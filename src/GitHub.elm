@@ -28,7 +28,7 @@ type alias Repo =
 
 fetchOrgRepos : Token -> String -> Task Http.Error (List Repo)
 fetchOrgRepos token org =
-  Pagination.fetchAll ("https://api.github.com/orgs/" ++ org ++ "/repos?per_page=100") [("Authorization", token)] (rfc5988Strategy decodeRepo) Nothing
+  Pagination.fetchAll ("https://api.github.com/orgs/" ++ org ++ "/repos?per_page=100") [("Authorization", "token " ++ token)] (rfc5988Strategy decodeRepo) Nothing
 
 fetchOrgIssues : Token -> String -> Task Http.Error (List Issue)
 fetchOrgIssues token org =
@@ -37,7 +37,7 @@ fetchOrgIssues token org =
 
 fetchRepoIssues : Token -> Repo -> Task Http.Error (List Issue)
 fetchRepoIssues token repo =
-  Pagination.fetchAll  ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/issues?per_page=100") [("Authorization", token)] (rfc5988Strategy (decodeIssue repo)) Nothing
+  Pagination.fetchAll  ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/issues?per_page=100") [("Authorization", "token " ++ token)] (rfc5988Strategy (decodeIssue repo)) Nothing
 
 decodeRepo : Json.Decode.Decoder Repo
 decodeRepo =

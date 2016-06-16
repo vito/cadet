@@ -5,3 +5,6 @@ repl-temp-*
 
 # compiled output
 public/
+
+# private config
+config.js

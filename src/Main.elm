@@ -11,14 +11,22 @@ import GitHub
 import Tracker
 
 type alias Model =
-  { stories : List Tracker.Story
+  { config : Config
+  , stories : List Tracker.Story
   , issues : List GitHub.Issue
   , error : Maybe String
   }
 
-main : Program Never
+type alias Config =
+  { githubToken : String
+  , githubOrganization : String
+  , trackerToken : String
+  , trackerProject : Int
+  }
+
+main : Program Config
 main =
-  Html.program
+  Html.programWithFlags
     { init = init
     , update = update
     , view = view
@@ -31,9 +39,15 @@ type Msg
   | IssuesAndStoriesFetched (List Tracker.Story) (List GitHub.Issue)
   | APIError Http.Error
 
-init : (Model, Cmd Msg)
-init =
-  ({ stories = [], issues = [], error = Nothing }, fetchStoriesAndIssues)
+init : Config -> (Model, Cmd Msg)
+init config =
+  ( { config = config
+    , stories = []
+    , issues = []
+    , error = Nothing
+    }
+  , fetchStoriesAndIssues config
+  )
 
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
@@ -86,21 +100,21 @@ viewIssue issue =
     ]
   ]
 
-fetchStoriesAndIssues : Cmd Msg
-fetchStoriesAndIssues =
+fetchStoriesAndIssues : Config -> Cmd Msg
+fetchStoriesAndIssues config =
   Task.perform APIError (uncurry IssuesAndStoriesFetched) <|
-    fetchStories `Task.andThen` \stories ->
-      fetchIssues `Task.andThen` \issues ->
+    fetchStories config `Task.andThen` \stories ->
+      fetchIssues config `Task.andThen` \issues ->
         Task.succeed (stories, issues)
 
-fetchIssues : Task Http.Error (List GitHub.Issue)
-fetchIssues =
+fetchIssues : Config -> Task Http.Error (List GitHub.Issue)
+fetchIssues config =
   GitHub.fetchOrgIssues
-    "token bfa5d14a30eb1b962a5d26f941b3e9039df21bb2"
-    "concourse"
+    config.githubToken
+    config.githubOrganization
 
-fetchStories : Task Http.Error (List Tracker.Story)
-fetchStories =
+fetchStories : Config -> Task Http.Error (List Tracker.Story)
+fetchStories config =
   Tracker.fetchProjectStories
-    "790f312a5aa2a755e7b22539dbd35560"
-    1059262
+    config.trackerToken
+    config.trackerProject

@@ -7,9 +7,15 @@
   <body>
     <div id="customs"></div>
     <script type="text/javascript" src="public/elm.js"></script>
+    <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
       var node = document.getElementById("customs");
-      var app = Elm.Main.embed(node);
+      var app = Elm.Main.embed(node, {
+        githubOrganization: CUSTOMS_GITHUB_ORGANIZATION,
+        githubToken: CUSTOMS_GITHUB_TOKEN,
+        trackerProject: CUSTOMS_TRACKER_PROJECT,
+        trackerToken: CUSTOMS_TRACKER_TOKEN
+      });
     </script>
   </body>
 </html>
