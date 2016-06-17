@@ -2,18 +2,38 @@
   box-sizing: border-box;
 }
 
+html, body, #customs, .columns {
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
 .columns {
   display: flex;
 }
 
 .column {
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
-.stories {
-  order: 0;
+.column .cell {
+  flex: 1;
+  overflow-y: auto;
+  margin: 10px;
 }
 
-.issues {
-  order: 1;
+.topic {
+  margin-bottom: 10px;
+  border: 1px solid #bbb;
+}
+
+.topic-stories,
+.topic-issues {
+  padding: 5px;
+}
+
+.topic-stories {
+  border-bottom: 1px dotted #bbb;
 }

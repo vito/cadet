@@ -1,4 +1,4 @@
-module Tracker exposing (Story, fetchProjectStories)
+module Tracker exposing (Story, StoryType(..), StoryState(..), fetchProjectStories, storyIsScheduled)
 
 import Dict exposing (Dict)
 import Http
@@ -38,7 +38,15 @@ type StoryState
 
 fetchProjectStories : Token -> Int -> Task Http.Error (List Story)
 fetchProjectStories token project =
-  Pagination.fetchAll ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories?envelope=true") [("X-TrackerToken", token)] trackerPagination Nothing
+  Pagination.fetchAll
+    ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories?envelope=true")
+    [("X-TrackerToken", token)]
+    trackerPagination
+    Nothing
+
+storyIsScheduled : Story -> Bool
+storyIsScheduled {state} =
+  state /= StoryStateUnscheduled
 
 decodeStory : Json.Decode.Decoder Story
 decodeStory =
