@@ -9,7 +9,7 @@ clean:
 	rm -f public/elm.js public/elm.min.js public/main.css bindata.go
 
 public/elm.js: $(ELM_FILES)
-	elm make --warn --output public/elm.js --yes src/Main.elm
+	elm make --warn --output $@ --yes src/Main.elm
 
 public/main.css: $(LESS_FILES)
 	lessc --clean-css="--advanced" css/main.less $@
