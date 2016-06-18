@@ -11,5 +11,5 @@ clean:
 public/elm.js: $(ELM_FILES)
 	elm make --warn --output $@ --yes src/Main.elm
 
-public/main.css: $(LESS_FILES)
+public/main.css: css/main.less
 	lessc --clean-css="--advanced" css/main.less $@
