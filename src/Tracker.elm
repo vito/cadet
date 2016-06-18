@@ -1,11 +1,10 @@
-module Tracker exposing (Story, StoryType(..), StoryState(..), fetchProjectStories, storyIsScheduled)
+module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, storyIsScheduled, storyIsInFlight)
 
 import Dict exposing (Dict)
 import Http
 import Json.Decode exposing ((:=))
 import String
 import Task exposing (Task)
-import Debug
 
 import Pagination
 
@@ -19,6 +18,11 @@ type alias Story =
   , estimate : Maybe Int
   , state : StoryState
   , labels : List String
+  }
+
+type alias Iteration =
+  { number : Int
+  , stories : List Story
   }
 
 type StoryType
@@ -41,12 +45,38 @@ fetchProjectStories token project =
   Pagination.fetchAll
     ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories?envelope=true")
     [("X-TrackerToken", token)]
-    trackerPagination
+    (trackerPagination decodeStory)
+    Nothing
+
+fetchProjectBacklog : Token -> Int -> Task Http.Error (List Iteration)
+fetchProjectBacklog token project =
+  Pagination.fetchAll
+    ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/iterations?envelope=true&scope=current_backlog")
+    [("X-TrackerToken", token)]
+    (trackerPagination decodeIteration)
     Nothing
 
 storyIsScheduled : Story -> Bool
 storyIsScheduled {state} =
   state /= StoryStateUnscheduled
+
+storyIsInFlight : Story -> Bool
+storyIsInFlight {state} =
+  case state of
+    StoryStateUnscheduled ->
+      False
+    StoryStateUnstarted ->
+      False
+    StoryStateStarted ->
+      True
+    StoryStateFinished ->
+      True
+    StoryStateDelivered ->
+      True
+    StoryStateAccepted ->
+      False
+    StoryStateRejected ->
+      True
 
 decodeStory : Json.Decode.Decoder Story
 decodeStory =
@@ -58,6 +88,12 @@ decodeStory =
     (Json.Decode.maybe ("estimate" := Json.Decode.int))
     ("current_state" := decodeStoryState)
     ("labels" := Json.Decode.list ("name" := Json.Decode.string))
+
+decodeIteration : Json.Decode.Decoder Iteration
+decodeIteration =
+  Json.Decode.object2 Iteration
+    ("number" := Json.Decode.int)
+    ("stories" := Json.Decode.list decodeStory)
 
 decodeStoryType : Json.Decode.Decoder StoryType
 decodeStoryType =
@@ -97,12 +133,12 @@ decodeStoryState =
 
 type Page = Offset Int
 
-trackerPagination : Pagination.Strategy Page Story
-trackerPagination =
+trackerPagination : Json.Decode.Decoder a -> Pagination.Strategy Page a
+trackerPagination decode =
   { onPage = \page request ->
       { request | url = addParams request.url page }
 
-  , nextPage = \response -> Debug.log "nextPage" <|
+  , nextPage = \response ->
       case response.value of
         Http.Text body ->
           let
@@ -124,13 +160,13 @@ trackerPagination =
               _ ->
                 Nothing
         Http.Blob _ ->
-          Debug.log "bogus" Nothing
+          Nothing
 
   , previousPage =
       always Nothing
 
   , content =
-      ("data" := Json.Decode.list decodeStory)
+      ("data" := Json.Decode.list decode)
   }
 
 addParams : String -> Page -> String

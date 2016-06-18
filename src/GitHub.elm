@@ -1,4 +1,4 @@
-module GitHub exposing (Issue, fetchOrgIssues)
+module GitHub exposing (Issue, fetchOrgIssues, reactionCodes, reactionScore)
 
 import Dict exposing (Dict)
 import Http
@@ -17,7 +17,39 @@ type alias Issue =
   , url : String
   , number : Int
   , title : String
+  , commentCount : Int
+  , reactions : Reactions
   }
+
+type alias Reactions =
+  { plusOne : Int
+  , minusOne : Int
+  , laugh : Int
+  , confused : Int
+  , heart : Int
+  , hooray : Int
+  }
+
+reactionCodes : Reactions -> List (String, Int)
+reactionCodes reactions =
+  [ ("\x1f44d", reactions.plusOne)
+  , ("\x1f44e", reactions.minusOne)
+  , ("\x1f604", reactions.laugh)
+  , ("\x1f615", reactions.confused)
+  , ("\x1f389", reactions.heart)
+  , ("\x2764", reactions.hooray)
+  ]
+
+reactionScore : Reactions -> Int
+reactionScore reactions =
+  List.sum [
+    2 * reactions.plusOne,
+    -2 * reactions.minusOne,
+    1 * reactions.laugh,
+    -1 * reactions.confused,
+    3 * reactions.heart,
+    3 * reactions.hooray
+  ]
 
 type alias Repo =
   { id : Int
@@ -47,7 +79,7 @@ fetchRepoIssues token repo =
   else
     Pagination.fetchAll
       ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/issues?per_page=100")
-      [("Authorization", "token " ++ token)]
+      [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
       (rfc5988Strategy (decodeIssue repo))
       Nothing
 
@@ -62,12 +94,27 @@ decodeRepo =
 
 decodeIssue : Repo -> Json.Decode.Decoder Issue
 decodeIssue repo =
-  Json.Decode.object4 (Issue repo)
+  Json.Decode.object6 (Issue repo)
     ("id" := Json.Decode.int)
     ("html_url" := Json.Decode.string)
     ("number" := Json.Decode.int)
     ("title" := Json.Decode.string)
+    ("comments" := excludeTracksuitComment (Json.Decode.int))
+    ("reactions" := decodeReactions)
 
+excludeTracksuitComment : Json.Decode.Decoder Int -> Json.Decode.Decoder Int
+excludeTracksuitComment =
+  Json.Decode.map (flip (-) 1)
+
+decodeReactions : Json.Decode.Decoder Reactions
+decodeReactions =
+  Json.Decode.object6 Reactions
+    ("+1" := Json.Decode.int)
+    ("-1" := Json.Decode.int)
+    ("laugh" := Json.Decode.int)
+    ("confused" := Json.Decode.int)
+    ("heart" := Json.Decode.int)
+    ("hooray" := Json.Decode.int)
 
 rfc5988Strategy : Json.Decode.Decoder a -> Pagination.Strategy Int a
 rfc5988Strategy decode =
