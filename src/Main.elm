@@ -90,41 +90,43 @@ view model =
           groupTopicsByIteration model.backlog scheduled
       in
         div [class "columns"] [
-          div [class "column triaged"] [
-            div [class "cell backlog"] [
+          div [class "column"] [
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Backlog"],
               div [class "iterations"] <|
                 List.map viewIteration topicIterations
-            ],
-            div [class "cell icebox"] [
+            ]
+          ],
+          div [class "column"] [
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Icebox"],
               div [class "topics"] <|
                 List.map viewTopic << List.reverse << List.sortBy topicActivity <|
                   unscheduled
             ]
           ],
-          div [class "column engaged"] [
-            div [class "cell them-waiting"] [
+          div [class "column"] [
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Them Waiting"],
               div [class "topics"] <|
                 List.map viewTopic << List.reverse << List.sortBy topicActivity <|
                   engaged
             ],
-            div [class "cell us-waiting"] [
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Us Waiting"],
               div [class "topics"] <|
                 List.map viewTopic << List.reverse << List.sortBy topicActivity <|
                   engaged
-            ]
-          ],
-          div [class "column inbox"] [
-            div [class "cell pull-requests"] [
+            ],
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Pull Requests"],
               div [class "topics"] <|
                 List.map viewTopic << List.reverse << List.sortBy topicActivity <|
                   pullRequests
-            ],
-            div [class "cell issues"] [
+            ]
+          ],
+          div [class "column"] [
+            div [class "cell"] [
               h1 [class "cell-title"] [text "Issues"],
               div [class "topics"] <|
                 List.map viewTopic << List.reverse << List.sortBy topicActivity <|
