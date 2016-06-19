@@ -1,10 +1,7 @@
 module Pagination exposing (Paginated, Pagination, Strategy, fetch, fetchAll)
 
-import Dict exposing (Dict)
 import Http
 import Json.Decode
-import Regex exposing (Regex)
-import String
 import Task exposing (Task)
 
 type alias Paginated page a =
