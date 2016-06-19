@@ -37,7 +37,7 @@ reactionCodes reactions =
   , ("\x1f604", reactions.laugh)
   , ("\x1f615", reactions.confused)
   , ("\x1f389", reactions.heart)
-  , ("\x2764", reactions.hooray)
+  , ("\x1f496", reactions.hooray)
   ]
 
 reactionScore : Reactions -> Int
