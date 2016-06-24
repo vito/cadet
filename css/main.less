@@ -13,8 +13,7 @@ html, body, #customs, .columns {
 
 body {
   font-family: 'Open Sans', "HelveticaNeue", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  font-size: 14px;
+  font-size: 12px;
   line-height: 1.2;
   background: #666;
 }
@@ -107,6 +106,12 @@ body {
   border-right: 1px solid #ddd;
 }
 
+.story-summary {
+  padding: 2px;
+  padding-left: 26px;
+  position: relative;
+}
+
 .story-summary:before, .issue-comments:before, .reaction .emoji {
   margin-right: 5px;
   font-size: 12px;
@@ -132,7 +137,7 @@ body {
   content: "\2699";
 }
 
-.story-summary, .issue-summary {
+.issue-summary {
   padding: 5px;
   position: relative;
 }
@@ -158,13 +163,15 @@ body {
 }
 
 .issue-location {
-  font-size: 14px;
+  font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
+  font-size: 15px;
   font-weight: bold;
   color: #333;
 }
 
-.story-location {
-  padding-left: 22px;
+.story-location,
+.story-labels {
+  line-height: 19px;
   display: block;
 }
 
@@ -203,4 +210,20 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #ccc;
+}
+
+.story-labels {
+  .story-label {
+    color: #063;
+    font-size: 10px;
+    font-weight: 700;
+
+    &:after {
+      content: ", ";
+    }
+
+    &:last-child:after {
+      content: "";
+    }
+  }
 }

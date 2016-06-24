@@ -155,7 +155,9 @@ viewStory story =
     div [class "story-summary"] [
       a [href story.url, class "story-location"] [
         text story.summary
-      ]
+      ],
+      div [class "story-labels"] <|
+        List.map (span [class "story-label"] << (flip (::) []) << text) story.labels
     ]
   ]
 
