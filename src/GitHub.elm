@@ -1,4 +1,10 @@
-module GitHub exposing (Issue, fetchOrgIssues, reactionCodes, reactionScore)
+module GitHub exposing
+  ( Issue
+  , fetchOrgIssues
+  , issueScore
+  , reactionCodes
+  , reactionScore
+  )
 
 import Dict exposing (Dict)
 import Http
@@ -39,6 +45,10 @@ reactionCodes reactions =
   , ("\x1f389", reactions.heart)
   , ("\x1f496", reactions.hooray)
   ]
+
+issueScore : Issue -> Int
+issueScore {reactions, commentCount} =
+  reactionScore reactions + (2 * commentCount)
 
 reactionScore : Reactions -> Int
 reactionScore reactions =

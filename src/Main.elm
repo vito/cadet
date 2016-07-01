@@ -334,7 +334,7 @@ issueLabel issue =
 
 topicActivity : Topic -> Int
 topicActivity {issues} =
-  List.foldl (\issue acc -> GitHub.reactionScore issue.reactions + issue.commentCount) 0 issues
+  List.sum <| List.map GitHub.issueScore issues
 
 topicFlightness : Topic -> Int
 topicFlightness {stories} =
