@@ -1,6 +1,11 @@
 module GitHub exposing
-  ( Issue
+  ( Repo
+  , Issue
+  , Comment
   , fetchOrgIssues
+  , fetchOrgRepos
+  , fetchRepoIssues
+  , fetchIssueComments
   , issueScore
   , reactionCodes
   , reactionScore
@@ -17,6 +22,14 @@ import Pagination
 
 type alias Token = String
 
+type alias Repo =
+  { id : Int
+  , url : String
+  , owner : String
+  , name : String
+  , openIssues : Int
+  }
+
 type alias Issue =
   { repo : Repo
   , id : Int
@@ -24,6 +37,14 @@ type alias Issue =
   , number : Int
   , title : String
   , commentCount : Int
+  , reactions : Reactions
+  }
+
+type alias Comment =
+  { issue : Issue
+  , id : Int
+  , user : String
+  , url : String
   , reactions : Reactions
   }
 
@@ -61,14 +82,6 @@ reactionScore reactions =
     3 * reactions.hooray
   ]
 
-type alias Repo =
-  { id : Int
-  , url : String
-  , owner : String
-  , name : String
-  , openIssues : Int
-  }
-
 fetchOrgRepos : Token -> String -> Task Http.Error (List Repo)
 fetchOrgRepos token org =
   Pagination.fetchAll
@@ -93,6 +106,14 @@ fetchRepoIssues token repo =
       (rfc5988Strategy (decodeIssue repo))
       Nothing
 
+fetchIssueComments : Token -> Issue -> Task Http.Error (List Comment)
+fetchIssueComments token issue =
+  Pagination.fetchAll
+    ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
+    [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
+    (rfc5988Strategy (decodeComment issue))
+    Nothing
+
 decodeRepo : Json.Decode.Decoder Repo
 decodeRepo =
   Json.Decode.object5 Repo
@@ -110,6 +131,14 @@ decodeIssue repo =
     ("number" := Json.Decode.int)
     ("title" := Json.Decode.string)
     ("comments" := excludeTracksuitComment (Json.Decode.int))
+    ("reactions" := decodeReactions)
+
+decodeComment : Issue -> Json.Decode.Decoder Comment
+decodeComment issue =
+  Json.Decode.object4 (Comment issue)
+    ("id" := Json.Decode.int)
+    (Json.Decode.at ["user", "login"] Json.Decode.string)
+    ("html_url" := Json.Decode.string)
     ("reactions" := decodeReactions)
 
 excludeTracksuitComment : Json.Decode.Decoder Int -> Json.Decode.Decoder Int

@@ -11,19 +11,33 @@ import Task exposing (Task)
 import GitHub
 import Tracker
 
-type alias Model =
-  { config : Config
-  , backlog : List Tracker.Iteration
-  , stories : List Tracker.Story
-  , issues : List GitHub.Issue
-  , error : Maybe String
-  }
-
 type alias Config =
   { githubToken : String
   , githubOrganization : String
   , trackerToken : String
   , trackerProject : Int
+  }
+
+type alias Model =
+  { config : Config
+  , error : Maybe String
+
+  , topicIterations : List Iteration
+  , unscheduled : List Topic
+  , themWaiting : List Topic
+  , usWaiting : List Topic
+  , pendingPullRequests : List Topic
+  , pendingIssues : List Topic
+  }
+
+type alias Topic =
+  { stories : List Tracker.Story
+  , issues : List GitHub.Issue
+  }
+
+type alias Iteration =
+  { number : Int
+  , topics : List Topic
   }
 
 main : Program Config
@@ -38,15 +52,20 @@ main =
 type Msg
   = Noop
   | BacklogAndStoriesAndIssuesFetched (List Tracker.Iteration) (List Tracker.Story) (List GitHub.Issue)
+  | EngagementCommentsFetched Topic (List GitHub.Comment)
   | APIError Http.Error
 
 init : Config -> (Model, Cmd Msg)
 init config =
   ( { config = config
-    , backlog = []
-    , stories = []
-    , issues = []
     , error = Nothing
+
+    , topicIterations = []
+    , unscheduled = []
+    , themWaiting = []
+    , usWaiting = []
+    , pendingPullRequests = []
+    , pendingIssues = []
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -58,7 +77,49 @@ update msg model =
       (model, Cmd.none)
 
     BacklogAndStoriesAndIssuesFetched backlog stories issues ->
-      ({ model | error = Nothing, backlog = backlog, stories = stories, issues = issues }, Cmd.none)
+      let
+        topics =
+          groupByTopic stories issues
+
+        (triaged, pending) =
+          List.partition topicIsTriaged topics
+
+        (scheduled, unscheduled) =
+          List.partition topicIsScheduled triaged
+
+        (engaged, remaining) =
+          List.partition topicIsScheduled pending
+
+        (pendingPullRequests, pendingIssues) =
+          List.partition topicIsPullRequest pending
+
+        topicIterations =
+          groupTopicsByIteration backlog scheduled
+
+        checkEngagements =
+          List.map (checkEngagement model.config) engaged
+      in
+        ( { model |
+            error = Nothing
+
+          , topicIterations = topicIterations
+          , unscheduled = unscheduled
+          , pendingPullRequests = pendingPullRequests
+          , pendingIssues = pendingIssues
+          }
+        , Cmd.batch checkEngagements
+        )
+
+    EngagementCommentsFetched topic comments ->
+      case List.head (List.reverse comments) of
+        Just comment ->
+          if comment.user == "vito" then
+            ({ model | usWaiting = topic :: model.usWaiting }, Cmd.none)
+          else
+            ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+
+        Nothing ->
+          ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
 
     APIError e ->
       ({ model | error = Just (toString e) }, Cmd.none)
@@ -70,70 +131,51 @@ view model =
       pre [] [text msg]
 
     Nothing ->
-      let
-        topics =
-          groupByTopic model.stories model.issues
-
-        (triaged, pending) =
-          List.partition topicIsTriaged topics
-
-        (scheduled, unscheduled) =
-          List.partition topicIsScheduled triaged
-
-        (engaged, remaining) =
-          List.partition topicIsScheduled pending
-
-        (pullRequests, issues) =
-          List.partition topicIsPullRequest pending
-
-        topicIterations =
-          groupTopicsByIteration model.backlog scheduled
-      in
-        div [class "columns"] [
-          div [class "column"] [
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Backlog"],
-              div [class "iterations"] <|
-                List.map viewIteration topicIterations
-            ]
+      div [class "columns"] [
+        div [class "column"] [
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Backlog"],
+            div [class "iterations"] <|
+              List.map viewIteration model.topicIterations
+          ]
+        ],
+        div [class "column"] [
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Icebox"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+                model.unscheduled
+          ]
+        ],
+        div [class "column"] [
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Them Waiting"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+                model.themWaiting
           ],
-          div [class "column"] [
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Icebox"],
-              div [class "topics"] <|
-                List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                  unscheduled
-            ]
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Us Waiting"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+                model.usWaiting
           ],
-          div [class "column"] [
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Them Waiting"],
-              div [class "topics"] <|
-                List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                  engaged
-            ],
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Us Waiting"],
-              div [class "topics"] <|
-                List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                  engaged
-            ],
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Pull Requests"],
-              div [class "topics"] <|
-                List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                  pullRequests
-            ]
-          ],
-          div [class "column"] [
-            div [class "cell"] [
-              h1 [class "cell-title"] [text "Issues"],
-              div [class "topics"] <|
-                List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                  issues
-            ]
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Pull Requests"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+                model.pendingPullRequests
+          ]
+        ],
+        div [class "column"] [
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Issues"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+                model.pendingIssues
           ]
         ]
+      ]
 
 viewStory : Tracker.Story -> Html Msg
 viewStory story =
@@ -204,6 +246,17 @@ viewTopic {stories, issues} =
       (List.map viewStory stories)
   ]
 
+checkEngagement : Config -> Topic -> Cmd Msg
+checkEngagement config topic =
+  case topic.issues of
+    issue :: _ ->
+      Task.perform APIError (EngagementCommentsFetched topic) <|
+        GitHub.fetchIssueComments config.githubToken issue
+
+    _ ->
+      -- impossible
+      Cmd.none
+
 fetchBacklogAndStoriesAndIssues : Config -> Cmd Msg
 fetchBacklogAndStoriesAndIssues config =
   Task.perform APIError (\(b, s, i) -> BacklogAndStoriesAndIssuesFetched b s i) <|
@@ -229,16 +282,6 @@ fetchStories config =
   Tracker.fetchProjectStories
     config.trackerToken
     config.trackerProject
-
-type alias Topic =
-  { stories : List Tracker.Story
-  , issues : List GitHub.Issue
-  }
-
-type alias Iteration =
-  { number : Int
-  , topics : List Topic
-  }
 
 groupByTopic : List Tracker.Story -> List GitHub.Issue -> List Topic
 groupByTopic stories issues =
