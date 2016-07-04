@@ -113,7 +113,7 @@ update msg model =
     EngagementCommentsFetched topic comments ->
       case List.head (List.reverse comments) of
         Just comment ->
-          if comment.user == "vito" then
+          if comment.user.login == "vito" then
             ({ model | usWaiting = topic :: model.usWaiting }, Cmd.none)
           else
             ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
@@ -373,7 +373,7 @@ issueStories issue stories =
 
 issueLabel : GitHub.Issue -> String
 issueLabel issue =
-  issue.repo.owner ++ "/" ++ issue.repo.name ++ "#" ++ toString issue.number
+  issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "#" ++ toString issue.number
 
 topicActivity : Topic -> Int
 topicActivity {issues} =

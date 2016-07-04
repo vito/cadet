@@ -2,6 +2,7 @@ module GitHub exposing
   ( Repo
   , Issue
   , Comment
+  , User
   , fetchOrgIssues
   , fetchOrgRepos
   , fetchRepoIssues
@@ -25,7 +26,7 @@ type alias Token = String
 type alias Repo =
   { id : Int
   , url : String
-  , owner : String
+  , owner : User
   , name : String
   , openIssues : Int
   }
@@ -34,6 +35,7 @@ type alias Issue =
   { repo : Repo
   , id : Int
   , url : String
+  , user : User
   , number : Int
   , title : String
   , commentCount : Int
@@ -43,9 +45,16 @@ type alias Issue =
 type alias Comment =
   { issue : Issue
   , id : Int
-  , user : String
   , url : String
+  , user : User
   , reactions : Reactions
+  }
+
+type alias User =
+  { id : Int
+  , url : String
+  , login : String
+  , avatar : String
   }
 
 type alias Reactions =
@@ -101,7 +110,7 @@ fetchRepoIssues token repo =
     Task.succeed []
   else
     Pagination.fetchAll
-      ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/issues?per_page=100")
+      ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues?per_page=100")
       [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
       (rfc5988Strategy (decodeIssue repo))
       Nothing
@@ -109,7 +118,7 @@ fetchRepoIssues token repo =
 fetchIssueComments : Token -> Issue -> Task Http.Error (List Comment)
 fetchIssueComments token issue =
   Pagination.fetchAll
-    ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
+    ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
     [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
     (rfc5988Strategy (decodeComment issue))
     Nothing
@@ -119,15 +128,16 @@ decodeRepo =
   Json.Decode.object5 Repo
     ("id" := Json.Decode.int)
     ("html_url" := Json.Decode.string)
-    (Json.Decode.at ["owner", "login"] Json.Decode.string)
+    ("owner" := decodeUser)
     ("name" := Json.Decode.string)
     ("open_issues_count" := Json.Decode.int)
 
 decodeIssue : Repo -> Json.Decode.Decoder Issue
 decodeIssue repo =
-  Json.Decode.object6 (Issue repo)
+  Json.Decode.object7 (Issue repo)
     ("id" := Json.Decode.int)
     ("html_url" := Json.Decode.string)
+    ("user" := decodeUser)
     ("number" := Json.Decode.int)
     ("title" := Json.Decode.string)
     ("comments" := excludeTracksuitComment (Json.Decode.int))
@@ -137,9 +147,17 @@ decodeComment : Issue -> Json.Decode.Decoder Comment
 decodeComment issue =
   Json.Decode.object4 (Comment issue)
     ("id" := Json.Decode.int)
-    (Json.Decode.at ["user", "login"] Json.Decode.string)
     ("html_url" := Json.Decode.string)
+    ("user" := decodeUser)
     ("reactions" := decodeReactions)
+
+decodeUser : Json.Decode.Decoder User
+decodeUser =
+  Json.Decode.object4 User
+    ("id" := Json.Decode.int)
+    ("html_url" := Json.Decode.string)
+    ("login" := Json.Decode.string)
+    ("avatar_url" := Json.Decode.string)
 
 excludeTracksuitComment : Json.Decode.Decoder Int -> Json.Decode.Decoder Int
 excludeTracksuitComment =
