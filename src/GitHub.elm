@@ -3,8 +3,9 @@ module GitHub exposing
   , Issue
   , Comment
   , User
-  , fetchOrgIssues
+  , fetchOrgMembers
   , fetchOrgRepos
+  , fetchOrgIssues
   , fetchRepoIssues
   , fetchIssueComments
   , issueScore
@@ -90,6 +91,14 @@ reactionScore reactions =
     3 * reactions.heart,
     3 * reactions.hooray
   ]
+
+fetchOrgMembers : Token -> String -> Task Http.Error (List User)
+fetchOrgMembers token org =
+  Pagination.fetchAll
+    ("https://api.github.com/orgs/" ++ org ++ "/members?per_page=100")
+    [("Authorization", "token " ++ token)]
+    (rfc5988Strategy decodeUser)
+    Nothing
 
 fetchOrgRepos : Token -> String -> Task Http.Error (List Repo)
 fetchOrgRepos token org =

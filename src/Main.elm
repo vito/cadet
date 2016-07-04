@@ -22,6 +22,11 @@ type alias Model =
   { config : Config
   , error : Maybe String
 
+  , backlog : Maybe (List Tracker.Iteration)
+  , stories : Maybe (List Tracker.Story)
+  , issues : Maybe (List GitHub.Issue)
+  , members : Maybe (List GitHub.User)
+
   , topicIterations : List Iteration
   , unscheduled : List Topic
   , themWaiting : List Topic
@@ -51,7 +56,10 @@ main =
 
 type Msg
   = Noop
-  | BacklogAndStoriesAndIssuesFetched (List Tracker.Iteration) (List Tracker.Story) (List GitHub.Issue)
+  | BacklogFetched (List Tracker.Iteration)
+  | StoriesFetched (List Tracker.Story)
+  | IssuesFetched (List GitHub.Issue)
+  | MembersFetched (List GitHub.User)
   | EngagementCommentsFetched Topic (List GitHub.Comment)
   | APIError Http.Error
 
@@ -59,6 +67,11 @@ init : Config -> (Model, Cmd Msg)
 init config =
   ( { config = config
     , error = Nothing
+
+    , backlog = Nothing
+    , stories = Nothing
+    , issues = Nothing
+    , members = Nothing
 
     , topicIterations = []
     , unscheduled = []
@@ -76,7 +89,40 @@ update msg model =
     Noop ->
       (model, Cmd.none)
 
-    BacklogAndStoriesAndIssuesFetched backlog stories issues ->
+    BacklogFetched backlog ->
+      processIfReady { model | backlog = Just backlog }
+
+    StoriesFetched stories ->
+      processIfReady { model | stories = Just stories }
+
+    IssuesFetched issues ->
+      processIfReady { model | issues = Just issues }
+
+    MembersFetched members ->
+      processIfReady { model | members = Just members }
+
+    EngagementCommentsFetched topic comments ->
+      case List.head (List.reverse comments) of
+        Just comment ->
+          if isOrgMember model.members comment.user then
+            ({ model | usWaiting = topic :: model.usWaiting }, Cmd.none)
+          else
+            ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+
+        Nothing ->
+          ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+
+    APIError e ->
+      ({ model | error = Just (toString e) }, Cmd.none)
+
+isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
+isOrgMember users user =
+  List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
+
+processIfReady : Model -> (Model, Cmd Msg)
+processIfReady model =
+  case (model.backlog, model.stories, model.issues, model.members) of
+    (Just backlog, Just stories, Just issues, Just members) ->
       let
         topics =
           groupByTopic stories issues
@@ -110,19 +156,9 @@ update msg model =
         , Cmd.batch checkEngagements
         )
 
-    EngagementCommentsFetched topic comments ->
-      case List.head (List.reverse comments) of
-        Just comment ->
-          if comment.user.login == "vito" then
-            ({ model | usWaiting = topic :: model.usWaiting }, Cmd.none)
-          else
-            ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+    _ ->
+      (model, Cmd.none)
 
-        Nothing ->
-          ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
-
-    APIError e ->
-      ({ model | error = Just (toString e) }, Cmd.none)
 
 view : Model -> Html Msg
 view model =
@@ -259,29 +295,40 @@ checkEngagement config topic =
 
 fetchBacklogAndStoriesAndIssues : Config -> Cmd Msg
 fetchBacklogAndStoriesAndIssues config =
-  Task.perform APIError (\(b, s, i) -> BacklogAndStoriesAndIssuesFetched b s i) <|
-    fetchBacklog config `Task.andThen` \backlog ->
-      fetchStories config `Task.andThen` \stories ->
-        fetchIssues config `Task.andThen` \issues ->
-          Task.succeed (backlog, stories, issues)
+  Cmd.batch
+    [ fetchBacklog config
+    , fetchStories config
+    , fetchIssues config
+    , fetchMembers config
+    ]
 
-fetchBacklog : Config -> Task Http.Error (List Tracker.Iteration)
+fetchBacklog : Config -> Cmd Msg
 fetchBacklog config =
-  Tracker.fetchProjectBacklog
-    config.trackerToken
-    config.trackerProject
+  Task.perform APIError BacklogFetched <|
+    Tracker.fetchProjectBacklog
+      config.trackerToken
+      config.trackerProject
 
-fetchIssues : Config -> Task Http.Error (List GitHub.Issue)
-fetchIssues config =
-  GitHub.fetchOrgIssues
-    config.githubToken
-    config.githubOrganization
-
-fetchStories : Config -> Task Http.Error (List Tracker.Story)
+fetchStories : Config -> Cmd Msg
 fetchStories config =
-  Tracker.fetchProjectStories
-    config.trackerToken
-    config.trackerProject
+  Task.perform APIError StoriesFetched <|
+    Tracker.fetchProjectStories
+      config.trackerToken
+      config.trackerProject
+
+fetchIssues : Config -> Cmd Msg
+fetchIssues config =
+  Task.perform APIError IssuesFetched <|
+    GitHub.fetchOrgIssues
+      config.githubToken
+      config.githubOrganization
+
+fetchMembers : Config -> Cmd Msg
+fetchMembers config =
+  Task.perform APIError MembersFetched <|
+    GitHub.fetchOrgMembers
+      config.githubToken
+      config.githubOrganization
 
 groupByTopic : List Tracker.Story -> List GitHub.Issue -> List Topic
 groupByTopic stories issues =
