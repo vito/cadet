@@ -34,8 +34,7 @@ type alias Model =
   , themWaiting : List Topic
   , usWaiting : List Topic
   , pendingPullRequests : List Topic
-  , activeIssues : List Topic
-  , inactiveIssues : List Topic
+  , pendingIssues : List Topic
   }
 
 type alias Topic =
@@ -81,8 +80,7 @@ init config =
     , themWaiting = []
     , usWaiting = []
     , pendingPullRequests = []
-    , activeIssues = []
-    , inactiveIssues = []
+    , pendingIssues = []
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -143,9 +141,6 @@ processIfReady model =
         (pendingPullRequests, pendingIssues) =
           List.partition topicIsPullRequest remaining
 
-        (activeIssues, inactiveIssues) =
-          List.partition topicIsActive pendingIssues
-
         topicIterations =
           groupTopicsByIteration backlog scheduled
 
@@ -158,8 +153,7 @@ processIfReady model =
           , topicIterations = topicIterations
           , unscheduled = unscheduled
           , pendingPullRequests = pendingPullRequests
-          , activeIssues = activeIssues
-          , inactiveIssues = inactiveIssues
+          , pendingIssues = pendingIssues
           }
         , Cmd.batch checkEngagements
         )
@@ -213,16 +207,16 @@ view model =
         ],
         div [class "column"] [
           div [class "cell"] [
-            h1 [class "cell-title"] [text "Active Issues"],
+            h1 [class "cell-title"] [text "By Activity"],
             div [class "topics"] <|
               List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                model.activeIssues
+                model.pendingIssues
           ],
           div [class "cell"] [
-            h1 [class "cell-title"] [text "Inactive Issues"],
+            h1 [class "cell-title"] [text "By Date"],
             div [class "topics"] <|
               List.map viewTopic << List.reverse << List.sortBy topicCreation <|
-                model.inactiveIssues
+                model.pendingIssues
           ]
         ]
       ]
@@ -470,7 +464,3 @@ topicIsTriaged : Topic -> Bool
 topicIsTriaged {stories} =
   not <|
     List.all ((==) Tracker.StoryTypeChore) (List.map .type' stories)
-
-topicIsActive : Topic -> Bool
-topicIsActive {issues} =
-  List.any ((/=) 0 << GitHub.issueScore) issues
