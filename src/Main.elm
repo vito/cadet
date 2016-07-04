@@ -1,5 +1,6 @@
 module Main exposing (..)
 
+import Date
 import Dict exposing (Dict)
 import Html exposing (Html, h1, h2, div, pre, text, a, span)
 import Html.Lazy
@@ -7,6 +8,7 @@ import Html.Attributes exposing (class, classList, href)
 import Html.App as Html
 import Http
 import Task exposing (Task)
+import Time exposing (Time)
 
 import GitHub
 import Tracker
@@ -32,7 +34,8 @@ type alias Model =
   , themWaiting : List Topic
   , usWaiting : List Topic
   , pendingPullRequests : List Topic
-  , pendingIssues : List Topic
+  , activeIssues : List Topic
+  , inactiveIssues : List Topic
   }
 
 type alias Topic =
@@ -78,7 +81,8 @@ init config =
     , themWaiting = []
     , usWaiting = []
     , pendingPullRequests = []
-    , pendingIssues = []
+    , activeIssues = []
+    , inactiveIssues = []
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -137,7 +141,10 @@ processIfReady model =
           List.partition topicIsScheduled pending
 
         (pendingPullRequests, pendingIssues) =
-          List.partition topicIsPullRequest pending
+          List.partition topicIsPullRequest remaining
+
+        (activeIssues, inactiveIssues) =
+          List.partition topicIsActive pendingIssues
 
         topicIterations =
           groupTopicsByIteration backlog scheduled
@@ -151,7 +158,8 @@ processIfReady model =
           , topicIterations = topicIterations
           , unscheduled = unscheduled
           , pendingPullRequests = pendingPullRequests
-          , pendingIssues = pendingIssues
+          , activeIssues = activeIssues
+          , inactiveIssues = inactiveIssues
           }
         , Cmd.batch checkEngagements
         )
@@ -205,10 +213,16 @@ view model =
         ],
         div [class "column"] [
           div [class "cell"] [
-            h1 [class "cell-title"] [text "Issues"],
+            h1 [class "cell-title"] [text "Active Issues"],
             div [class "topics"] <|
               List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                model.pendingIssues
+                model.activeIssues
+          ],
+          div [class "cell"] [
+            h1 [class "cell-title"] [text "Inactive Issues"],
+            div [class "topics"] <|
+              List.map viewTopic << List.reverse << List.sortBy topicCreation <|
+                model.inactiveIssues
           ]
         ]
       ]
@@ -426,6 +440,10 @@ topicActivity : Topic -> Int
 topicActivity {issues} =
   List.sum <| List.map GitHub.issueScore issues
 
+topicCreation : Topic -> Time
+topicCreation {issues} =
+  Maybe.withDefault 0 (List.minimum (List.map (Date.toTime << .createdAt) issues))
+
 topicFlightness : Topic -> Int
 topicFlightness {stories} =
   List.length <| List.filter Tracker.storyIsInFlight stories
@@ -452,3 +470,7 @@ topicIsTriaged : Topic -> Bool
 topicIsTriaged {stories} =
   not <|
     List.all ((==) Tracker.StoryTypeChore) (List.map .type' stories)
+
+topicIsActive : Topic -> Bool
+topicIsActive {issues} =
+  List.any ((/=) 0 << GitHub.issueScore) issues

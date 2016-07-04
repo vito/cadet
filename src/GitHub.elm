@@ -13,9 +13,11 @@ module GitHub exposing
   , reactionScore
   )
 
+import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
 import Json.Decode exposing ((:=))
+import Json.Decode.Extra exposing ((|:))
 import Regex exposing (Regex)
 import String
 import Task exposing (Task)
@@ -35,6 +37,8 @@ type alias Repo =
 type alias Issue =
   { repo : Repo
   , id : Int
+  , createdAt : Date
+  , updatedAt : Date
   , url : String
   , user : User
   , number : Int
@@ -46,6 +50,8 @@ type alias Issue =
 type alias Comment =
   { issue : Issue
   , id : Int
+  , createdAt : Date
+  , updatedAt : Date
   , url : String
   , user : User
   , reactions : Reactions
@@ -143,19 +149,23 @@ decodeRepo =
 
 decodeIssue : Repo -> Json.Decode.Decoder Issue
 decodeIssue repo =
-  Json.Decode.object7 (Issue repo)
-    ("id" := Json.Decode.int)
-    ("html_url" := Json.Decode.string)
-    ("user" := decodeUser)
-    ("number" := Json.Decode.int)
-    ("title" := Json.Decode.string)
-    ("comments" := excludeTracksuitComment (Json.Decode.int))
-    ("reactions" := decodeReactions)
+  Json.Decode.succeed (Issue repo)
+    |: ("id" := Json.Decode.int)
+    |: ("created_at" := Json.Decode.Extra.date)
+    |: ("updated_at" := Json.Decode.Extra.date)
+    |: ("html_url" := Json.Decode.string)
+    |: ("user" := decodeUser)
+    |: ("number" := Json.Decode.int)
+    |: ("title" := Json.Decode.string)
+    |: ("comments" := excludeTracksuitComment (Json.Decode.int))
+    |: ("reactions" := decodeReactions)
 
 decodeComment : Issue -> Json.Decode.Decoder Comment
 decodeComment issue =
-  Json.Decode.object4 (Comment issue)
+  Json.Decode.object6 (Comment issue)
     ("id" := Json.Decode.int)
+    ("created_at" := Json.Decode.Extra.date)
+    ("updated_at" := Json.Decode.Extra.date)
     ("html_url" := Json.Decode.string)
     ("user" := decodeUser)
     ("reactions" := decodeReactions)
