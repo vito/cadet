@@ -142,20 +142,23 @@ body {
   position: relative;
 }
 
-.story.unscheduled {
+.unscheduled {
   background-color: #e4eff7;
 }
 
-.story.unstarted {
+.unstarted {
   background-color: #f4f4f4;
 }
 
-.story.started, .story.finished, .story.delivered, .story.rejected {
+.started, .finished, .delivered, .rejected {
   background-color: #f0f0c6;
 }
 
-.story.accepted {
+.accepted {
   background-color: #daebcf;
+}
+
+.story.accepted {
   border-top-color: #eefce2;
   border-bottom-color: #c3d5b4;
   border-left-color: #c3d5b4;
@@ -167,6 +170,63 @@ body {
   font-size: 15px;
   font-weight: bold;
   color: #333;
+}
+
+.issue-title {
+  font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+  line-height: 1.25;
+}
+
+.issue-info {
+  font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
+  font-size: 12px;
+  color: #767676;
+  line-height: 1.4;
+}
+
+.issue-story {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  font-size: 20px;
+  line-height: 57px;
+  width: 24px;
+  text-align: center;
+}
+
+.topic.untriaged {
+  margin: 0 -5px;
+
+  &:first-child {
+    margin-top: -5px;
+  }
+
+  &:last-child {
+    margin-bottom: -5px;
+  }
+
+  .issue-summary {
+    padding: 12px;
+    padding-left: 36px;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+  }
+
+  .issue {
+    border-radius: 0;
+    border-top: 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .story {
+    display: none;
+  }
 }
 
 .story-location,

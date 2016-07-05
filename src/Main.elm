@@ -221,23 +221,49 @@ view model =
         ]
       ]
 
+viewIteration : Iteration -> Html Msg
+viewIteration {number, topics} =
+  div [class "iteration"] [
+    h2 [class "iteration-title"] [
+      text (toString number)
+    ],
+    div [class "iteration-topics"] <|
+      List.map viewTopic topics
+  ]
+
+viewTopic : Topic -> Html Msg
+viewTopic topic =
+  if topicIsTriaged topic then
+    div [class "topic"] [
+      div [class "topic-issues"]
+        (List.map viewIssue topic.issues),
+      div [class "topic-stories"]
+        (List.map viewStory topic.stories)
+    ]
+  else
+    div [class "topic untriaged"] [
+      div [class "untriaged-issue"]
+        -- there should just be 1 issue and 1 story, so this is kinda cheating
+        (List.map2 viewUntriagedIssue topic.issues topic.stories)
+    ]
+
+storyClasses : Tracker.Story -> List (String, Bool)
+storyClasses story =
+  [ ("chore", story.type' == Tracker.StoryTypeChore),
+    ("feature", story.type' == Tracker.StoryTypeFeature),
+    ("bug", story.type' == Tracker.StoryTypeBug),
+    ("unscheduled", story.state == Tracker.StoryStateUnscheduled),
+    ("unstarted", story.state == Tracker.StoryStateUnstarted),
+    ("started", story.state == Tracker.StoryStateStarted),
+    ("finished", story.state == Tracker.StoryStateFinished),
+    ("delivered", story.state == Tracker.StoryStateDelivered),
+    ("accepted", story.state == Tracker.StoryStateAccepted),
+    ("rejected", story.state == Tracker.StoryStateRejected)
+  ]
+
 viewStory : Tracker.Story -> Html Msg
 viewStory story =
-  div [
-    classList [
-      ("story", True),
-      ("chore", story.type' == Tracker.StoryTypeChore),
-      ("feature", story.type' == Tracker.StoryTypeFeature),
-      ("bug", story.type' == Tracker.StoryTypeBug),
-      ("unscheduled", story.state == Tracker.StoryStateUnscheduled),
-      ("unstarted", story.state == Tracker.StoryStateUnstarted),
-      ("started", story.state == Tracker.StoryStateStarted),
-      ("finished", story.state == Tracker.StoryStateFinished),
-      ("delivered", story.state == Tracker.StoryStateDelivered),
-      ("accepted", story.state == Tracker.StoryStateAccepted),
-      ("rejected", story.state == Tracker.StoryStateRejected)
-    ]
-  ] [
+  div [classList (("story", True) :: storyClasses story)] [
     div [class "story-summary"] [
       a [href story.url, class "story-location"] [
         text story.summary
@@ -271,23 +297,60 @@ viewIssue issue =
     ]
   ]
 
-viewIteration : Iteration -> Html Msg
-viewIteration {number, topics} =
-  div [class "iteration"] [
-    h2 [class "iteration-title"] [
-      text (toString number)
-    ],
-    div [class "iteration-topics"] <|
-      List.map viewTopic topics
+viewUntriagedIssue : GitHub.Issue -> Tracker.Story -> Html Msg
+viewUntriagedIssue issue story =
+  div [class "issue"] [
+    div [class "issue-summary"] [
+      if issue.commentCount > 0 then
+        a [href issue.url, class "issue-comments"] [
+          text (toString issue.commentCount)
+        ]
+      else
+        span [] [],
+      span [class "issue-reactions"] <|
+        List.map (\(code, count) ->
+          span [class "reaction"] [
+            span [class "emoji"] [text code],
+            span [class "count"] [text <| toString count]
+          ]) <| List.filter ((/=) 0 << snd) <|
+            GitHub.reactionCodes issue.reactions,
+      a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
+        text "\x2699"
+      ],
+      a [href issue.url, class "issue-title"] [
+        text issue.title
+      ],
+      div [class "issue-info"] [
+        a [href issue.repo.url] [text issue.repo.name],
+        text " ",
+        a [href issue.url] [text ("#" ++ toString issue.number)],
+        text " ",
+        text "opened by ",
+        a [href issue.user.url] [text issue.user.login]
+      ]
+    ]
   ]
 
-viewTopic : Topic -> Html Msg
-viewTopic {stories, issues} =
-  div [class "topic"] [
-    div [class "topic-issues"]
-      (List.map viewIssue issues),
-    div [class "topic-stories"]
-      (List.map viewStory stories)
+viewUntriagedStory : Tracker.Story -> Html Msg
+viewUntriagedStory story =
+  div [
+    classList [
+      ("story", True),
+      ("chore", story.type' == Tracker.StoryTypeChore),
+      ("feature", story.type' == Tracker.StoryTypeFeature),
+      ("bug", story.type' == Tracker.StoryTypeBug),
+      ("unscheduled", story.state == Tracker.StoryStateUnscheduled),
+      ("unstarted", story.state == Tracker.StoryStateUnstarted),
+      ("started", story.state == Tracker.StoryStateStarted),
+      ("finished", story.state == Tracker.StoryStateFinished),
+      ("delivered", story.state == Tracker.StoryStateDelivered),
+      ("accepted", story.state == Tracker.StoryStateAccepted),
+      ("rejected", story.state == Tracker.StoryStateRejected)
+    ]
+  ] [
+    div [class "story-summary"] [
+      a [href story.url, class "story-location"] []
+    ]
   ]
 
 checkEngagement : Config -> Topic -> Cmd Msg
