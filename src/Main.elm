@@ -315,7 +315,7 @@ viewUntriagedIssue issue story =
           ]) <| List.filter ((/=) 0 << snd) <|
             GitHub.reactionCodes issue.reactions,
       a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
-        text "\x2699"
+        text " "
       ],
       a [href issue.url, class "issue-title"] [
         text issue.title
