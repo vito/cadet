@@ -211,6 +211,16 @@ processIfReady model =
       (model, Cmd.none)
 
 
+cell : String -> (a -> Html Msg) -> List a -> Html Msg
+cell title viewEntry entries =
+  div [class "cell"] [
+    h1 [class "cell-title"] [
+      text (title ++ " (" ++ toString (List.length entries) ++ ")")
+    ],
+    div [class "cell-content"] <|
+      List.map viewEntry entries
+  ]
+
 view : Model -> Html Msg
 view model =
   case model.error of
@@ -220,53 +230,25 @@ view model =
     Nothing ->
       div [class "columns"] [
         div [class "column"] [
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "Backlog"],
-            div [class "iterations"] <|
-              List.map viewIteration model.topicIterations
-          ]
+          cell "Backlog" viewIteration model.topicIterations
         ],
         div [class "column"] [
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "Icebox"],
-            div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
-                model.unscheduled
-          ]
+          cell "Icebox" viewTopic <|
+            List.reverse (List.sortBy topicActivity model.unscheduled)
         ],
         div [class "column"] [
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "Them Waiting"],
-            div [class "topics"] <|
-              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
-                model.themWaiting
-          ],
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "Us Waiting"],
-            div [class "topics"] <|
-              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
-                model.usWaiting
-          ],
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "Pull Requests"],
-            div [class "topics"] <|
-              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
-                model.pendingPullRequests
-          ]
+          cell "Them Waiting" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueActivity model.themWaiting),
+          cell "Us Waiting" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueActivity model.usWaiting),
+          cell "Pull Requests" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueActivity model.pendingPullRequests)
         ],
         div [class "column"] [
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "By Activity"],
-            div [class "topics"] <|
-              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
-                model.pendingIssues
-          ],
-          div [class "cell"] [
-            h1 [class "cell-title"] [text "By Date"],
-            div [class "topics"] <|
-              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueCreation <|
-                model.pendingIssues
-          ]
+          cell "Issues By Activity" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueActivity model.pendingIssues),
+          cell "Issues By Date" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueCreation model.pendingIssues)
         ]
       ]
 
