@@ -32,15 +32,22 @@ type alias Model =
 
   , topicIterations : List Iteration
   , unscheduled : List Topic
-  , themWaiting : List Topic
-  , usWaiting : List Topic
-  , pendingPullRequests : List Topic
-  , pendingIssues : List Topic
+
+  , themWaiting : List UntriagedIssue
+  , usWaiting : List UntriagedIssue
+
+  , pendingPullRequests : List UntriagedIssue
+  , pendingIssues : List UntriagedIssue
   }
 
 type alias Topic =
   { stories : List Tracker.Story
   , issues : List GitHub.Issue
+  }
+
+type alias UntriagedIssue =
+  { story : Tracker.Story
+  , issue : GitHub.Issue
   }
 
 type alias Iteration =
@@ -63,8 +70,9 @@ type Msg
   | StoriesFetched (List Tracker.Story)
   | IssuesFetched (List GitHub.Issue)
   | MembersFetched (List GitHub.User)
-  | EngagementCommentsFetched Topic (List GitHub.Comment)
-  | Engage Tracker.Story
+  | EngagementCommentsFetched UntriagedIssue (List GitHub.Comment)
+  | Engage UntriagedIssue
+  | StoryStarted UntriagedIssue Tracker.Story
   | APIError Http.Error
 
 init : Config -> (Model, Cmd Msg)
@@ -105,33 +113,46 @@ update msg model =
     MembersFetched members ->
       processIfReady { model | members = Just members }
 
-    EngagementCommentsFetched topic comments ->
+    EngagementCommentsFetched issue comments ->
       case List.head (List.reverse comments) of
         Just comment ->
           if isOrgMember model.members comment.user then
-            ({ model | usWaiting = topic :: model.usWaiting }, Cmd.none)
+            ({ model | usWaiting = issue :: model.usWaiting }, Cmd.none)
           else
-            ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+            ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
 
         Nothing ->
-          ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
+          ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
 
-    Engage story ->
-      (model, startStory model.config story)
+    Engage issue ->
+      (model, startStory model.config issue)
+
+    StoryStarted issue startedStory ->
+      let
+        removeNoLongerPending =
+          List.filter ((/=) issue.issue.id << .id << .issue)
+
+        startedIssue =
+          { issue | story = startedStory }
+      in
+        ( { model
+          | pendingIssues = removeNoLongerPending model.pendingIssues
+          , pendingPullRequests = removeNoLongerPending model.pendingPullRequests
+          }
+        , checkEngagement model.config startedIssue
+        )
 
     APIError e ->
       ({ model | error = Just (toString e) }, Cmd.none)
 
-startStory : Config -> Tracker.Story -> Cmd Msg
-startStory config story =
-  Task.perform APIError StoriesFetched <|
-  Tracker.startStory
-    config.trackerToken
-    config.trackerProject
-    story.id `Task.andThen` \_ ->
-      Tracker.fetchProjectStories
-        config.trackerToken
-        config.trackerProject
+startStory : Config -> UntriagedIssue -> Cmd Msg
+startStory config issue =
+  Task.perform APIError (StoryStarted issue) <|
+    Tracker.startStory
+      config.trackerToken
+      config.trackerProject
+      issue.story.id
+
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
 isOrgMember users user =
@@ -160,8 +181,16 @@ processIfReady model =
         topicIterations =
           groupTopicsByIteration backlog scheduled
 
+        untriaged {stories, issues} =
+          case (stories, issues) of
+            (story :: _, issue :: _) ->
+              { story = story, issue = issue }
+
+            _ ->
+              Debug.crash "impossible"
+
         checkEngagements =
-          List.map (checkEngagement model.config) engaged
+          List.map (checkEngagement model.config << untriaged) engaged
       in
         ( { model |
             error = Nothing
@@ -171,8 +200,9 @@ processIfReady model =
 
           , topicIterations = topicIterations
           , unscheduled = unscheduled
-          , pendingPullRequests = pendingPullRequests
-          , pendingIssues = pendingIssues
+
+          , pendingPullRequests = List.map untriaged pendingPullRequests
+          , pendingIssues = List.map untriaged pendingIssues
           }
         , Cmd.batch checkEngagements
         )
@@ -208,19 +238,19 @@ view model =
           div [class "cell"] [
             h1 [class "cell-title"] [text "Them Waiting"],
             div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
                 model.themWaiting
           ],
           div [class "cell"] [
             h1 [class "cell-title"] [text "Us Waiting"],
             div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
                 model.usWaiting
           ],
           div [class "cell"] [
             h1 [class "cell-title"] [text "Pull Requests"],
             div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
                 model.pendingPullRequests
           ]
         ],
@@ -228,13 +258,13 @@ view model =
           div [class "cell"] [
             h1 [class "cell-title"] [text "By Activity"],
             div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicActivity <|
+              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueActivity <|
                 model.pendingIssues
           ],
           div [class "cell"] [
             h1 [class "cell-title"] [text "By Date"],
             div [class "topics"] <|
-              List.map viewTopic << List.reverse << List.sortBy topicCreation <|
+              List.map viewUntriagedIssue << List.reverse << List.sortBy untriagedIssueCreation <|
                 model.pendingIssues
           ]
         ]
@@ -252,19 +282,53 @@ viewIteration {number, topics} =
 
 viewTopic : Topic -> Html Msg
 viewTopic topic =
-  if topicIsTriaged topic then
-    div [class "topic"] [
-      div [class "topic-issues"]
-        (List.map viewIssue topic.issues),
-      div [class "topic-stories"]
-        (List.map viewStory topic.stories)
+  div [class "topic"] [
+    div [class "topic-issues"]
+      (List.map viewIssue topic.issues),
+    div [class "topic-stories"]
+      (List.map viewStory topic.stories)
+  ]
+
+viewUntriagedIssue : UntriagedIssue -> Html Msg
+viewUntriagedIssue {issue, story} =
+  div [class "untriaged-issue"] [
+    div [class "issue"] [
+      div [class "issue-summary"] [
+        if issue.commentCount > 0 then
+          a [href issue.url, class "issue-comments"] [
+            text (toString issue.commentCount)
+          ]
+        else
+          span [] [],
+        span [class "issue-reactions"] <|
+          List.map (\(code, count) ->
+            span [class "reaction"] [
+              span [class "emoji"] [text code],
+              span [class "count"] [text <| toString count]
+            ]) <| List.filter ((/=) 0 << snd) <|
+              GitHub.reactionCodes issue.reactions,
+        if Tracker.storyIsInFlight story then
+          a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
+            text " "
+          ]
+        else
+          a [onClick (Engage { issue = issue, story = story }), classList (("issue-story", True) :: storyClasses story)] [
+            text " "
+          ],
+        a [href issue.url, class "issue-title"] [
+          text issue.title
+        ],
+        div [class "issue-info"] [
+          a [href issue.repo.url] [text issue.repo.name],
+          text " ",
+          a [href issue.url] [text ("#" ++ toString issue.number)],
+          text " ",
+          text "opened by ",
+          a [href issue.user.url] [text issue.user.login]
+        ]
+      ]
     ]
-  else
-    div [class "topic untriaged"] [
-      div [class "untriaged-issue"]
-        -- there should just be 1 issue and 1 story, so this is kinda cheating
-        (List.map2 viewUntriagedIssue topic.issues topic.stories)
-    ]
+  ]
 
 storyClasses : Tracker.Story -> List (String, Bool)
 storyClasses story =
@@ -316,77 +380,10 @@ viewIssue issue =
     ]
   ]
 
-viewUntriagedIssue : GitHub.Issue -> Tracker.Story -> Html Msg
-viewUntriagedIssue issue story =
-  div [class "issue"] [
-    div [class "issue-summary"] [
-      if issue.commentCount > 0 then
-        a [href issue.url, class "issue-comments"] [
-          text (toString issue.commentCount)
-        ]
-      else
-        span [] [],
-      span [class "issue-reactions"] <|
-        List.map (\(code, count) ->
-          span [class "reaction"] [
-            span [class "emoji"] [text code],
-            span [class "count"] [text <| toString count]
-          ]) <| List.filter ((/=) 0 << snd) <|
-            GitHub.reactionCodes issue.reactions,
-      if Tracker.storyIsInFlight story then
-        a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
-          text " "
-        ]
-      else
-        a [onClick (Engage story), classList (("issue-story", True) :: storyClasses story)] [
-          text " "
-        ],
-      a [href issue.url, class "issue-title"] [
-        text issue.title
-      ],
-      div [class "issue-info"] [
-        a [href issue.repo.url] [text issue.repo.name],
-        text " ",
-        a [href issue.url] [text ("#" ++ toString issue.number)],
-        text " ",
-        text "opened by ",
-        a [href issue.user.url] [text issue.user.login]
-      ]
-    ]
-  ]
-
-viewUntriagedStory : Tracker.Story -> Html Msg
-viewUntriagedStory story =
-  div [
-    classList [
-      ("story", True),
-      ("chore", story.type' == Tracker.StoryTypeChore),
-      ("feature", story.type' == Tracker.StoryTypeFeature),
-      ("bug", story.type' == Tracker.StoryTypeBug),
-      ("unscheduled", story.state == Tracker.StoryStateUnscheduled),
-      ("unstarted", story.state == Tracker.StoryStateUnstarted),
-      ("started", story.state == Tracker.StoryStateStarted),
-      ("finished", story.state == Tracker.StoryStateFinished),
-      ("delivered", story.state == Tracker.StoryStateDelivered),
-      ("accepted", story.state == Tracker.StoryStateAccepted),
-      ("rejected", story.state == Tracker.StoryStateRejected)
-    ]
-  ] [
-    div [class "story-summary"] [
-      a [href story.url, class "story-location"] []
-    ]
-  ]
-
-checkEngagement : Config -> Topic -> Cmd Msg
-checkEngagement config topic =
-  case topic.issues of
-    issue :: _ ->
-      Task.perform APIError (EngagementCommentsFetched topic) <|
-        GitHub.fetchIssueComments config.githubToken issue
-
-    _ ->
-      -- impossible
-      Cmd.none
+checkEngagement : Config -> UntriagedIssue -> Cmd Msg
+checkEngagement config issue =
+  Task.perform APIError (EngagementCommentsFetched issue) <|
+    GitHub.fetchIssueComments config.githubToken issue.issue
 
 fetchBacklogAndStoriesAndIssues : Config -> Cmd Msg
 fetchBacklogAndStoriesAndIssues config =
@@ -521,9 +518,13 @@ topicActivity : Topic -> Int
 topicActivity {issues} =
   List.sum <| List.map GitHub.issueScore issues
 
-topicCreation : Topic -> Time
-topicCreation {issues} =
-  Maybe.withDefault 0 (List.minimum (List.map (Date.toTime << .createdAt) issues))
+untriagedIssueActivity : UntriagedIssue -> Int
+untriagedIssueActivity {issue} =
+  GitHub.issueScore issue
+
+untriagedIssueCreation : UntriagedIssue -> Time
+untriagedIssueCreation {issue} =
+  Date.toTime issue.createdAt
 
 topicFlightness : Topic -> Int
 topicFlightness {stories} =

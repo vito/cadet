@@ -56,7 +56,7 @@ fetchProjectBacklog token project =
     (trackerPagination decodeIteration)
     Nothing
 
-startStory : Token -> Int -> Int -> Task Http.Error ()
+startStory : Token -> Int -> Int -> Task Http.Error Story
 startStory token project story =
   let
     start =
@@ -70,7 +70,14 @@ startStory token project story =
         , body = Http.string "{\"current_state\":\"started\"}"
         }
   in
-    Task.map (always ()) <| Task.mapError promoteHttpError start
+    Task.mapError promoteHttpError start `Task.andThen` \response ->
+      case handleResponse response `Result.andThen` decodeBody of
+        Ok story ->
+          Task.succeed story
+
+        Err err ->
+          Task.fail err
+
 
 storyIsScheduled : Story -> Bool
 storyIsScheduled {state} =
@@ -93,6 +100,11 @@ storyIsInFlight {state} =
       False
     StoryStateRejected ->
       True
+
+decodeBody : String -> Result Http.Error Story
+decodeBody body =
+  Json.Decode.decodeString decodeStory body
+    |> Result.formatError Http.UnexpectedPayload
 
 decodeStory : Json.Decode.Decoder Story
 decodeStory =
@@ -235,6 +247,18 @@ toQuery (Offset offset) =
 parseNum : String -> Maybe Int
 parseNum =
   Result.toMaybe << String.toInt
+
+handleResponse : Http.Response -> Result Http.Error String
+handleResponse response =
+  if 200 <= response.status && response.status < 300 then
+    case response.value of
+      Http.Text str ->
+        Ok str
+
+      _ ->
+        Err (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
+  else
+    Err (Http.BadResponse response.status response.statusText)
 
 promoteHttpError : Http.RawError -> Http.Error
 promoteHttpError rawError =
