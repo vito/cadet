@@ -4,6 +4,7 @@ import Date
 import Dict exposing (Dict)
 import Html exposing (Html, h1, h2, div, pre, text, a, span)
 import Html.Lazy
+import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, classList, href)
 import Html.App as Html
 import Http
@@ -63,6 +64,7 @@ type Msg
   | IssuesFetched (List GitHub.Issue)
   | MembersFetched (List GitHub.User)
   | EngagementCommentsFetched Topic (List GitHub.Comment)
+  | Engage Tracker.Story
   | APIError Http.Error
 
 init : Config -> (Model, Cmd Msg)
@@ -114,8 +116,22 @@ update msg model =
         Nothing ->
           ({ model | themWaiting = topic :: model.themWaiting }, Cmd.none)
 
+    Engage story ->
+      (model, startStory model.config story)
+
     APIError e ->
       ({ model | error = Just (toString e) }, Cmd.none)
+
+startStory : Config -> Tracker.Story -> Cmd Msg
+startStory config story =
+  Task.perform APIError StoriesFetched <|
+  Tracker.startStory
+    config.trackerToken
+    config.trackerProject
+    story.id `Task.andThen` \_ ->
+      Tracker.fetchProjectStories
+        config.trackerToken
+        config.trackerProject
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
 isOrgMember users user =
@@ -149,6 +165,9 @@ processIfReady model =
       in
         ( { model |
             error = Nothing
+
+          , themWaiting = []
+          , usWaiting = []
 
           , topicIterations = topicIterations
           , unscheduled = unscheduled
@@ -314,9 +333,14 @@ viewUntriagedIssue issue story =
             span [class "count"] [text <| toString count]
           ]) <| List.filter ((/=) 0 << snd) <|
             GitHub.reactionCodes issue.reactions,
-      a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
-        text " "
-      ],
+      if Tracker.storyIsInFlight story then
+        a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
+          text " "
+        ]
+      else
+        a [onClick (Engage story), classList (("issue-story", True) :: storyClasses story)] [
+          text " "
+        ],
       a [href issue.url, class "issue-title"] [
         text issue.title
       ],

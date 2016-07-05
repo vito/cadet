@@ -1,4 +1,4 @@
-module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, storyIsScheduled, storyIsInFlight)
+module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, startStory, storyIsScheduled, storyIsInFlight)
 
 import Dict exposing (Dict)
 import Http
@@ -55,6 +55,22 @@ fetchProjectBacklog token project =
     [("X-TrackerToken", token)]
     (trackerPagination decodeIteration)
     Nothing
+
+startStory : Token -> Int -> Int -> Task Http.Error ()
+startStory token project story =
+  let
+    start =
+      Http.send Http.defaultSettings
+        { verb = "PUT"
+        , headers =
+            [ ("X-TrackerToken", token)
+            , ("Content-Type", "application/json")
+            ]
+        , url = "https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories/" ++ toString story
+        , body = Http.string "{\"current_state\":\"started\"}"
+        }
+  in
+    Task.map (always ()) <| Task.mapError promoteHttpError start
 
 storyIsScheduled : Story -> Bool
 storyIsScheduled {state} =
@@ -219,3 +235,9 @@ toQuery (Offset offset) =
 parseNum : String -> Maybe Int
 parseNum =
   Result.toMaybe << String.toInt
+
+promoteHttpError : Http.RawError -> Http.Error
+promoteHttpError rawError =
+  case rawError of
+    Http.RawTimeout -> Http.Timeout
+    Http.RawNetworkError -> Http.NetworkError
