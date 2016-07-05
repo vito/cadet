@@ -19,6 +19,7 @@ type alias Config =
   , githubOrganization : String
   , trackerToken : String
   , trackerProject : Int
+  , tracksuitUser : String
   }
 
 type alias Model =
@@ -114,15 +115,10 @@ update msg model =
       processIfReady { model | members = Just members }
 
     EngagementCommentsFetched issue comments ->
-      case List.head (List.reverse comments) of
-        Just comment ->
-          if isOrgMember model.members comment.user then
-            ({ model | usWaiting = issue :: model.usWaiting }, Cmd.none)
-          else
-            ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
-
-        Nothing ->
-          ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
+      if lastActivityIsUs model comments then
+        ({ model | usWaiting = issue :: model.usWaiting }, Cmd.none)
+      else
+        ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
 
     Engage issue ->
       (model, startStory model.config issue)
@@ -144,6 +140,19 @@ update msg model =
 
     APIError e ->
       ({ model | error = Just (toString e) }, Cmd.none)
+
+lastActivityIsUs : Model -> List GitHub.Comment -> Bool
+lastActivityIsUs model comments =
+  let
+    withoutBot =
+      List.filter ((/=) model.config.tracksuitUser << .login << .user) comments
+  in
+    case List.head (List.reverse withoutBot) of
+      Just comment ->
+        isOrgMember model.members comment.user
+
+      Nothing ->
+        False
 
 startStory : Config -> UntriagedIssue -> Cmd Msg
 startStory config issue =
