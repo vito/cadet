@@ -502,25 +502,26 @@ viewStory story =
 
 viewOrphanedStory : OrphanedStory -> Html Msg
 viewOrphanedStory orphan =
-  let
-    stories =
-      div [class "topic-stories headless"] [
-        span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
-        viewStory orphan.story
-      ]
-  in
-    div [class "orphaned topic"] <|
-      case orphan.issue of
-        Just issue ->
-          [
-            div [class "topic-issues"] [
-              viewTriagedIssue issue
-            ],
-            stories
+  div [class "orphaned topic"] <|
+    case orphan.issue of
+      Just issue ->
+        [
+          div [class "topic-issues"] [
+            viewTriagedIssue issue
+          ],
+          div [class "topic-stories"] [
+            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
+            viewStory orphan.story
           ]
+        ]
 
-        Nothing ->
-          [stories]
+      Nothing ->
+        [
+          div [class "topic-stories headless"] [
+            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
+            viewStory orphan.story
+          ]
+        ]
 
 checkEngagement : Config -> UntriagedIssue -> Cmd Msg
 checkEngagement config issue =
