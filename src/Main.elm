@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Date
 import Dict exposing (Dict)
-import Html exposing (Html, h1, h2, div, pre, text, a, span)
+import Html exposing (Html, h1, h2, div, pre, text, a, span, i)
 import Html.Lazy
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, classList, href)
@@ -37,8 +37,7 @@ type alias Model =
   , themWaiting : List UntriagedIssue
   , usWaiting : List UntriagedIssue
 
-  , pendingPullRequests : List UntriagedIssue
-  , pendingIssues : List UntriagedIssue
+  , pending : List UntriagedIssue
   }
 
 type alias Topic =
@@ -73,7 +72,9 @@ type Msg
   | MembersFetched (List GitHub.User)
   | EngagementCommentsFetched UntriagedIssue (List GitHub.Comment)
   | Engage UntriagedIssue
-  | StoryStarted UntriagedIssue Tracker.Story
+  | Engaged UntriagedIssue Tracker.Story
+  | Disengage UntriagedIssue
+  | Disengaged UntriagedIssue Tracker.Story
   | APIError Http.Error
 
 init : Config -> (Model, Cmd Msg)
@@ -90,8 +91,7 @@ init config =
     , unscheduled = []
     , themWaiting = []
     , usWaiting = []
-    , pendingPullRequests = []
-    , pendingIssues = []
+    , pending = []
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -121,9 +121,9 @@ update msg model =
         ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
 
     Engage issue ->
-      (model, startStory model.config issue)
+      (model, engage model.config issue)
 
-    StoryStarted issue startedStory ->
+    Engaged issue startedStory ->
       let
         removeNoLongerPending =
           List.filter ((/=) issue.issue.id << .id << .issue)
@@ -132,10 +132,24 @@ update msg model =
           { issue | story = startedStory }
       in
         ( { model
-          | pendingIssues = removeNoLongerPending model.pendingIssues
-          , pendingPullRequests = removeNoLongerPending model.pendingPullRequests
+          | pending = removeNoLongerPending model.pending
           }
         , checkEngagement model.config startedIssue
+        )
+
+    Disengage issue ->
+      (model, disengage model.config issue)
+
+    Disengaged issue _ ->
+      let
+        removeEngaged =
+          List.filter ((/=) issue.issue.id << .id << .issue)
+      in
+        ( { model
+          | usWaiting = removeEngaged model.usWaiting
+          , themWaiting = removeEngaged model.themWaiting
+          }
+        , Cmd.none
         )
 
     APIError e ->
@@ -154,10 +168,18 @@ lastActivityIsUs model comments =
       Nothing ->
         False
 
-startStory : Config -> UntriagedIssue -> Cmd Msg
-startStory config issue =
-  Task.perform APIError (StoryStarted issue) <|
+engage : Config -> UntriagedIssue -> Cmd Msg
+engage config issue =
+  Task.perform APIError (Engaged issue) <|
     Tracker.startStory
+      config.trackerToken
+      config.trackerProject
+      issue.story.id
+
+disengage : Config -> UntriagedIssue -> Cmd Msg
+disengage config issue =
+  Task.perform APIError (Disengaged issue) <|
+    Tracker.acceptStory
       config.trackerToken
       config.trackerProject
       issue.story.id
@@ -184,9 +206,6 @@ processIfReady model =
         (engaged, remaining) =
           List.partition topicIsScheduled pending
 
-        (pendingPullRequests, pendingIssues) =
-          List.partition topicIsPullRequest remaining
-
         topicIterations =
           groupTopicsByIteration backlog scheduled
 
@@ -210,8 +229,7 @@ processIfReady model =
           , topicIterations = topicIterations
           , unscheduled = unscheduled
 
-          , pendingPullRequests = List.map untriaged pendingPullRequests
-          , pendingIssues = List.map untriaged pendingIssues
+          , pending = List.map untriaged remaining
           }
         , Cmd.batch checkEngagements
         )
@@ -249,15 +267,13 @@ view model =
           cell "Them Waiting" viewUntriagedIssue <|
             List.reverse (List.sortBy untriagedIssueActivity model.themWaiting),
           cell "Us Waiting" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueActivity model.usWaiting),
-          cell "Pull Requests" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueActivity model.pendingPullRequests)
+            List.reverse (List.sortBy untriagedIssueActivity model.usWaiting)
         ],
         div [class "column"] [
-          cell "Issues By Activity" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueActivity model.pendingIssues),
-          cell "Issues By Date" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueCreation model.pendingIssues)
+          cell "Pending By Activity" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueActivity model.pending),
+          cell "Pending By Date" viewUntriagedIssue <|
+            List.reverse (List.sortBy untriagedIssueCreation model.pending)
         ]
       ]
 
@@ -275,41 +291,36 @@ viewTopic : Topic -> Html Msg
 viewTopic topic =
   div [class "topic"] [
     div [class "topic-issues"]
-      (List.map viewIssue topic.issues),
+      (List.map viewTriagedIssue topic.issues),
     div [class "topic-stories"]
       (List.map viewStory topic.stories)
   ]
 
 viewUntriagedIssue : UntriagedIssue -> Html Msg
-viewUntriagedIssue {issue, story} =
-  div [class "untriaged-issue"] [
-    div [class "issue"] [
-      div [class "issue-summary"] [
-        if issue.commentCount > 0 then
-          a [href issue.url, class "issue-comments"] [
-            text (toString issue.commentCount)
-          ]
+viewUntriagedIssue untriagedIssue =
+  viewIssue (Just untriagedIssue) untriagedIssue.issue
+
+viewTriagedIssue : GitHub.Issue -> Html Msg
+viewTriagedIssue issue =
+  viewIssue Nothing issue
+
+viewIssue : Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
+viewIssue maybeUntriagedIssue issue =
+  let
+    typeCell =
+      div [class "issue-cell issue-type"] [
+        if issue.isPullRequest then
+          i [class "emoji octicon octicon-git-pull-request"] []
         else
-          span [] [],
-        span [class "issue-reactions"] <|
-          List.map (\(code, count) ->
-            span [class "reaction"] [
-              span [class "emoji"] [text code],
-              span [class "count"] [text <| toString count]
-            ]) <| List.filter ((/=) 0 << snd) <|
-              GitHub.reactionCodes issue.reactions,
-        if Tracker.storyIsInFlight story then
-          a [href story.url, classList (("issue-story", True) :: storyClasses story)] [
-            text " "
-          ]
-        else
-          a [onClick (Engage { issue = issue, story = story }), classList (("issue-story", True) :: storyClasses story)] [
-            text " "
-          ],
+          i [class "emoji octicon octicon-issue-opened"] []
+      ]
+
+    infoCell =
+      div [class "issue-cell issue-info"] [
         a [href issue.url, class "issue-title"] [
           text issue.title
         ],
-        div [class "issue-info"] [
+        div [class "issue-meta"] [
           a [href issue.repo.url] [text issue.repo.name],
           text " ",
           a [href issue.url] [text ("#" ++ toString issue.number)],
@@ -318,8 +329,65 @@ viewUntriagedIssue {issue, story} =
           a [href issue.user.url] [text issue.user.login]
         ]
       ]
-    ]
-  ]
+
+    flairCell =
+      div [class "issue-cell issue-flair"] <|
+        issueFlair issue
+
+    engagementCell untriagedIssue =
+      div [
+        class "issue-cell issue-engagement",
+        onClick <|
+          if Tracker.storyIsInFlight untriagedIssue.story then
+            Disengage untriagedIssue
+          else
+            Engage untriagedIssue
+      ] [
+        if Tracker.storyIsInFlight untriagedIssue.story then
+          i [class "octicon octicon-x"] []
+        else
+          i [class "octicon octicon-mail-reply"] []
+      ]
+
+    baseCells =
+      [typeCell, infoCell, flairCell]
+
+    cells =
+      case maybeUntriagedIssue of
+        Nothing ->
+          baseCells
+
+        Just untriagedIssue ->
+          baseCells ++ [engagementCell untriagedIssue]
+  in
+    div [class "issue-summary"] cells
+
+issueFlair : GitHub.Issue -> List (Html Msg)
+issueFlair {url, reactions, commentCount} =
+  let
+    presentReactions =
+      List.filter ((/=) 0 << snd) <|
+        GitHub.reactionCodes reactions
+
+    viewReaction (code, count) =
+      span [class "reaction"] [
+        span [class "emoji"] [text code],
+        span [class "count"] [text <| toString count]
+      ]
+
+    commentsElement =
+      span [class "reaction"] [
+        span [class "emoji"] [i [class "octicon octicon-comment"] []],
+        span [class "count"] [text <| toString commentCount]
+      ]
+
+    reactionElements =
+      List.map viewReaction presentReactions
+  in
+    if commentCount > 0 then
+      reactionElements ++ [commentsElement]
+    else
+      reactionElements
 
 storyClasses : Tracker.Story -> List (String, Bool)
 storyClasses story =
@@ -347,29 +415,6 @@ viewStory story =
     ]
   ]
 
-
-viewIssue : GitHub.Issue -> Html Msg
-viewIssue issue =
-  div [class "issue"] [
-    div [class "issue-summary"] [
-      if issue.commentCount > 0 then
-        a [href issue.url, class "issue-comments"] [
-          text (toString issue.commentCount)
-        ]
-      else
-        span [] [],
-      span [class "issue-reactions"] <|
-        List.map (\(code, count) ->
-          span [class "reaction"] [
-            span [class "emoji"] [text code],
-            span [class "count"] [text <| toString count]
-          ]) <| List.filter ((/=) 0 << snd) <|
-            GitHub.reactionCodes issue.reactions,
-      a [href issue.url, class "issue-location"] [
-        text (issue.repo.name ++ " #" ++ toString issue.number)
-      ]
-    ]
-  ]
 
 checkEngagement : Config -> UntriagedIssue -> Cmd Msg
 checkEngagement config issue =
@@ -532,8 +577,8 @@ topicID {stories, issues} =
   )
 
 topicIsPullRequest : Topic -> Bool
-topicIsPullRequest {stories} =
-  List.any (List.member "has-pr" << .labels) stories
+topicIsPullRequest {issues} =
+  List.any .isPullRequest issues
 
 topicIsScheduled : Topic -> Bool
 topicIsScheduled {stories} =

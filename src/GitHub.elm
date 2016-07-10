@@ -40,6 +40,7 @@ type alias Issue =
   , createdAt : Date
   , updatedAt : Date
   , url : String
+  , isPullRequest : Bool
   , user : User
   , number : Int
   , title : String
@@ -84,8 +85,8 @@ reactionCodes reactions =
   ]
 
 issueScore : Issue -> Int
-issueScore {reactions, commentCount} =
-  reactionScore reactions + (2 * commentCount)
+issueScore {reactions, commentCount, isPullRequest} =
+  reactionScore reactions + (2 * commentCount) + (if isPullRequest then 1000 else 0)
 
 reactionScore : Reactions -> Int
 reactionScore reactions =
@@ -154,6 +155,7 @@ decodeIssue repo =
     |: ("created_at" := Json.Decode.Extra.date)
     |: ("updated_at" := Json.Decode.Extra.date)
     |: ("html_url" := Json.Decode.string)
+    |: (Json.Decode.map ((/=) Nothing) << Json.Decode.maybe <| "pull_request" := Json.Decode.value)
     |: ("user" := decodeUser)
     |: ("number" := Json.Decode.int)
     |: ("title" := Json.Decode.string)

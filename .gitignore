@@ -4,7 +4,8 @@ elm-stuff/
 repl-temp-*
 
 # compiled output
-public/
+public/elm.js
+public/main.css
 
 # private config
 config.js

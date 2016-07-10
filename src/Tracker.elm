@@ -1,4 +1,4 @@
-module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, startStory, storyIsScheduled, storyIsInFlight)
+module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, startStory, finishStory, acceptStory, storyIsScheduled, storyIsInFlight)
 
 import Dict exposing (Dict)
 import Http
@@ -58,6 +58,18 @@ fetchProjectBacklog token project =
 
 startStory : Token -> Int -> Int -> Task Http.Error Story
 startStory token project story =
+  updateStory token project story "{\"current_state\":\"started\"}"
+
+finishStory : Token -> Int -> Int -> Task Http.Error Story
+finishStory token project story =
+  updateStory token project story "{\"current_state\":\"finished\"}"
+
+acceptStory : Token -> Int -> Int -> Task Http.Error Story
+acceptStory token project story =
+  updateStory token project story "{\"current_state\":\"accepted\"}"
+
+updateStory : Token -> Int -> Int -> String -> Task Http.Error Story
+updateStory token project story payload =
   let
     start =
       Http.send Http.defaultSettings
@@ -67,7 +79,7 @@ startStory token project story =
             , ("Content-Type", "application/json")
             ]
         , url = "https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories/" ++ toString story
-        , body = Http.string "{\"current_state\":\"started\"}"
+        , body = Http.string payload
         }
   in
     Task.mapError promoteHttpError start `Task.andThen` \response ->

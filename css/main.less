@@ -48,7 +48,6 @@ body {
 }
 
 .cell-content {
-  padding: 5px;
   overflow-y: auto;
   height: 100%;
   border-bottom-left-radius: 7px;
@@ -57,11 +56,7 @@ body {
 }
 
 .topic {
-  margin-bottom: 10px;
-}
-
-.topic:last-child {
-  margin-bottom: 0;
+  margin: 5px;
 }
 
 .iteration {
@@ -79,13 +74,21 @@ body {
   margin-top: -5px;
 }
 
-.topic-issues .issue:first-child {
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-}
+.topic-issues {
+  .issue-summary {
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
 
-.topic-issues .issue:last-child {
-  border-bottom: 1px solid #ddd;
+    &:first-child {
+      border-top: 1px solid #ddd;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+
+    &:last-child {
+      border-bottom: 1px solid #ddd;
+    }
+  }
 }
 
 .topic-stories .story:last-child {
@@ -93,17 +96,19 @@ body {
   border-bottom-right-radius: 5px;
 }
 
-.story {
-  border-top: 1px solid #fff;
-  border-bottom: 1px solid #ddd;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-}
+.topic {
+  .story {
+    border-top: 1px solid #fff;
+    border-bottom: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+  }
 
-.issue {
-  border-top: 1px solid #ddd;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
+  .issue {
+    border-top: 1px solid #ddd;
+    border-left: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+  }
 }
 
 .story-summary {
@@ -112,10 +117,23 @@ body {
   position: relative;
 }
 
-.story-summary:before, .issue-comments:before, .reaction .emoji {
+.story-summary:before, .reaction .emoji {
   margin-right: 5px;
   font-size: 11px;
   vertical-align: middle;
+}
+
+.issue-engagement {
+  color: fade(#333, 50%);
+}
+
+.issue-type {
+  color: #6cc644;
+}
+
+.issue-engagement:hover {
+  cursor: pointer;
+  color: #333 !important;
 }
 
 .story-summary:before {
@@ -138,8 +156,19 @@ body {
 }
 
 .issue-summary {
-  padding: 5px;
-  position: relative;
+  display: flex;
+  flex-direction: row;
+
+  .issue-cell {
+    padding: 12px;
+    padding-right: 0;
+
+    &:last-child {
+      // would be 12px as above, but account for extra whitespace left after
+      // octicon (visually 14px even though font size is 16px and it's square)
+      padding-right: 10px;
+    }
+  }
 }
 
 .unscheduled {
@@ -172,57 +201,37 @@ body {
   color: #333;
 }
 
-.issue-title {
-  font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
-  font-size: 16px;
-  font-weight: bold;
-  color: #333;
-  line-height: 1.25;
-}
-
 .issue-info {
   font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
-  font-size: 12px;
-  color: #767676;
-  line-height: 1.4;
+  flex-grow: 1;
+
+  .issue-title {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    line-height: 1.25;
+  }
+
+  .issue-meta {
+    font-size: 12px;
+    color: #767676;
+    line-height: 1.4;
+  }
 }
 
-.issue-story {
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 12px;
+.issue-flair {
+  flex-shrink: 0;
 }
 
-.untriaged-issue {
-  margin: 0 -5px;
+.issue-summary {
+  border-bottom: 1px solid #eee;
 
-  &:first-child {
-    margin-top: -5px;
+  &:hover {
+    background: #f5f5f5;
   }
 
-  &:last-child {
-    margin-bottom: -5px;
-  }
-
-  .issue-summary {
-    padding: 12px;
-    padding-left: 24px;
-
-    &:hover {
-      background: #f5f5f5;
-    }
-  }
-
-  .issue {
-    border-radius: 0;
-    border-top: 0;
-    border-bottom: 1px solid #eee;
-  }
-
-  .story {
-    display: none;
+  a:hover {
+    color: #4078c0;
   }
 }
 
@@ -232,21 +241,8 @@ body {
   display: block;
 }
 
-.issue-summary a:hover {
-  color: #4078c0;
-}
-
-.issue-comments,
-.issue-reactions {
-  float: right;
-}
-
-.issue-comments:before {
-  content: "\1f4ac";
-}
-
 .reaction, .issue-comments {
-  margin-left: 8px;
+  margin-left: 10px;
 }
 
 ::-webkit-scrollbar {
@@ -283,4 +279,8 @@ body {
       content: "";
     }
   }
+}
+
+.octicon {
+  vertical-align: middle;
 }
