@@ -10,6 +10,7 @@ module Tracker exposing
   , startStory
   , finishStory
   , acceptStory
+  , deleteStory
   , storyIsScheduled
   , storyIsInFlight
   , storyIsAccepted
@@ -95,6 +96,13 @@ finishStory token project story =
 acceptStory : Token -> Int -> Int -> Task Error Story
 acceptStory token project story =
   updateStory token project story "{\"current_state\":\"accepted\"}"
+
+deleteStory : Token -> Int -> Int -> Task Error ()
+deleteStory token project story =
+  HttpBuilder.delete ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories/" ++ toString story)
+    |> HttpBuilder.withHeader "X-TrackerToken" token
+    |> HttpBuilder.send (always (Ok ())) (HttpBuilder.jsonReader decodeError)
+    |> Task.map .data
 
 updateStory : Token -> Int -> Int -> String -> Task Error Story
 updateStory token project story payload =

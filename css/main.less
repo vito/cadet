@@ -97,6 +97,12 @@ body {
   }
 }
 
+.topic-stories.headless .story {
+  border-top: 1px solid #ddd;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
 .topic-stories .story:last-child {
   border-bottom-left-radius: 5px;
   border-bottom-right-radius: 5px;
@@ -120,7 +126,6 @@ body {
 .story-summary {
   padding: 2px;
   padding-left: 26px;
-  position: relative;
 }
 
 .story-summary:before, .reaction .emoji {
@@ -134,7 +139,13 @@ body {
 }
 
 .issue-type {
-  color: #6cc644;
+  .gh-open {
+    color: #6cc644;
+  }
+
+  .gh-closed {
+    color: #bd2c00;
+  }
 }
 
 .issue-engagement:hover {
@@ -142,24 +153,39 @@ body {
   color: #333 !important;
 }
 
-.story-summary:before {
-  position: absolute;
-  top: 4px;
-  left: 5px;
-  line-height: 18px;
+.story.feature .story-summary {
+  background-image: url("tracker-feature.png");
+  background-size: 16px 16px;
+  background-position: 4px 3px;
+  background-repeat: no-repeat;
 }
 
-.story.feature .story-summary:before {
-  content: "\2b50";
+.story.bug .story-summary {
+  background-image: url("tracker-bug.png");
+  background-size: 18px 15px;
+  background-position: 4px 3px;
+  background-repeat: no-repeat;
 }
 
-.story.bug .story-summary:before {
-  content: "\1f41e";
+.story.chore .story-summary {
+  background-image: url("tracker-chore.png");
+  background-size: 18px 14px;
+  background-position: 4px 4px;
+  background-repeat: no-repeat;
 }
 
-.story.chore .story-summary:before {
-  content: "\2699";
+.delete-story {
+  background-image: url("tracker-delete.png");
+  background-size: 12px 12px;
+  background-repeat: no-repeat;
+  width: 12px;
+  height: 12px;
+  float: right;
+  cursor: pointer;
+  margin-top: 6px;
+  margin-right: 6px;
 }
+
 
 .issue-summary {
   display: flex;

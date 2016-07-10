@@ -9,6 +9,7 @@ import Html.Attributes exposing (class, classList, href)
 import Html.App as Html
 import Regex exposing (Regex)
 import Set exposing (Set)
+import String
 import Task exposing (Task)
 import Time exposing (Time)
 
@@ -44,7 +45,7 @@ type alias Model =
 
   , pending : List UntriagedIssue
 
-  , orphaned : List Tracker.Story
+  , orphaned : List OrphanedStory
   }
 
 type alias Topic =
@@ -55,6 +56,11 @@ type alias Topic =
 type alias UntriagedIssue =
   { story : Tracker.Story
   , issue : GitHub.Issue
+  }
+
+type alias OrphanedStory =
+  { story : Tracker.Story
+  , issue : Maybe GitHub.Issue
   }
 
 type alias Iteration =
@@ -78,11 +84,15 @@ type Msg
   | MembersFetched (List GitHub.User)
   | RepositoriesFetched (List GitHub.Repo)
   | IssuesFetched GitHub.Repo (List GitHub.Issue)
+  | OrphanedStoryIssueFetched Tracker.Story GitHub.Issue
+  | OrphanedStoryIssueMissing Tracker.Story
   | EngagementCommentsFetched UntriagedIssue (List GitHub.Comment)
   | Engage UntriagedIssue
   | Engaged UntriagedIssue Tracker.Story
   | Disengage UntriagedIssue
   | Disengaged UntriagedIssue Tracker.Story
+  | DeleteOrphanedStory OrphanedStory
+  | OrphanedStoryDeleted OrphanedStory
   | Error String
 
 init : Config -> (Model, Cmd Msg)
@@ -140,6 +150,12 @@ update msg model =
         , missingIssues = Set.remove repo.id model.missingIssues
         }
 
+    OrphanedStoryIssueFetched story issue ->
+      ({ model | orphaned = { story = story, issue = Just issue } :: model.orphaned }, Cmd.none)
+
+    OrphanedStoryIssueMissing story ->
+      ({ model | orphaned = { story = story, issue = Nothing } :: model.orphaned }, Cmd.none)
+
     EngagementCommentsFetched issue comments ->
       if lastActivityIsUs model comments then
         ({ model | usWaiting = issue :: model.usWaiting }, Cmd.none)
@@ -178,6 +194,20 @@ update msg model =
         , Cmd.none
         )
 
+    DeleteOrphanedStory orphan ->
+      (model, deleteStory model.config orphan)
+
+    OrphanedStoryDeleted orphan ->
+      let
+        removeDeleted =
+          List.filter ((/=) orphan.story.id << .id << .story)
+      in
+        ( { model
+          | orphaned = removeDeleted model.orphaned
+          }
+        , Cmd.none
+        )
+
     Error msg ->
       ({ model | error = Just msg }, Cmd.none)
 
@@ -210,6 +240,13 @@ disengage config issue =
       config.trackerProject
       issue.story.id
 
+deleteStory : Config -> OrphanedStory -> Cmd Msg
+deleteStory config orphan =
+  Task.perform (Error << toString) (always <| OrphanedStoryDeleted orphan) <|
+    Tracker.deleteStory
+      config.trackerToken
+      config.trackerProject
+      orphan.story.id
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
 isOrgMember users user =
@@ -258,11 +295,14 @@ process model backlog stories issues members =
         not (Tracker.storyIsAccepted story) &&
         not (List.any (topicIsForStory story) topics)
 
-    orphanedStories =
+    orphans =
       List.filter (storyIsOrphaned topics) stories
 
     checkEngagements =
       List.map (checkEngagement model.config << untriaged) engaged
+
+    findOrphanedIssues =
+      List.map (fetchOrphanedStoryIssue model) orphans
   in
     ( { model |
         error = Nothing
@@ -274,10 +314,8 @@ process model backlog stories issues members =
       , unscheduled = unscheduled
 
       , pending = List.map untriaged remaining
-
-      , orphaned = orphanedStories
       }
-    , Cmd.batch checkEngagements
+    , Cmd.batch (checkEngagements ++ findOrphanedIssues)
     )
 
 
@@ -304,7 +342,9 @@ view model =
         ],
         div [class "column"] [
           cell "Icebox" viewTopic <|
-            List.reverse (List.sortBy topicActivity model.unscheduled)
+            List.reverse (List.sortBy topicActivity model.unscheduled),
+          cell "Orphaned" viewOrphanedStory <|
+            model.orphaned
         ],
         div [class "column"] [
           cell "Them Waiting" viewUntriagedIssue <|
@@ -348,9 +388,15 @@ viewIssue maybeUntriagedIssue issue =
     typeCell =
       div [class "issue-cell issue-type"] [
         if issue.isPullRequest then
-          i [class "emoji octicon octicon-git-pull-request"] []
+          if issue.state == GitHub.IssueStateOpen then
+            i [class "emoji octicon octicon-git-pull-request gh-open"] []
+          else
+            i [class "emoji octicon octicon-git-pull-request gh-closed"] []
         else
-          i [class "emoji octicon octicon-issue-opened"] []
+          if issue.state == GitHub.IssueStateOpen then
+            i [class "emoji octicon octicon-issue-opened gh-open"] []
+          else
+            i [class "emoji octicon octicon-issue-closed gh-closed"] []
       ]
 
     infoCell =
@@ -449,10 +495,32 @@ viewStory story =
         text story.summary
       ],
       div [class "story-labels"] <|
-        List.map (span [class "story-label"] << (flip (::) []) << text) story.labels
+        List.map (span [class "story-label"] << (flip (::) []) << text) <|
+          List.filter (not << Regex.contains issueLabelRegex) story.labels
     ]
   ]
 
+viewOrphanedStory : OrphanedStory -> Html Msg
+viewOrphanedStory orphan =
+  let
+    stories =
+      div [class "topic-stories headless"] [
+        span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
+        viewStory orphan.story
+      ]
+  in
+    div [class "orphaned topic"] <|
+      case orphan.issue of
+        Just issue ->
+          [
+            div [class "topic-issues"] [
+              viewTriagedIssue issue
+            ],
+            stories
+          ]
+
+        Nothing ->
+          [stories]
 
 checkEngagement : Config -> UntriagedIssue -> Cmd Msg
 checkEngagement config issue =
@@ -502,6 +570,32 @@ fetchMembers config =
     GitHub.fetchOrgMembers
       config.githubToken
       config.githubOrganization
+
+fetchOrphanedStoryIssue : Model -> Tracker.Story -> Cmd Msg
+fetchOrphanedStoryIssue model story =
+  let
+    (owner, repoName, num) =
+      storyIssueInfo story
+
+    maybeRepo =
+      model.repositories
+        |> List.filter (\repo -> repo.owner.login == owner && repo.name == repoName)
+        |> List.head
+
+  in
+    case maybeRepo of
+      Just repo ->
+        Task.perform (Error << toString) (OrphanedStoryIssueFetched story) <|
+          GitHub.fetchIssue
+            model.config.githubToken
+            repo
+            num
+
+      Nothing ->
+        -- this is possible if multiple orgs tracksuit into one tracker, or if
+        -- a repo is no longer in the organization
+        Task.perform (Error << toString) OrphanedStoryIssueMissing <|
+          Task.succeed story
 
 groupByTopic : List Tracker.Story -> List GitHub.Issue -> List Topic
 groupByTopic stories issues =
@@ -591,25 +685,30 @@ issueLabelRegex : Regex
 issueLabelRegex =
   Regex.regex "([^/]+)/([^#]+)#([0-9]+)"
 
-storyIssueURL : Tracker.Story -> String
-storyIssueURL {labels} =
+storyIssueInfo : Tracker.Story -> (String, String, Int)
+storyIssueInfo {labels} =
   let
-    extractURL label =
+    extractInfo label =
       case Regex.find (Regex.AtMost 1) issueLabelRegex label of
         [] ->
           Nothing
 
         {submatches} :: _ ->
           case submatches of
-            [Just owner, Just repo, Just num] ->
-              Just ("https://github.com/" ++ owner ++ "/" ++ repo ++ "/issues/" ++ num)
+            [Just owner, Just repo, Just numstr] ->
+              case String.toInt numstr of
+                Err _ ->
+                  Debug.crash "impossible: non-numeric issue number"
+
+                Ok num ->
+                  Just (owner, repo, num)
 
             _ ->
               Nothing
   in
-    case List.filterMap extractURL labels of
-      (url :: _) ->
-        url
+    case List.filterMap extractInfo labels of
+      (info :: _) ->
+        info
 
       [] ->
         Debug.crash "could not extract story issue URL"

@@ -3,11 +3,13 @@ module GitHub exposing
   , Error
   , Repo
   , Issue
+  , IssueState(..)
   , Comment
   , User
   , fetchOrgMembers
   , fetchOrgRepos
   , fetchRepoIssues
+  , fetchIssue
   , fetchIssueComments
   , issueScore
   , reactionCodes
@@ -50,6 +52,7 @@ type alias Issue =
   , createdAt : Date
   , updatedAt : Date
   , url : String
+  , state : IssueState
   , isPullRequest : Bool
   , user : User
   , number : Int
@@ -57,6 +60,10 @@ type alias Issue =
   , commentCount : Int
   , reactions : Reactions
   }
+
+type IssueState
+  = IssueStateOpen
+  | IssueStateClosed
 
 type alias Comment =
   { issue : Issue
@@ -173,12 +180,24 @@ decodeIssue repo =
     |: ("created_at" := Json.Decode.Extra.date)
     |: ("updated_at" := Json.Decode.Extra.date)
     |: ("html_url" := Json.Decode.string)
+    |: ("state" := decodeIssueState)
     |: (Json.Decode.map ((/=) Nothing) << Json.Decode.maybe <| "pull_request" := Json.Decode.value)
     |: ("user" := decodeUser)
     |: ("number" := Json.Decode.int)
     |: ("title" := Json.Decode.string)
     |: ("comments" := excludeTracksuitComment (Json.Decode.int))
     |: ("reactions" := decodeReactions)
+
+decodeIssueState : Json.Decode.Decoder IssueState
+decodeIssueState =
+  Json.Decode.customDecoder Json.Decode.string <| \x ->
+    case x of
+      "open" ->
+        Ok IssueStateOpen
+      "closed" ->
+        Ok IssueStateClosed
+      _ ->
+        Err ("unknown issue state: " ++ x)
 
 decodeComment : Issue -> Json.Decode.Decoder Comment
 decodeComment issue =
