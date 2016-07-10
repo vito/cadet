@@ -278,14 +278,9 @@ view model =
       ]
 
 viewIteration : Iteration -> Html Msg
-viewIteration {number, topics} =
-  div [class "iteration"] [
-    h2 [class "iteration-title"] [
-      text (toString number)
-    ],
-    div [class "iteration-topics"] <|
-      List.map viewTopic topics
-  ]
+viewIteration {topics} =
+  div [class "iteration"] <|
+    List.map viewTopic topics
 
 viewTopic : Topic -> Html Msg
 viewTopic topic =
