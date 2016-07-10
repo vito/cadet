@@ -1,11 +1,12 @@
 module GitHub exposing
-  ( Repo
+  ( APIError
+  , Error
+  , Repo
   , Issue
   , Comment
   , User
   , fetchOrgMembers
   , fetchOrgRepos
-  , fetchOrgIssues
   , fetchRepoIssues
   , fetchIssueComments
   , issueScore
@@ -16,6 +17,7 @@ module GitHub exposing
 import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
+import HttpBuilder
 import Json.Decode exposing ((:=))
 import Json.Decode.Extra exposing ((|:))
 import Regex exposing (Regex)
@@ -25,6 +27,14 @@ import Task exposing (Task)
 import Pagination
 
 type alias Token = String
+
+type alias APIError =
+  { message : String
+  }
+
+type alias Error =
+  HttpBuilder.Error APIError
+
 
 type alias Repo =
   { id : Int
@@ -115,11 +125,6 @@ fetchOrgRepos token org =
     (rfc5988Strategy decodeRepo)
     Nothing
 
-fetchOrgIssues : Token -> String -> Task Http.Error (List Issue)
-fetchOrgIssues token org =
-  fetchOrgRepos token org `Task.andThen` \repos ->
-    Task.map List.concat <| Task.sequence (List.map (fetchRepoIssues token) repos)
-
 fetchRepoIssues : Token -> Repo -> Task Http.Error (List Issue)
 fetchRepoIssues token repo =
   if repo.openIssues == 0 then
@@ -131,6 +136,14 @@ fetchRepoIssues token repo =
       (rfc5988Strategy (decodeIssue repo))
       Nothing
 
+fetchIssue : Token -> Repo -> Int -> Task Error Issue
+fetchIssue token repo number =
+  HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues/" ++ toString number)
+    |> HttpBuilder.withHeader "Authorization" ("token " ++ token)
+    |> HttpBuilder.withHeader "Accept" "application/vnd.github.squirrel-girl-preview"
+    |> HttpBuilder.send (HttpBuilder.jsonReader (decodeIssue repo)) (HttpBuilder.jsonReader decodeError)
+    |> Task.map .data
+
 fetchIssueComments : Token -> Issue -> Task Http.Error (List Comment)
 fetchIssueComments token issue =
   Pagination.fetchAll
@@ -138,6 +151,11 @@ fetchIssueComments token issue =
     [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
     (rfc5988Strategy (decodeComment issue))
     Nothing
+
+decodeError : Json.Decode.Decoder APIError
+decodeError =
+  Json.Decode.object1 APIError
+    ("message" := Json.Decode.string)
 
 decodeRepo : Json.Decode.Decoder Repo
 decodeRepo =

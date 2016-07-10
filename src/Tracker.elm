@@ -1,7 +1,23 @@
-module Tracker exposing (Story, Iteration, StoryType(..), StoryState(..), fetchProjectStories, fetchProjectBacklog, startStory, finishStory, acceptStory, storyIsScheduled, storyIsInFlight)
+module Tracker exposing
+  ( APIError
+  , Error
+  , Story
+  , Iteration
+  , StoryType(..)
+  , StoryState(..)
+  , fetchProjectStories
+  , fetchProjectBacklog
+  , startStory
+  , finishStory
+  , acceptStory
+  , storyIsScheduled
+  , storyIsInFlight
+  , storyIsAccepted
+  )
 
 import Dict exposing (Dict)
 import Http
+import HttpBuilder
 import Json.Decode exposing ((:=))
 import String
 import Task exposing (Task)
@@ -9,6 +25,18 @@ import Task exposing (Task)
 import Pagination
 
 type alias Token = String
+
+type alias APIError =
+  { code : String
+  , error : String
+  , requirement : Maybe String
+  , general_problem : Maybe String
+  , possible_fix : Maybe String
+  , validation_errors : Maybe (List String)
+  }
+
+type alias Error =
+  HttpBuilder.Error APIError
 
 type alias Story =
   { id : Int
@@ -56,39 +84,26 @@ fetchProjectBacklog token project =
     (trackerPagination decodeIteration)
     Nothing
 
-startStory : Token -> Int -> Int -> Task Http.Error Story
+startStory : Token -> Int -> Int -> Task Error Story
 startStory token project story =
   updateStory token project story "{\"current_state\":\"started\"}"
 
-finishStory : Token -> Int -> Int -> Task Http.Error Story
+finishStory : Token -> Int -> Int -> Task Error Story
 finishStory token project story =
   updateStory token project story "{\"current_state\":\"finished\"}"
 
-acceptStory : Token -> Int -> Int -> Task Http.Error Story
+acceptStory : Token -> Int -> Int -> Task Error Story
 acceptStory token project story =
   updateStory token project story "{\"current_state\":\"accepted\"}"
 
-updateStory : Token -> Int -> Int -> String -> Task Http.Error Story
+updateStory : Token -> Int -> Int -> String -> Task Error Story
 updateStory token project story payload =
-  let
-    start =
-      Http.send Http.defaultSettings
-        { verb = "PUT"
-        , headers =
-            [ ("X-TrackerToken", token)
-            , ("Content-Type", "application/json")
-            ]
-        , url = "https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories/" ++ toString story
-        , body = Http.string payload
-        }
-  in
-    Task.mapError promoteHttpError start `Task.andThen` \response ->
-      case handleResponse response `Result.andThen` decodeBody of
-        Ok story ->
-          Task.succeed story
-
-        Err err ->
-          Task.fail err
+  HttpBuilder.put ("https://www.pivotaltracker.com/services/v5/projects/" ++ toString project ++ "/stories/" ++ toString story)
+    |> HttpBuilder.withHeader "Content-Type" "application/json"
+    |> HttpBuilder.withHeader "X-TrackerToken" token
+    |> HttpBuilder.withBody (Http.string payload)
+    |> HttpBuilder.send (HttpBuilder.jsonReader decodeStory) (HttpBuilder.jsonReader decodeError)
+    |> Task.map .data
 
 
 storyIsScheduled : Story -> Bool
@@ -113,10 +128,24 @@ storyIsInFlight {state} =
     StoryStateRejected ->
       True
 
-decodeBody : String -> Result Http.Error Story
-decodeBody body =
-  Json.Decode.decodeString decodeStory body
-    |> Result.formatError Http.UnexpectedPayload
+storyIsAccepted : Story -> Bool
+storyIsAccepted {state} =
+  case state of
+    StoryStateAccepted ->
+      True
+
+    _ ->
+      False
+
+decodeError : Json.Decode.Decoder APIError
+decodeError =
+  Json.Decode.object6 APIError
+    ("code" := Json.Decode.string)
+    ("error" := Json.Decode.string)
+    (Json.Decode.maybe ("requirement" := Json.Decode.string))
+    (Json.Decode.maybe ("general_problem" := Json.Decode.string))
+    (Json.Decode.maybe ("possible_fix" := Json.Decode.string))
+    (Json.Decode.maybe ("validation_errors" := Json.Decode.list Json.Decode.string))
 
 decodeStory : Json.Decode.Decoder Story
 decodeStory =
@@ -255,25 +284,3 @@ parseQuery query =
 toQuery : Page -> Dict String String
 toQuery (Offset offset) =
   Dict.singleton "offset" (toString offset)
-
-parseNum : String -> Maybe Int
-parseNum =
-  Result.toMaybe << String.toInt
-
-handleResponse : Http.Response -> Result Http.Error String
-handleResponse response =
-  if 200 <= response.status && response.status < 300 then
-    case response.value of
-      Http.Text str ->
-        Ok str
-
-      _ ->
-        Err (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
-  else
-    Err (Http.BadResponse response.status response.statusText)
-
-promoteHttpError : Http.RawError -> Http.Error
-promoteHttpError rawError =
-  case rawError of
-    Http.RawTimeout -> Http.Timeout
-    Http.RawNetworkError -> Http.NetworkError

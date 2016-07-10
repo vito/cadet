@@ -7,7 +7,8 @@ import Html.Lazy
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, classList, href)
 import Html.App as Html
-import Http
+import Regex exposing (Regex)
+import Set exposing (Set)
 import Task exposing (Task)
 import Time exposing (Time)
 
@@ -26,10 +27,14 @@ type alias Model =
   { config : Config
   , error : Maybe String
 
+  , repositories : List GitHub.Repo
+
   , backlog : Maybe (List Tracker.Iteration)
   , stories : Maybe (List Tracker.Story)
-  , issues : Maybe (List GitHub.Issue)
   , members : Maybe (List GitHub.User)
+
+  , issues : List GitHub.Issue
+  , missingIssues : Set Int
 
   , topicIterations : List Iteration
   , unscheduled : List Topic
@@ -38,6 +43,8 @@ type alias Model =
   , usWaiting : List UntriagedIssue
 
   , pending : List UntriagedIssue
+
+  , orphaned : List Tracker.Story
   }
 
 type alias Topic =
@@ -68,30 +75,36 @@ type Msg
   = Noop
   | BacklogFetched (List Tracker.Iteration)
   | StoriesFetched (List Tracker.Story)
-  | IssuesFetched (List GitHub.Issue)
   | MembersFetched (List GitHub.User)
+  | RepositoriesFetched (List GitHub.Repo)
+  | IssuesFetched GitHub.Repo (List GitHub.Issue)
   | EngagementCommentsFetched UntriagedIssue (List GitHub.Comment)
   | Engage UntriagedIssue
   | Engaged UntriagedIssue Tracker.Story
   | Disengage UntriagedIssue
   | Disengaged UntriagedIssue Tracker.Story
-  | APIError Http.Error
+  | Error String
 
 init : Config -> (Model, Cmd Msg)
 init config =
   ( { config = config
     , error = Nothing
 
+    , repositories = []
+
     , backlog = Nothing
     , stories = Nothing
-    , issues = Nothing
     , members = Nothing
+
+    , issues = []
+    , missingIssues = Set.empty
 
     , topicIterations = []
     , unscheduled = []
     , themWaiting = []
     , usWaiting = []
     , pending = []
+    , orphaned = []
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -108,11 +121,24 @@ update msg model =
     StoriesFetched stories ->
       processIfReady { model | stories = Just stories }
 
-    IssuesFetched issues ->
-      processIfReady { model | issues = Just issues }
-
     MembersFetched members ->
       processIfReady { model | members = Just members }
+
+    RepositoriesFetched repos ->
+      ( { model
+        | repositories = repos
+        , missingIssues = Set.fromList (List.map .id repos)
+        }
+      , Cmd.batch <|
+          List.map (fetchIssues model.config) repos
+      )
+
+    IssuesFetched repo issues ->
+      processIfReady
+        { model
+        | issues = issues ++ model.issues
+        , missingIssues = Set.remove repo.id model.missingIssues
+        }
 
     EngagementCommentsFetched issue comments ->
       if lastActivityIsUs model comments then
@@ -152,8 +178,8 @@ update msg model =
         , Cmd.none
         )
 
-    APIError e ->
-      ({ model | error = Just (toString e) }, Cmd.none)
+    Error msg ->
+      ({ model | error = Just msg }, Cmd.none)
 
 lastActivityIsUs : Model -> List GitHub.Comment -> Bool
 lastActivityIsUs model comments =
@@ -170,7 +196,7 @@ lastActivityIsUs model comments =
 
 engage : Config -> UntriagedIssue -> Cmd Msg
 engage config issue =
-  Task.perform APIError (Engaged issue) <|
+  Task.perform (Error << toString) (Engaged issue) <|
     Tracker.startStory
       config.trackerToken
       config.trackerProject
@@ -178,7 +204,7 @@ engage config issue =
 
 disengage : Config -> UntriagedIssue -> Cmd Msg
 disengage config issue =
-  Task.perform APIError (Disengaged issue) <|
+  Task.perform (Error << toString) (Disengaged issue) <|
     Tracker.acceptStory
       config.trackerToken
       config.trackerProject
@@ -191,51 +217,68 @@ isOrgMember users user =
 
 processIfReady : Model -> (Model, Cmd Msg)
 processIfReady model =
-  case (model.backlog, model.stories, model.issues, model.members) of
-    (Just backlog, Just stories, Just issues, Just members) ->
-      let
-        topics =
-          groupByTopic stories issues
+  if not (List.isEmpty model.repositories) && Set.isEmpty model.missingIssues then
+    case (model.backlog, model.stories, model.members) of
+      (Just backlog, Just stories, Just members) ->
+        process model backlog stories model.issues members
 
-        (triaged, pending) =
-          List.partition topicIsTriaged topics
+      _ ->
+        (model, Cmd.none)
+  else
+    (model, Cmd.none)
 
-        (scheduled, unscheduled) =
-          List.partition topicIsScheduled triaged
+process : Model -> List Tracker.Iteration -> List Tracker.Story -> List GitHub.Issue -> List GitHub.User -> (Model, Cmd Msg)
+process model backlog stories issues members =
+  let
+    topics =
+      groupByTopic stories issues
 
-        (engaged, remaining) =
-          List.partition topicIsScheduled pending
+    (triaged, pending) =
+      List.partition topicIsTriaged topics
 
-        topicIterations =
-          groupTopicsByIteration backlog scheduled
+    (scheduled, unscheduled) =
+      List.partition topicIsScheduled triaged
 
-        untriaged {stories, issues} =
-          case (stories, issues) of
-            (story :: _, issue :: _) ->
-              { story = story, issue = issue }
+    (engaged, remaining) =
+      List.partition topicIsScheduled pending
 
-            _ ->
-              Debug.crash "impossible"
+    topicIterations =
+      groupTopicsByIteration backlog scheduled
 
-        checkEngagements =
-          List.map (checkEngagement model.config << untriaged) engaged
-      in
-        ( { model |
-            error = Nothing
+    untriaged {stories, issues} =
+      case (stories, issues) of
+        (story :: _, issue :: _) ->
+          { story = story, issue = issue }
 
-          , themWaiting = []
-          , usWaiting = []
+        _ ->
+          Debug.crash "impossible"
 
-          , topicIterations = topicIterations
-          , unscheduled = unscheduled
+    storyIsOrphaned topics story =
+      storyIsForAnyIssue story &&
+        not (Tracker.storyIsAccepted story) &&
+        not (List.any (topicIsForStory story) topics)
 
-          , pending = List.map untriaged remaining
-          }
-        , Cmd.batch checkEngagements
-        )
+    orphanedStories =
+      List.filter (storyIsOrphaned topics) stories
 
-    _ ->
-      (model, Cmd.none)
+    checkEngagements =
+      List.map (checkEngagement model.config << untriaged) engaged
+  in
+    ( { model |
+        error = Nothing
+
+      , themWaiting = []
+      , usWaiting = []
+
+      , topicIterations = topicIterations
+      , unscheduled = unscheduled
+
+      , pending = List.map untriaged remaining
+
+      , orphaned = orphanedStories
+      }
+    , Cmd.batch checkEngagements
+    )
 
 
 cell : String -> (a -> Html Msg) -> List a -> Html Msg
@@ -413,7 +456,7 @@ viewStory story =
 
 checkEngagement : Config -> UntriagedIssue -> Cmd Msg
 checkEngagement config issue =
-  Task.perform APIError (EngagementCommentsFetched issue) <|
+  Task.perform (Error << toString) (EngagementCommentsFetched issue) <|
     GitHub.fetchIssueComments config.githubToken issue.issue
 
 fetchBacklogAndStoriesAndIssues : Config -> Cmd Msg
@@ -421,34 +464,41 @@ fetchBacklogAndStoriesAndIssues config =
   Cmd.batch
     [ fetchBacklog config
     , fetchStories config
-    , fetchIssues config
+    , fetchRepositories config
     , fetchMembers config
     ]
 
 fetchBacklog : Config -> Cmd Msg
 fetchBacklog config =
-  Task.perform APIError BacklogFetched <|
+  Task.perform (Error << toString) BacklogFetched <|
     Tracker.fetchProjectBacklog
       config.trackerToken
       config.trackerProject
 
 fetchStories : Config -> Cmd Msg
 fetchStories config =
-  Task.perform APIError StoriesFetched <|
+  Task.perform (Error << toString) StoriesFetched <|
     Tracker.fetchProjectStories
       config.trackerToken
       config.trackerProject
 
-fetchIssues : Config -> Cmd Msg
-fetchIssues config =
-  Task.perform APIError IssuesFetched <|
-    GitHub.fetchOrgIssues
+fetchRepositories : Config -> Cmd Msg
+fetchRepositories config =
+  Task.perform (Error << toString) RepositoriesFetched <|
+    GitHub.fetchOrgRepos
       config.githubToken
       config.githubOrganization
 
+fetchIssues : Config -> GitHub.Repo -> Cmd Msg
+fetchIssues config repo =
+  Task.perform (Error << toString) (IssuesFetched repo) <|
+    GitHub.fetchRepoIssues
+      config.githubToken
+      repo
+
 fetchMembers : Config -> Cmd Msg
 fetchMembers config =
-  Task.perform APIError MembersFetched <|
+  Task.perform (Error << toString) MembersFetched <|
     GitHub.fetchOrgMembers
       config.githubToken
       config.githubOrganization
@@ -536,6 +586,37 @@ storyIssues story issues =
 storyIsForIssue : Tracker.Story -> GitHub.Issue -> Bool
 storyIsForIssue story issue =
   List.member (issueLabel issue) story.labels
+
+issueLabelRegex : Regex
+issueLabelRegex =
+  Regex.regex "([^/]+)/([^#]+)#([0-9]+)"
+
+storyIssueURL : Tracker.Story -> String
+storyIssueURL {labels} =
+  let
+    extractURL label =
+      case Regex.find (Regex.AtMost 1) issueLabelRegex label of
+        [] ->
+          Nothing
+
+        {submatches} :: _ ->
+          case submatches of
+            [Just owner, Just repo, Just num] ->
+              Just ("https://github.com/" ++ owner ++ "/" ++ repo ++ "/issues/" ++ num)
+
+            _ ->
+              Nothing
+  in
+    case List.filterMap extractURL labels of
+      (url :: _) ->
+        url
+
+      [] ->
+        Debug.crash "could not extract story issue URL"
+
+storyIsForAnyIssue : Tracker.Story -> Bool
+storyIsForAnyIssue {labels} =
+  List.any (Regex.contains issueLabelRegex) labels
 
 issueStories : GitHub.Issue -> List Tracker.Story -> List Tracker.Story
 issueStories issue stories =
