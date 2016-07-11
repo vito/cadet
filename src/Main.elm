@@ -770,7 +770,9 @@ topicIsPullRequest {issues} =
 
 topicIsScheduled : Topic -> Bool
 topicIsScheduled {stories} =
-  List.any Tracker.storyIsScheduled stories
+  List.any (\story ->
+    Tracker.storyIsScheduled story &&
+      not (Tracker.storyIsAccepted story)) stories
 
 topicIsTriaged : Topic -> Bool
 topicIsTriaged {stories} =
