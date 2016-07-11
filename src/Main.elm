@@ -774,5 +774,4 @@ topicIsScheduled {stories} =
 
 topicIsTriaged : Topic -> Bool
 topicIsTriaged {stories} =
-  not <|
-    List.all ((==) Tracker.StoryTypeChore) (List.map .type' stories)
+  List.any ((/=) Tracker.StoryTypeChore) (List.map .type' stories)
