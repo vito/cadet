@@ -55,10 +55,6 @@ body {
   background: #fff;
 }
 
-.topic {
-  margin: 5px;
-}
-
 .iteration {
   padding-bottom: 20px;
   border-bottom: 1px dashed #ddd;
@@ -82,13 +78,8 @@ body {
 
 .topic-issues {
   .issue-summary {
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-
     &:first-child {
       border-top: 1px solid #ddd;
-      border-top-left-radius: 5px;
-      border-top-right-radius: 5px;
     }
 
     &:last-child {
@@ -97,29 +88,37 @@ body {
   }
 }
 
-.topic-stories.headless .story {
-  border-top: 1px solid #ddd;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-}
+.topic-stories {
+  margin-left: 13px;
 
-.topic-stories .story:last-child {
-  border-bottom-left-radius: 5px;
-  border-bottom-right-radius: 5px;
+  .story {
+    border-left: 1px solid #ddd;
+
+    &:last-child {
+      border-bottom-left-radius: 5px;
+    }
+  }
+
+  &.headless {
+    margin-left: 0;
+
+    .story {
+      border-top: 1px solid #ddd;
+      border-radius: 0;
+    }
+  }
 }
 
 .topic {
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 5px;
+  }
+
   .story {
     border-top: 1px solid #fff;
     border-bottom: 1px solid #ddd;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
-  }
-
-  .issue {
-    border-top: 1px solid #ddd;
-    border-left: 1px solid #ddd;
-    border-right: 1px solid #ddd;
   }
 }
 
@@ -187,8 +186,17 @@ body {
 
 
 .issue-summary {
+  border-bottom: 1px solid #eee;
   display: flex;
   flex-direction: row;
+
+  &:hover {
+    background: #f5f5f5;
+  }
+
+  a:hover {
+    color: #4078c0;
+  }
 
   .issue-cell {
     padding: 12px;
@@ -256,18 +264,6 @@ body {
 
 .issue-flair {
   flex-shrink: 0;
-}
-
-.issue-summary {
-  border-bottom: 1px solid #eee;
-
-  &:hover {
-    background: #f5f5f5;
-  }
-
-  a:hover {
-    color: #4078c0;
-  }
 }
 
 .story-location,
