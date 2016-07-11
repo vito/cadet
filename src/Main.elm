@@ -343,8 +343,11 @@ view model =
         div [class "column"] [
           cell "Icebox" viewTopic <|
             List.reverse (List.sortBy topicActivity model.unscheduled),
-          cell "Orphaned" viewOrphanedStory <|
-            model.orphaned
+          if not <| List.isEmpty model.orphaned then
+            cell "Orphaned" viewOrphanedStory <|
+              model.orphaned
+          else
+            text ""
         ],
         div [class "column"] [
           cell "Them Waiting" viewUntriagedIssue <|
