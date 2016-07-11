@@ -38,14 +38,13 @@ type alias Model =
   , missingIssues : Set Int
 
   , topicIterations : List Iteration
+
   , unscheduled : List Topic
-
-  , themWaiting : List UntriagedIssue
-  , usWaiting : List UntriagedIssue
-
+  , engaged : List UntriagedIssue
   , pending : List UntriagedIssue
-
   , orphaned : List OrphanedStory
+
+  , themWaiting : Set Int -- GitHub issue IDs
   }
 
 type alias Topic =
@@ -86,7 +85,7 @@ type Msg
   | IssuesFetched GitHub.Repo (List GitHub.Issue)
   | OrphanedStoryIssueFetched Tracker.Story GitHub.Issue
   | OrphanedStoryIssueMissing Tracker.Story
-  | EngagementCommentsFetched UntriagedIssue (List GitHub.Comment)
+  | IssueCommentsFetched GitHub.Issue (List GitHub.Comment)
   | Engage UntriagedIssue
   | Engaged UntriagedIssue Tracker.Story
   | Disengage UntriagedIssue
@@ -111,10 +110,11 @@ init config =
 
     , topicIterations = []
     , unscheduled = []
-    , themWaiting = []
-    , usWaiting = []
+    , engaged = []
     , pending = []
     , orphaned = []
+
+    , themWaiting = Set.empty
     }
   , fetchBacklogAndStoriesAndIssues config
   )
@@ -156,11 +156,11 @@ update msg model =
     OrphanedStoryIssueMissing story ->
       ({ model | orphaned = { story = story, issue = Nothing } :: model.orphaned }, Cmd.none)
 
-    EngagementCommentsFetched issue comments ->
+    IssueCommentsFetched issue comments ->
       if lastActivityIsUs model comments then
-        ({ model | usWaiting = issue :: model.usWaiting }, Cmd.none)
+        (model, Cmd.none)
       else
-        ({ model | themWaiting = issue :: model.themWaiting }, Cmd.none)
+        ({ model | themWaiting = Set.insert issue.id model.themWaiting }, Cmd.none)
 
     Engage issue ->
       (model, engage model.config issue)
@@ -173,10 +173,8 @@ update msg model =
         startedIssue =
           { issue | story = startedStory }
       in
-        ( { model
-          | pending = removeNoLongerPending model.pending
-          }
-        , checkEngagement model.config startedIssue
+        ( { model | pending = removeNoLongerPending model.pending }
+        , checkEngagement model.config issue.issue
         )
 
     Disengage issue ->
@@ -187,10 +185,7 @@ update msg model =
         removeEngaged =
           List.filter ((/=) issue.issue.id << .id << .issue)
       in
-        ( { model
-          | usWaiting = removeEngaged model.usWaiting
-          , themWaiting = removeEngaged model.themWaiting
-          }
+        ( { model | engaged = removeEngaged model.engaged }
         , Cmd.none
         )
 
@@ -299,7 +294,10 @@ process model backlog stories issues members =
       List.filter (storyIsOrphaned topics) stories
 
     checkEngagements =
-      List.map (checkEngagement model.config << untriaged) engaged
+      List.concatMap (List.map (checkEngagement model.config) << .issues) engaged
+
+    checkTriagedEngagements =
+      List.concatMap (List.map (checkEngagement model.config) << .issues) unscheduled
 
     findOrphanedIssues =
       List.map (fetchOrphanedStoryIssue model) orphans
@@ -307,15 +305,12 @@ process model backlog stories issues members =
     ( { model |
         error = Nothing
 
-      , themWaiting = []
-      , usWaiting = []
-
       , topicIterations = topicIterations
       , unscheduled = unscheduled
-
       , pending = List.map untriaged remaining
+      , engaged = List.map untriaged engaged
       }
-    , Cmd.batch (checkEngagements ++ findOrphanedIssues)
+    , Cmd.batch (checkEngagements ++ checkTriagedEngagements ++ findOrphanedIssues)
     )
 
 
@@ -340,21 +335,31 @@ view model =
         div [class "column"] [
           cell "Backlog" viewIteration model.topicIterations
         ],
-        div [class "column"] [
-          cell "Icebox" viewTopic <|
-            List.reverse (List.sortBy topicActivity model.unscheduled),
-          if not <| List.isEmpty model.orphaned then
-            cell "Orphaned" viewOrphanedStory <|
-              model.orphaned
-          else
-            text ""
-        ],
-        div [class "column"] [
-          cell "Them Waiting" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueActivity model.themWaiting),
-          cell "Us Waiting" viewUntriagedIssue <|
-            List.reverse (List.sortBy untriagedIssueActivity model.usWaiting)
-        ],
+        div [class "column"] <|
+          let
+            (themWaiting, usWaiting) =
+              List.partition (List.any (theyAreWaiting model) << .issues) model.unscheduled
+          in [
+            cell "Triaged (Them Waiting)" viewTopic <|
+              List.reverse (List.sortBy topicActivity themWaiting),
+            cell "Triaged (Us Waiting)" viewTopic <|
+              List.reverse (List.sortBy topicActivity usWaiting),
+            if not <| List.isEmpty model.orphaned then
+              cell "Orphaned" viewOrphanedStory <|
+                model.orphaned
+            else
+              text ""
+          ],
+        div [class "column"] <|
+          let
+            (themWaiting, usWaiting) =
+              List.partition (theyAreWaiting model << .issue) model.engaged
+          in [
+            cell "Them Waiting" viewUntriagedIssue <|
+              List.reverse (List.sortBy untriagedIssueActivity themWaiting),
+            cell "Us Waiting" viewUntriagedIssue <|
+              List.reverse (List.sortBy untriagedIssueActivity usWaiting)
+          ],
         div [class "column"] [
           cell "Pending By Activity" viewUntriagedIssue <|
             List.reverse (List.sortBy untriagedIssueActivity model.pending),
@@ -362,6 +367,10 @@ view model =
             List.reverse (List.sortBy untriagedIssueCreation model.pending)
         ]
       ]
+
+theyAreWaiting : Model -> GitHub.Issue -> Bool
+theyAreWaiting model issue =
+  Set.member issue.id model.themWaiting
 
 viewIteration : Iteration -> Html Msg
 viewIteration {topics} =
@@ -526,10 +535,10 @@ viewOrphanedStory orphan =
           ]
         ]
 
-checkEngagement : Config -> UntriagedIssue -> Cmd Msg
+checkEngagement : Config -> GitHub.Issue -> Cmd Msg
 checkEngagement config issue =
-  Task.perform (Error << toString) (EngagementCommentsFetched issue) <|
-    GitHub.fetchIssueComments config.githubToken issue.issue
+  Task.perform (Error << toString) (IssueCommentsFetched issue) <|
+    GitHub.fetchIssueComments config.githubToken issue
 
 fetchBacklogAndStoriesAndIssues : Config -> Cmd Msg
 fetchBacklogAndStoriesAndIssues config =
