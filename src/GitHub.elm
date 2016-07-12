@@ -4,6 +4,7 @@ module GitHub exposing
   , Repo
   , Issue
   , IssueState(..)
+  , IssueLabel
   , Comment
   , User
   , fetchOrgMembers
@@ -59,6 +60,12 @@ type alias Issue =
   , title : String
   , commentCount : Int
   , reactions : Reactions
+  , labels : List IssueLabel
+  }
+
+type alias IssueLabel =
+  { name : String
+  , color : String
   }
 
 type IssueState
@@ -187,6 +194,7 @@ decodeIssue repo =
     |: ("title" := Json.Decode.string)
     |: ("comments" := excludeTracksuitComment (Json.Decode.int))
     |: ("reactions" := decodeReactions)
+    |: ("labels" := Json.Decode.list decodeIssueLabel)
 
 decodeIssueState : Json.Decode.Decoder IssueState
 decodeIssueState =
@@ -198,6 +206,12 @@ decodeIssueState =
         Ok IssueStateClosed
       _ ->
         Err ("unknown issue state: " ++ x)
+
+decodeIssueLabel : Json.Decode.Decoder IssueLabel
+decodeIssueLabel =
+  Json.Decode.object2 IssueLabel
+    ("name" := Json.Decode.string)
+    ("color" := Json.Decode.string)
 
 decodeComment : Issue -> Json.Decode.Decoder Comment
 decodeComment issue =

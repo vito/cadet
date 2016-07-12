@@ -5,8 +5,10 @@ import Dict exposing (Dict)
 import Html exposing (Html, h1, h2, div, pre, text, a, span, i)
 import Html.Lazy
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, classList, href)
+import Html.Attributes exposing (class, classList, href, style)
 import Html.App as Html
+import Http
+import ParseInt
 import Regex exposing (Regex)
 import Set exposing (Set)
 import String
@@ -333,19 +335,19 @@ view model =
     Nothing ->
       div [class "columns"] [
         div [class "column"] [
-          cell "Backlog" viewIteration model.topicIterations
+          cell "Backlog" (viewIteration model) model.topicIterations
         ],
         div [class "column"] <|
           let
             (themWaiting, usWaiting) =
               List.partition (List.any (theyAreWaiting model) << .issues) model.unscheduled
           in [
-            cell "Triaged (Them Waiting)" viewTopic <|
+            cell "Triaged (Them Waiting)" (viewTopic model) <|
               List.reverse (List.sortBy topicActivity themWaiting),
-            cell "Triaged (Us Waiting)" viewTopic <|
+            cell "Triaged (Us Waiting)" (viewTopic model) <|
               List.reverse (List.sortBy topicActivity usWaiting),
             if not <| List.isEmpty model.orphaned then
-              cell "Orphaned" viewOrphanedStory <|
+              cell "Orphaned" (viewOrphanedStory model) <|
                 model.orphaned
             else
               text ""
@@ -355,15 +357,15 @@ view model =
             (themWaiting, usWaiting) =
               List.partition (theyAreWaiting model << .issue) model.engaged
           in [
-            cell "Them Waiting" viewUntriagedIssue <|
+            cell "Them Waiting" (viewUntriagedIssue model) <|
               List.reverse (List.sortBy untriagedIssueActivity themWaiting),
-            cell "Us Waiting" viewUntriagedIssue <|
+            cell "Us Waiting" (viewUntriagedIssue model) <|
               List.reverse (List.sortBy untriagedIssueActivity usWaiting)
           ],
         div [class "column"] [
-          cell "Pending By Activity" viewUntriagedIssue <|
+          cell "Pending By Activity" (viewUntriagedIssue model) <|
             List.reverse (List.sortBy untriagedIssueActivity model.pending),
-          cell "Pending By Date" viewUntriagedIssue <|
+          cell "Pending By Date" (viewUntriagedIssue model) <|
             List.reverse (List.sortBy untriagedIssueCreation model.pending)
         ]
       ]
@@ -372,30 +374,30 @@ theyAreWaiting : Model -> GitHub.Issue -> Bool
 theyAreWaiting model issue =
   Set.member issue.id model.themWaiting
 
-viewIteration : Iteration -> Html Msg
-viewIteration {topics} =
+viewIteration : Model -> Iteration -> Html Msg
+viewIteration model {topics} =
   div [class "iteration"] <|
-    List.map viewTopic topics
+    List.map (viewTopic model) topics
 
-viewTopic : Topic -> Html Msg
-viewTopic topic =
+viewTopic : Model -> Topic -> Html Msg
+viewTopic model topic =
   div [class "topic"] [
     div [class "topic-issues"]
-      (List.map viewTriagedIssue topic.issues),
-    div [class "topic-stories"]
-      (List.map viewStory topic.stories)
+      (List.map (viewTriagedIssue model) topic.issues) --,
+    -- div [class "topic-stories"]
+    --   (List.map viewStory topic.stories)
   ]
 
-viewUntriagedIssue : UntriagedIssue -> Html Msg
-viewUntriagedIssue untriagedIssue =
-  viewIssue (Just untriagedIssue) untriagedIssue.issue
+viewUntriagedIssue : Model -> UntriagedIssue -> Html Msg
+viewUntriagedIssue model untriagedIssue =
+  viewIssue model (Just untriagedIssue) untriagedIssue.issue
 
-viewTriagedIssue : GitHub.Issue -> Html Msg
-viewTriagedIssue issue =
-  viewIssue Nothing issue
+viewTriagedIssue : Model -> GitHub.Issue -> Html Msg
+viewTriagedIssue model issue =
+  viewIssue model Nothing issue
 
-viewIssue : Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
-viewIssue maybeUntriagedIssue issue =
+viewIssue : Model -> Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
+viewIssue model maybeUntriagedIssue issue =
   let
     typeCell =
       div [class "issue-cell issue-type"] [
@@ -416,6 +418,8 @@ viewIssue maybeUntriagedIssue issue =
         a [href issue.url, class "issue-title"] [
           text issue.title
         ],
+        span [class "issue-labels"] <|
+          List.map viewIssueLabel issue.labels,
         div [class "issue-meta"] [
           a [href issue.repo.url] [text issue.repo.name],
           text " ",
@@ -445,18 +449,87 @@ viewIssue maybeUntriagedIssue issue =
           i [class "octicon octicon-mail-reply"] []
       ]
 
+    trackerCell =
+      div [class "issue-cell issue-tracker"] [
+        a [href (projectSearchURI model (issueLabel issue)), class "tracker-icon"] [
+        ]
+      ]
+
     baseCells =
       [typeCell, infoCell, flairCell]
 
     cells =
       case maybeUntriagedIssue of
         Nothing ->
-          baseCells
+          baseCells ++ [trackerCell]
 
         Just untriagedIssue ->
           baseCells ++ [engagementCell untriagedIssue]
   in
     div [class "issue-summary"] cells
+
+projectSearchURI : Model -> String -> String
+projectSearchURI model label =
+  "https://www.pivotaltracker.com/n/projects/" ++
+    toString model.config.trackerProject ++
+    "/search?q=" ++ Http.uriEncode ("label:\"" ++ label ++ "\"")
+
+hexRegex : Regex
+hexRegex =
+  Regex.regex "([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})"
+
+hexBrightness : Int -> Int
+hexBrightness h =
+  case compare h (0xff // 2) of
+    LT ->
+      -1
+
+    EQ ->
+      0
+
+    GT ->
+      1
+
+colorIsLight : String -> Bool
+colorIsLight hex =
+  let
+    matches =
+      List.head <| Regex.find (Regex.AtMost 1) hexRegex hex
+  in
+    case Maybe.map .submatches matches of
+      Just [Just h1s, Just h2s, Just h3s] ->
+        case List.map ParseInt.parseIntHex [h1s, h2s, h3s] of
+          [Ok h1, Ok h2, Ok h3] ->
+            if (hexBrightness h1 + hexBrightness h2 + hexBrightness h3) > 0 then
+              True
+            else
+              False
+
+          _ ->
+            Debug.crash "invalid hex"
+
+      _ ->
+        Debug.crash "invalid hex"
+
+viewIssueLabel : GitHub.IssueLabel -> Html Msg
+viewIssueLabel {name, color} =
+    span
+      [ class "issue-label"
+      , style
+          [ ("background-color", "#" ++ color)
+          , ( "color"
+            , if colorIsLight color then
+                -- GitHub appears to pre-compute a hex code, but this seems to be
+                -- pretty much all it's doing
+                "rgba(0, 0, 0, .8)"
+              else
+                -- for darker backgrounds they just do white
+                "#fff"
+            )
+          ]
+      ]
+      [ text name
+      ]
 
 issueFlair : GitHub.Issue -> List (Html Msg)
 issueFlair {url, reactions, commentCount} =
@@ -512,14 +585,14 @@ viewStory story =
     ]
   ]
 
-viewOrphanedStory : OrphanedStory -> Html Msg
-viewOrphanedStory orphan =
+viewOrphanedStory : Model -> OrphanedStory -> Html Msg
+viewOrphanedStory model orphan =
   div [class "orphaned topic"] <|
     case orphan.issue of
       Just issue ->
         [
           div [class "topic-issues"] [
-            viewTriagedIssue issue
+            viewTriagedIssue model issue
           ],
           div [class "topic-stories"] [
             span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
