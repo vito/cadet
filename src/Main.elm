@@ -175,7 +175,10 @@ update msg model =
         startedIssue =
           { issue | story = startedStory }
       in
-        ( { model | pending = removeNoLongerPending model.pending }
+        ( { model
+          | pending = removeNoLongerPending model.pending
+          , engaged = startedIssue :: model.engaged
+          }
         , checkEngagement model.config issue.issue
         )
 
