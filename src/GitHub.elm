@@ -123,11 +123,18 @@ reactionScore reactions =
     3 * reactions.hooray
   ]
 
+auth : String -> List (String, String)
+auth token =
+  if token == "" then
+    []
+  else
+    [("Authorization", "token " ++ token)]
+
 fetchOrgMembers : Token -> String -> Task Http.Error (List User)
 fetchOrgMembers token org =
   Pagination.fetchAll
     ("https://api.github.com/orgs/" ++ org ++ "/members?per_page=100")
-    [("Authorization", "token " ++ token)]
+    (auth token)
     (rfc5988Strategy decodeUser)
     Nothing
 
@@ -135,7 +142,7 @@ fetchOrgRepos : Token -> String -> Task Http.Error (List Repo)
 fetchOrgRepos token org =
   Pagination.fetchAll
     ("https://api.github.com/orgs/" ++ org ++ "/repos?per_page=100")
-    [("Authorization", "token " ++ token)]
+    (auth token)
     (rfc5988Strategy decodeRepo)
     Nothing
 
@@ -146,14 +153,14 @@ fetchRepoIssues token repo =
   else
     Pagination.fetchAll
       ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues?per_page=100")
-      [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
+      (("Accept", "application/vnd.github.squirrel-girl-preview") :: auth token)
       (rfc5988Strategy (decodeIssue repo))
       Nothing
 
 fetchIssue : Token -> Repo -> Int -> Task Error Issue
 fetchIssue token repo number =
   HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues/" ++ toString number)
-    |> HttpBuilder.withHeader "Authorization" ("token " ++ token)
+    |> HttpBuilder.withHeaders (auth token)
     |> HttpBuilder.withHeader "Accept" "application/vnd.github.squirrel-girl-preview"
     |> HttpBuilder.send (HttpBuilder.jsonReader (decodeIssue repo)) (HttpBuilder.jsonReader decodeError)
     |> Task.map .data
@@ -162,7 +169,7 @@ fetchIssueComments : Token -> Issue -> Task Http.Error (List Comment)
 fetchIssueComments token issue =
   Pagination.fetchAll
     ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
-    [("Authorization", "token " ++ token), ("Accept", "application/vnd.github.squirrel-girl-preview")]
+      (("Accept", "application/vnd.github.squirrel-girl-preview") :: auth token)
     (rfc5988Strategy (decodeComment issue))
     Nothing
 
