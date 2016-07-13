@@ -93,6 +93,8 @@ type Msg
   | Disengaged UntriagedIssue Tracker.Story
   | DeleteOrphanedStory OrphanedStory
   | OrphanedStoryDeleted OrphanedStory
+  | AcceptOrphanedStory OrphanedStory
+  | OrphanedStoryAccepted OrphanedStory
   | Error String
 
 init : Config -> (Model, Cmd Msg)
@@ -193,6 +195,18 @@ update msg model =
         , Cmd.none
         )
 
+    AcceptOrphanedStory orphan ->
+      (model, acceptOrphan model.config orphan)
+
+    OrphanedStoryAccepted orphan ->
+      let
+        remove =
+          List.filter ((/=) orphan.story.id << .id << .story)
+      in
+        ( { model | orphaned = remove model.orphaned }
+        , Cmd.none
+        )
+
     DeleteOrphanedStory orphan ->
       (model, deleteStory model.config orphan)
 
@@ -238,6 +252,14 @@ disengage config issue =
       config.trackerToken
       config.trackerProject
       issue.story.id
+
+acceptOrphan : Config -> OrphanedStory -> Cmd Msg
+acceptOrphan config orphan =
+  Task.perform (Error << toString) (always <| OrphanedStoryAccepted orphan) <|
+    Tracker.acceptStoryAsChore
+      config.trackerToken
+      config.trackerProject
+      orphan.story.id
 
 deleteStory : Config -> OrphanedStory -> Cmd Msg
 deleteStory config orphan =
@@ -392,14 +414,25 @@ viewTopic topic =
 
 viewUntriagedIssue : UntriagedIssue -> Html Msg
 viewUntriagedIssue untriagedIssue =
-  viewIssue (Just untriagedIssue) untriagedIssue.issue
+  viewIssue untriagedIssue.issue [
+    if Tracker.storyIsInFlight untriagedIssue.story then
+      div [
+        class "issue-cell issue-engagement",
+        onClick (Disengage untriagedIssue)
+      ] [ i [class "octicon octicon-x"] [] ]
+    else
+      div [
+        class "issue-cell issue-engagement",
+        onClick (Engage untriagedIssue)
+      ] [ i [class "octicon octicon-mail-reply"] [] ]
+  ]
 
 viewTriagedIssue : GitHub.Issue -> Html Msg
 viewTriagedIssue issue =
-  viewIssue Nothing issue
+  viewIssue issue []
 
-viewIssue : Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
-viewIssue maybeUntriagedIssue issue =
+viewIssue : GitHub.Issue -> List (Html Msg) -> Html Msg
+viewIssue issue extraCells =
   let
     typeCell =
       div [class "issue-cell issue-type"] [
@@ -436,31 +469,11 @@ viewIssue maybeUntriagedIssue issue =
       div [class "issue-cell issue-flair"] <|
         issueFlair issue
 
-    engagementCell untriagedIssue =
-      div [
-        class "issue-cell issue-engagement",
-        onClick <|
-          if Tracker.storyIsInFlight untriagedIssue.story then
-            Disengage untriagedIssue
-          else
-            Engage untriagedIssue
-      ] [
-        if Tracker.storyIsInFlight untriagedIssue.story then
-          i [class "octicon octicon-x"] []
-        else
-          i [class "octicon octicon-mail-reply"] []
-      ]
-
     baseCells =
       [typeCell, infoCell, flairCell]
 
     cells =
-      case maybeUntriagedIssue of
-        Nothing ->
-          baseCells
-
-        Just untriagedIssue ->
-          baseCells ++ [engagementCell untriagedIssue]
+      baseCells ++ extraCells
   in
     div [class "issue-summary"] cells
 
@@ -607,12 +620,14 @@ viewOrphanedStory orphan =
       Just issue ->
         [
           div [class "topic-issues"] [
-            viewTriagedIssue issue
+            viewIssue issue [
+              div [
+                class "issue-cell issue-engagement",
+                onClick (AcceptOrphanedStory orphan)
+              ] [ i [class "octicon octicon-x"] [] ]
+            ]
           ],
           div [class "topic-stories"] [
-            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [
-              i [class "octicon octicon-x"] []
-            ],
             viewStory orphan.story
           ]
         ]
@@ -621,7 +636,7 @@ viewOrphanedStory orphan =
         [
           div [class "topic-stories headless"] [
             span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [
-              i [class "octicon octicon-x"] []
+              i [class "octicon octicon-trashcan"] []
             ],
             viewStory orphan.story
           ]

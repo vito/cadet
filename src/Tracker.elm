@@ -10,6 +10,7 @@ module Tracker exposing
   , startStory
   , finishStory
   , acceptStory
+  , acceptStoryAsChore
   , deleteStory
   , storyIsScheduled
   , storyIsInFlight
@@ -98,6 +99,10 @@ finishStory token project story =
 acceptStory : Token -> Int -> Int -> Task Error Story
 acceptStory token project story =
   updateStory token project story "{\"current_state\":\"accepted\"}"
+
+acceptStoryAsChore : Token -> Int -> Int -> Task Error Story
+acceptStoryAsChore token project story =
+  updateStory token project story "{\"story_type\":\"chore\",\"current_state\":\"accepted\"}"
 
 deleteStory : Token -> Int -> Int -> Task Error ()
 deleteStory token project story =
