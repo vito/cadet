@@ -110,7 +110,9 @@ reactionCodes reactions =
 
 issueScore : Issue -> Int
 issueScore {reactions, commentCount, isPullRequest} =
-  reactionScore reactions + (2 * commentCount) + (if isPullRequest then 1000 else 0)
+  reactionScore reactions +
+    (2 * commentCount) +
+    (if isPullRequest then 1000 else 0)
 
 reactionScore : Reactions -> Int
 reactionScore reactions =

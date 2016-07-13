@@ -14,6 +14,8 @@ module Tracker exposing
   , storyIsScheduled
   , storyIsInFlight
   , storyIsAccepted
+  , compareStoryProgress
+  , compareProgress
   )
 
 import Dict exposing (Dict)
@@ -292,3 +294,79 @@ parseQuery query =
 toQuery : Page -> Dict String String
 toQuery (Offset offset) =
   Dict.singleton "offset" (toString offset)
+
+compareStoryProgress : Story -> Story -> Order
+compareStoryProgress a b =
+  compareProgress a.state b.state
+
+compareProgress : StoryState -> StoryState -> Order
+compareProgress a b =
+  if a == b then
+    EQ
+  else
+    case (a, b) of
+      (StoryStateUnscheduled, _) ->
+        LT
+
+      (StoryStateUnstarted, StoryStateUnscheduled) ->
+        GT
+      (StoryStateUnstarted, _) ->
+        LT
+
+      (StoryStateStarted, StoryStateUnscheduled) ->
+        GT
+      (StoryStateStarted, StoryStateUnstarted) ->
+        GT
+      (StoryStateStarted, _) ->
+        LT
+
+      (StoryStateFinished, StoryStateUnscheduled) ->
+        GT
+      (StoryStateFinished, StoryStateUnstarted) ->
+        GT
+      (StoryStateFinished, StoryStateStarted) ->
+        GT
+      (StoryStateFinished, _) ->
+        LT
+
+      (StoryStateDelivered, StoryStateUnscheduled) ->
+        GT
+      (StoryStateDelivered, StoryStateUnstarted) ->
+        GT
+      (StoryStateDelivered, StoryStateStarted) ->
+        GT
+      (StoryStateDelivered, StoryStateFinished) ->
+        GT
+      (StoryStateDelivered, _) ->
+        LT
+
+      (StoryStateAccepted, StoryStateRejected) ->
+        EQ
+      (StoryStateRejected, StoryStateAccepted) ->
+        EQ
+
+      (StoryStateAccepted, StoryStateUnscheduled) ->
+        GT
+      (StoryStateAccepted, StoryStateUnstarted) ->
+        GT
+      (StoryStateAccepted, StoryStateStarted) ->
+        GT
+      (StoryStateAccepted, StoryStateFinished) ->
+        GT
+      (StoryStateAccepted, StoryStateDelivered) ->
+        GT
+      (StoryStateAccepted, _) ->
+        LT
+
+      (StoryStateRejected, StoryStateUnscheduled) ->
+        GT
+      (StoryStateRejected, StoryStateUnstarted) ->
+        GT
+      (StoryStateRejected, StoryStateStarted) ->
+        GT
+      (StoryStateRejected, StoryStateFinished) ->
+        GT
+      (StoryStateRejected, StoryStateDelivered) ->
+        GT
+      (StoryStateRejected, _) ->
+        LT

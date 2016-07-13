@@ -7,7 +7,6 @@ import Html.Lazy
 import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, classList, href, style)
 import Html.App as Html
-import Http
 import ParseInt
 import Regex exposing (Regex)
 import Set exposing (Set)
@@ -338,19 +337,19 @@ view model =
     Nothing ->
       div [class "columns"] [
         div [class "column"] [
-          cell "Backlog" (viewIteration model) model.topicIterations
+          cell "Backlog" viewIteration model.topicIterations
         ],
         div [class "column"] <|
           let
             (themWaiting, usWaiting) =
               List.partition (List.any (theyAreWaiting model) << .issues) model.unscheduled
           in [
-            cell "Triaged (Them Waiting)" (viewTopic model) <|
+            cell "Triaged (Them Waiting)" viewTopic <|
               List.reverse (List.sortBy topicActivity themWaiting),
-            cell "Triaged (Us Waiting)" (viewTopic model) <|
+            cell "Triaged (Us Waiting)" viewTopic <|
               List.reverse (List.sortBy topicActivity usWaiting),
             if not <| List.isEmpty model.orphaned then
-              cell "Orphaned" (viewOrphanedStory model) <|
+              cell "Orphaned" viewOrphanedStory <|
                 model.orphaned
             else
               text ""
@@ -360,15 +359,15 @@ view model =
             (themWaiting, usWaiting) =
               List.partition (theyAreWaiting model << .issue) model.engaged
           in [
-            cell "Them Waiting" (viewUntriagedIssue model) <|
+            cell "Them Waiting" viewUntriagedIssue <|
               List.reverse (List.sortBy untriagedIssueActivity themWaiting),
-            cell "Us Waiting" (viewUntriagedIssue model) <|
+            cell "Us Waiting" viewUntriagedIssue <|
               List.reverse (List.sortBy untriagedIssueActivity usWaiting)
           ],
         div [class "column"] [
-          cell "Pending By Activity" (viewUntriagedIssue model) <|
+          cell "Pending By Activity" viewUntriagedIssue <|
             List.reverse (List.sortBy untriagedIssueActivity model.pending),
-          cell "Pending By Date" (viewUntriagedIssue model) <|
+          cell "Pending By Date" viewUntriagedIssue <|
             List.reverse (List.sortBy untriagedIssueCreation model.pending)
         ]
       ]
@@ -377,30 +376,30 @@ theyAreWaiting : Model -> GitHub.Issue -> Bool
 theyAreWaiting model issue =
   Set.member issue.id model.themWaiting
 
-viewIteration : Model -> Iteration -> Html Msg
-viewIteration model {topics} =
+viewIteration : Iteration -> Html Msg
+viewIteration {topics} =
   div [class "iteration"] <|
-    List.map (viewTopic model) topics
+    List.map viewTopic topics
 
-viewTopic : Model -> Topic -> Html Msg
-viewTopic model topic =
+viewTopic : Topic -> Html Msg
+viewTopic topic =
   div [class "topic"] [
     div [class "topic-issues"]
-      (List.map (viewTriagedIssue model) topic.issues) --,
-    -- div [class "topic-stories"]
-    --   (List.map viewStory topic.stories)
+      (List.map viewTriagedIssue topic.issues),
+    div [class "topic-stories"]
+      (List.map viewStory (List.reverse <| List.sortWith Tracker.compareStoryProgress topic.stories))
   ]
 
-viewUntriagedIssue : Model -> UntriagedIssue -> Html Msg
-viewUntriagedIssue model untriagedIssue =
-  viewIssue model (Just untriagedIssue) untriagedIssue.issue
+viewUntriagedIssue : UntriagedIssue -> Html Msg
+viewUntriagedIssue untriagedIssue =
+  viewIssue (Just untriagedIssue) untriagedIssue.issue
 
-viewTriagedIssue : Model -> GitHub.Issue -> Html Msg
-viewTriagedIssue model issue =
-  viewIssue model Nothing issue
+viewTriagedIssue : GitHub.Issue -> Html Msg
+viewTriagedIssue issue =
+  viewIssue Nothing issue
 
-viewIssue : Model -> Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
-viewIssue model maybeUntriagedIssue issue =
+viewIssue : Maybe UntriagedIssue -> GitHub.Issue -> Html Msg
+viewIssue maybeUntriagedIssue issue =
   let
     typeCell =
       div [class "issue-cell issue-type"] [
@@ -452,30 +451,18 @@ viewIssue model maybeUntriagedIssue issue =
           i [class "octicon octicon-mail-reply"] []
       ]
 
-    trackerCell =
-      div [class "issue-cell issue-tracker"] [
-        a [href (projectSearchURI model (issueLabel issue)), class "tracker-icon"] [
-        ]
-      ]
-
     baseCells =
       [typeCell, infoCell, flairCell]
 
     cells =
       case maybeUntriagedIssue of
         Nothing ->
-          baseCells ++ [trackerCell]
+          baseCells
 
         Just untriagedIssue ->
           baseCells ++ [engagementCell untriagedIssue]
   in
     div [class "issue-summary"] cells
-
-projectSearchURI : Model -> String -> String
-projectSearchURI model label =
-  "https://www.pivotaltracker.com/n/projects/" ++
-    toString model.config.trackerProject ++
-    "/search?q=" ++ Http.uriEncode ("label:\"" ++ label ++ "\"")
 
 hexRegex : Regex
 hexRegex =
@@ -577,28 +564,44 @@ storyClasses story =
 
 viewStory : Tracker.Story -> Html Msg
 viewStory story =
-  div [classList (("story", True) :: storyClasses story)] [
-    div [class "story-summary"] [
+  div [class "story-summary"] [
+    div [class "story-cell story-type"] [
+      case story.state of
+        Tracker.StoryStateUnscheduled ->
+          text ""
+        Tracker.StoryStateUnstarted ->
+          text ""
+        Tracker.StoryStateStarted ->
+          i [class "octicon octicon-pulse"] []
+        Tracker.StoryStateFinished ->
+          i [class "octicon octicon-pulse"] []
+        Tracker.StoryStateDelivered ->
+          i [class "octicon octicon-pulse"] []
+        Tracker.StoryStateAccepted ->
+          i [class "octicon octicon-check"] []
+        Tracker.StoryStateRejected ->
+          i [class "octicon octicon-check"] []
+    ],
+    div [class "story-cell story-location"] [
       a [href story.url, class "story-location"] [
         text story.summary
-      ],
-      div [class "story-labels"] <|
-        List.map (span [class "story-label"] << (flip (::) []) << text) <|
-          List.filter (not << Regex.contains issueLabelRegex) story.labels
+      ]
     ]
   ]
 
-viewOrphanedStory : Model -> OrphanedStory -> Html Msg
-viewOrphanedStory model orphan =
+viewOrphanedStory : OrphanedStory -> Html Msg
+viewOrphanedStory orphan =
   div [class "orphaned topic"] <|
     case orphan.issue of
       Just issue ->
         [
           div [class "topic-issues"] [
-            viewTriagedIssue model issue
+            viewTriagedIssue issue
           ],
           div [class "topic-stories"] [
-            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
+            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [
+              i [class "octicon octicon-x"] []
+            ],
             viewStory orphan.story
           ]
         ]
@@ -606,7 +609,9 @@ viewOrphanedStory model orphan =
       Nothing ->
         [
           div [class "topic-stories headless"] [
-            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [],
+            span [class "delete-story", onClick (DeleteOrphanedStory orphan)] [
+              i [class "octicon octicon-x"] []
+            ],
             viewStory orphan.story
           ]
         ]
