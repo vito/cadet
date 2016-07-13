@@ -566,6 +566,22 @@ viewStory : Tracker.Story -> Html Msg
 viewStory story =
   div [class "story-summary"] [
     div [class "story-cell story-type"] [
+      case story.type' of
+        Tracker.StoryTypeChore ->
+          i [class "octicon octicon-gear"] []
+        Tracker.StoryTypeFeature ->
+          i [class "octicon octicon-star"] []
+        Tracker.StoryTypeBug ->
+          i [class "octicon octicon-bug"] []
+        Tracker.StoryTypeRelease ->
+          i [class "octicon octicon-gift"] []
+    ],
+    div [class "story-cell story-location"] [
+      a [href story.url, class "story-location"] [
+        text story.summary
+      ]
+    ],
+    div [class "story-cell story-state"] [
       case story.state of
         Tracker.StoryStateUnscheduled ->
           text ""
@@ -581,11 +597,6 @@ viewStory story =
           i [class "octicon octicon-check"] []
         Tracker.StoryStateRejected ->
           i [class "octicon octicon-check"] []
-    ],
-    div [class "story-cell story-location"] [
-      a [href story.url, class "story-location"] [
-        text story.summary
-      ]
     ]
   ]
 

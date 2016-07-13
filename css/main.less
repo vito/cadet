@@ -198,6 +198,7 @@ body {
 .story-summary {
   display: flex;
   flex-direction: row;
+  align-items: center;
 
   .story-cell {
     padding: 2px 12px;
@@ -208,18 +209,16 @@ body {
     }
   }
 
-  .story-type {
-    width: 16px + 12px;
+  .story-type, .story-state {
+    min-width: 16px + 12px;
+    flex-shrink: 0;
+    color: fade(#333, 50%);
   }
 
   .story-location {
+    line-height: 20px;
     flex-grow: 1;
   }
-}
-
-.story-location,
-.story-labels {
-  line-height: 19px;
 }
 
 .reaction, .issue-comments {
