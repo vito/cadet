@@ -1,5 +1,7 @@
 # Customs
 
+![Customs Screenshot](screenshot.png)
+
 A dashboard optimizing management of GitHub issues and their progression
 through Tracker to completion.
 
