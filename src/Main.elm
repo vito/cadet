@@ -369,12 +369,7 @@ view model =
             cell "Triaged (Them Waiting)" viewTopic <|
               List.reverse (List.sortBy topicActivity themWaiting),
             cell "Triaged (Us Waiting)" viewTopic <|
-              List.reverse (List.sortBy topicActivity usWaiting),
-            if not <| List.isEmpty model.orphaned then
-              cell "Orphaned" viewOrphanedStory <|
-                model.orphaned
-            else
-              text ""
+              List.reverse (List.sortBy topicActivity usWaiting)
           ],
         div [class "column"] <|
           let
@@ -384,7 +379,12 @@ view model =
             cell "Them Waiting" viewUntriagedIssue <|
               List.reverse (List.sortBy untriagedIssueActivity themWaiting),
             cell "Us Waiting" viewUntriagedIssue <|
-              List.reverse (List.sortBy untriagedIssueActivity usWaiting)
+              List.reverse (List.sortBy untriagedIssueActivity usWaiting),
+            if not <| List.isEmpty model.orphaned then
+              cell "Orphaned" viewOrphanedStory <|
+                model.orphaned
+            else
+              text ""
           ],
         div [class "column"] [
           cell "Pending By Activity" viewUntriagedIssue <|
