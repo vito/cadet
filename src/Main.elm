@@ -5,7 +5,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, h1, h2, div, pre, text, a, span, i)
 import Html.Lazy
 import Html.Events exposing (onClick)
-import Html.Attributes exposing (class, classList, href, style)
+import Html.Attributes exposing (class, classList, href, style, target)
 import Html.App as Html
 import ParseInt
 import Regex exposing (Regex)
@@ -450,18 +450,18 @@ viewIssue issue extraCells =
 
     infoCell =
       div [class "issue-cell issue-info"] [
-        a [href issue.url, class "issue-title"] [
+        a [href issue.url, target "_blank", class "issue-title"] [
           text issue.title
         ],
         span [class "issue-labels"] <|
           List.map viewIssueLabel issue.labels,
         div [class "issue-meta"] [
-          a [href issue.repo.url] [text issue.repo.name],
+          a [href issue.repo.url, target "_blank"] [text issue.repo.name],
           text " ",
-          a [href issue.url] [text ("#" ++ toString issue.number)],
+          a [href issue.url, target "_blank"] [text ("#" ++ toString issue.number)],
           text " ",
           text "opened by ",
-          a [href issue.user.url] [text issue.user.login]
+          a [href issue.user.url, target "_blank"] [text issue.user.login]
         ]
       ]
 
@@ -590,7 +590,7 @@ viewStory story =
           i [class "octicon octicon-gift"] []
     ],
     div [class "story-cell story-location"] [
-      a [href story.url, class "story-location"] [
+      a [href story.url, target "_blank", class "story-location"] [
         text story.summary
       ]
     ],
