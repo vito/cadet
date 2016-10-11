@@ -735,17 +735,21 @@ groupByTopic stories issues =
 
 expandTopic : Dict Int (List Tracker.Story) -> Dict Int (List GitHub.Issue) -> List GitHub.Issue -> Topic
 expandTopic i2s s2i i1 =
+  allRelatedRecur i2s s2i { stories = allRelated i1 i2s, issues = i1 }
+
+allRelatedRecur : Dict Int (List Tracker.Story) -> Dict Int (List GitHub.Issue) -> Topic -> Topic
+allRelatedRecur i2s s2i sofar =
   let
-    s1 =
-      allRelated i1 i2s
+    relatedIssues =
+      allRelated sofar.stories s2i
 
-    i2 =
-      allRelated s1 s2i
-
-    s2 =
-      allRelated i2 i2s
+    relatedStories =
+      allRelated sofar.issues i2s
   in
-    { stories = s2, issues = i2 }
+    if relatedStories == sofar.stories && relatedIssues == sofar.issues then
+      sofar
+    else
+      allRelatedRecur i2s s2i { stories = relatedStories, issues = relatedIssues }
 
 allRelated : List { a | id : Int } -> Dict Int (List { b | id : Int }) -> List { b | id : Int }
 allRelated xs x2ys =
