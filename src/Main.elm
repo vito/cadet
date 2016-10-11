@@ -740,16 +740,15 @@ expandTopic i2s s2i i1 =
 allRelatedRecur : Dict Int (List Tracker.Story) -> Dict Int (List GitHub.Issue) -> Topic -> Topic
 allRelatedRecur i2s s2i sofar =
   let
-    relatedIssues =
-      allRelated sofar.stories s2i
-
-    relatedStories =
-      allRelated sofar.issues i2s
+    recursed =
+      { issues = allRelated sofar.stories s2i
+      , stories = allRelated sofar.issues i2s
+      }
   in
-    if relatedStories == sofar.stories && relatedIssues == sofar.issues then
+    if recursed == sofar then
       sofar
     else
-      allRelatedRecur i2s s2i { stories = relatedStories, issues = relatedIssues }
+      allRelatedRecur i2s s2i recursed
 
 allRelated : List { a | id : Int } -> Dict Int (List { b | id : Int }) -> List { b | id : Int }
 allRelated xs x2ys =
