@@ -22,7 +22,7 @@ type alias Config =
   , githubOrganization : String
   , trackerToken : String
   , trackerProject : Int
-  , tracksuitUser : String
+  , botUsers : List String
   }
 
 type alias Model =
@@ -227,10 +227,10 @@ update msg model =
 lastActivityIsUs : Model -> List GitHub.Comment -> Bool
 lastActivityIsUs model comments =
   let
-    withoutBot =
-      List.filter ((/=) model.config.tracksuitUser << .login << .user) comments
+    withoutBots =
+      List.filter (not << flip List.member model.config.botUsers << .login << .user) comments
   in
-    case List.head (List.reverse withoutBot) of
+    case List.head (List.reverse withoutBots) of
       Just comment ->
         isOrgMember model.members comment.user
 
