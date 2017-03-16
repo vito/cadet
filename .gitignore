@@ -3,9 +3,5 @@ elm-stuff/
 # elm-repl generated files
 repl-temp-*
 
-# compiled output
-public/elm.js
-public/main.css
-
 # private config
 config.js
