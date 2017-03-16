@@ -4,86 +4,75 @@ import Http
 import Json.Decode
 import Task exposing (Task)
 
+
 type alias Paginated page a =
-  { content : List a
-  , pagination : Pagination page
-  }
+    { content : List a
+    , pagination : Pagination page
+    }
+
 
 type alias Strategy page a =
-  { onPage : page -> Http.Request -> Http.Request
-  , nextPage : Http.Response -> Maybe page
-  , previousPage : Http.Response -> Maybe page
-  , content : Json.Decode.Decoder (List a)
-  }
+    { onPage : page -> String -> String
+    , nextPage : Http.Response String -> Maybe page
+    , previousPage : Http.Response String -> Maybe page
+    , content : Json.Decode.Decoder (List a)
+    }
+
 
 type alias Pagination page =
-  { previousPage : Maybe page
-  , nextPage : Maybe page
-  }
+    { previousPage : Maybe page
+    , nextPage : Maybe page
+    }
 
-fetch : String -> List (String, String) -> Strategy page a -> Maybe page -> Task Http.Error (Paginated page a)
+
+fetch : String -> List Http.Header -> Strategy page a -> Maybe page -> Task Http.Error (Paginated page a)
 fetch url headers strategy mpage =
-  let
-    request =
-      { verb = "GET"
+  Http.toTask <|
+    Http.request
+      { method = "GET"
       , headers = headers
-      , url = url
-      , body = Http.empty
+      , url =
+          case mpage of
+            Nothing ->
+              url
+            Just page ->
+              strategy.onPage page url
+      , body = Http.emptyBody
+      , expect = Http.expectStringResponse (parsePagination strategy)
+      , timeout = Nothing
+      , withCredentials = False
       }
 
-    paginatedRequest =
-      case mpage of
-        Nothing ->
-          request
-        Just page ->
-          strategy.onPage page request
 
-    get =
-      Http.send Http.defaultSettings paginatedRequest
-  in
-    Task.mapError promoteHttpError get `Task.andThen` \response ->
-      case handleResponse response `Result.andThen` decodeBody strategy.content of
-        Ok content ->
-          Task.succeed
-            { content = content
-            , pagination =
-                { previousPage = strategy.previousPage response
-                , nextPage = strategy.nextPage response
-                }
-            }
+parsePagination : Strategy page a -> Http.Response String -> Result String (Paginated page a)
+parsePagination strategy response =
+    let
+        decoded =
+            Json.Decode.decodeString strategy.content response.body
+    in
+        case decoded of
+            Err err ->
+                Err err
 
-        Err err ->
-          Task.fail err
+            Ok content ->
+                Ok
+                  { content = content
+                  , pagination =
+                      { previousPage = strategy.previousPage response
+                      , nextPage = strategy.nextPage response
+                      }
+                  }
 
-decodeBody : Json.Decode.Decoder (List a) -> String -> Result Http.Error (List a)
-decodeBody decode body =
-  Json.Decode.decodeString decode body
-    |> Result.formatError Http.UnexpectedPayload
 
-fetchAll : String -> List (String, String) -> Strategy page a -> Maybe page -> Task Http.Error (List a)
+fetchAll : String -> List Http.Header -> Strategy page a -> Maybe page -> Task Http.Error (List a)
 fetchAll url headers strategy mpage =
-  fetch url headers strategy mpage `Task.andThen` \paginated ->
-    case paginated.pagination.nextPage of
-      Nothing ->
-        Task.succeed paginated.content
+    fetch url headers strategy mpage
+        |> Task.andThen
+            (\paginated ->
+                case paginated.pagination.nextPage of
+                    Nothing ->
+                        Task.succeed paginated.content
 
-      Just next ->
-        Task.map ((++) paginated.content) (fetchAll url headers strategy (Just next))
-
-handleResponse : Http.Response -> Result Http.Error String
-handleResponse response =
-  if 200 <= response.status && response.status < 300 then
-    case response.value of
-      Http.Text str ->
-        Ok str
-
-      _ ->
-        Err (Http.UnexpectedPayload "Response body is a blob, expecting a string.")
-  else
-    Err (Http.BadResponse response.status response.statusText)
-
-promoteHttpError : Http.RawError -> Http.Error
-promoteHttpError rawError =
-  case rawError of
-    Http.RawTimeout -> Http.Timeout
-    Http.RawNetworkError -> Http.NetworkError
+                    Just next ->
+                        Task.map ((++) paginated.content) (fetchAll url headers strategy (Just next))
+            )
