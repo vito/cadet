@@ -27,21 +27,22 @@ type alias Pagination page =
 
 fetch : String -> List Http.Header -> Strategy page a -> Maybe page -> Task Http.Error (Paginated page a)
 fetch url headers strategy mpage =
-  Http.toTask <|
-    Http.request
-      { method = "GET"
-      , headers = headers
-      , url =
-          case mpage of
-            Nothing ->
-              url
-            Just page ->
-              strategy.onPage page url
-      , body = Http.emptyBody
-      , expect = Http.expectStringResponse (parsePagination strategy)
-      , timeout = Nothing
-      , withCredentials = False
-      }
+    Http.toTask <|
+        Http.request
+            { method = "GET"
+            , headers = headers
+            , url =
+                case mpage of
+                    Nothing ->
+                        url
+
+                    Just page ->
+                        strategy.onPage page url
+            , body = Http.emptyBody
+            , expect = Http.expectStringResponse (parsePagination strategy)
+            , timeout = Nothing
+            , withCredentials = False
+            }
 
 
 parsePagination : Strategy page a -> Http.Response String -> Result String (Paginated page a)
@@ -56,12 +57,12 @@ parsePagination strategy response =
 
             Ok content ->
                 Ok
-                  { content = content
-                  , pagination =
-                      { previousPage = strategy.previousPage response
-                      , nextPage = strategy.nextPage response
-                      }
-                  }
+                    { content = content
+                    , pagination =
+                        { previousPage = strategy.previousPage response
+                        , nextPage = strategy.nextPage response
+                        }
+                    }
 
 
 fetchAll : String -> List Http.Header -> Strategy page a -> Maybe page -> Task Http.Error (List a)

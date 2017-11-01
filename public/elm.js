@@ -135,970 +135,36 @@ function A9(fun, a, b, c, d, e, f, g, h, i)
     : fun(a)(b)(c)(d)(e)(f)(g)(h)(i);
 }
 
-//import Native.List //
+//import Result //
 
-var _elm_lang$core$Native_Array = function() {
+var _elm_lang$core$Native_Date = function() {
 
-// A RRB-Tree has two distinct data types.
-// Leaf -> "height"  is always 0
-//         "table"   is an array of elements
-// Node -> "height"  is always greater than 0
-//         "table"   is an array of child nodes
-//         "lengths" is an array of accumulated lengths of the child nodes
-
-// M is the maximal table size. 32 seems fast. E is the allowed increase
-// of search steps when concatting to find an index. Lower values will
-// decrease balancing, but will increase search steps.
-var M = 32;
-var E = 2;
-
-// An empty array.
-var empty = {
-	ctor: '_Array',
-	height: 0,
-	table: []
-};
-
-
-function get(i, array)
+function fromString(str)
 {
-	if (i < 0 || i >= length(array))
-	{
-		throw new Error(
-			'Index ' + i + ' is out of range. Check the length of ' +
-			'your array first or use getMaybe or getWithDefault.');
-	}
-	return unsafeGet(i, array);
+	var date = new Date(str);
+	return isNaN(date.getTime())
+		? _elm_lang$core$Result$Err('Unable to parse \'' + str + '\' as a date. Dates must be in the ISO 8601 format.')
+		: _elm_lang$core$Result$Ok(date);
 }
 
+var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var monthTable =
+	['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+	 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function unsafeGet(i, array)
-{
-	for (var x = array.height; x > 0; x--)
-	{
-		var slot = i >> (x * 5);
-		while (array.lengths[slot] <= i)
-		{
-			slot++;
-		}
-		if (slot > 0)
-		{
-			i -= array.lengths[slot - 1];
-		}
-		array = array.table[slot];
-	}
-	return array.table[i];
-}
-
-
-// Sets the value at the index i. Only the nodes leading to i will get
-// copied and updated.
-function set(i, item, array)
-{
-	if (i < 0 || length(array) <= i)
-	{
-		return array;
-	}
-	return unsafeSet(i, item, array);
-}
-
-
-function unsafeSet(i, item, array)
-{
-	array = nodeCopy(array);
-
-	if (array.height === 0)
-	{
-		array.table[i] = item;
-	}
-	else
-	{
-		var slot = getSlot(i, array);
-		if (slot > 0)
-		{
-			i -= array.lengths[slot - 1];
-		}
-		array.table[slot] = unsafeSet(i, item, array.table[slot]);
-	}
-	return array;
-}
-
-
-function initialize(len, f)
-{
-	if (len <= 0)
-	{
-		return empty;
-	}
-	var h = Math.floor( Math.log(len) / Math.log(M) );
-	return initialize_(f, h, 0, len);
-}
-
-function initialize_(f, h, from, to)
-{
-	if (h === 0)
-	{
-		var table = new Array((to - from) % (M + 1));
-		for (var i = 0; i < table.length; i++)
-		{
-		  table[i] = f(from + i);
-		}
-		return {
-			ctor: '_Array',
-			height: 0,
-			table: table
-		};
-	}
-
-	var step = Math.pow(M, h);
-	var table = new Array(Math.ceil((to - from) / step));
-	var lengths = new Array(table.length);
-	for (var i = 0; i < table.length; i++)
-	{
-		table[i] = initialize_(f, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
-		lengths[i] = length(table[i]) + (i > 0 ? lengths[i-1] : 0);
-	}
-	return {
-		ctor: '_Array',
-		height: h,
-		table: table,
-		lengths: lengths
-	};
-}
-
-function fromList(list)
-{
-	if (list.ctor === '[]')
-	{
-		return empty;
-	}
-
-	// Allocate M sized blocks (table) and write list elements to it.
-	var table = new Array(M);
-	var nodes = [];
-	var i = 0;
-
-	while (list.ctor !== '[]')
-	{
-		table[i] = list._0;
-		list = list._1;
-		i++;
-
-		// table is full, so we can push a leaf containing it into the
-		// next node.
-		if (i === M)
-		{
-			var leaf = {
-				ctor: '_Array',
-				height: 0,
-				table: table
-			};
-			fromListPush(leaf, nodes);
-			table = new Array(M);
-			i = 0;
-		}
-	}
-
-	// Maybe there is something left on the table.
-	if (i > 0)
-	{
-		var leaf = {
-			ctor: '_Array',
-			height: 0,
-			table: table.splice(0, i)
-		};
-		fromListPush(leaf, nodes);
-	}
-
-	// Go through all of the nodes and eventually push them into higher nodes.
-	for (var h = 0; h < nodes.length - 1; h++)
-	{
-		if (nodes[h].table.length > 0)
-		{
-			fromListPush(nodes[h], nodes);
-		}
-	}
-
-	var head = nodes[nodes.length - 1];
-	if (head.height > 0 && head.table.length === 1)
-	{
-		return head.table[0];
-	}
-	else
-	{
-		return head;
-	}
-}
-
-// Push a node into a higher node as a child.
-function fromListPush(toPush, nodes)
-{
-	var h = toPush.height;
-
-	// Maybe the node on this height does not exist.
-	if (nodes.length === h)
-	{
-		var node = {
-			ctor: '_Array',
-			height: h + 1,
-			table: [],
-			lengths: []
-		};
-		nodes.push(node);
-	}
-
-	nodes[h].table.push(toPush);
-	var len = length(toPush);
-	if (nodes[h].lengths.length > 0)
-	{
-		len += nodes[h].lengths[nodes[h].lengths.length - 1];
-	}
-	nodes[h].lengths.push(len);
-
-	if (nodes[h].table.length === M)
-	{
-		fromListPush(nodes[h], nodes);
-		nodes[h] = {
-			ctor: '_Array',
-			height: h + 1,
-			table: [],
-			lengths: []
-		};
-	}
-}
-
-// Pushes an item via push_ to the bottom right of a tree.
-function push(item, a)
-{
-	var pushed = push_(item, a);
-	if (pushed !== null)
-	{
-		return pushed;
-	}
-
-	var newTree = create(item, a.height);
-	return siblise(a, newTree);
-}
-
-// Recursively tries to push an item to the bottom-right most
-// tree possible. If there is no space left for the item,
-// null will be returned.
-function push_(item, a)
-{
-	// Handle resursion stop at leaf level.
-	if (a.height === 0)
-	{
-		if (a.table.length < M)
-		{
-			var newA = {
-				ctor: '_Array',
-				height: 0,
-				table: a.table.slice()
-			};
-			newA.table.push(item);
-			return newA;
-		}
-		else
-		{
-		  return null;
-		}
-	}
-
-	// Recursively push
-	var pushed = push_(item, botRight(a));
-
-	// There was space in the bottom right tree, so the slot will
-	// be updated.
-	if (pushed !== null)
-	{
-		var newA = nodeCopy(a);
-		newA.table[newA.table.length - 1] = pushed;
-		newA.lengths[newA.lengths.length - 1]++;
-		return newA;
-	}
-
-	// When there was no space left, check if there is space left
-	// for a new slot with a tree which contains only the item
-	// at the bottom.
-	if (a.table.length < M)
-	{
-		var newSlot = create(item, a.height - 1);
-		var newA = nodeCopy(a);
-		newA.table.push(newSlot);
-		newA.lengths.push(newA.lengths[newA.lengths.length - 1] + length(newSlot));
-		return newA;
-	}
-	else
-	{
-		return null;
-	}
-}
-
-// Converts an array into a list of elements.
-function toList(a)
-{
-	return toList_(_elm_lang$core$Native_List.Nil, a);
-}
-
-function toList_(list, a)
-{
-	for (var i = a.table.length - 1; i >= 0; i--)
-	{
-		list =
-			a.height === 0
-				? _elm_lang$core$Native_List.Cons(a.table[i], list)
-				: toList_(list, a.table[i]);
-	}
-	return list;
-}
-
-// Maps a function over the elements of an array.
-function map(f, a)
-{
-	var newA = {
-		ctor: '_Array',
-		height: a.height,
-		table: new Array(a.table.length)
-	};
-	if (a.height > 0)
-	{
-		newA.lengths = a.lengths;
-	}
-	for (var i = 0; i < a.table.length; i++)
-	{
-		newA.table[i] =
-			a.height === 0
-				? f(a.table[i])
-				: map(f, a.table[i]);
-	}
-	return newA;
-}
-
-// Maps a function over the elements with their index as first argument.
-function indexedMap(f, a)
-{
-	return indexedMap_(f, a, 0);
-}
-
-function indexedMap_(f, a, from)
-{
-	var newA = {
-		ctor: '_Array',
-		height: a.height,
-		table: new Array(a.table.length)
-	};
-	if (a.height > 0)
-	{
-		newA.lengths = a.lengths;
-	}
-	for (var i = 0; i < a.table.length; i++)
-	{
-		newA.table[i] =
-			a.height === 0
-				? A2(f, from + i, a.table[i])
-				: indexedMap_(f, a.table[i], i == 0 ? from : from + a.lengths[i - 1]);
-	}
-	return newA;
-}
-
-function foldl(f, b, a)
-{
-	if (a.height === 0)
-	{
-		for (var i = 0; i < a.table.length; i++)
-		{
-			b = A2(f, a.table[i], b);
-		}
-	}
-	else
-	{
-		for (var i = 0; i < a.table.length; i++)
-		{
-			b = foldl(f, b, a.table[i]);
-		}
-	}
-	return b;
-}
-
-function foldr(f, b, a)
-{
-	if (a.height === 0)
-	{
-		for (var i = a.table.length; i--; )
-		{
-			b = A2(f, a.table[i], b);
-		}
-	}
-	else
-	{
-		for (var i = a.table.length; i--; )
-		{
-			b = foldr(f, b, a.table[i]);
-		}
-	}
-	return b;
-}
-
-// TODO: currently, it slices the right, then the left. This can be
-// optimized.
-function slice(from, to, a)
-{
-	if (from < 0)
-	{
-		from += length(a);
-	}
-	if (to < 0)
-	{
-		to += length(a);
-	}
-	return sliceLeft(from, sliceRight(to, a));
-}
-
-function sliceRight(to, a)
-{
-	if (to === length(a))
-	{
-		return a;
-	}
-
-	// Handle leaf level.
-	if (a.height === 0)
-	{
-		var newA = { ctor:'_Array', height:0 };
-		newA.table = a.table.slice(0, to);
-		return newA;
-	}
-
-	// Slice the right recursively.
-	var right = getSlot(to, a);
-	var sliced = sliceRight(to - (right > 0 ? a.lengths[right - 1] : 0), a.table[right]);
-
-	// Maybe the a node is not even needed, as sliced contains the whole slice.
-	if (right === 0)
-	{
-		return sliced;
-	}
-
-	// Create new node.
-	var newA = {
-		ctor: '_Array',
-		height: a.height,
-		table: a.table.slice(0, right),
-		lengths: a.lengths.slice(0, right)
-	};
-	if (sliced.table.length > 0)
-	{
-		newA.table[right] = sliced;
-		newA.lengths[right] = length(sliced) + (right > 0 ? newA.lengths[right - 1] : 0);
-	}
-	return newA;
-}
-
-function sliceLeft(from, a)
-{
-	if (from === 0)
-	{
-		return a;
-	}
-
-	// Handle leaf level.
-	if (a.height === 0)
-	{
-		var newA = { ctor:'_Array', height:0 };
-		newA.table = a.table.slice(from, a.table.length + 1);
-		return newA;
-	}
-
-	// Slice the left recursively.
-	var left = getSlot(from, a);
-	var sliced = sliceLeft(from - (left > 0 ? a.lengths[left - 1] : 0), a.table[left]);
-
-	// Maybe the a node is not even needed, as sliced contains the whole slice.
-	if (left === a.table.length - 1)
-	{
-		return sliced;
-	}
-
-	// Create new node.
-	var newA = {
-		ctor: '_Array',
-		height: a.height,
-		table: a.table.slice(left, a.table.length + 1),
-		lengths: new Array(a.table.length - left)
-	};
-	newA.table[0] = sliced;
-	var len = 0;
-	for (var i = 0; i < newA.table.length; i++)
-	{
-		len += length(newA.table[i]);
-		newA.lengths[i] = len;
-	}
-
-	return newA;
-}
-
-// Appends two trees.
-function append(a,b)
-{
-	if (a.table.length === 0)
-	{
-		return b;
-	}
-	if (b.table.length === 0)
-	{
-		return a;
-	}
-
-	var c = append_(a, b);
-
-	// Check if both nodes can be crunshed together.
-	if (c[0].table.length + c[1].table.length <= M)
-	{
-		if (c[0].table.length === 0)
-		{
-			return c[1];
-		}
-		if (c[1].table.length === 0)
-		{
-			return c[0];
-		}
-
-		// Adjust .table and .lengths
-		c[0].table = c[0].table.concat(c[1].table);
-		if (c[0].height > 0)
-		{
-			var len = length(c[0]);
-			for (var i = 0; i < c[1].lengths.length; i++)
-			{
-				c[1].lengths[i] += len;
-			}
-			c[0].lengths = c[0].lengths.concat(c[1].lengths);
-		}
-
-		return c[0];
-	}
-
-	if (c[0].height > 0)
-	{
-		var toRemove = calcToRemove(a, b);
-		if (toRemove > E)
-		{
-			c = shuffle(c[0], c[1], toRemove);
-		}
-	}
-
-	return siblise(c[0], c[1]);
-}
-
-// Returns an array of two nodes; right and left. One node _may_ be empty.
-function append_(a, b)
-{
-	if (a.height === 0 && b.height === 0)
-	{
-		return [a, b];
-	}
-
-	if (a.height !== 1 || b.height !== 1)
-	{
-		if (a.height === b.height)
-		{
-			a = nodeCopy(a);
-			b = nodeCopy(b);
-			var appended = append_(botRight(a), botLeft(b));
-
-			insertRight(a, appended[1]);
-			insertLeft(b, appended[0]);
-		}
-		else if (a.height > b.height)
-		{
-			a = nodeCopy(a);
-			var appended = append_(botRight(a), b);
-
-			insertRight(a, appended[0]);
-			b = parentise(appended[1], appended[1].height + 1);
-		}
-		else
-		{
-			b = nodeCopy(b);
-			var appended = append_(a, botLeft(b));
-
-			var left = appended[0].table.length === 0 ? 0 : 1;
-			var right = left === 0 ? 1 : 0;
-			insertLeft(b, appended[left]);
-			a = parentise(appended[right], appended[right].height + 1);
-		}
-	}
-
-	// Check if balancing is needed and return based on that.
-	if (a.table.length === 0 || b.table.length === 0)
-	{
-		return [a, b];
-	}
-
-	var toRemove = calcToRemove(a, b);
-	if (toRemove <= E)
-	{
-		return [a, b];
-	}
-	return shuffle(a, b, toRemove);
-}
-
-// Helperfunctions for append_. Replaces a child node at the side of the parent.
-function insertRight(parent, node)
-{
-	var index = parent.table.length - 1;
-	parent.table[index] = node;
-	parent.lengths[index] = length(node);
-	parent.lengths[index] += index > 0 ? parent.lengths[index - 1] : 0;
-}
-
-function insertLeft(parent, node)
-{
-	if (node.table.length > 0)
-	{
-		parent.table[0] = node;
-		parent.lengths[0] = length(node);
-
-		var len = length(parent.table[0]);
-		for (var i = 1; i < parent.lengths.length; i++)
-		{
-			len += length(parent.table[i]);
-			parent.lengths[i] = len;
-		}
-	}
-	else
-	{
-		parent.table.shift();
-		for (var i = 1; i < parent.lengths.length; i++)
-		{
-			parent.lengths[i] = parent.lengths[i] - parent.lengths[0];
-		}
-		parent.lengths.shift();
-	}
-}
-
-// Returns the extra search steps for E. Refer to the paper.
-function calcToRemove(a, b)
-{
-	var subLengths = 0;
-	for (var i = 0; i < a.table.length; i++)
-	{
-		subLengths += a.table[i].table.length;
-	}
-	for (var i = 0; i < b.table.length; i++)
-	{
-		subLengths += b.table[i].table.length;
-	}
-
-	var toRemove = a.table.length + b.table.length;
-	return toRemove - (Math.floor((subLengths - 1) / M) + 1);
-}
-
-// get2, set2 and saveSlot are helpers for accessing elements over two arrays.
-function get2(a, b, index)
-{
-	return index < a.length
-		? a[index]
-		: b[index - a.length];
-}
-
-function set2(a, b, index, value)
-{
-	if (index < a.length)
-	{
-		a[index] = value;
-	}
-	else
-	{
-		b[index - a.length] = value;
-	}
-}
-
-function saveSlot(a, b, index, slot)
-{
-	set2(a.table, b.table, index, slot);
-
-	var l = (index === 0 || index === a.lengths.length)
-		? 0
-		: get2(a.lengths, a.lengths, index - 1);
-
-	set2(a.lengths, b.lengths, index, l + length(slot));
-}
-
-// Creates a node or leaf with a given length at their arrays for perfomance.
-// Is only used by shuffle.
-function createNode(h, length)
-{
-	if (length < 0)
-	{
-		length = 0;
-	}
-	var a = {
-		ctor: '_Array',
-		height: h,
-		table: new Array(length)
-	};
-	if (h > 0)
-	{
-		a.lengths = new Array(length);
-	}
-	return a;
-}
-
-// Returns an array of two balanced nodes.
-function shuffle(a, b, toRemove)
-{
-	var newA = createNode(a.height, Math.min(M, a.table.length + b.table.length - toRemove));
-	var newB = createNode(a.height, newA.table.length - (a.table.length + b.table.length - toRemove));
-
-	// Skip the slots with size M. More precise: copy the slot references
-	// to the new node
-	var read = 0;
-	while (get2(a.table, b.table, read).table.length % M === 0)
-	{
-		set2(newA.table, newB.table, read, get2(a.table, b.table, read));
-		set2(newA.lengths, newB.lengths, read, get2(a.lengths, b.lengths, read));
-		read++;
-	}
-
-	// Pulling items from left to right, caching in a slot before writing
-	// it into the new nodes.
-	var write = read;
-	var slot = new createNode(a.height - 1, 0);
-	var from = 0;
-
-	// If the current slot is still containing data, then there will be at
-	// least one more write, so we do not break this loop yet.
-	while (read - write - (slot.table.length > 0 ? 1 : 0) < toRemove)
-	{
-		// Find out the max possible items for copying.
-		var source = get2(a.table, b.table, read);
-		var to = Math.min(M - slot.table.length, source.table.length);
-
-		// Copy and adjust size table.
-		slot.table = slot.table.concat(source.table.slice(from, to));
-		if (slot.height > 0)
-		{
-			var len = slot.lengths.length;
-			for (var i = len; i < len + to - from; i++)
-			{
-				slot.lengths[i] = length(slot.table[i]);
-				slot.lengths[i] += (i > 0 ? slot.lengths[i - 1] : 0);
-			}
-		}
-
-		from += to;
-
-		// Only proceed to next slots[i] if the current one was
-		// fully copied.
-		if (source.table.length <= to)
-		{
-			read++; from = 0;
-		}
-
-		// Only create a new slot if the current one is filled up.
-		if (slot.table.length === M)
-		{
-			saveSlot(newA, newB, write, slot);
-			slot = createNode(a.height - 1, 0);
-			write++;
-		}
-	}
-
-	// Cleanup after the loop. Copy the last slot into the new nodes.
-	if (slot.table.length > 0)
-	{
-		saveSlot(newA, newB, write, slot);
-		write++;
-	}
-
-	// Shift the untouched slots to the left
-	while (read < a.table.length + b.table.length )
-	{
-		saveSlot(newA, newB, write, get2(a.table, b.table, read));
-		read++;
-		write++;
-	}
-
-	return [newA, newB];
-}
-
-// Navigation functions
-function botRight(a)
-{
-	return a.table[a.table.length - 1];
-}
-function botLeft(a)
-{
-	return a.table[0];
-}
-
-// Copies a node for updating. Note that you should not use this if
-// only updating only one of "table" or "lengths" for performance reasons.
-function nodeCopy(a)
-{
-	var newA = {
-		ctor: '_Array',
-		height: a.height,
-		table: a.table.slice()
-	};
-	if (a.height > 0)
-	{
-		newA.lengths = a.lengths.slice();
-	}
-	return newA;
-}
-
-// Returns how many items are in the tree.
-function length(array)
-{
-	if (array.height === 0)
-	{
-		return array.table.length;
-	}
-	else
-	{
-		return array.lengths[array.lengths.length - 1];
-	}
-}
-
-// Calculates in which slot of "table" the item probably is, then
-// find the exact slot via forward searching in  "lengths". Returns the index.
-function getSlot(i, a)
-{
-	var slot = i >> (5 * a.height);
-	while (a.lengths[slot] <= i)
-	{
-		slot++;
-	}
-	return slot;
-}
-
-// Recursively creates a tree with a given height containing
-// only the given item.
-function create(item, h)
-{
-	if (h === 0)
-	{
-		return {
-			ctor: '_Array',
-			height: 0,
-			table: [item]
-		};
-	}
-	return {
-		ctor: '_Array',
-		height: h,
-		table: [create(item, h - 1)],
-		lengths: [1]
-	};
-}
-
-// Recursively creates a tree that contains the given tree.
-function parentise(tree, h)
-{
-	if (h === tree.height)
-	{
-		return tree;
-	}
-
-	return {
-		ctor: '_Array',
-		height: h,
-		table: [parentise(tree, h - 1)],
-		lengths: [length(tree)]
-	};
-}
-
-// Emphasizes blood brotherhood beneath two trees.
-function siblise(a, b)
-{
-	return {
-		ctor: '_Array',
-		height: a.height + 1,
-		table: [a, b],
-		lengths: [length(a), length(a) + length(b)]
-	};
-}
-
-function toJSArray(a)
-{
-	var jsArray = new Array(length(a));
-	toJSArray_(jsArray, 0, a);
-	return jsArray;
-}
-
-function toJSArray_(jsArray, i, a)
-{
-	for (var t = 0; t < a.table.length; t++)
-	{
-		if (a.height === 0)
-		{
-			jsArray[i + t] = a.table[t];
-		}
-		else
-		{
-			var inc = t === 0 ? 0 : a.lengths[t - 1];
-			toJSArray_(jsArray, i + inc, a.table[t]);
-		}
-	}
-}
-
-function fromJSArray(jsArray)
-{
-	if (jsArray.length === 0)
-	{
-		return empty;
-	}
-	var h = Math.floor(Math.log(jsArray.length) / Math.log(M));
-	return fromJSArray_(jsArray, h, 0, jsArray.length);
-}
-
-function fromJSArray_(jsArray, h, from, to)
-{
-	if (h === 0)
-	{
-		return {
-			ctor: '_Array',
-			height: 0,
-			table: jsArray.slice(from, to)
-		};
-	}
-
-	var step = Math.pow(M, h);
-	var table = new Array(Math.ceil((to - from) / step));
-	var lengths = new Array(table.length);
-	for (var i = 0; i < table.length; i++)
-	{
-		table[i] = fromJSArray_(jsArray, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
-		lengths[i] = length(table[i]) + (i > 0 ? lengths[i - 1] : 0);
-	}
-	return {
-		ctor: '_Array',
-		height: h,
-		table: table,
-		lengths: lengths
-	};
-}
 
 return {
-	empty: empty,
-	fromList: fromList,
-	toList: toList,
-	initialize: F2(initialize),
-	append: F2(append),
-	push: F2(push),
-	slice: F3(slice),
-	get: F2(get),
-	set: F3(set),
-	map: F2(map),
-	indexedMap: F2(indexedMap),
-	foldl: F3(foldl),
-	foldr: F3(foldr),
-	length: length,
-
-	toJSArray: toJSArray,
-	fromJSArray: fromJSArray
+	fromString: fromString,
+	year: function(d) { return d.getFullYear(); },
+	month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+	day: function(d) { return d.getDate(); },
+	hour: function(d) { return d.getHours(); },
+	minute: function(d) { return d.getMinutes(); },
+	second: function(d) { return d.getSeconds(); },
+	millisecond: function(d) { return d.getMilliseconds(); },
+	toTime: function(d) { return d.getTime(); },
+	fromTime: function(t) { return new Date(t); },
+	dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
 };
 
 }();
@@ -2620,60 +1686,1216 @@ var _elm_lang$core$List$indexedMap = F2(
 			xs);
 	});
 
-var _elm_lang$core$Array$append = _elm_lang$core$Native_Array.append;
-var _elm_lang$core$Array$length = _elm_lang$core$Native_Array.length;
-var _elm_lang$core$Array$isEmpty = function (array) {
-	return _elm_lang$core$Native_Utils.eq(
-		_elm_lang$core$Array$length(array),
-		0);
-};
-var _elm_lang$core$Array$slice = _elm_lang$core$Native_Array.slice;
-var _elm_lang$core$Array$set = _elm_lang$core$Native_Array.set;
-var _elm_lang$core$Array$get = F2(
-	function (i, array) {
-		return ((_elm_lang$core$Native_Utils.cmp(0, i) < 1) && (_elm_lang$core$Native_Utils.cmp(
-			i,
-			_elm_lang$core$Native_Array.length(array)) < 0)) ? _elm_lang$core$Maybe$Just(
-			A2(_elm_lang$core$Native_Array.get, i, array)) : _elm_lang$core$Maybe$Nothing;
+//import Native.Utils //
+
+var _elm_lang$core$Native_Scheduler = function() {
+
+var MAX_STEPS = 10000;
+
+
+// TASKS
+
+function succeed(value)
+{
+	return {
+		ctor: '_Task_succeed',
+		value: value
+	};
+}
+
+function fail(error)
+{
+	return {
+		ctor: '_Task_fail',
+		value: error
+	};
+}
+
+function nativeBinding(callback)
+{
+	return {
+		ctor: '_Task_nativeBinding',
+		callback: callback,
+		cancel: null
+	};
+}
+
+function andThen(callback, task)
+{
+	return {
+		ctor: '_Task_andThen',
+		callback: callback,
+		task: task
+	};
+}
+
+function onError(callback, task)
+{
+	return {
+		ctor: '_Task_onError',
+		callback: callback,
+		task: task
+	};
+}
+
+function receive(callback)
+{
+	return {
+		ctor: '_Task_receive',
+		callback: callback
+	};
+}
+
+
+// PROCESSES
+
+function rawSpawn(task)
+{
+	var process = {
+		ctor: '_Process',
+		id: _elm_lang$core$Native_Utils.guid(),
+		root: task,
+		stack: null,
+		mailbox: []
+	};
+
+	enqueue(process);
+
+	return process;
+}
+
+function spawn(task)
+{
+	return nativeBinding(function(callback) {
+		var process = rawSpawn(task);
+		callback(succeed(process));
 	});
-var _elm_lang$core$Array$push = _elm_lang$core$Native_Array.push;
-var _elm_lang$core$Array$empty = _elm_lang$core$Native_Array.empty;
-var _elm_lang$core$Array$filter = F2(
-	function (isOkay, arr) {
-		var update = F2(
-			function (x, xs) {
-				return isOkay(x) ? A2(_elm_lang$core$Native_Array.push, x, xs) : xs;
+}
+
+function rawSend(process, msg)
+{
+	process.mailbox.push(msg);
+	enqueue(process);
+}
+
+function send(process, msg)
+{
+	return nativeBinding(function(callback) {
+		rawSend(process, msg);
+		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+	});
+}
+
+function kill(process)
+{
+	return nativeBinding(function(callback) {
+		var root = process.root;
+		if (root.ctor === '_Task_nativeBinding' && root.cancel)
+		{
+			root.cancel();
+		}
+
+		process.root = null;
+
+		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+	});
+}
+
+function sleep(time)
+{
+	return nativeBinding(function(callback) {
+		var id = setTimeout(function() {
+			callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
+		}, time);
+
+		return function() { clearTimeout(id); };
+	});
+}
+
+
+// STEP PROCESSES
+
+function step(numSteps, process)
+{
+	while (numSteps < MAX_STEPS)
+	{
+		var ctor = process.root.ctor;
+
+		if (ctor === '_Task_succeed')
+		{
+			while (process.stack && process.stack.ctor === '_Task_onError')
+			{
+				process.stack = process.stack.rest;
+			}
+			if (process.stack === null)
+			{
+				break;
+			}
+			process.root = process.stack.callback(process.root.value);
+			process.stack = process.stack.rest;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_fail')
+		{
+			while (process.stack && process.stack.ctor === '_Task_andThen')
+			{
+				process.stack = process.stack.rest;
+			}
+			if (process.stack === null)
+			{
+				break;
+			}
+			process.root = process.stack.callback(process.root.value);
+			process.stack = process.stack.rest;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_andThen')
+		{
+			process.stack = {
+				ctor: '_Task_andThen',
+				callback: process.root.callback,
+				rest: process.stack
+			};
+			process.root = process.root.task;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_onError')
+		{
+			process.stack = {
+				ctor: '_Task_onError',
+				callback: process.root.callback,
+				rest: process.stack
+			};
+			process.root = process.root.task;
+			++numSteps;
+			continue;
+		}
+
+		if (ctor === '_Task_nativeBinding')
+		{
+			process.root.cancel = process.root.callback(function(newRoot) {
+				process.root = newRoot;
+				enqueue(process);
 			});
-		return A3(_elm_lang$core$Native_Array.foldl, update, _elm_lang$core$Native_Array.empty, arr);
-	});
-var _elm_lang$core$Array$foldr = _elm_lang$core$Native_Array.foldr;
-var _elm_lang$core$Array$foldl = _elm_lang$core$Native_Array.foldl;
-var _elm_lang$core$Array$indexedMap = _elm_lang$core$Native_Array.indexedMap;
-var _elm_lang$core$Array$map = _elm_lang$core$Native_Array.map;
-var _elm_lang$core$Array$toIndexedList = function (array) {
-	return A3(
-		_elm_lang$core$List$map2,
-		F2(
-			function (v0, v1) {
-				return {ctor: '_Tuple2', _0: v0, _1: v1};
-			}),
-		A2(
-			_elm_lang$core$List$range,
-			0,
-			_elm_lang$core$Native_Array.length(array) - 1),
-		_elm_lang$core$Native_Array.toList(array));
+
+			break;
+		}
+
+		if (ctor === '_Task_receive')
+		{
+			var mailbox = process.mailbox;
+			if (mailbox.length === 0)
+			{
+				break;
+			}
+
+			process.root = process.root.callback(mailbox.shift());
+			++numSteps;
+			continue;
+		}
+
+		throw new Error(ctor);
+	}
+
+	if (numSteps < MAX_STEPS)
+	{
+		return numSteps + 1;
+	}
+	enqueue(process);
+
+	return numSteps;
+}
+
+
+// WORK QUEUE
+
+var working = false;
+var workQueue = [];
+
+function enqueue(process)
+{
+	workQueue.push(process);
+
+	if (!working)
+	{
+		setTimeout(work, 0);
+		working = true;
+	}
+}
+
+function work()
+{
+	var numSteps = 0;
+	var process;
+	while (numSteps < MAX_STEPS && (process = workQueue.shift()))
+	{
+		if (process.root)
+		{
+			numSteps = step(numSteps, process);
+		}
+	}
+	if (!process)
+	{
+		working = false;
+		return;
+	}
+	setTimeout(work, 0);
+}
+
+
+return {
+	succeed: succeed,
+	fail: fail,
+	nativeBinding: nativeBinding,
+	andThen: F2(andThen),
+	onError: F2(onError),
+	receive: receive,
+
+	spawn: spawn,
+	kill: kill,
+	sleep: sleep,
+	send: F2(send),
+
+	rawSpawn: rawSpawn,
+	rawSend: rawSend
 };
-var _elm_lang$core$Array$toList = _elm_lang$core$Native_Array.toList;
-var _elm_lang$core$Array$fromList = _elm_lang$core$Native_Array.fromList;
-var _elm_lang$core$Array$initialize = _elm_lang$core$Native_Array.initialize;
-var _elm_lang$core$Array$repeat = F2(
-	function (n, e) {
-		return A2(
-			_elm_lang$core$Array$initialize,
-			n,
-			_elm_lang$core$Basics$always(e));
+
+}();
+//import //
+
+var _elm_lang$core$Native_Platform = function() {
+
+
+// PROGRAMS
+
+function program(impl)
+{
+	return function(flagDecoder)
+	{
+		return function(object, moduleName)
+		{
+			object['worker'] = function worker(flags)
+			{
+				if (typeof flags !== 'undefined')
+				{
+					throw new Error(
+						'The `' + moduleName + '` module does not need flags.\n'
+						+ 'Call ' + moduleName + '.worker() with no arguments and you should be all set!'
+					);
+				}
+
+				return initialize(
+					impl.init,
+					impl.update,
+					impl.subscriptions,
+					renderer
+				);
+			};
+		};
+	};
+}
+
+function programWithFlags(impl)
+{
+	return function(flagDecoder)
+	{
+		return function(object, moduleName)
+		{
+			object['worker'] = function worker(flags)
+			{
+				if (typeof flagDecoder === 'undefined')
+				{
+					throw new Error(
+						'Are you trying to sneak a Never value into Elm? Trickster!\n'
+						+ 'It looks like ' + moduleName + '.main is defined with `programWithFlags` but has type `Program Never`.\n'
+						+ 'Use `program` instead if you do not want flags.'
+					);
+				}
+
+				var result = A2(_elm_lang$core$Native_Json.run, flagDecoder, flags);
+				if (result.ctor === 'Err')
+				{
+					throw new Error(
+						moduleName + '.worker(...) was called with an unexpected argument.\n'
+						+ 'I tried to convert it to an Elm value, but ran into this problem:\n\n'
+						+ result._0
+					);
+				}
+
+				return initialize(
+					impl.init(result._0),
+					impl.update,
+					impl.subscriptions,
+					renderer
+				);
+			};
+		};
+	};
+}
+
+function renderer(enqueue, _)
+{
+	return function(_) {};
+}
+
+
+// HTML TO PROGRAM
+
+function htmlToProgram(vnode)
+{
+	var emptyBag = batch(_elm_lang$core$Native_List.Nil);
+	var noChange = _elm_lang$core$Native_Utils.Tuple2(
+		_elm_lang$core$Native_Utils.Tuple0,
+		emptyBag
+	);
+
+	return _elm_lang$virtual_dom$VirtualDom$program({
+		init: noChange,
+		view: function(model) { return main; },
+		update: F2(function(msg, model) { return noChange; }),
+		subscriptions: function (model) { return emptyBag; }
 	});
-var _elm_lang$core$Array$Array = {ctor: 'Array'};
+}
+
+
+// INITIALIZE A PROGRAM
+
+function initialize(init, update, subscriptions, renderer)
+{
+	// ambient state
+	var managers = {};
+	var updateView;
+
+	// init and update state in main process
+	var initApp = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
+		var model = init._0;
+		updateView = renderer(enqueue, model);
+		var cmds = init._1;
+		var subs = subscriptions(model);
+		dispatchEffects(managers, cmds, subs);
+		callback(_elm_lang$core$Native_Scheduler.succeed(model));
+	});
+
+	function onMessage(msg, model)
+	{
+		return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
+			var results = A2(update, msg, model);
+			model = results._0;
+			updateView(model);
+			var cmds = results._1;
+			var subs = subscriptions(model);
+			dispatchEffects(managers, cmds, subs);
+			callback(_elm_lang$core$Native_Scheduler.succeed(model));
+		});
+	}
+
+	var mainProcess = spawnLoop(initApp, onMessage);
+
+	function enqueue(msg)
+	{
+		_elm_lang$core$Native_Scheduler.rawSend(mainProcess, msg);
+	}
+
+	var ports = setupEffects(managers, enqueue);
+
+	return ports ? { ports: ports } : {};
+}
+
+
+// EFFECT MANAGERS
+
+var effectManagers = {};
+
+function setupEffects(managers, callback)
+{
+	var ports;
+
+	// setup all necessary effect managers
+	for (var key in effectManagers)
+	{
+		var manager = effectManagers[key];
+
+		if (manager.isForeign)
+		{
+			ports = ports || {};
+			ports[key] = manager.tag === 'cmd'
+				? setupOutgoingPort(key)
+				: setupIncomingPort(key, callback);
+		}
+
+		managers[key] = makeManager(manager, callback);
+	}
+
+	return ports;
+}
+
+function makeManager(info, callback)
+{
+	var router = {
+		main: callback,
+		self: undefined
+	};
+
+	var tag = info.tag;
+	var onEffects = info.onEffects;
+	var onSelfMsg = info.onSelfMsg;
+
+	function onMessage(msg, state)
+	{
+		if (msg.ctor === 'self')
+		{
+			return A3(onSelfMsg, router, msg._0, state);
+		}
+
+		var fx = msg._0;
+		switch (tag)
+		{
+			case 'cmd':
+				return A3(onEffects, router, fx.cmds, state);
+
+			case 'sub':
+				return A3(onEffects, router, fx.subs, state);
+
+			case 'fx':
+				return A4(onEffects, router, fx.cmds, fx.subs, state);
+		}
+	}
+
+	var process = spawnLoop(info.init, onMessage);
+	router.self = process;
+	return process;
+}
+
+function sendToApp(router, msg)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		router.main(msg);
+		callback(_elm_lang$core$Native_Scheduler.succeed(_elm_lang$core$Native_Utils.Tuple0));
+	});
+}
+
+function sendToSelf(router, msg)
+{
+	return A2(_elm_lang$core$Native_Scheduler.send, router.self, {
+		ctor: 'self',
+		_0: msg
+	});
+}
+
+
+// HELPER for STATEFUL LOOPS
+
+function spawnLoop(init, onMessage)
+{
+	var andThen = _elm_lang$core$Native_Scheduler.andThen;
+
+	function loop(state)
+	{
+		var handleMsg = _elm_lang$core$Native_Scheduler.receive(function(msg) {
+			return onMessage(msg, state);
+		});
+		return A2(andThen, loop, handleMsg);
+	}
+
+	var task = A2(andThen, loop, init);
+
+	return _elm_lang$core$Native_Scheduler.rawSpawn(task);
+}
+
+
+// BAGS
+
+function leaf(home)
+{
+	return function(value)
+	{
+		return {
+			type: 'leaf',
+			home: home,
+			value: value
+		};
+	};
+}
+
+function batch(list)
+{
+	return {
+		type: 'node',
+		branches: list
+	};
+}
+
+function map(tagger, bag)
+{
+	return {
+		type: 'map',
+		tagger: tagger,
+		tree: bag
+	}
+}
+
+
+// PIPE BAGS INTO EFFECT MANAGERS
+
+function dispatchEffects(managers, cmdBag, subBag)
+{
+	var effectsDict = {};
+	gatherEffects(true, cmdBag, effectsDict, null);
+	gatherEffects(false, subBag, effectsDict, null);
+
+	for (var home in managers)
+	{
+		var fx = home in effectsDict
+			? effectsDict[home]
+			: {
+				cmds: _elm_lang$core$Native_List.Nil,
+				subs: _elm_lang$core$Native_List.Nil
+			};
+
+		_elm_lang$core$Native_Scheduler.rawSend(managers[home], { ctor: 'fx', _0: fx });
+	}
+}
+
+function gatherEffects(isCmd, bag, effectsDict, taggers)
+{
+	switch (bag.type)
+	{
+		case 'leaf':
+			var home = bag.home;
+			var effect = toEffect(isCmd, home, taggers, bag.value);
+			effectsDict[home] = insert(isCmd, effect, effectsDict[home]);
+			return;
+
+		case 'node':
+			var list = bag.branches;
+			while (list.ctor !== '[]')
+			{
+				gatherEffects(isCmd, list._0, effectsDict, taggers);
+				list = list._1;
+			}
+			return;
+
+		case 'map':
+			gatherEffects(isCmd, bag.tree, effectsDict, {
+				tagger: bag.tagger,
+				rest: taggers
+			});
+			return;
+	}
+}
+
+function toEffect(isCmd, home, taggers, value)
+{
+	function applyTaggers(x)
+	{
+		var temp = taggers;
+		while (temp)
+		{
+			x = temp.tagger(x);
+			temp = temp.rest;
+		}
+		return x;
+	}
+
+	var map = isCmd
+		? effectManagers[home].cmdMap
+		: effectManagers[home].subMap;
+
+	return A2(map, applyTaggers, value)
+}
+
+function insert(isCmd, newEffect, effects)
+{
+	effects = effects || {
+		cmds: _elm_lang$core$Native_List.Nil,
+		subs: _elm_lang$core$Native_List.Nil
+	};
+	if (isCmd)
+	{
+		effects.cmds = _elm_lang$core$Native_List.Cons(newEffect, effects.cmds);
+		return effects;
+	}
+	effects.subs = _elm_lang$core$Native_List.Cons(newEffect, effects.subs);
+	return effects;
+}
+
+
+// PORTS
+
+function checkPortName(name)
+{
+	if (name in effectManagers)
+	{
+		throw new Error('There can only be one port named `' + name + '`, but your program has multiple.');
+	}
+}
+
+
+// OUTGOING PORTS
+
+function outgoingPort(name, converter)
+{
+	checkPortName(name);
+	effectManagers[name] = {
+		tag: 'cmd',
+		cmdMap: outgoingPortMap,
+		converter: converter,
+		isForeign: true
+	};
+	return leaf(name);
+}
+
+var outgoingPortMap = F2(function cmdMap(tagger, value) {
+	return value;
+});
+
+function setupOutgoingPort(name)
+{
+	var subs = [];
+	var converter = effectManagers[name].converter;
+
+	// CREATE MANAGER
+
+	var init = _elm_lang$core$Native_Scheduler.succeed(null);
+
+	function onEffects(router, cmdList, state)
+	{
+		while (cmdList.ctor !== '[]')
+		{
+			// grab a separate reference to subs in case unsubscribe is called
+			var currentSubs = subs;
+			var value = converter(cmdList._0);
+			for (var i = 0; i < currentSubs.length; i++)
+			{
+				currentSubs[i](value);
+			}
+			cmdList = cmdList._1;
+		}
+		return init;
+	}
+
+	effectManagers[name].init = init;
+	effectManagers[name].onEffects = F3(onEffects);
+
+	// PUBLIC API
+
+	function subscribe(callback)
+	{
+		subs.push(callback);
+	}
+
+	function unsubscribe(callback)
+	{
+		// copy subs into a new array in case unsubscribe is called within a
+		// subscribed callback
+		subs = subs.slice();
+		var index = subs.indexOf(callback);
+		if (index >= 0)
+		{
+			subs.splice(index, 1);
+		}
+	}
+
+	return {
+		subscribe: subscribe,
+		unsubscribe: unsubscribe
+	};
+}
+
+
+// INCOMING PORTS
+
+function incomingPort(name, converter)
+{
+	checkPortName(name);
+	effectManagers[name] = {
+		tag: 'sub',
+		subMap: incomingPortMap,
+		converter: converter,
+		isForeign: true
+	};
+	return leaf(name);
+}
+
+var incomingPortMap = F2(function subMap(tagger, finalTagger)
+{
+	return function(value)
+	{
+		return tagger(finalTagger(value));
+	};
+});
+
+function setupIncomingPort(name, callback)
+{
+	var sentBeforeInit = [];
+	var subs = _elm_lang$core$Native_List.Nil;
+	var converter = effectManagers[name].converter;
+	var currentOnEffects = preInitOnEffects;
+	var currentSend = preInitSend;
+
+	// CREATE MANAGER
+
+	var init = _elm_lang$core$Native_Scheduler.succeed(null);
+
+	function preInitOnEffects(router, subList, state)
+	{
+		var postInitResult = postInitOnEffects(router, subList, state);
+
+		for(var i = 0; i < sentBeforeInit.length; i++)
+		{
+			postInitSend(sentBeforeInit[i]);
+		}
+
+		sentBeforeInit = null; // to release objects held in queue
+		currentSend = postInitSend;
+		currentOnEffects = postInitOnEffects;
+		return postInitResult;
+	}
+
+	function postInitOnEffects(router, subList, state)
+	{
+		subs = subList;
+		return init;
+	}
+
+	function onEffects(router, subList, state)
+	{
+		return currentOnEffects(router, subList, state);
+	}
+
+	effectManagers[name].init = init;
+	effectManagers[name].onEffects = F3(onEffects);
+
+	// PUBLIC API
+
+	function preInitSend(value)
+	{
+		sentBeforeInit.push(value);
+	}
+
+	function postInitSend(value)
+	{
+		var temp = subs;
+		while (temp.ctor !== '[]')
+		{
+			callback(temp._0(value));
+			temp = temp._1;
+		}
+	}
+
+	function send(incomingValue)
+	{
+		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
+		if (result.ctor === 'Err')
+		{
+			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
+		}
+
+		currentSend(result._0);
+	}
+
+	return { send: send };
+}
+
+return {
+	// routers
+	sendToApp: F2(sendToApp),
+	sendToSelf: F2(sendToSelf),
+
+	// global setup
+	effectManagers: effectManagers,
+	outgoingPort: outgoingPort,
+	incomingPort: incomingPort,
+
+	htmlToProgram: htmlToProgram,
+	program: program,
+	programWithFlags: programWithFlags,
+	initialize: initialize,
+
+	// effect bags
+	leaf: leaf,
+	batch: batch,
+	map: F2(map)
+};
+
+}();
+
+var _elm_lang$core$Platform_Cmd$batch = _elm_lang$core$Native_Platform.batch;
+var _elm_lang$core$Platform_Cmd$none = _elm_lang$core$Platform_Cmd$batch(
+	{ctor: '[]'});
+var _elm_lang$core$Platform_Cmd_ops = _elm_lang$core$Platform_Cmd_ops || {};
+_elm_lang$core$Platform_Cmd_ops['!'] = F2(
+	function (model, commands) {
+		return {
+			ctor: '_Tuple2',
+			_0: model,
+			_1: _elm_lang$core$Platform_Cmd$batch(commands)
+		};
+	});
+var _elm_lang$core$Platform_Cmd$map = _elm_lang$core$Native_Platform.map;
+var _elm_lang$core$Platform_Cmd$Cmd = {ctor: 'Cmd'};
+
+var _elm_lang$core$Platform_Sub$batch = _elm_lang$core$Native_Platform.batch;
+var _elm_lang$core$Platform_Sub$none = _elm_lang$core$Platform_Sub$batch(
+	{ctor: '[]'});
+var _elm_lang$core$Platform_Sub$map = _elm_lang$core$Native_Platform.map;
+var _elm_lang$core$Platform_Sub$Sub = {ctor: 'Sub'};
+
+var _elm_lang$core$Platform$hack = _elm_lang$core$Native_Scheduler.succeed;
+var _elm_lang$core$Platform$sendToSelf = _elm_lang$core$Native_Platform.sendToSelf;
+var _elm_lang$core$Platform$sendToApp = _elm_lang$core$Native_Platform.sendToApp;
+var _elm_lang$core$Platform$programWithFlags = _elm_lang$core$Native_Platform.programWithFlags;
+var _elm_lang$core$Platform$program = _elm_lang$core$Native_Platform.program;
+var _elm_lang$core$Platform$Program = {ctor: 'Program'};
+var _elm_lang$core$Platform$Task = {ctor: 'Task'};
+var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
+var _elm_lang$core$Platform$Router = {ctor: 'Router'};
+
+var _elm_lang$core$Result$toMaybe = function (result) {
+	var _p0 = result;
+	if (_p0.ctor === 'Ok') {
+		return _elm_lang$core$Maybe$Just(_p0._0);
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _elm_lang$core$Result$withDefault = F2(
+	function (def, result) {
+		var _p1 = result;
+		if (_p1.ctor === 'Ok') {
+			return _p1._0;
+		} else {
+			return def;
+		}
+	});
+var _elm_lang$core$Result$Err = function (a) {
+	return {ctor: 'Err', _0: a};
+};
+var _elm_lang$core$Result$andThen = F2(
+	function (callback, result) {
+		var _p2 = result;
+		if (_p2.ctor === 'Ok') {
+			return callback(_p2._0);
+		} else {
+			return _elm_lang$core$Result$Err(_p2._0);
+		}
+	});
+var _elm_lang$core$Result$Ok = function (a) {
+	return {ctor: 'Ok', _0: a};
+};
+var _elm_lang$core$Result$map = F2(
+	function (func, ra) {
+		var _p3 = ra;
+		if (_p3.ctor === 'Ok') {
+			return _elm_lang$core$Result$Ok(
+				func(_p3._0));
+		} else {
+			return _elm_lang$core$Result$Err(_p3._0);
+		}
+	});
+var _elm_lang$core$Result$map2 = F3(
+	function (func, ra, rb) {
+		var _p4 = {ctor: '_Tuple2', _0: ra, _1: rb};
+		if (_p4._0.ctor === 'Ok') {
+			if (_p4._1.ctor === 'Ok') {
+				return _elm_lang$core$Result$Ok(
+					A2(func, _p4._0._0, _p4._1._0));
+			} else {
+				return _elm_lang$core$Result$Err(_p4._1._0);
+			}
+		} else {
+			return _elm_lang$core$Result$Err(_p4._0._0);
+		}
+	});
+var _elm_lang$core$Result$map3 = F4(
+	function (func, ra, rb, rc) {
+		var _p5 = {ctor: '_Tuple3', _0: ra, _1: rb, _2: rc};
+		if (_p5._0.ctor === 'Ok') {
+			if (_p5._1.ctor === 'Ok') {
+				if (_p5._2.ctor === 'Ok') {
+					return _elm_lang$core$Result$Ok(
+						A3(func, _p5._0._0, _p5._1._0, _p5._2._0));
+				} else {
+					return _elm_lang$core$Result$Err(_p5._2._0);
+				}
+			} else {
+				return _elm_lang$core$Result$Err(_p5._1._0);
+			}
+		} else {
+			return _elm_lang$core$Result$Err(_p5._0._0);
+		}
+	});
+var _elm_lang$core$Result$map4 = F5(
+	function (func, ra, rb, rc, rd) {
+		var _p6 = {ctor: '_Tuple4', _0: ra, _1: rb, _2: rc, _3: rd};
+		if (_p6._0.ctor === 'Ok') {
+			if (_p6._1.ctor === 'Ok') {
+				if (_p6._2.ctor === 'Ok') {
+					if (_p6._3.ctor === 'Ok') {
+						return _elm_lang$core$Result$Ok(
+							A4(func, _p6._0._0, _p6._1._0, _p6._2._0, _p6._3._0));
+					} else {
+						return _elm_lang$core$Result$Err(_p6._3._0);
+					}
+				} else {
+					return _elm_lang$core$Result$Err(_p6._2._0);
+				}
+			} else {
+				return _elm_lang$core$Result$Err(_p6._1._0);
+			}
+		} else {
+			return _elm_lang$core$Result$Err(_p6._0._0);
+		}
+	});
+var _elm_lang$core$Result$map5 = F6(
+	function (func, ra, rb, rc, rd, re) {
+		var _p7 = {ctor: '_Tuple5', _0: ra, _1: rb, _2: rc, _3: rd, _4: re};
+		if (_p7._0.ctor === 'Ok') {
+			if (_p7._1.ctor === 'Ok') {
+				if (_p7._2.ctor === 'Ok') {
+					if (_p7._3.ctor === 'Ok') {
+						if (_p7._4.ctor === 'Ok') {
+							return _elm_lang$core$Result$Ok(
+								A5(func, _p7._0._0, _p7._1._0, _p7._2._0, _p7._3._0, _p7._4._0));
+						} else {
+							return _elm_lang$core$Result$Err(_p7._4._0);
+						}
+					} else {
+						return _elm_lang$core$Result$Err(_p7._3._0);
+					}
+				} else {
+					return _elm_lang$core$Result$Err(_p7._2._0);
+				}
+			} else {
+				return _elm_lang$core$Result$Err(_p7._1._0);
+			}
+		} else {
+			return _elm_lang$core$Result$Err(_p7._0._0);
+		}
+	});
+var _elm_lang$core$Result$mapError = F2(
+	function (f, result) {
+		var _p8 = result;
+		if (_p8.ctor === 'Ok') {
+			return _elm_lang$core$Result$Ok(_p8._0);
+		} else {
+			return _elm_lang$core$Result$Err(
+				f(_p8._0));
+		}
+	});
+var _elm_lang$core$Result$fromMaybe = F2(
+	function (err, maybe) {
+		var _p9 = maybe;
+		if (_p9.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p9._0);
+		} else {
+			return _elm_lang$core$Result$Err(err);
+		}
+	});
+
+var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
+var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
+var _elm_lang$core$Task$spawnCmd = F2(
+	function (router, _p0) {
+		var _p1 = _p0;
+		return _elm_lang$core$Native_Scheduler.spawn(
+			A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Platform$sendToApp(router),
+				_p1._0));
+	});
+var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
+var _elm_lang$core$Task$mapError = F2(
+	function (convert, task) {
+		return A2(
+			_elm_lang$core$Task$onError,
+			function (_p2) {
+				return _elm_lang$core$Task$fail(
+					convert(_p2));
+			},
+			task);
+	});
+var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
+var _elm_lang$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return _elm_lang$core$Task$succeed(
+					func(a));
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return _elm_lang$core$Task$succeed(
+							A2(func, a, b));
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return _elm_lang$core$Task$succeed(
+									A3(func, a, b, c));
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map4 = F5(
+	function (func, taskA, taskB, taskC, taskD) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return _elm_lang$core$Task$succeed(
+											A4(func, a, b, c, d));
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map5 = F6(
+	function (func, taskA, taskB, taskC, taskD, taskE) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return A2(
+											_elm_lang$core$Task$andThen,
+											function (e) {
+												return _elm_lang$core$Task$succeed(
+													A5(func, a, b, c, d, e));
+											},
+											taskE);
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$sequence = function (tasks) {
+	var _p3 = tasks;
+	if (_p3.ctor === '[]') {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '[]'});
+	} else {
+		return A3(
+			_elm_lang$core$Task$map2,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			_p3._0,
+			_elm_lang$core$Task$sequence(_p3._1));
+	}
+};
+var _elm_lang$core$Task$onEffects = F3(
+	function (router, commands, state) {
+		return A2(
+			_elm_lang$core$Task$map,
+			function (_p4) {
+				return {ctor: '_Tuple0'};
+			},
+			_elm_lang$core$Task$sequence(
+				A2(
+					_elm_lang$core$List$map,
+					_elm_lang$core$Task$spawnCmd(router),
+					commands)));
+	});
+var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
+	{ctor: '_Tuple0'});
+var _elm_lang$core$Task$onSelfMsg = F3(
+	function (_p7, _p6, _p5) {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '_Tuple0'});
+	});
+var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
+var _elm_lang$core$Task$Perform = function (a) {
+	return {ctor: 'Perform', _0: a};
+};
+var _elm_lang$core$Task$perform = F2(
+	function (toMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(_elm_lang$core$Task$map, toMessage, task)));
+	});
+var _elm_lang$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(
+					_elm_lang$core$Task$onError,
+					function (_p8) {
+						return _elm_lang$core$Task$succeed(
+							resultToMessage(
+								_elm_lang$core$Result$Err(_p8)));
+					},
+					A2(
+						_elm_lang$core$Task$andThen,
+						function (_p9) {
+							return _elm_lang$core$Task$succeed(
+								resultToMessage(
+									_elm_lang$core$Result$Ok(_p9)));
+						},
+						task))));
+	});
+var _elm_lang$core$Task$cmdMap = F2(
+	function (tagger, _p10) {
+		var _p11 = _p10;
+		return _elm_lang$core$Task$Perform(
+			A2(_elm_lang$core$Task$map, tagger, _p11._0));
+	});
+_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
 
 //import Native.Utils //
 
@@ -3101,148 +3323,6 @@ var _elm_lang$core$Char$isHexDigit = function ($char) {
 		_elm_lang$core$Native_Utils.chr('F'),
 		$char));
 };
-
-var _elm_lang$core$Result$toMaybe = function (result) {
-	var _p0 = result;
-	if (_p0.ctor === 'Ok') {
-		return _elm_lang$core$Maybe$Just(_p0._0);
-	} else {
-		return _elm_lang$core$Maybe$Nothing;
-	}
-};
-var _elm_lang$core$Result$withDefault = F2(
-	function (def, result) {
-		var _p1 = result;
-		if (_p1.ctor === 'Ok') {
-			return _p1._0;
-		} else {
-			return def;
-		}
-	});
-var _elm_lang$core$Result$Err = function (a) {
-	return {ctor: 'Err', _0: a};
-};
-var _elm_lang$core$Result$andThen = F2(
-	function (callback, result) {
-		var _p2 = result;
-		if (_p2.ctor === 'Ok') {
-			return callback(_p2._0);
-		} else {
-			return _elm_lang$core$Result$Err(_p2._0);
-		}
-	});
-var _elm_lang$core$Result$Ok = function (a) {
-	return {ctor: 'Ok', _0: a};
-};
-var _elm_lang$core$Result$map = F2(
-	function (func, ra) {
-		var _p3 = ra;
-		if (_p3.ctor === 'Ok') {
-			return _elm_lang$core$Result$Ok(
-				func(_p3._0));
-		} else {
-			return _elm_lang$core$Result$Err(_p3._0);
-		}
-	});
-var _elm_lang$core$Result$map2 = F3(
-	function (func, ra, rb) {
-		var _p4 = {ctor: '_Tuple2', _0: ra, _1: rb};
-		if (_p4._0.ctor === 'Ok') {
-			if (_p4._1.ctor === 'Ok') {
-				return _elm_lang$core$Result$Ok(
-					A2(func, _p4._0._0, _p4._1._0));
-			} else {
-				return _elm_lang$core$Result$Err(_p4._1._0);
-			}
-		} else {
-			return _elm_lang$core$Result$Err(_p4._0._0);
-		}
-	});
-var _elm_lang$core$Result$map3 = F4(
-	function (func, ra, rb, rc) {
-		var _p5 = {ctor: '_Tuple3', _0: ra, _1: rb, _2: rc};
-		if (_p5._0.ctor === 'Ok') {
-			if (_p5._1.ctor === 'Ok') {
-				if (_p5._2.ctor === 'Ok') {
-					return _elm_lang$core$Result$Ok(
-						A3(func, _p5._0._0, _p5._1._0, _p5._2._0));
-				} else {
-					return _elm_lang$core$Result$Err(_p5._2._0);
-				}
-			} else {
-				return _elm_lang$core$Result$Err(_p5._1._0);
-			}
-		} else {
-			return _elm_lang$core$Result$Err(_p5._0._0);
-		}
-	});
-var _elm_lang$core$Result$map4 = F5(
-	function (func, ra, rb, rc, rd) {
-		var _p6 = {ctor: '_Tuple4', _0: ra, _1: rb, _2: rc, _3: rd};
-		if (_p6._0.ctor === 'Ok') {
-			if (_p6._1.ctor === 'Ok') {
-				if (_p6._2.ctor === 'Ok') {
-					if (_p6._3.ctor === 'Ok') {
-						return _elm_lang$core$Result$Ok(
-							A4(func, _p6._0._0, _p6._1._0, _p6._2._0, _p6._3._0));
-					} else {
-						return _elm_lang$core$Result$Err(_p6._3._0);
-					}
-				} else {
-					return _elm_lang$core$Result$Err(_p6._2._0);
-				}
-			} else {
-				return _elm_lang$core$Result$Err(_p6._1._0);
-			}
-		} else {
-			return _elm_lang$core$Result$Err(_p6._0._0);
-		}
-	});
-var _elm_lang$core$Result$map5 = F6(
-	function (func, ra, rb, rc, rd, re) {
-		var _p7 = {ctor: '_Tuple5', _0: ra, _1: rb, _2: rc, _3: rd, _4: re};
-		if (_p7._0.ctor === 'Ok') {
-			if (_p7._1.ctor === 'Ok') {
-				if (_p7._2.ctor === 'Ok') {
-					if (_p7._3.ctor === 'Ok') {
-						if (_p7._4.ctor === 'Ok') {
-							return _elm_lang$core$Result$Ok(
-								A5(func, _p7._0._0, _p7._1._0, _p7._2._0, _p7._3._0, _p7._4._0));
-						} else {
-							return _elm_lang$core$Result$Err(_p7._4._0);
-						}
-					} else {
-						return _elm_lang$core$Result$Err(_p7._3._0);
-					}
-				} else {
-					return _elm_lang$core$Result$Err(_p7._2._0);
-				}
-			} else {
-				return _elm_lang$core$Result$Err(_p7._1._0);
-			}
-		} else {
-			return _elm_lang$core$Result$Err(_p7._0._0);
-		}
-	});
-var _elm_lang$core$Result$mapError = F2(
-	function (f, result) {
-		var _p8 = result;
-		if (_p8.ctor === 'Ok') {
-			return _elm_lang$core$Result$Ok(_p8._0);
-		} else {
-			return _elm_lang$core$Result$Err(
-				f(_p8._0));
-		}
-	});
-var _elm_lang$core$Result$fromMaybe = F2(
-	function (err, maybe) {
-		var _p9 = maybe;
-		if (_p9.ctor === 'Just') {
-			return _elm_lang$core$Result$Ok(_p9._0);
-		} else {
-			return _elm_lang$core$Result$Err(err);
-		}
-	});
 
 var _elm_lang$core$String$fromList = _elm_lang$core$Native_String.fromList;
 var _elm_lang$core$String$toList = _elm_lang$core$Native_String.toList;
@@ -4205,6 +4285,1276 @@ var _elm_lang$core$Dict$diff = F2(
 			t2);
 	});
 
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			var spawnRest = function (id) {
+				return A3(
+					_elm_lang$core$Time$spawnHelp,
+					router,
+					_p0._1,
+					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+			};
+			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
+				A2(
+					_elm_lang$core$Time$setInterval,
+					_p1,
+					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
+			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{
+					ctor: '::',
+					_0: _p6,
+					_1: {ctor: '[]'}
+				},
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{ctor: '::', _0: _p6, _1: _p4._0},
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var tellTaggers = function (time) {
+				return _elm_lang$core$Task$sequence(
+					A2(
+						_elm_lang$core$List$map,
+						function (tagger) {
+							return A2(
+								_elm_lang$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						_p7._0));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p8) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						function (_p14) {
+							return _p13._2;
+						},
+						_elm_lang$core$Native_Scheduler.kill(id))
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: {ctor: '::', _0: interval, _1: _p18._0},
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (newProcesses) {
+				return _elm_lang$core$Task$succeed(
+					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p20) {
+					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
+var _elm_lang$core$Date$millisecond = _elm_lang$core$Native_Date.millisecond;
+var _elm_lang$core$Date$second = _elm_lang$core$Native_Date.second;
+var _elm_lang$core$Date$minute = _elm_lang$core$Native_Date.minute;
+var _elm_lang$core$Date$hour = _elm_lang$core$Native_Date.hour;
+var _elm_lang$core$Date$dayOfWeek = _elm_lang$core$Native_Date.dayOfWeek;
+var _elm_lang$core$Date$day = _elm_lang$core$Native_Date.day;
+var _elm_lang$core$Date$month = _elm_lang$core$Native_Date.month;
+var _elm_lang$core$Date$year = _elm_lang$core$Native_Date.year;
+var _elm_lang$core$Date$fromTime = _elm_lang$core$Native_Date.fromTime;
+var _elm_lang$core$Date$toTime = _elm_lang$core$Native_Date.toTime;
+var _elm_lang$core$Date$fromString = _elm_lang$core$Native_Date.fromString;
+var _elm_lang$core$Date$now = A2(_elm_lang$core$Task$map, _elm_lang$core$Date$fromTime, _elm_lang$core$Time$now);
+var _elm_lang$core$Date$Date = {ctor: 'Date'};
+var _elm_lang$core$Date$Sun = {ctor: 'Sun'};
+var _elm_lang$core$Date$Sat = {ctor: 'Sat'};
+var _elm_lang$core$Date$Fri = {ctor: 'Fri'};
+var _elm_lang$core$Date$Thu = {ctor: 'Thu'};
+var _elm_lang$core$Date$Wed = {ctor: 'Wed'};
+var _elm_lang$core$Date$Tue = {ctor: 'Tue'};
+var _elm_lang$core$Date$Mon = {ctor: 'Mon'};
+var _elm_lang$core$Date$Dec = {ctor: 'Dec'};
+var _elm_lang$core$Date$Nov = {ctor: 'Nov'};
+var _elm_lang$core$Date$Oct = {ctor: 'Oct'};
+var _elm_lang$core$Date$Sep = {ctor: 'Sep'};
+var _elm_lang$core$Date$Aug = {ctor: 'Aug'};
+var _elm_lang$core$Date$Jul = {ctor: 'Jul'};
+var _elm_lang$core$Date$Jun = {ctor: 'Jun'};
+var _elm_lang$core$Date$May = {ctor: 'May'};
+var _elm_lang$core$Date$Apr = {ctor: 'Apr'};
+var _elm_lang$core$Date$Mar = {ctor: 'Mar'};
+var _elm_lang$core$Date$Feb = {ctor: 'Feb'};
+var _elm_lang$core$Date$Jan = {ctor: 'Jan'};
+
+//import Native.List //
+
+var _elm_lang$core$Native_Array = function() {
+
+// A RRB-Tree has two distinct data types.
+// Leaf -> "height"  is always 0
+//         "table"   is an array of elements
+// Node -> "height"  is always greater than 0
+//         "table"   is an array of child nodes
+//         "lengths" is an array of accumulated lengths of the child nodes
+
+// M is the maximal table size. 32 seems fast. E is the allowed increase
+// of search steps when concatting to find an index. Lower values will
+// decrease balancing, but will increase search steps.
+var M = 32;
+var E = 2;
+
+// An empty array.
+var empty = {
+	ctor: '_Array',
+	height: 0,
+	table: []
+};
+
+
+function get(i, array)
+{
+	if (i < 0 || i >= length(array))
+	{
+		throw new Error(
+			'Index ' + i + ' is out of range. Check the length of ' +
+			'your array first or use getMaybe or getWithDefault.');
+	}
+	return unsafeGet(i, array);
+}
+
+
+function unsafeGet(i, array)
+{
+	for (var x = array.height; x > 0; x--)
+	{
+		var slot = i >> (x * 5);
+		while (array.lengths[slot] <= i)
+		{
+			slot++;
+		}
+		if (slot > 0)
+		{
+			i -= array.lengths[slot - 1];
+		}
+		array = array.table[slot];
+	}
+	return array.table[i];
+}
+
+
+// Sets the value at the index i. Only the nodes leading to i will get
+// copied and updated.
+function set(i, item, array)
+{
+	if (i < 0 || length(array) <= i)
+	{
+		return array;
+	}
+	return unsafeSet(i, item, array);
+}
+
+
+function unsafeSet(i, item, array)
+{
+	array = nodeCopy(array);
+
+	if (array.height === 0)
+	{
+		array.table[i] = item;
+	}
+	else
+	{
+		var slot = getSlot(i, array);
+		if (slot > 0)
+		{
+			i -= array.lengths[slot - 1];
+		}
+		array.table[slot] = unsafeSet(i, item, array.table[slot]);
+	}
+	return array;
+}
+
+
+function initialize(len, f)
+{
+	if (len <= 0)
+	{
+		return empty;
+	}
+	var h = Math.floor( Math.log(len) / Math.log(M) );
+	return initialize_(f, h, 0, len);
+}
+
+function initialize_(f, h, from, to)
+{
+	if (h === 0)
+	{
+		var table = new Array((to - from) % (M + 1));
+		for (var i = 0; i < table.length; i++)
+		{
+		  table[i] = f(from + i);
+		}
+		return {
+			ctor: '_Array',
+			height: 0,
+			table: table
+		};
+	}
+
+	var step = Math.pow(M, h);
+	var table = new Array(Math.ceil((to - from) / step));
+	var lengths = new Array(table.length);
+	for (var i = 0; i < table.length; i++)
+	{
+		table[i] = initialize_(f, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
+		lengths[i] = length(table[i]) + (i > 0 ? lengths[i-1] : 0);
+	}
+	return {
+		ctor: '_Array',
+		height: h,
+		table: table,
+		lengths: lengths
+	};
+}
+
+function fromList(list)
+{
+	if (list.ctor === '[]')
+	{
+		return empty;
+	}
+
+	// Allocate M sized blocks (table) and write list elements to it.
+	var table = new Array(M);
+	var nodes = [];
+	var i = 0;
+
+	while (list.ctor !== '[]')
+	{
+		table[i] = list._0;
+		list = list._1;
+		i++;
+
+		// table is full, so we can push a leaf containing it into the
+		// next node.
+		if (i === M)
+		{
+			var leaf = {
+				ctor: '_Array',
+				height: 0,
+				table: table
+			};
+			fromListPush(leaf, nodes);
+			table = new Array(M);
+			i = 0;
+		}
+	}
+
+	// Maybe there is something left on the table.
+	if (i > 0)
+	{
+		var leaf = {
+			ctor: '_Array',
+			height: 0,
+			table: table.splice(0, i)
+		};
+		fromListPush(leaf, nodes);
+	}
+
+	// Go through all of the nodes and eventually push them into higher nodes.
+	for (var h = 0; h < nodes.length - 1; h++)
+	{
+		if (nodes[h].table.length > 0)
+		{
+			fromListPush(nodes[h], nodes);
+		}
+	}
+
+	var head = nodes[nodes.length - 1];
+	if (head.height > 0 && head.table.length === 1)
+	{
+		return head.table[0];
+	}
+	else
+	{
+		return head;
+	}
+}
+
+// Push a node into a higher node as a child.
+function fromListPush(toPush, nodes)
+{
+	var h = toPush.height;
+
+	// Maybe the node on this height does not exist.
+	if (nodes.length === h)
+	{
+		var node = {
+			ctor: '_Array',
+			height: h + 1,
+			table: [],
+			lengths: []
+		};
+		nodes.push(node);
+	}
+
+	nodes[h].table.push(toPush);
+	var len = length(toPush);
+	if (nodes[h].lengths.length > 0)
+	{
+		len += nodes[h].lengths[nodes[h].lengths.length - 1];
+	}
+	nodes[h].lengths.push(len);
+
+	if (nodes[h].table.length === M)
+	{
+		fromListPush(nodes[h], nodes);
+		nodes[h] = {
+			ctor: '_Array',
+			height: h + 1,
+			table: [],
+			lengths: []
+		};
+	}
+}
+
+// Pushes an item via push_ to the bottom right of a tree.
+function push(item, a)
+{
+	var pushed = push_(item, a);
+	if (pushed !== null)
+	{
+		return pushed;
+	}
+
+	var newTree = create(item, a.height);
+	return siblise(a, newTree);
+}
+
+// Recursively tries to push an item to the bottom-right most
+// tree possible. If there is no space left for the item,
+// null will be returned.
+function push_(item, a)
+{
+	// Handle resursion stop at leaf level.
+	if (a.height === 0)
+	{
+		if (a.table.length < M)
+		{
+			var newA = {
+				ctor: '_Array',
+				height: 0,
+				table: a.table.slice()
+			};
+			newA.table.push(item);
+			return newA;
+		}
+		else
+		{
+		  return null;
+		}
+	}
+
+	// Recursively push
+	var pushed = push_(item, botRight(a));
+
+	// There was space in the bottom right tree, so the slot will
+	// be updated.
+	if (pushed !== null)
+	{
+		var newA = nodeCopy(a);
+		newA.table[newA.table.length - 1] = pushed;
+		newA.lengths[newA.lengths.length - 1]++;
+		return newA;
+	}
+
+	// When there was no space left, check if there is space left
+	// for a new slot with a tree which contains only the item
+	// at the bottom.
+	if (a.table.length < M)
+	{
+		var newSlot = create(item, a.height - 1);
+		var newA = nodeCopy(a);
+		newA.table.push(newSlot);
+		newA.lengths.push(newA.lengths[newA.lengths.length - 1] + length(newSlot));
+		return newA;
+	}
+	else
+	{
+		return null;
+	}
+}
+
+// Converts an array into a list of elements.
+function toList(a)
+{
+	return toList_(_elm_lang$core$Native_List.Nil, a);
+}
+
+function toList_(list, a)
+{
+	for (var i = a.table.length - 1; i >= 0; i--)
+	{
+		list =
+			a.height === 0
+				? _elm_lang$core$Native_List.Cons(a.table[i], list)
+				: toList_(list, a.table[i]);
+	}
+	return list;
+}
+
+// Maps a function over the elements of an array.
+function map(f, a)
+{
+	var newA = {
+		ctor: '_Array',
+		height: a.height,
+		table: new Array(a.table.length)
+	};
+	if (a.height > 0)
+	{
+		newA.lengths = a.lengths;
+	}
+	for (var i = 0; i < a.table.length; i++)
+	{
+		newA.table[i] =
+			a.height === 0
+				? f(a.table[i])
+				: map(f, a.table[i]);
+	}
+	return newA;
+}
+
+// Maps a function over the elements with their index as first argument.
+function indexedMap(f, a)
+{
+	return indexedMap_(f, a, 0);
+}
+
+function indexedMap_(f, a, from)
+{
+	var newA = {
+		ctor: '_Array',
+		height: a.height,
+		table: new Array(a.table.length)
+	};
+	if (a.height > 0)
+	{
+		newA.lengths = a.lengths;
+	}
+	for (var i = 0; i < a.table.length; i++)
+	{
+		newA.table[i] =
+			a.height === 0
+				? A2(f, from + i, a.table[i])
+				: indexedMap_(f, a.table[i], i == 0 ? from : from + a.lengths[i - 1]);
+	}
+	return newA;
+}
+
+function foldl(f, b, a)
+{
+	if (a.height === 0)
+	{
+		for (var i = 0; i < a.table.length; i++)
+		{
+			b = A2(f, a.table[i], b);
+		}
+	}
+	else
+	{
+		for (var i = 0; i < a.table.length; i++)
+		{
+			b = foldl(f, b, a.table[i]);
+		}
+	}
+	return b;
+}
+
+function foldr(f, b, a)
+{
+	if (a.height === 0)
+	{
+		for (var i = a.table.length; i--; )
+		{
+			b = A2(f, a.table[i], b);
+		}
+	}
+	else
+	{
+		for (var i = a.table.length; i--; )
+		{
+			b = foldr(f, b, a.table[i]);
+		}
+	}
+	return b;
+}
+
+// TODO: currently, it slices the right, then the left. This can be
+// optimized.
+function slice(from, to, a)
+{
+	if (from < 0)
+	{
+		from += length(a);
+	}
+	if (to < 0)
+	{
+		to += length(a);
+	}
+	return sliceLeft(from, sliceRight(to, a));
+}
+
+function sliceRight(to, a)
+{
+	if (to === length(a))
+	{
+		return a;
+	}
+
+	// Handle leaf level.
+	if (a.height === 0)
+	{
+		var newA = { ctor:'_Array', height:0 };
+		newA.table = a.table.slice(0, to);
+		return newA;
+	}
+
+	// Slice the right recursively.
+	var right = getSlot(to, a);
+	var sliced = sliceRight(to - (right > 0 ? a.lengths[right - 1] : 0), a.table[right]);
+
+	// Maybe the a node is not even needed, as sliced contains the whole slice.
+	if (right === 0)
+	{
+		return sliced;
+	}
+
+	// Create new node.
+	var newA = {
+		ctor: '_Array',
+		height: a.height,
+		table: a.table.slice(0, right),
+		lengths: a.lengths.slice(0, right)
+	};
+	if (sliced.table.length > 0)
+	{
+		newA.table[right] = sliced;
+		newA.lengths[right] = length(sliced) + (right > 0 ? newA.lengths[right - 1] : 0);
+	}
+	return newA;
+}
+
+function sliceLeft(from, a)
+{
+	if (from === 0)
+	{
+		return a;
+	}
+
+	// Handle leaf level.
+	if (a.height === 0)
+	{
+		var newA = { ctor:'_Array', height:0 };
+		newA.table = a.table.slice(from, a.table.length + 1);
+		return newA;
+	}
+
+	// Slice the left recursively.
+	var left = getSlot(from, a);
+	var sliced = sliceLeft(from - (left > 0 ? a.lengths[left - 1] : 0), a.table[left]);
+
+	// Maybe the a node is not even needed, as sliced contains the whole slice.
+	if (left === a.table.length - 1)
+	{
+		return sliced;
+	}
+
+	// Create new node.
+	var newA = {
+		ctor: '_Array',
+		height: a.height,
+		table: a.table.slice(left, a.table.length + 1),
+		lengths: new Array(a.table.length - left)
+	};
+	newA.table[0] = sliced;
+	var len = 0;
+	for (var i = 0; i < newA.table.length; i++)
+	{
+		len += length(newA.table[i]);
+		newA.lengths[i] = len;
+	}
+
+	return newA;
+}
+
+// Appends two trees.
+function append(a,b)
+{
+	if (a.table.length === 0)
+	{
+		return b;
+	}
+	if (b.table.length === 0)
+	{
+		return a;
+	}
+
+	var c = append_(a, b);
+
+	// Check if both nodes can be crunshed together.
+	if (c[0].table.length + c[1].table.length <= M)
+	{
+		if (c[0].table.length === 0)
+		{
+			return c[1];
+		}
+		if (c[1].table.length === 0)
+		{
+			return c[0];
+		}
+
+		// Adjust .table and .lengths
+		c[0].table = c[0].table.concat(c[1].table);
+		if (c[0].height > 0)
+		{
+			var len = length(c[0]);
+			for (var i = 0; i < c[1].lengths.length; i++)
+			{
+				c[1].lengths[i] += len;
+			}
+			c[0].lengths = c[0].lengths.concat(c[1].lengths);
+		}
+
+		return c[0];
+	}
+
+	if (c[0].height > 0)
+	{
+		var toRemove = calcToRemove(a, b);
+		if (toRemove > E)
+		{
+			c = shuffle(c[0], c[1], toRemove);
+		}
+	}
+
+	return siblise(c[0], c[1]);
+}
+
+// Returns an array of two nodes; right and left. One node _may_ be empty.
+function append_(a, b)
+{
+	if (a.height === 0 && b.height === 0)
+	{
+		return [a, b];
+	}
+
+	if (a.height !== 1 || b.height !== 1)
+	{
+		if (a.height === b.height)
+		{
+			a = nodeCopy(a);
+			b = nodeCopy(b);
+			var appended = append_(botRight(a), botLeft(b));
+
+			insertRight(a, appended[1]);
+			insertLeft(b, appended[0]);
+		}
+		else if (a.height > b.height)
+		{
+			a = nodeCopy(a);
+			var appended = append_(botRight(a), b);
+
+			insertRight(a, appended[0]);
+			b = parentise(appended[1], appended[1].height + 1);
+		}
+		else
+		{
+			b = nodeCopy(b);
+			var appended = append_(a, botLeft(b));
+
+			var left = appended[0].table.length === 0 ? 0 : 1;
+			var right = left === 0 ? 1 : 0;
+			insertLeft(b, appended[left]);
+			a = parentise(appended[right], appended[right].height + 1);
+		}
+	}
+
+	// Check if balancing is needed and return based on that.
+	if (a.table.length === 0 || b.table.length === 0)
+	{
+		return [a, b];
+	}
+
+	var toRemove = calcToRemove(a, b);
+	if (toRemove <= E)
+	{
+		return [a, b];
+	}
+	return shuffle(a, b, toRemove);
+}
+
+// Helperfunctions for append_. Replaces a child node at the side of the parent.
+function insertRight(parent, node)
+{
+	var index = parent.table.length - 1;
+	parent.table[index] = node;
+	parent.lengths[index] = length(node);
+	parent.lengths[index] += index > 0 ? parent.lengths[index - 1] : 0;
+}
+
+function insertLeft(parent, node)
+{
+	if (node.table.length > 0)
+	{
+		parent.table[0] = node;
+		parent.lengths[0] = length(node);
+
+		var len = length(parent.table[0]);
+		for (var i = 1; i < parent.lengths.length; i++)
+		{
+			len += length(parent.table[i]);
+			parent.lengths[i] = len;
+		}
+	}
+	else
+	{
+		parent.table.shift();
+		for (var i = 1; i < parent.lengths.length; i++)
+		{
+			parent.lengths[i] = parent.lengths[i] - parent.lengths[0];
+		}
+		parent.lengths.shift();
+	}
+}
+
+// Returns the extra search steps for E. Refer to the paper.
+function calcToRemove(a, b)
+{
+	var subLengths = 0;
+	for (var i = 0; i < a.table.length; i++)
+	{
+		subLengths += a.table[i].table.length;
+	}
+	for (var i = 0; i < b.table.length; i++)
+	{
+		subLengths += b.table[i].table.length;
+	}
+
+	var toRemove = a.table.length + b.table.length;
+	return toRemove - (Math.floor((subLengths - 1) / M) + 1);
+}
+
+// get2, set2 and saveSlot are helpers for accessing elements over two arrays.
+function get2(a, b, index)
+{
+	return index < a.length
+		? a[index]
+		: b[index - a.length];
+}
+
+function set2(a, b, index, value)
+{
+	if (index < a.length)
+	{
+		a[index] = value;
+	}
+	else
+	{
+		b[index - a.length] = value;
+	}
+}
+
+function saveSlot(a, b, index, slot)
+{
+	set2(a.table, b.table, index, slot);
+
+	var l = (index === 0 || index === a.lengths.length)
+		? 0
+		: get2(a.lengths, a.lengths, index - 1);
+
+	set2(a.lengths, b.lengths, index, l + length(slot));
+}
+
+// Creates a node or leaf with a given length at their arrays for perfomance.
+// Is only used by shuffle.
+function createNode(h, length)
+{
+	if (length < 0)
+	{
+		length = 0;
+	}
+	var a = {
+		ctor: '_Array',
+		height: h,
+		table: new Array(length)
+	};
+	if (h > 0)
+	{
+		a.lengths = new Array(length);
+	}
+	return a;
+}
+
+// Returns an array of two balanced nodes.
+function shuffle(a, b, toRemove)
+{
+	var newA = createNode(a.height, Math.min(M, a.table.length + b.table.length - toRemove));
+	var newB = createNode(a.height, newA.table.length - (a.table.length + b.table.length - toRemove));
+
+	// Skip the slots with size M. More precise: copy the slot references
+	// to the new node
+	var read = 0;
+	while (get2(a.table, b.table, read).table.length % M === 0)
+	{
+		set2(newA.table, newB.table, read, get2(a.table, b.table, read));
+		set2(newA.lengths, newB.lengths, read, get2(a.lengths, b.lengths, read));
+		read++;
+	}
+
+	// Pulling items from left to right, caching in a slot before writing
+	// it into the new nodes.
+	var write = read;
+	var slot = new createNode(a.height - 1, 0);
+	var from = 0;
+
+	// If the current slot is still containing data, then there will be at
+	// least one more write, so we do not break this loop yet.
+	while (read - write - (slot.table.length > 0 ? 1 : 0) < toRemove)
+	{
+		// Find out the max possible items for copying.
+		var source = get2(a.table, b.table, read);
+		var to = Math.min(M - slot.table.length, source.table.length);
+
+		// Copy and adjust size table.
+		slot.table = slot.table.concat(source.table.slice(from, to));
+		if (slot.height > 0)
+		{
+			var len = slot.lengths.length;
+			for (var i = len; i < len + to - from; i++)
+			{
+				slot.lengths[i] = length(slot.table[i]);
+				slot.lengths[i] += (i > 0 ? slot.lengths[i - 1] : 0);
+			}
+		}
+
+		from += to;
+
+		// Only proceed to next slots[i] if the current one was
+		// fully copied.
+		if (source.table.length <= to)
+		{
+			read++; from = 0;
+		}
+
+		// Only create a new slot if the current one is filled up.
+		if (slot.table.length === M)
+		{
+			saveSlot(newA, newB, write, slot);
+			slot = createNode(a.height - 1, 0);
+			write++;
+		}
+	}
+
+	// Cleanup after the loop. Copy the last slot into the new nodes.
+	if (slot.table.length > 0)
+	{
+		saveSlot(newA, newB, write, slot);
+		write++;
+	}
+
+	// Shift the untouched slots to the left
+	while (read < a.table.length + b.table.length )
+	{
+		saveSlot(newA, newB, write, get2(a.table, b.table, read));
+		read++;
+		write++;
+	}
+
+	return [newA, newB];
+}
+
+// Navigation functions
+function botRight(a)
+{
+	return a.table[a.table.length - 1];
+}
+function botLeft(a)
+{
+	return a.table[0];
+}
+
+// Copies a node for updating. Note that you should not use this if
+// only updating only one of "table" or "lengths" for performance reasons.
+function nodeCopy(a)
+{
+	var newA = {
+		ctor: '_Array',
+		height: a.height,
+		table: a.table.slice()
+	};
+	if (a.height > 0)
+	{
+		newA.lengths = a.lengths.slice();
+	}
+	return newA;
+}
+
+// Returns how many items are in the tree.
+function length(array)
+{
+	if (array.height === 0)
+	{
+		return array.table.length;
+	}
+	else
+	{
+		return array.lengths[array.lengths.length - 1];
+	}
+}
+
+// Calculates in which slot of "table" the item probably is, then
+// find the exact slot via forward searching in  "lengths". Returns the index.
+function getSlot(i, a)
+{
+	var slot = i >> (5 * a.height);
+	while (a.lengths[slot] <= i)
+	{
+		slot++;
+	}
+	return slot;
+}
+
+// Recursively creates a tree with a given height containing
+// only the given item.
+function create(item, h)
+{
+	if (h === 0)
+	{
+		return {
+			ctor: '_Array',
+			height: 0,
+			table: [item]
+		};
+	}
+	return {
+		ctor: '_Array',
+		height: h,
+		table: [create(item, h - 1)],
+		lengths: [1]
+	};
+}
+
+// Recursively creates a tree that contains the given tree.
+function parentise(tree, h)
+{
+	if (h === tree.height)
+	{
+		return tree;
+	}
+
+	return {
+		ctor: '_Array',
+		height: h,
+		table: [parentise(tree, h - 1)],
+		lengths: [length(tree)]
+	};
+}
+
+// Emphasizes blood brotherhood beneath two trees.
+function siblise(a, b)
+{
+	return {
+		ctor: '_Array',
+		height: a.height + 1,
+		table: [a, b],
+		lengths: [length(a), length(a) + length(b)]
+	};
+}
+
+function toJSArray(a)
+{
+	var jsArray = new Array(length(a));
+	toJSArray_(jsArray, 0, a);
+	return jsArray;
+}
+
+function toJSArray_(jsArray, i, a)
+{
+	for (var t = 0; t < a.table.length; t++)
+	{
+		if (a.height === 0)
+		{
+			jsArray[i + t] = a.table[t];
+		}
+		else
+		{
+			var inc = t === 0 ? 0 : a.lengths[t - 1];
+			toJSArray_(jsArray, i + inc, a.table[t]);
+		}
+	}
+}
+
+function fromJSArray(jsArray)
+{
+	if (jsArray.length === 0)
+	{
+		return empty;
+	}
+	var h = Math.floor(Math.log(jsArray.length) / Math.log(M));
+	return fromJSArray_(jsArray, h, 0, jsArray.length);
+}
+
+function fromJSArray_(jsArray, h, from, to)
+{
+	if (h === 0)
+	{
+		return {
+			ctor: '_Array',
+			height: 0,
+			table: jsArray.slice(from, to)
+		};
+	}
+
+	var step = Math.pow(M, h);
+	var table = new Array(Math.ceil((to - from) / step));
+	var lengths = new Array(table.length);
+	for (var i = 0; i < table.length; i++)
+	{
+		table[i] = fromJSArray_(jsArray, h - 1, from + (i * step), Math.min(from + ((i + 1) * step), to));
+		lengths[i] = length(table[i]) + (i > 0 ? lengths[i - 1] : 0);
+	}
+	return {
+		ctor: '_Array',
+		height: h,
+		table: table,
+		lengths: lengths
+	};
+}
+
+return {
+	empty: empty,
+	fromList: fromList,
+	toList: toList,
+	initialize: F2(initialize),
+	append: F2(append),
+	push: F2(push),
+	slice: F3(slice),
+	get: F2(get),
+	set: F3(set),
+	map: F2(map),
+	indexedMap: F2(indexedMap),
+	foldl: F3(foldl),
+	foldr: F3(foldr),
+	length: length,
+
+	toJSArray: toJSArray,
+	fromJSArray: fromJSArray
+};
+
+}();
+var _elm_lang$core$Array$append = _elm_lang$core$Native_Array.append;
+var _elm_lang$core$Array$length = _elm_lang$core$Native_Array.length;
+var _elm_lang$core$Array$isEmpty = function (array) {
+	return _elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Array$length(array),
+		0);
+};
+var _elm_lang$core$Array$slice = _elm_lang$core$Native_Array.slice;
+var _elm_lang$core$Array$set = _elm_lang$core$Native_Array.set;
+var _elm_lang$core$Array$get = F2(
+	function (i, array) {
+		return ((_elm_lang$core$Native_Utils.cmp(0, i) < 1) && (_elm_lang$core$Native_Utils.cmp(
+			i,
+			_elm_lang$core$Native_Array.length(array)) < 0)) ? _elm_lang$core$Maybe$Just(
+			A2(_elm_lang$core$Native_Array.get, i, array)) : _elm_lang$core$Maybe$Nothing;
+	});
+var _elm_lang$core$Array$push = _elm_lang$core$Native_Array.push;
+var _elm_lang$core$Array$empty = _elm_lang$core$Native_Array.empty;
+var _elm_lang$core$Array$filter = F2(
+	function (isOkay, arr) {
+		var update = F2(
+			function (x, xs) {
+				return isOkay(x) ? A2(_elm_lang$core$Native_Array.push, x, xs) : xs;
+			});
+		return A3(_elm_lang$core$Native_Array.foldl, update, _elm_lang$core$Native_Array.empty, arr);
+	});
+var _elm_lang$core$Array$foldr = _elm_lang$core$Native_Array.foldr;
+var _elm_lang$core$Array$foldl = _elm_lang$core$Native_Array.foldl;
+var _elm_lang$core$Array$indexedMap = _elm_lang$core$Native_Array.indexedMap;
+var _elm_lang$core$Array$map = _elm_lang$core$Native_Array.map;
+var _elm_lang$core$Array$toIndexedList = function (array) {
+	return A3(
+		_elm_lang$core$List$map2,
+		F2(
+			function (v0, v1) {
+				return {ctor: '_Tuple2', _0: v0, _1: v1};
+			}),
+		A2(
+			_elm_lang$core$List$range,
+			0,
+			_elm_lang$core$Native_Array.length(array) - 1),
+		_elm_lang$core$Native_Array.toList(array));
+};
+var _elm_lang$core$Array$toList = _elm_lang$core$Native_Array.toList;
+var _elm_lang$core$Array$fromList = _elm_lang$core$Native_Array.fromList;
+var _elm_lang$core$Array$initialize = _elm_lang$core$Native_Array.initialize;
+var _elm_lang$core$Array$repeat = F2(
+	function (n, e) {
+		return A2(
+			_elm_lang$core$Array$initialize,
+			n,
+			_elm_lang$core$Basics$always(e));
+	});
+var _elm_lang$core$Array$Array = {ctor: 'Array'};
+
 //import Maybe, Native.Array, Native.List, Native.Utils, Result //
 
 var _elm_lang$core$Native_Json = function() {
@@ -4855,1356 +6205,6 @@ var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive
 var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
 
-//import Result //
-
-var _elm_lang$core$Native_Date = function() {
-
-function fromString(str)
-{
-	var date = new Date(str);
-	return isNaN(date.getTime())
-		? _elm_lang$core$Result$Err('Unable to parse \'' + str + '\' as a date. Dates must be in the ISO 8601 format.')
-		: _elm_lang$core$Result$Ok(date);
-}
-
-var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-var monthTable =
-	['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-	 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-
-return {
-	fromString: fromString,
-	year: function(d) { return d.getFullYear(); },
-	month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
-	day: function(d) { return d.getDate(); },
-	hour: function(d) { return d.getHours(); },
-	minute: function(d) { return d.getMinutes(); },
-	second: function(d) { return d.getSeconds(); },
-	millisecond: function(d) { return d.getMilliseconds(); },
-	toTime: function(d) { return d.getTime(); },
-	fromTime: function(t) { return new Date(t); },
-	dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
-};
-
-}();
-//import Native.Utils //
-
-var _elm_lang$core$Native_Scheduler = function() {
-
-var MAX_STEPS = 10000;
-
-
-// TASKS
-
-function succeed(value)
-{
-	return {
-		ctor: '_Task_succeed',
-		value: value
-	};
-}
-
-function fail(error)
-{
-	return {
-		ctor: '_Task_fail',
-		value: error
-	};
-}
-
-function nativeBinding(callback)
-{
-	return {
-		ctor: '_Task_nativeBinding',
-		callback: callback,
-		cancel: null
-	};
-}
-
-function andThen(callback, task)
-{
-	return {
-		ctor: '_Task_andThen',
-		callback: callback,
-		task: task
-	};
-}
-
-function onError(callback, task)
-{
-	return {
-		ctor: '_Task_onError',
-		callback: callback,
-		task: task
-	};
-}
-
-function receive(callback)
-{
-	return {
-		ctor: '_Task_receive',
-		callback: callback
-	};
-}
-
-
-// PROCESSES
-
-function rawSpawn(task)
-{
-	var process = {
-		ctor: '_Process',
-		id: _elm_lang$core$Native_Utils.guid(),
-		root: task,
-		stack: null,
-		mailbox: []
-	};
-
-	enqueue(process);
-
-	return process;
-}
-
-function spawn(task)
-{
-	return nativeBinding(function(callback) {
-		var process = rawSpawn(task);
-		callback(succeed(process));
-	});
-}
-
-function rawSend(process, msg)
-{
-	process.mailbox.push(msg);
-	enqueue(process);
-}
-
-function send(process, msg)
-{
-	return nativeBinding(function(callback) {
-		rawSend(process, msg);
-		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-	});
-}
-
-function kill(process)
-{
-	return nativeBinding(function(callback) {
-		var root = process.root;
-		if (root.ctor === '_Task_nativeBinding' && root.cancel)
-		{
-			root.cancel();
-		}
-
-		process.root = null;
-
-		callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-	});
-}
-
-function sleep(time)
-{
-	return nativeBinding(function(callback) {
-		var id = setTimeout(function() {
-			callback(succeed(_elm_lang$core$Native_Utils.Tuple0));
-		}, time);
-
-		return function() { clearTimeout(id); };
-	});
-}
-
-
-// STEP PROCESSES
-
-function step(numSteps, process)
-{
-	while (numSteps < MAX_STEPS)
-	{
-		var ctor = process.root.ctor;
-
-		if (ctor === '_Task_succeed')
-		{
-			while (process.stack && process.stack.ctor === '_Task_onError')
-			{
-				process.stack = process.stack.rest;
-			}
-			if (process.stack === null)
-			{
-				break;
-			}
-			process.root = process.stack.callback(process.root.value);
-			process.stack = process.stack.rest;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_fail')
-		{
-			while (process.stack && process.stack.ctor === '_Task_andThen')
-			{
-				process.stack = process.stack.rest;
-			}
-			if (process.stack === null)
-			{
-				break;
-			}
-			process.root = process.stack.callback(process.root.value);
-			process.stack = process.stack.rest;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_andThen')
-		{
-			process.stack = {
-				ctor: '_Task_andThen',
-				callback: process.root.callback,
-				rest: process.stack
-			};
-			process.root = process.root.task;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_onError')
-		{
-			process.stack = {
-				ctor: '_Task_onError',
-				callback: process.root.callback,
-				rest: process.stack
-			};
-			process.root = process.root.task;
-			++numSteps;
-			continue;
-		}
-
-		if (ctor === '_Task_nativeBinding')
-		{
-			process.root.cancel = process.root.callback(function(newRoot) {
-				process.root = newRoot;
-				enqueue(process);
-			});
-
-			break;
-		}
-
-		if (ctor === '_Task_receive')
-		{
-			var mailbox = process.mailbox;
-			if (mailbox.length === 0)
-			{
-				break;
-			}
-
-			process.root = process.root.callback(mailbox.shift());
-			++numSteps;
-			continue;
-		}
-
-		throw new Error(ctor);
-	}
-
-	if (numSteps < MAX_STEPS)
-	{
-		return numSteps + 1;
-	}
-	enqueue(process);
-
-	return numSteps;
-}
-
-
-// WORK QUEUE
-
-var working = false;
-var workQueue = [];
-
-function enqueue(process)
-{
-	workQueue.push(process);
-
-	if (!working)
-	{
-		setTimeout(work, 0);
-		working = true;
-	}
-}
-
-function work()
-{
-	var numSteps = 0;
-	var process;
-	while (numSteps < MAX_STEPS && (process = workQueue.shift()))
-	{
-		if (process.root)
-		{
-			numSteps = step(numSteps, process);
-		}
-	}
-	if (!process)
-	{
-		working = false;
-		return;
-	}
-	setTimeout(work, 0);
-}
-
-
-return {
-	succeed: succeed,
-	fail: fail,
-	nativeBinding: nativeBinding,
-	andThen: F2(andThen),
-	onError: F2(onError),
-	receive: receive,
-
-	spawn: spawn,
-	kill: kill,
-	sleep: sleep,
-	send: F2(send),
-
-	rawSpawn: rawSpawn,
-	rawSend: rawSend
-};
-
-}();
-//import //
-
-var _elm_lang$core$Native_Platform = function() {
-
-
-// PROGRAMS
-
-function program(impl)
-{
-	return function(flagDecoder)
-	{
-		return function(object, moduleName)
-		{
-			object['worker'] = function worker(flags)
-			{
-				if (typeof flags !== 'undefined')
-				{
-					throw new Error(
-						'The `' + moduleName + '` module does not need flags.\n'
-						+ 'Call ' + moduleName + '.worker() with no arguments and you should be all set!'
-					);
-				}
-
-				return initialize(
-					impl.init,
-					impl.update,
-					impl.subscriptions,
-					renderer
-				);
-			};
-		};
-	};
-}
-
-function programWithFlags(impl)
-{
-	return function(flagDecoder)
-	{
-		return function(object, moduleName)
-		{
-			object['worker'] = function worker(flags)
-			{
-				if (typeof flagDecoder === 'undefined')
-				{
-					throw new Error(
-						'Are you trying to sneak a Never value into Elm? Trickster!\n'
-						+ 'It looks like ' + moduleName + '.main is defined with `programWithFlags` but has type `Program Never`.\n'
-						+ 'Use `program` instead if you do not want flags.'
-					);
-				}
-
-				var result = A2(_elm_lang$core$Native_Json.run, flagDecoder, flags);
-				if (result.ctor === 'Err')
-				{
-					throw new Error(
-						moduleName + '.worker(...) was called with an unexpected argument.\n'
-						+ 'I tried to convert it to an Elm value, but ran into this problem:\n\n'
-						+ result._0
-					);
-				}
-
-				return initialize(
-					impl.init(result._0),
-					impl.update,
-					impl.subscriptions,
-					renderer
-				);
-			};
-		};
-	};
-}
-
-function renderer(enqueue, _)
-{
-	return function(_) {};
-}
-
-
-// HTML TO PROGRAM
-
-function htmlToProgram(vnode)
-{
-	var emptyBag = batch(_elm_lang$core$Native_List.Nil);
-	var noChange = _elm_lang$core$Native_Utils.Tuple2(
-		_elm_lang$core$Native_Utils.Tuple0,
-		emptyBag
-	);
-
-	return _elm_lang$virtual_dom$VirtualDom$program({
-		init: noChange,
-		view: function(model) { return main; },
-		update: F2(function(msg, model) { return noChange; }),
-		subscriptions: function (model) { return emptyBag; }
-	});
-}
-
-
-// INITIALIZE A PROGRAM
-
-function initialize(init, update, subscriptions, renderer)
-{
-	// ambient state
-	var managers = {};
-	var updateView;
-
-	// init and update state in main process
-	var initApp = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
-		var model = init._0;
-		updateView = renderer(enqueue, model);
-		var cmds = init._1;
-		var subs = subscriptions(model);
-		dispatchEffects(managers, cmds, subs);
-		callback(_elm_lang$core$Native_Scheduler.succeed(model));
-	});
-
-	function onMessage(msg, model)
-	{
-		return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback) {
-			var results = A2(update, msg, model);
-			model = results._0;
-			updateView(model);
-			var cmds = results._1;
-			var subs = subscriptions(model);
-			dispatchEffects(managers, cmds, subs);
-			callback(_elm_lang$core$Native_Scheduler.succeed(model));
-		});
-	}
-
-	var mainProcess = spawnLoop(initApp, onMessage);
-
-	function enqueue(msg)
-	{
-		_elm_lang$core$Native_Scheduler.rawSend(mainProcess, msg);
-	}
-
-	var ports = setupEffects(managers, enqueue);
-
-	return ports ? { ports: ports } : {};
-}
-
-
-// EFFECT MANAGERS
-
-var effectManagers = {};
-
-function setupEffects(managers, callback)
-{
-	var ports;
-
-	// setup all necessary effect managers
-	for (var key in effectManagers)
-	{
-		var manager = effectManagers[key];
-
-		if (manager.isForeign)
-		{
-			ports = ports || {};
-			ports[key] = manager.tag === 'cmd'
-				? setupOutgoingPort(key)
-				: setupIncomingPort(key, callback);
-		}
-
-		managers[key] = makeManager(manager, callback);
-	}
-
-	return ports;
-}
-
-function makeManager(info, callback)
-{
-	var router = {
-		main: callback,
-		self: undefined
-	};
-
-	var tag = info.tag;
-	var onEffects = info.onEffects;
-	var onSelfMsg = info.onSelfMsg;
-
-	function onMessage(msg, state)
-	{
-		if (msg.ctor === 'self')
-		{
-			return A3(onSelfMsg, router, msg._0, state);
-		}
-
-		var fx = msg._0;
-		switch (tag)
-		{
-			case 'cmd':
-				return A3(onEffects, router, fx.cmds, state);
-
-			case 'sub':
-				return A3(onEffects, router, fx.subs, state);
-
-			case 'fx':
-				return A4(onEffects, router, fx.cmds, fx.subs, state);
-		}
-	}
-
-	var process = spawnLoop(info.init, onMessage);
-	router.self = process;
-	return process;
-}
-
-function sendToApp(router, msg)
-{
-	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-	{
-		router.main(msg);
-		callback(_elm_lang$core$Native_Scheduler.succeed(_elm_lang$core$Native_Utils.Tuple0));
-	});
-}
-
-function sendToSelf(router, msg)
-{
-	return A2(_elm_lang$core$Native_Scheduler.send, router.self, {
-		ctor: 'self',
-		_0: msg
-	});
-}
-
-
-// HELPER for STATEFUL LOOPS
-
-function spawnLoop(init, onMessage)
-{
-	var andThen = _elm_lang$core$Native_Scheduler.andThen;
-
-	function loop(state)
-	{
-		var handleMsg = _elm_lang$core$Native_Scheduler.receive(function(msg) {
-			return onMessage(msg, state);
-		});
-		return A2(andThen, loop, handleMsg);
-	}
-
-	var task = A2(andThen, loop, init);
-
-	return _elm_lang$core$Native_Scheduler.rawSpawn(task);
-}
-
-
-// BAGS
-
-function leaf(home)
-{
-	return function(value)
-	{
-		return {
-			type: 'leaf',
-			home: home,
-			value: value
-		};
-	};
-}
-
-function batch(list)
-{
-	return {
-		type: 'node',
-		branches: list
-	};
-}
-
-function map(tagger, bag)
-{
-	return {
-		type: 'map',
-		tagger: tagger,
-		tree: bag
-	}
-}
-
-
-// PIPE BAGS INTO EFFECT MANAGERS
-
-function dispatchEffects(managers, cmdBag, subBag)
-{
-	var effectsDict = {};
-	gatherEffects(true, cmdBag, effectsDict, null);
-	gatherEffects(false, subBag, effectsDict, null);
-
-	for (var home in managers)
-	{
-		var fx = home in effectsDict
-			? effectsDict[home]
-			: {
-				cmds: _elm_lang$core$Native_List.Nil,
-				subs: _elm_lang$core$Native_List.Nil
-			};
-
-		_elm_lang$core$Native_Scheduler.rawSend(managers[home], { ctor: 'fx', _0: fx });
-	}
-}
-
-function gatherEffects(isCmd, bag, effectsDict, taggers)
-{
-	switch (bag.type)
-	{
-		case 'leaf':
-			var home = bag.home;
-			var effect = toEffect(isCmd, home, taggers, bag.value);
-			effectsDict[home] = insert(isCmd, effect, effectsDict[home]);
-			return;
-
-		case 'node':
-			var list = bag.branches;
-			while (list.ctor !== '[]')
-			{
-				gatherEffects(isCmd, list._0, effectsDict, taggers);
-				list = list._1;
-			}
-			return;
-
-		case 'map':
-			gatherEffects(isCmd, bag.tree, effectsDict, {
-				tagger: bag.tagger,
-				rest: taggers
-			});
-			return;
-	}
-}
-
-function toEffect(isCmd, home, taggers, value)
-{
-	function applyTaggers(x)
-	{
-		var temp = taggers;
-		while (temp)
-		{
-			x = temp.tagger(x);
-			temp = temp.rest;
-		}
-		return x;
-	}
-
-	var map = isCmd
-		? effectManagers[home].cmdMap
-		: effectManagers[home].subMap;
-
-	return A2(map, applyTaggers, value)
-}
-
-function insert(isCmd, newEffect, effects)
-{
-	effects = effects || {
-		cmds: _elm_lang$core$Native_List.Nil,
-		subs: _elm_lang$core$Native_List.Nil
-	};
-	if (isCmd)
-	{
-		effects.cmds = _elm_lang$core$Native_List.Cons(newEffect, effects.cmds);
-		return effects;
-	}
-	effects.subs = _elm_lang$core$Native_List.Cons(newEffect, effects.subs);
-	return effects;
-}
-
-
-// PORTS
-
-function checkPortName(name)
-{
-	if (name in effectManagers)
-	{
-		throw new Error('There can only be one port named `' + name + '`, but your program has multiple.');
-	}
-}
-
-
-// OUTGOING PORTS
-
-function outgoingPort(name, converter)
-{
-	checkPortName(name);
-	effectManagers[name] = {
-		tag: 'cmd',
-		cmdMap: outgoingPortMap,
-		converter: converter,
-		isForeign: true
-	};
-	return leaf(name);
-}
-
-var outgoingPortMap = F2(function cmdMap(tagger, value) {
-	return value;
-});
-
-function setupOutgoingPort(name)
-{
-	var subs = [];
-	var converter = effectManagers[name].converter;
-
-	// CREATE MANAGER
-
-	var init = _elm_lang$core$Native_Scheduler.succeed(null);
-
-	function onEffects(router, cmdList, state)
-	{
-		while (cmdList.ctor !== '[]')
-		{
-			// grab a separate reference to subs in case unsubscribe is called
-			var currentSubs = subs;
-			var value = converter(cmdList._0);
-			for (var i = 0; i < currentSubs.length; i++)
-			{
-				currentSubs[i](value);
-			}
-			cmdList = cmdList._1;
-		}
-		return init;
-	}
-
-	effectManagers[name].init = init;
-	effectManagers[name].onEffects = F3(onEffects);
-
-	// PUBLIC API
-
-	function subscribe(callback)
-	{
-		subs.push(callback);
-	}
-
-	function unsubscribe(callback)
-	{
-		// copy subs into a new array in case unsubscribe is called within a
-		// subscribed callback
-		subs = subs.slice();
-		var index = subs.indexOf(callback);
-		if (index >= 0)
-		{
-			subs.splice(index, 1);
-		}
-	}
-
-	return {
-		subscribe: subscribe,
-		unsubscribe: unsubscribe
-	};
-}
-
-
-// INCOMING PORTS
-
-function incomingPort(name, converter)
-{
-	checkPortName(name);
-	effectManagers[name] = {
-		tag: 'sub',
-		subMap: incomingPortMap,
-		converter: converter,
-		isForeign: true
-	};
-	return leaf(name);
-}
-
-var incomingPortMap = F2(function subMap(tagger, finalTagger)
-{
-	return function(value)
-	{
-		return tagger(finalTagger(value));
-	};
-});
-
-function setupIncomingPort(name, callback)
-{
-	var sentBeforeInit = [];
-	var subs = _elm_lang$core$Native_List.Nil;
-	var converter = effectManagers[name].converter;
-	var currentOnEffects = preInitOnEffects;
-	var currentSend = preInitSend;
-
-	// CREATE MANAGER
-
-	var init = _elm_lang$core$Native_Scheduler.succeed(null);
-
-	function preInitOnEffects(router, subList, state)
-	{
-		var postInitResult = postInitOnEffects(router, subList, state);
-
-		for(var i = 0; i < sentBeforeInit.length; i++)
-		{
-			postInitSend(sentBeforeInit[i]);
-		}
-
-		sentBeforeInit = null; // to release objects held in queue
-		currentSend = postInitSend;
-		currentOnEffects = postInitOnEffects;
-		return postInitResult;
-	}
-
-	function postInitOnEffects(router, subList, state)
-	{
-		subs = subList;
-		return init;
-	}
-
-	function onEffects(router, subList, state)
-	{
-		return currentOnEffects(router, subList, state);
-	}
-
-	effectManagers[name].init = init;
-	effectManagers[name].onEffects = F3(onEffects);
-
-	// PUBLIC API
-
-	function preInitSend(value)
-	{
-		sentBeforeInit.push(value);
-	}
-
-	function postInitSend(value)
-	{
-		var temp = subs;
-		while (temp.ctor !== '[]')
-		{
-			callback(temp._0(value));
-			temp = temp._1;
-		}
-	}
-
-	function send(incomingValue)
-	{
-		var result = A2(_elm_lang$core$Json_Decode$decodeValue, converter, incomingValue);
-		if (result.ctor === 'Err')
-		{
-			throw new Error('Trying to send an unexpected type of value through port `' + name + '`:\n' + result._0);
-		}
-
-		currentSend(result._0);
-	}
-
-	return { send: send };
-}
-
-return {
-	// routers
-	sendToApp: F2(sendToApp),
-	sendToSelf: F2(sendToSelf),
-
-	// global setup
-	effectManagers: effectManagers,
-	outgoingPort: outgoingPort,
-	incomingPort: incomingPort,
-
-	htmlToProgram: htmlToProgram,
-	program: program,
-	programWithFlags: programWithFlags,
-	initialize: initialize,
-
-	// effect bags
-	leaf: leaf,
-	batch: batch,
-	map: F2(map)
-};
-
-}();
-
-var _elm_lang$core$Platform_Cmd$batch = _elm_lang$core$Native_Platform.batch;
-var _elm_lang$core$Platform_Cmd$none = _elm_lang$core$Platform_Cmd$batch(
-	{ctor: '[]'});
-var _elm_lang$core$Platform_Cmd_ops = _elm_lang$core$Platform_Cmd_ops || {};
-_elm_lang$core$Platform_Cmd_ops['!'] = F2(
-	function (model, commands) {
-		return {
-			ctor: '_Tuple2',
-			_0: model,
-			_1: _elm_lang$core$Platform_Cmd$batch(commands)
-		};
-	});
-var _elm_lang$core$Platform_Cmd$map = _elm_lang$core$Native_Platform.map;
-var _elm_lang$core$Platform_Cmd$Cmd = {ctor: 'Cmd'};
-
-var _elm_lang$core$Platform_Sub$batch = _elm_lang$core$Native_Platform.batch;
-var _elm_lang$core$Platform_Sub$none = _elm_lang$core$Platform_Sub$batch(
-	{ctor: '[]'});
-var _elm_lang$core$Platform_Sub$map = _elm_lang$core$Native_Platform.map;
-var _elm_lang$core$Platform_Sub$Sub = {ctor: 'Sub'};
-
-var _elm_lang$core$Platform$hack = _elm_lang$core$Native_Scheduler.succeed;
-var _elm_lang$core$Platform$sendToSelf = _elm_lang$core$Native_Platform.sendToSelf;
-var _elm_lang$core$Platform$sendToApp = _elm_lang$core$Native_Platform.sendToApp;
-var _elm_lang$core$Platform$programWithFlags = _elm_lang$core$Native_Platform.programWithFlags;
-var _elm_lang$core$Platform$program = _elm_lang$core$Native_Platform.program;
-var _elm_lang$core$Platform$Program = {ctor: 'Program'};
-var _elm_lang$core$Platform$Task = {ctor: 'Task'};
-var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
-var _elm_lang$core$Platform$Router = {ctor: 'Router'};
-
-var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
-var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
-var _elm_lang$core$Task$spawnCmd = F2(
-	function (router, _p0) {
-		var _p1 = _p0;
-		return _elm_lang$core$Native_Scheduler.spawn(
-			A2(
-				_elm_lang$core$Task$andThen,
-				_elm_lang$core$Platform$sendToApp(router),
-				_p1._0));
-	});
-var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
-var _elm_lang$core$Task$mapError = F2(
-	function (convert, task) {
-		return A2(
-			_elm_lang$core$Task$onError,
-			function (_p2) {
-				return _elm_lang$core$Task$fail(
-					convert(_p2));
-			},
-			task);
-	});
-var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
-var _elm_lang$core$Task$map = F2(
-	function (func, taskA) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return _elm_lang$core$Task$succeed(
-					func(a));
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map2 = F3(
-	function (func, taskA, taskB) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return _elm_lang$core$Task$succeed(
-							A2(func, a, b));
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map3 = F4(
-	function (func, taskA, taskB, taskC) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return _elm_lang$core$Task$succeed(
-									A3(func, a, b, c));
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map4 = F5(
-	function (func, taskA, taskB, taskC, taskD) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									function (d) {
-										return _elm_lang$core$Task$succeed(
-											A4(func, a, b, c, d));
-									},
-									taskD);
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map5 = F6(
-	function (func, taskA, taskB, taskC, taskD, taskE) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									function (d) {
-										return A2(
-											_elm_lang$core$Task$andThen,
-											function (e) {
-												return _elm_lang$core$Task$succeed(
-													A5(func, a, b, c, d, e));
-											},
-											taskE);
-									},
-									taskD);
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$sequence = function (tasks) {
-	var _p3 = tasks;
-	if (_p3.ctor === '[]') {
-		return _elm_lang$core$Task$succeed(
-			{ctor: '[]'});
-	} else {
-		return A3(
-			_elm_lang$core$Task$map2,
-			F2(
-				function (x, y) {
-					return {ctor: '::', _0: x, _1: y};
-				}),
-			_p3._0,
-			_elm_lang$core$Task$sequence(_p3._1));
-	}
-};
-var _elm_lang$core$Task$onEffects = F3(
-	function (router, commands, state) {
-		return A2(
-			_elm_lang$core$Task$map,
-			function (_p4) {
-				return {ctor: '_Tuple0'};
-			},
-			_elm_lang$core$Task$sequence(
-				A2(
-					_elm_lang$core$List$map,
-					_elm_lang$core$Task$spawnCmd(router),
-					commands)));
-	});
-var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
-	{ctor: '_Tuple0'});
-var _elm_lang$core$Task$onSelfMsg = F3(
-	function (_p7, _p6, _p5) {
-		return _elm_lang$core$Task$succeed(
-			{ctor: '_Tuple0'});
-	});
-var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
-var _elm_lang$core$Task$Perform = function (a) {
-	return {ctor: 'Perform', _0: a};
-};
-var _elm_lang$core$Task$perform = F2(
-	function (toMessage, task) {
-		return _elm_lang$core$Task$command(
-			_elm_lang$core$Task$Perform(
-				A2(_elm_lang$core$Task$map, toMessage, task)));
-	});
-var _elm_lang$core$Task$attempt = F2(
-	function (resultToMessage, task) {
-		return _elm_lang$core$Task$command(
-			_elm_lang$core$Task$Perform(
-				A2(
-					_elm_lang$core$Task$onError,
-					function (_p8) {
-						return _elm_lang$core$Task$succeed(
-							resultToMessage(
-								_elm_lang$core$Result$Err(_p8)));
-					},
-					A2(
-						_elm_lang$core$Task$andThen,
-						function (_p9) {
-							return _elm_lang$core$Task$succeed(
-								resultToMessage(
-									_elm_lang$core$Result$Ok(_p9)));
-						},
-						task))));
-	});
-var _elm_lang$core$Task$cmdMap = F2(
-	function (tagger, _p10) {
-		var _p11 = _p10;
-		return _elm_lang$core$Task$Perform(
-			A2(_elm_lang$core$Task$map, tagger, _p11._0));
-	});
-_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
-
-//import Native.Scheduler //
-
-var _elm_lang$core$Native_Time = function() {
-
-var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-{
-	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
-});
-
-function setInterval_(interval, task)
-{
-	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-	{
-		var id = setInterval(function() {
-			_elm_lang$core$Native_Scheduler.rawSpawn(task);
-		}, interval);
-
-		return function() { clearInterval(id); };
-	});
-}
-
-return {
-	now: now,
-	setInterval_: F2(setInterval_)
-};
-
-}();
-var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
-var _elm_lang$core$Time$spawnHelp = F3(
-	function (router, intervals, processes) {
-		var _p0 = intervals;
-		if (_p0.ctor === '[]') {
-			return _elm_lang$core$Task$succeed(processes);
-		} else {
-			var _p1 = _p0._0;
-			var spawnRest = function (id) {
-				return A3(
-					_elm_lang$core$Time$spawnHelp,
-					router,
-					_p0._1,
-					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
-			};
-			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
-				A2(
-					_elm_lang$core$Time$setInterval,
-					_p1,
-					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
-			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
-		}
-	});
-var _elm_lang$core$Time$addMySub = F2(
-	function (_p2, state) {
-		var _p3 = _p2;
-		var _p6 = _p3._1;
-		var _p5 = _p3._0;
-		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
-		if (_p4.ctor === 'Nothing') {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				{
-					ctor: '::',
-					_0: _p6,
-					_1: {ctor: '[]'}
-				},
-				state);
-		} else {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				{ctor: '::', _0: _p6, _1: _p4._0},
-				state);
-		}
-	});
-var _elm_lang$core$Time$inMilliseconds = function (t) {
-	return t;
-};
-var _elm_lang$core$Time$millisecond = 1;
-var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
-var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
-var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
-var _elm_lang$core$Time$inHours = function (t) {
-	return t / _elm_lang$core$Time$hour;
-};
-var _elm_lang$core$Time$inMinutes = function (t) {
-	return t / _elm_lang$core$Time$minute;
-};
-var _elm_lang$core$Time$inSeconds = function (t) {
-	return t / _elm_lang$core$Time$second;
-};
-var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
-var _elm_lang$core$Time$onSelfMsg = F3(
-	function (router, interval, state) {
-		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
-		if (_p7.ctor === 'Nothing') {
-			return _elm_lang$core$Task$succeed(state);
-		} else {
-			var tellTaggers = function (time) {
-				return _elm_lang$core$Task$sequence(
-					A2(
-						_elm_lang$core$List$map,
-						function (tagger) {
-							return A2(
-								_elm_lang$core$Platform$sendToApp,
-								router,
-								tagger(time));
-						},
-						_p7._0));
-			};
-			return A2(
-				_elm_lang$core$Task$andThen,
-				function (_p8) {
-					return _elm_lang$core$Task$succeed(state);
-				},
-				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
-		}
-	});
-var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
-var _elm_lang$core$Time$State = F2(
-	function (a, b) {
-		return {taggers: a, processes: b};
-	});
-var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
-	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
-var _elm_lang$core$Time$onEffects = F3(
-	function (router, subs, _p9) {
-		var _p10 = _p9;
-		var rightStep = F3(
-			function (_p12, id, _p11) {
-				var _p13 = _p11;
-				return {
-					ctor: '_Tuple3',
-					_0: _p13._0,
-					_1: _p13._1,
-					_2: A2(
-						_elm_lang$core$Task$andThen,
-						function (_p14) {
-							return _p13._2;
-						},
-						_elm_lang$core$Native_Scheduler.kill(id))
-				};
-			});
-		var bothStep = F4(
-			function (interval, taggers, id, _p15) {
-				var _p16 = _p15;
-				return {
-					ctor: '_Tuple3',
-					_0: _p16._0,
-					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
-					_2: _p16._2
-				};
-			});
-		var leftStep = F3(
-			function (interval, taggers, _p17) {
-				var _p18 = _p17;
-				return {
-					ctor: '_Tuple3',
-					_0: {ctor: '::', _0: interval, _1: _p18._0},
-					_1: _p18._1,
-					_2: _p18._2
-				};
-			});
-		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
-		var _p19 = A6(
-			_elm_lang$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			newTaggers,
-			_p10.processes,
-			{
-				ctor: '_Tuple3',
-				_0: {ctor: '[]'},
-				_1: _elm_lang$core$Dict$empty,
-				_2: _elm_lang$core$Task$succeed(
-					{ctor: '_Tuple0'})
-			});
-		var spawnList = _p19._0;
-		var existingDict = _p19._1;
-		var killTask = _p19._2;
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (newProcesses) {
-				return _elm_lang$core$Task$succeed(
-					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
-			},
-			A2(
-				_elm_lang$core$Task$andThen,
-				function (_p20) {
-					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
-				},
-				killTask));
-	});
-var _elm_lang$core$Time$Every = F2(
-	function (a, b) {
-		return {ctor: 'Every', _0: a, _1: b};
-	});
-var _elm_lang$core$Time$every = F2(
-	function (interval, tagger) {
-		return _elm_lang$core$Time$subscription(
-			A2(_elm_lang$core$Time$Every, interval, tagger));
-	});
-var _elm_lang$core$Time$subMap = F2(
-	function (f, _p21) {
-		var _p22 = _p21;
-		return A2(
-			_elm_lang$core$Time$Every,
-			_p22._0,
-			function (_p23) {
-				return f(
-					_p22._1(_p23));
-			});
-	});
-_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
-
-var _elm_lang$core$Date$millisecond = _elm_lang$core$Native_Date.millisecond;
-var _elm_lang$core$Date$second = _elm_lang$core$Native_Date.second;
-var _elm_lang$core$Date$minute = _elm_lang$core$Native_Date.minute;
-var _elm_lang$core$Date$hour = _elm_lang$core$Native_Date.hour;
-var _elm_lang$core$Date$dayOfWeek = _elm_lang$core$Native_Date.dayOfWeek;
-var _elm_lang$core$Date$day = _elm_lang$core$Native_Date.day;
-var _elm_lang$core$Date$month = _elm_lang$core$Native_Date.month;
-var _elm_lang$core$Date$year = _elm_lang$core$Native_Date.year;
-var _elm_lang$core$Date$fromTime = _elm_lang$core$Native_Date.fromTime;
-var _elm_lang$core$Date$toTime = _elm_lang$core$Native_Date.toTime;
-var _elm_lang$core$Date$fromString = _elm_lang$core$Native_Date.fromString;
-var _elm_lang$core$Date$now = A2(_elm_lang$core$Task$map, _elm_lang$core$Date$fromTime, _elm_lang$core$Time$now);
-var _elm_lang$core$Date$Date = {ctor: 'Date'};
-var _elm_lang$core$Date$Sun = {ctor: 'Sun'};
-var _elm_lang$core$Date$Sat = {ctor: 'Sat'};
-var _elm_lang$core$Date$Fri = {ctor: 'Fri'};
-var _elm_lang$core$Date$Thu = {ctor: 'Thu'};
-var _elm_lang$core$Date$Wed = {ctor: 'Wed'};
-var _elm_lang$core$Date$Tue = {ctor: 'Tue'};
-var _elm_lang$core$Date$Mon = {ctor: 'Mon'};
-var _elm_lang$core$Date$Dec = {ctor: 'Dec'};
-var _elm_lang$core$Date$Nov = {ctor: 'Nov'};
-var _elm_lang$core$Date$Oct = {ctor: 'Oct'};
-var _elm_lang$core$Date$Sep = {ctor: 'Sep'};
-var _elm_lang$core$Date$Aug = {ctor: 'Aug'};
-var _elm_lang$core$Date$Jul = {ctor: 'Jul'};
-var _elm_lang$core$Date$Jun = {ctor: 'Jun'};
-var _elm_lang$core$Date$May = {ctor: 'May'};
-var _elm_lang$core$Date$Apr = {ctor: 'Apr'};
-var _elm_lang$core$Date$Mar = {ctor: 'Mar'};
-var _elm_lang$core$Date$Feb = {ctor: 'Feb'};
-var _elm_lang$core$Date$Jan = {ctor: 'Jan'};
-
 var _elm_lang$core$Set$foldr = F3(
 	function (f, b, _p0) {
 		var _p1 = _p0;
@@ -6366,6 +6366,32 @@ var _elm_lang$core$Tuple$first = function (_p6) {
 	return _p7._0;
 };
 
+var _elm_community$json_extra$Json_Decode_Extra$combine = A2(
+	_elm_lang$core$List$foldr,
+	_elm_lang$core$Json_Decode$map2(
+		F2(
+			function (x, y) {
+				return {ctor: '::', _0: x, _1: y};
+			})),
+	_elm_lang$core$Json_Decode$succeed(
+		{ctor: '[]'}));
+var _elm_community$json_extra$Json_Decode_Extra$collection = function (decoder) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (length) {
+			return _elm_community$json_extra$Json_Decode_Extra$combine(
+				A2(
+					_elm_lang$core$List$map,
+					function (index) {
+						return A2(
+							_elm_lang$core$Json_Decode$field,
+							_elm_lang$core$Basics$toString(index),
+							decoder);
+					},
+					A2(_elm_lang$core$List$range, 0, length - 1)));
+		},
+		A2(_elm_lang$core$Json_Decode$field, 'length', _elm_lang$core$Json_Decode$int));
+};
 var _elm_community$json_extra$Json_Decode_Extra$fromResult = function (result) {
 	var _p0 = result;
 	if (_p0.ctor === 'Ok') {
@@ -6373,6 +6399,29 @@ var _elm_community$json_extra$Json_Decode_Extra$fromResult = function (result) {
 	} else {
 		return _elm_lang$core$Json_Decode$fail(_p0._0);
 	}
+};
+var _elm_community$json_extra$Json_Decode_Extra$parseInt = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p1) {
+		return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			_elm_lang$core$String$toInt(_p1));
+	},
+	_elm_lang$core$Json_Decode$string);
+var _elm_community$json_extra$Json_Decode_Extra$parseFloat = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p2) {
+		return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			_elm_lang$core$String$toFloat(_p2));
+	},
+	_elm_lang$core$Json_Decode$string);
+var _elm_community$json_extra$Json_Decode_Extra$doubleEncoded = function (decoder) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (_p3) {
+			return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+				A2(_elm_lang$core$Json_Decode$decodeString, decoder, _p3));
+		},
+		_elm_lang$core$Json_Decode$string);
 };
 var _elm_community$json_extra$Json_Decode_Extra$sequenceHelp = F2(
 	function (decoders, jsonValues) {
@@ -6396,15 +6445,33 @@ var _elm_community$json_extra$Json_Decode_Extra$sequence = function (decoders) {
 		_elm_community$json_extra$Json_Decode_Extra$sequenceHelp(decoders),
 		_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$value));
 };
+var _elm_community$json_extra$Json_Decode_Extra$indexedList = function (indexedDecoder) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (values) {
+			return _elm_community$json_extra$Json_Decode_Extra$sequence(
+				A2(
+					_elm_lang$core$List$map,
+					indexedDecoder,
+					A2(
+						_elm_lang$core$List$range,
+						0,
+						_elm_lang$core$List$length(values) - 1)));
+		},
+		_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$value));
+};
 var _elm_community$json_extra$Json_Decode_Extra$optionalField = F2(
 	function (fieldName, decoder) {
 		var finishDecoding = function (json) {
-			var _p1 = A2(
+			var _p4 = A2(
 				_elm_lang$core$Json_Decode$decodeValue,
 				A2(_elm_lang$core$Json_Decode$field, fieldName, _elm_lang$core$Json_Decode$value),
 				json);
-			if (_p1.ctor === 'Ok') {
-				return A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, decoder);
+			if (_p4.ctor === 'Ok') {
+				return A2(
+					_elm_lang$core$Json_Decode$map,
+					_elm_lang$core$Maybe$Just,
+					A2(_elm_lang$core$Json_Decode$field, fieldName, decoder));
 			} else {
 				return _elm_lang$core$Json_Decode$succeed(_elm_lang$core$Maybe$Nothing);
 			}
@@ -6414,30 +6481,27 @@ var _elm_community$json_extra$Json_Decode_Extra$optionalField = F2(
 var _elm_community$json_extra$Json_Decode_Extra$withDefault = F2(
 	function (fallback, decoder) {
 		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (_p2) {
-				return _elm_lang$core$Json_Decode$succeed(
-					A2(_elm_lang$core$Maybe$withDefault, fallback, _p2));
-			},
+			_elm_lang$core$Json_Decode$map,
+			_elm_lang$core$Maybe$withDefault(fallback),
 			_elm_lang$core$Json_Decode$maybe(decoder));
 	});
 var _elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples = F2(
 	function (keyDecoder, tuples) {
-		var _p3 = tuples;
-		if (_p3.ctor === '[]') {
+		var _p5 = tuples;
+		if (_p5.ctor === '[]') {
 			return _elm_lang$core$Json_Decode$succeed(_elm_lang$core$Dict$empty);
 		} else {
-			var _p4 = A2(_elm_lang$core$Json_Decode$decodeString, keyDecoder, _p3._0._0);
-			if (_p4.ctor === 'Ok') {
+			var _p6 = A2(_elm_lang$core$Json_Decode$decodeString, keyDecoder, _p5._0._0);
+			if (_p6.ctor === 'Ok') {
 				return A2(
 					_elm_lang$core$Json_Decode$andThen,
-					function (_p5) {
+					function (_p7) {
 						return _elm_lang$core$Json_Decode$succeed(
-							A3(_elm_lang$core$Dict$insert, _p4._0, _p3._0._1, _p5));
+							A3(_elm_lang$core$Dict$insert, _p6._0, _p5._0._1, _p7));
 					},
-					A2(_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples, keyDecoder, _p3._1));
+					A2(_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples, keyDecoder, _p5._1));
 			} else {
-				return _elm_lang$core$Json_Decode$fail(_p4._0);
+				return _elm_lang$core$Json_Decode$fail(_p6._0);
 			}
 		}
 	});
@@ -6445,21 +6509,13 @@ var _elm_community$json_extra$Json_Decode_Extra$dict2 = F2(
 	function (keyDecoder, valueDecoder) {
 		return A2(
 			_elm_lang$core$Json_Decode$andThen,
-			function (_p6) {
-				return A2(
-					_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples,
-					keyDecoder,
-					_elm_lang$core$Dict$toList(_p6));
-			},
-			_elm_lang$core$Json_Decode$dict(valueDecoder));
+			_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples(keyDecoder),
+			_elm_lang$core$Json_Decode$keyValuePairs(valueDecoder));
 	});
 var _elm_community$json_extra$Json_Decode_Extra$set = function (decoder) {
 	return A2(
-		_elm_lang$core$Json_Decode$andThen,
-		function (_p7) {
-			return _elm_lang$core$Json_Decode$succeed(
-				_elm_lang$core$Set$fromList(_p7));
-		},
+		_elm_lang$core$Json_Decode$map,
+		_elm_lang$core$Set$fromList,
 		_elm_lang$core$Json_Decode$list(decoder));
 };
 var _elm_community$json_extra$Json_Decode_Extra$date = A2(
@@ -9002,125 +9058,6 @@ var _elm_lang$html$Html_Attributes$classList = function (list) {
 };
 var _elm_lang$html$Html_Attributes$style = _elm_lang$virtual_dom$VirtualDom$style;
 
-var _elm_lang$html$Html_Events$keyCode = A2(_elm_lang$core$Json_Decode$field, 'keyCode', _elm_lang$core$Json_Decode$int);
-var _elm_lang$html$Html_Events$targetChecked = A2(
-	_elm_lang$core$Json_Decode$at,
-	{
-		ctor: '::',
-		_0: 'target',
-		_1: {
-			ctor: '::',
-			_0: 'checked',
-			_1: {ctor: '[]'}
-		}
-	},
-	_elm_lang$core$Json_Decode$bool);
-var _elm_lang$html$Html_Events$targetValue = A2(
-	_elm_lang$core$Json_Decode$at,
-	{
-		ctor: '::',
-		_0: 'target',
-		_1: {
-			ctor: '::',
-			_0: 'value',
-			_1: {ctor: '[]'}
-		}
-	},
-	_elm_lang$core$Json_Decode$string);
-var _elm_lang$html$Html_Events$defaultOptions = _elm_lang$virtual_dom$VirtualDom$defaultOptions;
-var _elm_lang$html$Html_Events$onWithOptions = _elm_lang$virtual_dom$VirtualDom$onWithOptions;
-var _elm_lang$html$Html_Events$on = _elm_lang$virtual_dom$VirtualDom$on;
-var _elm_lang$html$Html_Events$onFocus = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'focus',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onBlur = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'blur',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onSubmitOptions = _elm_lang$core$Native_Utils.update(
-	_elm_lang$html$Html_Events$defaultOptions,
-	{preventDefault: true});
-var _elm_lang$html$Html_Events$onSubmit = function (msg) {
-	return A3(
-		_elm_lang$html$Html_Events$onWithOptions,
-		'submit',
-		_elm_lang$html$Html_Events$onSubmitOptions,
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onCheck = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'change',
-		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetChecked));
-};
-var _elm_lang$html$Html_Events$onInput = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'input',
-		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$targetValue));
-};
-var _elm_lang$html$Html_Events$onMouseOut = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseout',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseOver = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseover',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseLeave = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseleave',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseEnter = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseenter',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseUp = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mouseup',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onMouseDown = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'mousedown',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onDoubleClick = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'dblclick',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$onClick = function (msg) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'click',
-		_elm_lang$core$Json_Decode$succeed(msg));
-};
-var _elm_lang$html$Html_Events$Options = F2(
-	function (a, b) {
-		return {stopPropagation: a, preventDefault: b};
-	});
-
-var _elm_lang$html$Html_Lazy$lazy3 = _elm_lang$virtual_dom$VirtualDom$lazy3;
-var _elm_lang$html$Html_Lazy$lazy2 = _elm_lang$virtual_dom$VirtualDom$lazy2;
-var _elm_lang$html$Html_Lazy$lazy = _elm_lang$virtual_dom$VirtualDom$lazy;
-
 var _elm_lang$http$Native_Http = function() {
 
 
@@ -9804,7 +9741,7 @@ var _lukewestby$elm_http_builder$HttpBuilder$RequestBuilder = F9(
 		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g, queryParams: h, cacheBuster: i};
 	});
 
-var _vito$customs$Pagination$parsePagination = F2(
+var _vito$cadet$Pagination$parsePagination = F2(
 	function (strategy, response) {
 		var decoded = A2(_elm_lang$core$Json_Decode$decodeString, strategy.content, response.body);
 		var _p0 = decoded;
@@ -9821,7 +9758,7 @@ var _vito$customs$Pagination$parsePagination = F2(
 				});
 		}
 	});
-var _vito$customs$Pagination$fetch = F4(
+var _vito$cadet$Pagination$fetch = F4(
 	function (url, headers, strategy, mpage) {
 		return _elm_lang$http$Http$toTask(
 			_elm_lang$http$Http$request(
@@ -9838,12 +9775,12 @@ var _vito$customs$Pagination$fetch = F4(
 					}(),
 					body: _elm_lang$http$Http$emptyBody,
 					expect: _elm_lang$http$Http$expectStringResponse(
-						_vito$customs$Pagination$parsePagination(strategy)),
+						_vito$cadet$Pagination$parsePagination(strategy)),
 					timeout: _elm_lang$core$Maybe$Nothing,
 					withCredentials: false
 				}));
 	});
-var _vito$customs$Pagination$fetchAll = F4(
+var _vito$cadet$Pagination$fetchAll = F4(
 	function (url, headers, strategy, mpage) {
 		return A2(
 			_elm_lang$core$Task$andThen,
@@ -9859,29 +9796,29 @@ var _vito$customs$Pagination$fetchAll = F4(
 								return A2(_elm_lang$core$Basics_ops['++'], x, y);
 							})(paginated.content),
 						A4(
-							_vito$customs$Pagination$fetchAll,
+							_vito$cadet$Pagination$fetchAll,
 							url,
 							headers,
 							strategy,
 							_elm_lang$core$Maybe$Just(_p2._0)));
 				}
 			},
-			A4(_vito$customs$Pagination$fetch, url, headers, strategy, mpage));
+			A4(_vito$cadet$Pagination$fetch, url, headers, strategy, mpage));
 	});
-var _vito$customs$Pagination$Paginated = F2(
+var _vito$cadet$Pagination$Paginated = F2(
 	function (a, b) {
 		return {content: a, pagination: b};
 	});
-var _vito$customs$Pagination$Strategy = F4(
+var _vito$cadet$Pagination$Strategy = F4(
 	function (a, b, c, d) {
 		return {onPage: a, nextPage: b, previousPage: c, content: d};
 	});
-var _vito$customs$Pagination$Pagination = F2(
+var _vito$cadet$Pagination$Pagination = F2(
 	function (a, b) {
 		return {previousPage: a, nextPage: b};
 	});
 
-var _vito$customs$GitHub$customDecoder = F2(
+var _vito$cadet$GitHub$customDecoder = F2(
 	function (decoder, toResult) {
 		return A2(
 			_elm_lang$core$Json_Decode$andThen,
@@ -9895,27 +9832,27 @@ var _vito$customs$GitHub$customDecoder = F2(
 			},
 			decoder);
 	});
-var _vito$customs$GitHub$parseNum = function (_p1) {
+var _vito$cadet$GitHub$parseNum = function (_p1) {
 	return _elm_lang$core$Result$toMaybe(
 		_elm_lang$core$String$toInt(_p1));
 };
-var _vito$customs$GitHub$toQuery = function (page) {
+var _vito$cadet$GitHub$toQuery = function (page) {
 	return A2(
 		_elm_lang$core$Dict$singleton,
 		'page',
 		_elm_lang$core$Basics$toString(page));
 };
-var _vito$customs$GitHub$fromQuery = function (query) {
+var _vito$cadet$GitHub$fromQuery = function (query) {
 	var num = A2(
 		_elm_lang$core$Maybe$withDefault,
 		1,
 		A2(
 			_elm_lang$core$Maybe$andThen,
-			_vito$customs$GitHub$parseNum,
+			_vito$cadet$GitHub$parseNum,
 			A2(_elm_lang$core$Dict$get, 'page', query)));
 	return _elm_lang$core$Maybe$Just(num);
 };
-var _vito$customs$GitHub$parseQuery = function (query) {
+var _vito$cadet$GitHub$parseQuery = function (query) {
 	var parseParam = function (p) {
 		var _p2 = A2(_elm_lang$core$String$split, '=', p);
 		if (_p2.ctor === '::') {
@@ -9934,7 +9871,7 @@ var _vito$customs$GitHub$parseQuery = function (query) {
 			parseParam,
 			A2(_elm_lang$core$String$split, '&', query)));
 };
-var _vito$customs$GitHub$setQuery = F2(
+var _vito$cadet$GitHub$setQuery = F2(
 	function (baseURL, query) {
 		var params = A2(
 			_elm_lang$core$String$join,
@@ -9954,54 +9891,54 @@ var _vito$customs$GitHub$setQuery = F2(
 			baseURL,
 			A2(_elm_lang$core$Basics_ops['++'], '?', params));
 	});
-var _vito$customs$GitHub$extractQuery = function (url) {
+var _vito$cadet$GitHub$extractQuery = function (url) {
 	var _p5 = A2(_elm_lang$core$String$split, '?', url);
 	if ((_p5.ctor === '::') && (_p5._1.ctor === '::')) {
 		return {
 			ctor: '_Tuple2',
 			_0: _p5._0,
-			_1: _vito$customs$GitHub$parseQuery(_p5._1._0)
+			_1: _vito$cadet$GitHub$parseQuery(_p5._1._0)
 		};
 	} else {
 		return {ctor: '_Tuple2', _0: url, _1: _elm_lang$core$Dict$empty};
 	}
 };
-var _vito$customs$GitHub$addParams = F2(
+var _vito$cadet$GitHub$addParams = F2(
 	function (url, page) {
-		var _p6 = _vito$customs$GitHub$extractQuery(url);
+		var _p6 = _vito$cadet$GitHub$extractQuery(url);
 		var baseURL = _p6._0;
 		var query = _p6._1;
 		return A2(
-			_vito$customs$GitHub$setQuery,
+			_vito$cadet$GitHub$setQuery,
 			baseURL,
 			A2(
 				_elm_lang$core$Dict$union,
 				query,
-				_vito$customs$GitHub$toQuery(page)));
+				_vito$cadet$GitHub$toQuery(page)));
 	});
-var _vito$customs$GitHub$parseParams = function (_p7) {
-	return _vito$customs$GitHub$fromQuery(
+var _vito$cadet$GitHub$parseParams = function (_p7) {
+	return _vito$cadet$GitHub$fromQuery(
 		_elm_lang$core$Tuple$second(
-			_vito$customs$GitHub$extractQuery(_p7)));
+			_vito$cadet$GitHub$extractQuery(_p7)));
 };
-var _vito$customs$GitHub$nextRel = 'next';
-var _vito$customs$GitHub$previousRel = 'prev';
-var _vito$customs$GitHub$linkHeaderRegex = _elm_lang$core$Regex$regex(
+var _vito$cadet$GitHub$nextRel = 'next';
+var _vito$cadet$GitHub$previousRel = 'prev';
+var _vito$cadet$GitHub$linkHeaderRegex = _elm_lang$core$Regex$regex(
 	A2(
 		_elm_lang$core$Basics_ops['++'],
 		'<([^>]+)>; rel=\"(',
 		A2(
 			_elm_lang$core$Basics_ops['++'],
-			_vito$customs$GitHub$previousRel,
+			_vito$cadet$GitHub$previousRel,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'|',
-				A2(_elm_lang$core$Basics_ops['++'], _vito$customs$GitHub$nextRel, ')\"')))));
-var _vito$customs$GitHub$parseLinkTuple = function (header) {
+				A2(_elm_lang$core$Basics_ops['++'], _vito$cadet$GitHub$nextRel, ')\"')))));
+var _vito$cadet$GitHub$parseLinkTuple = function (header) {
 	var _p8 = A3(
 		_elm_lang$core$Regex$find,
 		_elm_lang$core$Regex$AtMost(1),
-		_vito$customs$GitHub$linkHeaderRegex,
+		_vito$cadet$GitHub$linkHeaderRegex,
 		header);
 	if (_p8.ctor === '[]') {
 		return _elm_lang$core$Maybe$Nothing;
@@ -10015,30 +9952,30 @@ var _vito$customs$GitHub$parseLinkTuple = function (header) {
 		}
 	}
 };
-var _vito$customs$GitHub$parseLink = F2(
+var _vito$cadet$GitHub$parseLink = F2(
 	function (rel, response) {
 		return A2(
 			_elm_lang$core$Maybe$andThen,
 			function (commaSeparatedCraziness) {
 				var headers = A2(_elm_lang$core$String$split, ', ', commaSeparatedCraziness);
 				var parsed = _elm_lang$core$Dict$fromList(
-					A2(_elm_lang$core$List$filterMap, _vito$customs$GitHub$parseLinkTuple, headers));
+					A2(_elm_lang$core$List$filterMap, _vito$cadet$GitHub$parseLinkTuple, headers));
 				return A2(
 					_elm_lang$core$Maybe$andThen,
-					_vito$customs$GitHub$parseParams,
+					_vito$cadet$GitHub$parseParams,
 					A2(_elm_lang$core$Dict$get, rel, parsed));
 			},
-			A2(_elm_lang$core$Dict$get, 'Link', response.headers));
+			A2(_elm_lang$core$Dict$get, 'link', response.headers));
 	});
-var _vito$customs$GitHub$rfc5988Strategy = function (decode) {
+var _vito$cadet$GitHub$rfc5988Strategy = function (decode) {
 	return {
-		onPage: _elm_lang$core$Basics$flip(_vito$customs$GitHub$addParams),
-		nextPage: _vito$customs$GitHub$parseLink(_vito$customs$GitHub$nextRel),
-		previousPage: _vito$customs$GitHub$parseLink(_vito$customs$GitHub$previousRel),
+		onPage: _elm_lang$core$Basics$flip(_vito$cadet$GitHub$addParams),
+		nextPage: _vito$cadet$GitHub$parseLink(_vito$cadet$GitHub$nextRel),
+		previousPage: _vito$cadet$GitHub$parseLink(_vito$cadet$GitHub$previousRel),
 		content: _elm_lang$core$Json_Decode$list(decode)
 	};
 };
-var _vito$customs$GitHub$excludeTracksuitComment = _elm_lang$core$Json_Decode$map(
+var _vito$cadet$GitHub$excludeTracksuitComment = _elm_lang$core$Json_Decode$map(
 	A2(
 		_elm_lang$core$Basics$flip,
 		F2(
@@ -10046,7 +9983,7 @@ var _vito$customs$GitHub$excludeTracksuitComment = _elm_lang$core$Json_Decode$ma
 				return x - y;
 			}),
 		1));
-var _vito$customs$GitHub$auth = function (token) {
+var _vito$cadet$GitHub$auth = function (token) {
 	return _elm_lang$core$Native_Utils.eq(token, '') ? {ctor: '[]'} : {
 		ctor: '::',
 		_0: {
@@ -10057,13 +9994,13 @@ var _vito$customs$GitHub$auth = function (token) {
 		_1: {ctor: '[]'}
 	};
 };
-var _vito$customs$GitHub$authHeaders = function (_p10) {
+var _vito$cadet$GitHub$authHeaders = function (_p10) {
 	return A2(
 		_elm_lang$core$List$map,
 		_elm_lang$core$Basics$uncurry(_elm_lang$http$Http$header),
-		_vito$customs$GitHub$auth(_p10));
+		_vito$cadet$GitHub$auth(_p10));
 };
-var _vito$customs$GitHub$reactionScore = function (reactions) {
+var _vito$cadet$GitHub$reactionScore = function (reactions) {
 	return _elm_lang$core$List$sum(
 		{
 			ctor: '::',
@@ -10091,11 +10028,11 @@ var _vito$customs$GitHub$reactionScore = function (reactions) {
 			}
 		});
 };
-var _vito$customs$GitHub$issueScore = function (_p11) {
+var _vito$cadet$GitHub$issueScore = function (_p11) {
 	var _p12 = _p11;
-	return (_vito$customs$GitHub$reactionScore(_p12.reactions) + (2 * _p12.commentCount)) + (_p12.isPullRequest ? 1000 : 0);
+	return (_vito$cadet$GitHub$reactionScore(_p12.reactions) + (2 * _p12.commentCount)) + (_p12.isPullRequest ? 1000 : 0);
 };
-var _vito$customs$GitHub$reactionCodes = function (reactions) {
+var _vito$cadet$GitHub$reactionCodes = function (reactions) {
 	return {
 		ctor: '::',
 		_0: {ctor: '_Tuple2', _0: '👍', _1: reactions.plusOne},
@@ -10122,18 +10059,18 @@ var _vito$customs$GitHub$reactionCodes = function (reactions) {
 		}
 	};
 };
-var _vito$customs$GitHub$APIError = function (a) {
+var _vito$cadet$GitHub$APIError = function (a) {
 	return {message: a};
 };
-var _vito$customs$GitHub$decodeError = A2(
+var _vito$cadet$GitHub$decodeError = A2(
 	_elm_lang$core$Json_Decode$map,
-	_vito$customs$GitHub$APIError,
+	_vito$cadet$GitHub$APIError,
 	A2(_elm_lang$core$Json_Decode$field, 'message', _elm_lang$core$Json_Decode$string));
-var _vito$customs$GitHub$Repo = F5(
+var _vito$cadet$GitHub$Repo = F5(
 	function (a, b, c, d, e) {
 		return {id: a, url: b, owner: c, name: d, openIssues: e};
 	});
-var _vito$customs$GitHub$Issue = function (a) {
+var _vito$cadet$GitHub$Issue = function (a) {
 	return function (b) {
 		return function (c) {
 			return function (d) {
@@ -10160,90 +10097,216 @@ var _vito$customs$GitHub$Issue = function (a) {
 		};
 	};
 };
-var _vito$customs$GitHub$IssueLabel = F2(
+var _vito$cadet$GitHub$IssueLabel = F2(
 	function (a, b) {
 		return {name: a, color: b};
 	});
-var _vito$customs$GitHub$decodeIssueLabel = A3(
+var _vito$cadet$GitHub$decodeIssueLabel = A3(
 	_elm_lang$core$Json_Decode$map2,
-	_vito$customs$GitHub$IssueLabel,
+	_vito$cadet$GitHub$IssueLabel,
 	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'color', _elm_lang$core$Json_Decode$string));
-var _vito$customs$GitHub$Comment = F7(
+var _vito$cadet$GitHub$Comment = F7(
 	function (a, b, c, d, e, f, g) {
 		return {issue: a, id: b, createdAt: c, updatedAt: d, url: e, user: f, reactions: g};
 	});
-var _vito$customs$GitHub$User = F4(
+var _vito$cadet$GitHub$TimelineEvent = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {id: a, url: b, actor: c, event: d, commitId: e, label: f, assignee: g, milestone: h, source: i, rename: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var _vito$cadet$GitHub$TimelineEventSource = F3(
+	function (a, b, c) {
+		return {id: a, actor: b, url: c};
+	});
+var _vito$cadet$GitHub$TimelineEventRename = F2(
+	function (a, b) {
+		return {from: a, to: b};
+	});
+var _vito$cadet$GitHub$decodeTimelineEventRename = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$TimelineEventRename),
+		A2(_elm_lang$core$Json_Decode$field, 'from', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'to', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHub$Milestone = F5(
+	function (a, b, c, d, e) {
+		return {id: a, number: b, url: c, title: d, description: e};
+	});
+var _vito$cadet$GitHub$decodeMilestone = A6(
+	_elm_lang$core$Json_Decode$map5,
+	_vito$cadet$GitHub$Milestone,
+	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode$field, 'description', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHub$User = F4(
 	function (a, b, c, d) {
 		return {id: a, url: b, login: c, avatar: d};
 	});
-var _vito$customs$GitHub$decodeUser = A5(
+var _vito$cadet$GitHub$decodeUser = A5(
 	_elm_lang$core$Json_Decode$map4,
-	_vito$customs$GitHub$User,
+	_vito$cadet$GitHub$User,
 	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'login', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'avatar_url', _elm_lang$core$Json_Decode$string));
-var _vito$customs$GitHub$fetchOrgMembers = F2(
+var _vito$cadet$GitHub$fetchOrgMembers = F2(
 	function (token, org) {
 		return A4(
-			_vito$customs$Pagination$fetchAll,
+			_vito$cadet$Pagination$fetchAll,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'https://api.github.com/orgs/',
 				A2(_elm_lang$core$Basics_ops['++'], org, '/members?per_page=100')),
-			_vito$customs$GitHub$authHeaders(token),
-			_vito$customs$GitHub$rfc5988Strategy(_vito$customs$GitHub$decodeUser),
+			_vito$cadet$GitHub$authHeaders(token),
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeUser),
 			_elm_lang$core$Maybe$Nothing);
 	});
-var _vito$customs$GitHub$decodeRepo = A6(
+var _vito$cadet$GitHub$decodeRepo = A6(
 	_elm_lang$core$Json_Decode$map5,
-	_vito$customs$GitHub$Repo,
+	_vito$cadet$GitHub$Repo,
 	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 'owner', _vito$customs$GitHub$decodeUser),
+	A2(_elm_lang$core$Json_Decode$field, 'owner', _vito$cadet$GitHub$decodeUser),
 	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'open_issues_count', _elm_lang$core$Json_Decode$int));
-var _vito$customs$GitHub$fetchOrgRepos = F2(
+var _vito$cadet$GitHub$fetchOrgRepos = F2(
 	function (token, org) {
 		return A4(
-			_vito$customs$Pagination$fetchAll,
+			_vito$cadet$Pagination$fetchAll,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'https://api.github.com/orgs/',
 				A2(_elm_lang$core$Basics_ops['++'], org, '/repos?per_page=100')),
-			_vito$customs$GitHub$authHeaders(token),
-			_vito$customs$GitHub$rfc5988Strategy(_vito$customs$GitHub$decodeRepo),
+			_vito$cadet$GitHub$authHeaders(token),
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeRepo),
 			_elm_lang$core$Maybe$Nothing);
 	});
-var _vito$customs$GitHub$Reactions = F6(
+var _vito$cadet$GitHub$decodeTimelineEventSource = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$TimelineEventSource),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+		A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHub$decodeUser)),
+	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHub$decodeTimelineEvent = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			A2(
+				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+				A2(
+					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+					A2(
+						_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+						A2(
+							_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+							A2(
+								_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+								A2(
+									_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+									A2(
+										_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+										_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$TimelineEvent),
+										A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+									A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+								A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHub$decodeUser)),
+							A2(_elm_lang$core$Json_Decode$field, 'event', _elm_lang$core$Json_Decode$string)),
+						_elm_lang$core$Json_Decode$maybe(
+							A2(_elm_lang$core$Json_Decode$field, 'commit_id', _elm_lang$core$Json_Decode$string))),
+					_elm_lang$core$Json_Decode$maybe(
+						A2(_elm_lang$core$Json_Decode$field, 'label', _vito$cadet$GitHub$decodeIssueLabel))),
+				_elm_lang$core$Json_Decode$maybe(
+					A2(_elm_lang$core$Json_Decode$field, 'assignee', _vito$cadet$GitHub$decodeUser))),
+			_elm_lang$core$Json_Decode$maybe(
+				A2(_elm_lang$core$Json_Decode$field, 'milestone', _vito$cadet$GitHub$decodeMilestone))),
+		_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$field, 'source', _vito$cadet$GitHub$decodeTimelineEventSource))),
+	_elm_lang$core$Json_Decode$maybe(
+		A2(_elm_lang$core$Json_Decode$field, 'rename', _vito$cadet$GitHub$decodeTimelineEventRename)));
+var _vito$cadet$GitHub$fetchIssueTimeline = F2(
+	function (token, issue) {
+		return A4(
+			_vito$cadet$Pagination$fetchAll,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'https://api.github.com/repos/',
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					issue.repo.owner.login,
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'/',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							issue.repo.name,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'/issues/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									_elm_lang$core$Basics$toString(issue.number),
+									'/timeline?per_page=100')))))),
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.mockingbird-preview'),
+				_1: _vito$cadet$GitHub$authHeaders(token)
+			},
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeTimelineEvent),
+			_elm_lang$core$Maybe$Nothing);
+	});
+var _vito$cadet$GitHub$Reactions = F6(
 	function (a, b, c, d, e, f) {
 		return {plusOne: a, minusOne: b, laugh: c, confused: d, heart: e, hooray: f};
 	});
-var _vito$customs$GitHub$decodeReactions = A7(
+var _vito$cadet$GitHub$decodeReactions = A7(
 	_elm_lang$core$Json_Decode$map6,
-	_vito$customs$GitHub$Reactions,
+	_vito$cadet$GitHub$Reactions,
 	A2(_elm_lang$core$Json_Decode$field, '+1', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, '-1', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'laugh', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'confused', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'heart', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'hooray', _elm_lang$core$Json_Decode$int));
-var _vito$customs$GitHub$decodeComment = function (issue) {
+var _vito$cadet$GitHub$decodeComment = function (issue) {
 	return A7(
 		_elm_lang$core$Json_Decode$map6,
-		_vito$customs$GitHub$Comment(issue),
+		_vito$cadet$GitHub$Comment(issue),
 		A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
 		A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date),
 		A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date),
 		A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string),
-		A2(_elm_lang$core$Json_Decode$field, 'user', _vito$customs$GitHub$decodeUser),
-		A2(_elm_lang$core$Json_Decode$field, 'reactions', _vito$customs$GitHub$decodeReactions));
+		A2(_elm_lang$core$Json_Decode$field, 'user', _vito$cadet$GitHub$decodeUser),
+		A2(_elm_lang$core$Json_Decode$field, 'reactions', _vito$cadet$GitHub$decodeReactions));
 };
-var _vito$customs$GitHub$fetchIssueComments = F2(
+var _vito$cadet$GitHub$fetchIssueComments = F2(
 	function (token, issue) {
 		return A4(
-			_vito$customs$Pagination$fetchAll,
+			_vito$cadet$Pagination$fetchAll,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'https://api.github.com/repos/',
@@ -10266,30 +10329,30 @@ var _vito$customs$GitHub$fetchIssueComments = F2(
 			{
 				ctor: '::',
 				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.squirrel-girl-preview'),
-				_1: _vito$customs$GitHub$authHeaders(token)
+				_1: _vito$cadet$GitHub$authHeaders(token)
 			},
-			_vito$customs$GitHub$rfc5988Strategy(
-				_vito$customs$GitHub$decodeComment(issue)),
+			_vito$cadet$GitHub$rfc5988Strategy(
+				_vito$cadet$GitHub$decodeComment(issue)),
 			_elm_lang$core$Maybe$Nothing);
 	});
-var _vito$customs$GitHub$IssueStateClosed = {ctor: 'IssueStateClosed'};
-var _vito$customs$GitHub$IssueStateOpen = {ctor: 'IssueStateOpen'};
-var _vito$customs$GitHub$decodeIssueState = A2(
-	_vito$customs$GitHub$customDecoder,
+var _vito$cadet$GitHub$IssueStateClosed = {ctor: 'IssueStateClosed'};
+var _vito$cadet$GitHub$IssueStateOpen = {ctor: 'IssueStateOpen'};
+var _vito$cadet$GitHub$decodeIssueState = A2(
+	_vito$cadet$GitHub$customDecoder,
 	_elm_lang$core$Json_Decode$string,
 	function (x) {
 		var _p13 = x;
 		switch (_p13) {
 			case 'open':
-				return _elm_lang$core$Result$Ok(_vito$customs$GitHub$IssueStateOpen);
+				return _elm_lang$core$Result$Ok(_vito$cadet$GitHub$IssueStateOpen);
 			case 'closed':
-				return _elm_lang$core$Result$Ok(_vito$customs$GitHub$IssueStateClosed);
+				return _elm_lang$core$Result$Ok(_vito$cadet$GitHub$IssueStateClosed);
 			default:
 				return _elm_lang$core$Result$Err(
 					A2(_elm_lang$core$Basics_ops['++'], 'unknown issue state: ', x));
 		}
 	});
-var _vito$customs$GitHub$decodeIssue = function (repo) {
+var _vito$cadet$GitHub$decodeIssue = function (repo) {
 	return A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 		A2(
@@ -10315,12 +10378,12 @@ var _vito$customs$GitHub$decodeIssue = function (repo) {
 												A2(
 													_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 													_elm_lang$core$Json_Decode$succeed(
-														_vito$customs$GitHub$Issue(repo)),
+														_vito$cadet$GitHub$Issue(repo)),
 													A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
 												A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 											A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 										A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string)),
-									A2(_elm_lang$core$Json_Decode$field, 'state', _vito$customs$GitHub$decodeIssueState)),
+									A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHub$decodeIssueState)),
 								function (_p14) {
 									return A2(
 										_elm_lang$core$Json_Decode$map,
@@ -10331,24 +10394,24 @@ var _vito$customs$GitHub$decodeIssue = function (repo) {
 										_elm_lang$core$Json_Decode$maybe(_p14));
 								}(
 									A2(_elm_lang$core$Json_Decode$field, 'pull_request', _elm_lang$core$Json_Decode$value))),
-							A2(_elm_lang$core$Json_Decode$field, 'user', _vito$customs$GitHub$decodeUser)),
+							A2(_elm_lang$core$Json_Decode$field, 'user', _vito$cadet$GitHub$decodeUser)),
 						A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int)),
 					A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string)),
 				A2(
 					_elm_lang$core$Json_Decode$field,
 					'comments',
-					_vito$customs$GitHub$excludeTracksuitComment(_elm_lang$core$Json_Decode$int))),
-			A2(_elm_lang$core$Json_Decode$field, 'reactions', _vito$customs$GitHub$decodeReactions)),
+					_vito$cadet$GitHub$excludeTracksuitComment(_elm_lang$core$Json_Decode$int))),
+			A2(_elm_lang$core$Json_Decode$field, 'reactions', _vito$cadet$GitHub$decodeReactions)),
 		A2(
 			_elm_lang$core$Json_Decode$field,
 			'labels',
-			_elm_lang$core$Json_Decode$list(_vito$customs$GitHub$decodeIssueLabel)));
+			_elm_lang$core$Json_Decode$list(_vito$cadet$GitHub$decodeIssueLabel)));
 };
-var _vito$customs$GitHub$fetchRepoIssues = F2(
+var _vito$cadet$GitHub$fetchRepoIssues = F2(
 	function (token, repo) {
 		return _elm_lang$core$Native_Utils.eq(repo.openIssues, 0) ? _elm_lang$core$Task$succeed(
 			{ctor: '[]'}) : A4(
-			_vito$customs$Pagination$fetchAll,
+			_vito$cadet$Pagination$fetchAll,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
 				'https://api.github.com/repos/',
@@ -10362,26 +10425,26 @@ var _vito$customs$GitHub$fetchRepoIssues = F2(
 			{
 				ctor: '::',
 				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.squirrel-girl-preview'),
-				_1: _vito$customs$GitHub$authHeaders(token)
+				_1: _vito$cadet$GitHub$authHeaders(token)
 			},
-			_vito$customs$GitHub$rfc5988Strategy(
-				_vito$customs$GitHub$decodeIssue(repo)),
+			_vito$cadet$GitHub$rfc5988Strategy(
+				_vito$cadet$GitHub$decodeIssue(repo)),
 			_elm_lang$core$Maybe$Nothing);
 	});
-var _vito$customs$GitHub$fetchIssue = F3(
+var _vito$cadet$GitHub$fetchIssue = F3(
 	function (token, repo, number) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
 				_elm_lang$http$Http$expectJson(
-					_vito$customs$GitHub$decodeIssue(repo)),
+					_vito$cadet$GitHub$decodeIssue(repo)),
 				A3(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeader,
 					'Accept',
 					'application/vnd.github.squirrel-girl-preview',
 					A2(
 						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						_vito$customs$GitHub$auth(token),
+						_vito$cadet$GitHub$auth(token),
 						_lukewestby$elm_http_builder$HttpBuilder$get(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
@@ -10401,1086 +10464,9 @@ var _vito$customs$GitHub$fetchIssue = F3(
 												_elm_lang$core$Basics$toString(number)))))))))));
 	});
 
-var _vito$customs$Tracker$customDecoder = F2(
-	function (decoder, toResult) {
-		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (a) {
-				var _p0 = toResult(a);
-				if (_p0.ctor === 'Ok') {
-					return _elm_lang$core$Json_Decode$succeed(_p0._0);
-				} else {
-					return _elm_lang$core$Json_Decode$fail(_p0._0);
-				}
-			},
-			decoder);
-	});
-var _vito$customs$Tracker$compareProgress = F2(
-	function (a, b) {
-		if (_elm_lang$core$Native_Utils.eq(a, b)) {
-			return _elm_lang$core$Basics$EQ;
-		} else {
-			var _p1 = {ctor: '_Tuple2', _0: a, _1: b};
-			switch (_p1._0.ctor) {
-				case 'StoryStateUnscheduled':
-					return _elm_lang$core$Basics$LT;
-				case 'StoryStateUnstarted':
-					if (_p1._1.ctor === 'StoryStateUnscheduled') {
-						return _elm_lang$core$Basics$GT;
-					} else {
-						return _elm_lang$core$Basics$LT;
-					}
-				case 'StoryStateStarted':
-					switch (_p1._1.ctor) {
-						case 'StoryStateUnscheduled':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateUnstarted':
-							return _elm_lang$core$Basics$GT;
-						default:
-							return _elm_lang$core$Basics$LT;
-					}
-				case 'StoryStateFinished':
-					switch (_p1._1.ctor) {
-						case 'StoryStateUnscheduled':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateUnstarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateStarted':
-							return _elm_lang$core$Basics$GT;
-						default:
-							return _elm_lang$core$Basics$LT;
-					}
-				case 'StoryStateDelivered':
-					switch (_p1._1.ctor) {
-						case 'StoryStateUnscheduled':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateUnstarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateStarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateFinished':
-							return _elm_lang$core$Basics$GT;
-						default:
-							return _elm_lang$core$Basics$LT;
-					}
-				case 'StoryStateAccepted':
-					switch (_p1._1.ctor) {
-						case 'StoryStateRejected':
-							return _elm_lang$core$Basics$EQ;
-						case 'StoryStateUnscheduled':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateUnstarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateStarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateFinished':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateDelivered':
-							return _elm_lang$core$Basics$GT;
-						default:
-							return _elm_lang$core$Basics$LT;
-					}
-				default:
-					switch (_p1._1.ctor) {
-						case 'StoryStateAccepted':
-							return _elm_lang$core$Basics$EQ;
-						case 'StoryStateUnscheduled':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateUnstarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateStarted':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateFinished':
-							return _elm_lang$core$Basics$GT;
-						case 'StoryStateDelivered':
-							return _elm_lang$core$Basics$GT;
-						default:
-							return _elm_lang$core$Basics$LT;
-					}
-			}
-		}
-	});
-var _vito$customs$Tracker$compareStoryProgress = F2(
-	function (a, b) {
-		return A2(_vito$customs$Tracker$compareProgress, a.state, b.state);
-	});
-var _vito$customs$Tracker$toQuery = function (_p2) {
-	var _p3 = _p2;
-	return A2(
-		_elm_lang$core$Dict$singleton,
-		'offset',
-		_elm_lang$core$Basics$toString(_p3._0));
-};
-var _vito$customs$Tracker$parseQuery = function (query) {
-	var parseParam = function (p) {
-		var _p4 = A2(_elm_lang$core$String$split, '=', p);
-		if (_p4.ctor === '::') {
-			return {
-				ctor: '_Tuple2',
-				_0: _p4._0,
-				_1: A2(_elm_lang$core$String$join, '=', _p4._1)
-			};
-		} else {
-			return {ctor: '_Tuple2', _0: '', _1: ''};
-		}
-	};
-	return _elm_lang$core$Dict$fromList(
-		A2(
-			_elm_lang$core$List$map,
-			parseParam,
-			A2(_elm_lang$core$String$split, '&', query)));
-};
-var _vito$customs$Tracker$setQuery = F2(
-	function (baseURL, query) {
-		var params = A2(
-			_elm_lang$core$String$join,
-			'&',
-			A2(
-				_elm_lang$core$List$map,
-				function (_p5) {
-					var _p6 = _p5;
-					return A2(
-						_elm_lang$core$Basics_ops['++'],
-						_p6._0,
-						A2(_elm_lang$core$Basics_ops['++'], '=', _p6._1));
-				},
-				_elm_lang$core$Dict$toList(query)));
-		return _elm_lang$core$Native_Utils.eq(params, '') ? baseURL : A2(
-			_elm_lang$core$Basics_ops['++'],
-			baseURL,
-			A2(_elm_lang$core$Basics_ops['++'], '?', params));
-	});
-var _vito$customs$Tracker$extractQuery = function (url) {
-	var _p7 = A2(_elm_lang$core$String$split, '?', url);
-	if ((_p7.ctor === '::') && (_p7._1.ctor === '::')) {
-		return {
-			ctor: '_Tuple2',
-			_0: _p7._0,
-			_1: _vito$customs$Tracker$parseQuery(_p7._1._0)
-		};
-	} else {
-		return {ctor: '_Tuple2', _0: url, _1: _elm_lang$core$Dict$empty};
-	}
-};
-var _vito$customs$Tracker$addParams = F2(
-	function (url, page) {
-		var _p8 = _vito$customs$Tracker$extractQuery(url);
-		var baseURL = _p8._0;
-		var query = _p8._1;
-		return A2(
-			_vito$customs$Tracker$setQuery,
-			baseURL,
-			A2(
-				_elm_lang$core$Dict$union,
-				query,
-				_vito$customs$Tracker$toQuery(page)));
-	});
-var _vito$customs$Tracker$storyIsAccepted = function (_p9) {
-	var _p10 = _p9;
-	var _p11 = _p10.state;
-	if (_p11.ctor === 'StoryStateAccepted') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var _vito$customs$Tracker$storyIsInFlight = function (_p12) {
-	var _p13 = _p12;
-	var _p14 = _p13.state;
-	switch (_p14.ctor) {
-		case 'StoryStateUnscheduled':
-			return false;
-		case 'StoryStateUnstarted':
-			return false;
-		case 'StoryStateStarted':
-			return true;
-		case 'StoryStateFinished':
-			return true;
-		case 'StoryStateDelivered':
-			return true;
-		case 'StoryStateAccepted':
-			return false;
-		default:
-			return true;
-	}
-};
-var _vito$customs$Tracker$deleteStory = F3(
-	function (token, project, story) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A3(
-				_lukewestby$elm_http_builder$HttpBuilder$withHeader,
-				'X-TrackerToken',
-				token,
-				_lukewestby$elm_http_builder$HttpBuilder$delete(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'https://www.pivotaltracker.com/services/v5/projects/',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(project),
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'/stories/',
-								_elm_lang$core$Basics$toString(story)))))));
-	});
-var _vito$customs$Tracker$APIError = F6(
-	function (a, b, c, d, e, f) {
-		return {code: a, error: b, requirement: c, general_problem: d, possible_fix: e, validation_errors: f};
-	});
-var _vito$customs$Tracker$decodeError = A7(
-	_elm_lang$core$Json_Decode$map6,
-	_vito$customs$Tracker$APIError,
-	A2(_elm_lang$core$Json_Decode$field, 'code', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 'error', _elm_lang$core$Json_Decode$string),
-	_elm_lang$core$Json_Decode$maybe(
-		A2(_elm_lang$core$Json_Decode$field, 'requirement', _elm_lang$core$Json_Decode$string)),
-	_elm_lang$core$Json_Decode$maybe(
-		A2(_elm_lang$core$Json_Decode$field, 'general_problem', _elm_lang$core$Json_Decode$string)),
-	_elm_lang$core$Json_Decode$maybe(
-		A2(_elm_lang$core$Json_Decode$field, 'possible_fix', _elm_lang$core$Json_Decode$string)),
-	_elm_lang$core$Json_Decode$maybe(
-		A2(
-			_elm_lang$core$Json_Decode$field,
-			'validation_errors',
-			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string))));
-var _vito$customs$Tracker$Story = F7(
-	function (a, b, c, d, e, f, g) {
-		return {id: a, url: b, summary: c, type_: d, estimate: e, state: f, labels: g};
-	});
-var _vito$customs$Tracker$Iteration = F2(
-	function (a, b) {
-		return {number: a, stories: b};
-	});
-var _vito$customs$Tracker$StoryTypeRelease = {ctor: 'StoryTypeRelease'};
-var _vito$customs$Tracker$StoryTypeBug = {ctor: 'StoryTypeBug'};
-var _vito$customs$Tracker$StoryTypeFeature = {ctor: 'StoryTypeFeature'};
-var _vito$customs$Tracker$StoryTypeChore = {ctor: 'StoryTypeChore'};
-var _vito$customs$Tracker$decodeStoryType = A2(
-	_vito$customs$Tracker$customDecoder,
-	_elm_lang$core$Json_Decode$string,
-	function (x) {
-		var _p15 = x;
-		switch (_p15) {
-			case 'chore':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryTypeChore);
-			case 'feature':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryTypeFeature);
-			case 'bug':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryTypeBug);
-			case 'release':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryTypeRelease);
-			default:
-				return _elm_lang$core$Result$Err(
-					A2(_elm_lang$core$Basics_ops['++'], 'unknown story type: ', x));
-		}
-	});
-var _vito$customs$Tracker$StoryStateRejected = {ctor: 'StoryStateRejected'};
-var _vito$customs$Tracker$StoryStateAccepted = {ctor: 'StoryStateAccepted'};
-var _vito$customs$Tracker$StoryStateDelivered = {ctor: 'StoryStateDelivered'};
-var _vito$customs$Tracker$StoryStateFinished = {ctor: 'StoryStateFinished'};
-var _vito$customs$Tracker$StoryStateStarted = {ctor: 'StoryStateStarted'};
-var _vito$customs$Tracker$StoryStateUnstarted = {ctor: 'StoryStateUnstarted'};
-var _vito$customs$Tracker$StoryStateUnscheduled = {ctor: 'StoryStateUnscheduled'};
-var _vito$customs$Tracker$storyIsScheduled = function (_p16) {
-	var _p17 = _p16;
-	return !_elm_lang$core$Native_Utils.eq(_p17.state, _vito$customs$Tracker$StoryStateUnscheduled);
-};
-var _vito$customs$Tracker$decodeStoryState = A2(
-	_vito$customs$Tracker$customDecoder,
-	_elm_lang$core$Json_Decode$string,
-	function (x) {
-		var _p18 = x;
-		switch (_p18) {
-			case 'unscheduled':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateUnscheduled);
-			case 'unstarted':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateUnstarted);
-			case 'started':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateStarted);
-			case 'finished':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateFinished);
-			case 'delivered':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateDelivered);
-			case 'accepted':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateAccepted);
-			case 'rejected':
-				return _elm_lang$core$Result$Ok(_vito$customs$Tracker$StoryStateRejected);
-			default:
-				return _elm_lang$core$Result$Err(
-					A2(_elm_lang$core$Basics_ops['++'], 'unknown story state: ', x));
-		}
-	});
-var _vito$customs$Tracker$decodeStory = A8(
-	_elm_lang$core$Json_Decode$map7,
-	_vito$customs$Tracker$Story,
-	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
-	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string),
-	A2(_elm_lang$core$Json_Decode$field, 'story_type', _vito$customs$Tracker$decodeStoryType),
-	_elm_lang$core$Json_Decode$maybe(
-		A2(_elm_lang$core$Json_Decode$field, 'estimate', _elm_lang$core$Json_Decode$int)),
-	A2(_elm_lang$core$Json_Decode$field, 'current_state', _vito$customs$Tracker$decodeStoryState),
-	A2(
-		_elm_lang$core$Json_Decode$field,
-		'labels',
-		_elm_lang$core$Json_Decode$list(
-			A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string))));
-var _vito$customs$Tracker$updateStory = F4(
-	function (token, project, story, payload) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-				_elm_lang$http$Http$expectJson(_vito$customs$Tracker$decodeStory),
-				A3(
-					_lukewestby$elm_http_builder$HttpBuilder$withStringBody,
-					'application/json',
-					payload,
-					A3(
-						_lukewestby$elm_http_builder$HttpBuilder$withHeader,
-						'X-TrackerToken',
-						token,
-						_lukewestby$elm_http_builder$HttpBuilder$put(
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'https://www.pivotaltracker.com/services/v5/projects/',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(project),
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										'/stories/',
-										_elm_lang$core$Basics$toString(story)))))))));
-	});
-var _vito$customs$Tracker$startStory = F3(
-	function (token, project, story) {
-		return A4(_vito$customs$Tracker$updateStory, token, project, story, '{\"current_state\":\"started\"}');
-	});
-var _vito$customs$Tracker$finishStory = F3(
-	function (token, project, story) {
-		return A4(_vito$customs$Tracker$updateStory, token, project, story, '{\"current_state\":\"finished\"}');
-	});
-var _vito$customs$Tracker$acceptStory = F3(
-	function (token, project, story) {
-		return A4(_vito$customs$Tracker$updateStory, token, project, story, '{\"current_state\":\"accepted\"}');
-	});
-var _vito$customs$Tracker$acceptStoryAsChore = F3(
-	function (token, project, story) {
-		return A4(_vito$customs$Tracker$updateStory, token, project, story, '{\"story_type\":\"chore\",\"current_state\":\"accepted\"}');
-	});
-var _vito$customs$Tracker$decodeIteration = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_vito$customs$Tracker$Iteration,
-	A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int),
-	A2(
-		_elm_lang$core$Json_Decode$field,
-		'stories',
-		_elm_lang$core$Json_Decode$list(_vito$customs$Tracker$decodeStory)));
-var _vito$customs$Tracker$Offset = function (a) {
-	return {ctor: 'Offset', _0: a};
-};
-var _vito$customs$Tracker$trackerPagination = function (decode) {
-	return {
-		onPage: _elm_lang$core$Basics$flip(_vito$customs$Tracker$addParams),
-		nextPage: function (response) {
-			var rreturned = A2(
-				_elm_lang$core$Json_Decode$decodeString,
-				A2(
-					_elm_lang$core$Json_Decode$at,
-					{
-						ctor: '::',
-						_0: 'pagination',
-						_1: {
-							ctor: '::',
-							_0: 'returned',
-							_1: {ctor: '[]'}
-						}
-					},
-					_elm_lang$core$Json_Decode$int),
-				response.body);
-			var roffset = A2(
-				_elm_lang$core$Json_Decode$decodeString,
-				A2(
-					_elm_lang$core$Json_Decode$at,
-					{
-						ctor: '::',
-						_0: 'pagination',
-						_1: {
-							ctor: '::',
-							_0: 'offset',
-							_1: {ctor: '[]'}
-						}
-					},
-					_elm_lang$core$Json_Decode$int),
-				response.body);
-			var rtotal = A2(
-				_elm_lang$core$Json_Decode$decodeString,
-				A2(
-					_elm_lang$core$Json_Decode$at,
-					{
-						ctor: '::',
-						_0: 'pagination',
-						_1: {
-							ctor: '::',
-							_0: 'total',
-							_1: {ctor: '[]'}
-						}
-					},
-					_elm_lang$core$Json_Decode$int),
-				response.body);
-			var _p19 = {ctor: '_Tuple3', _0: rtotal, _1: roffset, _2: rreturned};
-			if ((((_p19.ctor === '_Tuple3') && (_p19._0.ctor === 'Ok')) && (_p19._1.ctor === 'Ok')) && (_p19._2.ctor === 'Ok')) {
-				var _p21 = _p19._2._0;
-				var _p20 = _p19._1._0;
-				return (_elm_lang$core$Native_Utils.cmp(_p20 + _p21, _p19._0._0) < 0) ? _elm_lang$core$Maybe$Just(
-					_vito$customs$Tracker$Offset(_p20 + _p21)) : _elm_lang$core$Maybe$Nothing;
-			} else {
-				return _elm_lang$core$Maybe$Nothing;
-			}
-		},
-		previousPage: _elm_lang$core$Basics$always(_elm_lang$core$Maybe$Nothing),
-		content: A2(
-			_elm_lang$core$Json_Decode$field,
-			'data',
-			_elm_lang$core$Json_Decode$list(decode))
-	};
-};
-var _vito$customs$Tracker$fetchProjectStories = F2(
-	function (token, project) {
-		return A4(
-			_vito$customs$Pagination$fetchAll,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'https://www.pivotaltracker.com/services/v5/projects/',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(project),
-					'/stories?envelope=true')),
-			{
-				ctor: '::',
-				_0: A2(_elm_lang$http$Http$header, 'X-TrackerToken', token),
-				_1: {ctor: '[]'}
-			},
-			_vito$customs$Tracker$trackerPagination(_vito$customs$Tracker$decodeStory),
-			_elm_lang$core$Maybe$Nothing);
-	});
-var _vito$customs$Tracker$fetchProjectBacklog = F2(
-	function (token, project) {
-		return A4(
-			_vito$customs$Pagination$fetchAll,
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				'https://www.pivotaltracker.com/services/v5/projects/',
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(project),
-					'/iterations?envelope=true&scope=current_backlog')),
-			{
-				ctor: '::',
-				_0: A2(_elm_lang$http$Http$header, 'X-TrackerToken', token),
-				_1: {ctor: '[]'}
-			},
-			_vito$customs$Tracker$trackerPagination(_vito$customs$Tracker$decodeIteration),
-			_elm_lang$core$Maybe$Nothing);
-	});
-
-var _vito$customs$Main$topicIsTriaged = function (_p0) {
+var _vito$cadet$Main$issueFlair = function (_p0) {
 	var _p1 = _p0;
-	return A2(
-		_elm_lang$core$List$any,
-		F2(
-			function (x, y) {
-				return !_elm_lang$core$Native_Utils.eq(x, y);
-			})(_vito$customs$Tracker$StoryTypeChore),
-		A2(
-			_elm_lang$core$List$map,
-			function (_) {
-				return _.type_;
-			},
-			_p1.stories));
-};
-var _vito$customs$Main$topicIsScheduled = function (_p2) {
-	var _p3 = _p2;
-	return A2(
-		_elm_lang$core$List$any,
-		function (story) {
-			return _vito$customs$Tracker$storyIsScheduled(story) && (!_vito$customs$Tracker$storyIsAccepted(story));
-		},
-		_p3.stories);
-};
-var _vito$customs$Main$topicIsPullRequest = function (_p4) {
-	var _p5 = _p4;
-	return A2(
-		_elm_lang$core$List$any,
-		function (_) {
-			return _.isPullRequest;
-		},
-		_p5.issues);
-};
-var _vito$customs$Main$topicID = function (_p6) {
-	var _p7 = _p6;
-	return {
-		ctor: '_Tuple2',
-		_0: _elm_lang$core$List$sort(
-			A2(
-				_elm_lang$core$List$map,
-				function (_) {
-					return _.id;
-				},
-				_p7.stories)),
-		_1: _elm_lang$core$List$sort(
-			A2(
-				_elm_lang$core$List$map,
-				function (_) {
-					return _.id;
-				},
-				_p7.issues))
-	};
-};
-var _vito$customs$Main$topicIsBlank = function (_p8) {
-	var _p9 = _p8;
-	return _elm_lang$core$List$isEmpty(_p9.stories) && _elm_lang$core$List$isEmpty(_p9.issues);
-};
-var _vito$customs$Main$topicFlightness = function (_p10) {
-	var _p11 = _p10;
-	return _elm_lang$core$List$length(
-		A2(_elm_lang$core$List$filter, _vito$customs$Tracker$storyIsInFlight, _p11.stories));
-};
-var _vito$customs$Main$untriagedIssueCreation = function (_p12) {
-	var _p13 = _p12;
-	return _elm_lang$core$Date$toTime(_p13.issue.createdAt);
-};
-var _vito$customs$Main$untriagedIssueActivity = function (_p14) {
-	var _p15 = _p14;
-	return _vito$customs$GitHub$issueScore(_p15.issue);
-};
-var _vito$customs$Main$topicActivity = function (_p16) {
-	var _p17 = _p16;
-	return _elm_lang$core$List$sum(
-		A2(_elm_lang$core$List$map, _vito$customs$GitHub$issueScore, _p17.issues));
-};
-var _vito$customs$Main$issueLabel = function (issue) {
-	return A2(
-		_elm_lang$core$Basics_ops['++'],
-		issue.repo.owner.login,
-		A2(
-			_elm_lang$core$Basics_ops['++'],
-			'/',
-			A2(
-				_elm_lang$core$Basics_ops['++'],
-				issue.repo.name,
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					'#',
-					_elm_lang$core$Basics$toString(issue.number)))));
-};
-var _vito$customs$Main$issueLabelRegex = _elm_lang$core$Regex$regex('([^/]+)/([^#]+)#([0-9]+)');
-var _vito$customs$Main$storyIssueInfo = function (_p18) {
-	var _p19 = _p18;
-	var extractInfo = function (label) {
-		var _p20 = A3(
-			_elm_lang$core$Regex$find,
-			_elm_lang$core$Regex$AtMost(1),
-			_vito$customs$Main$issueLabelRegex,
-			label);
-		if (_p20.ctor === '[]') {
-			return _elm_lang$core$Maybe$Nothing;
-		} else {
-			var _p21 = _p20._0.submatches;
-			if (((((((_p21.ctor === '::') && (_p21._0.ctor === 'Just')) && (_p21._1.ctor === '::')) && (_p21._1._0.ctor === 'Just')) && (_p21._1._1.ctor === '::')) && (_p21._1._1._0.ctor === 'Just')) && (_p21._1._1._1.ctor === '[]')) {
-				var _p22 = _elm_lang$core$String$toInt(_p21._1._1._0._0);
-				if (_p22.ctor === 'Err') {
-					return _elm_lang$core$Native_Utils.crashCase(
-						'Main',
-						{
-							start: {line: 882, column: 29},
-							end: {line: 887, column: 62}
-						},
-						_p22)('impossible: non-numeric issue number');
-				} else {
-					return _elm_lang$core$Maybe$Just(
-						{ctor: '_Tuple3', _0: _p21._0._0, _1: _p21._1._0._0, _2: _p22._0});
-				}
-			} else {
-				return _elm_lang$core$Maybe$Nothing;
-			}
-		}
-	};
-	var _p24 = A2(_elm_lang$core$List$filterMap, extractInfo, _p19.labels);
-	if (_p24.ctor === '::') {
-		return _p24._0;
-	} else {
-		return _elm_lang$core$Native_Utils.crashCase(
-			'Main',
-			{
-				start: {line: 892, column: 9},
-				end: {line: 897, column: 64}
-			},
-			_p24)('could not extract story issue URL');
-	}
-};
-var _vito$customs$Main$storyIsForAnyIssue = function (_p26) {
-	var _p27 = _p26;
-	return A2(
-		_elm_lang$core$List$any,
-		_elm_lang$core$Regex$contains(_vito$customs$Main$issueLabelRegex),
-		_p27.labels);
-};
-var _vito$customs$Main$storyIsForIssue = F2(
-	function (story, issue) {
-		return A2(
-			_elm_lang$core$List$member,
-			_vito$customs$Main$issueLabel(issue),
-			story.labels);
-	});
-var _vito$customs$Main$issueStories = F2(
-	function (issue, stories) {
-		return A2(
-			_elm_lang$core$List$filter,
-			A2(_elm_lang$core$Basics$flip, _vito$customs$Main$storyIsForIssue, issue),
-			stories);
-	});
-var _vito$customs$Main$storyIssues = F2(
-	function (story, issues) {
-		return A2(
-			_elm_lang$core$List$filter,
-			_vito$customs$Main$storyIsForIssue(story),
-			issues);
-	});
-var _vito$customs$Main$topicIsForStory = F2(
-	function (story, _p28) {
-		var _p29 = _p28;
-		return A2(
-			_elm_lang$core$List$any,
-			function (_p30) {
-				return A2(
-					F2(
-						function (x, y) {
-							return _elm_lang$core$Native_Utils.eq(x, y);
-						}),
-					story.id,
-					function (_) {
-						return _.id;
-					}(_p30));
-			},
-			_p29.stories);
-	});
-var _vito$customs$Main$topicIndexInIteration = F2(
-	function (_p31, topic) {
-		var _p32 = _p31;
-		var _p33 = _p32.stories;
-		var max = _elm_lang$core$List$length(_p33);
-		var indices = A2(
-			_elm_lang$core$List$indexedMap,
-			F2(
-				function (i, s) {
-					return A2(_vito$customs$Main$topicIsForStory, s, topic) ? i : max;
-				}),
-			_p33);
-		return A2(
-			_elm_lang$core$Maybe$withDefault,
-			max,
-			_elm_lang$core$List$minimum(indices));
-	});
-var _vito$customs$Main$topicIsInIteration = F2(
-	function (_p34, topic) {
-		var _p35 = _p34;
-		return A2(
-			_elm_lang$core$List$any,
-			function (ts) {
-				return A2(
-					_elm_lang$core$List$any,
-					function (_p36) {
-						return A2(
-							F2(
-								function (x, y) {
-									return _elm_lang$core$Native_Utils.eq(x, y);
-								}),
-							ts.id,
-							function (_) {
-								return _.id;
-							}(_p36));
-					},
-					_p35.stories);
-			},
-			topic.stories);
-	});
-var _vito$customs$Main$groupTopicsByIteration = F2(
-	function (iterations, topics) {
-		var _p37 = iterations;
-		if (_p37.ctor === '[]') {
-			return {ctor: '[]'};
-		} else {
-			var _p39 = _p37._0;
-			var _p38 = A2(
-				_elm_lang$core$List$partition,
-				_vito$customs$Main$topicIsInIteration(_p39),
-				topics);
-			var inIteration = _p38._0;
-			var notInIteration = _p38._1;
-			var ordered = A2(
-				_elm_lang$core$List$sortBy,
-				_vito$customs$Main$topicIndexInIteration(_p39),
-				inIteration);
-			return {
-				ctor: '::',
-				_0: {number: _p39.number, topics: ordered},
-				_1: A2(_vito$customs$Main$groupTopicsByIteration, _p37._1, notInIteration)
-			};
-		}
-	});
-var _vito$customs$Main$allRelated = F2(
-	function (xs, x2ys) {
-		return _elm_lang$core$Dict$values(
-			A3(
-				_elm_lang$core$List$foldl,
-				_elm_lang$core$Dict$union,
-				_elm_lang$core$Dict$empty,
-				A2(
-					_elm_lang$core$List$map,
-					function (x) {
-						var _p40 = A2(_elm_lang$core$Dict$get, x.id, x2ys);
-						if (_p40.ctor === 'Nothing') {
-							return _elm_lang$core$Dict$empty;
-						} else {
-							return _elm_lang$core$Dict$fromList(
-								A2(
-									_elm_lang$core$List$map,
-									function (y) {
-										return {ctor: '_Tuple2', _0: y.id, _1: y};
-									},
-									_p40._0));
-						}
-					},
-					xs)));
-	});
-var _vito$customs$Main$allRelatedRecur = F3(
-	function (i2s, s2i, sofar) {
-		allRelatedRecur:
-		while (true) {
-			var recursed = {
-				issues: A2(_vito$customs$Main$allRelated, sofar.stories, s2i),
-				stories: A2(_vito$customs$Main$allRelated, sofar.issues, i2s)
-			};
-			if (_elm_lang$core$Native_Utils.eq(recursed, sofar)) {
-				return sofar;
-			} else {
-				var _v20 = i2s,
-					_v21 = s2i,
-					_v22 = recursed;
-				i2s = _v20;
-				s2i = _v21;
-				sofar = _v22;
-				continue allRelatedRecur;
-			}
-		}
-	});
-var _vito$customs$Main$expandTopic = F3(
-	function (i2s, s2i, i1) {
-		return A3(
-			_vito$customs$Main$allRelatedRecur,
-			i2s,
-			s2i,
-			{
-				stories: A2(_vito$customs$Main$allRelated, i1, i2s),
-				issues: i1
-			});
-	});
-var _vito$customs$Main$groupByTopic = F2(
-	function (stories, issues) {
-		var issue2Stories = A3(
-			_elm_lang$core$List$foldl,
-			function (issue) {
-				return A2(
-					_elm_lang$core$Dict$insert,
-					issue.id,
-					A2(_vito$customs$Main$issueStories, issue, stories));
-			},
-			_elm_lang$core$Dict$empty,
-			issues);
-		var story2Issues = A3(
-			_elm_lang$core$List$foldl,
-			function (story) {
-				return A2(
-					_elm_lang$core$Dict$insert,
-					story.id,
-					A2(_vito$customs$Main$storyIssues, story, issues));
-			},
-			_elm_lang$core$Dict$empty,
-			stories);
-		return _elm_lang$core$Dict$values(
-			_elm_lang$core$Dict$fromList(
-				A2(
-					_elm_lang$core$List$map,
-					function (topic) {
-						return {
-							ctor: '_Tuple2',
-							_0: _vito$customs$Main$topicID(topic),
-							_1: topic
-						};
-					},
-					A2(
-						_elm_lang$core$List$filter,
-						function (_p41) {
-							return !_vito$customs$Main$topicIsBlank(_p41);
-						},
-						A2(
-							_elm_lang$core$List$map,
-							A2(_vito$customs$Main$expandTopic, issue2Stories, story2Issues),
-							_elm_lang$core$Dict$values(story2Issues))))));
-	});
-var _vito$customs$Main$viewStory = function (story) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('story-summary'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('story-cell story-type'),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: function () {
-						var _p42 = story.type_;
-						switch (_p42.ctor) {
-							case 'StoryTypeChore':
-								return A2(
-									_elm_lang$html$Html$i,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-gear'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'});
-							case 'StoryTypeFeature':
-								return A2(
-									_elm_lang$html$Html$i,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-star'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'});
-							case 'StoryTypeBug':
-								return A2(
-									_elm_lang$html$Html$i,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-bug'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'});
-							default:
-								return A2(
-									_elm_lang$html$Html$i,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-gift'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'});
-						}
-					}(),
-					_1: {ctor: '[]'}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('story-cell story-location'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$a,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$href(story.url),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$target('_blank'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('story-location'),
-										_1: {ctor: '[]'}
-									}
-								}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(story.summary),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('story-cell story-state'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: function () {
-								var _p43 = story.state;
-								switch (_p43.ctor) {
-									case 'StoryStateUnscheduled':
-										return _elm_lang$html$Html$text('');
-									case 'StoryStateUnstarted':
-										return _elm_lang$html$Html$text('');
-									case 'StoryStateStarted':
-										return A2(
-											_elm_lang$html$Html$i,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-pulse'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'});
-									case 'StoryStateFinished':
-										return A2(
-											_elm_lang$html$Html$i,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-pulse'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'});
-									case 'StoryStateDelivered':
-										return A2(
-											_elm_lang$html$Html$i,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-pulse'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'});
-									case 'StoryStateAccepted':
-										return A2(
-											_elm_lang$html$Html$i,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-check'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'});
-									default:
-										return A2(
-											_elm_lang$html$Html$i,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-check'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'});
-								}
-							}(),
-							_1: {ctor: '[]'}
-						}),
-					_1: {ctor: '[]'}
-				}
-			}
-		});
-};
-var _vito$customs$Main$storyClasses = function (story) {
-	return {
-		ctor: '::',
-		_0: {
-			ctor: '_Tuple2',
-			_0: 'chore',
-			_1: _elm_lang$core$Native_Utils.eq(story.type_, _vito$customs$Tracker$StoryTypeChore)
-		},
-		_1: {
-			ctor: '::',
-			_0: {
-				ctor: '_Tuple2',
-				_0: 'feature',
-				_1: _elm_lang$core$Native_Utils.eq(story.type_, _vito$customs$Tracker$StoryTypeFeature)
-			},
-			_1: {
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'bug',
-					_1: _elm_lang$core$Native_Utils.eq(story.type_, _vito$customs$Tracker$StoryTypeBug)
-				},
-				_1: {
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'unscheduled',
-						_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateUnscheduled)
-					},
-					_1: {
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'unstarted',
-							_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateUnstarted)
-						},
-						_1: {
-							ctor: '::',
-							_0: {
-								ctor: '_Tuple2',
-								_0: 'started',
-								_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateStarted)
-							},
-							_1: {
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'finished',
-									_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateFinished)
-								},
-								_1: {
-									ctor: '::',
-									_0: {
-										ctor: '_Tuple2',
-										_0: 'delivered',
-										_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateDelivered)
-									},
-									_1: {
-										ctor: '::',
-										_0: {
-											ctor: '_Tuple2',
-											_0: 'accepted',
-											_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateAccepted)
-										},
-										_1: {
-											ctor: '::',
-											_0: {
-												ctor: '_Tuple2',
-												_0: 'rejected',
-												_1: _elm_lang$core$Native_Utils.eq(story.state, _vito$customs$Tracker$StoryStateRejected)
-											},
-											_1: {ctor: '[]'}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-	};
-};
-var _vito$customs$Main$issueFlair = function (_p44) {
-	var _p45 = _p44;
-	var _p49 = _p45.commentCount;
+	var _p5 = _p1.commentCount;
 	var commentsElement = A2(
 		_elm_lang$html$Html$span,
 		{
@@ -11521,14 +10507,14 @@ var _vito$customs$Main$issueFlair = function (_p44) {
 					{
 						ctor: '::',
 						_0: _elm_lang$html$Html$text(
-							_elm_lang$core$Basics$toString(_p49)),
+							_elm_lang$core$Basics$toString(_p5)),
 						_1: {ctor: '[]'}
 					}),
 				_1: {ctor: '[]'}
 			}
 		});
-	var viewReaction = function (_p46) {
-		var _p47 = _p46;
+	var viewReaction = function (_p2) {
+		var _p3 = _p2;
 		return A2(
 			_elm_lang$html$Html$span,
 			{
@@ -11547,7 +10533,7 @@ var _vito$customs$Main$issueFlair = function (_p44) {
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(_p47._0),
+						_0: _elm_lang$html$Html$text(_p3._0),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -11562,7 +10548,7 @@ var _vito$customs$Main$issueFlair = function (_p44) {
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html$text(
-								_elm_lang$core$Basics$toString(_p47._1)),
+								_elm_lang$core$Basics$toString(_p3._1)),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
@@ -11571,18 +10557,18 @@ var _vito$customs$Main$issueFlair = function (_p44) {
 	};
 	var presentReactions = A2(
 		_elm_lang$core$List$filter,
-		function (_p48) {
+		function (_p4) {
 			return A2(
 				F2(
 					function (x, y) {
 						return !_elm_lang$core$Native_Utils.eq(x, y);
 					}),
 				0,
-				_elm_lang$core$Tuple$second(_p48));
+				_elm_lang$core$Tuple$second(_p4));
 		},
-		_vito$customs$GitHub$reactionCodes(_p45.reactions));
+		_vito$cadet$GitHub$reactionCodes(_p1.reactions));
 	var reactionElements = A2(_elm_lang$core$List$map, viewReaction, presentReactions);
-	return (_elm_lang$core$Native_Utils.cmp(_p49, 0) > 0) ? A2(
+	return (_elm_lang$core$Native_Utils.cmp(_p5, 0) > 0) ? A2(
 		_elm_lang$core$Basics_ops['++'],
 		reactionElements,
 		{
@@ -11591,9 +10577,9 @@ var _vito$customs$Main$issueFlair = function (_p44) {
 			_1: {ctor: '[]'}
 		}) : reactionElements;
 };
-var _vito$customs$Main$hexBrightness = function (h) {
-	var _p50 = A2(_elm_lang$core$Basics$compare, h, (255 / 2) | 0);
-	switch (_p50.ctor) {
+var _vito$cadet$Main$hexBrightness = function (h) {
+	var _p6 = A2(_elm_lang$core$Basics$compare, h, (255 / 2) | 0);
+	switch (_p6.ctor) {
 		case 'LT':
 			return -1;
 		case 'EQ':
@@ -11602,63 +10588,63 @@ var _vito$customs$Main$hexBrightness = function (h) {
 			return 1;
 	}
 };
-var _vito$customs$Main$hexRegex = _elm_lang$core$Regex$regex('([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})');
-var _vito$customs$Main$colorIsLight = function (hex) {
+var _vito$cadet$Main$hexRegex = _elm_lang$core$Regex$regex('([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})');
+var _vito$cadet$Main$colorIsLight = function (hex) {
 	var matches = _elm_lang$core$List$head(
 		A3(
 			_elm_lang$core$Regex$find,
 			_elm_lang$core$Regex$AtMost(1),
-			_vito$customs$Main$hexRegex,
+			_vito$cadet$Main$hexRegex,
 			hex));
-	var _p51 = A2(
+	var _p7 = A2(
 		_elm_lang$core$Maybe$map,
 		function (_) {
 			return _.submatches;
 		},
 		matches);
-	if ((((((((_p51.ctor === 'Just') && (_p51._0.ctor === '::')) && (_p51._0._0.ctor === 'Just')) && (_p51._0._1.ctor === '::')) && (_p51._0._1._0.ctor === 'Just')) && (_p51._0._1._1.ctor === '::')) && (_p51._0._1._1._0.ctor === 'Just')) && (_p51._0._1._1._1.ctor === '[]')) {
-		var _p52 = A2(
+	if ((((((((_p7.ctor === 'Just') && (_p7._0.ctor === '::')) && (_p7._0._0.ctor === 'Just')) && (_p7._0._1.ctor === '::')) && (_p7._0._1._0.ctor === 'Just')) && (_p7._0._1._1.ctor === '::')) && (_p7._0._1._1._0.ctor === 'Just')) && (_p7._0._1._1._1.ctor === '[]')) {
+		var _p8 = A2(
 			_elm_lang$core$List$map,
 			_fredcy$elm_parseint$ParseInt$parseIntHex,
 			{
 				ctor: '::',
-				_0: _p51._0._0._0,
+				_0: _p7._0._0._0,
 				_1: {
 					ctor: '::',
-					_0: _p51._0._1._0._0,
+					_0: _p7._0._1._0._0,
 					_1: {
 						ctor: '::',
-						_0: _p51._0._1._1._0._0,
+						_0: _p7._0._1._1._0._0,
 						_1: {ctor: '[]'}
 					}
 				}
 			});
-		if (((((((_p52.ctor === '::') && (_p52._0.ctor === 'Ok')) && (_p52._1.ctor === '::')) && (_p52._1._0.ctor === 'Ok')) && (_p52._1._1.ctor === '::')) && (_p52._1._1._0.ctor === 'Ok')) && (_p52._1._1._1.ctor === '[]')) {
+		if (((((((_p8.ctor === '::') && (_p8._0.ctor === 'Ok')) && (_p8._1.ctor === '::')) && (_p8._1._0.ctor === 'Ok')) && (_p8._1._1.ctor === '::')) && (_p8._1._1._0.ctor === 'Ok')) && (_p8._1._1._1.ctor === '[]')) {
 			return (_elm_lang$core$Native_Utils.cmp(
-				(_vito$customs$Main$hexBrightness(_p52._0._0) + _vito$customs$Main$hexBrightness(_p52._1._0._0)) + _vito$customs$Main$hexBrightness(_p52._1._1._0._0),
+				(_vito$cadet$Main$hexBrightness(_p8._0._0) + _vito$cadet$Main$hexBrightness(_p8._1._0._0)) + _vito$cadet$Main$hexBrightness(_p8._1._1._0._0),
 				0) > 0) ? true : false;
 		} else {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 521, column: 17},
-					end: {line: 529, column: 50}
+					start: {line: 223, column: 17},
+					end: {line: 231, column: 50}
 				},
-				_p52)('invalid hex');
+				_p8)('invalid hex');
 		}
 	} else {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 519, column: 9},
-				end: {line: 532, column: 42}
+				start: {line: 221, column: 9},
+				end: {line: 234, column: 42}
 			},
-			_p51)('invalid hex');
+			_p7)('invalid hex');
 	}
 };
-var _vito$customs$Main$viewIssueLabel = function (_p55) {
-	var _p56 = _p55;
-	var _p57 = _p56.color;
+var _vito$cadet$Main$viewIssueLabel = function (_p11) {
+	var _p12 = _p11;
+	var _p13 = _p12.color;
 	return A2(
 		_elm_lang$html$Html$span,
 		{
@@ -11672,14 +10658,14 @@ var _vito$customs$Main$viewIssueLabel = function (_p55) {
 						_0: {
 							ctor: '_Tuple2',
 							_0: 'background-color',
-							_1: A2(_elm_lang$core$Basics_ops['++'], '#', _p57)
+							_1: A2(_elm_lang$core$Basics_ops['++'], '#', _p13)
 						},
 						_1: {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
 								_0: 'color',
-								_1: _vito$customs$Main$colorIsLight(_p57) ? 'rgba(0, 0, 0, .8)' : '#fff'
+								_1: _vito$cadet$Main$colorIsLight(_p13) ? 'rgba(0, 0, 0, .8)' : '#fff'
 							},
 							_1: {ctor: '[]'}
 						}
@@ -11689,11 +10675,11 @@ var _vito$customs$Main$viewIssueLabel = function (_p55) {
 		},
 		{
 			ctor: '::',
-			_0: _elm_lang$html$Html$text(_p56.name),
+			_0: _elm_lang$html$Html$text(_p12.name),
 			_1: {ctor: '[]'}
 		});
 };
-var _vito$customs$Main$viewIssue = F2(
+var _vito$cadet$Main$viewIssue = F2(
 	function (issue, extraCells) {
 		var flairCell = A2(
 			_elm_lang$html$Html$div,
@@ -11702,7 +10688,7 @@ var _vito$customs$Main$viewIssue = F2(
 				_0: _elm_lang$html$Html_Attributes$class('issue-cell issue-flair'),
 				_1: {ctor: '[]'}
 			},
-			_vito$customs$Main$issueFlair(issue));
+			_vito$cadet$Main$issueFlair(issue));
 		var infoCell = A2(
 			_elm_lang$html$Html$div,
 			{
@@ -11741,7 +10727,7 @@ var _vito$customs$Main$viewIssue = F2(
 							_0: _elm_lang$html$Html_Attributes$class('issue-labels'),
 							_1: {ctor: '[]'}
 						},
-						A2(_elm_lang$core$List$map, _vito$customs$Main$viewIssueLabel, issue.labels)),
+						A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueLabel, issue.labels)),
 					_1: {
 						ctor: '::',
 						_0: A2(
@@ -11838,7 +10824,7 @@ var _vito$customs$Main$viewIssue = F2(
 			},
 			{
 				ctor: '::',
-				_0: issue.isPullRequest ? (_elm_lang$core$Native_Utils.eq(issue.state, _vito$customs$GitHub$IssueStateOpen) ? A2(
+				_0: issue.isPullRequest ? (_elm_lang$core$Native_Utils.eq(issue.state, _vito$cadet$GitHub$IssueStateOpen) ? A2(
 					_elm_lang$html$Html$i,
 					{
 						ctor: '::',
@@ -11852,7 +10838,7 @@ var _vito$customs$Main$viewIssue = F2(
 						_0: _elm_lang$html$Html_Attributes$class('emoji octicon octicon-git-pull-request gh-closed'),
 						_1: {ctor: '[]'}
 					},
-					{ctor: '[]'})) : (_elm_lang$core$Native_Utils.eq(issue.state, _vito$customs$GitHub$IssueStateOpen) ? A2(
+					{ctor: '[]'})) : (_elm_lang$core$Native_Utils.eq(issue.state, _vito$cadet$GitHub$IssueStateOpen) ? A2(
 					_elm_lang$html$Html$i,
 					{
 						ctor: '::',
@@ -11892,64 +10878,17 @@ var _vito$customs$Main$viewIssue = F2(
 			},
 			cells);
 	});
-var _vito$customs$Main$viewTriagedIssue = function (issue) {
+var _vito$cadet$Main$viewTriagedIssue = function (issue) {
 	return A2(
-		_vito$customs$Main$viewIssue,
+		_vito$cadet$Main$viewIssue,
 		issue,
 		{ctor: '[]'});
 };
-var _vito$customs$Main$viewTopic = function (topic) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('topic'),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('topic-issues'),
-					_1: {ctor: '[]'}
-				},
-				A2(_elm_lang$core$List$map, _vito$customs$Main$viewTriagedIssue, topic.issues)),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('topic-stories'),
-						_1: {ctor: '[]'}
-					},
-					A2(
-						_elm_lang$core$List$map,
-						_vito$customs$Main$viewStory,
-						_elm_lang$core$List$reverse(
-							A2(_elm_lang$core$List$sortWith, _vito$customs$Tracker$compareStoryProgress, topic.stories)))),
-				_1: {ctor: '[]'}
-			}
-		});
-};
-var _vito$customs$Main$viewIteration = function (_p58) {
-	var _p59 = _p58;
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('iteration'),
-			_1: {ctor: '[]'}
-		},
-		A2(_elm_lang$core$List$map, _vito$customs$Main$viewTopic, _p59.topics));
-};
-var _vito$customs$Main$theyAreWaiting = F2(
+var _vito$cadet$Main$theyAreWaiting = F2(
 	function (model, issue) {
 		return A2(_elm_lang$core$Set$member, issue.id, model.themWaiting);
 	});
-var _vito$customs$Main$cell = F3(
+var _vito$cadet$Main$cell = F3(
 	function (title, viewEntry, entries) {
 		return A2(
 			_elm_lang$html$Html$div,
@@ -11997,349 +10936,15 @@ var _vito$customs$Main$cell = F3(
 				}
 			});
 	});
-var _vito$customs$Main$isOrgMember = F2(
-	function (users, user) {
-		return A2(
-			_elm_lang$core$List$any,
-			function (x) {
-				return _elm_lang$core$Native_Utils.eq(x.id, user.id);
-			},
-			A2(
-				_elm_lang$core$Maybe$withDefault,
-				{ctor: '[]'},
-				users));
-	});
-var _vito$customs$Main$lastActivityIsUs = F2(
-	function (model, comments) {
-		var withoutBots = A2(
-			_elm_lang$core$List$filter,
-			function (_p60) {
-				return !A3(
-					_elm_lang$core$Basics$flip,
-					_elm_lang$core$List$member,
-					model.config.botUsers,
-					function (_) {
-						return _.login;
-					}(
-						function (_) {
-							return _.user;
-						}(_p60)));
-			},
-			comments);
-		var _p61 = _elm_lang$core$List$head(
-			_elm_lang$core$List$reverse(withoutBots));
-		if (_p61.ctor === 'Just') {
-			return A2(_vito$customs$Main$isOrgMember, model.members, _p61._0.user);
-		} else {
-			return false;
-		}
-	});
-var _vito$customs$Main$Config = F5(
-	function (a, b, c, d, e) {
-		return {githubToken: a, githubOrganization: b, trackerToken: c, trackerProject: d, botUsers: e};
-	});
-var _vito$customs$Main$Model = function (a) {
-	return function (b) {
-		return function (c) {
-			return function (d) {
-				return function (e) {
-					return function (f) {
-						return function (g) {
-							return function (h) {
-								return function (i) {
-									return function (j) {
-										return function (k) {
-											return function (l) {
-												return function (m) {
-													return function (n) {
-														return {config: a, error: b, repositories: c, backlog: d, stories: e, members: f, issues: g, missingIssues: h, topicIterations: i, unscheduled: j, engaged: k, pending: l, orphaned: m, themWaiting: n};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var _vito$customs$Main$Topic = F2(
-	function (a, b) {
-		return {stories: a, issues: b};
-	});
-var _vito$customs$Main$UntriagedIssue = F2(
-	function (a, b) {
-		return {story: a, issue: b};
-	});
-var _vito$customs$Main$OrphanedStory = F2(
-	function (a, b) {
-		return {story: a, issue: b};
-	});
-var _vito$customs$Main$Iteration = F2(
-	function (a, b) {
-		return {number: a, topics: b};
-	});
-var _vito$customs$Main$Error = function (a) {
-	return {ctor: 'Error', _0: a};
-};
-var _vito$customs$Main$handleErr = F2(
-	function (ok, res) {
-		var _p62 = res;
-		if (_p62.ctor === 'Ok') {
-			return ok(_p62._0);
-		} else {
-			return _vito$customs$Main$Error(
-				_elm_lang$core$Basics$toString(_p62._0));
-		}
-	});
-var _vito$customs$Main$OrphanedStoryAccepted = function (a) {
-	return {ctor: 'OrphanedStoryAccepted', _0: a};
-};
-var _vito$customs$Main$acceptOrphan = F2(
-	function (config, orphan) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_elm_lang$core$Basics$always(
-					_vito$customs$Main$OrphanedStoryAccepted(orphan))),
-			A3(_vito$customs$Tracker$acceptStoryAsChore, config.trackerToken, config.trackerProject, orphan.story.id));
-	});
-var _vito$customs$Main$AcceptOrphanedStory = function (a) {
-	return {ctor: 'AcceptOrphanedStory', _0: a};
-};
-var _vito$customs$Main$OrphanedStoryDeleted = function (a) {
-	return {ctor: 'OrphanedStoryDeleted', _0: a};
-};
-var _vito$customs$Main$deleteStory = F2(
-	function (config, orphan) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_elm_lang$core$Basics$always(
-					_vito$customs$Main$OrphanedStoryDeleted(orphan))),
-			A3(_vito$customs$Tracker$deleteStory, config.trackerToken, config.trackerProject, orphan.story.id));
-	});
-var _vito$customs$Main$DeleteOrphanedStory = function (a) {
-	return {ctor: 'DeleteOrphanedStory', _0: a};
-};
-var _vito$customs$Main$viewOrphanedStory = function (orphan) {
-	return A2(
-		_elm_lang$html$Html$div,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$class('orphaned topic'),
-			_1: {ctor: '[]'}
-		},
-		function () {
-			var _p63 = orphan.issue;
-			if (_p63.ctor === 'Just') {
-				return {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('topic-issues'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_vito$customs$Main$viewIssue,
-								_p63._0,
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('issue-cell issue-engagement'),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(
-													_vito$customs$Main$AcceptOrphanedStory(orphan)),
-												_1: {ctor: '[]'}
-											}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$i,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
-													_1: {ctor: '[]'}
-												},
-												{ctor: '[]'}),
-											_1: {ctor: '[]'}
-										}),
-									_1: {ctor: '[]'}
-								}),
-							_1: {ctor: '[]'}
-						}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('topic-stories'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: _vito$customs$Main$viewStory(orphan.story),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
-				};
-			} else {
-				return {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('topic-stories headless'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$span,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('delete-story'),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_vito$customs$Main$DeleteOrphanedStory(orphan)),
-										_1: {ctor: '[]'}
-									}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$i,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('octicon octicon-trashcan'),
-											_1: {ctor: '[]'}
-										},
-										{ctor: '[]'}),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: _vito$customs$Main$viewStory(orphan.story),
-								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {ctor: '[]'}
-				};
-			}
-		}());
-};
-var _vito$customs$Main$Disengaged = F2(
-	function (a, b) {
-		return {ctor: 'Disengaged', _0: a, _1: b};
-	});
-var _vito$customs$Main$disengage = F2(
-	function (config, issue) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_vito$customs$Main$Disengaged(issue)),
-			A3(_vito$customs$Tracker$acceptStory, config.trackerToken, config.trackerProject, issue.story.id));
-	});
-var _vito$customs$Main$Disengage = function (a) {
-	return {ctor: 'Disengage', _0: a};
-};
-var _vito$customs$Main$Engaged = F2(
-	function (a, b) {
-		return {ctor: 'Engaged', _0: a, _1: b};
-	});
-var _vito$customs$Main$engage = F2(
-	function (config, issue) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_vito$customs$Main$Engaged(issue)),
-			A3(_vito$customs$Tracker$startStory, config.trackerToken, config.trackerProject, issue.story.id));
-	});
-var _vito$customs$Main$Engage = function (a) {
-	return {ctor: 'Engage', _0: a};
-};
-var _vito$customs$Main$viewUntriagedIssue = function (untriagedIssue) {
-	return A2(
-		_vito$customs$Main$viewIssue,
-		untriagedIssue.issue,
-		{
-			ctor: '::',
-			_0: _vito$customs$Tracker$storyIsInFlight(untriagedIssue.story) ? A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('issue-cell issue-engagement'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(
-							_vito$customs$Main$Disengage(untriagedIssue)),
-						_1: {ctor: '[]'}
-					}
-				},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$i,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
-							_1: {ctor: '[]'}
-						},
-						{ctor: '[]'}),
-					_1: {ctor: '[]'}
-				}) : A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('issue-cell issue-engagement'),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$html$Html_Events$onClick(
-							_vito$customs$Main$Engage(untriagedIssue)),
-						_1: {ctor: '[]'}
-					}
-				},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$i,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('octicon octicon-mail-reply'),
-							_1: {ctor: '[]'}
-						},
-						{ctor: '[]'}),
-					_1: {ctor: '[]'}
-				}),
-			_1: {ctor: '[]'}
-		});
-};
-var _vito$customs$Main$view = function (model) {
-	var _p64 = model.error;
-	if (_p64.ctor === 'Just') {
+var _vito$cadet$Main$view = function (model) {
+	var _p14 = model.error;
+	if (_p14.ctor === 'Just') {
 		return A2(
 			_elm_lang$html$Html$pre,
 			{ctor: '[]'},
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html$text(_p64._0),
+				_0: _elm_lang$html$Html$text(_p14._0),
 				_1: {ctor: '[]'}
 			});
 	} else {
@@ -12361,511 +10966,128 @@ var _vito$customs$Main$view = function (model) {
 					},
 					{
 						ctor: '::',
-						_0: A3(_vito$customs$Main$cell, 'Backlog', _vito$customs$Main$viewIteration, model.topicIterations),
+						_0: A3(_vito$cadet$Main$cell, 'Issues', _vito$cadet$Main$viewTriagedIssue, model.issues),
 						_1: {ctor: '[]'}
 					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('column'),
-							_1: {ctor: '[]'}
-						},
-						function () {
-							var _p65 = A2(
-								_elm_lang$core$List$partition,
-								function (_p66) {
-									return A2(
-										_elm_lang$core$List$any,
-										_vito$customs$Main$theyAreWaiting(model),
-										function (_) {
-											return _.issues;
-										}(_p66));
-								},
-								model.unscheduled);
-							var themWaiting = _p65._0;
-							var usWaiting = _p65._1;
-							return {
-								ctor: '::',
-								_0: A3(
-									_vito$customs$Main$cell,
-									'Triaged (Them Waiting)',
-									_vito$customs$Main$viewTopic,
-									_elm_lang$core$List$reverse(
-										A2(_elm_lang$core$List$sortBy, _vito$customs$Main$topicActivity, themWaiting))),
-								_1: {
-									ctor: '::',
-									_0: A3(
-										_vito$customs$Main$cell,
-										'Triaged (Us Waiting)',
-										_vito$customs$Main$viewTopic,
-										_elm_lang$core$List$reverse(
-											A2(_elm_lang$core$List$sortBy, _vito$customs$Main$topicActivity, usWaiting))),
-									_1: {ctor: '[]'}
-								}
-							};
-						}()),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('column'),
-								_1: {ctor: '[]'}
-							},
-							function () {
-								var _p67 = A2(
-									_elm_lang$core$List$partition,
-									function (_p68) {
-										return A2(
-											_vito$customs$Main$theyAreWaiting,
-											model,
-											function (_) {
-												return _.issue;
-											}(_p68));
-									},
-									model.engaged);
-								var themWaiting = _p67._0;
-								var usWaiting = _p67._1;
-								return {
-									ctor: '::',
-									_0: A3(
-										_vito$customs$Main$cell,
-										'Them Waiting',
-										_vito$customs$Main$viewUntriagedIssue,
-										_elm_lang$core$List$reverse(
-											A2(_elm_lang$core$List$sortBy, _vito$customs$Main$untriagedIssueActivity, themWaiting))),
-									_1: {
-										ctor: '::',
-										_0: A3(
-											_vito$customs$Main$cell,
-											'Us Waiting',
-											_vito$customs$Main$viewUntriagedIssue,
-											_elm_lang$core$List$reverse(
-												A2(_elm_lang$core$List$sortBy, _vito$customs$Main$untriagedIssueActivity, usWaiting))),
-										_1: {
-											ctor: '::',
-											_0: (!_elm_lang$core$List$isEmpty(model.orphaned)) ? A3(_vito$customs$Main$cell, 'Orphaned', _vito$customs$Main$viewOrphanedStory, model.orphaned) : _elm_lang$html$Html$text(''),
-											_1: {ctor: '[]'}
-										}
-									}
-								};
-							}()),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('column'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: A3(
-										_vito$customs$Main$cell,
-										'Pending By Activity',
-										_vito$customs$Main$viewUntriagedIssue,
-										_elm_lang$core$List$reverse(
-											A2(_elm_lang$core$List$sortBy, _vito$customs$Main$untriagedIssueActivity, model.pending))),
-									_1: {
-										ctor: '::',
-										_0: A3(
-											_vito$customs$Main$cell,
-											'Pending By Date',
-											_vito$customs$Main$viewUntriagedIssue,
-											_elm_lang$core$List$reverse(
-												A2(_elm_lang$core$List$sortBy, _vito$customs$Main$untriagedIssueCreation, model.pending))),
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {ctor: '[]'}
-						}
-					}
-				}
+				_1: {ctor: '[]'}
 			});
 	}
 };
-var _vito$customs$Main$IssueCommentsFetched = F2(
-	function (a, b) {
-		return {ctor: 'IssueCommentsFetched', _0: a, _1: b};
-	});
-var _vito$customs$Main$checkEngagement = F2(
-	function (config, issue) {
+var _vito$cadet$Main$isOrgMember = F2(
+	function (users, user) {
 		return A2(
-			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_vito$customs$Main$IssueCommentsFetched(issue)),
-			A2(_vito$customs$GitHub$fetchIssueComments, config.githubToken, issue));
-	});
-var _vito$customs$Main$OrphanedStoryIssueMissing = function (a) {
-	return {ctor: 'OrphanedStoryIssueMissing', _0: a};
-};
-var _vito$customs$Main$OrphanedStoryIssueFetched = F2(
-	function (a, b) {
-		return {ctor: 'OrphanedStoryIssueFetched', _0: a, _1: b};
-	});
-var _vito$customs$Main$fetchOrphanedStoryIssue = F2(
-	function (model, story) {
-		var _p69 = _vito$customs$Main$storyIssueInfo(story);
-		var owner = _p69._0;
-		var repoName = _p69._1;
-		var num = _p69._2;
-		var maybeRepo = _elm_lang$core$List$head(
+			_elm_lang$core$List$any,
+			function (x) {
+				return _elm_lang$core$Native_Utils.eq(x.id, user.id);
+			},
 			A2(
-				_elm_lang$core$List$filter,
-				function (repo) {
-					return _elm_lang$core$Native_Utils.eq(repo.owner.login, owner) && _elm_lang$core$Native_Utils.eq(repo.name, repoName);
-				},
-				model.repositories));
-		var _p70 = maybeRepo;
-		if (_p70.ctor === 'Just') {
-			return A2(
-				_elm_lang$core$Task$attempt,
-				_vito$customs$Main$handleErr(
-					_vito$customs$Main$OrphanedStoryIssueFetched(story)),
-				A3(_vito$customs$GitHub$fetchIssue, model.config.githubToken, _p70._0, num));
+				_elm_lang$core$Maybe$withDefault,
+				{ctor: '[]'},
+				users));
+	});
+var _vito$cadet$Main$lastActivityIsUs = F2(
+	function (model, timeline) {
+		var _p15 = _elm_lang$core$List$head(
+			_elm_lang$core$List$reverse(timeline));
+		if (_p15.ctor === 'Just') {
+			return A2(_vito$cadet$Main$isOrgMember, model.members, _p15._0.actor);
 		} else {
-			return A2(
-				_elm_lang$core$Task$attempt,
-				_vito$customs$Main$handleErr(_vito$customs$Main$OrphanedStoryIssueMissing),
-				_elm_lang$core$Task$succeed(story));
+			return false;
 		}
 	});
-var _vito$customs$Main$process = F5(
-	function (model, backlog, stories, issues, members) {
-		var storyIsOrphaned = F2(
-			function (topics, story) {
-				return _vito$customs$Main$storyIsForAnyIssue(story) && ((!_vito$customs$Tracker$storyIsAccepted(story)) && (!A2(
-					_elm_lang$core$List$any,
-					_vito$customs$Main$topicIsForStory(story),
-					topics)));
-			});
-		var untriaged = function (_p71) {
-			var _p72 = _p71;
-			var _p73 = {ctor: '_Tuple2', _0: _p72.stories, _1: _p72.issues};
-			if (((_p73.ctor === '_Tuple2') && (_p73._0.ctor === '::')) && (_p73._1.ctor === '::')) {
-				return {story: _p73._0._0, issue: _p73._1._0};
-			} else {
-				return _elm_lang$core$Native_Utils.crashCase(
-					'Main',
-					{
-						start: {line: 314, column: 13},
-						end: {line: 319, column: 45}
-					},
-					_p73)('impossible');
-			}
-		};
-		var topics = A2(_vito$customs$Main$groupByTopic, stories, issues);
-		var _p75 = A2(_elm_lang$core$List$partition, _vito$customs$Main$topicIsTriaged, topics);
-		var triaged = _p75._0;
-		var pending = _p75._1;
-		var _p76 = A2(_elm_lang$core$List$partition, _vito$customs$Main$topicIsScheduled, triaged);
-		var scheduled = _p76._0;
-		var unscheduled = _p76._1;
-		var topicIterations = A2(_vito$customs$Main$groupTopicsByIteration, backlog, scheduled);
-		var checkTriagedEngagements = A2(
-			_elm_lang$core$List$concatMap,
-			function (_p77) {
-				return A2(
-					_elm_lang$core$List$map,
-					_vito$customs$Main$checkEngagement(model.config),
-					function (_) {
-						return _.issues;
-					}(_p77));
-			},
-			unscheduled);
-		var _p78 = A2(_elm_lang$core$List$partition, _vito$customs$Main$topicIsScheduled, pending);
-		var engaged = _p78._0;
-		var remaining = _p78._1;
-		var checkEngagements = A2(
-			_elm_lang$core$List$concatMap,
-			function (_p79) {
-				return A2(
-					_elm_lang$core$List$map,
-					_vito$customs$Main$checkEngagement(model.config),
-					function (_) {
-						return _.issues;
-					}(_p79));
-			},
-			engaged);
-		var orphans = A2(
-			_elm_lang$core$List$filter,
-			storyIsOrphaned(topics),
-			stories);
-		var findOrphanedIssues = A2(
-			_elm_lang$core$List$map,
-			_vito$customs$Main$fetchOrphanedStoryIssue(model),
-			orphans);
-		return {
-			ctor: '_Tuple2',
-			_0: _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					error: _elm_lang$core$Maybe$Nothing,
-					topicIterations: topicIterations,
-					unscheduled: unscheduled,
-					pending: A2(_elm_lang$core$List$map, untriaged, remaining),
-					engaged: A2(_elm_lang$core$List$map, untriaged, engaged)
-				}),
-			_1: _elm_lang$core$Platform_Cmd$batch(
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					checkEngagements,
-					A2(_elm_lang$core$Basics_ops['++'], checkTriagedEngagements, findOrphanedIssues)))
-		};
+var _vito$cadet$Main$Config = F2(
+	function (a, b) {
+		return {githubToken: a, githubOrganization: b};
 	});
-var _vito$customs$Main$processIfReady = function (model) {
-	if ((!_elm_lang$core$List$isEmpty(model.repositories)) && _elm_lang$core$Set$isEmpty(model.missingIssues)) {
-		var _p80 = {ctor: '_Tuple3', _0: model.backlog, _1: model.stories, _2: model.members};
-		if ((((_p80.ctor === '_Tuple3') && (_p80._0.ctor === 'Just')) && (_p80._1.ctor === 'Just')) && (_p80._2.ctor === 'Just')) {
-			return A5(_vito$customs$Main$process, model, _p80._0._0, _p80._1._0, model.issues, _p80._2._0);
-		} else {
-			return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-		}
-	} else {
-		return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-	}
+var _vito$cadet$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {config: a, error: b, repositories: c, members: d, issues: e, reposLoadingIssues: f, themWaiting: g};
+	});
+var _vito$cadet$Main$Error = function (a) {
+	return {ctor: 'Error', _0: a};
 };
-var _vito$customs$Main$IssuesFetched = F2(
+var _vito$cadet$Main$handleErr = F2(
+	function (ok, res) {
+		var _p16 = res;
+		if (_p16.ctor === 'Ok') {
+			return ok(_p16._0);
+		} else {
+			return _vito$cadet$Main$Error(
+				_elm_lang$core$Basics$toString(_p16._0));
+		}
+	});
+var _vito$cadet$Main$IssueTimelineFetched = F2(
+	function (a, b) {
+		return {ctor: 'IssueTimelineFetched', _0: a, _1: b};
+	});
+var _vito$cadet$Main$IssuesFetched = F2(
 	function (a, b) {
 		return {ctor: 'IssuesFetched', _0: a, _1: b};
 	});
-var _vito$customs$Main$fetchIssues = F2(
+var _vito$cadet$Main$fetchIssues = F2(
 	function (config, repo) {
 		return A2(
 			_elm_lang$core$Task$attempt,
-			_vito$customs$Main$handleErr(
-				_vito$customs$Main$IssuesFetched(repo)),
-			A2(_vito$customs$GitHub$fetchRepoIssues, config.githubToken, repo));
+			_vito$cadet$Main$handleErr(
+				_vito$cadet$Main$IssuesFetched(repo)),
+			A2(_vito$cadet$GitHub$fetchRepoIssues, config.githubToken, repo));
 	});
-var _vito$customs$Main$update = F2(
+var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p81 = msg;
-		switch (_p81.ctor) {
+		var _p17 = msg;
+		switch (_p17.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
-			case 'BacklogFetched':
-				return _vito$customs$Main$processIfReady(
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{
-							backlog: _elm_lang$core$Maybe$Just(_p81._0)
-						}));
-			case 'StoriesFetched':
-				return _vito$customs$Main$processIfReady(
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{
-							stories: _elm_lang$core$Maybe$Just(_p81._0)
-						}));
 			case 'MembersFetched':
-				return _vito$customs$Main$processIfReady(
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{
-							members: _elm_lang$core$Maybe$Just(_p81._0)
-						}));
-			case 'RepositoriesFetched':
-				var _p82 = _p81._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							repositories: _p82,
-							missingIssues: _elm_lang$core$Set$fromList(
+							members: _elm_lang$core$Maybe$Just(_p17._0)
+						}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+			case 'RepositoriesFetched':
+				var _p18 = _p17._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							repositories: _p18,
+							reposLoadingIssues: _elm_lang$core$Set$fromList(
 								A2(
 									_elm_lang$core$List$map,
 									function (_) {
 										return _.id;
 									},
-									_p82))
+									_p18))
 						}),
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						A2(
 							_elm_lang$core$List$map,
-							_vito$customs$Main$fetchIssues(model.config),
-							_p82))
+							_vito$cadet$Main$fetchIssues(model.config),
+							_p18))
 				};
 			case 'IssuesFetched':
-				return _vito$customs$Main$processIfReady(
-					_elm_lang$core$Native_Utils.update(
-						model,
-						{
-							issues: A2(_elm_lang$core$Basics_ops['++'], _p81._1, model.issues),
-							missingIssues: A2(_elm_lang$core$Set$remove, _p81._0.id, model.missingIssues)
-						}));
-			case 'OrphanedStoryIssueFetched':
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							orphaned: {
-								ctor: '::',
-								_0: {
-									story: _p81._0,
-									issue: _elm_lang$core$Maybe$Just(_p81._1)
-								},
-								_1: model.orphaned
-							}
+							issues: A2(_elm_lang$core$Basics_ops['++'], _p17._1, model.issues),
+							reposLoadingIssues: A2(_elm_lang$core$Set$remove, _p17._0.id, model.reposLoadingIssues)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
-			case 'OrphanedStoryIssueMissing':
-				return {
+			case 'IssueTimelineFetched':
+				return A2(_vito$cadet$Main$lastActivityIsUs, model, _p17._1) ? {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none} : {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							orphaned: {
-								ctor: '::',
-								_0: {story: _p81._0, issue: _elm_lang$core$Maybe$Nothing},
-								_1: model.orphaned
-							}
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'IssueCommentsFetched':
-				return A2(_vito$customs$Main$lastActivityIsUs, model, _p81._1) ? {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none} : {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							themWaiting: A2(_elm_lang$core$Set$insert, _p81._0.id, model.themWaiting)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'Engage':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: A2(_vito$customs$Main$engage, model.config, _p81._0)
-				};
-			case 'Engaged':
-				var _p84 = _p81._0;
-				var startedIssue = _elm_lang$core$Native_Utils.update(
-					_p84,
-					{story: _p81._1});
-				var removeNoLongerPending = _elm_lang$core$List$filter(
-					function (_p83) {
-						return A2(
-							F2(
-								function (x, y) {
-									return !_elm_lang$core$Native_Utils.eq(x, y);
-								}),
-							_p84.issue.id,
-							function (_) {
-								return _.id;
-							}(
-								function (_) {
-									return _.issue;
-								}(_p83)));
-					});
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							pending: removeNoLongerPending(model.pending),
-							engaged: {ctor: '::', _0: startedIssue, _1: model.engaged}
-						}),
-					_1: A2(_vito$customs$Main$checkEngagement, model.config, _p84.issue)
-				};
-			case 'Disengage':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: A2(_vito$customs$Main$disengage, model.config, _p81._0)
-				};
-			case 'Disengaged':
-				var removeEngaged = _elm_lang$core$List$filter(
-					function (_p85) {
-						return A2(
-							F2(
-								function (x, y) {
-									return !_elm_lang$core$Native_Utils.eq(x, y);
-								}),
-							_p81._0.issue.id,
-							function (_) {
-								return _.id;
-							}(
-								function (_) {
-									return _.issue;
-								}(_p85)));
-					});
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							engaged: removeEngaged(model.engaged)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'AcceptOrphanedStory':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: A2(_vito$customs$Main$acceptOrphan, model.config, _p81._0)
-				};
-			case 'OrphanedStoryAccepted':
-				var remove = _elm_lang$core$List$filter(
-					function (_p86) {
-						return A2(
-							F2(
-								function (x, y) {
-									return !_elm_lang$core$Native_Utils.eq(x, y);
-								}),
-							_p81._0.story.id,
-							function (_) {
-								return _.id;
-							}(
-								function (_) {
-									return _.story;
-								}(_p86)));
-					});
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							orphaned: remove(model.orphaned)
-						}),
-					_1: _elm_lang$core$Platform_Cmd$none
-				};
-			case 'DeleteOrphanedStory':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: A2(_vito$customs$Main$deleteStory, model.config, _p81._0)
-				};
-			case 'OrphanedStoryDeleted':
-				var removeDeleted = _elm_lang$core$List$filter(
-					function (_p87) {
-						return A2(
-							F2(
-								function (x, y) {
-									return !_elm_lang$core$Native_Utils.eq(x, y);
-								}),
-							_p81._0.story.id,
-							function (_) {
-								return _.id;
-							}(
-								function (_) {
-									return _.story;
-								}(_p87)));
-					});
-				return {
-					ctor: '_Tuple2',
-					_0: _elm_lang$core$Native_Utils.update(
-						model,
-						{
-							orphaned: removeDeleted(model.orphaned)
+							themWaiting: A2(_elm_lang$core$Set$insert, _p17._0.id, model.themWaiting)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -12875,133 +11097,79 @@ var _vito$customs$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							error: _elm_lang$core$Maybe$Just(_p81._0)
+							error: _elm_lang$core$Maybe$Just(_p17._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 		}
 	});
-var _vito$customs$Main$RepositoriesFetched = function (a) {
+var _vito$cadet$Main$RepositoriesFetched = function (a) {
 	return {ctor: 'RepositoriesFetched', _0: a};
 };
-var _vito$customs$Main$fetchRepositories = function (config) {
+var _vito$cadet$Main$fetchRepositories = function (config) {
 	return A2(
 		_elm_lang$core$Task$attempt,
-		_vito$customs$Main$handleErr(_vito$customs$Main$RepositoriesFetched),
-		A2(_vito$customs$GitHub$fetchOrgRepos, config.githubToken, config.githubOrganization));
+		_vito$cadet$Main$handleErr(_vito$cadet$Main$RepositoriesFetched),
+		A2(_vito$cadet$GitHub$fetchOrgRepos, config.githubToken, config.githubOrganization));
 };
-var _vito$customs$Main$MembersFetched = function (a) {
+var _vito$cadet$Main$MembersFetched = function (a) {
 	return {ctor: 'MembersFetched', _0: a};
 };
-var _vito$customs$Main$fetchMembers = function (config) {
+var _vito$cadet$Main$fetchMembers = function (config) {
 	return A2(
 		_elm_lang$core$Task$attempt,
-		_vito$customs$Main$handleErr(_vito$customs$Main$MembersFetched),
-		A2(_vito$customs$GitHub$fetchOrgMembers, config.githubToken, config.githubOrganization));
+		_vito$cadet$Main$handleErr(_vito$cadet$Main$MembersFetched),
+		A2(_vito$cadet$GitHub$fetchOrgMembers, config.githubToken, config.githubOrganization));
 };
-var _vito$customs$Main$StoriesFetched = function (a) {
-	return {ctor: 'StoriesFetched', _0: a};
-};
-var _vito$customs$Main$fetchStories = function (config) {
-	return A2(
-		_elm_lang$core$Task$attempt,
-		_vito$customs$Main$handleErr(_vito$customs$Main$StoriesFetched),
-		A2(_vito$customs$Tracker$fetchProjectStories, config.trackerToken, config.trackerProject));
-};
-var _vito$customs$Main$BacklogFetched = function (a) {
-	return {ctor: 'BacklogFetched', _0: a};
-};
-var _vito$customs$Main$fetchBacklog = function (config) {
-	return A2(
-		_elm_lang$core$Task$attempt,
-		_vito$customs$Main$handleErr(_vito$customs$Main$BacklogFetched),
-		A2(_vito$customs$Tracker$fetchProjectBacklog, config.trackerToken, config.trackerProject));
-};
-var _vito$customs$Main$fetchBacklogAndStoriesAndIssues = function (config) {
-	return _elm_lang$core$Platform_Cmd$batch(
-		{
-			ctor: '::',
-			_0: _vito$customs$Main$fetchBacklog(config),
-			_1: {
-				ctor: '::',
-				_0: _vito$customs$Main$fetchStories(config),
-				_1: {
-					ctor: '::',
-					_0: _vito$customs$Main$fetchRepositories(config),
-					_1: {
-						ctor: '::',
-						_0: _vito$customs$Main$fetchMembers(config),
-						_1: {ctor: '[]'}
-					}
-				}
-			}
-		});
-};
-var _vito$customs$Main$init = function (config) {
+var _vito$cadet$Main$init = function (config) {
 	return {
 		ctor: '_Tuple2',
 		_0: {
 			config: config,
 			error: _elm_lang$core$Maybe$Nothing,
 			repositories: {ctor: '[]'},
-			backlog: _elm_lang$core$Maybe$Nothing,
-			stories: _elm_lang$core$Maybe$Nothing,
 			members: _elm_lang$core$Maybe$Nothing,
 			issues: {ctor: '[]'},
-			missingIssues: _elm_lang$core$Set$empty,
-			topicIterations: {ctor: '[]'},
-			unscheduled: {ctor: '[]'},
-			engaged: {ctor: '[]'},
-			pending: {ctor: '[]'},
-			orphaned: {ctor: '[]'},
+			reposLoadingIssues: _elm_lang$core$Set$empty,
 			themWaiting: _elm_lang$core$Set$empty
 		},
-		_1: _vito$customs$Main$fetchBacklogAndStoriesAndIssues(config)
+		_1: _elm_lang$core$Platform_Cmd$batch(
+			{
+				ctor: '::',
+				_0: _vito$cadet$Main$fetchRepositories(config),
+				_1: {
+					ctor: '::',
+					_0: _vito$cadet$Main$fetchMembers(config),
+					_1: {ctor: '[]'}
+				}
+			})
 	};
 };
-var _vito$customs$Main$main = _elm_lang$html$Html$programWithFlags(
+var _vito$cadet$Main$main = _elm_lang$html$Html$programWithFlags(
 	{
-		init: _vito$customs$Main$init,
-		update: _vito$customs$Main$update,
-		view: _elm_lang$html$Html_Lazy$lazy(_vito$customs$Main$view),
+		init: _vito$cadet$Main$init,
+		update: _vito$cadet$Main$update,
+		view: _vito$cadet$Main$view,
 		subscriptions: _elm_lang$core$Basics$always(_elm_lang$core$Platform_Sub$none)
 	})(
 	A2(
 		_elm_lang$core$Json_Decode$andThen,
-		function (botUsers) {
+		function (githubOrganization) {
 			return A2(
 				_elm_lang$core$Json_Decode$andThen,
-				function (githubOrganization) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (githubToken) {
-							return A2(
-								_elm_lang$core$Json_Decode$andThen,
-								function (trackerProject) {
-									return A2(
-										_elm_lang$core$Json_Decode$andThen,
-										function (trackerToken) {
-											return _elm_lang$core$Json_Decode$succeed(
-												{botUsers: botUsers, githubOrganization: githubOrganization, githubToken: githubToken, trackerProject: trackerProject, trackerToken: trackerToken});
-										},
-										A2(_elm_lang$core$Json_Decode$field, 'trackerToken', _elm_lang$core$Json_Decode$string));
-								},
-								A2(_elm_lang$core$Json_Decode$field, 'trackerProject', _elm_lang$core$Json_Decode$int));
-						},
-						A2(_elm_lang$core$Json_Decode$field, 'githubToken', _elm_lang$core$Json_Decode$string));
+				function (githubToken) {
+					return _elm_lang$core$Json_Decode$succeed(
+						{githubOrganization: githubOrganization, githubToken: githubToken});
 				},
-				A2(_elm_lang$core$Json_Decode$field, 'githubOrganization', _elm_lang$core$Json_Decode$string));
+				A2(_elm_lang$core$Json_Decode$field, 'githubToken', _elm_lang$core$Json_Decode$string));
 		},
-		A2(
-			_elm_lang$core$Json_Decode$field,
-			'botUsers',
-			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string))));
-var _vito$customs$Main$Noop = {ctor: 'Noop'};
+		A2(_elm_lang$core$Json_Decode$field, 'githubOrganization', _elm_lang$core$Json_Decode$string)));
+var _vito$cadet$Main$Noop = {ctor: 'Noop'};
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
-if (typeof _vito$customs$Main$main !== 'undefined') {
-    _vito$customs$Main$main(Elm['Main'], 'Main', undefined);
+if (typeof _vito$cadet$Main$main !== 'undefined') {
+    _vito$cadet$Main$main(Elm['Main'], 'Main', undefined);
 }
 
 if (typeof define === "function" && define['amd'])

@@ -1,16 +1,11 @@
 module Main exposing (..)
 
-import Date
-import Dict exposing (Dict)
 import Html exposing (Html, h1, h2, div, pre, text, a, span, i)
-import Html.Events exposing (onClick)
 import Html.Attributes exposing (class, classList, href, style, target)
 import ParseInt
 import Regex exposing (Regex)
 import Set exposing (Set)
-import String
 import Task exposing (Task)
-import Time exposing (Time)
 import GitHub
 
 
@@ -74,7 +69,7 @@ update msg model =
             ( model, Cmd.none )
 
         MembersFetched members ->
-            processIfReady { model | members = Just members }
+            ( { model | members = Just members }, Cmd.none )
 
         RepositoriesFetched repos ->
             ( { model
@@ -86,11 +81,12 @@ update msg model =
             )
 
         IssuesFetched repo issues ->
-            processIfReady
-                { model
-                    | issues = issues ++ model.issues
-                    , reposLoadingIssues = Set.remove repo.id model.reposLoadingIssues
-                }
+            ( { model
+                | issues = issues ++ model.issues
+                , reposLoadingIssues = Set.remove repo.id model.reposLoadingIssues
+              }
+            , Cmd.none
+            )
 
         IssueTimelineFetched issue timeline ->
             if lastActivityIsUs model timeline then
@@ -102,36 +98,19 @@ update msg model =
             ( { model | error = Just msg }, Cmd.none )
 
 
-lastActivityIsUs : Model -> List GitHub.Comment -> Bool
+lastActivityIsUs : Model -> List GitHub.TimelineEvent -> Bool
 lastActivityIsUs model timeline =
-    let
-        withoutBots =
-            List.filter (not << flip List.member model.config.botUsers << .login << .user) timeline
-    in
-        case List.head (List.reverse withoutBots) of
-            Just comment ->
-                isOrgMember model.members comment.user
+    case List.head (List.reverse timeline) of
+        Just event ->
+            isOrgMember model.members event.actor
 
-            Nothing ->
-                False
+        Nothing ->
+            False
 
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
 isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
-
-
-processIfReady : Model -> ( Model, Cmd Msg )
-processIfReady model =
-    if not (List.isEmpty model.repositories) && Set.isEmpty model.reposLoadingIssues then
-        case ( model.backlog, model.stories, model.members ) of
-            ( Just backlog, Just stories, Just members ) ->
-                process model backlog stories model.issues members
-
-            _ ->
-                ( model, Cmd.none )
-    else
-        ( model, Cmd.none )
 
 
 cell : String -> (a -> Html Msg) -> List a -> Html Msg
@@ -154,38 +133,7 @@ view model =
         Nothing ->
             div [ class "columns" ]
                 [ div [ class "column" ]
-                    [ cell "Backlog" viewIteration model.topicIterations
-                    ]
-                , div [ class "column" ] <|
-                    let
-                        ( themWaiting, usWaiting ) =
-                            List.partition (List.any (theyAreWaiting model) << .issues) model.unscheduled
-                    in
-                        [ cell "Triaged (Them Waiting)" viewTopic <|
-                            List.reverse (List.sortBy topicActivity themWaiting)
-                        , cell "Triaged (Us Waiting)" viewTopic <|
-                            List.reverse (List.sortBy topicActivity usWaiting)
-                        ]
-                , div [ class "column" ] <|
-                    let
-                        ( themWaiting, usWaiting ) =
-                            List.partition (theyAreWaiting model << .issue) model.engaged
-                    in
-                        [ cell "Them Waiting" viewUntriagedIssue <|
-                            List.reverse (List.sortBy untriagedIssueActivity themWaiting)
-                        , cell "Us Waiting" viewUntriagedIssue <|
-                            List.reverse (List.sortBy untriagedIssueActivity usWaiting)
-                        , if not <| List.isEmpty model.orphaned then
-                            cell "Orphaned" viewOrphanedStory <|
-                                model.orphaned
-                          else
-                            text ""
-                        ]
-                , div [ class "column" ]
-                    [ cell "Pending By Activity" viewUntriagedIssue <|
-                        List.reverse (List.sortBy untriagedIssueActivity model.pending)
-                    , cell "Pending By Date" viewUntriagedIssue <|
-                        List.reverse (List.sortBy untriagedIssueCreation model.pending)
+                    [ cell "Issues" viewTriagedIssue model.issues
                     ]
                 ]
 

@@ -7,6 +7,9 @@ module GitHub
         , IssueLabel
         , Comment
         , TimelineEvent
+        , TimelineEventSource
+        , TimelineEventRename
+        , Milestone
         , User
         , fetchOrgMembers
         , fetchOrgRepos
@@ -97,9 +100,17 @@ type alias TimelineEvent =
     , label : Maybe IssueLabel
     , assignee : Maybe User
     , milestone : Maybe Milestone
-    , source : Maybe { id : Int, actor : User, url : String }
-    , rename : Maybe { from : String, to : String }
+    , source : Maybe TimelineEventSource
+    , rename : Maybe TimelineEventRename
     }
+
+
+type alias TimelineEventSource =
+    { id : Int, actor : User, url : String }
+
+
+type alias TimelineEventRename =
+    { from : String, to : String }
 
 
 type alias Milestone =
@@ -229,7 +240,7 @@ fetchIssueTimeline token issue =
     Pagination.fetchAll
         ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/timeline?per_page=100")
         (Http.header "Accept" "application/vnd.github.mockingbird-preview" :: authHeaders token)
-        (rfc5988Strategy (decodeTimelineEvent issue))
+        (rfc5988Strategy decodeTimelineEvent)
         Nothing
 
 
@@ -299,6 +310,46 @@ decodeComment issue =
         (Json.Decode.field "reactions" decodeReactions)
 
 
+decodeTimelineEvent : Json.Decode.Decoder TimelineEvent
+decodeTimelineEvent =
+    Json.Decode.succeed TimelineEvent
+        |: (Json.Decode.field "id" Json.Decode.int)
+        |: (Json.Decode.field "url" Json.Decode.string)
+        |: (Json.Decode.field "actor" decodeUser)
+        |: (Json.Decode.field "event" Json.Decode.string)
+        |: (Json.Decode.maybe <| Json.Decode.field "commit_id" Json.Decode.string)
+        |: (Json.Decode.maybe <| Json.Decode.field "label" decodeIssueLabel)
+        |: (Json.Decode.maybe <| Json.Decode.field "assignee" decodeUser)
+        |: (Json.Decode.maybe <| Json.Decode.field "milestone" decodeMilestone)
+        |: (Json.Decode.maybe <| Json.Decode.field "source" decodeTimelineEventSource)
+        |: (Json.Decode.maybe <| Json.Decode.field "rename" decodeTimelineEventRename)
+
+
+decodeTimelineEventSource : Json.Decode.Decoder TimelineEventSource
+decodeTimelineEventSource =
+    Json.Decode.succeed TimelineEventSource
+        |: (Json.Decode.field "id" Json.Decode.int)
+        |: (Json.Decode.field "actor" decodeUser)
+        |: (Json.Decode.field "url" Json.Decode.string)
+
+
+decodeTimelineEventRename : Json.Decode.Decoder TimelineEventRename
+decodeTimelineEventRename =
+    Json.Decode.succeed TimelineEventRename
+        |: (Json.Decode.field "from" Json.Decode.string)
+        |: (Json.Decode.field "to" Json.Decode.string)
+
+
+decodeMilestone : Json.Decode.Decoder Milestone
+decodeMilestone =
+    Json.Decode.map5 Milestone
+        (Json.Decode.field "id" Json.Decode.int)
+        (Json.Decode.field "number" Json.Decode.int)
+        (Json.Decode.field "url" Json.Decode.string)
+        (Json.Decode.field "title" Json.Decode.string)
+        (Json.Decode.field "description" Json.Decode.string)
+
+
 decodeUser : Json.Decode.Decoder User
 decodeUser =
     Json.Decode.map4 User
@@ -338,7 +389,7 @@ rfc5988Strategy decode =
 
 parseLink : String -> Http.Response a -> Maybe Int
 parseLink rel response =
-    Dict.get "Link" response.headers
+    Dict.get "link" response.headers
         |> Maybe.andThen
             (\commaSeparatedCraziness ->
                 let
