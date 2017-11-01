@@ -6,12 +6,14 @@ module GitHub
         , IssueState(..)
         , IssueLabel
         , Comment
+        , TimelineEvent
         , User
         , fetchOrgMembers
         , fetchOrgRepos
         , fetchRepoIssues
         , fetchIssue
         , fetchIssueComments
+        , fetchIssueTimeline
         , issueScore
         , reactionCodes
         , reactionScore
@@ -36,7 +38,6 @@ type alias Token =
 type alias APIError =
     { message : String
     }
-
 
 
 type alias Repo =
@@ -84,6 +85,29 @@ type alias Comment =
     , url : String
     , user : User
     , reactions : Reactions
+    }
+
+
+type alias TimelineEvent =
+    { id : Int
+    , url : String
+    , actor : User
+    , event : String
+    , commitId : Maybe String
+    , label : Maybe IssueLabel
+    , assignee : Maybe User
+    , milestone : Maybe Milestone
+    , source : Maybe { id : Int, actor : User, url : String }
+    , rename : Maybe { from : String, to : String }
+    }
+
+
+type alias Milestone =
+    { id : Int
+    , number : Int
+    , url : String
+    , title : String
+    , description : String
     }
 
 
@@ -139,15 +163,18 @@ reactionScore reactions =
         ]
 
 
-auth : String -> List (String, String)
+auth : String -> List ( String, String )
 auth token =
     if token == "" then
         []
     else
-        [ ("Authorization", "token " ++ token) ]
+        [ ( "Authorization", "token " ++ token ) ]
+
 
 authHeaders : String -> List Http.Header
-authHeaders = List.map (uncurry Http.header) << auth
+authHeaders =
+    List.map (uncurry Http.header) << auth
+
 
 fetchOrgMembers : Token -> String -> Task Http.Error (List User)
 fetchOrgMembers token org =
@@ -194,6 +221,15 @@ fetchIssueComments token issue =
         ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
         (Http.header "Accept" "application/vnd.github.squirrel-girl-preview" :: authHeaders token)
         (rfc5988Strategy (decodeComment issue))
+        Nothing
+
+
+fetchIssueTimeline : Token -> Issue -> Task Http.Error (List TimelineEvent)
+fetchIssueTimeline token issue =
+    Pagination.fetchAll
+        ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/timeline?per_page=100")
+        (Http.header "Accept" "application/vnd.github.mockingbird-preview" :: authHeaders token)
+        (rfc5988Strategy (decodeTimelineEvent issue))
         Nothing
 
 
@@ -403,10 +439,10 @@ fromQuery : Dict String String -> Maybe Int
 fromQuery query =
     let
         num =
-            Maybe.withDefault 1 (
-                Dict.get "page" query
+            Maybe.withDefault 1
+                (Dict.get "page" query
                     |> Maybe.andThen parseNum
-            )
+                )
     in
         Just num
 

@@ -1,7 +1,7 @@
 {
     "version": "0.0.1",
-    "summary": "Tracker and GitHub dashboard",
-    "repository": "https://github.com/vito/customs.git",
+    "summary": "GitHub dashboard",
+    "repository": "https://github.com/vito/cadet.git",
     "license": "MIT",
     "source-directories": [
         "src",
