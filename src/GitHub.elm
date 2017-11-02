@@ -46,6 +46,7 @@ type alias APIError =
 type alias Repo =
     { id : Int
     , url : String
+    , htmlURL : String
     , owner : User
     , name : String
     , openIssues : Int
@@ -53,11 +54,11 @@ type alias Repo =
 
 
 type alias Issue =
-    { repo : Repo
-    , id : Int
+    { id : Int
+    , url : String
+    , htmlURL : String
     , createdAt : Date
     , updatedAt : Date
-    , url : String
     , state : IssueState
     , isPullRequest : Bool
     , user : User
@@ -81,21 +82,21 @@ type IssueState
 
 
 type alias Comment =
-    { issue : Issue
-    , id : Int
+    { id : Int
+    , url : String
+    , htmlURL : String
     , createdAt : Date
     , updatedAt : Date
-    , url : String
     , user : User
     , reactions : Reactions
     }
 
 
 type alias TimelineEvent =
-    { id : Int
-    , url : String
-    , actor : User
-    , event : String
+    { event :
+        String
+        -- , url : String
+    , actor : Maybe User
     , commitId : Maybe String
     , label : Maybe IssueLabel
     , assignee : Maybe User
@@ -106,7 +107,9 @@ type alias TimelineEvent =
 
 
 type alias TimelineEventSource =
-    { id : Int, actor : User, url : String }
+    { type_ : String
+    , issueID : Maybe Int
+    }
 
 
 type alias TimelineEventRename =
@@ -115,8 +118,9 @@ type alias TimelineEventRename =
 
 type alias Milestone =
     { id : Int
-    , number : Int
     , url : String
+    , htmlURL : String
+    , number : Int
     , title : String
     , description : String
     }
@@ -125,6 +129,7 @@ type alias Milestone =
 type alias User =
     { id : Int
     , url : String
+    , htmlURL : String
     , login : String
     , avatar : String
     }
@@ -213,7 +218,7 @@ fetchRepoIssues token repo =
         Pagination.fetchAll
             ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues?per_page=100")
             (Http.header "Accept" "application/vnd.github.squirrel-girl-preview" :: authHeaders token)
-            (rfc5988Strategy (decodeIssue repo))
+            (rfc5988Strategy decodeIssue)
             Nothing
 
 
@@ -222,23 +227,23 @@ fetchIssue token repo number =
     HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner.login ++ "/" ++ repo.name ++ "/issues/" ++ toString number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withHeader "Accept" "application/vnd.github.squirrel-girl-preview"
-        |> HttpBuilder.withExpect (Http.expectJson (decodeIssue repo))
+        |> HttpBuilder.withExpect (Http.expectJson decodeIssue)
         |> HttpBuilder.toTask
 
 
 fetchIssueComments : Token -> Issue -> Task Http.Error (List Comment)
 fetchIssueComments token issue =
     Pagination.fetchAll
-        ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/comments?per_page=100")
+        (issue.url ++ "/comments?per_page=100")
         (Http.header "Accept" "application/vnd.github.squirrel-girl-preview" :: authHeaders token)
-        (rfc5988Strategy (decodeComment issue))
+        (rfc5988Strategy decodeComment)
         Nothing
 
 
 fetchIssueTimeline : Token -> Issue -> Task Http.Error (List TimelineEvent)
 fetchIssueTimeline token issue =
     Pagination.fetchAll
-        ("https://api.github.com/repos/" ++ issue.repo.owner.login ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/timeline?per_page=100")
+        (issue.url ++ "/timeline?per_page=100")
         (Http.header "Accept" "application/vnd.github.mockingbird-preview" :: authHeaders token)
         (rfc5988Strategy decodeTimelineEvent)
         Nothing
@@ -252,21 +257,23 @@ decodeError =
 
 decodeRepo : Json.Decode.Decoder Repo
 decodeRepo =
-    Json.Decode.map5 Repo
+    Json.Decode.map6 Repo
         (Json.Decode.field "id" Json.Decode.int)
+        (Json.Decode.field "url" Json.Decode.string)
         (Json.Decode.field "html_url" Json.Decode.string)
         (Json.Decode.field "owner" decodeUser)
         (Json.Decode.field "name" Json.Decode.string)
         (Json.Decode.field "open_issues_count" Json.Decode.int)
 
 
-decodeIssue : Repo -> Json.Decode.Decoder Issue
-decodeIssue repo =
-    Json.Decode.succeed (Issue repo)
+decodeIssue : Json.Decode.Decoder Issue
+decodeIssue =
+    Json.Decode.succeed Issue
         |: (Json.Decode.field "id" Json.Decode.int)
+        |: (Json.Decode.field "url" Json.Decode.string)
+        |: (Json.Decode.field "html_url" Json.Decode.string)
         |: (Json.Decode.field "created_at" Json.Decode.Extra.date)
         |: (Json.Decode.field "updated_at" Json.Decode.Extra.date)
-        |: (Json.Decode.field "html_url" Json.Decode.string)
         |: (Json.Decode.field "state" decodeIssueState)
         |: (Json.Decode.map ((/=) Nothing) << Json.Decode.maybe <| Json.Decode.field "pull_request" Json.Decode.value)
         |: (Json.Decode.field "user" decodeUser)
@@ -299,13 +306,14 @@ decodeIssueLabel =
         (Json.Decode.field "color" Json.Decode.string)
 
 
-decodeComment : Issue -> Json.Decode.Decoder Comment
-decodeComment issue =
-    Json.Decode.map6 (Comment issue)
+decodeComment : Json.Decode.Decoder Comment
+decodeComment =
+    Json.Decode.map7 Comment
         (Json.Decode.field "id" Json.Decode.int)
+        (Json.Decode.field "url" Json.Decode.string)
+        (Json.Decode.field "html_url" Json.Decode.string)
         (Json.Decode.field "created_at" Json.Decode.Extra.date)
         (Json.Decode.field "updated_at" Json.Decode.Extra.date)
-        (Json.Decode.field "html_url" Json.Decode.string)
         (Json.Decode.field "user" decodeUser)
         (Json.Decode.field "reactions" decodeReactions)
 
@@ -313,10 +321,10 @@ decodeComment issue =
 decodeTimelineEvent : Json.Decode.Decoder TimelineEvent
 decodeTimelineEvent =
     Json.Decode.succeed TimelineEvent
-        |: (Json.Decode.field "id" Json.Decode.int)
-        |: (Json.Decode.field "url" Json.Decode.string)
-        |: (Json.Decode.field "actor" decodeUser)
         |: (Json.Decode.field "event" Json.Decode.string)
+        -- |: (Json.Decode.field "url" Json.Decode.string)
+        |:
+            (Json.Decode.maybe <| Json.Decode.field "actor" decodeUser)
         |: (Json.Decode.maybe <| Json.Decode.field "commit_id" Json.Decode.string)
         |: (Json.Decode.maybe <| Json.Decode.field "label" decodeIssueLabel)
         |: (Json.Decode.maybe <| Json.Decode.field "assignee" decodeUser)
@@ -328,9 +336,8 @@ decodeTimelineEvent =
 decodeTimelineEventSource : Json.Decode.Decoder TimelineEventSource
 decodeTimelineEventSource =
     Json.Decode.succeed TimelineEventSource
-        |: (Json.Decode.field "id" Json.Decode.int)
-        |: (Json.Decode.field "actor" decodeUser)
-        |: (Json.Decode.field "url" Json.Decode.string)
+        |: (Json.Decode.field "type" Json.Decode.string)
+        |: (Json.Decode.maybe <| Json.Decode.at [ "issue", "id" ] Json.Decode.int)
 
 
 decodeTimelineEventRename : Json.Decode.Decoder TimelineEventRename
@@ -342,18 +349,20 @@ decodeTimelineEventRename =
 
 decodeMilestone : Json.Decode.Decoder Milestone
 decodeMilestone =
-    Json.Decode.map5 Milestone
+    Json.Decode.map6 Milestone
         (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "number" Json.Decode.int)
         (Json.Decode.field "url" Json.Decode.string)
+        (Json.Decode.field "html_url" Json.Decode.string)
+        (Json.Decode.field "number" Json.Decode.int)
         (Json.Decode.field "title" Json.Decode.string)
         (Json.Decode.field "description" Json.Decode.string)
 
 
 decodeUser : Json.Decode.Decoder User
 decodeUser =
-    Json.Decode.map4 User
+    Json.Decode.map5 User
         (Json.Decode.field "id" Json.Decode.int)
+        (Json.Decode.field "url" Json.Decode.string)
         (Json.Decode.field "html_url" Json.Decode.string)
         (Json.Decode.field "login" Json.Decode.string)
         (Json.Decode.field "avatar_url" Json.Decode.string)

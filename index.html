@@ -15,7 +15,11 @@
       var node = document.getElementById("customs");
       var app = Elm.Main.embed(node, {
         githubOrganization: CUSTOMS_GITHUB_ORGANIZATION,
-        githubToken: CUSTOMS_GITHUB_TOKEN
+        githubToken: CUSTOMS_GITHUB_TOKEN,
+        windowSize: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }
       });
     </script>
   </body>
