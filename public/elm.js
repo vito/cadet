@@ -14288,8 +14288,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 391, column: 17},
-					end: {line: 399, column: 50}
+					start: {line: 433, column: 17},
+					end: {line: 441, column: 50}
 				},
 				_p8)('invalid hex');
 		}
@@ -14297,8 +14297,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 389, column: 9},
-				end: {line: 402, column: 42}
+				start: {line: 431, column: 9},
+				end: {line: 444, column: 42}
 			},
 			_p7)('invalid hex');
 	}
@@ -14358,13 +14358,13 @@ var _vito$cadet$Main$issueNode = function (node) {
 				_elm_lang$svg$Svg$circle,
 				{
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$r('10'),
+					_0: _elm_lang$svg$Svg_Attributes$r('14'),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$fill('#fff'),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$stroke('#333'),
+							_0: _elm_lang$svg$Svg_Attributes$stroke('#F4EAD5'),
 							_1: {
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$strokeWidth('3px'),
@@ -14383,13 +14383,38 @@ var _vito$cadet$Main$issueNode = function (node) {
 						}
 					}
 				},
-				{
-					ctor: '::',
-					_0: _elm_lang$svg$Svg$text(
-						_elm_lang$core$Basics$toString(node.label.value.number)),
-					_1: {ctor: '[]'}
-				}),
-			_1: {ctor: '[]'}
+				{ctor: '[]'}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$text_,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$x(
+							_elm_lang$core$Basics$toString(node.label.x)),
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$svg$Svg_Attributes$y(
+								_elm_lang$core$Basics$toString(node.label.y + 5)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Attributes$textAnchor('middle'),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Attributes$fill('#C6A49A'),
+									_1: {ctor: '[]'}
+								}
+							}
+						}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg$text(
+							_elm_lang$core$Basics$toString(node.label.value.number)),
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			}
 		});
 };
 var _vito$cadet$Main$linkPath = F2(
@@ -14434,10 +14459,10 @@ var _vito$cadet$Main$linkPath = F2(
 			_elm_lang$svg$Svg$line,
 			{
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$strokeWidth('2'),
+				_0: _elm_lang$svg$Svg_Attributes$strokeWidth('3'),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$stroke('#f00'),
+					_0: _elm_lang$svg$Svg_Attributes$stroke('#F4EAD5'),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$svg$Svg_Attributes$x1(
@@ -14565,22 +14590,35 @@ var _vito$cadet$Main$issueEntity = F3(
 			_1: s3
 		};
 	});
-var _vito$cadet$Main$updateContextWithValue = F2(
-	function (nodeCtx, value) {
+var _vito$cadet$Main$updateContextWithValue = F3(
+	function (_p23, nodeCtx, value) {
+		var _p24 = _p23;
+		var _p26 = _p24.width;
+		var _p25 = _p24.height;
 		var node = nodeCtx.node;
+		var bounded = _elm_lang$core$Native_Utils.update(
+			value,
+			{
+				x: (_elm_lang$core$Native_Utils.cmp(value.x, 0) < 0) ? 0 : ((_elm_lang$core$Native_Utils.cmp(
+					value.x,
+					_elm_lang$core$Basics$toFloat(_p26)) > 0) ? _elm_lang$core$Basics$toFloat(_p26) : value.x),
+				y: (_elm_lang$core$Native_Utils.cmp(value.y, 0) < 0) ? 0 : ((_elm_lang$core$Native_Utils.cmp(
+					value.y,
+					_elm_lang$core$Basics$toFloat(_p25)) > 0) ? _elm_lang$core$Basics$toFloat(_p25) : value.y)
+			});
 		return _elm_lang$core$Native_Utils.update(
 			nodeCtx,
 			{
 				node: _elm_lang$core$Native_Utils.update(
 					node,
-					{label: value})
+					{label: bounded})
 			});
 	});
-var _vito$cadet$Main$updateGraphWithList = function () {
+var _vito$cadet$Main$updateGraphWithList = function (windowSize) {
 	var graphUpdater = function (value) {
 		return _elm_lang$core$Maybe$map(
 			function (ctx) {
-				return A2(_vito$cadet$Main$updateContextWithValue, ctx, value);
+				return A3(_vito$cadet$Main$updateContextWithValue, windowSize, ctx, value);
 			});
 	};
 	return _elm_lang$core$List$foldr(
@@ -14592,26 +14630,43 @@ var _vito$cadet$Main$updateGraphWithList = function () {
 					graphUpdater(node),
 					graph);
 			}));
-}();
+};
 var _vito$cadet$Main$Config = F3(
 	function (a, b, c) {
 		return {githubToken: a, githubOrganization: b, windowSize: c};
 	});
-var _vito$cadet$Main$Model = F9(
-	function (a, b, c, d, e, f, g, h, i) {
-		return {config: a, error: b, repositories: c, members: d, issues: e, reposLoadingIssues: f, themWaiting: g, graph: h, simulation: i};
-	});
+var _vito$cadet$Main$Model = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {config: a, error: b, repositories: c, members: d, issues: e, issueTimelines: f, reposLoadingIssues: g, themWaiting: h, graph: i, simulation: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var _vito$cadet$Main$Error = function (a) {
 	return {ctor: 'Error', _0: a};
 };
 var _vito$cadet$Main$handleErr = F2(
 	function (ok, res) {
-		var _p23 = res;
-		if (_p23.ctor === 'Ok') {
-			return ok(_p23._0);
+		var _p27 = res;
+		if (_p27.ctor === 'Ok') {
+			return ok(_p27._0);
 		} else {
 			return _vito$cadet$Main$Error(
-				_elm_lang$core$Basics$toString(_p23._0));
+				_elm_lang$core$Basics$toString(_p27._0));
 		}
 	});
 var _vito$cadet$Main$IssueTimelineFetched = F2(
@@ -14640,12 +14695,12 @@ var _vito$cadet$Main$fetchIssues = F2(
 	});
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p24 = msg;
-		switch (_p24.ctor) {
+		var _p28 = msg;
+		switch (_p28.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
-				var _p25 = A2(
+				var _p29 = A2(
 					_gampleman$elm_visualization$Visualization_Force$tick,
 					model.simulation,
 					A2(
@@ -14654,14 +14709,14 @@ var _vito$cadet$Main$update = F2(
 							return _.label;
 						},
 						_elm_community$graph$Graph$nodes(model.graph)));
-				var newState = _p25._0;
-				var list = _p25._1;
+				var newState = _p29._0;
+				var list = _p29._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							graph: A2(_vito$cadet$Main$updateGraphWithList, model.graph, list),
+							graph: A3(_vito$cadet$Main$updateGraphWithList, model.config.windowSize, model.graph, list),
 							simulation: newState
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
@@ -14675,7 +14730,7 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p24._0})
+								{windowSize: _p28._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -14685,56 +14740,52 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							members: _elm_lang$core$Maybe$Just(_p24._0)
+							members: _elm_lang$core$Maybe$Just(_p28._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'RepositoriesFetched':
-				var _p26 = _p24._0;
+				var _p30 = _p28._0;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							repositories: _p26,
+							repositories: _p30,
 							reposLoadingIssues: _elm_lang$core$Set$fromList(
 								A2(
 									_elm_lang$core$List$map,
 									function (_) {
 										return _.id;
 									},
-									_p26))
+									_p30))
 						}),
 					_1: _elm_lang$core$Platform_Cmd$batch(
 						A2(
 							_elm_lang$core$List$map,
 							_vito$cadet$Main$fetchIssues(model.config),
-							_p26))
+							_p30))
 				};
 			case 'IssuesFetched':
-				var reposLoadingIssues = A2(_elm_lang$core$Set$remove, _p24._0.id, model.reposLoadingIssues);
-				var link = function (_p27) {
-					var _p28 = _p27;
-					return {ctor: '_Tuple2', _0: _p28.from, _1: _p28.to};
-				};
-				var allIssues = A2(_elm_lang$core$Basics_ops['++'], model.issues, _p24._1);
+				var reposLoadingIssues = A2(_elm_lang$core$Set$remove, _p28._0.id, model.reposLoadingIssues);
+				var allIssues = A2(_elm_lang$core$Basics_ops['++'], model.issues, _p28._1);
 				var graph = A2(
 					_elm_community$graph$Graph$fromNodesAndEdges,
 					_elm_lang$core$Tuple$first(
 						A3(
 							_elm_lang$core$List$foldl,
 							F2(
-								function (issue, _p29) {
-									var _p30 = _p29;
-									var _p31 = A3(_vito$cadet$Main$issueEntity, _p30._1, model.config.windowSize, issue);
-									var entity = _p31._0;
-									var nextSeed = _p31._1;
+								function (issue, _p31) {
+									var _p32 = _p31;
+									var _p33 = A3(_vito$cadet$Main$issueEntity, _p32._1, model.config.windowSize, issue);
+									var entity = _p33._0;
+									var nextSeed = _p33._1;
 									return {
 										ctor: '_Tuple2',
 										_0: {
 											ctor: '::',
 											_0: A2(_elm_community$graph$Graph$Node, issue.id, entity),
-											_1: _p30._0
+											_1: _p32._0
 										},
 										_1: nextSeed
 									};
@@ -14746,21 +14797,11 @@ var _vito$cadet$Main$update = F2(
 							},
 							allIssues)),
 					{ctor: '[]'});
-				var forces = {
-					ctor: '::',
-					_0: _gampleman$elm_visualization$Visualization_Force$links(
-						A2(
-							_elm_lang$core$List$map,
-							link,
-							_elm_community$graph$Graph$edges(graph))),
-					_1: {ctor: '[]'}
-				};
-				var simulation = _gampleman$elm_visualization$Visualization_Force$simulation(forces);
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{issues: allIssues, reposLoadingIssues: reposLoadingIssues, graph: graph, simulation: simulation}),
+						{issues: allIssues, reposLoadingIssues: reposLoadingIssues, graph: graph}),
 					_1: _elm_lang$core$Set$isEmpty(reposLoadingIssues) ? _elm_lang$core$Platform_Cmd$batch(
 						A2(
 							_elm_lang$core$List$map,
@@ -14768,23 +14809,24 @@ var _vito$cadet$Main$update = F2(
 							allIssues)) : _elm_lang$core$Platform_Cmd$none
 				};
 			case 'IssueTimelineFetched':
-				var _p35 = _p24._0;
-				var link = function (_p32) {
-					var _p33 = _p32;
-					return {ctor: '_Tuple2', _0: _p33.from, _1: _p33.to};
+				var _p38 = _p28._1;
+				var _p37 = _p28._0;
+				var link = function (_p34) {
+					var _p35 = _p34;
+					return {ctor: '_Tuple2', _0: _p35.from, _1: _p35.to};
 				};
 				var references = A2(
 					_elm_lang$core$List$filterMap,
 					function (event) {
-						var _p34 = event.source;
-						if (_p34.ctor === 'Just') {
-							return _p34._0.issueID;
+						var _p36 = event.source;
+						if (_p36.ctor === 'Just') {
+							return _p36._0.issueID;
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
 						}
 					},
-					_p24._1);
-				var newGraph = A3(
+					_p38);
+				var wiredGraph = A3(
 					_elm_lang$core$List$foldl,
 					F2(
 						function (referencer, graph) {
@@ -14796,10 +14838,10 @@ var _vito$cadet$Main$update = F2(
 										{
 											outgoing: A3(
 												_elm_community$intdict$IntDict$insert,
-												_p35.id,
+												_p37.id,
 												{ctor: '_Tuple0'},
 												nc.outgoing)
-										}) : (_elm_lang$core$Native_Utils.eq(nc.node.id, _p35.id) ? _elm_lang$core$Native_Utils.update(
+										}) : (_elm_lang$core$Native_Utils.eq(nc.node.id, _p37.id) ? _elm_lang$core$Native_Utils.update(
 										nc,
 										{
 											incoming: A3(
@@ -14819,7 +14861,7 @@ var _vito$cadet$Main$update = F2(
 						A2(
 							_elm_lang$core$List$map,
 							link,
-							_elm_community$graph$Graph$edges(newGraph))),
+							_elm_community$graph$Graph$edges(wiredGraph))),
 					_1: {
 						ctor: '::',
 						_0: _gampleman$elm_visualization$Visualization_Force$manyBody(
@@ -14828,16 +14870,39 @@ var _vito$cadet$Main$update = F2(
 								function (_) {
 									return _.id;
 								},
-								_elm_community$graph$Graph$nodes(newGraph))),
+								_elm_community$graph$Graph$nodes(wiredGraph))),
 						_1: {ctor: '[]'}
 					}
 				};
-				var newSimulation = _gampleman$elm_visualization$Visualization_Force$simulation(forces);
+				var timelines = A3(_elm_lang$core$Dict$insert, _p37.id, _p38, model.issueTimelines);
+				var allTimelinesLoaded = A3(
+					_elm_lang$core$Basics$flip,
+					_elm_lang$core$Basics$always,
+					A2(
+						_elm_lang$core$Debug$log,
+						'all?',
+						{
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Dict$size(timelines),
+							_1: _elm_lang$core$List$length(model.issues)
+						}),
+					_elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Dict$size(timelines),
+						_elm_lang$core$List$length(model.issues)));
+				var newGraph = allTimelinesLoaded ? A3(
+					_elm_community$graph$Graph$fold,
+					F2(
+						function (nc, g) {
+							return (_elm_community$intdict$IntDict$isEmpty(nc.incoming) && _elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? g : A2(_elm_community$graph$Graph$insert, nc, g);
+						}),
+					_elm_community$graph$Graph$empty,
+					wiredGraph) : wiredGraph;
+				var newSimulation = allTimelinesLoaded ? _gampleman$elm_visualization$Visualization_Force$simulation(forces) : model.simulation;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{graph: newGraph, simulation: newSimulation}),
+						{graph: newGraph, simulation: newSimulation, issueTimelines: timelines}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
@@ -14846,7 +14911,7 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							error: _elm_lang$core$Maybe$Just(_p24._0)
+							error: _elm_lang$core$Maybe$Just(_p28._0)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -14879,6 +14944,7 @@ var _vito$cadet$Main$init = function (config) {
 			repositories: {ctor: '[]'},
 			members: _elm_lang$core$Maybe$Nothing,
 			issues: {ctor: '[]'},
+			issueTimelines: _elm_lang$core$Dict$empty,
 			reposLoadingIssues: _elm_lang$core$Set$empty,
 			themWaiting: _elm_lang$core$Set$empty,
 			graph: _elm_community$graph$Graph$empty,

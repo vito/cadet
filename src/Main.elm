@@ -3,6 +3,7 @@ module Main exposing (..)
 import IntDict
 import Debug
 import Time
+import Dict exposing (Dict)
 import Graph exposing (Graph)
 import AnimationFrame
 import Svg exposing (Svg)
@@ -32,6 +33,7 @@ type alias Model =
     , repositories : List GitHub.Repo
     , members : Maybe (List GitHub.User)
     , issues : List GitHub.Issue
+    , issueTimelines : Dict Int (List GitHub.TimelineEvent)
     , reposLoadingIssues : Set Int
     , themWaiting : Set Int
     , graph : Graph Entity ()
@@ -71,6 +73,7 @@ init config =
       , repositories = []
       , members = Nothing
       , issues = []
+      , issueTimelines = Dict.empty
       , reposLoadingIssues = Set.empty
       , themWaiting = Set.empty
       , graph = Graph.empty
@@ -94,22 +97,40 @@ subscriptions model =
         ]
 
 
-updateGraphWithList : Graph Entity () -> List Entity -> Graph Entity ()
-updateGraphWithList =
+updateGraphWithList : Window.Size -> Graph Entity () -> List Entity -> Graph Entity ()
+updateGraphWithList windowSize =
     let
         graphUpdater value =
-            Maybe.map (\ctx -> updateContextWithValue ctx value)
+            Maybe.map (\ctx -> updateContextWithValue windowSize ctx value)
     in
         List.foldr (\node graph -> Graph.update node.id (graphUpdater node) graph)
 
 
-updateContextWithValue : Graph.NodeContext Entity () -> Entity -> Graph.NodeContext Entity ()
-updateContextWithValue nodeCtx value =
+updateContextWithValue : Window.Size -> Graph.NodeContext Entity () -> Entity -> Graph.NodeContext Entity ()
+updateContextWithValue { width, height } nodeCtx value =
     let
+        bounded =
+            { value
+                | x =
+                    if value.x < 0 then
+                        0
+                    else if value.x > toFloat width then
+                        toFloat width
+                    else
+                        value.x
+                , y =
+                    if value.y < 0 then
+                        0
+                    else if value.y > toFloat height then
+                        toFloat height
+                    else
+                        value.y
+            }
+
         node =
             nodeCtx.node
     in
-        { nodeCtx | node = { node | label = value } }
+        { nodeCtx | node = { node | label = bounded } }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -123,7 +144,7 @@ update msg model =
                 ( newState, list ) =
                     VF.tick model.simulation (List.map .label (Graph.nodes model.graph))
             in
-                ( { model | graph = updateGraphWithList model.graph list, simulation = newState }, Cmd.none )
+                ( { model | graph = updateGraphWithList model.config.windowSize model.graph list, simulation = newState }, Cmd.none )
 
         Resize size ->
             let
@@ -176,18 +197,6 @@ update msg model =
                 --     )
                 --     model.graph
                 --     issues
-                link { from, to } =
-                    ( from, to )
-
-                forces =
-                    [ -- VF.center (screenWidth / 2) (screenHeight / 2)
-                      VF.links <| List.map link <| Graph.edges graph
-                      -- , VF.manyBodyStrength -5 <| List.map .id <| Graph.nodes graph
-                    ]
-
-                simulation =
-                    VF.simulation forces
-
                 reposLoadingIssues =
                     Set.remove repo.id model.reposLoadingIssues
             in
@@ -195,7 +204,6 @@ update msg model =
                     | issues = allIssues
                     , reposLoadingIssues = reposLoadingIssues
                     , graph = graph
-                    , simulation = simulation
                   }
                 , if Set.isEmpty reposLoadingIssues then
                     Cmd.batch <|
@@ -206,6 +214,14 @@ update msg model =
 
         IssueTimelineFetched issue timeline ->
             let
+                timelines =
+                    Dict.insert issue.id timeline model.issueTimelines
+
+                allTimelinesLoaded =
+                    flip always (Debug.log "all?" ( Dict.size timelines, List.length model.issues )) <|
+                        Dict.size timelines
+                            == List.length model.issues
+
                 references =
                     List.filterMap
                         (\event ->
@@ -218,7 +234,7 @@ update msg model =
                         )
                         timeline
 
-                newGraph =
+                wiredGraph =
                     List.foldl
                         (\referencer graph ->
                             Graph.mapContexts
@@ -235,19 +251,36 @@ update msg model =
                         model.graph
                         references
 
+                newGraph =
+                    if allTimelinesLoaded then
+                        Graph.fold
+                            (\nc g ->
+                                if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
+                                    g
+                                else
+                                    Graph.insert nc g
+                            )
+                            Graph.empty
+                            wiredGraph
+                    else
+                        wiredGraph
+
                 link { from, to } =
                     ( from, to )
 
                 forces =
                     [ -- VF.center (screenWidth / 2) (screenHeight / 2)
-                      VF.links <| List.map link <| Graph.edges newGraph
-                    , VF.manyBody <| List.map .id <| Graph.nodes newGraph
+                      VF.links <| List.map link <| Graph.edges wiredGraph
+                    , VF.manyBody <| List.map .id <| Graph.nodes wiredGraph
                     ]
 
                 newSimulation =
-                    VF.simulation forces
+                    if allTimelinesLoaded then
+                        VF.simulation forces
+                    else
+                        model.simulation
             in
-                ( { model | graph = newGraph, simulation = newSimulation }, Cmd.none )
+                ( { model | graph = newGraph, simulation = newSimulation, issueTimelines = timelines }, Cmd.none )
 
         Error msg ->
             ( { model | error = Just msg }, Cmd.none )
@@ -331,8 +364,8 @@ linkPath graph edge =
                     { x = 0, y = 0 }
     in
         Svg.line
-            [ SA.strokeWidth "2"
-            , SA.stroke "#f00"
+            [ SA.strokeWidth "3"
+            , SA.stroke "#F4EAD5"
             , SA.x1 (toString source.x)
             , SA.y1 (toString source.y)
             , SA.x2 (toString target.x)
@@ -343,14 +376,23 @@ linkPath graph edge =
 
 issueNode : Graph.Node Entity -> Svg Msg
 issueNode node =
-    Svg.a [ SA.xlinkHref node.label.value.htmlURL ]
+    Svg.a
+        [ SA.xlinkHref node.label.value.htmlURL
+        ]
         [ Svg.circle
-            [ SA.r "10"
+            [ SA.r "14"
             , SA.fill "#fff"
-            , SA.stroke "#333"
+            , SA.stroke "#F4EAD5"
             , SA.strokeWidth "3px"
             , SA.cx (toString node.label.x)
             , SA.cy (toString node.label.y)
+            ]
+            []
+        , Svg.text_
+            [ SA.x (toString node.label.x)
+            , SA.y (toString (node.label.y + 5))
+            , SA.textAnchor "middle"
+            , SA.fill "#C6A49A"
             ]
             [ Svg.text (toString node.label.value.number)
             ]
