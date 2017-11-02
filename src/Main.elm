@@ -15,6 +15,7 @@ import Svg.Attributes as SA
 import Html exposing (Html)
 import Html.Attributes as HA
 import Visualization.Force as VF
+import Visualization.Shape as VS
 import ParseInt
 import Regex exposing (Regex)
 import Task exposing (Task)
@@ -101,25 +102,23 @@ updateGraphWithList windowSize =
         List.foldr (\node graph -> Graph.update node.id (graphUpdater node) graph)
 
 
+bind : Float -> Int -> Float -> Float
+bind target size gap =
+    if target < gap then
+        gap
+    else if target > toFloat size - gap then
+        toFloat size - gap
+    else
+        target
+
+
 updateContextWithValue : Window.Size -> Graph.NodeContext Entity () -> Entity -> Graph.NodeContext Entity ()
 updateContextWithValue { width, height } nodeCtx value =
     let
         bounded =
             { value
-                | x =
-                    if value.x < 0 then
-                        0
-                    else if value.x > toFloat width then
-                        toFloat width
-                    else
-                        value.x
-                , y =
-                    if value.y < 0 then
-                        0
-                    else if value.y > toFloat height then
-                        toFloat height
-                    else
-                        value.y
+                | x = bind value.x width 20
+                , y = bind value.y height 20
             }
 
         node =
@@ -233,12 +232,11 @@ update msg model =
                         wiredGraph
 
                 link { from, to } =
-                    ( from, to )
+                    { source = from, target = to, distance = 50, strength = Nothing }
 
                 forces =
-                    [ -- VF.center (screenWidth / 2) (screenHeight / 2)
-                      VF.links <| List.map link <| Graph.edges wiredGraph
-                    , VF.manyBody <| List.map .id <| Graph.nodes wiredGraph
+                    [ VF.customLinks 1 <| List.map link <| Graph.edges wiredGraph
+                    , VF.manyBodyStrength -20 <| List.map .id <| Graph.nodes wiredGraph
                     ]
 
                 newSimulation =
@@ -327,8 +325,8 @@ linkPath graph edge =
                     { x = 0, y = 0 }
     in
         Svg.line
-            [ SA.strokeWidth "3"
-            , SA.stroke "#F4EAD5"
+            [ SA.strokeWidth "4"
+            , SA.stroke "rgba(0,0,0,.2)"
             , SA.x1 (toString source.x)
             , SA.y1 (toString source.y)
             , SA.x2 (toString target.x)
@@ -339,27 +337,69 @@ linkPath graph edge =
 
 issueNode : Graph.Node Entity -> Svg Msg
 issueNode node =
-    Svg.a
-        [ SA.xlinkHref node.label.value.htmlURL
-        ]
-        [ Svg.circle
-            [ SA.r "14"
-            , SA.fill "#fff"
-            , SA.stroke "#F4EAD5"
-            , SA.strokeWidth "3px"
-            , SA.cx (toString node.label.x)
-            , SA.cy (toString node.label.y)
+    let
+        x =
+            node.label.x
+
+        y =
+            node.label.y
+
+        issue =
+            node.label.value
+
+        labels =
+            issue.labels
+
+        radius =
+            15
+
+        segments =
+            VS.pie
+                { startAngle = 0
+                , endAngle = 2 * pi
+                , padAngle = 0
+                , sortingFn = \_ _ -> EQ
+                , valueFn = always 1.0
+                , innerRadius = radius
+                , outerRadius = radius + 3
+                , cornerRadius = 0
+                , padRadius = 0
+                }
+                (List.repeat (List.length labels) 1)
+    in
+        Svg.g
+            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             ]
-            []
-        , Svg.text_
-            [ SA.x (toString node.label.x)
-            , SA.y (toString (node.label.y + 5))
-            , SA.textAnchor "middle"
-            , SA.fill "#C6A49A"
+            [ Svg.a
+                [ SA.xlinkHref issue.htmlURL
+                ]
+                ([ Svg.circle
+                    [ SA.r (toString radius)
+                    , SA.fill "#fff"
+                    ]
+                    []
+                 , Svg.text_
+                    [ SA.y "4"
+                    , SA.textAnchor "middle"
+                    , SA.fill "#C6A49A"
+                    , SA.fontWeight "bold"
+                    ]
+                    [ Svg.text (toString issue.number)
+                    ]
+                 ]
+                    ++ (List.map2
+                            (\arc label ->
+                                Svg.path
+                                    [ SA.d (VS.arc arc)
+                                    , SA.fill ("#" ++ label.color)
+                                    ]
+                                    []
+                            )
+                            segments
+                            labels
+                       )
+                )
             ]
-            [ Svg.text (toString node.label.value.number)
-            ]
-        ]
 
 
 hexRegex : Regex
