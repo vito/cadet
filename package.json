@@ -1,0 +1,15 @@
+{
+  "name": "cadet",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/vito/cadet",
+  "author": "Alex Suraci <suraci.alex@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "elm": "^0.18.0",
+    "fastify": "^0.31.0",
+    "fastify-static": "^0.3.0",
+    "github": "^12.0.1",
+    "xhr2": "^0.1.4"
+  }
+}

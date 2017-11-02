@@ -1,7 +1,3 @@
-# elm-package generated files
 elm-stuff/
-# elm-repl generated files
+node_modules/
 repl-temp-*
-
-# private config
-config.js

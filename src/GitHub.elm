@@ -20,6 +20,9 @@ module GitHub
         , issueScore
         , reactionCodes
         , reactionScore
+        , decodeRepo
+        , decodeIssue
+        , decodeTimelineEvent
         )
 
 import Date exposing (Date)
@@ -44,7 +47,8 @@ type alias APIError =
 
 
 type alias Repo =
-    { id : Int
+    { value : Json.Decode.Value
+    , id : Int
     , url : String
     , htmlURL : String
     , owner : User
@@ -54,7 +58,8 @@ type alias Repo =
 
 
 type alias Issue =
-    { id : Int
+    { value : Json.Decode.Value
+    , id : Int
     , url : String
     , htmlURL : String
     , createdAt : Date
@@ -93,9 +98,8 @@ type alias Comment =
 
 
 type alias TimelineEvent =
-    { event :
-        String
-        -- , url : String
+    { value : Json.Decode.Value
+    , event : String
     , actor : Maybe User
     , commitId : Maybe String
     , label : Maybe IssueLabel
@@ -257,7 +261,8 @@ decodeError =
 
 decodeRepo : Json.Decode.Decoder Repo
 decodeRepo =
-    Json.Decode.map6 Repo
+    Json.Decode.map7 Repo
+        Json.Decode.value
         (Json.Decode.field "id" Json.Decode.int)
         (Json.Decode.field "url" Json.Decode.string)
         (Json.Decode.field "html_url" Json.Decode.string)
@@ -269,6 +274,7 @@ decodeRepo =
 decodeIssue : Json.Decode.Decoder Issue
 decodeIssue =
     Json.Decode.succeed Issue
+        |: Json.Decode.value
         |: (Json.Decode.field "id" Json.Decode.int)
         |: (Json.Decode.field "url" Json.Decode.string)
         |: (Json.Decode.field "html_url" Json.Decode.string)
@@ -321,6 +327,7 @@ decodeComment =
 decodeTimelineEvent : Json.Decode.Decoder TimelineEvent
 decodeTimelineEvent =
     Json.Decode.succeed TimelineEvent
+        |: Json.Decode.value
         |: (Json.Decode.field "event" Json.Decode.string)
         -- |: (Json.Decode.field "url" Json.Decode.string)
         |:

@@ -10,12 +10,9 @@
   <body>
     <div id="customs"></div>
     <script type="text/javascript" src="public/elm.js"></script>
-    <script type="text/javascript" src="config.js"></script>
     <script type="text/javascript">
       var node = document.getElementById("customs");
       var app = Elm.Main.embed(node, {
-        githubOrganization: CUSTOMS_GITHUB_ORGANIZATION,
-        githubToken: CUSTOMS_GITHUB_TOKEN,
         windowSize: {
           width: window.innerWidth,
           height: window.innerHeight,

@@ -2,6 +2,10 @@ module Main exposing (..)
 
 import IntDict
 import Debug
+import Json.Decode
+import Json.Decode.Extra exposing ((|:))
+import Http
+import HttpBuilder
 import Time
 import Dict exposing (Dict)
 import Graph exposing (Graph)
@@ -13,7 +17,6 @@ import Html.Attributes as HA
 import Visualization.Force as VF
 import ParseInt
 import Regex exposing (Regex)
-import Set exposing (Set)
 import Task exposing (Task)
 import Window
 import Random
@@ -21,21 +24,16 @@ import GitHub
 
 
 type alias Config =
-    { githubToken : String
-    , githubOrganization : String
-    , windowSize : Window.Size
+    { windowSize : Window.Size
     }
 
 
 type alias Model =
     { config : Config
     , error : Maybe String
-    , repositories : List GitHub.Repo
-    , members : Maybe (List GitHub.User)
-    , issues : List GitHub.Issue
-    , issueTimelines : Dict Int (List GitHub.TimelineEvent)
-    , reposLoadingIssues : Set Int
-    , themWaiting : Set Int
+    , repos : List GitHub.Repo
+    , repoIssues : Dict String (List GitHub.Issue)
+    , issueTimelines : Dict String (List GitHub.TimelineEvent)
     , graph : Graph Entity ()
     , simulation : VF.State Graph.NodeId
     }
@@ -59,30 +57,27 @@ type Msg
     = Noop
     | Tick Time.Time
     | Resize Window.Size
-    | MembersFetched (List GitHub.User)
-    | RepositoriesFetched (List GitHub.Repo)
-    | IssuesFetched GitHub.Repo (List GitHub.Issue)
-    | IssueTimelineFetched GitHub.Issue (List GitHub.TimelineEvent)
-    | Error String
+    | DataFetched (Result Http.Error Data)
+
+
+type alias Data =
+    { repositories : List GitHub.Repo
+    , issues : Dict String (List GitHub.Issue)
+    , timelines : Dict String (List GitHub.TimelineEvent)
+    }
 
 
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , error = Nothing
-      , repositories = []
-      , members = Nothing
-      , issues = []
+      , repos = []
+      , repoIssues = Dict.empty
       , issueTimelines = Dict.empty
-      , reposLoadingIssues = Set.empty
-      , themWaiting = Set.empty
       , graph = Graph.empty
       , simulation = VF.simulation []
       }
-    , Cmd.batch
-        [ fetchRepositories config
-        , fetchMembers config
-        ]
+    , fetchData
     )
 
 
@@ -153,22 +148,10 @@ update msg model =
             in
                 ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
-        MembersFetched members ->
-            ( { model | members = Just members }, Cmd.none )
-
-        RepositoriesFetched repos ->
-            ( { model
-                | repositories = repos
-                , reposLoadingIssues = Set.fromList (List.map .id repos)
-              }
-            , Cmd.batch <|
-                List.map (fetchIssues model.config) repos
-            )
-
-        IssuesFetched repo issues ->
+        DataFetched (Ok data) ->
             let
                 allIssues =
-                    model.issues ++ issues
+                    List.concat (Dict.values data.issues)
 
                 graph =
                     Graph.fromNodesAndEdges
@@ -186,83 +169,67 @@ update msg model =
                         )
                         []
 
-                -- List.foldl
-                --     (\issue graph ->
-                --         Graph.insert
-                --             { node = Graph.Node issue.id (issueEntity (Debug.log "size" <| Graph.size graph) issue)
-                --             , incoming = IntDict.empty
-                --             , outgoing = IntDict.empty
-                --             }
-                --             graph
-                --     )
-                --     model.graph
-                --     issues
-                reposLoadingIssues =
-                    Set.remove repo.id model.reposLoadingIssues
-            in
-                ( { model
-                    | issues = allIssues
-                    , reposLoadingIssues = reposLoadingIssues
-                    , graph = graph
-                  }
-                , if Set.isEmpty reposLoadingIssues then
-                    Cmd.batch <|
-                        List.map (fetchIssueTimeline model.config) allIssues
-                  else
-                    Cmd.none
-                )
-
-        IssueTimelineFetched issue timeline ->
-            let
-                timelines =
-                    Dict.insert issue.id timeline model.issueTimelines
-
-                allTimelinesLoaded =
-                    flip always (Debug.log "all?" ( Dict.size timelines, List.length model.issues )) <|
-                        Dict.size timelines
-                            == List.length model.issues
+                allEvents =
+                    List.concat (Dict.values data.timelines)
 
                 references =
-                    List.filterMap
-                        (\event ->
-                            case event.source of
-                                Just { type_, issueID } ->
-                                    issueID
+                    Dict.foldl
+                        (\targetIDStr events pairs ->
+                            let
+                                targetID =
+                                    case String.toInt targetIDStr of
+                                        Ok id ->
+                                            id
 
-                                _ ->
-                                    Nothing
+                                        Err err ->
+                                            Debug.crash err
+                            in
+                                List.filterMap
+                                    (\event ->
+                                        case event.source of
+                                            Just { type_, issueID } ->
+                                                case issueID of
+                                                    Just sourceID ->
+                                                        Just ( targetID, sourceID )
+
+                                                    _ ->
+                                                        Nothing
+
+                                            _ ->
+                                                Nothing
+                                    )
+                                    events
+                                    ++ pairs
                         )
-                        timeline
+                        []
+                        data.timelines
 
                 wiredGraph =
                     List.foldl
-                        (\referencer graph ->
+                        (\( targetID, sourceID ) graph ->
                             Graph.mapContexts
                                 (\nc ->
-                                    if nc.node.id == referencer then
-                                        { nc | outgoing = IntDict.insert issue.id () nc.outgoing }
-                                    else if nc.node.id == issue.id then
-                                        { nc | incoming = IntDict.insert referencer () nc.incoming }
+                                    if nc.node.id == sourceID then
+                                        { nc | outgoing = IntDict.insert targetID () nc.outgoing }
+                                    else if nc.node.id == targetID then
+                                        { nc | incoming = IntDict.insert sourceID () nc.incoming }
                                     else
                                         nc
                                 )
                                 graph
                         )
-                        model.graph
+                        graph
                         references
 
                 newGraph =
-                    if allTimelinesLoaded then
-                        Graph.fold
-                            (\nc g ->
-                                if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
-                                    g
-                                else
-                                    Graph.insert nc g
-                            )
-                            Graph.empty
-                            wiredGraph
-                    else
+                    Graph.fold
+                        (\nc g ->
+                            if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
+                                g
+                            else
+                                Graph.insert nc g
+                        )
+                        Graph.empty
                         wiredGraph
 
                 link { from, to } =
@@ -275,15 +242,21 @@ update msg model =
                     ]
 
                 newSimulation =
-                    if allTimelinesLoaded then
-                        VF.simulation forces
-                    else
-                        model.simulation
+                    VF.simulation forces
             in
-                ( { model | graph = newGraph, simulation = newSimulation, issueTimelines = timelines }, Cmd.none )
+                ( { model
+                    | repos = data.repositories
+                    , repoIssues = data.issues
+                    , issueTimelines = data.timelines
+                    , graph = newGraph
+                    , simulation = newSimulation
+                  }
+                , Cmd.none
+                )
 
-        Error msg ->
-            ( { model | error = Just msg }, Cmd.none )
+        DataFetched (Err msg) ->
+            flip always (Debug.log "error" msg) <|
+                ( model, Cmd.none )
 
 
 issueEntity : Random.Seed -> Window.Size -> GitHub.Issue -> ( Entity, Random.Seed )
@@ -311,16 +284,6 @@ issueEntity s1 { width, height } issue =
           }
         , s3
         )
-
-
-
--- lastActivityIsUs : Model -> List GitHub.TimelineEvent -> Bool
--- lastActivityIsUs model timeline =
---     case List.head (List.reverse timeline) of
---         Just event ->
---             isOrgMember model.members event.actor
---         Nothing ->
---             False
 
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
@@ -397,11 +360,6 @@ issueNode node =
             [ Svg.text (toString node.label.value.number)
             ]
         ]
-
-
-theyAreWaiting : Model -> GitHub.Issue -> Bool
-theyAreWaiting model issue =
-    Set.member issue.id model.themWaiting
 
 
 hexRegex : Regex
@@ -493,43 +451,17 @@ issueFlair { url, reactions, commentCount } =
             reactionElements
 
 
-fetchRepositories : Config -> Cmd Msg
-fetchRepositories config =
-    Task.attempt (handleErr RepositoriesFetched) <|
-        GitHub.fetchOrgRepos
-            config.githubToken
-            config.githubOrganization
+fetchData : Cmd Msg
+fetchData =
+    HttpBuilder.get "/data"
+        |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.toTask
+        |> Task.attempt DataFetched
 
 
-fetchIssues : Config -> GitHub.Repo -> Cmd Msg
-fetchIssues config repo =
-    Task.attempt (handleErr <| IssuesFetched repo) <|
-        GitHub.fetchRepoIssues
-            config.githubToken
-            repo
-
-
-fetchIssueTimeline : Config -> GitHub.Issue -> Cmd Msg
-fetchIssueTimeline config issue =
-    Task.attempt (handleErr <| IssueTimelineFetched issue) <|
-        GitHub.fetchIssueTimeline
-            config.githubToken
-            issue
-
-
-fetchMembers : Config -> Cmd Msg
-fetchMembers config =
-    Task.attempt (handleErr MembersFetched) <|
-        GitHub.fetchOrgMembers
-            config.githubToken
-            config.githubOrganization
-
-
-handleErr : (a -> Msg) -> Result x a -> Msg
-handleErr ok res =
-    case res of
-        Ok x ->
-            ok x
-
-        Err x ->
-            Error (toString x)
+decodeData : Json.Decode.Decoder Data
+decodeData =
+    Json.Decode.succeed Data
+        |: (Json.Decode.field "repositories" <| Json.Decode.list GitHub.decodeRepo)
+        |: (Json.Decode.field "issues" <| Json.Decode.dict (Json.Decode.list GitHub.decodeIssue))
+        |: (Json.Decode.field "timelines" <| Json.Decode.dict (Json.Decode.list GitHub.decodeTimelineEvent))
