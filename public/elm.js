@@ -16672,14 +16672,6 @@ var _vito$cadet$GitHub$rfc5988Strategy = function (decode) {
 		content: _elm_lang$core$Json_Decode$list(decode)
 	};
 };
-var _vito$cadet$GitHub$excludeTracksuitComment = _elm_lang$core$Json_Decode$map(
-	A2(
-		_elm_lang$core$Basics$flip,
-		F2(
-			function (x, y) {
-				return x - y;
-			}),
-		1));
 var _vito$cadet$GitHub$auth = function (token) {
 	return _elm_lang$core$Native_Utils.eq(token, '') ? {ctor: '[]'} : {
 		ctor: '::',
@@ -17056,10 +17048,7 @@ var _vito$cadet$GitHub$decodeIssue = A2(
 						A2(_elm_lang$core$Json_Decode$field, 'user', _vito$cadet$GitHub$decodeUser)),
 					A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int)),
 				A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string)),
-			A2(
-				_elm_lang$core$Json_Decode$field,
-				'comments',
-				_vito$cadet$GitHub$excludeTracksuitComment(_elm_lang$core$Json_Decode$int))),
+			A2(_elm_lang$core$Json_Decode$field, 'comments', _elm_lang$core$Json_Decode$int)),
 		A2(_elm_lang$core$Json_Decode$field, 'reactions', _vito$cadet$GitHub$decodeReactions)),
 	A2(
 		_elm_lang$core$Json_Decode$field,

@@ -285,7 +285,7 @@ decodeIssue =
         |: (Json.Decode.field "user" decodeUser)
         |: (Json.Decode.field "number" Json.Decode.int)
         |: (Json.Decode.field "title" Json.Decode.string)
-        |: (Json.Decode.field "comments" <| excludeTracksuitComment (Json.Decode.int))
+        |: (Json.Decode.field "comments" Json.Decode.int)
         |: (Json.Decode.field "reactions" decodeReactions)
         |: (Json.Decode.field "labels" <| Json.Decode.list decodeIssueLabel)
 
@@ -373,11 +373,6 @@ decodeUser =
         (Json.Decode.field "html_url" Json.Decode.string)
         (Json.Decode.field "login" Json.Decode.string)
         (Json.Decode.field "avatar_url" Json.Decode.string)
-
-
-excludeTracksuitComment : Json.Decode.Decoder Int -> Json.Decode.Decoder Int
-excludeTracksuitComment =
-    Json.Decode.map (flip (-) 1)
 
 
 decodeReactions : Json.Decode.Decoder Reactions
