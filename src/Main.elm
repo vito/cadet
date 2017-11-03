@@ -11,8 +11,10 @@ import Time
 import Dict exposing (Dict)
 import Graph exposing (Graph)
 import AnimationFrame
+import Set exposing (Set)
 import Svg exposing (Svg)
 import Svg.Attributes as SA
+import Svg.Events as SE
 import Html exposing (Html)
 import Html.Attributes as HA
 import Visualization.Force as VF
@@ -36,6 +38,7 @@ type alias Model =
     , repoIssues : Dict String (List GitHub.Issue)
     , issueTimelines : Dict String (List GitHub.TimelineEvent)
     , issueGraphs : List (ForceGraph GitHub.Issue)
+    , issueBubbles : Set Int
     }
 
 
@@ -64,6 +67,7 @@ type Msg
     | Tick Time.Time
     | Resize Window.Size
     | DataFetched (Result Http.Error Data)
+    | RevealIssue Int
 
 
 type alias Data =
@@ -80,6 +84,7 @@ init config =
       , repoIssues = Dict.empty
       , issueTimelines = Dict.empty
       , issueGraphs = []
+      , issueBubbles = Set.empty
       }
     , fetchData
     )
@@ -217,6 +222,9 @@ update msg model =
             in
                 ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
+        RevealIssue issueId ->
+            ( { model | issueBubbles = Set.insert issueId model.issueBubbles }, Cmd.none )
+
         DataFetched (Ok data) ->
             let
                 allIssues =
@@ -342,12 +350,8 @@ issueEntity s1 { width, height } issue =
         initialRadius =
             30.0
     in
-        ( { x =
-                x
-                --toFloat (index % 33) * (initialRadius + 5) + initialRadius
-          , y =
-                y
-                --(toFloat <| index // 33) * (initialRadius + 5) + initialRadius
+        ( { x = x
+          , y = y
           , vx = 0.0
           , vy = 0.0
           , id = issue.id
@@ -364,8 +368,30 @@ isOrgMember users user =
 
 view : Model -> Html Msg
 view model =
-    Html.div [] <|
-        List.map (viewGraph model) (List.reverse <| List.sortWith graphCompare model.issueGraphs)
+    Html.div []
+        [ Html.div [] <|
+            List.map (viewGraph model) (List.reverse <| List.sortWith graphCompare model.issueGraphs)
+        , Html.div [] <|
+            List.map (viewBubble model) (Set.toList model.issueBubbles)
+        ]
+
+
+viewBubble : Model -> Int -> Html Msg
+viewBubble model issueId =
+    let
+        graphs =
+            List.filter (Graph.member issueId) (List.map .graph model.issueGraphs)
+
+        node =
+            case graphs of
+                [ graph ] ->
+                    Graph.get issueId graph
+
+                _ ->
+                    Debug.crash "impossible"
+    in
+        -- Html.div [HA.style [("position", "absolute"), ("top", toString node.label.x ++ "px"), ("left", toString node.label.x ++ "px")
+        Html.text "hi"
 
 
 graphCompare : ForceGraph GitHub.Issue -> ForceGraph GitHub.Issue -> Order
@@ -402,7 +428,7 @@ issueNodeBounds nc =
         ( x - radius, y - radius, x + radius, y + radius )
 
 
-viewGraph : Model -> ForceGraph GitHub.Issue -> Html Msg
+viewGraph : Model -> ForceGraph GitHub.Issue -> ( Svg Msg, ( Float, Float ) )
 viewGraph model { graph } =
     let
         nodeContexts =
@@ -436,15 +462,15 @@ viewGraph model { graph } =
         height =
             maxY - minY
     in
-        Svg.svg
-            [ SA.width (toString width ++ "px")
-            , SA.height (toString height ++ "px")
-            , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
+        ( Svg.symbol
+            [ SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
             [ Svg.g [ SA.class "links" ] (List.map (linkPath graph) (Graph.edges graph))
             , Svg.g [ SA.class "flairs" ] (List.map issueFlair issues)
             , Svg.g [ SA.class "nodes" ] (List.map issueNode issues)
             ]
+        , ( width, height )
+        )
 
 
 linkPath : Graph (ForceNode n) () -> Graph.Edge () -> Svg Msg
@@ -623,6 +649,7 @@ issueNode ( { node, incoming, outgoing } as nc, mevents ) =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+            , SE.onMouseOver (RevealIssue issue.id)
             ]
             [ Svg.a
                 [ SA.xlinkHref issue.htmlURL
