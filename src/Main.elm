@@ -322,8 +322,7 @@ forceGraph graph =
                 distance =
                     case ( Graph.get from graph, Graph.get to graph ) of
                         ( Just fnc, Just tnc ) ->
-                            -- 30 + (max (IntDict.size tnc.incoming) (IntDict.size fnc.outgoing) * 10)
-                            40
+                            40 + (max (IntDict.size tnc.incoming) (IntDict.size fnc.outgoing) * 5)
 
                         _ ->
                             Debug.crash "impossible: unknown target"
@@ -376,7 +375,7 @@ isOrgMember users user =
 view : Model -> Html Msg
 view model =
     Html.div [] <|
-        List.map (viewGraph 500 500) model.issueGraphs
+        List.map (viewGraph 500 500) (List.reverse <| List.sortBy (.graph >> Graph.size) model.issueGraphs)
 
 
 viewGraph : Int -> Int -> ForceGraph GitHub.Issue -> Html Msg
