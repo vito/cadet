@@ -365,7 +365,41 @@ isOrgMember users user =
 view : Model -> Html Msg
 view model =
     Html.div [] <|
-        List.map (viewGraph model) (List.reverse <| List.sortBy (.graph >> Graph.size) model.issueGraphs)
+        List.map (viewGraph model) (List.reverse <| List.sortWith graphCompare model.issueGraphs)
+
+
+graphCompare : ForceGraph GitHub.Issue -> ForceGraph GitHub.Issue -> Order
+graphCompare a b =
+    case compare (Graph.size a.graph) (Graph.size b.graph) of
+        EQ ->
+            let
+                graphScore =
+                    List.foldl (+) 0 << List.map (.label >> nodeScore) << Graph.nodes
+            in
+                compare (graphScore a.graph) (graphScore b.graph)
+
+        x ->
+            x
+
+
+nodeScore : ForceNode GitHub.Issue -> Int
+nodeScore fn =
+    GitHub.issueScore fn.value
+
+
+issueNodeBounds : Graph.NodeContext (ForceNode GitHub.Issue) () -> ( Float, Float, Float, Float )
+issueNodeBounds nc =
+    let
+        x =
+            nc.node.label.x
+
+        y =
+            nc.node.label.y
+
+        radius =
+            issueRadiusWithFlair nc
+    in
+        ( x - radius, y - radius, x + radius, y + radius )
 
 
 viewGraph : Model -> ForceGraph GitHub.Issue -> Html Msg
@@ -378,20 +412,23 @@ viewGraph model { graph } =
             List.map (\nc -> ( nc, Dict.get (toString nc.node.label.value.id) model.issueTimelines )) <|
                 nodeContexts
 
+        bounds =
+            List.map issueNodeBounds nodeContexts
+
         padding =
             50
 
         minX =
-            List.foldl (\nc acc -> min nc.node.label.x acc) 999999 nodeContexts - padding
+            List.foldl (\( x1, _, _, _ ) acc -> min x1 acc) 999999 bounds - padding
 
         minY =
-            List.foldl (\nc acc -> min nc.node.label.y acc) 999999 nodeContexts - padding
+            List.foldl (\( _, y1, _, _ ) acc -> min y1 acc) 999999 bounds - padding
 
         maxX =
-            List.foldl (\nc acc -> max nc.node.label.x acc) 0 nodeContexts + padding
+            List.foldl (\( _, _, x2, _ ) acc -> max x2 acc) 0 bounds + padding
 
         maxY =
-            List.foldl (\nc acc -> max nc.node.label.y acc) 0 nodeContexts + padding
+            List.foldl (\( _, _, _, y2 ) acc -> max y2 acc) 0 bounds + padding
 
         width =
             maxX - minX
@@ -445,6 +482,31 @@ issueRadius { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
+issueRadiusWithLabels : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadiusWithLabels =
+    issueRadius >> ((+) 3)
+
+
+flairRadiusBase : Float
+flairRadiusBase =
+    16
+
+
+issueRadiusWithFlair : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadiusWithFlair nc =
+    let
+        issue =
+            nc.node.label.value
+
+        reactionCounts =
+            List.map Tuple.second (GitHub.reactionCodes issue.reactions)
+
+        highestFlair =
+            List.foldl (\num acc -> max num acc) 0 (issue.commentCount :: reactionCounts)
+    in
+        issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
+
+
 issueFlair : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
 issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
     let
@@ -458,7 +520,7 @@ issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
             node.label.value
 
         radius =
-            issueRadius nc
+            issueRadiusWithLabels nc
 
         reactions =
             List.filter (Tuple.second >> flip (>) 0) <|
@@ -473,8 +535,8 @@ issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
                         , padAngle = 0.03
                         , sortingFn = \_ _ -> EQ
                         , valueFn = always 1.0
-                        , innerRadius = radius + 3
-                        , outerRadius = radius + 18 + toFloat count
+                        , innerRadius = radius
+                        , outerRadius = radius + flairRadiusBase + toFloat count
                         , cornerRadius = 3
                         , padRadius = 0
                         }
