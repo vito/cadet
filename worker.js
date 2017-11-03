@@ -6533,6 +6533,10 @@ var _elm_community$json_extra$Json_Decode_Extra$andMap = _elm_lang$core$Json_Dec
 var _elm_community$json_extra$Json_Decode_Extra_ops = _elm_community$json_extra$Json_Decode_Extra_ops || {};
 _elm_community$json_extra$Json_Decode_Extra_ops['|:'] = _elm_lang$core$Basics$flip(_elm_community$json_extra$Json_Decode_Extra$andMap);
 
+var _elm_lang$core$Process$kill = _elm_lang$core$Native_Scheduler.kill;
+var _elm_lang$core$Process$sleep = _elm_lang$core$Native_Scheduler.sleep;
+var _elm_lang$core$Process$spawn = _elm_lang$core$Native_Scheduler.spawn;
+
 //import Maybe, Native.List //
 
 var _elm_lang$core$Native_Regex = function() {
@@ -7936,210 +7940,214 @@ var _vito$cadet$Main$Flags = F2(
 	function (a, b) {
 		return {githubToken: a, githubOrg: b};
 	});
-var _vito$cadet$Main$Model = F5(
-	function (a, b, c, d, e) {
-		return {githubToken: a, githubOrg: b, repos: c, issues: d, timelines: e};
+var _vito$cadet$Main$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {githubToken: a, githubOrg: b, repos: c, issues: d, timelines: e, failedQueue: f};
 	});
 var _vito$cadet$Main$TimelineFetched = F2(
 	function (a, b) {
 		return {ctor: 'TimelineFetched', _0: a, _1: b};
 	});
-var _vito$cadet$Main$RefreshTimelines = {ctor: 'RefreshTimelines'};
+var _vito$cadet$Main$fetchTimeline = F3(
+	function (model, delay, issue) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			_vito$cadet$Main$TimelineFetched(issue),
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p0) {
+					return A2(_vito$cadet$GitHub$fetchIssueTimeline, model.githubToken, issue);
+				},
+				_elm_lang$core$Process$sleep(delay)));
+	});
 var _vito$cadet$Main$IssuesFetched = F2(
 	function (a, b) {
 		return {ctor: 'IssuesFetched', _0: a, _1: b};
 	});
-var _vito$cadet$Main$RefreshIssues = {ctor: 'RefreshIssues'};
+var _vito$cadet$Main$fetchIssues = F3(
+	function (model, delay, repo) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			_vito$cadet$Main$IssuesFetched(repo),
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p1) {
+					return A2(_vito$cadet$GitHub$fetchRepoIssues, model.githubToken, repo);
+				},
+				_elm_lang$core$Process$sleep(delay)));
+	});
 var _vito$cadet$Main$RepositoriesFetched = function (a) {
 	return {ctor: 'RepositoriesFetched', _0: a};
 };
+var _vito$cadet$Main$fetchRepos = function (model) {
+	return A2(
+		_elm_lang$core$Task$attempt,
+		_vito$cadet$Main$RepositoriesFetched,
+		A2(_vito$cadet$GitHub$fetchOrgRepos, model.githubToken, model.githubOrg));
+};
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p0 = msg;
-		switch (_p0.ctor) {
-			case 'RefreshRepositories':
+		var _p2 = msg;
+		switch (_p2.ctor) {
+			case 'Refresh':
 				return {
 					ctor: '_Tuple2',
 					_0: model,
-					_1: A2(
-						_elm_lang$core$Task$attempt,
-						_vito$cadet$Main$RepositoriesFetched,
-						A2(_vito$cadet$GitHub$fetchOrgRepos, model.githubToken, model.githubOrg))
+					_1: _vito$cadet$Main$fetchRepos(model)
+				};
+			case 'Retry':
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{
+							failedQueue: {ctor: '[]'}
+						}),
+					_1: _elm_lang$core$Platform_Cmd$batch(model.failedQueue)
 				};
 			case 'RepositoriesFetched':
-				if (_p0._0.ctor === 'Ok') {
-					var _p3 = _p0._0._0;
-					var _p1 = {
+				if (_p2._0.ctor === 'Ok') {
+					var _p3 = _p2._0._0;
+					var staggeredIssuesFetch = function (i) {
+						return A2(
+							_vito$cadet$Main$fetchIssues,
+							model,
+							(_elm_lang$core$Basics$toFloat(i) * 100) * _elm_lang$core$Time$millisecond);
+					};
+					var fetch = A2(_elm_lang$core$List$indexedMap, staggeredIssuesFetch, _p3);
+					var updateData = _vito$cadet$Main$setRepositories(
+						A2(
+							_elm_lang$core$List$map,
+							function (_) {
+								return _.value;
+							},
+							_p3));
+					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{repos: _p3}),
-						_1: _vito$cadet$Main$setRepositories(
-							A2(
-								_elm_lang$core$List$map,
-								function (_) {
-									return _.value;
-								},
-								_p3))
+						_1: _elm_lang$core$Platform_Cmd$batch(
+							{ctor: '::', _0: updateData, _1: fetch})
 					};
-					var newModel = _p1._0;
-					var newMsg = _p1._1;
-					if (_elm_lang$core$Dict$isEmpty(model.issues)) {
-						var _p2 = A2(_vito$cadet$Main$update, _vito$cadet$Main$RefreshIssues, newModel);
-						var refreshModel = _p2._0;
-						var refreshMsg = _p2._1;
-						return {
-							ctor: '_Tuple2',
-							_0: refreshModel,
-							_1: _elm_lang$core$Platform_Cmd$batch(
-								{
-									ctor: '::',
-									_0: newMsg,
-									_1: {
-										ctor: '::',
-										_0: refreshMsg,
-										_1: {ctor: '[]'}
-									}
-								})
-						};
-					} else {
-						return {ctor: '_Tuple2', _0: newModel, _1: newMsg};
-					}
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'failed to fetch repositories', _p0._0._0),
+						A2(_elm_lang$core$Debug$log, 'failed to fetch repositories', _p2._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
-			case 'RefreshIssues':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						A2(
-							_elm_lang$core$List$map,
-							function (repo) {
-								return A2(
-									_elm_lang$core$Task$attempt,
-									_vito$cadet$Main$IssuesFetched(repo),
-									A2(_vito$cadet$GitHub$fetchRepoIssues, model.githubToken, repo));
-							},
-							model.repos))
-				};
 			case 'IssuesFetched':
-				if (_p0._1.ctor === 'Ok') {
-					var _p6 = _p0._0;
-					var _p5 = _p0._1._0;
-					var _p4 = {
+				if (_p2._1.ctor === 'Ok') {
+					var _p5 = _p2._0;
+					var _p4 = _p2._1._0;
+					var staggeredTimelineFetch = function (i) {
+						return A2(
+							_vito$cadet$Main$fetchTimeline,
+							model,
+							(_elm_lang$core$Basics$toFloat(i) * 100) * _elm_lang$core$Time$millisecond);
+					};
+					var fetch = A2(_elm_lang$core$List$indexedMap, staggeredTimelineFetch, _p4);
+					var updateData = _vito$cadet$Main$setIssues(
+						{
+							ctor: '_Tuple2',
+							_0: _p5.id,
+							_1: A2(
+								_elm_lang$core$List$map,
+								function (_) {
+									return _.value;
+								},
+								_p4)
+						});
+					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								issues: A3(_elm_lang$core$Dict$insert, _p6.id, _p5, model.issues)
+								issues: A3(_elm_lang$core$Dict$insert, _p5.id, _p4, model.issues)
 							}),
-						_1: _vito$cadet$Main$setIssues(
-							{
-								ctor: '_Tuple2',
-								_0: _p6.id,
-								_1: A2(
-									_elm_lang$core$List$map,
-									function (_) {
-										return _.value;
-									},
-									_p5)
-							})
+						_1: _elm_lang$core$Platform_Cmd$batch(
+							{ctor: '::', _0: updateData, _1: fetch})
 					};
-					var newModel = _p4._0;
-					var newMsg = _p4._1;
-					var fetchMissingTimelines = A3(
-						_elm_lang$core$List$foldl,
-						F2(
-							function (issue, msg) {
-								return A2(_elm_lang$core$Dict$member, issue.id, model.timelines) ? msg : _elm_lang$core$Platform_Cmd$batch(
-									{
-										ctor: '::',
-										_0: msg,
-										_1: {
-											ctor: '::',
-											_0: A2(
-												_elm_lang$core$Task$attempt,
-												_vito$cadet$Main$TimelineFetched(issue),
-												A2(_vito$cadet$GitHub$fetchIssueTimeline, model.githubToken, issue)),
-											_1: {ctor: '[]'}
-										}
-									});
-							}),
-						newMsg,
-						_p5);
-					return {ctor: '_Tuple2', _0: newModel, _1: fetchMissingTimelines};
 				} else {
+					var _p6 = _p2._0;
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
 						A2(
 							_elm_lang$core$Debug$log,
-							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch issues for ', _p0._0.htmlURL),
-							_p0._1._0),
-						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch issues for ', _p6.htmlURL),
+							_p2._1._0),
+						{
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Native_Utils.update(
+								model,
+								{
+									failedQueue: {
+										ctor: '::',
+										_0: A3(_vito$cadet$Main$fetchIssues, model, 0, _p6),
+										_1: model.failedQueue
+									}
+								}),
+							_1: _elm_lang$core$Platform_Cmd$none
+						});
 				}
-			case 'RefreshTimelines':
-				return {
-					ctor: '_Tuple2',
-					_0: model,
-					_1: _elm_lang$core$Platform_Cmd$batch(
-						A2(
-							_elm_lang$core$List$map,
-							function (issue) {
-								return A2(
-									_elm_lang$core$Task$attempt,
-									_vito$cadet$Main$TimelineFetched(issue),
-									A2(_vito$cadet$GitHub$fetchIssueTimeline, model.githubToken, issue));
-							},
-							_elm_lang$core$List$concat(
-								_elm_lang$core$Dict$values(model.issues))))
-				};
 			default:
-				if (_p0._1.ctor === 'Ok') {
+				if (_p2._1.ctor === 'Ok') {
 					return {
 						ctor: '_Tuple2',
 						_0: model,
 						_1: _vito$cadet$Main$setTimeline(
 							{
 								ctor: '_Tuple2',
-								_0: _p0._0.id,
+								_0: _p2._0.id,
 								_1: A2(
 									_elm_lang$core$List$map,
 									function (_) {
 										return _.value;
 									},
-									_p0._1._0)
+									_p2._1._0)
 							})
 					};
 				} else {
+					var _p7 = _p2._0;
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
 						A2(
 							_elm_lang$core$Debug$log,
-							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p0._0.htmlURL),
-							_p0._1._0),
-						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p7.htmlURL),
+							_p2._1._0),
+						{
+							ctor: '_Tuple2',
+							_0: _elm_lang$core$Native_Utils.update(
+								model,
+								{
+									failedQueue: {
+										ctor: '::',
+										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p7),
+										_1: model.failedQueue
+									}
+								}),
+							_1: _elm_lang$core$Platform_Cmd$none
+						});
 				}
 		}
 	});
-var _vito$cadet$Main$RefreshRepositories = {ctor: 'RefreshRepositories'};
-var _vito$cadet$Main$init = function (_p7) {
-	var _p8 = _p7;
+var _vito$cadet$Main$Retry = {ctor: 'Retry'};
+var _vito$cadet$Main$Refresh = {ctor: 'Refresh'};
+var _vito$cadet$Main$init = function (_p8) {
+	var _p9 = _p8;
 	return A2(
 		_vito$cadet$Main$update,
-		_vito$cadet$Main$RefreshRepositories,
+		_vito$cadet$Main$Refresh,
 		{
-			githubToken: _p8.githubToken,
-			githubOrg: _p8.githubOrg,
+			githubToken: _p9.githubToken,
+			githubOrg: _p9.githubOrg,
 			repos: {ctor: '[]'},
 			issues: _elm_lang$core$Dict$empty,
-			timelines: _elm_lang$core$Dict$empty
+			timelines: _elm_lang$core$Dict$empty,
+			failedQueue: {ctor: '[]'}
 		});
 };
 var _vito$cadet$Main$subscriptions = function (model) {
@@ -8149,21 +8157,14 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			_0: A2(
 				_elm_lang$core$Time$every,
 				_elm_lang$core$Time$hour,
-				_elm_lang$core$Basics$always(_vito$cadet$Main$RefreshRepositories)),
+				_elm_lang$core$Basics$always(_vito$cadet$Main$Refresh)),
 			_1: {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$core$Time$every,
-					5 * _elm_lang$core$Time$minute,
-					_elm_lang$core$Basics$always(_vito$cadet$Main$RefreshIssues)),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$core$Time$every,
-						10 * _elm_lang$core$Time$minute,
-						_elm_lang$core$Basics$always(_vito$cadet$Main$RefreshTimelines)),
-					_1: {ctor: '[]'}
-				}
+					10 * _elm_lang$core$Time$second,
+					_elm_lang$core$Basics$always(_vito$cadet$Main$Retry)),
+				_1: {ctor: '[]'}
 			}
 		});
 };
