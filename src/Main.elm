@@ -218,90 +218,69 @@ update msg model =
                 ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
         DataFetched (Ok data) ->
-            let
-                allIssues =
-                    List.concat (Dict.values data.issues)
-
-                graph =
-                    Graph.fromNodesAndEdges
-                        (Tuple.first <|
-                            List.foldl
-                                (\issue ( nodes, seed ) ->
-                                    let
-                                        ( entity, nextSeed ) =
-                                            issueEntity seed model.config.windowSize issue
-                                    in
-                                        ( Graph.Node issue.id entity :: nodes, nextSeed )
-                                )
-                                ( [], Random.initialSeed 1 )
-                                allIssues
-                        )
-                        []
-
-                allEvents =
-                    List.concat (Dict.values data.timelines)
-
-                references =
-                    Dict.foldl
-                        (\targetIDStr events pairs ->
-                            let
-                                targetID =
-                                    case String.toInt targetIDStr of
-                                        Ok id ->
-                                            id
-
-                                        Err err ->
-                                            Debug.crash err
-                            in
-                                List.filterMap
-                                    (\event ->
-                                        case event.source of
-                                            Just { type_, issueID } ->
-                                                case issueID of
-                                                    Just sourceID ->
-                                                        Just ( targetID, sourceID )
-
-                                                    _ ->
-                                                        Nothing
-
-                                            _ ->
-                                                Nothing
-                                    )
-                                    events
-                                    ++ pairs
-                        )
-                        []
-                        data.timelines
-
-                wiredGraph =
-                    List.foldl
-                        (\( targetID, sourceID ) graph ->
-                            Graph.mapContexts
-                                (\nc ->
-                                    if nc.node.id == sourceID then
-                                        { nc | outgoing = IntDict.insert targetID () nc.outgoing }
-                                    else if nc.node.id == targetID then
-                                        { nc | incoming = IntDict.insert sourceID () nc.incoming }
-                                    else
-                                        nc
-                                )
-                                graph
-                        )
-                        graph
-                        references
-            in
-                ( { model
-                    | repos = data.repositories
-                    , repoIssues = data.issues
-                    , issueTimelines = data.timelines
-                    , issueGraphs = List.map forceGraph (subGraphs wiredGraph)
-                  }
-                , Cmd.none
-                )
+            computeGraphs model data
 
         DataFetched (Err msg) ->
             flip always (Debug.log "error" msg) <|
                 ( model, Cmd.none )
+
+
+computeGraphs : Model -> Data -> ( Model, Cmd Msg )
+computeGraphs model data =
+    let
+        allIssues =
+            List.concat (Dict.values data.issues)
+
+        references =
+            collectReferences data.timelines
+
+        graph =
+            Graph.fromNodesAndEdges
+                (List.indexedMap issueGraphNode allIssues)
+                references
+    in
+        ( { model
+            | repos = data.repositories
+            , repoIssues = data.issues
+            , issueTimelines = data.timelines
+            , issueGraphs = List.map forceGraph (subGraphs graph)
+          }
+        , Cmd.none
+        )
+
+
+collectReferences : Dict String (List GitHub.TimelineEvent) -> List (Graph.Edge ())
+collectReferences timelines =
+    Dict.foldl
+        (\targetIDStr events edges ->
+            let
+                targetID =
+                    case String.toInt targetIDStr of
+                        Ok id ->
+                            id
+
+                        Err err ->
+                            Debug.crash err
+            in
+                List.filterMap
+                    (\event ->
+                        case event.source of
+                            Just { type_, issueID } ->
+                                case issueID of
+                                    Just sourceID ->
+                                        Just { from = sourceID, to = targetID, label = () }
+
+                                    _ ->
+                                        Nothing
+
+                            _ ->
+                                Nothing
+                    )
+                    events
+                    ++ edges
+        )
+        []
+        timelines
 
 
 forceGraph : Graph (ForceNode n) () -> ForceGraph n
@@ -330,31 +309,26 @@ forceGraph graph =
         { graph = graph, simulation = newSimulation }
 
 
-issueEntity : Random.Seed -> Window.Size -> GitHub.Issue -> ( ForceNode GitHub.Issue, Random.Seed )
-issueEntity s1 { width, height } issue =
+issueGraphNode : Int -> GitHub.Issue -> Graph.Node (ForceNode GitHub.Issue)
+issueGraphNode i issue =
     let
+        canvas =
+            500
+
         ( x, s2 ) =
-            Random.step (Random.float 0 (toFloat width)) s1
+            Random.step (Random.float 0 canvas) (Random.initialSeed i)
 
         ( y, s3 ) =
-            Random.step (Random.float 0 (toFloat height)) s2
-
-        initialRadius =
-            30.0
+            Random.step (Random.float 0 canvas) s2
     in
-        ( { x =
-                x
-                --toFloat (index % 33) * (initialRadius + 5) + initialRadius
-          , y =
-                y
-                --(toFloat <| index // 33) * (initialRadius + 5) + initialRadius
-          , vx = 0.0
-          , vy = 0.0
-          , id = issue.id
-          , value = issue
-          }
-        , s3
-        )
+        Graph.Node issue.id
+            { x = x
+            , y = y
+            , vx = 0.0
+            , vy = 0.0
+            , id = issue.id
+            , value = issue
+            }
 
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
