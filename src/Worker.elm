@@ -112,7 +112,9 @@ update msg model =
         IssuesFetched repo (Ok issues) ->
             let
                 ( newModel, newMsg ) =
-                    ( { model | issues = Dict.insert repo.id issues model.issues }, setIssues ( repo.id, List.map .value issues ) )
+                    ( { model | issues = Dict.insert repo.id issues model.issues }
+                    , setIssues ( repo.id, List.map .value issues )
+                    )
 
                 fetchMissingTimelines =
                     List.foldl

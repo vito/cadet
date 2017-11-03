@@ -1,7 +1,7 @@
 ELM_FILES = $(shell find src/ -type f -name '*.elm' -or -name '*.js')
 LESS_FILES = $(shell find css/ -type f -name '*.less')
 
-all: worker.js public/elm.js public/main.css
+all: public/elm.js public/main.css worker.js
 
 .PHONY: clean
 

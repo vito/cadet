@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import IntDict
+import Set
 import Debug
 import Json.Decode
 import Json.Decode.Extra exposing ((|:))
@@ -31,17 +32,21 @@ type alias Config =
 
 type alias Model =
     { config : Config
-    , error : Maybe String
     , repos : List GitHub.Repo
     , repoIssues : Dict String (List GitHub.Issue)
     , issueTimelines : Dict String (List GitHub.TimelineEvent)
-    , graph : Graph Entity ()
+    , issueGraphs : List (ForceGraph GitHub.Issue)
+    }
+
+
+type alias ForceGraph n =
+    { graph : Graph (ForceNode n) ()
     , simulation : VF.State Graph.NodeId
     }
 
 
-type alias Entity =
-    VF.Entity Graph.NodeId { value : GitHub.Issue }
+type alias ForceNode n =
+    VF.Entity Graph.NodeId { value : n }
 
 
 main : Program Config Model Msg
@@ -71,12 +76,10 @@ type alias Data =
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
-      , error = Nothing
       , repos = []
       , repoIssues = Dict.empty
       , issueTimelines = Dict.empty
-      , graph = Graph.empty
-      , simulation = VF.simulation []
+      , issueGraphs = []
       }
     , fetchData
     )
@@ -86,20 +89,20 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Window.resizes Resize
-        , if VF.isCompleted model.simulation then
+        , if List.all (VF.isCompleted << .simulation) model.issueGraphs then
             Sub.none
           else
             AnimationFrame.times Tick
         ]
 
 
-updateGraphWithList : Window.Size -> Graph Entity () -> List Entity -> Graph Entity ()
-updateGraphWithList windowSize =
+updateGraphWithList : Graph (ForceNode n) () -> List (ForceNode n) -> Graph (ForceNode n) ()
+updateGraphWithList =
     let
         graphUpdater value =
-            Maybe.map (\ctx -> updateContextWithValue windowSize ctx value)
+            Maybe.map (\ctx -> updateContextWithValue ctx value)
     in
-        List.foldr (\node graph -> Graph.update node.id (graphUpdater node) graph)
+        List.foldr (\node -> Graph.update node.id (graphUpdater node))
 
 
 bind : Float -> Int -> Float -> Float
@@ -112,19 +115,96 @@ bind target size gap =
         target
 
 
-updateContextWithValue : Window.Size -> Graph.NodeContext Entity () -> Entity -> Graph.NodeContext Entity ()
-updateContextWithValue { width, height } nodeCtx value =
+updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceNode n -> Graph.NodeContext (ForceNode n) ()
+updateContextWithValue nodeCtx value =
     let
-        bounded =
-            { value
-                | x = bind value.x width 20
-                , y = bind value.y height 20
-            }
-
         node =
             nodeCtx.node
     in
-        { nodeCtx | node = { node | label = bounded } }
+        { nodeCtx | node = { node | label = value } }
+
+
+edgesContains : Graph.NodeId -> List (Graph.Edge e) -> Bool
+edgesContains nodeId =
+    List.any (\{ from, to } -> from == nodeId || to == nodeId)
+
+
+subEdges : List (Graph.Edge e) -> List (List (Graph.Edge e))
+subEdges edges =
+    let
+        go edges acc =
+            case edges of
+                [] ->
+                    acc
+
+                edge :: rest ->
+                    let
+                        hasFrom =
+                            List.filter (edgesContains edge.from) acc
+
+                        hasTo =
+                            List.filter (edgesContains edge.to) acc
+
+                        hasNeither =
+                            List.filter (\es -> not (edgesContains edge.from es) && not (edgesContains edge.to es)) acc
+                    in
+                        case ( hasFrom, hasTo ) of
+                            ( [], [] ) ->
+                                go rest ([ edge ] :: acc)
+
+                            ( [ sub1 ], [ sub2 ] ) ->
+                                go rest ((edge :: (sub1 ++ sub2)) :: hasNeither)
+
+                            ( [ sub1 ], [] ) ->
+                                go rest ((edge :: sub1) :: hasNeither)
+
+                            ( [], [ sub2 ] ) ->
+                                go rest ((edge :: sub2) :: hasNeither)
+
+                            _ ->
+                                Debug.crash "impossible"
+    in
+        go edges []
+
+
+subGraphs : Graph n e -> List (Graph n e)
+subGraphs graph =
+    let
+        singletons =
+            Graph.fold
+                (\nc ncs ->
+                    if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
+                        nc :: ncs
+                    else
+                        ncs
+                )
+                []
+                graph
+
+        singletonGraphs =
+            List.map (flip Graph.insert Graph.empty) singletons
+
+        subEdgeNodes =
+            List.foldl (\edge set -> Set.insert edge.from (Set.insert edge.to set)) Set.empty
+
+        connectedGraphs =
+            graph
+                |> Graph.edges
+                |> subEdges
+                |> List.map (flip Graph.inducedSubgraph graph << Set.toList << subEdgeNodes)
+    in
+        connectedGraphs ++ singletonGraphs
+
+
+tickGraph : ForceGraph n -> ForceGraph n
+tickGraph { graph, simulation } =
+    let
+        ( newState, list ) =
+            VF.tick simulation (List.map .label (Graph.nodes graph))
+    in
+        { graph = updateGraphWithList graph list
+        , simulation = newState
+        }
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -134,11 +214,11 @@ update msg model =
             ( model, Cmd.none )
 
         Tick _ ->
-            let
-                ( newState, list ) =
-                    VF.tick model.simulation (List.map .label (Graph.nodes model.graph))
-            in
-                ( { model | graph = updateGraphWithList model.config.windowSize model.graph list, simulation = newState }, Cmd.none )
+            ( { model
+                | issueGraphs = List.map tickGraph model.issueGraphs
+              }
+            , Cmd.none
+            )
 
         Resize size ->
             let
@@ -163,7 +243,7 @@ update msg model =
                                     in
                                         ( Graph.Node issue.id entity :: nodes, nextSeed )
                                 )
-                                ( [], Random.initialSeed 42 )
+                                ( [], Random.initialSeed 1 )
                                 allIssues
                         )
                         []
@@ -219,35 +299,12 @@ update msg model =
                         )
                         graph
                         references
-
-                newGraph =
-                    Graph.fold
-                        (\nc g ->
-                            if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
-                                g
-                            else
-                                Graph.insert nc g
-                        )
-                        Graph.empty
-                        wiredGraph
-
-                link { from, to } =
-                    { source = from, target = to, distance = 50, strength = Nothing }
-
-                forces =
-                    [ VF.customLinks 1 <| List.map link <| Graph.edges wiredGraph
-                    , VF.manyBodyStrength -20 <| List.map .id <| Graph.nodes wiredGraph
-                    ]
-
-                newSimulation =
-                    VF.simulation forces
             in
                 ( { model
                     | repos = data.repositories
                     , repoIssues = data.issues
                     , issueTimelines = data.timelines
-                    , graph = newGraph
-                    , simulation = newSimulation
+                    , issueGraphs = List.map forceGraph (subGraphs wiredGraph)
                   }
                 , Cmd.none
                 )
@@ -257,7 +314,34 @@ update msg model =
                 ( model, Cmd.none )
 
 
-issueEntity : Random.Seed -> Window.Size -> GitHub.Issue -> ( Entity, Random.Seed )
+forceGraph : Graph (ForceNode n) () -> ForceGraph n
+forceGraph graph =
+    let
+        link { from, to } =
+            let
+                distance =
+                    case ( Graph.get from graph, Graph.get to graph ) of
+                        ( Just fnc, Just tnc ) ->
+                            -- 30 + (max (IntDict.size tnc.incoming) (IntDict.size fnc.outgoing) * 10)
+                            40
+
+                        _ ->
+                            Debug.crash "impossible: unknown target"
+            in
+                { source = from, target = to, distance = toFloat distance, strength = Nothing }
+
+        forces =
+            [ VF.customLinks 1 <| List.map link <| Graph.edges graph
+            , VF.manyBodyStrength -120 <| List.map .id <| Graph.nodes graph
+            ]
+
+        newSimulation =
+            VF.simulation forces
+    in
+        { graph = graph, simulation = newSimulation }
+
+
+issueEntity : Random.Seed -> Window.Size -> GitHub.Issue -> ( ForceNode GitHub.Issue, Random.Seed )
 issueEntity s1 { width, height } issue =
     let
         ( x, s2 ) =
@@ -291,21 +375,48 @@ isOrgMember users user =
 
 view : Model -> Html Msg
 view model =
-    case model.error of
-        Just msg ->
-            Html.pre [] [ Html.text msg ]
-
-        Nothing ->
-            Svg.svg
-                [ SA.width (toString model.config.windowSize.width ++ "px")
-                , SA.height (toString model.config.windowSize.height ++ "px")
-                ]
-                [ Svg.g [ SA.class "links" ] (List.map (linkPath model.graph) (Graph.edges model.graph))
-                , Svg.g [ SA.class "nodes" ] (List.map issueNode (Graph.nodes model.graph))
-                ]
+    Html.div [] <|
+        List.map (viewGraph 500 500) model.issueGraphs
 
 
-linkPath : Graph Entity () -> Graph.Edge () -> Svg Msg
+viewGraph : Int -> Int -> ForceGraph GitHub.Issue -> Html Msg
+viewGraph w h { graph } =
+    let
+        nodeContexts =
+            Graph.fold (::) [] graph
+
+        padding =
+            50
+
+        minX =
+            List.foldl (\nc acc -> min nc.node.label.x acc) 999999 nodeContexts - padding
+
+        minY =
+            List.foldl (\nc acc -> min nc.node.label.y acc) 999999 nodeContexts - padding
+
+        maxX =
+            List.foldl (\nc acc -> max nc.node.label.x acc) 0 nodeContexts + padding
+
+        maxY =
+            List.foldl (\nc acc -> max nc.node.label.y acc) 0 nodeContexts + padding
+
+        width =
+            maxX - minX
+
+        height =
+            maxY - minY
+    in
+        Svg.svg
+            [ SA.width (toString width ++ "px")
+            , SA.height (toString height ++ "px")
+            , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
+            ]
+            [ Svg.g [ SA.class "links" ] (List.map (linkPath graph) (Graph.edges graph))
+            , Svg.g [ SA.class "nodes" ] (List.map issueNode nodeContexts)
+            ]
+
+
+linkPath : Graph (ForceNode n) () -> Graph.Edge () -> Svg Msg
 linkPath graph edge =
     let
         source =
@@ -335,8 +446,8 @@ linkPath graph edge =
             []
 
 
-issueNode : Graph.Node Entity -> Svg Msg
-issueNode node =
+issueNode : Graph.NodeContext (ForceNode GitHub.Issue) () -> Svg Msg
+issueNode { node, incoming, outgoing } =
     let
         x =
             node.label.x
@@ -351,7 +462,7 @@ issueNode node =
             issue.labels
 
         radius =
-            15
+            15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
         segments =
             VS.pie
@@ -375,13 +486,21 @@ issueNode node =
                 ]
                 ([ Svg.circle
                     [ SA.r (toString radius)
-                    , SA.fill "#fff"
+                    , SA.fill <|
+                        if issue.isPullRequest then
+                            "#28a745"
+                        else
+                            "#fff"
                     ]
                     []
                  , Svg.text_
                     [ SA.y "4"
                     , SA.textAnchor "middle"
-                    , SA.fill "#C6A49A"
+                    , SA.fill <|
+                        if issue.isPullRequest then
+                            "#fff"
+                        else
+                            "#C6A49A"
                     , SA.fontWeight "bold"
                     ]
                     [ Svg.text (toString issue.number)

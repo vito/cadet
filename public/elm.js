@@ -4368,8 +4368,8 @@ var _elm_community$graph$Graph$ignorePath = F4(
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Graph',
 				{
-					start: {line: 880, column: 3},
-					end: {line: 884, column: 20}
+					start: {line: 1084, column: 5},
+					end: {line: 1089, column: 26}
 				},
 				_p1)('Graph.ignorePath: No algorithm should ever pass an empty path into this BfsNodeVisitor.');
 		} else {
@@ -4473,17 +4473,42 @@ var _elm_community$graph$Graph$get = function (nodeId) {
 			_elm_community$graph$Graph$unGraph(_p7));
 	};
 };
+var _elm_community$graph$Graph$unsafeGet = F3(
+	function (msg, id, graph) {
+		var _p8 = A2(_elm_community$graph$Graph$get, id, graph);
+		if (_p8.ctor === 'Nothing') {
+			return _elm_lang$core$Native_Utils.crashCase(
+				'Graph',
+				{
+					start: {line: 735, column: 5},
+					end: {line: 740, column: 16}
+				},
+				_p8)(msg);
+		} else {
+			return _p8._0;
+		}
+	});
+var _elm_community$graph$Graph$topologicalSort = function (_p10) {
+	var _p11 = _p10;
+	var error = 'Graph.topologicalSort: Invalid `AcyclicGraph`, where the ordering contained nodes not present in the graph';
+	return A2(
+		_elm_lang$core$List$map,
+		function (id) {
+			return A3(_elm_community$graph$Graph$unsafeGet, error, id, _p11._0);
+		},
+		_p11._1);
+};
 var _elm_community$graph$Graph$nodeIdRange = function (graph) {
 	return A2(
 		_elm_lang$core$Maybe$andThen,
-		function (_p8) {
-			var _p9 = _p8;
+		function (_p12) {
+			var _p13 = _p12;
 			return A2(
 				_elm_lang$core$Maybe$andThen,
-				function (_p10) {
-					var _p11 = _p10;
+				function (_p14) {
+					var _p15 = _p14;
 					return _elm_lang$core$Maybe$Just(
-						{ctor: '_Tuple2', _0: _p9._0, _1: _p11._0});
+						{ctor: '_Tuple2', _0: _p13._0, _1: _p15._0});
 				},
 				_elm_community$intdict$IntDict$findMax(
 					_elm_community$graph$Graph$unGraph(graph)));
@@ -4491,18 +4516,18 @@ var _elm_community$graph$Graph$nodeIdRange = function (graph) {
 		_elm_community$intdict$IntDict$findMin(
 			_elm_community$graph$Graph$unGraph(graph)));
 };
-var _elm_community$graph$Graph$nodes = function (_p12) {
+var _elm_community$graph$Graph$nodes = function (_p16) {
 	return A2(
 		_elm_lang$core$List$map,
 		function (_) {
 			return _.node;
 		},
 		_elm_community$intdict$IntDict$values(
-			_elm_community$graph$Graph$unGraph(_p12)));
+			_elm_community$graph$Graph$unGraph(_p16)));
 };
-var _elm_community$graph$Graph$nodeIds = function (_p13) {
+var _elm_community$graph$Graph$nodeIds = function (_p17) {
 	return _elm_community$intdict$IntDict$keys(
-		_elm_community$graph$Graph$unGraph(_p13));
+		_elm_community$graph$Graph$unGraph(_p17));
 };
 var _elm_community$graph$Graph$edges = function (graph) {
 	var flippedFoldl = F3(
@@ -4594,6 +4619,10 @@ var _elm_community$graph$Graph$fromNodesAndEdges = F2(
 						_elm_lang$core$Maybe$map(updateOutgoing),
 						rep));
 			});
+		var addEdgeIfValid = F2(
+			function (edge, rep) {
+				return (A2(_elm_community$intdict$IntDict$member, edge.from, rep) && A2(_elm_community$intdict$IntDict$member, edge.to, rep)) ? A2(addEdge, edge, rep) : rep;
+			});
 		var nodeRep = A3(
 			_elm_lang$core$List$foldl,
 			function (n) {
@@ -4605,18 +4634,18 @@ var _elm_community$graph$Graph$fromNodesAndEdges = F2(
 			_elm_community$intdict$IntDict$empty,
 			nodes);
 		return _elm_community$graph$Graph$Graph(
-			A3(_elm_lang$core$List$foldl, addEdge, nodeRep, edges));
+			A3(_elm_lang$core$List$foldl, addEdgeIfValid, nodeRep, edges));
 	});
 var _elm_community$graph$Graph$fromNodeLabelsAndEdgePairs = F2(
 	function (labels, edgePairs) {
 		var edges = A2(
 			_elm_lang$core$List$map,
-			function (_p14) {
-				var _p15 = _p14;
+			function (_p18) {
+				var _p19 = _p18;
 				return A3(
 					_elm_community$graph$Graph$Edge,
-					_p15._0,
-					_p15._1,
+					_p19._0,
+					_p19._1,
 					{ctor: '_Tuple0'});
 			},
 			edgePairs);
@@ -4624,16 +4653,16 @@ var _elm_community$graph$Graph$fromNodeLabelsAndEdgePairs = F2(
 			A3(
 				_elm_lang$core$List$foldl,
 				F2(
-					function (lbl, _p16) {
-						var _p17 = _p16;
-						var _p18 = _p17._0;
+					function (lbl, _p20) {
+						var _p21 = _p20;
+						var _p22 = _p21._0;
 						return {
 							ctor: '_Tuple2',
-							_0: _p18 + 1,
+							_0: _p22 + 1,
 							_1: {
 								ctor: '::',
-								_0: A2(_elm_community$graph$Graph$Node, _p18, lbl),
-								_1: _p17._1
+								_0: A2(_elm_community$graph$Graph$Node, _p22, lbl),
+								_1: _p21._1
 							}
 						};
 					}),
@@ -4661,12 +4690,12 @@ var _elm_community$graph$Graph$symmetricClosure = function (edgeMerger) {
 				ctx,
 				{outgoing: edges, incoming: edges});
 		});
-	return function (_p19) {
+	return function (_p23) {
 		return _elm_community$graph$Graph$Graph(
 			A2(
 				_elm_community$intdict$IntDict$map,
 				updateContext,
-				_elm_community$graph$Graph$unGraph(_p19)));
+				_elm_community$graph$Graph$unGraph(_p23)));
 	};
 };
 var _elm_community$graph$Graph$reverseEdges = function () {
@@ -4676,12 +4705,12 @@ var _elm_community$graph$Graph$reverseEdges = function () {
 				ctx,
 				{outgoing: ctx.incoming, incoming: ctx.outgoing});
 		});
-	return function (_p20) {
+	return function (_p24) {
 		return _elm_community$graph$Graph$Graph(
 			A2(
 				_elm_community$intdict$IntDict$map,
 				updateContext,
-				_elm_community$graph$Graph$unGraph(_p20)));
+				_elm_community$graph$Graph$unGraph(_p24)));
 	};
 }();
 var _elm_community$graph$Graph$Remove = function (a) {
@@ -4695,37 +4724,37 @@ var _elm_community$graph$Graph$computeEdgeDiff = F2(
 		var collectUpdates = F3(
 			function (edgeUpdate, updatedId, label) {
 				var replaceUpdate = function (old) {
-					var _p21 = {
+					var _p25 = {
 						ctor: '_Tuple2',
 						_0: old,
 						_1: edgeUpdate(label)
 					};
-					if (_p21._0.ctor === 'Just') {
-						if (_p21._0._0.ctor === 'Remove') {
-							if (_p21._1.ctor === 'Insert') {
-								var _p22 = _p21._1._0;
-								return _elm_lang$core$Native_Utils.eq(_p21._0._0._0, _p22) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
-									_elm_community$graph$Graph$Insert(_p22));
+					if (_p25._0.ctor === 'Just') {
+						if (_p25._0._0.ctor === 'Remove') {
+							if (_p25._1.ctor === 'Insert') {
+								var _p26 = _p25._1._0;
+								return _elm_lang$core$Native_Utils.eq(_p25._0._0._0, _p26) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
+									_elm_community$graph$Graph$Insert(_p26));
 							} else {
 								return _elm_lang$core$Native_Utils.crashCase(
 									'Graph',
 									{
-										start: {line: 189, column: 11},
-										end: {line: 199, column: 22}
+										start: {line: 247, column: 21},
+										end: {line: 261, column: 36}
 									},
-									_p21)('Graph.computeEdgeDiff: Collected two removals for the same edge. This is an error in the implementation of Graph and you should file a bug report!');
+									_p25)('Graph.computeEdgeDiff: Collected two removals for the same edge. This is an error in the implementation of Graph and you should file a bug report!');
 							}
 						} else {
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Graph',
 								{
-									start: {line: 189, column: 11},
-									end: {line: 199, column: 22}
+									start: {line: 247, column: 21},
+									end: {line: 261, column: 36}
 								},
-								_p21)('Graph.computeEdgeDiff: Collected inserts before removals. This is an error in the implementation of Graph and you should file a bug report!');
+								_p25)('Graph.computeEdgeDiff: Collected inserts before removals. This is an error in the implementation of Graph and you should file a bug report!');
 						}
 					} else {
-						return _elm_lang$core$Maybe$Just(_p21._1);
+						return _elm_lang$core$Maybe$Just(_p25._1);
 					}
 				};
 				return A2(_elm_community$intdict$IntDict$update, updatedId, replaceUpdate);
@@ -4738,38 +4767,38 @@ var _elm_community$graph$Graph$computeEdgeDiff = F2(
 					updates,
 					adj);
 			});
-		var _p25 = {ctor: '_Tuple2', _0: old, _1: $new};
-		if (_p25._0.ctor === 'Nothing') {
-			if (_p25._1.ctor === 'Nothing') {
+		var _p29 = {ctor: '_Tuple2', _0: old, _1: $new};
+		if (_p29._0.ctor === 'Nothing') {
+			if (_p29._1.ctor === 'Nothing') {
 				return _elm_community$graph$Graph$emptyDiff;
 			} else {
-				var _p27 = _p25._1._0;
+				var _p31 = _p29._1._0;
 				return {
-					outgoing: A3(collect, _elm_community$graph$Graph$Insert, _p27.incoming, _elm_community$intdict$IntDict$empty),
-					incoming: A3(collect, _elm_community$graph$Graph$Insert, _p27.outgoing, _elm_community$intdict$IntDict$empty)
+					outgoing: A3(collect, _elm_community$graph$Graph$Insert, _p31.incoming, _elm_community$intdict$IntDict$empty),
+					incoming: A3(collect, _elm_community$graph$Graph$Insert, _p31.outgoing, _elm_community$intdict$IntDict$empty)
 				};
 			}
 		} else {
-			if (_p25._1.ctor === 'Nothing') {
-				var _p26 = _p25._0._0;
+			if (_p29._1.ctor === 'Nothing') {
+				var _p30 = _p29._0._0;
 				return {
-					outgoing: A3(collect, _elm_community$graph$Graph$Remove, _p26.incoming, _elm_community$intdict$IntDict$empty),
-					incoming: A3(collect, _elm_community$graph$Graph$Remove, _p26.outgoing, _elm_community$intdict$IntDict$empty)
+					outgoing: A3(collect, _elm_community$graph$Graph$Remove, _p30.incoming, _elm_community$intdict$IntDict$empty),
+					incoming: A3(collect, _elm_community$graph$Graph$Remove, _p30.outgoing, _elm_community$intdict$IntDict$empty)
 				};
 			} else {
-				var _p29 = _p25._0._0;
-				var _p28 = _p25._1._0;
-				return _elm_lang$core$Native_Utils.eq(_p29, _p28) ? _elm_community$graph$Graph$emptyDiff : {
+				var _p33 = _p29._0._0;
+				var _p32 = _p29._1._0;
+				return _elm_lang$core$Native_Utils.eq(_p33, _p32) ? _elm_community$graph$Graph$emptyDiff : {
 					outgoing: A3(
 						collect,
 						_elm_community$graph$Graph$Insert,
-						_p28.incoming,
-						A3(collect, _elm_community$graph$Graph$Remove, _p29.incoming, _elm_community$intdict$IntDict$empty)),
+						_p32.incoming,
+						A3(collect, _elm_community$graph$Graph$Remove, _p33.incoming, _elm_community$intdict$IntDict$empty)),
 					incoming: A3(
 						collect,
 						_elm_community$graph$Graph$Insert,
-						_p28.outgoing,
-						A3(collect, _elm_community$graph$Graph$Remove, _p29.outgoing, _elm_community$intdict$IntDict$empty))
+						_p32.outgoing,
+						A3(collect, _elm_community$graph$Graph$Remove, _p33.outgoing, _elm_community$intdict$IntDict$empty))
 				};
 			}
 		}
@@ -4780,7 +4809,7 @@ var _elm_community$graph$Graph$update = F2(
 			var filterInvalidEdges = function (ctx) {
 				return _elm_community$intdict$IntDict$filter(
 					F2(
-						function (id, _p30) {
+						function (id, _p34) {
 							return _elm_lang$core$Native_Utils.eq(id, ctx.node.id) || A2(_elm_community$intdict$IntDict$member, id, rep);
 						}));
 			};
@@ -4804,10 +4833,10 @@ var _elm_community$graph$Graph$update = F2(
 				_elm_lang$core$Basics$always($new),
 				A3(_elm_community$graph$Graph$applyEdgeDiff, nodeId, diff, rep));
 		};
-		return function (_p31) {
+		return function (_p35) {
 			return _elm_community$graph$Graph$Graph(
 				wrappedUpdater(
-					_elm_community$graph$Graph$unGraph(_p31)));
+					_elm_community$graph$Graph$unGraph(_p35)));
 		};
 	});
 var _elm_community$graph$Graph$insert = F2(
@@ -4823,9 +4852,9 @@ var _elm_community$graph$Graph$inducedSubgraph = F2(
 	function (nodeIds, graph) {
 		var insertContextById = F2(
 			function (nodeId, acc) {
-				var _p32 = A2(_elm_community$graph$Graph$get, nodeId, graph);
-				if (_p32.ctor === 'Just') {
-					return A2(_elm_community$graph$Graph$insert, _p32._0, acc);
+				var _p36 = A2(_elm_community$graph$Graph$get, nodeId, graph);
+				if (_p36.ctor === 'Just') {
+					return A2(_elm_community$graph$Graph$insert, _p36._0, acc);
 				} else {
 					return acc;
 				}
@@ -4855,13 +4884,13 @@ var _elm_community$graph$Graph$fold = F3(
 							_elm_lang$core$Maybe$map,
 							_elm_lang$core$Tuple$first,
 							_elm_community$graph$Graph$nodeIdRange(graph1)));
-					var _p33 = maybeContext;
-					if (_p33.ctor === 'Just') {
-						var _p34 = _p33._0;
-						var _v11 = A2(f, _p34, acc),
-							_v12 = A2(_elm_community$graph$Graph$remove, _p34.node.id, graph1);
-						acc = _v11;
-						graph1 = _v12;
+					var _p37 = maybeContext;
+					if (_p37.ctor === 'Just') {
+						var _p38 = _p37._0;
+						var _v13 = A2(f, _p38, acc),
+							_v14 = A2(_elm_community$graph$Graph$remove, _p38.node.id, graph1);
+						acc = _v13;
+						graph1 = _v14;
 						continue go;
 					} else {
 						return acc;
@@ -4927,40 +4956,40 @@ var _elm_community$graph$Graph$guidedDfs = F5(
 			function (seeds, acc, graph) {
 				go:
 				while (true) {
-					var _p35 = seeds;
-					if (_p35.ctor === '[]') {
+					var _p39 = seeds;
+					if (_p39.ctor === '[]') {
 						return {ctor: '_Tuple2', _0: acc, _1: graph};
 					} else {
-						var _p41 = _p35._1;
-						var _p40 = _p35._0;
-						var _p36 = A2(_elm_community$graph$Graph$get, _p40, graph);
-						if (_p36.ctor === 'Nothing') {
-							var _v15 = _p41,
-								_v16 = acc,
-								_v17 = graph;
-							seeds = _v15;
-							acc = _v16;
-							graph = _v17;
+						var _p45 = _p39._1;
+						var _p44 = _p39._0;
+						var _p40 = A2(_elm_community$graph$Graph$get, _p44, graph);
+						if (_p40.ctor === 'Nothing') {
+							var _v17 = _p45,
+								_v18 = acc,
+								_v19 = graph;
+							seeds = _v17;
+							acc = _v18;
+							graph = _v19;
 							continue go;
 						} else {
-							var _p39 = _p36._0;
-							var _p37 = A2(visitNode, _p39, acc);
-							var accAfterDiscovery = _p37._0;
-							var finishNode = _p37._1;
-							var _p38 = A3(
+							var _p43 = _p40._0;
+							var _p41 = A2(visitNode, _p43, acc);
+							var accAfterDiscovery = _p41._0;
+							var finishNode = _p41._1;
+							var _p42 = A3(
 								go,
-								selectNeighbors(_p39),
+								selectNeighbors(_p43),
 								accAfterDiscovery,
-								A2(_elm_community$graph$Graph$remove, _p40, graph));
-							var accBeforeFinish = _p38._0;
-							var graph1 = _p38._1;
+								A2(_elm_community$graph$Graph$remove, _p44, graph));
+							var accBeforeFinish = _p42._0;
+							var graph1 = _p42._1;
 							var accAfterFinish = finishNode(accBeforeFinish);
-							var _v18 = _p41,
-								_v19 = accAfterFinish,
-								_v20 = graph1;
-							seeds = _v18;
-							acc = _v19;
-							graph = _v20;
+							var _v20 = _p45,
+								_v21 = accAfterFinish,
+								_v22 = graph1;
+							seeds = _v20;
+							acc = _v21;
+							graph = _v22;
 							continue go;
 						}
 					}
@@ -5007,7 +5036,7 @@ var _elm_community$graph$Graph$dfsForest = F2(
 	});
 var _elm_community$graph$Graph$dfsTree = F2(
 	function (seed, graph) {
-		var _p42 = A2(
+		var _p46 = A2(
 			_elm_community$graph$Graph$dfsForest,
 			{
 				ctor: '::',
@@ -5015,67 +5044,22 @@ var _elm_community$graph$Graph$dfsTree = F2(
 				_1: {ctor: '[]'}
 			},
 			graph);
-		if (_p42.ctor === '[]') {
+		if (_p46.ctor === '[]') {
 			return _elm_community$graph$Graph_Tree$empty;
 		} else {
-			if (_p42._1.ctor === '[]') {
-				return _p42._0;
+			if (_p46._1.ctor === '[]') {
+				return _p46._0;
 			} else {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Graph',
 					{
-						start: {line: 822, column: 3},
-						end: {line: 828, column: 120}
+						start: {line: 1020, column: 5},
+						end: {line: 1028, column: 126}
 					},
-					_p42)('dfsTree: There can\'t be more than one DFS tree. This invariant is violated, please report this bug.');
+					_p46)('dfsTree: There can\'t be more than one DFS tree. This invariant is violated, please report this bug.');
 			}
 		}
 	});
-var _elm_community$graph$Graph$topologicalSort = function (graph) {
-	return A2(
-		_elm_lang$core$List$concatMap,
-		_elm_community$graph$Graph_Tree$preOrderList,
-		_elm_lang$core$List$reverse(
-			A2(
-				_elm_community$graph$Graph$dfsForest,
-				_elm_community$graph$Graph$nodeIds(graph),
-				graph)));
-};
-var _elm_community$graph$Graph$stronglyConnectedComponents = function (graph) {
-	var timestamps = A3(
-		_elm_community$graph$Graph$dfs,
-		_elm_community$graph$Graph$onFinish(
-			function (_p44) {
-				return F2(
-					function (x, y) {
-						return {ctor: '::', _0: x, _1: y};
-					})(
-					function (_) {
-						return _.id;
-					}(
-						function (_) {
-							return _.node;
-						}(_p44)));
-			}),
-		{ctor: '[]'},
-		graph);
-	var forest = A2(
-		_elm_community$graph$Graph$dfsForest,
-		timestamps,
-		_elm_community$graph$Graph$reverseEdges(graph));
-	var components = A2(
-		_elm_lang$core$List$map,
-		function (_p45) {
-			return _elm_community$graph$Graph$reverseEdges(
-				A3(
-					_elm_lang$core$List$foldr,
-					_elm_community$graph$Graph$insert,
-					_elm_community$graph$Graph$empty,
-					_elm_community$graph$Graph_Tree$preOrderList(_p45)));
-		},
-		forest);
-	return components;
-};
 var _elm_community$graph$Graph$guidedBfs = F5(
 	function (selectNeighbors, visitNode, seeds, acc, graph) {
 		var enqueueMany = F4(
@@ -5095,38 +5079,38 @@ var _elm_community$graph$Graph$guidedBfs = F5(
 			function (seeds, acc, graph) {
 				go:
 				while (true) {
-					var _p46 = _avh4$elm_fifo$Fifo$remove(seeds);
-					if (_p46._0.ctor === 'Nothing') {
+					var _p48 = _avh4$elm_fifo$Fifo$remove(seeds);
+					if (_p48._0.ctor === 'Nothing') {
 						return {ctor: '_Tuple2', _0: acc, _1: graph};
 					} else {
-						var _p51 = _p46._1;
-						var _p50 = _p46._0._0._0;
-						var _p49 = _p46._0._0._2;
-						var _p47 = A2(_elm_community$graph$Graph$get, _p50, graph);
-						if (_p47.ctor === 'Nothing') {
-							var _v24 = _p51,
-								_v25 = acc,
-								_v26 = graph;
-							seeds = _v24;
-							acc = _v25;
-							graph = _v26;
+						var _p53 = _p48._1;
+						var _p52 = _p48._0._0._0;
+						var _p51 = _p48._0._0._2;
+						var _p49 = A2(_elm_community$graph$Graph$get, _p52, graph);
+						if (_p49.ctor === 'Nothing') {
+							var _v26 = _p53,
+								_v27 = acc,
+								_v28 = graph;
+							seeds = _v26;
+							acc = _v27;
+							graph = _v28;
 							continue go;
 						} else {
-							var _p48 = _p47._0;
-							var path = {ctor: '::', _0: _p48, _1: _p46._0._0._1};
-							var accAfterVisit = A3(visitNode, path, _p49, acc);
+							var _p50 = _p49._0;
+							var path = {ctor: '::', _0: _p50, _1: _p48._0._0._1};
+							var accAfterVisit = A3(visitNode, path, _p51, acc);
 							var seeds2 = A4(
 								enqueueMany,
-								_p49 + 1,
+								_p51 + 1,
 								path,
-								selectNeighbors(_p48),
-								_p51);
-							var _v27 = seeds2,
-								_v28 = accAfterVisit,
-								_v29 = A2(_elm_community$graph$Graph$remove, _p50, graph);
-							seeds = _v27;
-							acc = _v28;
-							graph = _v29;
+								selectNeighbors(_p50),
+								_p53);
+							var _v29 = seeds2,
+								_v30 = accAfterVisit,
+								_v31 = A2(_elm_community$graph$Graph$remove, _p52, graph);
+							seeds = _v29;
+							acc = _v30;
+							graph = _v31;
 							continue go;
 						}
 					}
@@ -5147,68 +5131,70 @@ var _elm_community$graph$Graph$bfs = F3(
 	function (visitNode, acc, graph) {
 		bfs:
 		while (true) {
-			var _p52 = _elm_community$graph$Graph$nodeIdRange(graph);
-			if (_p52.ctor === 'Nothing') {
+			var _p54 = _elm_community$graph$Graph$nodeIdRange(graph);
+			if (_p54.ctor === 'Nothing') {
 				return acc;
 			} else {
-				var _p53 = A5(
+				var _p55 = A5(
 					_elm_community$graph$Graph$guidedBfs,
 					_elm_community$graph$Graph$alongOutgoingEdges,
 					visitNode,
 					{
 						ctor: '::',
-						_0: _p52._0._0,
+						_0: _p54._0._0,
 						_1: {ctor: '[]'}
 					},
 					acc,
 					graph);
-				var finalAcc = _p53._0;
-				var restgraph1 = _p53._1;
-				var _v31 = visitNode,
-					_v32 = finalAcc,
-					_v33 = restgraph1;
-				visitNode = _v31;
-				acc = _v32;
-				graph = _v33;
+				var finalAcc = _p55._0;
+				var restgraph1 = _p55._1;
+				var _v33 = visitNode,
+					_v34 = finalAcc,
+					_v35 = restgraph1;
+				visitNode = _v33;
+				acc = _v34;
+				graph = _v35;
 				continue bfs;
 			}
 		}
 	});
-var _elm_community$graph$Graph$heightLevels = function (graph) {
+var _elm_community$graph$Graph$heightLevels = function (_p56) {
+	var _p57 = _p56;
+	var _p70 = _p57._0;
 	var subtract = F2(
 		function (a, b) {
 			return b - a;
 		});
 	var decrementAndNoteSources = F3(
-		function (id, _p55, _p54) {
-			var _p56 = _p54;
-			var _p60 = _p56._0;
+		function (id, _p59, _p58) {
+			var _p60 = _p58;
+			var _p64 = _p60._0;
 			var indegreesDec = A3(
 				_elm_community$intdict$IntDict$update,
 				id,
 				_elm_lang$core$Maybe$map(
 					subtract(1)),
-				_p56._1);
-			var _p57 = A2(_elm_community$intdict$IntDict$get, id, indegreesDec);
-			if ((_p57.ctor === 'Just') && (_p57._0 === 0)) {
-				var _p58 = A2(_elm_community$graph$Graph$get, id, graph);
-				if (_p58.ctor === 'Just') {
+				_p60._1);
+			var _p61 = A2(_elm_community$intdict$IntDict$get, id, indegreesDec);
+			if ((_p61.ctor === 'Just') && (_p61._0 === 0)) {
+				var _p62 = A2(_elm_community$graph$Graph$get, id, _p70);
+				if (_p62.ctor === 'Just') {
 					return {
 						ctor: '_Tuple2',
-						_0: {ctor: '::', _0: _p58._0, _1: _p60},
+						_0: {ctor: '::', _0: _p62._0, _1: _p64},
 						_1: indegreesDec
 					};
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Graph',
 						{
-							start: {line: 1001, column: 13},
-							end: {line: 1003, column: 154}
+							start: {line: 1220, column: 21},
+							end: {line: 1225, column: 157}
 						},
-						_p58)('Graph.heightLevels: Could not get a node of a graph which should be there by invariants. Please file a bug report!');
+						_p62)('Graph.heightLevels: Could not get a node of a graph which should be there by invariants. Please file a bug report!');
 				}
 			} else {
-				return {ctor: '_Tuple2', _0: _p60, _1: indegreesDec};
+				return {ctor: '_Tuple2', _0: _p64, _1: indegreesDec};
 			}
 		});
 	var decrementIndegrees = F3(
@@ -5221,9 +5207,9 @@ var _elm_community$graph$Graph$heightLevels = function (graph) {
 		});
 	var go = F4(
 		function (currentLevel, nextLevel, indegrees, graph) {
-			var _p61 = {ctor: '_Tuple2', _0: currentLevel, _1: nextLevel};
-			if (_p61._0.ctor === '[]') {
-				if (_p61._1.ctor === '[]') {
+			var _p65 = {ctor: '_Tuple2', _0: currentLevel, _1: nextLevel};
+			if (_p65._0.ctor === '[]') {
+				if (_p65._1.ctor === '[]') {
 					return {
 						ctor: '::',
 						_0: {ctor: '[]'},
@@ -5242,29 +5228,29 @@ var _elm_community$graph$Graph$heightLevels = function (graph) {
 					};
 				}
 			} else {
-				var _p65 = _p61._0._0;
-				var _p62 = A3(decrementIndegrees, _p65, nextLevel, indegrees);
-				var nextLevel1 = _p62._0;
-				var indegrees1 = _p62._1;
-				var _p63 = A4(
+				var _p69 = _p65._0._0;
+				var _p66 = A3(decrementIndegrees, _p69, nextLevel, indegrees);
+				var nextLevel1 = _p66._0;
+				var indegrees1 = _p66._1;
+				var _p67 = A4(
 					go,
-					_p61._0._1,
+					_p65._0._1,
 					nextLevel1,
 					indegrees1,
-					A2(_elm_community$graph$Graph$remove, _p65.node.id, graph));
-				if (_p63.ctor === '[]') {
+					A2(_elm_community$graph$Graph$remove, _p69.node.id, graph));
+				if (_p67.ctor === '[]') {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Graph',
 						{
-							start: {line: 1020, column: 13},
-							end: {line: 1024, column: 44}
+							start: {line: 1246, column: 21},
+							end: {line: 1251, column: 56}
 						},
-						_p63)('Graph.heightLevels: Reached a branch which is impossible by invariants. Please file a bug report!');
+						_p67)('Graph.heightLevels: Reached a branch which is impossible by invariants. Please file a bug report!');
 				} else {
 					return {
 						ctor: '::',
-						_0: {ctor: '::', _0: _p65, _1: _p63._0},
-						_1: _p63._1
+						_0: {ctor: '::', _0: _p69, _1: _p67._0},
+						_1: _p67._1
 					};
 				}
 			}
@@ -5278,20 +5264,135 @@ var _elm_community$graph$Graph$heightLevels = function (graph) {
 				_elm_community$intdict$IntDict$size(ctx.incoming));
 		},
 		_elm_community$intdict$IntDict$empty);
+	var isSource = function (ctx) {
+		return _elm_community$intdict$IntDict$isEmpty(ctx.incoming);
+	};
 	var sources = A3(
 		_elm_community$graph$Graph$fold,
 		F2(
 			function (ctx, acc) {
-				return _elm_community$intdict$IntDict$isEmpty(ctx.incoming) ? {ctor: '::', _0: ctx, _1: acc} : acc;
+				return isSource(ctx) ? {ctor: '::', _0: ctx, _1: acc} : acc;
 			}),
 		{ctor: '[]'},
-		graph);
+		_p70);
 	return A4(
 		go,
 		sources,
 		{ctor: '[]'},
-		countIndegrees(graph),
+		countIndegrees(_p70),
+		_p70);
+};
+var _elm_community$graph$Graph$AcyclicGraph = F2(
+	function (a, b) {
+		return {ctor: 'AcyclicGraph', _0: a, _1: b};
+	});
+var _elm_community$graph$Graph$checkForBackEdges = F2(
+	function (ordering, graph) {
+		var success = function (_p71) {
+			return A2(_elm_community$graph$Graph$AcyclicGraph, graph, ordering);
+		};
+		var check = F2(
+			function (id, _p72) {
+				var _p73 = _p72;
+				var error = 'Graph.checkForBackEdges: `ordering` didn\'t contain `id`';
+				var ctx = A3(_elm_community$graph$Graph$unsafeGet, error, id, graph);
+				var backSetWithId = A3(
+					_elm_community$intdict$IntDict$insert,
+					id,
+					{ctor: '_Tuple0'},
+					_p73._0);
+				var backEdges = A2(_elm_community$intdict$IntDict$intersect, ctx.outgoing, backSetWithId);
+				var _p74 = _elm_community$intdict$IntDict$findMin(backEdges);
+				if (_p74.ctor === 'Nothing') {
+					return _elm_lang$core$Result$Ok(
+						{
+							ctor: '_Tuple2',
+							_0: backSetWithId,
+							_1: {ctor: '_Tuple0'}
+						});
+				} else {
+					return _elm_lang$core$Result$Err(
+						A3(_elm_community$graph$Graph$Edge, id, _p74._0._0, _p74._0._1));
+				}
+			});
+		return A2(
+			_elm_lang$core$Result$map,
+			success,
+			A3(
+				_elm_lang$core$List$foldl,
+				F2(
+					function (id, res) {
+						return A2(
+							_elm_lang$core$Result$andThen,
+							check(id),
+							res);
+					}),
+				_elm_lang$core$Result$Ok(
+					{
+						ctor: '_Tuple2',
+						_0: _elm_community$intdict$IntDict$empty,
+						_1: {ctor: '_Tuple0'}
+					}),
+				ordering));
+	});
+var _elm_community$graph$Graph$checkAcyclic = function (graph) {
+	var reversePostOrder = A3(
+		_elm_community$graph$Graph$dfs,
+		_elm_community$graph$Graph$onFinish(
+			function (_p75) {
+				return F2(
+					function (x, y) {
+						return {ctor: '::', _0: x, _1: y};
+					})(
+					function (_) {
+						return _.id;
+					}(
+						function (_) {
+							return _.node;
+						}(_p75)));
+			}),
+		{ctor: '[]'},
 		graph);
+	return A2(_elm_community$graph$Graph$checkForBackEdges, reversePostOrder, graph);
+};
+var _elm_community$graph$Graph$stronglyConnectedComponents = function (graph) {
+	var reversePostOrder = A3(
+		_elm_community$graph$Graph$dfs,
+		_elm_community$graph$Graph$onFinish(
+			function (_p76) {
+				return F2(
+					function (x, y) {
+						return {ctor: '::', _0: x, _1: y};
+					})(
+					function (_) {
+						return _.id;
+					}(
+						function (_) {
+							return _.node;
+						}(_p76)));
+			}),
+		{ctor: '[]'},
+		graph);
+	return A2(
+		_elm_lang$core$Result$mapError,
+		function (_p77) {
+			var forest = A2(
+				_elm_community$graph$Graph$dfsForest,
+				reversePostOrder,
+				_elm_community$graph$Graph$reverseEdges(graph));
+			return A2(
+				_elm_lang$core$List$map,
+				function (_p78) {
+					return _elm_community$graph$Graph$reverseEdges(
+						A3(
+							_elm_lang$core$List$foldr,
+							_elm_community$graph$Graph$insert,
+							_elm_community$graph$Graph$empty,
+							_elm_community$graph$Graph_Tree$preOrderList(_p78)));
+				},
+				forest);
+		},
+		A2(_elm_community$graph$Graph$checkForBackEdges, reversePostOrder, graph));
 };
 
 //import Result //
@@ -17182,8 +17283,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 431, column: 17},
-					end: {line: 439, column: 50}
+					start: {line: 550, column: 17},
+					end: {line: 558, column: 50}
 				},
 				_p8)('invalid hex');
 		}
@@ -17191,8 +17292,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 429, column: 9},
-				end: {line: 442, column: 42}
+				start: {line: 548, column: 9},
+				end: {line: 561, column: 42}
 			},
 			_p7)('invalid hex');
 	}
@@ -17234,9 +17335,13 @@ var _vito$cadet$Main$viewIssueLabel = function (_p11) {
 			_1: {ctor: '[]'}
 		});
 };
-var _vito$cadet$Main$issueNode = function (node) {
-	var radius = 15;
-	var issue = node.label.value;
+var _vito$cadet$Main$issueNode = function (_p14) {
+	var _p15 = _p14;
+	var _p18 = _p15.node;
+	var radius = 15 + ((_elm_lang$core$Basics$toFloat(
+		_elm_community$intdict$IntDict$size(_p15.incoming)) / 2) + _elm_lang$core$Basics$toFloat(
+		_elm_community$intdict$IntDict$size(_p15.outgoing) * 2));
+	var issue = _p18.label.value;
 	var labels = issue.labels;
 	var segments = A2(
 		_gampleman$elm_visualization$Visualization_Shape$pie,
@@ -17245,7 +17350,7 @@ var _vito$cadet$Main$issueNode = function (node) {
 			endAngle: 2 * _elm_lang$core$Basics$pi,
 			padAngle: 0,
 			sortingFn: F2(
-				function (_p15, _p14) {
+				function (_p17, _p16) {
 					return _elm_lang$core$Basics$EQ;
 				}),
 			valueFn: _elm_lang$core$Basics$always(1.0),
@@ -17258,8 +17363,8 @@ var _vito$cadet$Main$issueNode = function (node) {
 			_elm_lang$core$List$repeat,
 			_elm_lang$core$List$length(labels),
 			1));
-	var y = node.label.y;
-	var x = node.label.x;
+	var y = _p18.label.y;
+	var x = _p18.label.x;
 	return A2(
 		_elm_lang$svg$Svg$g,
 		{
@@ -17301,7 +17406,8 @@ var _vito$cadet$Main$issueNode = function (node) {
 									_elm_lang$core$Basics$toString(radius)),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$fill('#fff'),
+									_0: _elm_lang$svg$Svg_Attributes$fill(
+										issue.isPullRequest ? '#28a745' : '#fff'),
 									_1: {ctor: '[]'}
 								}
 							},
@@ -17318,7 +17424,8 @@ var _vito$cadet$Main$issueNode = function (node) {
 										_0: _elm_lang$svg$Svg_Attributes$textAnchor('middle'),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$svg$Svg_Attributes$fill('#C6A49A'),
+											_0: _elm_lang$svg$Svg_Attributes$fill(
+												issue.isPullRequest ? '#fff' : '#C6A49A'),
 											_1: {
 												ctor: '::',
 												_0: _elm_lang$svg$Svg_Attributes$fontWeight('bold'),
@@ -17363,37 +17470,37 @@ var _vito$cadet$Main$issueNode = function (node) {
 var _vito$cadet$Main$linkPath = F2(
 	function (graph, edge) {
 		var target = function () {
-			var _p17 = A2(
+			var _p20 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p16) {
+				function (_p19) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p16));
+						}(_p19));
 				},
 				A2(_elm_community$graph$Graph$get, edge.to, graph));
-			if (_p17.ctor === 'Just') {
-				return {x: _p17._0.x, y: _p17._0.y};
+			if (_p20.ctor === 'Just') {
+				return {x: _p20._0.x, y: _p20._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
 		}();
 		var source = function () {
-			var _p19 = A2(
+			var _p22 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p18) {
+				function (_p21) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p18));
+						}(_p21));
 				},
 				A2(_elm_community$graph$Graph$get, edge.from, graph));
-			if (_p19.ctor === 'Just') {
-				return {x: _p19._0.x, y: _p19._0.y};
+			if (_p22.ctor === 'Just') {
+				return {x: _p22._0.x, y: _p22._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
@@ -17431,18 +17538,53 @@ var _vito$cadet$Main$linkPath = F2(
 			},
 			{ctor: '[]'});
 	});
-var _vito$cadet$Main$view = function (model) {
-	var _p20 = model.error;
-	if (_p20.ctor === 'Just') {
-		return A2(
-			_elm_lang$html$Html$pre,
+var _vito$cadet$Main$viewGraph = F3(
+	function (w, h, _p23) {
+		var _p24 = _p23;
+		var _p25 = _p24.graph;
+		var padding = 50;
+		var nodeContexts = A3(
+			_elm_community$graph$Graph$fold,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
 			{ctor: '[]'},
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html$text(_p20._0),
-				_1: {ctor: '[]'}
-			});
-	} else {
+			_p25);
+		var minX = A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (nc, acc) {
+					return A2(_elm_lang$core$Basics$min, nc.node.label.x, acc);
+				}),
+			999999,
+			nodeContexts) - padding;
+		var minY = A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (nc, acc) {
+					return A2(_elm_lang$core$Basics$min, nc.node.label.y, acc);
+				}),
+			999999,
+			nodeContexts) - padding;
+		var maxX = A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (nc, acc) {
+					return A2(_elm_lang$core$Basics$max, nc.node.label.x, acc);
+				}),
+			0,
+			nodeContexts) + padding;
+		var width = maxX - minX;
+		var maxY = A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (nc, acc) {
+					return A2(_elm_lang$core$Basics$max, nc.node.label.y, acc);
+				}),
+			0,
+			nodeContexts) + padding;
+		var height = maxY - minY;
 		return A2(
 			_elm_lang$svg$Svg$svg,
 			{
@@ -17450,16 +17592,39 @@ var _vito$cadet$Main$view = function (model) {
 				_0: _elm_lang$svg$Svg_Attributes$width(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						_elm_lang$core$Basics$toString(model.config.windowSize.width),
+						_elm_lang$core$Basics$toString(width),
 						'px')),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$height(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(model.config.windowSize.height),
+							_elm_lang$core$Basics$toString(height),
 							'px')),
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$viewBox(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								_elm_lang$core$Basics$toString(minX),
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									' ',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										_elm_lang$core$Basics$toString(minY),
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											' ',
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(width),
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													' ',
+													_elm_lang$core$Basics$toString(height)))))))),
+						_1: {ctor: '[]'}
+					}
 				}
 			},
 			{
@@ -17473,8 +17638,8 @@ var _vito$cadet$Main$view = function (model) {
 					},
 					A2(
 						_elm_lang$core$List$map,
-						_vito$cadet$Main$linkPath(model.graph),
-						_elm_community$graph$Graph$edges(model.graph))),
+						_vito$cadet$Main$linkPath(_p25),
+						_elm_community$graph$Graph$edges(_p25))),
 				_1: {
 					ctor: '::',
 					_0: A2(
@@ -17484,14 +17649,19 @@ var _vito$cadet$Main$view = function (model) {
 							_0: _elm_lang$svg$Svg_Attributes$class('nodes'),
 							_1: {ctor: '[]'}
 						},
-						A2(
-							_elm_lang$core$List$map,
-							_vito$cadet$Main$issueNode,
-							_elm_community$graph$Graph$nodes(model.graph))),
+						A2(_elm_lang$core$List$map, _vito$cadet$Main$issueNode, nodeContexts)),
 					_1: {ctor: '[]'}
 				}
 			});
-	}
+	});
+var _vito$cadet$Main$view = function (model) {
+	return A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		A2(
+			_elm_lang$core$List$map,
+			A2(_vito$cadet$Main$viewGraph, 500, 500),
+			model.issueGraphs));
 };
 var _vito$cadet$Main$isOrgMember = F2(
 	function (users, user) {
@@ -17506,32 +17676,256 @@ var _vito$cadet$Main$isOrgMember = F2(
 				users));
 	});
 var _vito$cadet$Main$issueEntity = F3(
-	function (s1, _p21, issue) {
-		var _p22 = _p21;
+	function (s1, _p26, issue) {
+		var _p27 = _p26;
 		var initialRadius = 30.0;
-		var _p23 = A2(
+		var _p28 = A2(
 			_elm_lang$core$Random$step,
 			A2(
 				_elm_lang$core$Random$float,
 				0,
-				_elm_lang$core$Basics$toFloat(_p22.width)),
+				_elm_lang$core$Basics$toFloat(_p27.width)),
 			s1);
-		var x = _p23._0;
-		var s2 = _p23._1;
-		var _p24 = A2(
+		var x = _p28._0;
+		var s2 = _p28._1;
+		var _p29 = A2(
 			_elm_lang$core$Random$step,
 			A2(
 				_elm_lang$core$Random$float,
 				0,
-				_elm_lang$core$Basics$toFloat(_p22.height)),
+				_elm_lang$core$Basics$toFloat(_p27.height)),
 			s2);
-		var y = _p24._0;
-		var s3 = _p24._1;
+		var y = _p29._0;
+		var s3 = _p29._1;
 		return {
 			ctor: '_Tuple2',
 			_0: {x: x, y: y, vx: 0.0, vy: 0.0, id: issue.id, value: issue},
 			_1: s3
 		};
+	});
+var _vito$cadet$Main$forceGraph = function (graph) {
+	var link = function (_p30) {
+		var _p31 = _p30;
+		var _p35 = _p31.to;
+		var _p34 = _p31.from;
+		var distance = function () {
+			var _p32 = {
+				ctor: '_Tuple2',
+				_0: A2(_elm_community$graph$Graph$get, _p34, graph),
+				_1: A2(_elm_community$graph$Graph$get, _p35, graph)
+			};
+			if (((_p32.ctor === '_Tuple2') && (_p32._0.ctor === 'Just')) && (_p32._1.ctor === 'Just')) {
+				return 40;
+			} else {
+				return _elm_lang$core$Native_Utils.crashCase(
+					'Main',
+					{
+						start: {line: 323, column: 21},
+						end: {line: 329, column: 69}
+					},
+					_p32)('impossible: unknown target');
+			}
+		}();
+		return {
+			source: _p34,
+			target: _p35,
+			distance: _elm_lang$core$Basics$toFloat(distance),
+			strength: _elm_lang$core$Maybe$Nothing
+		};
+	};
+	var forces = {
+		ctor: '::',
+		_0: A2(
+			_gampleman$elm_visualization$Visualization_Force$customLinks,
+			1,
+			A2(
+				_elm_lang$core$List$map,
+				link,
+				_elm_community$graph$Graph$edges(graph))),
+		_1: {
+			ctor: '::',
+			_0: A2(
+				_gampleman$elm_visualization$Visualization_Force$manyBodyStrength,
+				-120,
+				A2(
+					_elm_lang$core$List$map,
+					function (_) {
+						return _.id;
+					},
+					_elm_community$graph$Graph$nodes(graph))),
+			_1: {ctor: '[]'}
+		}
+	};
+	var newSimulation = _gampleman$elm_visualization$Visualization_Force$simulation(forces);
+	return {graph: graph, simulation: newSimulation};
+};
+var _vito$cadet$Main$edgesContains = function (nodeId) {
+	return _elm_lang$core$List$any(
+		function (_p36) {
+			var _p37 = _p36;
+			return _elm_lang$core$Native_Utils.eq(_p37.from, nodeId) || _elm_lang$core$Native_Utils.eq(_p37.to, nodeId);
+		});
+};
+var _vito$cadet$Main$subEdges = function (edges) {
+	var go = F2(
+		function (edges, acc) {
+			go:
+			while (true) {
+				var _p38 = edges;
+				if (_p38.ctor === '[]') {
+					return acc;
+				} else {
+					var _p42 = _p38._1;
+					var _p41 = _p38._0;
+					var hasNeither = A2(
+						_elm_lang$core$List$filter,
+						function (es) {
+							return (!A2(_vito$cadet$Main$edgesContains, _p41.from, es)) && (!A2(_vito$cadet$Main$edgesContains, _p41.to, es));
+						},
+						acc);
+					var hasTo = A2(
+						_elm_lang$core$List$filter,
+						_vito$cadet$Main$edgesContains(_p41.to),
+						acc);
+					var hasFrom = A2(
+						_elm_lang$core$List$filter,
+						_vito$cadet$Main$edgesContains(_p41.from),
+						acc);
+					var _p39 = {ctor: '_Tuple2', _0: hasFrom, _1: hasTo};
+					_v15_4:
+					do {
+						if (_p39.ctor === '_Tuple2') {
+							if (_p39._0.ctor === '::') {
+								if (_p39._0._1.ctor === '[]') {
+									if (_p39._1.ctor === '::') {
+										if (_p39._1._1.ctor === '[]') {
+											var _v16 = _p42,
+												_v17 = {
+												ctor: '::',
+												_0: {
+													ctor: '::',
+													_0: _p41,
+													_1: A2(_elm_lang$core$Basics_ops['++'], _p39._0._0, _p39._1._0)
+												},
+												_1: hasNeither
+											};
+											edges = _v16;
+											acc = _v17;
+											continue go;
+										} else {
+											break _v15_4;
+										}
+									} else {
+										var _v18 = _p42,
+											_v19 = {
+											ctor: '::',
+											_0: {ctor: '::', _0: _p41, _1: _p39._0._0},
+											_1: hasNeither
+										};
+										edges = _v18;
+										acc = _v19;
+										continue go;
+									}
+								} else {
+									break _v15_4;
+								}
+							} else {
+								if (_p39._1.ctor === '[]') {
+									var _v20 = _p42,
+										_v21 = {
+										ctor: '::',
+										_0: {
+											ctor: '::',
+											_0: _p41,
+											_1: {ctor: '[]'}
+										},
+										_1: acc
+									};
+									edges = _v20;
+									acc = _v21;
+									continue go;
+								} else {
+									if (_p39._1._1.ctor === '[]') {
+										var _v22 = _p42,
+											_v23 = {
+											ctor: '::',
+											_0: {ctor: '::', _0: _p41, _1: _p39._1._0},
+											_1: hasNeither
+										};
+										edges = _v22;
+										acc = _v23;
+										continue go;
+									} else {
+										break _v15_4;
+									}
+								}
+							}
+						} else {
+							break _v15_4;
+						}
+					} while(false);
+					return _elm_lang$core$Native_Utils.crashCase(
+						'Main',
+						{
+							start: {line: 151, column: 25},
+							end: {line: 165, column: 57}
+						},
+						_p39)('impossible');
+				}
+			}
+		});
+	return A2(
+		go,
+		edges,
+		{ctor: '[]'});
+};
+var _vito$cadet$Main$subGraphs = function (graph) {
+	var subEdgeNodes = A2(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (edge, set) {
+				return A2(
+					_elm_lang$core$Set$insert,
+					edge.from,
+					A2(_elm_lang$core$Set$insert, edge.to, set));
+			}),
+		_elm_lang$core$Set$empty);
+	var connectedGraphs = A2(
+		_elm_lang$core$List$map,
+		function (_p43) {
+			return A3(
+				_elm_lang$core$Basics$flip,
+				_elm_community$graph$Graph$inducedSubgraph,
+				graph,
+				_elm_lang$core$Set$toList(
+					subEdgeNodes(_p43)));
+		},
+		_vito$cadet$Main$subEdges(
+			_elm_community$graph$Graph$edges(graph)));
+	var singletons = A3(
+		_elm_community$graph$Graph$fold,
+		F2(
+			function (nc, ncs) {
+				return (_elm_community$intdict$IntDict$isEmpty(nc.incoming) && _elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? {ctor: '::', _0: nc, _1: ncs} : ncs;
+			}),
+		{ctor: '[]'},
+		graph);
+	var singletonGraphs = A2(
+		_elm_lang$core$List$map,
+		A2(_elm_lang$core$Basics$flip, _elm_community$graph$Graph$insert, _elm_community$graph$Graph$empty),
+		singletons);
+	return A2(_elm_lang$core$Basics_ops['++'], connectedGraphs, singletonGraphs);
+};
+var _vito$cadet$Main$updateContextWithValue = F2(
+	function (nodeCtx, value) {
+		var node = nodeCtx.node;
+		return _elm_lang$core$Native_Utils.update(
+			nodeCtx,
+			{
+				node: _elm_lang$core$Native_Utils.update(
+					node,
+					{label: value})
+			});
 	});
 var _vito$cadet$Main$bind = F3(
 	function (target, size, gap) {
@@ -17539,66 +17933,53 @@ var _vito$cadet$Main$bind = F3(
 			target,
 			_elm_lang$core$Basics$toFloat(size) - gap) > 0) ? (_elm_lang$core$Basics$toFloat(size) - gap) : target);
 	});
-var _vito$cadet$Main$updateContextWithValue = F3(
-	function (_p25, nodeCtx, value) {
-		var _p26 = _p25;
-		var node = nodeCtx.node;
-		var bounded = _elm_lang$core$Native_Utils.update(
-			value,
-			{
-				x: A3(_vito$cadet$Main$bind, value.x, _p26.width, 20),
-				y: A3(_vito$cadet$Main$bind, value.y, _p26.height, 20)
-			});
-		return _elm_lang$core$Native_Utils.update(
-			nodeCtx,
-			{
-				node: _elm_lang$core$Native_Utils.update(
-					node,
-					{label: bounded})
-			});
-	});
-var _vito$cadet$Main$updateGraphWithList = function (windowSize) {
+var _vito$cadet$Main$updateGraphWithList = function () {
 	var graphUpdater = function (value) {
 		return _elm_lang$core$Maybe$map(
 			function (ctx) {
-				return A3(_vito$cadet$Main$updateContextWithValue, windowSize, ctx, value);
+				return A2(_vito$cadet$Main$updateContextWithValue, ctx, value);
 			});
 	};
 	return _elm_lang$core$List$foldr(
-		F2(
-			function (node, graph) {
-				return A3(
-					_elm_community$graph$Graph$update,
-					node.id,
-					graphUpdater(node),
-					graph);
-			}));
+		function (node) {
+			return A2(
+				_elm_community$graph$Graph$update,
+				node.id,
+				graphUpdater(node));
+		});
+}();
+var _vito$cadet$Main$tickGraph = function (_p44) {
+	var _p45 = _p44;
+	var _p47 = _p45.graph;
+	var _p46 = A2(
+		_gampleman$elm_visualization$Visualization_Force$tick,
+		_p45.simulation,
+		A2(
+			_elm_lang$core$List$map,
+			function (_) {
+				return _.label;
+			},
+			_elm_community$graph$Graph$nodes(_p47)));
+	var newState = _p46._0;
+	var list = _p46._1;
+	return {
+		graph: A2(_vito$cadet$Main$updateGraphWithList, _p47, list),
+		simulation: newState
+	};
 };
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p27 = msg;
-		switch (_p27.ctor) {
+		var _p48 = msg;
+		switch (_p48.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
-				var _p28 = A2(
-					_gampleman$elm_visualization$Visualization_Force$tick,
-					model.simulation,
-					A2(
-						_elm_lang$core$List$map,
-						function (_) {
-							return _.label;
-						},
-						_elm_community$graph$Graph$nodes(model.graph)));
-				var newState = _p28._0;
-				var list = _p28._1;
 				return {
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							graph: A3(_vito$cadet$Main$updateGraphWithList, model.config.windowSize, model.graph, list),
-							simulation: newState
+							issueGraphs: A2(_elm_lang$core$List$map, _vito$cadet$Main$tickGraph, model.issueGraphs)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -17611,33 +17992,29 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p27._0})
+								{windowSize: _p48._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				if (_p27._0.ctor === 'Ok') {
-					var _p42 = _p27._0._0;
-					var link = function (_p29) {
-						var _p30 = _p29;
-						return {source: _p30.from, target: _p30.to, distance: 50, strength: _elm_lang$core$Maybe$Nothing};
-					};
+				if (_p48._0.ctor === 'Ok') {
+					var _p60 = _p48._0._0;
 					var references = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
 							function (targetIDStr, events, pairs) {
 								var targetID = function () {
-									var _p31 = _elm_lang$core$String$toInt(targetIDStr);
-									if (_p31.ctor === 'Ok') {
-										return _p31._0;
+									var _p49 = _elm_lang$core$String$toInt(targetIDStr);
+									if (_p49.ctor === 'Ok') {
+										return _p49._0;
 									} else {
 										return _elm_lang$core$Native_Utils.crashCase(
 											'Main',
 											{
-												start: {line: 179, column: 37},
-												end: {line: 184, column: 60}
+												start: {line: 259, column: 37},
+												end: {line: 264, column: 60}
 											},
-											_p31)(_p31._0);
+											_p49)(_p49._0);
 									}
 								}();
 								return A2(
@@ -17645,12 +18022,12 @@ var _vito$cadet$Main$update = F2(
 									A2(
 										_elm_lang$core$List$filterMap,
 										function (event) {
-											var _p33 = event.source;
-											if (_p33.ctor === 'Just') {
-												var _p34 = _p33._0.issueID;
-												if (_p34.ctor === 'Just') {
+											var _p51 = event.source;
+											if (_p51.ctor === 'Just') {
+												var _p52 = _p51._0.issueID;
+												if (_p52.ctor === 'Just') {
 													return _elm_lang$core$Maybe$Just(
-														{ctor: '_Tuple2', _0: targetID, _1: _p34._0});
+														{ctor: '_Tuple2', _0: targetID, _1: _p52._0});
 												} else {
 													return _elm_lang$core$Maybe$Nothing;
 												}
@@ -17662,28 +18039,28 @@ var _vito$cadet$Main$update = F2(
 									pairs);
 							}),
 						{ctor: '[]'},
-						_p42.timelines);
+						_p60.timelines);
 					var allEvents = _elm_lang$core$List$concat(
-						_elm_lang$core$Dict$values(_p42.timelines));
+						_elm_lang$core$Dict$values(_p60.timelines));
 					var allIssues = _elm_lang$core$List$concat(
-						_elm_lang$core$Dict$values(_p42.issues));
+						_elm_lang$core$Dict$values(_p60.issues));
 					var graph = A2(
 						_elm_community$graph$Graph$fromNodesAndEdges,
 						_elm_lang$core$Tuple$first(
 							A3(
 								_elm_lang$core$List$foldl,
 								F2(
-									function (issue, _p35) {
-										var _p36 = _p35;
-										var _p37 = A3(_vito$cadet$Main$issueEntity, _p36._1, model.config.windowSize, issue);
-										var entity = _p37._0;
-										var nextSeed = _p37._1;
+									function (issue, _p53) {
+										var _p54 = _p53;
+										var _p55 = A3(_vito$cadet$Main$issueEntity, _p54._1, model.config.windowSize, issue);
+										var entity = _p55._0;
+										var nextSeed = _p55._1;
 										return {
 											ctor: '_Tuple2',
 											_0: {
 												ctor: '::',
 												_0: A2(_elm_community$graph$Graph$Node, issue.id, entity),
-												_1: _p36._0
+												_1: _p54._0
 											},
 											_1: nextSeed
 										};
@@ -17691,34 +18068,34 @@ var _vito$cadet$Main$update = F2(
 								{
 									ctor: '_Tuple2',
 									_0: {ctor: '[]'},
-									_1: _elm_lang$core$Random$initialSeed(42)
+									_1: _elm_lang$core$Random$initialSeed(1)
 								},
 								allIssues)),
 						{ctor: '[]'});
 					var wiredGraph = A3(
 						_elm_lang$core$List$foldl,
 						F2(
-							function (_p38, graph) {
-								var _p39 = _p38;
-								var _p41 = _p39._0;
-								var _p40 = _p39._1;
+							function (_p56, graph) {
+								var _p57 = _p56;
+								var _p59 = _p57._0;
+								var _p58 = _p57._1;
 								return A2(
 									_elm_community$graph$Graph$mapContexts,
 									function (nc) {
-										return _elm_lang$core$Native_Utils.eq(nc.node.id, _p40) ? _elm_lang$core$Native_Utils.update(
+										return _elm_lang$core$Native_Utils.eq(nc.node.id, _p58) ? _elm_lang$core$Native_Utils.update(
 											nc,
 											{
 												outgoing: A3(
 													_elm_community$intdict$IntDict$insert,
-													_p41,
+													_p59,
 													{ctor: '_Tuple0'},
 													nc.outgoing)
-											}) : (_elm_lang$core$Native_Utils.eq(nc.node.id, _p41) ? _elm_lang$core$Native_Utils.update(
+											}) : (_elm_lang$core$Native_Utils.eq(nc.node.id, _p59) ? _elm_lang$core$Native_Utils.update(
 											nc,
 											{
 												incoming: A3(
 													_elm_community$intdict$IntDict$insert,
-													_p40,
+													_p58,
 													{ctor: '_Tuple0'},
 													nc.incoming)
 											}) : nc);
@@ -17727,50 +18104,26 @@ var _vito$cadet$Main$update = F2(
 							}),
 						graph,
 						references);
-					var newGraph = A3(
-						_elm_community$graph$Graph$fold,
-						F2(
-							function (nc, g) {
-								return (_elm_community$intdict$IntDict$isEmpty(nc.incoming) && _elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? g : A2(_elm_community$graph$Graph$insert, nc, g);
-							}),
-						_elm_community$graph$Graph$empty,
-						wiredGraph);
-					var forces = {
-						ctor: '::',
-						_0: A2(
-							_gampleman$elm_visualization$Visualization_Force$customLinks,
-							1,
-							A2(
-								_elm_lang$core$List$map,
-								link,
-								_elm_community$graph$Graph$edges(wiredGraph))),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_gampleman$elm_visualization$Visualization_Force$manyBodyStrength,
-								-20,
-								A2(
-									_elm_lang$core$List$map,
-									function (_) {
-										return _.id;
-									},
-									_elm_community$graph$Graph$nodes(wiredGraph))),
-							_1: {ctor: '[]'}
-						}
-					};
-					var newSimulation = _gampleman$elm_visualization$Visualization_Force$simulation(forces);
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{repos: _p42.repositories, repoIssues: _p42.issues, issueTimelines: _p42.timelines, graph: newGraph, simulation: newSimulation}),
+							{
+								repos: _p60.repositories,
+								repoIssues: _p60.issues,
+								issueTimelines: _p60.timelines,
+								issueGraphs: A2(
+									_elm_lang$core$List$map,
+									_vito$cadet$Main$forceGraph,
+									_vito$cadet$Main$subGraphs(wiredGraph))
+							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'error', _p27._0._0),
+						A2(_elm_lang$core$Debug$log, 'error', _p48._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 		}
@@ -17778,9 +18131,13 @@ var _vito$cadet$Main$update = F2(
 var _vito$cadet$Main$Config = function (a) {
 	return {windowSize: a};
 };
-var _vito$cadet$Main$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {config: a, error: b, repos: c, repoIssues: d, issueTimelines: e, graph: f, simulation: g};
+var _vito$cadet$Main$Model = F5(
+	function (a, b, c, d, e) {
+		return {config: a, repos: b, repoIssues: c, issueTimelines: d, issueGraphs: e};
+	});
+var _vito$cadet$Main$ForceGraph = F2(
+	function (a, b) {
+		return {graph: a, simulation: b};
 	});
 var _vito$cadet$Main$Data = F3(
 	function (a, b, c) {
@@ -17823,13 +18180,10 @@ var _vito$cadet$Main$init = function (config) {
 		ctor: '_Tuple2',
 		_0: {
 			config: config,
-			error: _elm_lang$core$Maybe$Nothing,
 			repos: {ctor: '[]'},
 			repoIssues: _elm_lang$core$Dict$empty,
 			issueTimelines: _elm_lang$core$Dict$empty,
-			graph: _elm_community$graph$Graph$empty,
-			simulation: _gampleman$elm_visualization$Visualization_Force$simulation(
-				{ctor: '[]'})
+			issueGraphs: {ctor: '[]'}
 		},
 		_1: _vito$cadet$Main$fetchData
 	};
@@ -17847,7 +18201,15 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			_0: _elm_lang$window$Window$resizes(_vito$cadet$Main$Resize),
 			_1: {
 				ctor: '::',
-				_0: _gampleman$elm_visualization$Visualization_Force$isCompleted(model.simulation) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
+				_0: A2(
+					_elm_lang$core$List$all,
+					function (_p61) {
+						return _gampleman$elm_visualization$Visualization_Force$isCompleted(
+							function (_) {
+								return _.simulation;
+							}(_p61));
+					},
+					model.issueGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
 				_1: {ctor: '[]'}
 			}
 		});
