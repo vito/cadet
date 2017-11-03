@@ -17618,7 +17618,7 @@ var _vito$cadet$Main$viewGraph = F2(
 	function (model, _p32) {
 		var _p33 = _p32;
 		var _p42 = _p33.graph;
-		var padding = 50;
+		var padding = 10;
 		var nodeContexts = A3(
 			_elm_community$graph$Graph$fold,
 			F2(

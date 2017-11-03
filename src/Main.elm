@@ -416,7 +416,7 @@ viewGraph model { graph } =
             List.map issueNodeBounds nodeContexts
 
         padding =
-            50
+            10
 
         minX =
             List.foldl (\( x1, _, _, _ ) acc -> min x1 acc) 999999 bounds - padding
