@@ -7537,10 +7537,10 @@ var _vito$cadet$GitHub$reactionCodes = function (reactions) {
 					_0: {ctor: '_Tuple2', _0: '😕', _1: reactions.confused},
 					_1: {
 						ctor: '::',
-						_0: {ctor: '_Tuple2', _0: '🎉', _1: reactions.heart},
+						_0: {ctor: '_Tuple2', _0: '💖', _1: reactions.heart},
 						_1: {
 							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: '💖', _1: reactions.hooray},
+							_0: {ctor: '_Tuple2', _0: '🎉', _1: reactions.hooray},
 							_1: {ctor: '[]'}
 						}
 					}

@@ -105,16 +105,6 @@ updateGraphWithList =
         List.foldr (\node -> Graph.update node.id (graphUpdater node))
 
 
-bind : Float -> Int -> Float -> Float
-bind target size gap =
-    if target < gap then
-        gap
-    else if target > toFloat size - gap then
-        toFloat size - gap
-    else
-        target
-
-
 updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceNode n -> Graph.NodeContext (ForceNode n) ()
 updateContextWithValue nodeCtx value =
     let
@@ -375,14 +365,18 @@ isOrgMember users user =
 view : Model -> Html Msg
 view model =
     Html.div [] <|
-        List.map (viewGraph 500 500) (List.reverse <| List.sortBy (.graph >> Graph.size) model.issueGraphs)
+        List.map (viewGraph model) (List.reverse <| List.sortBy (.graph >> Graph.size) model.issueGraphs)
 
 
-viewGraph : Int -> Int -> ForceGraph GitHub.Issue -> Html Msg
-viewGraph w h { graph } =
+viewGraph : Model -> ForceGraph GitHub.Issue -> Html Msg
+viewGraph model { graph } =
     let
         nodeContexts =
             Graph.fold (::) [] graph
+
+        issues =
+            List.map (\nc -> ( nc, Dict.get (toString nc.node.label.value.id) model.issueTimelines )) <|
+                nodeContexts
 
         padding =
             50
@@ -411,7 +405,8 @@ viewGraph w h { graph } =
             , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
             [ Svg.g [ SA.class "links" ] (List.map (linkPath graph) (Graph.edges graph))
-            , Svg.g [ SA.class "nodes" ] (List.map issueNode nodeContexts)
+            , Svg.g [ SA.class "flairs" ] (List.map issueFlair issues)
+            , Svg.g [ SA.class "nodes" ] (List.map issueNode issues)
             ]
 
 
@@ -445,8 +440,95 @@ linkPath graph edge =
             []
 
 
-issueNode : Graph.NodeContext (ForceNode GitHub.Issue) () -> Svg Msg
-issueNode { node, incoming, outgoing } =
+issueRadius : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadius { incoming, outgoing } =
+    15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+
+
+issueFlair : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
+issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
+    let
+        x =
+            node.label.x
+
+        y =
+            node.label.y
+
+        issue =
+            node.label.value
+
+        radius =
+            issueRadius nc
+
+        reactions =
+            List.filter (Tuple.second >> flip (>) 0) <|
+                (( "💬", issue.commentCount ) :: GitHub.reactionCodes issue.reactions)
+
+        reactionSegment i ( _, count ) =
+            let
+                segments =
+                    VS.pie
+                        { startAngle = 0
+                        , endAngle = 2 * pi
+                        , padAngle = 0.03
+                        , sortingFn = \_ _ -> EQ
+                        , valueFn = always 1.0
+                        , innerRadius = radius + 3
+                        , outerRadius = radius + 18 + toFloat count
+                        , cornerRadius = 3
+                        , padRadius = 0
+                        }
+                        (List.repeat (List.length reactions) 1)
+            in
+                case List.take 1 (List.drop i segments) of
+                    [ s ] ->
+                        s
+
+                    _ ->
+                        Debug.crash "impossible"
+
+        innerCentroid arc =
+            let
+                r =
+                    arc.innerRadius + 10
+
+                a =
+                    (arc.startAngle + arc.endAngle) / 2 - pi / 2
+            in
+                ( cos a * r, sin a * r )
+    in
+        Svg.g
+            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+            ]
+        <|
+            (List.indexedMap
+                (\i (( emoji, count ) as reaction) ->
+                    let
+                        arc =
+                            reactionSegment i reaction
+                    in
+                        Svg.g [ SA.class "reveal" ]
+                            [ Svg.path
+                                [ SA.d (VS.arc arc)
+                                , SA.fill ("rgba(255, 255, 255, .3)")
+                                ]
+                                []
+                            , Svg.text_
+                                [ SA.transform ("translate" ++ toString (innerCentroid arc))
+                                , SA.textAnchor "middle"
+                                , SA.alignmentBaseline "middle"
+                                , SA.class "hidden"
+                                ]
+                                [ Svg.text emoji
+                                ]
+                            ]
+                )
+                reactions
+            )
+
+
+issueNode : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
+issueNode ( { node, incoming, outgoing } as nc, mevents ) =
     let
         x =
             node.label.x
@@ -461,9 +543,9 @@ issueNode { node, incoming, outgoing } =
             issue.labels
 
         radius =
-            15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+            issueRadius nc
 
-        segments =
+        labelSegments =
             VS.pie
                 { startAngle = 0
                 , endAngle = 2 * pi
@@ -493,14 +575,13 @@ issueNode { node, incoming, outgoing } =
                     ]
                     []
                  , Svg.text_
-                    [ SA.y "4"
-                    , SA.textAnchor "middle"
+                    [ SA.textAnchor "middle"
+                    , SA.alignmentBaseline "middle"
                     , SA.fill <|
                         if issue.isPullRequest then
                             "#fff"
                         else
                             "#C6A49A"
-                    , SA.fontWeight "bold"
                     ]
                     [ Svg.text (toString issue.number)
                     ]
@@ -513,7 +594,7 @@ issueNode { node, incoming, outgoing } =
                                     ]
                                     []
                             )
-                            segments
+                            labelSegments
                             labels
                        )
                 )
@@ -579,34 +660,6 @@ viewIssueLabel { name, color } =
         ]
         [ Html.text name
         ]
-
-
-issueFlair : GitHub.Issue -> List (Html Msg)
-issueFlair { url, reactions, commentCount } =
-    let
-        presentReactions =
-            List.filter ((/=) 0 << Tuple.second) <|
-                GitHub.reactionCodes reactions
-
-        viewReaction ( code, count ) =
-            Html.span [ HA.class "reaction" ]
-                [ Html.span [ HA.class "emoji" ] [ Html.text code ]
-                , Html.span [ HA.class "count" ] [ Html.text <| toString count ]
-                ]
-
-        commentsElement =
-            Html.span [ HA.class "reaction" ]
-                [ Html.span [ HA.class "emoji" ] [ Html.i [ HA.class "octicon octicon-comment" ] [] ]
-                , Html.span [ HA.class "count" ] [ Html.text <| toString commentCount ]
-                ]
-
-        reactionElements =
-            List.map viewReaction presentReactions
-    in
-        if commentCount > 0 then
-            reactionElements ++ [ commentsElement ]
-        else
-            reactionElements
 
 
 fetchData : Cmd Msg

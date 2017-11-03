@@ -155,8 +155,8 @@ reactionCodes reactions =
     , ( "👎", reactions.minusOne )
     , ( "😄", reactions.laugh )
     , ( "😕", reactions.confused )
-    , ( "🎉", reactions.heart )
-    , ( "💖", reactions.hooray )
+    , ( "💖", reactions.heart )
+    , ( "🎉", reactions.hooray )
     ]
 
 
