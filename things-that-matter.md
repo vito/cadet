@@ -1,22 +1,24 @@
-things that i care about:
+things to visualize:
 
-* visualize issue references
-* how many reactions/comments
-* project
-* last activity
-* who had last word
-* labels
-* anti-pattern
-* milestone
-* has the author ever submitted a PR
-* subscribers? (is that the same as 'participants'?)
-* issues that are tied to a PR
-* issues that reference many closed issues (i.e. consolidated)
-  * these should maybe appear more prominent
+* [x] issue references
+* [x] labels
+* [x] how many reactions/comments
+* [x] issues that are tied to a PR
+* [ ] last activity
+* [ ] who had last word
+* [ ] issues that reference many closed issues (i.e. consolidated)
+* [ ] subscribers? (is that the same as 'participants'?)
+* [ ] has the author ever submitted a PR
 
 features that i care about:
 
-* lasso/multi-select labeling
-* assigning to projects
-* force-directed graph would probably be nice
-* dragging issues around (brownie points for persisting it)
+* [x] force-directed graph would probably be nice
+* [ ] view by project
+* [ ] assign to project
+* [ ] view by milestone
+* [ ] see what's in flight
+* [ ] see where things are prioritized
+* [ ] batch labeling
+* [ ] ephemeral connection management (i.e. without having to leave comment)
+* [ ] breaking/ignoring incidental references (i.e. a reference that is semantically meaningless)
+* [ ] ~~dragging issues around (brownie points for persisting it)~~ recognizing via deterministic locations is good enough for now
