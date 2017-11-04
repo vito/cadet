@@ -14,6 +14,7 @@ import Regex exposing (Regex)
 import Set
 import Svg exposing (Svg)
 import Svg.Attributes as SA
+import Svg.Lazy
 import Time
 import Visualization.Shape as VS
 import Window
@@ -217,9 +218,6 @@ viewGraph { graph } =
         bounds =
             List.map issueNodeBounds nodeContexts
 
-        nodes =
-            Graph.nodes graph
-
         padding =
             10
 
@@ -240,15 +238,28 @@ viewGraph { graph } =
 
         height =
             maxY - minY
+
+        links =
+            (List.map (Svg.Lazy.lazy <| linkPath graph) (Graph.edges graph))
+
+        ( flairs, nodes ) =
+            Graph.fold
+                (\{ node } ( fs, ns ) ->
+                    ( Svg.Lazy.lazy viewIssueFlair node :: fs
+                    , Svg.Lazy.lazy viewIssueNode node :: ns
+                    )
+                )
+                ( [], [] )
+                graph
     in
         Svg.svg
             [ SA.width (toString width ++ "px")
             , SA.height (toString height ++ "px")
             , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
-            [ Svg.g [ SA.class "links" ] (List.map (linkPath graph) (Graph.edges graph))
-            , Svg.g [ SA.class "flairs" ] (List.map viewIssueFlair nodes)
-            , Svg.g [ SA.class "nodes" ] (List.map viewIssueNode nodes)
+            [ Svg.g [ SA.class "links" ] links
+            , Svg.g [ SA.class "flairs" ] flairs
+            , Svg.g [ SA.class "nodes" ] nodes
             ]
 
 
