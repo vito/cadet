@@ -17159,8 +17159,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 680, column: 17},
-					end: {line: 688, column: 50}
+					start: {line: 675, column: 17},
+					end: {line: 683, column: 50}
 				},
 				_p2)('invalid hex');
 		}
@@ -17168,8 +17168,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 678, column: 9},
-				end: {line: 691, column: 42}
+				start: {line: 673, column: 9},
+				end: {line: 686, column: 42}
 			},
 			_p1)('invalid hex');
 	}
@@ -17307,8 +17307,8 @@ var _vito$cadet$Main$issueFlair = function (_p11) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 533, column: 17},
-						end: {line: 538, column: 49}
+						start: {line: 528, column: 17},
+						end: {line: 533, column: 49}
 					},
 					_p18)('impossible');
 			}
@@ -17850,8 +17850,8 @@ var _vito$cadet$Main$forceGraph = function (graph) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 304, column: 21},
-						end: {line: 309, column: 69}
+						start: {line: 299, column: 21},
+						end: {line: 304, column: 69}
 					},
 					_p50)('impossible: unknown target');
 			}
@@ -17890,35 +17890,40 @@ var _vito$cadet$Main$forceGraph = function (graph) {
 	return {graph: graph, simulation: newSimulation};
 };
 var _vito$cadet$Main$collectReferences = function (timelines) {
+	var findSource = function (event) {
+		var _p54 = event.source;
+		if (_p54.ctor === 'Just') {
+			return _p54._0.issueID;
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	};
+	var edge = F2(
+		function (targetID, sourceID) {
+			return {
+				from: sourceID,
+				to: targetID,
+				label: {ctor: '_Tuple0'}
+			};
+		});
+	var addReferencesTo = F3(
+		function (targetID, events, edges) {
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				A2(
+					_elm_lang$core$List$filterMap,
+					function (_p55) {
+						return A2(
+							_elm_lang$core$Maybe$map,
+							edge(targetID),
+							findSource(_p55));
+					},
+					events),
+				edges);
+		});
 	return A3(
 		_elm_lang$core$Dict$foldl,
-		F3(
-			function (targetID, events, edges) {
-				return A2(
-					_elm_lang$core$Basics_ops['++'],
-					A2(
-						_elm_lang$core$List$filterMap,
-						function (event) {
-							var _p54 = event.source;
-							if (_p54.ctor === 'Just') {
-								var _p55 = _p54._0.issueID;
-								if (_p55.ctor === 'Just') {
-									return _elm_lang$core$Maybe$Just(
-										{
-											from: _p55._0,
-											to: targetID,
-											label: {ctor: '_Tuple0'}
-										});
-								} else {
-									return _elm_lang$core$Maybe$Nothing;
-								}
-							} else {
-								return _elm_lang$core$Maybe$Nothing;
-							}
-						},
-						events),
-					edges);
-			}),
+		addReferencesTo,
 		{ctor: '[]'},
 		timelines);
 };
@@ -17955,15 +17960,15 @@ var _vito$cadet$Main$subEdges = function (edges) {
 						_vito$cadet$Main$edgesContains(_p61.from),
 						acc);
 					var _p59 = {ctor: '_Tuple2', _0: hasFrom, _1: hasTo};
-					_v24_4:
+					_v23_4:
 					do {
 						if (_p59.ctor === '_Tuple2') {
 							if (_p59._0.ctor === '::') {
 								if (_p59._0._1.ctor === '[]') {
 									if (_p59._1.ctor === '::') {
 										if (_p59._1._1.ctor === '[]') {
-											var _v25 = _p62,
-												_v26 = {
+											var _v24 = _p62,
+												_v25 = {
 												ctor: '::',
 												_0: {
 													ctor: '::',
@@ -17972,30 +17977,30 @@ var _vito$cadet$Main$subEdges = function (edges) {
 												},
 												_1: hasNeither
 											};
-											edges = _v25;
-											acc = _v26;
+											edges = _v24;
+											acc = _v25;
 											continue go;
 										} else {
-											break _v24_4;
+											break _v23_4;
 										}
 									} else {
-										var _v27 = _p62,
-											_v28 = {
+										var _v26 = _p62,
+											_v27 = {
 											ctor: '::',
 											_0: {ctor: '::', _0: _p61, _1: _p59._0._0},
 											_1: hasNeither
 										};
-										edges = _v27;
-										acc = _v28;
+										edges = _v26;
+										acc = _v27;
 										continue go;
 									}
 								} else {
-									break _v24_4;
+									break _v23_4;
 								}
 							} else {
 								if (_p59._1.ctor === '[]') {
-									var _v29 = _p62,
-										_v30 = {
+									var _v28 = _p62,
+										_v29 = {
 										ctor: '::',
 										_0: {
 											ctor: '::',
@@ -18004,27 +18009,27 @@ var _vito$cadet$Main$subEdges = function (edges) {
 										},
 										_1: acc
 									};
-									edges = _v29;
-									acc = _v30;
+									edges = _v28;
+									acc = _v29;
 									continue go;
 								} else {
 									if (_p59._1._1.ctor === '[]') {
-										var _v31 = _p62,
-											_v32 = {
+										var _v30 = _p62,
+											_v31 = {
 											ctor: '::',
 											_0: {ctor: '::', _0: _p61, _1: _p59._1._0},
 											_1: hasNeither
 										};
-										edges = _v31;
-										acc = _v32;
+										edges = _v30;
+										acc = _v31;
 										continue go;
 									} else {
-										break _v24_4;
+										break _v23_4;
 									}
 								}
 							}
 						} else {
-							break _v24_4;
+							break _v23_4;
 						}
 					} while(false);
 					return _elm_lang$core$Native_Utils.crashCase(

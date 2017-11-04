@@ -272,27 +272,22 @@ computeGraphs model data =
 
 collectReferences : Dict Int (List GitHub.TimelineEvent) -> List (Graph.Edge ())
 collectReferences timelines =
-    Dict.foldl
-        (\targetID events edges ->
-            List.filterMap
-                (\event ->
-                    case event.source of
-                        Just { type_, issueID } ->
-                            case issueID of
-                                Just sourceID ->
-                                    Just { from = sourceID, to = targetID, label = () }
+    let
+        edge targetID sourceID =
+            { from = sourceID, to = targetID, label = () }
 
-                                _ ->
-                                    Nothing
+        findSource event =
+            case event.source of
+                Just { type_, issueID } ->
+                    issueID
 
-                        _ ->
-                            Nothing
-                )
-                events
-                ++ edges
-        )
-        []
-        timelines
+                _ ->
+                    Nothing
+
+        addReferencesTo targetID events edges =
+            List.filterMap (Maybe.map (edge targetID) << findSource) events ++ edges
+    in
+        Dict.foldl addReferencesTo [] timelines
 
 
 forceGraph : Graph (ForceNode n) () -> ForceGraph n
