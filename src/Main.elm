@@ -45,6 +45,13 @@ type alias ForceGraph n =
 
 type alias ForceNode n =
     { entity : ForceEntity n
+    , flair : List (Svg Msg)
+    , labels : List (Svg Msg)
+    , radii :
+        { base : Float
+        , withLabels : Float
+        , withFlair : Float
+        }
     }
 
 
@@ -252,9 +259,10 @@ computeGraphs model data =
             collectReferences issueTimelines
 
         graph =
-            Graph.fromNodesAndEdges
-                (List.indexedMap issueGraphNode allIssues)
-                references
+            Graph.mapContexts issueForceNode <|
+                Graph.fromNodesAndEdges
+                    (List.map (\i -> Graph.Node i.id i) allIssues)
+                    references
 
         issueGraphs =
             subGraphs graph
@@ -303,7 +311,11 @@ forceGraph graph =
                         _ ->
                             Debug.crash "impossible: unknown target"
             in
-                { source = from, target = to, distance = toFloat distance, strength = Nothing }
+                { source = from
+                , target = to
+                , distance = toFloat distance
+                , strength = Nothing
+                }
 
         forces =
             [ VF.customLinks 1 <| List.map link <| Graph.edges graph
@@ -314,30 +326,6 @@ forceGraph graph =
             VF.simulation forces
     in
         { graph = graph, simulation = newSimulation }
-
-
-issueGraphNode : Int -> GitHub.Issue -> Graph.Node (ForceNode GitHub.Issue)
-issueGraphNode i issue =
-    let
-        canvas =
-            500
-
-        ( x, s2 ) =
-            Random.step (Random.float 0 canvas) (Random.initialSeed i)
-
-        ( y, s3 ) =
-            Random.step (Random.float 0 canvas) s2
-    in
-        Graph.Node issue.id
-            { entity =
-                { x = x
-                , y = y
-                , vx = 0.0
-                , vy = 0.0
-                , id = issue.id
-                , value = issue
-                }
-            }
 
 
 isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
@@ -380,7 +368,7 @@ issueNodeBounds nc =
             nc.node.label.entity.y
 
         radius =
-            issueRadiusWithFlair nc
+            nc.node.label.radii.withFlair
     in
         ( x - radius, y - radius, x + radius, y + radius )
 
@@ -460,12 +448,12 @@ linkPath graph edge =
             []
 
 
-issueRadius : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadius : Graph.NodeContext GitHub.Issue () -> Float
 issueRadius { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
-issueRadiusWithLabels : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadiusWithLabels : Graph.NodeContext GitHub.Issue () -> Float
 issueRadiusWithLabels =
     issueRadius >> ((+) 3)
 
@@ -475,11 +463,11 @@ flairRadiusBase =
     16
 
 
-issueRadiusWithFlair : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
+issueRadiusWithFlair : Graph.NodeContext GitHub.Issue () -> Float
 issueRadiusWithFlair nc =
     let
         issue =
-            nc.node.label.entity.value
+            nc.node.label
 
         reactionCounts =
             List.map Tuple.second (GitHub.reactionCodes issue.reactions)
@@ -490,17 +478,56 @@ issueRadiusWithFlair nc =
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-issueFlair : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
-issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
+issueForceNode : Graph.NodeContext GitHub.Issue () -> Graph.NodeContext (ForceNode GitHub.Issue) ()
+issueForceNode nc =
     let
-        x =
-            node.label.entity.x
-
-        y =
-            node.label.entity.y
+        node =
+            nc.node
 
         issue =
-            node.label.entity.value
+            node.label
+
+        flair =
+            nodeFlairArcs nc
+
+        labels =
+            nodeLabelArcs nc
+
+        canvas =
+            500
+
+        ( x, s2 ) =
+            Random.step (Random.float 0 canvas) (Random.initialSeed issue.id)
+
+        ( y, s3 ) =
+            Random.step (Random.float 0 canvas) s2
+
+        forceNode =
+            { entity =
+                { x = x
+                , y = y
+                , vx = 0.0
+                , vy = 0.0
+                , id = issue.id
+                , value = issue
+                }
+            , radii =
+                { base = issueRadius nc
+                , withLabels = issueRadiusWithLabels nc
+                , withFlair = issueRadiusWithFlair nc
+                }
+            , flair = flair
+            , labels = labels
+            }
+    in
+        { nc | node = { node | label = forceNode } }
+
+
+nodeFlairArcs : Graph.NodeContext GitHub.Issue () -> List (Svg Msg)
+nodeFlairArcs nc =
+    let
+        issue =
+            nc.node.label
 
         radius =
             issueRadiusWithLabels nc
@@ -542,47 +569,36 @@ issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
             in
                 ( cos a * r, sin a * r )
     in
-        Svg.g
-            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-            ]
-        <|
-            (List.indexedMap
-                (\i (( emoji, count ) as reaction) ->
-                    let
-                        arc =
-                            reactionSegment i reaction
-                    in
-                        Svg.g [ SA.class "reveal" ]
-                            [ Svg.path
-                                [ SA.d (VS.arc arc)
-                                , SA.fill ("rgba(255, 255, 255, .3)")
-                                ]
-                                []
-                            , Svg.text_
-                                [ SA.transform ("translate" ++ toString (innerCentroid arc))
-                                , SA.textAnchor "middle"
-                                , SA.alignmentBaseline "middle"
-                                , SA.class "hidden"
-                                ]
-                                [ Svg.text emoji
-                                ]
+        List.indexedMap
+            (\i (( emoji, count ) as reaction) ->
+                let
+                    arc =
+                        reactionSegment i reaction
+                in
+                    Svg.g [ SA.class "reveal" ]
+                        [ Svg.path
+                            [ SA.d (VS.arc arc)
+                            , SA.fill ("rgba(255, 255, 255, .3)")
                             ]
-                )
-                reactions
+                            []
+                        , Svg.text_
+                            [ SA.transform ("translate" ++ toString (innerCentroid arc))
+                            , SA.textAnchor "middle"
+                            , SA.alignmentBaseline "middle"
+                            , SA.class "hidden"
+                            ]
+                            [ Svg.text emoji
+                            ]
+                        ]
             )
+            reactions
 
 
-issueNode : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
-issueNode ( { node, incoming, outgoing } as nc, mevents ) =
+nodeLabelArcs : Graph.NodeContext GitHub.Issue () -> List (Svg Msg)
+nodeLabelArcs nc =
     let
-        x =
-            node.label.entity.x
-
-        y =
-            node.label.entity.y
-
         issue =
-            node.label.entity.value
+            nc.node.label
 
         labels =
             issue.labels
@@ -604,6 +620,48 @@ issueNode ( { node, incoming, outgoing } as nc, mevents ) =
                 }
                 (List.repeat (List.length labels) 1)
     in
+        List.map2
+            (\arc label ->
+                Svg.path
+                    [ SA.d (VS.arc arc)
+                    , SA.fill ("#" ++ label.color)
+                    ]
+                    []
+            )
+            labelSegments
+            labels
+
+
+issueFlair : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
+issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
+    let
+        x =
+            node.label.entity.x
+
+        y =
+            node.label.entity.y
+
+        issue =
+            node.label.entity.value
+    in
+        Svg.g
+            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+            ]
+            node.label.flair
+
+
+issueNode : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
+issueNode ( { node, incoming, outgoing } as nc, mevents ) =
+    let
+        x =
+            node.label.entity.x
+
+        y =
+            node.label.entity.y
+
+        issue =
+            node.label.entity.value
+    in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             ]
@@ -611,7 +669,7 @@ issueNode ( { node, incoming, outgoing } as nc, mevents ) =
                 [ SA.xlinkHref issue.htmlURL
                 ]
                 ([ Svg.circle
-                    [ SA.r (toString radius)
+                    [ SA.r (toString node.label.radii.base)
                     , SA.fill <|
                         if issue.isPullRequest then
                             "#28a745"
@@ -631,17 +689,7 @@ issueNode ( { node, incoming, outgoing } as nc, mevents ) =
                     [ Svg.text (toString issue.number)
                     ]
                  ]
-                    ++ (List.map2
-                            (\arc label ->
-                                Svg.path
-                                    [ SA.d (VS.arc arc)
-                                    , SA.fill ("#" ++ label.color)
-                                    ]
-                                    []
-                            )
-                            labelSegments
-                            labels
-                       )
+                    ++ node.label.labels
                 )
             ]
 
