@@ -44,7 +44,8 @@ fromGraph g =
             ]
 
         newSimulation =
-            VF.simulation forces
+            VF.iterations (Graph.size graph * 10) <|
+                VF.simulation forces
     in
         { graph = graph, simulation = newSimulation }
 

@@ -1,20 +1,21 @@
 module Main exposing (..)
 
-import IntDict
-import Set
+import AnimationFrame
 import Debug
-import Http
-import Time
 import Dict exposing (Dict)
 import Graph exposing (Graph)
-import AnimationFrame
-import Svg exposing (Svg)
-import Svg.Attributes as SA
 import Html exposing (Html)
 import Html.Attributes as HA
-import Visualization.Shape as VS
+import Html.Lazy
+import Http
+import IntDict
 import ParseInt
 import Regex exposing (Regex)
+import Set
+import Svg exposing (Svg)
+import Svg.Attributes as SA
+import Time
+import Visualization.Shape as VS
 import Window
 import GitHub
 import Data exposing (Data)
@@ -35,6 +36,7 @@ type alias Model =
 
 type alias IssueNode =
     { issue : GitHub.Issue
+    , timeline : List GitHub.TimelineEvent
     , flair : List (Svg Msg)
     , labels : List (Svg Msg)
     , radii :
@@ -91,7 +93,15 @@ update msg model =
 
         Tick _ ->
             ( { model
-                | issueGraphs = List.map FG.tick model.issueGraphs
+                | issueGraphs =
+                    List.map
+                        (\g ->
+                            if FG.isCompleted g then
+                                g
+                            else
+                                FG.tick g
+                        )
+                        model.issueGraphs
               }
             , Cmd.none
             )
@@ -114,7 +124,7 @@ update msg model =
 view : Model -> Html Msg
 view model =
     Html.div [] <|
-        List.map (viewGraph model) model.issueGraphs
+        List.map (Html.Lazy.lazy viewGraph) model.issueGraphs
 
 
 computeGraphs : Model -> Data -> ( Model, Cmd Msg )
@@ -140,7 +150,7 @@ computeGraphs model data =
             collectReferences issueTimelines
 
         graph =
-            Graph.mapContexts issueNode <|
+            Graph.mapContexts (issueNode issueTimelines) <|
                 Graph.fromNodesAndEdges
                     (List.map (\i -> Graph.Node i.id i) allIssues)
                     references
@@ -198,33 +208,17 @@ nodeScore fn =
     GitHub.issueScore fn.value.issue
 
 
-issueNodeBounds : Graph.NodeContext (FG.ForceNode IssueNode) () -> ( Float, Float, Float, Float )
-issueNodeBounds nc =
-    let
-        x =
-            nc.node.label.x
-
-        y =
-            nc.node.label.y
-
-        radius =
-            nc.node.label.value.radii.withFlair
-    in
-        ( x - radius, y - radius, x + radius, y + radius )
-
-
-viewGraph : Model -> ForceGraph IssueNode -> Html Msg
-viewGraph model { graph } =
+viewGraph : ForceGraph IssueNode -> Html Msg
+viewGraph { graph } =
     let
         nodeContexts =
             Graph.fold (::) [] graph
 
-        issues =
-            List.map (\nc -> ( nc, Dict.get nc.node.label.value.issue.id model.issueTimelines )) <|
-                nodeContexts
-
         bounds =
             List.map issueNodeBounds nodeContexts
+
+        nodes =
+            Graph.nodes graph
 
         padding =
             10
@@ -253,8 +247,8 @@ viewGraph model { graph } =
             , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
             [ Svg.g [ SA.class "links" ] (List.map (linkPath graph) (Graph.edges graph))
-            , Svg.g [ SA.class "flairs" ] (List.map viewIssueFlair issues)
-            , Svg.g [ SA.class "nodes" ] (List.map viewIssueNode issues)
+            , Svg.g [ SA.class "flairs" ] (List.map viewIssueFlair nodes)
+            , Svg.g [ SA.class "nodes" ] (List.map viewIssueNode nodes)
             ]
 
 
@@ -318,14 +312,17 @@ issueRadiusWithFlair nc =
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-issueNode : Graph.NodeContext GitHub.Issue () -> Graph.NodeContext IssueNode ()
-issueNode nc =
+issueNode : Dict Int (List GitHub.TimelineEvent) -> Graph.NodeContext GitHub.Issue () -> Graph.NodeContext IssueNode ()
+issueNode timelines nc =
     let
         node =
             nc.node
 
         issue =
             node.label
+
+        timeline =
+            Maybe.withDefault [] (Dict.get issue.id timelines)
 
         flair =
             nodeFlairArcs nc
@@ -337,6 +334,7 @@ issueNode nc =
             { node
                 | label =
                     { issue = issue
+                    , timeline = timeline
                     , radii =
                         { base = issueRadius nc
                         , withLabels = issueRadiusWithLabels nc
@@ -459,35 +457,35 @@ nodeLabelArcs nc =
             labels
 
 
-viewIssueFlair : ( Graph.NodeContext (FG.ForceNode IssueNode) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
-viewIssueFlair ( { node, incoming, outgoing } as nc, mevents ) =
+viewIssueFlair : Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
+viewIssueFlair { label } =
     let
         x =
-            node.label.x
+            label.x
 
         y =
-            node.label.y
+            label.y
 
         issue =
-            node.label.value.issue
+            label.value.issue
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             ]
-            node.label.value.flair
+            label.value.flair
 
 
-viewIssueNode : ( Graph.NodeContext (FG.ForceNode IssueNode) (), Maybe (List GitHub.TimelineEvent) ) -> Svg Msg
-viewIssueNode ( { node, incoming, outgoing } as nc, mevents ) =
+viewIssueNode : Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
+viewIssueNode { label } =
     let
         x =
-            node.label.x
+            label.x
 
         y =
-            node.label.y
+            label.y
 
         issue =
-            node.label.value.issue
+            label.value.issue
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
@@ -497,7 +495,7 @@ viewIssueNode ( { node, incoming, outgoing } as nc, mevents ) =
                 , SA.target "_blank"
                 ]
                 ([ Svg.circle
-                    [ SA.r (toString node.label.value.radii.base)
+                    [ SA.r (toString label.value.radii.base)
                     , SA.fill <|
                         if issue.isPullRequest then
                             "#28a745"
@@ -517,7 +515,7 @@ viewIssueNode ( { node, incoming, outgoing } as nc, mevents ) =
                     [ Svg.text (toString issue.number)
                     ]
                  ]
-                    ++ node.label.value.labels
+                    ++ label.value.labels
                 )
             ]
 
@@ -656,3 +654,18 @@ subGraphs graph =
                 |> List.map (flip Graph.inducedSubgraph graph << Set.toList << subEdgeNodes)
     in
         connectedGraphs ++ singletonGraphs
+
+
+issueNodeBounds : Graph.NodeContext (FG.ForceNode IssueNode) () -> ( Float, Float, Float, Float )
+issueNodeBounds nc =
+    let
+        x =
+            nc.node.label.x
+
+        y =
+            nc.node.label.y
+
+        radius =
+            nc.node.label.value.radii.withFlair
+    in
+        ( x - radius, y - radius, x + radius, y + radius )

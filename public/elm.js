@@ -13227,6 +13227,10 @@ var _elm_lang$html$Html_Attributes$classList = function (list) {
 };
 var _elm_lang$html$Html_Attributes$style = _elm_lang$virtual_dom$VirtualDom$style;
 
+var _elm_lang$html$Html_Lazy$lazy3 = _elm_lang$virtual_dom$VirtualDom$lazy3;
+var _elm_lang$html$Html_Lazy$lazy2 = _elm_lang$virtual_dom$VirtualDom$lazy2;
+var _elm_lang$html$Html_Lazy$lazy = _elm_lang$virtual_dom$VirtualDom$lazy;
+
 var _elm_lang$http$Native_Http = function() {
 
 
@@ -17279,7 +17283,10 @@ var _vito$cadet$ForceGraph$fromGraph = function (g) {
 			_1: {ctor: '[]'}
 		}
 	};
-	var newSimulation = _gampleman$elm_visualization$Visualization_Force$simulation(forces);
+	var newSimulation = A2(
+		_gampleman$elm_visualization$Visualization_Force$iterations,
+		_elm_community$graph$Graph$size(graph) * 10,
+		_gampleman$elm_visualization$Visualization_Force$simulation(forces));
 	return {graph: graph, simulation: newSimulation};
 };
 var _vito$cadet$ForceGraph$ForceGraph = F2(
@@ -17287,6 +17294,12 @@ var _vito$cadet$ForceGraph$ForceGraph = F2(
 		return {graph: a, simulation: b};
 	});
 
+var _vito$cadet$Main$issueNodeBounds = function (nc) {
+	var radius = nc.node.label.value.radii.withFlair;
+	var y = nc.node.label.y;
+	var x = nc.node.label.x;
+	return {ctor: '_Tuple4', _0: x - radius, _1: y - radius, _2: x + radius, _3: y + radius};
+};
 var _vito$cadet$Main$subEdges = function (edges) {
 	var edgesContains = function (nodeId) {
 		return _elm_lang$core$List$any(
@@ -17395,8 +17408,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 613, column: 25},
-							end: {line: 627, column: 57}
+							start: {line: 611, column: 25},
+							end: {line: 625, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -17506,8 +17519,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 551, column: 17},
-					end: {line: 559, column: 50}
+					start: {line: 549, column: 17},
+					end: {line: 557, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -17515,8 +17528,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 549, column: 9},
-				end: {line: 562, column: 42}
+				start: {line: 547, column: 9},
+				end: {line: 560, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -17560,10 +17573,10 @@ var _vito$cadet$Main$viewIssueLabel = function (_p13) {
 };
 var _vito$cadet$Main$viewIssueNode = function (_p16) {
 	var _p17 = _p16;
-	var _p18 = _p17._0.node;
-	var issue = _p18.label.value.issue;
-	var y = _p18.label.y;
-	var x = _p18.label.x;
+	var _p18 = _p17.label;
+	var issue = _p18.value.issue;
+	var y = _p18.y;
+	var x = _p18.x;
 	return A2(
 		_elm_lang$svg$Svg$g,
 		{
@@ -17606,7 +17619,7 @@ var _vito$cadet$Main$viewIssueNode = function (_p16) {
 							{
 								ctor: '::',
 								_0: _elm_lang$svg$Svg_Attributes$r(
-									_elm_lang$core$Basics$toString(_p18.label.value.radii.base)),
+									_elm_lang$core$Basics$toString(_p18.value.radii.base)),
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$svg$Svg_Attributes$fill(
@@ -17642,16 +17655,16 @@ var _vito$cadet$Main$viewIssueNode = function (_p16) {
 							_1: {ctor: '[]'}
 						}
 					},
-					_p18.label.value.labels)),
+					_p18.value.labels)),
 			_1: {ctor: '[]'}
 		});
 };
 var _vito$cadet$Main$viewIssueFlair = function (_p19) {
 	var _p20 = _p19;
-	var _p21 = _p20._0.node;
-	var issue = _p21.label.value.issue;
-	var y = _p21.label.y;
-	var x = _p21.label.x;
+	var _p21 = _p20.label;
+	var issue = _p21.value.issue;
+	var y = _p21.y;
+	var x = _p21.x;
 	return A2(
 		_elm_lang$svg$Svg$g,
 		{
@@ -17672,7 +17685,7 @@ var _vito$cadet$Main$viewIssueFlair = function (_p19) {
 								')'))))),
 			_1: {ctor: '[]'}
 		},
-		_p21.label.value.flair);
+		_p21.value.flair);
 };
 var _vito$cadet$Main$flairRadiusBase = 16;
 var _vito$cadet$Main$issueRadius = function (_p22) {
@@ -17768,8 +17781,8 @@ var _vito$cadet$Main$nodeFlairArcs = function (nc) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 382, column: 17},
-						end: {line: 387, column: 49}
+						start: {line: 380, column: 17},
+						end: {line: 385, column: 49}
 					},
 					_p30)('impossible');
 			}
@@ -17885,29 +17898,35 @@ var _vito$cadet$Main$nodeLabelArcs = function (nc) {
 		labelSegments,
 		labels);
 };
-var _vito$cadet$Main$issueNode = function (nc) {
-	var labels = _vito$cadet$Main$nodeLabelArcs(nc);
-	var flair = _vito$cadet$Main$nodeFlairArcs(nc);
-	var node = nc.node;
-	var issue = node.label;
-	var forceNode = _elm_lang$core$Native_Utils.update(
-		node,
-		{
-			label: {
-				issue: issue,
-				radii: {
-					base: _vito$cadet$Main$issueRadius(nc),
-					withLabels: _vito$cadet$Main$issueRadiusWithLabels(nc),
-					withFlair: _vito$cadet$Main$issueRadiusWithFlair(nc)
-				},
-				flair: flair,
-				labels: labels
-			}
-		});
-	return _elm_lang$core$Native_Utils.update(
-		nc,
-		{node: forceNode});
-};
+var _vito$cadet$Main$issueNode = F2(
+	function (timelines, nc) {
+		var labels = _vito$cadet$Main$nodeLabelArcs(nc);
+		var flair = _vito$cadet$Main$nodeFlairArcs(nc);
+		var node = nc.node;
+		var issue = node.label;
+		var timeline = A2(
+			_elm_lang$core$Maybe$withDefault,
+			{ctor: '[]'},
+			A2(_elm_lang$core$Dict$get, issue.id, timelines));
+		var forceNode = _elm_lang$core$Native_Utils.update(
+			node,
+			{
+				label: {
+					issue: issue,
+					timeline: timeline,
+					radii: {
+						base: _vito$cadet$Main$issueRadius(nc),
+						withLabels: _vito$cadet$Main$issueRadiusWithLabels(nc),
+						withFlair: _vito$cadet$Main$issueRadiusWithFlair(nc)
+					},
+					flair: flair,
+					labels: labels
+				}
+			});
+		return _elm_lang$core$Native_Utils.update(
+			nc,
+			{node: forceNode});
+	});
 var _vito$cadet$Main$linkPath = F2(
 	function (graph, edge) {
 		var target = function () {
@@ -17979,154 +17998,138 @@ var _vito$cadet$Main$linkPath = F2(
 			},
 			{ctor: '[]'});
 	});
-var _vito$cadet$Main$issueNodeBounds = function (nc) {
-	var radius = nc.node.label.value.radii.withFlair;
-	var y = nc.node.label.y;
-	var x = nc.node.label.x;
-	return {ctor: '_Tuple4', _0: x - radius, _1: y - radius, _2: x + radius, _3: y + radius};
-};
-var _vito$cadet$Main$viewGraph = F2(
-	function (model, _p40) {
-		var _p41 = _p40;
-		var _p50 = _p41.graph;
-		var padding = 10;
-		var nodeContexts = A3(
-			_elm_community$graph$Graph$fold,
-			F2(
-				function (x, y) {
-					return {ctor: '::', _0: x, _1: y};
-				}),
-			{ctor: '[]'},
-			_p50);
-		var issues = A2(
-			_elm_lang$core$List$map,
-			function (nc) {
-				return {
-					ctor: '_Tuple2',
-					_0: nc,
-					_1: A2(_elm_lang$core$Dict$get, nc.node.label.value.issue.id, model.issueTimelines)
-				};
-			},
-			nodeContexts);
-		var bounds = A2(_elm_lang$core$List$map, _vito$cadet$Main$issueNodeBounds, nodeContexts);
-		var minX = A3(
-			_elm_lang$core$List$foldl,
-			F2(
-				function (_p42, acc) {
-					var _p43 = _p42;
-					return A2(_elm_lang$core$Basics$min, _p43._0, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var minY = A3(
-			_elm_lang$core$List$foldl,
-			F2(
-				function (_p44, acc) {
-					var _p45 = _p44;
-					return A2(_elm_lang$core$Basics$min, _p45._1, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var maxX = A3(
-			_elm_lang$core$List$foldl,
-			F2(
-				function (_p46, acc) {
-					var _p47 = _p46;
-					return A2(_elm_lang$core$Basics$max, _p47._2, acc);
-				}),
-			0,
-			bounds) + padding;
-		var width = maxX - minX;
-		var maxY = A3(
-			_elm_lang$core$List$foldl,
-			F2(
-				function (_p48, acc) {
-					var _p49 = _p48;
-					return A2(_elm_lang$core$Basics$max, _p49._3, acc);
-				}),
-			0,
-			bounds) + padding;
-		var height = maxY - minY;
-		return A2(
-			_elm_lang$svg$Svg$svg,
-			{
+var _vito$cadet$Main$viewGraph = function (_p40) {
+	var _p41 = _p40;
+	var _p50 = _p41.graph;
+	var padding = 10;
+	var nodes = _elm_community$graph$Graph$nodes(_p50);
+	var nodeContexts = A3(
+		_elm_community$graph$Graph$fold,
+		F2(
+			function (x, y) {
+				return {ctor: '::', _0: x, _1: y};
+			}),
+		{ctor: '[]'},
+		_p50);
+	var bounds = A2(_elm_lang$core$List$map, _vito$cadet$Main$issueNodeBounds, nodeContexts);
+	var minX = A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (_p42, acc) {
+				var _p43 = _p42;
+				return A2(_elm_lang$core$Basics$min, _p43._0, acc);
+			}),
+		999999,
+		bounds) - padding;
+	var minY = A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (_p44, acc) {
+				var _p45 = _p44;
+				return A2(_elm_lang$core$Basics$min, _p45._1, acc);
+			}),
+		999999,
+		bounds) - padding;
+	var maxX = A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (_p46, acc) {
+				var _p47 = _p46;
+				return A2(_elm_lang$core$Basics$max, _p47._2, acc);
+			}),
+		0,
+		bounds) + padding;
+	var width = maxX - minX;
+	var maxY = A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (_p48, acc) {
+				var _p49 = _p48;
+				return A2(_elm_lang$core$Basics$max, _p49._3, acc);
+			}),
+		0,
+		bounds) + padding;
+	var height = maxY - minY;
+	return A2(
+		_elm_lang$svg$Svg$svg,
+		{
+			ctor: '::',
+			_0: _elm_lang$svg$Svg_Attributes$width(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					_elm_lang$core$Basics$toString(width),
+					'px')),
+			_1: {
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$width(
+				_0: _elm_lang$svg$Svg_Attributes$height(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						_elm_lang$core$Basics$toString(width),
+						_elm_lang$core$Basics$toString(height),
 						'px')),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$height(
+					_0: _elm_lang$svg$Svg_Attributes$viewBox(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(height),
-							'px')),
-					_1: {
-						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$viewBox(
+							_elm_lang$core$Basics$toString(minX),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								_elm_lang$core$Basics$toString(minX),
+								' ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									' ',
+									_elm_lang$core$Basics$toString(minY),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										_elm_lang$core$Basics$toString(minY),
+										' ',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											' ',
+											_elm_lang$core$Basics$toString(width),
 											A2(
 												_elm_lang$core$Basics_ops['++'],
-												_elm_lang$core$Basics$toString(width),
-												A2(
-													_elm_lang$core$Basics_ops['++'],
-													' ',
-													_elm_lang$core$Basics$toString(height)))))))),
-						_1: {ctor: '[]'}
-					}
+												' ',
+												_elm_lang$core$Basics$toString(height)))))))),
+					_1: {ctor: '[]'}
 				}
-			},
-			{
+			}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$svg$Svg$g,
+				{
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$class('links'),
+					_1: {ctor: '[]'}
+				},
+				A2(
+					_elm_lang$core$List$map,
+					_vito$cadet$Main$linkPath(_p50),
+					_elm_community$graph$Graph$edges(_p50))),
+			_1: {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$svg$Svg$g,
 					{
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$class('links'),
+						_0: _elm_lang$svg$Svg_Attributes$class('flairs'),
 						_1: {ctor: '[]'}
 					},
-					A2(
-						_elm_lang$core$List$map,
-						_vito$cadet$Main$linkPath(_p50),
-						_elm_community$graph$Graph$edges(_p50))),
+					A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueFlair, nodes)),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_elm_lang$svg$Svg$g,
 						{
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$class('flairs'),
+							_0: _elm_lang$svg$Svg_Attributes$class('nodes'),
 							_1: {ctor: '[]'}
 						},
-						A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueFlair, issues)),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$svg$Svg$g,
-							{
-								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$class('nodes'),
-								_1: {ctor: '[]'}
-							},
-							A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueNode, issues)),
-						_1: {ctor: '[]'}
-					}
+						A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueNode, nodes)),
+					_1: {ctor: '[]'}
 				}
-			});
-	});
+			}
+		});
+};
 var _vito$cadet$Main$nodeScore = function (fn) {
 	return _vito$cadet$GitHub$issueScore(fn.value.issue);
 };
@@ -18214,8 +18217,8 @@ var _vito$cadet$Main$computeGraphs = F2(
 						return _elm_lang$core$Native_Utils.crashCase(
 							'Main',
 							{
-								start: {line: 129, column: 21},
-								end: {line: 134, column: 53}
+								start: {line: 139, column: 21},
+								end: {line: 144, column: 53}
 							},
 							_p56)('impossible');
 					}
@@ -18227,7 +18230,7 @@ var _vito$cadet$Main$computeGraphs = F2(
 			_elm_lang$core$Dict$values(data.issues));
 		var graph = A2(
 			_elm_community$graph$Graph$mapContexts,
-			_vito$cadet$Main$issueNode,
+			_vito$cadet$Main$issueNode(issueTimelines),
 			A2(
 				_elm_community$graph$Graph$fromNodesAndEdges,
 				A2(
@@ -18259,7 +18262,7 @@ var _vito$cadet$Main$view = function (model) {
 		{ctor: '[]'},
 		A2(
 			_elm_lang$core$List$map,
-			_vito$cadet$Main$viewGraph(model),
+			_elm_lang$html$Html_Lazy$lazy(_vito$cadet$Main$viewGraph),
 			model.issueGraphs));
 };
 var _vito$cadet$Main$update = F2(
@@ -18274,7 +18277,12 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							issueGraphs: A2(_elm_lang$core$List$map, _vito$cadet$ForceGraph$tick, model.issueGraphs)
+							issueGraphs: A2(
+								_elm_lang$core$List$map,
+								function (g) {
+									return _vito$cadet$ForceGraph$isCompleted(g) ? g : _vito$cadet$ForceGraph$tick(g);
+								},
+								model.issueGraphs)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -18310,9 +18318,9 @@ var _vito$cadet$Main$Model = F3(
 	function (a, b, c) {
 		return {config: a, issueTimelines: b, issueGraphs: c};
 	});
-var _vito$cadet$Main$IssueNode = F4(
-	function (a, b, c, d) {
-		return {issue: a, flair: b, labels: c, radii: d};
+var _vito$cadet$Main$IssueNode = F5(
+	function (a, b, c, d, e) {
+		return {issue: a, timeline: b, flair: c, labels: d, radii: e};
 	});
 var _vito$cadet$Main$DataFetched = function (a) {
 	return {ctor: 'DataFetched', _0: a};
