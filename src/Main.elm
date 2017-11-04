@@ -667,6 +667,7 @@ issueNode ( { node, incoming, outgoing } as nc, mevents ) =
             ]
             [ Svg.a
                 [ SA.xlinkHref issue.htmlURL
+                , SA.target "_blank"
                 ]
                 ([ Svg.circle
                     [ SA.r (toString node.label.radii.base)

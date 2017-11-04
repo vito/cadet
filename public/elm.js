@@ -17159,8 +17159,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 723, column: 17},
-					end: {line: 731, column: 50}
+					start: {line: 724, column: 17},
+					end: {line: 732, column: 50}
 				},
 				_p2)('invalid hex');
 		}
@@ -17168,8 +17168,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 721, column: 9},
-				end: {line: 734, column: 42}
+				start: {line: 722, column: 9},
+				end: {line: 735, column: 42}
 			},
 			_p1)('invalid hex');
 	}
@@ -17244,7 +17244,11 @@ var _vito$cadet$Main$issueNode = function (_p8) {
 				{
 					ctor: '::',
 					_0: _elm_lang$svg$Svg_Attributes$xlinkHref(issue.htmlURL),
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$target('_blank'),
+						_1: {ctor: '[]'}
+					}
 				},
 				A2(
 					_elm_lang$core$Basics_ops['++'],
