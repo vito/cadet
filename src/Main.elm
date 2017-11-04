@@ -46,6 +46,11 @@ type alias ForceGraph n =
 
 
 type alias ForceNode n =
+    { entity : ForceEntity n
+    }
+
+
+type alias ForceEntity n =
     VF.Entity Graph.NodeId { value : n }
 
 
@@ -96,7 +101,7 @@ subscriptions model =
         ]
 
 
-updateGraphWithList : Graph (ForceNode n) () -> List (ForceNode n) -> Graph (ForceNode n) ()
+updateGraphWithList : Graph (ForceNode n) () -> List (ForceEntity n) -> Graph (ForceNode n) ()
 updateGraphWithList =
     let
         graphUpdater value =
@@ -105,13 +110,16 @@ updateGraphWithList =
         List.foldr (\node -> Graph.update node.id (graphUpdater node))
 
 
-updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceNode n -> Graph.NodeContext (ForceNode n) ()
+updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceEntity n -> Graph.NodeContext (ForceNode n) ()
 updateContextWithValue nodeCtx value =
     let
         node =
             nodeCtx.node
+
+        label =
+            node.label
     in
-        { nodeCtx | node = { node | label = value } }
+        { nodeCtx | node = { node | label = { label | entity = value } } }
 
 
 edgesContains : Graph.NodeId -> List (Graph.Edge e) -> Bool
@@ -190,7 +198,7 @@ tickGraph : ForceGraph n -> ForceGraph n
 tickGraph { graph, simulation } =
     let
         ( newState, list ) =
-            VF.tick simulation (List.map .label (Graph.nodes graph))
+            VF.tick simulation (List.map (.label >> .entity) (Graph.nodes graph))
     in
         { graph = updateGraphWithList graph list
         , simulation = newState
@@ -322,12 +330,14 @@ issueGraphNode i issue =
             Random.step (Random.float 0 canvas) s2
     in
         Graph.Node issue.id
-            { x = x
-            , y = y
-            , vx = 0.0
-            , vy = 0.0
-            , id = issue.id
-            , value = issue
+            { entity =
+                { x = x
+                , y = y
+                , vx = 0.0
+                , vy = 0.0
+                , id = issue.id
+                , value = issue
+                }
             }
 
 
@@ -358,17 +368,17 @@ graphCompare a b =
 
 nodeScore : ForceNode GitHub.Issue -> Int
 nodeScore fn =
-    GitHub.issueScore fn.value
+    GitHub.issueScore fn.entity.value
 
 
 issueNodeBounds : Graph.NodeContext (ForceNode GitHub.Issue) () -> ( Float, Float, Float, Float )
 issueNodeBounds nc =
     let
         x =
-            nc.node.label.x
+            nc.node.label.entity.x
 
         y =
-            nc.node.label.y
+            nc.node.label.entity.y
 
         radius =
             issueRadiusWithFlair nc
@@ -383,7 +393,7 @@ viewGraph model { graph } =
             Graph.fold (::) [] graph
 
         issues =
-            List.map (\nc -> ( nc, Dict.get (toString nc.node.label.value.id) model.issueTimelines )) <|
+            List.map (\nc -> ( nc, Dict.get (toString nc.node.label.entity.value.id) model.issueTimelines )) <|
                 nodeContexts
 
         bounds =
@@ -425,7 +435,7 @@ linkPath : Graph (ForceNode n) () -> Graph.Edge () -> Svg Msg
 linkPath graph edge =
     let
         source =
-            case Maybe.map (.node >> .label) (Graph.get edge.from graph) of
+            case Maybe.map (.node >> .label >> .entity) (Graph.get edge.from graph) of
                 Just { x, y } ->
                     { x = x, y = y }
 
@@ -433,7 +443,7 @@ linkPath graph edge =
                     { x = 0, y = 0 }
 
         target =
-            case Maybe.map (.node >> .label) (Graph.get edge.to graph) of
+            case Maybe.map (.node >> .label >> .entity) (Graph.get edge.to graph) of
                 Just { x, y } ->
                     { x = x, y = y }
 
@@ -470,7 +480,7 @@ issueRadiusWithFlair : Graph.NodeContext (ForceNode GitHub.Issue) () -> Float
 issueRadiusWithFlair nc =
     let
         issue =
-            nc.node.label.value
+            nc.node.label.entity.value
 
         reactionCounts =
             List.map Tuple.second (GitHub.reactionCodes issue.reactions)
@@ -485,13 +495,13 @@ issueFlair : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub
 issueFlair ( { node, incoming, outgoing } as nc, mevents ) =
     let
         x =
-            node.label.x
+            node.label.entity.x
 
         y =
-            node.label.y
+            node.label.entity.y
 
         issue =
-            node.label.value
+            node.label.entity.value
 
         radius =
             issueRadiusWithLabels nc
@@ -567,13 +577,13 @@ issueNode : ( Graph.NodeContext (ForceNode GitHub.Issue) (), Maybe (List GitHub.
 issueNode ( { node, incoming, outgoing } as nc, mevents ) =
     let
         x =
-            node.label.x
+            node.label.entity.x
 
         y =
-            node.label.y
+            node.label.entity.y
 
         issue =
-            node.label.value
+            node.label.entity.value
 
         labels =
             issue.labels

@@ -17159,8 +17159,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 666, column: 17},
-					end: {line: 674, column: 50}
+					start: {line: 676, column: 17},
+					end: {line: 684, column: 50}
 				},
 				_p2)('invalid hex');
 		}
@@ -17168,8 +17168,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 664, column: 9},
-				end: {line: 677, column: 42}
+				start: {line: 674, column: 9},
+				end: {line: 687, column: 42}
 			},
 			_p1)('invalid hex');
 	}
@@ -17228,7 +17228,7 @@ var _vito$cadet$Main$issueRadiusWithLabels = function (_p10) {
 		_vito$cadet$Main$issueRadius(_p10));
 };
 var _vito$cadet$Main$issueRadiusWithFlair = function (nc) {
-	var issue = nc.node.label.value;
+	var issue = nc.node.label.entity.value;
 	var reactionCounts = A2(
 		_elm_lang$core$List$map,
 		_elm_lang$core$Tuple$second,
@@ -17256,7 +17256,7 @@ var _vito$cadet$Main$issueFlair = function (_p11) {
 		};
 	};
 	var radius = _vito$cadet$Main$issueRadiusWithLabels(_p12._0);
-	var issue = _p22.label.value;
+	var issue = _p22.label.entity.value;
 	var reactions = A2(
 		_elm_lang$core$List$filter,
 		function (_p13) {
@@ -17307,14 +17307,14 @@ var _vito$cadet$Main$issueFlair = function (_p11) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 519, column: 17},
-						end: {line: 524, column: 49}
+						start: {line: 529, column: 17},
+						end: {line: 534, column: 49}
 					},
 					_p18)('impossible');
 			}
 		});
-	var y = _p22.label.y;
-	var x = _p22.label.x;
+	var y = _p22.label.entity.y;
+	var x = _p22.label.entity.x;
 	return A2(
 		_elm_lang$svg$Svg$g,
 		{
@@ -17404,7 +17404,7 @@ var _vito$cadet$Main$issueNode = function (_p23) {
 	var _p24 = _p23;
 	var _p27 = _p24._0.node;
 	var radius = _vito$cadet$Main$issueRadius(_p24._0);
-	var issue = _p27.label.value;
+	var issue = _p27.label.entity.value;
 	var labels = issue.labels;
 	var labelSegments = A2(
 		_gampleman$elm_visualization$Visualization_Shape$pie,
@@ -17426,8 +17426,8 @@ var _vito$cadet$Main$issueNode = function (_p23) {
 			_elm_lang$core$List$repeat,
 			_elm_lang$core$List$length(labels),
 			1));
-	var y = _p27.label.y;
-	var x = _p27.label.x;
+	var y = _p27.label.entity.y;
+	var x = _p27.label.entity.x;
 	return A2(
 		_elm_lang$svg$Svg$g,
 		{
@@ -17533,11 +17533,14 @@ var _vito$cadet$Main$linkPath = F2(
 				_elm_lang$core$Maybe$map,
 				function (_p28) {
 					return function (_) {
-						return _.label;
+						return _.entity;
 					}(
 						function (_) {
-							return _.node;
-						}(_p28));
+							return _.label;
+						}(
+							function (_) {
+								return _.node;
+							}(_p28)));
 				},
 				A2(_elm_community$graph$Graph$get, edge.to, graph));
 			if (_p29.ctor === 'Just') {
@@ -17551,11 +17554,14 @@ var _vito$cadet$Main$linkPath = F2(
 				_elm_lang$core$Maybe$map,
 				function (_p30) {
 					return function (_) {
-						return _.label;
+						return _.entity;
 					}(
 						function (_) {
-							return _.node;
-						}(_p30));
+							return _.label;
+						}(
+							function (_) {
+								return _.node;
+							}(_p30)));
 				},
 				A2(_elm_community$graph$Graph$get, edge.from, graph));
 			if (_p31.ctor === 'Just') {
@@ -17599,8 +17605,8 @@ var _vito$cadet$Main$linkPath = F2(
 	});
 var _vito$cadet$Main$issueNodeBounds = function (nc) {
 	var radius = _vito$cadet$Main$issueRadiusWithFlair(nc);
-	var y = nc.node.label.y;
-	var x = nc.node.label.x;
+	var y = nc.node.label.entity.y;
+	var x = nc.node.label.entity.x;
 	return {ctor: '_Tuple4', _0: x - radius, _1: y - radius, _2: x + radius, _3: y + radius};
 };
 var _vito$cadet$Main$viewGraph = F2(
@@ -17624,7 +17630,7 @@ var _vito$cadet$Main$viewGraph = F2(
 					_0: nc,
 					_1: A2(
 						_elm_lang$core$Dict$get,
-						_elm_lang$core$Basics$toString(nc.node.label.value.id),
+						_elm_lang$core$Basics$toString(nc.node.label.entity.value.id),
 						model.issueTimelines)
 				};
 			},
@@ -17749,7 +17755,7 @@ var _vito$cadet$Main$viewGraph = F2(
 			});
 	});
 var _vito$cadet$Main$nodeScore = function (fn) {
-	return _vito$cadet$GitHub$issueScore(fn.value);
+	return _vito$cadet$GitHub$issueScore(fn.entity.value);
 };
 var _vito$cadet$Main$graphCompare = F2(
 	function (a, b) {
@@ -17823,7 +17829,9 @@ var _vito$cadet$Main$issueGraphNode = F2(
 		return A2(
 			_elm_community$graph$Graph$Node,
 			issue.id,
-			{x: x, y: y, vx: 0.0, vy: 0.0, id: issue.id, value: issue});
+			{
+				entity: {x: x, y: y, vx: 0.0, vy: 0.0, id: issue.id, value: issue}
+			});
 	});
 var _vito$cadet$Main$forceGraph = function (graph) {
 	var link = function (_p48) {
@@ -17845,8 +17853,8 @@ var _vito$cadet$Main$forceGraph = function (graph) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 292, column: 21},
-						end: {line: 297, column: 69}
+						start: {line: 300, column: 21},
+						end: {line: 305, column: 69}
 					},
 					_p50)('impossible: unknown target');
 			}
@@ -17897,8 +17905,8 @@ var _vito$cadet$Main$collectReferences = function (timelines) {
 						return _elm_lang$core$Native_Utils.crashCase(
 							'Main',
 							{
-								start: {line: 258, column: 21},
-								end: {line: 263, column: 44}
+								start: {line: 266, column: 21},
+								end: {line: 271, column: 44}
 							},
 							_p54)(_p54._0);
 					}
@@ -18039,8 +18047,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 141, column: 25},
-							end: {line: 155, column: 57}
+							start: {line: 149, column: 25},
+							end: {line: 163, column: 57}
 						},
 						_p61)('impossible');
 				}
@@ -18120,12 +18128,17 @@ var _vito$cadet$Main$computeGraphs = F2(
 var _vito$cadet$Main$updateContextWithValue = F2(
 	function (nodeCtx, value) {
 		var node = nodeCtx.node;
+		var label = node.label;
 		return _elm_lang$core$Native_Utils.update(
 			nodeCtx,
 			{
 				node: _elm_lang$core$Native_Utils.update(
 					node,
-					{label: value})
+					{
+						label: _elm_lang$core$Native_Utils.update(
+							label,
+							{entity: value})
+					})
 			});
 	});
 var _vito$cadet$Main$updateGraphWithList = function () {
@@ -18145,27 +18158,32 @@ var _vito$cadet$Main$updateGraphWithList = function () {
 }();
 var _vito$cadet$Main$tickGraph = function (_p67) {
 	var _p68 = _p67;
-	var _p70 = _p68.graph;
+	var _p71 = _p68.graph;
 	var _p69 = A2(
 		_gampleman$elm_visualization$Visualization_Force$tick,
 		_p68.simulation,
 		A2(
 			_elm_lang$core$List$map,
-			function (_) {
-				return _.label;
+			function (_p70) {
+				return function (_) {
+					return _.entity;
+				}(
+					function (_) {
+						return _.label;
+					}(_p70));
 			},
-			_elm_community$graph$Graph$nodes(_p70)));
+			_elm_community$graph$Graph$nodes(_p71)));
 	var newState = _p69._0;
 	var list = _p69._1;
 	return {
-		graph: A2(_vito$cadet$Main$updateGraphWithList, _p70, list),
+		graph: A2(_vito$cadet$Main$updateGraphWithList, _p71, list),
 		simulation: newState
 	};
 };
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p71 = msg;
-		switch (_p71.ctor) {
+		var _p72 = msg;
+		switch (_p72.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
@@ -18187,18 +18205,18 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p71._0})
+								{windowSize: _p72._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				if (_p71._0.ctor === 'Ok') {
-					return A2(_vito$cadet$Main$computeGraphs, model, _p71._0._0);
+				if (_p72._0.ctor === 'Ok') {
+					return A2(_vito$cadet$Main$computeGraphs, model, _p72._0._0);
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'error', _p71._0._0),
+						A2(_elm_lang$core$Debug$log, 'error', _p72._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 		}
@@ -18214,6 +18232,9 @@ var _vito$cadet$Main$ForceGraph = F2(
 	function (a, b) {
 		return {graph: a, simulation: b};
 	});
+var _vito$cadet$Main$ForceNode = function (a) {
+	return {entity: a};
+};
 var _vito$cadet$Main$Data = F3(
 	function (a, b, c) {
 		return {repositories: a, issues: b, timelines: c};
@@ -18278,11 +18299,11 @@ var _vito$cadet$Main$subscriptions = function (model) {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$core$List$all,
-					function (_p72) {
+					function (_p73) {
 						return _gampleman$elm_visualization$Visualization_Force$isCompleted(
 							function (_) {
 								return _.simulation;
-							}(_p72));
+							}(_p73));
 					},
 					model.issueGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
 				_1: {ctor: '[]'}
