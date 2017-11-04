@@ -1,0 +1,5 @@
+---
+applications:
+- name: cadet
+  memory: 512M
+  instances: 1

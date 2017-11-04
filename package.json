@@ -5,6 +5,9 @@
   "repository": "https://github.com/vito/cadet",
   "author": "Alex Suraci <suraci.alex@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "node index.js"
+  },
   "dependencies": {
     "elm": "^0.18.0",
     "fastify": "^0.31.0",
