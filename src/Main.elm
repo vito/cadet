@@ -32,9 +32,7 @@ type alias Config =
 
 type alias Model =
     { config : Config
-    , repos : List GitHub.Repo
-    , repoIssues : Dict String (List GitHub.Issue)
-    , issueTimelines : Dict String (List GitHub.TimelineEvent)
+    , issueTimelines : Dict Int (List GitHub.TimelineEvent)
     , issueGraphs : List (ForceGraph GitHub.Issue)
     }
 
@@ -81,10 +79,8 @@ type alias Data =
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
-      , repos = []
-      , repoIssues = Dict.empty
-      , issueTimelines = Dict.empty
       , issueGraphs = []
+      , issueTimelines = Dict.empty
       }
     , fetchData
     )
@@ -239,53 +235,61 @@ computeGraphs model data =
         allIssues =
             List.concat (Dict.values data.issues)
 
+        issueTimelines =
+            Dict.foldl
+                (\idStr timeline d ->
+                    case String.toInt idStr of
+                        Ok id ->
+                            Dict.insert id timeline d
+
+                        _ ->
+                            Debug.crash "impossible"
+                )
+                Dict.empty
+                data.timelines
+
         references =
-            collectReferences data.timelines
+            collectReferences issueTimelines
 
         graph =
             Graph.fromNodesAndEdges
                 (List.indexedMap issueGraphNode allIssues)
                 references
+
+        issueGraphs =
+            subGraphs graph
+                |> List.map forceGraph
+                |> List.sortWith graphCompare
+                |> List.reverse
     in
         ( { model
-            | repos = data.repositories
-            , repoIssues = data.issues
-            , issueTimelines = data.timelines
-            , issueGraphs = List.reverse << List.sortWith graphCompare << List.map forceGraph <| subGraphs graph
+            | issueTimelines = issueTimelines
+            , issueGraphs = issueGraphs
           }
         , Cmd.none
         )
 
 
-collectReferences : Dict String (List GitHub.TimelineEvent) -> List (Graph.Edge ())
+collectReferences : Dict Int (List GitHub.TimelineEvent) -> List (Graph.Edge ())
 collectReferences timelines =
     Dict.foldl
-        (\targetIDStr events edges ->
-            let
-                targetID =
-                    case String.toInt targetIDStr of
-                        Ok id ->
-                            id
+        (\targetID events edges ->
+            List.filterMap
+                (\event ->
+                    case event.source of
+                        Just { type_, issueID } ->
+                            case issueID of
+                                Just sourceID ->
+                                    Just { from = sourceID, to = targetID, label = () }
 
-                        Err err ->
-                            Debug.crash err
-            in
-                List.filterMap
-                    (\event ->
-                        case event.source of
-                            Just { type_, issueID } ->
-                                case issueID of
-                                    Just sourceID ->
-                                        Just { from = sourceID, to = targetID, label = () }
+                                _ ->
+                                    Nothing
 
-                                    _ ->
-                                        Nothing
-
-                            _ ->
-                                Nothing
-                    )
-                    events
-                    ++ edges
+                        _ ->
+                            Nothing
+                )
+                events
+                ++ edges
         )
         []
         timelines
@@ -393,7 +397,7 @@ viewGraph model { graph } =
             Graph.fold (::) [] graph
 
         issues =
-            List.map (\nc -> ( nc, Dict.get (toString nc.node.label.entity.value.id) model.issueTimelines )) <|
+            List.map (\nc -> ( nc, Dict.get nc.node.label.entity.value.id model.issueTimelines )) <|
                 nodeContexts
 
         bounds =

@@ -32,13 +32,13 @@ worker.ports.setRepositories.subscribe(function(repositories) {
 worker.ports.setIssues.subscribe(function(args) {
   var id = args[0], issues = args[1];
   console.log("issues refreshed for repo", id);
-  data.issues[id] = issues;
+  data.issues[id] = issues
 });
 
 worker.ports.setTimeline.subscribe(function(args) {
   var id = args[0], timeline = args[1];
   console.log("timeline refreshed for issue", id);
-  data.timelines[id] = timeline;
+  data.timelines[id] = timeline
 });
 
 app.register(fstatic, {
