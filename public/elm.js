@@ -17791,8 +17791,7 @@ var _vito$cadet$Main$view = function (model) {
 		A2(
 			_elm_lang$core$List$map,
 			_vito$cadet$Main$viewGraph(model),
-			_elm_lang$core$List$reverse(
-				A2(_elm_lang$core$List$sortWith, _vito$cadet$Main$graphCompare, model.issueGraphs))));
+			model.issueGraphs));
 };
 var _vito$cadet$Main$isOrgMember = F2(
 	function (users, user) {
@@ -18106,9 +18105,13 @@ var _vito$cadet$Main$computeGraphs = F2(
 					repos: data.repositories,
 					repoIssues: data.issues,
 					issueTimelines: data.timelines,
-					issueGraphs: A2(
-						_elm_lang$core$List$map,
-						_vito$cadet$Main$forceGraph,
+					issueGraphs: function (_p66) {
+						return _elm_lang$core$List$reverse(
+							A2(
+								_elm_lang$core$List$sortWith,
+								_vito$cadet$Main$graphCompare,
+								A2(_elm_lang$core$List$map, _vito$cadet$Main$forceGraph, _p66)));
+					}(
 						_vito$cadet$Main$subGraphs(graph))
 				}),
 			_1: _elm_lang$core$Platform_Cmd$none
@@ -18140,29 +18143,29 @@ var _vito$cadet$Main$updateGraphWithList = function () {
 				graphUpdater(node));
 		});
 }();
-var _vito$cadet$Main$tickGraph = function (_p66) {
-	var _p67 = _p66;
-	var _p69 = _p67.graph;
-	var _p68 = A2(
+var _vito$cadet$Main$tickGraph = function (_p67) {
+	var _p68 = _p67;
+	var _p70 = _p68.graph;
+	var _p69 = A2(
 		_gampleman$elm_visualization$Visualization_Force$tick,
-		_p67.simulation,
+		_p68.simulation,
 		A2(
 			_elm_lang$core$List$map,
 			function (_) {
 				return _.label;
 			},
-			_elm_community$graph$Graph$nodes(_p69)));
-	var newState = _p68._0;
-	var list = _p68._1;
+			_elm_community$graph$Graph$nodes(_p70)));
+	var newState = _p69._0;
+	var list = _p69._1;
 	return {
-		graph: A2(_vito$cadet$Main$updateGraphWithList, _p69, list),
+		graph: A2(_vito$cadet$Main$updateGraphWithList, _p70, list),
 		simulation: newState
 	};
 };
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p70 = msg;
-		switch (_p70.ctor) {
+		var _p71 = msg;
+		switch (_p71.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
@@ -18184,18 +18187,18 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p70._0})
+								{windowSize: _p71._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				if (_p70._0.ctor === 'Ok') {
-					return A2(_vito$cadet$Main$computeGraphs, model, _p70._0._0);
+				if (_p71._0.ctor === 'Ok') {
+					return A2(_vito$cadet$Main$computeGraphs, model, _p71._0._0);
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'error', _p70._0._0),
+						A2(_elm_lang$core$Debug$log, 'error', _p71._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 		}
@@ -18275,11 +18278,11 @@ var _vito$cadet$Main$subscriptions = function (model) {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$core$List$all,
-					function (_p71) {
+					function (_p72) {
 						return _gampleman$elm_visualization$Visualization_Force$isCompleted(
 							function (_) {
 								return _.simulation;
-							}(_p71));
+							}(_p72));
 					},
 					model.issueGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
 				_1: {ctor: '[]'}

@@ -243,7 +243,7 @@ computeGraphs model data =
             | repos = data.repositories
             , repoIssues = data.issues
             , issueTimelines = data.timelines
-            , issueGraphs = List.map forceGraph (subGraphs graph)
+            , issueGraphs = List.reverse << List.sortWith graphCompare << List.map forceGraph <| subGraphs graph
           }
         , Cmd.none
         )
@@ -339,7 +339,7 @@ isOrgMember users user =
 view : Model -> Html Msg
 view model =
     Html.div [] <|
-        List.map (viewGraph model) (List.reverse <| List.sortWith graphCompare model.issueGraphs)
+        List.map (viewGraph model) model.issueGraphs
 
 
 graphCompare : ForceGraph GitHub.Issue -> ForceGraph GitHub.Issue -> Order
