@@ -15,5 +15,8 @@
     "fastify-static": "^0.3.0",
     "github": "^12.0.1",
     "xhr2": "^0.1.4"
+  },
+  "engines": {
+    "node": ">=6.0.0"
   }
 }
