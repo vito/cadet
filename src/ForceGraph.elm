@@ -1,4 +1,4 @@
-module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, tick, isCompleted)
+module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, member, update, tick, isCompleted)
 
 import Graph exposing (Graph)
 import Random
@@ -48,6 +48,35 @@ fromGraph g =
                 VF.simulation forces
     in
         { graph = graph, simulation = newSimulation }
+
+
+member : Graph.NodeId -> ForceGraph n -> Bool
+member id =
+    Graph.member id << .graph
+
+
+update : Graph.NodeId -> (n -> n) -> ForceGraph n -> ForceGraph n
+update id f fg =
+    { fg
+        | graph =
+            Graph.update id
+                (Maybe.map
+                    (\nc ->
+                        let
+                            node =
+                                nc.node
+
+                            label =
+                                node.label
+
+                            value =
+                                label.value
+                        in
+                            { nc | node = { node | label = { label | value = f value } } }
+                    )
+                )
+                fg.graph
+    }
 
 
 node : Graph.NodeContext n () -> Graph.NodeContext (ForceNode n) ()

@@ -13,6 +13,7 @@ import Regex exposing (Regex)
 import Set
 import Svg exposing (Svg)
 import Svg.Attributes as SA
+import Svg.Events as SE
 import Svg.Lazy
 import Time
 import Visualization.Shape as VS
@@ -29,8 +30,9 @@ type alias Config =
 
 type alias Model =
     { config : Config
-    , issueTimelines : Dict Int (List GitHub.TimelineEvent)
     , issueGraphs : List (ForceGraph IssueNode)
+    , selectedIssues : List GitHub.Issue
+    , anticipatedIssue : Maybe GitHub.Issue
     }
 
 
@@ -43,6 +45,7 @@ type alias IssueNode =
         , withLabels : Float
         , withFlair : Float
         }
+    , selected : Bool
     }
 
 
@@ -61,13 +64,18 @@ type Msg
     | Tick Time.Time
     | Resize Window.Size
     | DataFetched (Result Http.Error Data)
+    | SelectIssue GitHub.Issue
+    | DeselectIssue GitHub.Issue
+    | AnticipateIssue GitHub.Issue
+    | UnanticipateIssue
 
 
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , issueGraphs = []
-      , issueTimelines = Dict.empty
+      , selectedIssues = []
+      , anticipatedIssue = Nothing
       }
     , Data.fetch DataFetched
     )
@@ -112,6 +120,30 @@ update msg model =
             in
                 ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
+        SelectIssue issue ->
+            ( { model
+                | issueGraphs = List.map (setIssueSelected issue.id True) model.issueGraphs
+                , selectedIssues = issue :: model.selectedIssues
+              }
+            , Cmd.none
+            )
+
+        DeselectIssue issue ->
+            ( { model
+                | issueGraphs = List.map (setIssueSelected issue.id False) model.issueGraphs
+                , selectedIssues = List.filter ((/=) issue.id << .id) model.selectedIssues
+              }
+            , Cmd.none
+            )
+
+        AnticipateIssue issue ->
+            ( { model | anticipatedIssue = Just issue }
+            , Cmd.none
+            )
+
+        UnanticipateIssue ->
+            ( { model | anticipatedIssue = Nothing }, Cmd.none )
+
         DataFetched (Ok data) ->
             computeGraphs model data
 
@@ -122,8 +154,38 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    flowGraphs model.config.windowSize <|
-        List.map viewGraph model.issueGraphs
+    let
+        svg =
+            flowGraphs model.config.windowSize <|
+                List.map viewGraph model.issueGraphs
+    in
+        Html.div [ HA.class "cadet" ]
+            [ svg
+            , Html.div [ HA.class "issues" ] <|
+                (case model.anticipatedIssue of
+                    Just issue ->
+                        if List.member issue model.selectedIssues then
+                            Html.text ""
+                        else
+                            viewIssueInfo True issue
+
+                    Nothing ->
+                        Html.text ""
+                )
+                    :: List.map (viewIssueInfo False) model.selectedIssues
+            ]
+
+
+setIssueSelected : Int -> Bool -> ForceGraph IssueNode -> ForceGraph IssueNode
+setIssueSelected id val fg =
+    let
+        toggle node =
+            { node | selected = val }
+    in
+        if FG.member id fg then
+            FG.update id toggle fg
+        else
+            fg
 
 
 flowGraphs : Window.Size -> List Subgraph -> Html Msg
@@ -368,6 +430,7 @@ issueNode nc =
                         }
                     , flair = flair
                     , labels = labels
+                    , selected = False
                     }
             }
     in
@@ -512,38 +575,60 @@ viewIssueNode { label } =
 
         issue =
             label.value.issue
+
+        circleWithNumber =
+            [ Svg.circle
+                [ SA.r (toString label.value.radii.base)
+                , SA.fill <|
+                    if issue.isPullRequest then
+                        "#28a745"
+                    else
+                        "#fff"
+                ]
+                []
+            , Svg.text_
+                [ SA.textAnchor "middle"
+                , SA.alignmentBaseline "middle"
+                , SA.fill <|
+                    if issue.isPullRequest then
+                        "#fff"
+                    else
+                        "#C6A49A"
+                ]
+                [ Svg.text (toString issue.number)
+                ]
+            ]
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-            ]
-            [ Svg.a
-                [ SA.xlinkHref issue.htmlURL
-                , SA.target "_blank"
-                ]
-                ([ Svg.circle
-                    [ SA.r (toString label.value.radii.base)
-                    , SA.fill <|
-                        if issue.isPullRequest then
-                            "#28a745"
-                        else
-                            "#fff"
-                    ]
-                    []
-                 , Svg.text_
-                    [ SA.textAnchor "middle"
-                    , SA.alignmentBaseline "middle"
-                    , SA.fill <|
-                        if issue.isPullRequest then
-                            "#fff"
-                        else
-                            "#C6A49A"
-                    ]
-                    [ Svg.text (toString issue.number)
-                    ]
-                 ]
-                    ++ label.value.labels
+            , SE.onMouseOver (AnticipateIssue issue)
+            , SE.onMouseOut UnanticipateIssue
+            , SE.onClick
+                (if label.value.selected then
+                    DeselectIssue issue
+                 else
+                    SelectIssue issue
                 )
             ]
+            (circleWithNumber ++ label.value.labels)
+
+
+viewIssueInfo : Bool -> GitHub.Issue -> Html Msg
+viewIssueInfo anticipated issue =
+    Html.div
+        [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ] ]
+        [ Html.a [ HA.href issue.htmlURL, HA.target "_blank", HA.class "issue-title" ]
+            [ Html.text issue.title
+            ]
+        , Html.span [ HA.class "issue-labels" ] <|
+            List.map viewIssueLabel issue.labels
+        , Html.div [ HA.class "issue-meta" ]
+            [ Html.a [ HA.href issue.htmlURL, HA.target "_blank" ] [ Html.text ("#" ++ toString issue.number) ]
+            , Html.text " "
+            , Html.text "opened by "
+            , Html.a [ HA.href issue.user.url, HA.target "_blank" ] [ Html.text issue.user.login ]
+            ]
+        ]
 
 
 hexRegex : Regex
