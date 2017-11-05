@@ -16,7 +16,7 @@ port setRepositories : List Json.Decode.Value -> Cmd msg
 port setIssues : ( Int, List Json.Decode.Value ) -> Cmd msg
 
 
-port setTimeline : ( Int, List Json.Decode.Value ) -> Cmd msg
+port setReferences : ( Int, List Int ) -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -118,7 +118,19 @@ update msg model =
                 ( { model | failedQueue = fetchIssues model 0 repo :: model.failedQueue }, Cmd.none )
 
         TimelineFetched issue (Ok timeline) ->
-            ( model, setTimeline ( issue.id, List.map .value timeline ) )
+            let
+                findSource event =
+                    case event.source of
+                        Just { type_, issueID } ->
+                            issueID
+
+                        _ ->
+                            Nothing
+
+                edges =
+                    List.filterMap findSource timeline
+            in
+                ( model, setReferences ( issue.id, edges ) )
 
         TimelineFetched issue (Err err) ->
             flip always (Debug.log ("failed to fetch timeline for " ++ issue.htmlURL) err) <|

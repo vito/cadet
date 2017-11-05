@@ -7925,8 +7925,8 @@ var _vito$cadet$Main$setIssues = _elm_lang$core$Native_Platform.outgoingPort(
 			})
 		];
 	});
-var _vito$cadet$Main$setTimeline = _elm_lang$core$Native_Platform.outgoingPort(
-	'setTimeline',
+var _vito$cadet$Main$setReferences = _elm_lang$core$Native_Platform.outgoingPort(
+	'setReferences',
 	function (v) {
 		return [
 			v._0,
@@ -8094,29 +8094,29 @@ var _vito$cadet$Main$update = F2(
 				}
 			default:
 				if (_p2._1.ctor === 'Ok') {
+					var findSource = function (event) {
+						var _p7 = event.source;
+						if (_p7.ctor === 'Just') {
+							return _p7._0.issueID;
+						} else {
+							return _elm_lang$core$Maybe$Nothing;
+						}
+					};
+					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p2._1._0);
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: _vito$cadet$Main$setTimeline(
-							{
-								ctor: '_Tuple2',
-								_0: _p2._0.id,
-								_1: A2(
-									_elm_lang$core$List$map,
-									function (_) {
-										return _.value;
-									},
-									_p2._1._0)
-							})
+						_1: _vito$cadet$Main$setReferences(
+							{ctor: '_Tuple2', _0: _p2._0.id, _1: edges})
 					};
 				} else {
-					var _p7 = _p2._0;
+					var _p8 = _p2._0;
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
 						A2(
 							_elm_lang$core$Debug$log,
-							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p7.htmlURL),
+							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p8.htmlURL),
 							_p2._1._0),
 						{
 							ctor: '_Tuple2',
@@ -8125,7 +8125,7 @@ var _vito$cadet$Main$update = F2(
 								{
 									failedQueue: {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p7),
+										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p8),
 										_1: model.failedQueue
 									}
 								}),
@@ -8136,14 +8136,14 @@ var _vito$cadet$Main$update = F2(
 	});
 var _vito$cadet$Main$Retry = {ctor: 'Retry'};
 var _vito$cadet$Main$Refresh = {ctor: 'Refresh'};
-var _vito$cadet$Main$init = function (_p8) {
-	var _p9 = _p8;
+var _vito$cadet$Main$init = function (_p9) {
+	var _p10 = _p9;
 	return A2(
 		_vito$cadet$Main$update,
 		_vito$cadet$Main$Refresh,
 		{
-			githubToken: _p9.githubToken,
-			githubOrg: _p9.githubOrg,
+			githubToken: _p10.githubToken,
+			githubOrg: _p10.githubOrg,
 			repos: {ctor: '[]'},
 			issues: _elm_lang$core$Dict$empty,
 			timelines: _elm_lang$core$Dict$empty,

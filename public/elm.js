@@ -17119,7 +17119,7 @@ var _vito$cadet$GitHub$fetchIssue = F3(
 
 var _vito$cadet$Data$Data = F3(
 	function (a, b, c) {
-		return {repositories: a, issues: b, timelines: c};
+		return {repositories: a, issues: b, references: c};
 	});
 var _vito$cadet$Data$decodeData = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
@@ -17139,9 +17139,9 @@ var _vito$cadet$Data$decodeData = A2(
 				_elm_lang$core$Json_Decode$list(_vito$cadet$GitHub$decodeIssue)))),
 	A2(
 		_elm_lang$core$Json_Decode$field,
-		'timelines',
+		'references',
 		_elm_lang$core$Json_Decode$dict(
-			_elm_lang$core$Json_Decode$list(_vito$cadet$GitHub$decodeTimelineEvent))));
+			_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$int))));
 var _vito$cadet$Data$fetch = function (f) {
 	return A2(
 		_elm_lang$core$Task$attempt,
@@ -17412,8 +17412,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 622, column: 25},
-							end: {line: 636, column: 57}
+							start: {line: 597, column: 25},
+							end: {line: 611, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -17523,8 +17523,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 560, column: 17},
-					end: {line: 568, column: 50}
+					start: {line: 535, column: 17},
+					end: {line: 543, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -17532,8 +17532,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 558, column: 9},
-				end: {line: 571, column: 42}
+				start: {line: 533, column: 9},
+				end: {line: 546, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -17785,8 +17785,8 @@ var _vito$cadet$Main$nodeFlairArcs = function (nc) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 391, column: 17},
-						end: {line: 396, column: 49}
+						start: {line: 366, column: 17},
+						end: {line: 371, column: 49}
 					},
 					_p30)('impossible');
 			}
@@ -17902,35 +17902,29 @@ var _vito$cadet$Main$nodeLabelArcs = function (nc) {
 		labelSegments,
 		labels);
 };
-var _vito$cadet$Main$issueNode = F2(
-	function (timelines, nc) {
-		var labels = _vito$cadet$Main$nodeLabelArcs(nc);
-		var flair = _vito$cadet$Main$nodeFlairArcs(nc);
-		var node = nc.node;
-		var issue = node.label;
-		var timeline = A2(
-			_elm_lang$core$Maybe$withDefault,
-			{ctor: '[]'},
-			A2(_elm_lang$core$Dict$get, issue.id, timelines));
-		var forceNode = _elm_lang$core$Native_Utils.update(
-			node,
-			{
-				label: {
-					issue: issue,
-					timeline: timeline,
-					radii: {
-						base: _vito$cadet$Main$issueRadius(nc),
-						withLabels: _vito$cadet$Main$issueRadiusWithLabels(nc),
-						withFlair: _vito$cadet$Main$issueRadiusWithFlair(nc)
-					},
-					flair: flair,
-					labels: labels
-				}
-			});
-		return _elm_lang$core$Native_Utils.update(
-			nc,
-			{node: forceNode});
-	});
+var _vito$cadet$Main$issueNode = function (nc) {
+	var labels = _vito$cadet$Main$nodeLabelArcs(nc);
+	var flair = _vito$cadet$Main$nodeFlairArcs(nc);
+	var node = nc.node;
+	var issue = node.label;
+	var forceNode = _elm_lang$core$Native_Utils.update(
+		node,
+		{
+			label: {
+				issue: issue,
+				radii: {
+					base: _vito$cadet$Main$issueRadius(nc),
+					withLabels: _vito$cadet$Main$issueRadiusWithLabels(nc),
+					withFlair: _vito$cadet$Main$issueRadiusWithFlair(nc)
+				},
+				flair: flair,
+				labels: labels
+			}
+		});
+	return _elm_lang$core$Native_Utils.update(
+		nc,
+		{node: forceNode});
+};
 var _vito$cadet$Main$linkPath = F2(
 	function (graph, edge) {
 		var target = function () {
@@ -18200,71 +18194,44 @@ var _vito$cadet$Main$graphCompare = F2(
 			return _p57;
 		}
 	});
-var _vito$cadet$Main$collectReferences = function (timelines) {
-	var findSource = function (event) {
-		var _p60 = event.source;
-		if (_p60.ctor === 'Just') {
-			return _p60._0.issueID;
-		} else {
-			return _elm_lang$core$Maybe$Nothing;
-		}
-	};
-	var edge = F2(
-		function (targetID, sourceID) {
-			return {
-				from: sourceID,
-				to: targetID,
-				label: {ctor: '_Tuple0'}
-			};
-		});
-	var addReferencesTo = F3(
-		function (targetID, events, edges) {
-			return A2(
-				_elm_lang$core$Basics_ops['++'],
-				A2(
-					_elm_lang$core$List$filterMap,
-					function (_p61) {
-						return A2(
-							_elm_lang$core$Maybe$map,
-							edge(targetID),
-							findSource(_p61));
-					},
-					events),
-				edges);
-		});
-	return A3(
-		_elm_lang$core$Dict$foldl,
-		addReferencesTo,
-		{ctor: '[]'},
-		timelines);
-};
 var _vito$cadet$Main$computeGraphs = F2(
 	function (model, data) {
-		var issueTimelines = A3(
+		var references = A3(
 			_elm_lang$core$Dict$foldl,
 			F3(
-				function (idStr, timeline, d) {
-					var _p62 = _elm_lang$core$String$toInt(idStr);
-					if (_p62.ctor === 'Ok') {
-						return A3(_elm_lang$core$Dict$insert, _p62._0, timeline, d);
+				function (idStr, sourceIds, refs) {
+					var _p60 = _elm_lang$core$String$toInt(idStr);
+					if (_p60.ctor === 'Ok') {
+						return A2(
+							_elm_lang$core$Basics_ops['++'],
+							A2(
+								_elm_lang$core$List$map,
+								function (sourceId) {
+									return {
+										from: sourceId,
+										to: _p60._0,
+										label: {ctor: '_Tuple0'}
+									};
+								},
+								sourceIds),
+							refs);
 					} else {
 						return _elm_lang$core$Native_Utils.crashCase(
 							'Main',
 							{
-								start: {line: 140, column: 21},
-								end: {line: 145, column: 53}
+								start: {line: 139, column: 21},
+								end: {line: 152, column: 53}
 							},
-							_p62)('impossible');
+							_p60)('impossible');
 					}
 				}),
-			_elm_lang$core$Dict$empty,
-			data.timelines);
-		var references = _vito$cadet$Main$collectReferences(issueTimelines);
+			{ctor: '[]'},
+			data.references);
 		var allIssues = _elm_lang$core$List$concat(
 			_elm_lang$core$Dict$values(data.issues));
 		var graph = A2(
 			_elm_community$graph$Graph$mapContexts,
-			_vito$cadet$Main$issueNode(issueTimelines),
+			_vito$cadet$Main$issueNode,
 			A2(
 				_elm_community$graph$Graph$fromNodesAndEdges,
 				A2(
@@ -18286,7 +18253,7 @@ var _vito$cadet$Main$computeGraphs = F2(
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
 				model,
-				{issueTimelines: issueTimelines, issueGraphs: issueGraphs}),
+				{issueGraphs: issueGraphs}),
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
@@ -18301,8 +18268,8 @@ var _vito$cadet$Main$view = function (model) {
 };
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p64 = msg;
-		switch (_p64.ctor) {
+		var _p62 = msg;
+		switch (_p62.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
@@ -18329,18 +18296,18 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p64._0})
+								{windowSize: _p62._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				if (_p64._0.ctor === 'Ok') {
-					return A2(_vito$cadet$Main$computeGraphs, model, _p64._0._0);
+				if (_p62._0.ctor === 'Ok') {
+					return A2(_vito$cadet$Main$computeGraphs, model, _p62._0._0);
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'error', _p64._0._0),
+						A2(_elm_lang$core$Debug$log, 'error', _p62._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 		}
@@ -18352,9 +18319,9 @@ var _vito$cadet$Main$Model = F3(
 	function (a, b, c) {
 		return {config: a, issueTimelines: b, issueGraphs: c};
 	});
-var _vito$cadet$Main$IssueNode = F5(
-	function (a, b, c, d, e) {
-		return {issue: a, timeline: b, flair: c, labels: d, radii: e};
+var _vito$cadet$Main$IssueNode = F4(
+	function (a, b, c, d) {
+		return {issue: a, flair: b, labels: c, radii: d};
 	});
 var _vito$cadet$Main$DataFetched = function (a) {
 	return {ctor: 'DataFetched', _0: a};

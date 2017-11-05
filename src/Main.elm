@@ -37,7 +37,6 @@ type alias Model =
 
 type alias IssueNode =
     { issue : GitHub.Issue
-    , timeline : List GitHub.TimelineEvent
     , flair : List (Svg Msg)
     , labels : List (Svg Msg)
     , radii :
@@ -134,24 +133,29 @@ computeGraphs model data =
         allIssues =
             List.concat (Dict.values data.issues)
 
-        issueTimelines =
+        references =
             Dict.foldl
-                (\idStr timeline d ->
+                (\idStr sourceIds refs ->
                     case String.toInt idStr of
                         Ok id ->
-                            Dict.insert id timeline d
+                            List.map
+                                (\sourceId ->
+                                    { from = sourceId
+                                    , to = id
+                                    , label = ()
+                                    }
+                                )
+                                sourceIds
+                                ++ refs
 
                         _ ->
                             Debug.crash "impossible"
                 )
-                Dict.empty
-                data.timelines
-
-        references =
-            collectReferences issueTimelines
+                []
+                data.references
 
         graph =
-            Graph.mapContexts (issueNode issueTimelines) <|
+            Graph.mapContexts issueNode <|
                 Graph.fromNodesAndEdges
                     (List.map (\i -> Graph.Node i.id i) allIssues)
                     references
@@ -162,32 +166,7 @@ computeGraphs model data =
                 |> List.sortWith graphCompare
                 |> List.reverse
     in
-        ( { model
-            | issueTimelines = issueTimelines
-            , issueGraphs = issueGraphs
-          }
-        , Cmd.none
-        )
-
-
-collectReferences : Dict Int (List GitHub.TimelineEvent) -> List (Graph.Edge ())
-collectReferences timelines =
-    let
-        edge targetID sourceID =
-            { from = sourceID, to = targetID, label = () }
-
-        findSource event =
-            case event.source of
-                Just { type_, issueID } ->
-                    issueID
-
-                _ ->
-                    Nothing
-
-        addReferencesTo targetID events edges =
-            List.filterMap (Maybe.map (edge targetID) << findSource) events ++ edges
-    in
-        Dict.foldl addReferencesTo [] timelines
+        ( { model | issueGraphs = issueGraphs }, Cmd.none )
 
 
 graphCompare : ForceGraph IssueNode -> ForceGraph IssueNode -> Order
@@ -323,17 +302,14 @@ issueRadiusWithFlair nc =
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-issueNode : Dict Int (List GitHub.TimelineEvent) -> Graph.NodeContext GitHub.Issue () -> Graph.NodeContext IssueNode ()
-issueNode timelines nc =
+issueNode : Graph.NodeContext GitHub.Issue () -> Graph.NodeContext IssueNode ()
+issueNode nc =
     let
         node =
             nc.node
 
         issue =
             node.label
-
-        timeline =
-            Maybe.withDefault [] (Dict.get issue.id timelines)
 
         flair =
             nodeFlairArcs nc
@@ -345,7 +321,6 @@ issueNode timelines nc =
             { node
                 | label =
                     { issue = issue
-                    , timeline = timeline
                     , radii =
                         { base = issueRadius nc
                         , withLabels = issueRadiusWithLabels nc
