@@ -1,6 +1,7 @@
 const fastify = require('fastify')
 const path = require('path')
 const fstatic = require('fastify-static')
+const compression = require('compression')
 
 global.XMLHttpRequest = require("xhr2");
 
@@ -32,6 +33,8 @@ worker.ports.setReferences.subscribe(function(args) {
   console.log("references refreshed for issue", id);
   data.references[id] = issueIds;
 });
+
+app.use(compression())
 
 app.register(fstatic, {
   root: path.join(__dirname, 'public'),

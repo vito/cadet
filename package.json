@@ -9,6 +9,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "compression": "^1.7.1",
     "elm": "^0.18.0",
     "fastify": "^0.31.0",
     "fastify-static": "^0.3.0",
