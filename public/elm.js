@@ -13227,10 +13227,6 @@ var _elm_lang$html$Html_Attributes$classList = function (list) {
 };
 var _elm_lang$html$Html_Attributes$style = _elm_lang$virtual_dom$VirtualDom$style;
 
-var _elm_lang$html$Html_Lazy$lazy3 = _elm_lang$virtual_dom$VirtualDom$lazy3;
-var _elm_lang$html$Html_Lazy$lazy2 = _elm_lang$virtual_dom$VirtualDom$lazy2;
-var _elm_lang$html$Html_Lazy$lazy = _elm_lang$virtual_dom$VirtualDom$lazy;
-
 var _elm_lang$http$Native_Http = function() {
 
 
@@ -17406,8 +17402,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 597, column: 25},
-							end: {line: 611, column: 57}
+							start: {line: 637, column: 25},
+							end: {line: 651, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -17517,8 +17513,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 535, column: 17},
-					end: {line: 543, column: 50}
+					start: {line: 575, column: 17},
+					end: {line: 583, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -17526,8 +17522,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 533, column: 9},
-				end: {line: 546, column: 42}
+				start: {line: 573, column: 9},
+				end: {line: 586, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -17779,8 +17775,8 @@ var _vito$cadet$Main$nodeFlairArcs = function (nc) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 366, column: 17},
-						end: {line: 371, column: 49}
+						start: {line: 406, column: 17},
+						end: {line: 411, column: 49}
 					},
 					_p30)('impossible');
 			}
@@ -18075,49 +18071,8 @@ var _vito$cadet$Main$viewGraph = function (_p40) {
 		0,
 		bounds) + padding;
 	var height = maxY - minY;
-	return A2(
-		_elm_lang$svg$Svg$svg,
-		{
-			ctor: '::',
-			_0: _elm_lang$svg$Svg_Attributes$width(
-				A2(
-					_elm_lang$core$Basics_ops['++'],
-					_elm_lang$core$Basics$toString(width),
-					'px')),
-			_1: {
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$height(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						_elm_lang$core$Basics$toString(height),
-						'px')),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$viewBox(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(minX),
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								' ',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(minY),
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										' ',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(width),
-											A2(
-												_elm_lang$core$Basics_ops['++'],
-												' ',
-												_elm_lang$core$Basics$toString(height)))))))),
-					_1: {ctor: '[]'}
-				}
-			}
-		},
-		{
+	return {
+		content: {
 			ctor: '::',
 			_0: A2(
 				_elm_lang$svg$Svg$g,
@@ -18150,7 +18105,10 @@ var _vito$cadet$Main$viewGraph = function (_p40) {
 					_1: {ctor: '[]'}
 				}
 			}
-		});
+		},
+		bounds: {minX: minX, minY: minY, maxX: maxX, maxY: maxY},
+		size: {width: width, height: height}
+	};
 };
 var _vito$cadet$Main$nodeScore = function (fn) {
 	return _vito$cadet$GitHub$issueScore(fn.value.issue);
@@ -18213,8 +18171,8 @@ var _vito$cadet$Main$computeGraphs = F2(
 						return _elm_lang$core$Native_Utils.crashCase(
 							'Main',
 							{
-								start: {line: 139, column: 21},
-								end: {line: 152, column: 53}
+								start: {line: 173, column: 21},
+								end: {line: 186, column: 53}
 							},
 							_p60)('impossible');
 					}
@@ -18251,19 +18209,106 @@ var _vito$cadet$Main$computeGraphs = F2(
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
+var _vito$cadet$Main$viewSubgraph = F3(
+	function (window, sg, _p62) {
+		var _p63 = _p62;
+		var _p68 = _p63._3;
+		var _p67 = _p63._2;
+		var _p66 = _p63._1;
+		var _p64 = (_elm_lang$core$Native_Utils.cmp(
+			_p66 + sg.size.width,
+			_elm_lang$core$Basics$toFloat(window.width)) > 0) ? {ctor: '_Tuple3', _0: 0, _1: _p67 + _p68, _2: sg.size.height} : {
+			ctor: '_Tuple3',
+			_0: _p66,
+			_1: _p67,
+			_2: A2(_elm_lang$core$Basics$max, sg.size.height, _p68)
+		};
+		var wrappedX = _p64._0;
+		var wrappedY = _p64._1;
+		var wrappedNextRow = _p64._2;
+		var _p65 = {ctor: '_Tuple2', _0: wrappedX - sg.bounds.minX, _1: wrappedY - sg.bounds.minY};
+		var x = _p65._0;
+		var y = _p65._1;
+		var transform = A2(
+			_elm_lang$core$Basics_ops['++'],
+			'translate(',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Basics$toString(x),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					', ',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(y),
+						')'))));
+		return {
+			ctor: '_Tuple4',
+			_0: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$g,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$transform(transform),
+						_1: {ctor: '[]'}
+					},
+					sg.content),
+				_1: _p63._0
+			},
+			_1: wrappedX + sg.size.width,
+			_2: wrappedY,
+			_3: wrappedNextRow
+		};
+	});
+var _vito$cadet$Main$flowGraphs = F2(
+	function (window, graphs) {
+		var _p69 = A3(
+			_elm_lang$core$List$foldl,
+			_vito$cadet$Main$viewSubgraph(window),
+			{
+				ctor: '_Tuple4',
+				_0: {ctor: '[]'},
+				_1: 0,
+				_2: 0,
+				_3: 0
+			},
+			graphs);
+		var gs = _p69._0;
+		var x = _p69._1;
+		var y = _p69._2;
+		var nextRow = _p69._3;
+		return A2(
+			_elm_lang$svg$Svg$svg,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$width(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						_elm_lang$core$Basics$toString(window.width),
+						'px')),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$height(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(y + nextRow),
+							'px')),
+					_1: {ctor: '[]'}
+				}
+			},
+			gs);
+	});
 var _vito$cadet$Main$view = function (model) {
 	return A2(
-		_elm_lang$html$Html$div,
-		{ctor: '[]'},
-		A2(
-			_elm_lang$core$List$map,
-			_elm_lang$html$Html_Lazy$lazy(_vito$cadet$Main$viewGraph),
-			model.issueGraphs));
+		_vito$cadet$Main$flowGraphs,
+		model.config.windowSize,
+		A2(_elm_lang$core$List$map, _vito$cadet$Main$viewGraph, model.issueGraphs));
 };
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p62 = msg;
-		switch (_p62.ctor) {
+		var _p70 = msg;
+		switch (_p70.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Tick':
@@ -18290,18 +18335,18 @@ var _vito$cadet$Main$update = F2(
 						{
 							config: _elm_lang$core$Native_Utils.update(
 								newConfig,
-								{windowSize: _p62._0})
+								{windowSize: _p70._0})
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			default:
-				if (_p62._0.ctor === 'Ok') {
-					return A2(_vito$cadet$Main$computeGraphs, model, _p62._0._0);
+				if (_p70._0.ctor === 'Ok') {
+					return A2(_vito$cadet$Main$computeGraphs, model, _p70._0._0);
 				} else {
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
-						A2(_elm_lang$core$Debug$log, 'error', _p62._0._0),
+						A2(_elm_lang$core$Debug$log, 'error', _p70._0._0),
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 		}
@@ -18316,6 +18361,10 @@ var _vito$cadet$Main$Model = F3(
 var _vito$cadet$Main$IssueNode = F4(
 	function (a, b, c, d) {
 		return {issue: a, flair: b, labels: c, radii: d};
+	});
+var _vito$cadet$Main$Subgraph = F3(
+	function (a, b, c) {
+		return {content: a, bounds: b, size: c};
 	});
 var _vito$cadet$Main$DataFetched = function (a) {
 	return {ctor: 'DataFetched', _0: a};
