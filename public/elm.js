@@ -17117,21 +17117,15 @@ var _vito$cadet$GitHub$fetchIssue = F3(
 												_elm_lang$core$Basics$toString(number)))))))))));
 	});
 
-var _vito$cadet$Data$Data = F3(
-	function (a, b, c) {
-		return {repositories: a, issues: b, references: c};
+var _vito$cadet$Data$Data = F2(
+	function (a, b) {
+		return {issues: a, references: b};
 	});
 var _vito$cadet$Data$decodeData = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		A2(
-			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-			_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$Data),
-			A2(
-				_elm_lang$core$Json_Decode$field,
-				'repositories',
-				_elm_lang$core$Json_Decode$list(_vito$cadet$GitHub$decodeRepo))),
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$Data),
 		A2(
 			_elm_lang$core$Json_Decode$field,
 			'issues',

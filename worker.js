@@ -7906,14 +7906,6 @@ var _vito$cadet$GitHub$fetchIssue = F3(
 												_elm_lang$core$Basics$toString(number)))))))))));
 	});
 
-var _vito$cadet$Main$setRepositories = _elm_lang$core$Native_Platform.outgoingPort(
-	'setRepositories',
-	function (v) {
-		return _elm_lang$core$Native_List.toArray(v).map(
-			function (v) {
-				return v;
-			});
-	});
 var _vito$cadet$Main$setIssues = _elm_lang$core$Native_Platform.outgoingPort(
 	'setIssues',
 	function (v) {
@@ -8015,20 +8007,12 @@ var _vito$cadet$Main$update = F2(
 							(_elm_lang$core$Basics$toFloat(i) * 100) * _elm_lang$core$Time$millisecond);
 					};
 					var fetch = A2(_elm_lang$core$List$indexedMap, staggeredIssuesFetch, _p3);
-					var updateData = _vito$cadet$Main$setRepositories(
-						A2(
-							_elm_lang$core$List$map,
-							function (_) {
-								return _.value;
-							},
-							_p3));
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{repos: _p3}),
-						_1: _elm_lang$core$Platform_Cmd$batch(
-							{ctor: '::', _0: updateData, _1: fetch})
+						_1: _elm_lang$core$Platform_Cmd$batch(fetch)
 					};
 				} else {
 					return A3(

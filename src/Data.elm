@@ -10,8 +10,7 @@ import Http
 
 
 type alias Data =
-    { repositories : List GitHub.Repo
-    , issues : Dict String (List GitHub.Issue)
+    { issues : Dict String (List GitHub.Issue)
     , references : Dict String (List Int)
     }
 
@@ -27,6 +26,5 @@ fetch f =
 decodeData : Json.Decode.Decoder Data
 decodeData =
     Json.Decode.succeed Data
-        |: (Json.Decode.field "repositories" <| Json.Decode.list GitHub.decodeRepo)
         |: (Json.Decode.field "issues" <| Json.Decode.dict (Json.Decode.list GitHub.decodeIssue))
         |: (Json.Decode.field "references" <| Json.Decode.dict (Json.Decode.list Json.Decode.int))

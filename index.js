@@ -14,20 +14,12 @@ const app = fastify()
 const port = process.env.PORT || 8000;
 
 const data = {
-  // list of all repositories
-  repositories: [],
-
   // map from repositories to issues
   issues: {},
 
   // map from issue to issues that referenced it
   references: {}
 }
-
-worker.ports.setRepositories.subscribe(function(repositories) {
-  console.log("repos refreshed");
-  data.repositories = repositories;
-});
 
 worker.ports.setIssues.subscribe(function(args) {
   var id = args[0], issues = args[1];

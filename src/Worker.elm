@@ -10,9 +10,6 @@ import Http
 import GitHub
 
 
-port setRepositories : List Json.Decode.Value -> Cmd msg
-
-
 port setIssues : ( Int, List Json.Decode.Value ) -> Cmd msg
 
 
@@ -83,16 +80,13 @@ update msg model =
 
         RepositoriesFetched (Ok repos) ->
             let
-                updateData =
-                    setRepositories (List.map .value repos)
-
                 staggeredIssuesFetch i =
                     fetchIssues model (toFloat i * 100 * Time.millisecond)
 
                 fetch =
                     List.indexedMap staggeredIssuesFetch repos
             in
-                ( { model | repos = repos }, Cmd.batch (updateData :: fetch) )
+                ( { model | repos = repos }, Cmd.batch fetch )
 
         RepositoriesFetched (Err err) ->
             flip always (Debug.log "failed to fetch repositories" err) <|
