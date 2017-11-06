@@ -22,19 +22,38 @@ body {
   position: fixed;
   right: 0;
   bottom: 0;
-  width: 500px;
+}
+
+.issue-controls {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+
+  &:first-child .issue-info {
+    border-top-color: transparent;
+    border-top-left-radius: 10px;
+  }
+
+  .issue-buttons {
+    margin-top: 23px;
+
+    .octicon {
+      cursor: pointer;
+      color: fade(#fff, 50%);
+
+      &:hover {
+        color: white;
+      }
+    }
+  }
 }
 
 .issue-info {
   padding: 12px;
   background: #fff;
   border-top: 1px solid #e1e4e8;
+  width: 500px;
   position: relative;
-
-  &:first-child {
-    border-top: 0;
-    border-top-left-radius: 10px;
-  }
 
   &:hover {
     background: #f6f8fa;

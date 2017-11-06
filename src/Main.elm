@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import Graph exposing (Graph)
 import Html exposing (Html)
 import Html.Attributes as HA
+import Html.Events as HE
 import Http
 import IntDict
 import ParseInt
@@ -615,18 +616,30 @@ viewIssueNode { label } =
 
 viewIssueInfo : Bool -> GitHub.Issue -> Html Msg
 viewIssueInfo anticipated issue =
-    Html.div
-        [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ] ]
-        [ Html.a [ HA.href issue.htmlURL, HA.target "_blank", HA.class "issue-title" ]
-            [ Html.text issue.title
+    Html.div [ HA.class "issue-controls" ]
+        [ Html.div [ HA.class "issue-buttons" ]
+            [ if not anticipated then
+                Html.span
+                    [ HE.onClick (DeselectIssue issue)
+                    , HA.class "octicon octicon-x"
+                    ]
+                    [ Html.text "" ]
+              else
+                Html.text ""
             ]
-        , Html.span [ HA.class "issue-labels" ] <|
-            List.map viewIssueLabel issue.labels
-        , Html.div [ HA.class "issue-meta" ]
-            [ Html.a [ HA.href issue.htmlURL, HA.target "_blank" ] [ Html.text ("#" ++ toString issue.number) ]
-            , Html.text " "
-            , Html.text "opened by "
-            , Html.a [ HA.href issue.user.url, HA.target "_blank" ] [ Html.text issue.user.login ]
+        , Html.div
+            [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ] ]
+            [ Html.a [ HA.href issue.htmlURL, HA.target "_blank", HA.class "issue-title" ]
+                [ Html.text issue.title
+                ]
+            , Html.span [ HA.class "issue-labels" ] <|
+                List.map viewIssueLabel issue.labels
+            , Html.div [ HA.class "issue-meta" ]
+                [ Html.a [ HA.href issue.htmlURL, HA.target "_blank" ] [ Html.text ("#" ++ toString issue.number) ]
+                , Html.text " "
+                , Html.text "opened by "
+                , Html.a [ HA.href issue.user.url, HA.target "_blank" ] [ Html.text issue.user.login ]
+                ]
             ]
         ]
 
