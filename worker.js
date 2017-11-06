@@ -7792,6 +7792,104 @@ var _vito$cadet$GitHub$fetchIssueComments = F2(
 			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeComment),
 			_elm_lang$core$Maybe$Nothing);
 	});
+var _vito$cadet$GitHub$Project = F6(
+	function (a, b, c, d, e, f) {
+		return {id: a, url: b, name: c, number: d, htmlURL: e, columnsURL: f};
+	});
+var _vito$cadet$GitHub$decodeProject = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			A2(
+				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+				A2(
+					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+					A2(
+						_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+						_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$Project),
+						A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+					A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+				A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+			A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int)),
+		A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'columns_url', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHub$fetchOrgProjects = F2(
+	function (token, org) {
+		return A4(
+			_vito$cadet$Pagination$fetchAll,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'https://api.github.com/orgs/',
+				A2(_elm_lang$core$Basics_ops['++'], org, '/projects?per_page=100')),
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.inertia-preview+json'),
+				_1: _vito$cadet$GitHub$authHeaders(token)
+			},
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeProject),
+			_elm_lang$core$Maybe$Nothing);
+	});
+var _vito$cadet$GitHub$ProjectColumn = F4(
+	function (a, b, c, d) {
+		return {id: a, url: b, name: c, cardsURL: d};
+	});
+var _vito$cadet$GitHub$decodeProjectColumn = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			A2(
+				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+				_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$ProjectColumn),
+				A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+			A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'cards_url', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHub$fetchProjectColumns = F2(
+	function (token, project) {
+		return A4(
+			_vito$cadet$Pagination$fetchAll,
+			A2(_elm_lang$core$Basics_ops['++'], project.columnsURL, '?per_page=100'),
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.inertia-preview+json'),
+				_1: _vito$cadet$GitHub$authHeaders(token)
+			},
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeProjectColumn),
+			_elm_lang$core$Maybe$Nothing);
+	});
+var _vito$cadet$GitHub$ProjectCard = F3(
+	function (a, b, c) {
+		return {id: a, note: b, contentURL: c};
+	});
+var _vito$cadet$GitHub$decodeProjectCard = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$ProjectCard),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+		_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$field, 'note', _elm_lang$core$Json_Decode$string))),
+	_elm_lang$core$Json_Decode$maybe(
+		A2(_elm_lang$core$Json_Decode$field, 'content_url', _elm_lang$core$Json_Decode$string)));
+var _vito$cadet$GitHub$fetchProjectColumnCards = F2(
+	function (token, column) {
+		return A4(
+			_vito$cadet$Pagination$fetchAll,
+			A2(_elm_lang$core$Basics_ops['++'], column.cardsURL, '?per_page=100'),
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$http$Http$header, 'Accept', 'application/vnd.github.inertia-preview+json'),
+				_1: _vito$cadet$GitHub$authHeaders(token)
+			},
+			_vito$cadet$GitHub$rfc5988Strategy(_vito$cadet$GitHub$decodeProjectCard),
+			_elm_lang$core$Maybe$Nothing);
+	});
 var _vito$cadet$GitHub$IssueStateClosed = {ctor: 'IssueStateClosed'};
 var _vito$cadet$GitHub$IssueStateOpen = {ctor: 'IssueStateOpen'};
 var _vito$cadet$GitHub$decodeIssueState = A2(

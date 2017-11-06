@@ -11,6 +11,9 @@ module GitHub
         , TimelineEventRename
         , Milestone
         , User
+        , Project
+        , ProjectColumn
+        , ProjectCard
         , fetchOrgMembers
         , fetchOrgRepos
         , fetchRepoIssues
@@ -29,8 +32,8 @@ import Date exposing (Date)
 import Dict exposing (Dict)
 import Http
 import HttpBuilder
-import Json.Decode
-import Json.Decode.Extra exposing ((|:))
+import Json.Decode as JD
+import Json.Decode.Extra as JDE exposing ((|:))
 import Regex exposing (Regex)
 import String
 import Task exposing (Task)
@@ -47,7 +50,7 @@ type alias APIError =
 
 
 type alias Repo =
-    { value : Json.Decode.Value
+    { value : JD.Value
     , id : Int
     , url : String
     , htmlURL : String
@@ -58,7 +61,7 @@ type alias Repo =
 
 
 type alias Issue =
-    { value : Json.Decode.Value
+    { value : JD.Value
     , id : Int
     , url : String
     , htmlURL : String
@@ -98,7 +101,7 @@ type alias Comment =
 
 
 type alias TimelineEvent =
-    { value : Json.Decode.Value
+    { value : JD.Value
     , event : String
     , actor : Maybe User
     , commitId : Maybe String
@@ -146,6 +149,31 @@ type alias Reactions =
     , confused : Int
     , heart : Int
     , hooray : Int
+    }
+
+
+type alias Project =
+    { id : Int
+    , url : String
+    , name : String
+    , number : Int
+    , htmlURL : String
+    , columnsURL : String
+    }
+
+
+type alias ProjectColumn =
+    { id : Int
+    , url : String
+    , name : String
+    , cardsURL : String
+    }
+
+
+type alias ProjectCard =
+    { id : Int
+    , note : Maybe String
+    , contentURL : Maybe String
     }
 
 
@@ -253,46 +281,73 @@ fetchIssueTimeline token issue =
         Nothing
 
 
-decodeError : Json.Decode.Decoder APIError
+fetchOrgProjects : Token -> String -> Task Http.Error (List Project)
+fetchOrgProjects token org =
+    Pagination.fetchAll
+        ("https://api.github.com/orgs/" ++ org ++ "/projects?per_page=100")
+        (Http.header "Accept" "application/vnd.github.inertia-preview+json" :: authHeaders token)
+        (rfc5988Strategy decodeProject)
+        Nothing
+
+
+fetchProjectColumns : Token -> Project -> Task Http.Error (List ProjectColumn)
+fetchProjectColumns token project =
+    Pagination.fetchAll
+        (project.columnsURL ++ "?per_page=100")
+        (Http.header "Accept" "application/vnd.github.inertia-preview+json" :: authHeaders token)
+        (rfc5988Strategy decodeProjectColumn)
+        Nothing
+
+
+fetchProjectColumnCards : Token -> ProjectColumn -> Task Http.Error (List ProjectCard)
+fetchProjectColumnCards token column =
+    Pagination.fetchAll
+        (column.cardsURL ++ "?per_page=100")
+        (Http.header "Accept" "application/vnd.github.inertia-preview+json" :: authHeaders token)
+        (rfc5988Strategy decodeProjectCard)
+        Nothing
+
+
+decodeError : JD.Decoder APIError
 decodeError =
-    Json.Decode.map APIError
-        (Json.Decode.field "message" Json.Decode.string)
+    JD.map APIError
+        (JD.field "message" JD.string)
 
 
-decodeRepo : Json.Decode.Decoder Repo
+decodeRepo : JD.Decoder Repo
 decodeRepo =
-    Json.Decode.map7 Repo
-        Json.Decode.value
-        (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "url" Json.Decode.string)
-        (Json.Decode.field "html_url" Json.Decode.string)
-        (Json.Decode.field "owner" decodeUser)
-        (Json.Decode.field "name" Json.Decode.string)
-        (Json.Decode.field "open_issues_count" Json.Decode.int)
+    JD.map7 Repo
+        JD.value
+        (JD.field "id" JD.int)
+        (JD.field "url" JD.string)
+        (JD.field "html_url" JD.string)
+        (JD.field "owner" decodeUser)
+        (JD.field "name" JD.string)
+        (JD.field "open_issues_count" JD.int)
 
 
-decodeIssue : Json.Decode.Decoder Issue
+decodeIssue : JD.Decoder Issue
 decodeIssue =
-    Json.Decode.succeed Issue
-        |: Json.Decode.value
-        |: (Json.Decode.field "id" Json.Decode.int)
-        |: (Json.Decode.field "url" Json.Decode.string)
-        |: (Json.Decode.field "html_url" Json.Decode.string)
-        |: (Json.Decode.field "created_at" Json.Decode.Extra.date)
-        |: (Json.Decode.field "updated_at" Json.Decode.Extra.date)
-        |: (Json.Decode.field "state" decodeIssueState)
-        |: (Json.Decode.map ((/=) Nothing) << Json.Decode.maybe <| Json.Decode.field "pull_request" Json.Decode.value)
-        |: (Json.Decode.field "user" decodeUser)
-        |: (Json.Decode.field "number" Json.Decode.int)
-        |: (Json.Decode.field "title" Json.Decode.string)
-        |: (Json.Decode.field "comments" Json.Decode.int)
-        |: (Json.Decode.field "reactions" decodeReactions)
-        |: (Json.Decode.field "labels" <| Json.Decode.list decodeIssueLabel)
+    JD.succeed Issue
+        |: JD.value
+        |: (JD.field "id" JD.int)
+        |: (JD.field "url" JD.string)
+        |: (JD.field "html_url" JD.string)
+        |: (JD.field "created_at" JDE.date)
+        |: (JD.field "updated_at" JDE.date)
+        |: (JD.field "state" decodeIssueState)
+        |: (JD.map ((/=) Nothing) << JD.maybe <| JD.field "pull_request" JD.value)
+        |: (JD.field "user" decodeUser)
+        |: (JD.field "number" JD.int)
+        |: (JD.field "title" JD.string)
+        |: (JD.field "comments" JD.int)
+        |: (JD.field "reactions" decodeReactions)
+        |: (JD.field "labels" <| JD.list decodeIssueLabel)
 
 
-decodeIssueState : Json.Decode.Decoder IssueState
+decodeIssueState : JD.Decoder IssueState
 decodeIssueState =
-    customDecoder Json.Decode.string <|
+    customDecoder JD.string <|
         \x ->
             case x of
                 "open" ->
@@ -305,88 +360,116 @@ decodeIssueState =
                     Err ("unknown issue state: " ++ x)
 
 
-decodeIssueLabel : Json.Decode.Decoder IssueLabel
+decodeIssueLabel : JD.Decoder IssueLabel
 decodeIssueLabel =
-    Json.Decode.map2 IssueLabel
-        (Json.Decode.field "name" Json.Decode.string)
-        (Json.Decode.field "color" Json.Decode.string)
+    JD.map2 IssueLabel
+        (JD.field "name" JD.string)
+        (JD.field "color" JD.string)
 
 
-decodeComment : Json.Decode.Decoder Comment
+decodeComment : JD.Decoder Comment
 decodeComment =
-    Json.Decode.map7 Comment
-        (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "url" Json.Decode.string)
-        (Json.Decode.field "html_url" Json.Decode.string)
-        (Json.Decode.field "created_at" Json.Decode.Extra.date)
-        (Json.Decode.field "updated_at" Json.Decode.Extra.date)
-        (Json.Decode.field "user" decodeUser)
-        (Json.Decode.field "reactions" decodeReactions)
+    JD.map7 Comment
+        (JD.field "id" JD.int)
+        (JD.field "url" JD.string)
+        (JD.field "html_url" JD.string)
+        (JD.field "created_at" JDE.date)
+        (JD.field "updated_at" JDE.date)
+        (JD.field "user" decodeUser)
+        (JD.field "reactions" decodeReactions)
 
 
-decodeTimelineEvent : Json.Decode.Decoder TimelineEvent
+decodeTimelineEvent : JD.Decoder TimelineEvent
 decodeTimelineEvent =
-    Json.Decode.succeed TimelineEvent
-        |: Json.Decode.value
-        |: (Json.Decode.field "event" Json.Decode.string)
-        -- |: (Json.Decode.field "url" Json.Decode.string)
+    JD.succeed TimelineEvent
+        |: JD.value
+        |: (JD.field "event" JD.string)
+        -- |: (JD.field "url" JD.string)
         |:
-            (Json.Decode.maybe <| Json.Decode.field "actor" decodeUser)
-        |: (Json.Decode.maybe <| Json.Decode.field "commit_id" Json.Decode.string)
-        |: (Json.Decode.maybe <| Json.Decode.field "label" decodeIssueLabel)
-        |: (Json.Decode.maybe <| Json.Decode.field "assignee" decodeUser)
-        |: (Json.Decode.maybe <| Json.Decode.field "milestone" decodeMilestone)
-        |: (Json.Decode.maybe <| Json.Decode.field "source" decodeTimelineEventSource)
-        |: (Json.Decode.maybe <| Json.Decode.field "rename" decodeTimelineEventRename)
+            (JD.maybe <| JD.field "actor" decodeUser)
+        |: (JD.maybe <| JD.field "commit_id" JD.string)
+        |: (JD.maybe <| JD.field "label" decodeIssueLabel)
+        |: (JD.maybe <| JD.field "assignee" decodeUser)
+        |: (JD.maybe <| JD.field "milestone" decodeMilestone)
+        |: (JD.maybe <| JD.field "source" decodeTimelineEventSource)
+        |: (JD.maybe <| JD.field "rename" decodeTimelineEventRename)
 
 
-decodeTimelineEventSource : Json.Decode.Decoder TimelineEventSource
+decodeTimelineEventSource : JD.Decoder TimelineEventSource
 decodeTimelineEventSource =
-    Json.Decode.succeed TimelineEventSource
-        |: (Json.Decode.field "type" Json.Decode.string)
-        |: (Json.Decode.maybe <| Json.Decode.at [ "issue", "id" ] Json.Decode.int)
+    JD.succeed TimelineEventSource
+        |: (JD.field "type" JD.string)
+        |: (JD.maybe <| JD.at [ "issue", "id" ] JD.int)
 
 
-decodeTimelineEventRename : Json.Decode.Decoder TimelineEventRename
+decodeTimelineEventRename : JD.Decoder TimelineEventRename
 decodeTimelineEventRename =
-    Json.Decode.succeed TimelineEventRename
-        |: (Json.Decode.field "from" Json.Decode.string)
-        |: (Json.Decode.field "to" Json.Decode.string)
+    JD.succeed TimelineEventRename
+        |: (JD.field "from" JD.string)
+        |: (JD.field "to" JD.string)
 
 
-decodeMilestone : Json.Decode.Decoder Milestone
+decodeMilestone : JD.Decoder Milestone
 decodeMilestone =
-    Json.Decode.map6 Milestone
-        (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "url" Json.Decode.string)
-        (Json.Decode.field "html_url" Json.Decode.string)
-        (Json.Decode.field "number" Json.Decode.int)
-        (Json.Decode.field "title" Json.Decode.string)
-        (Json.Decode.field "description" Json.Decode.string)
+    JD.map6 Milestone
+        (JD.field "id" JD.int)
+        (JD.field "url" JD.string)
+        (JD.field "html_url" JD.string)
+        (JD.field "number" JD.int)
+        (JD.field "title" JD.string)
+        (JD.field "description" JD.string)
 
 
-decodeUser : Json.Decode.Decoder User
+decodeUser : JD.Decoder User
 decodeUser =
-    Json.Decode.map5 User
-        (Json.Decode.field "id" Json.Decode.int)
-        (Json.Decode.field "url" Json.Decode.string)
-        (Json.Decode.field "html_url" Json.Decode.string)
-        (Json.Decode.field "login" Json.Decode.string)
-        (Json.Decode.field "avatar_url" Json.Decode.string)
+    JD.map5 User
+        (JD.field "id" JD.int)
+        (JD.field "url" JD.string)
+        (JD.field "html_url" JD.string)
+        (JD.field "login" JD.string)
+        (JD.field "avatar_url" JD.string)
 
 
-decodeReactions : Json.Decode.Decoder Reactions
+decodeReactions : JD.Decoder Reactions
 decodeReactions =
-    Json.Decode.map6 Reactions
-        (Json.Decode.field "+1" Json.Decode.int)
-        (Json.Decode.field "-1" Json.Decode.int)
-        (Json.Decode.field "laugh" Json.Decode.int)
-        (Json.Decode.field "confused" Json.Decode.int)
-        (Json.Decode.field "heart" Json.Decode.int)
-        (Json.Decode.field "hooray" Json.Decode.int)
+    JD.map6 Reactions
+        (JD.field "+1" JD.int)
+        (JD.field "-1" JD.int)
+        (JD.field "laugh" JD.int)
+        (JD.field "confused" JD.int)
+        (JD.field "heart" JD.int)
+        (JD.field "hooray" JD.int)
 
 
-rfc5988Strategy : Json.Decode.Decoder a -> Pagination.Strategy Int a
+decodeProject : JD.Decoder Project
+decodeProject =
+    JD.succeed Project
+        |: JD.field "id" JD.int
+        |: JD.field "url" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "number" JD.int
+        |: JD.field "html_url" JD.string
+        |: JD.field "columns_url" JD.string
+
+
+decodeProjectColumn : JD.Decoder ProjectColumn
+decodeProjectColumn =
+    JD.succeed ProjectColumn
+        |: JD.field "id" JD.int
+        |: JD.field "url" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "cards_url" JD.string
+
+
+decodeProjectCard : JD.Decoder ProjectCard
+decodeProjectCard =
+    JD.succeed ProjectCard
+        |: JD.field "id" JD.int
+        |: JD.maybe (JD.field "note" JD.string)
+        |: JD.maybe (JD.field "content_url" JD.string)
+
+
+rfc5988Strategy : JD.Decoder a -> Pagination.Strategy Int a
 rfc5988Strategy decode =
     { onPage = flip addParams
     , nextPage =
@@ -394,7 +477,7 @@ rfc5988Strategy decode =
     , previousPage =
         parseLink previousRel
     , content =
-        Json.Decode.list decode
+        JD.list decode
     }
 
 
@@ -519,15 +602,15 @@ parseNum =
     Result.toMaybe << String.toInt
 
 
-customDecoder : Json.Decode.Decoder b -> (b -> Result String a) -> Json.Decode.Decoder a
+customDecoder : JD.Decoder b -> (b -> Result String a) -> JD.Decoder a
 customDecoder decoder toResult =
-    Json.Decode.andThen
+    JD.andThen
         (\a ->
             case toResult a of
                 Ok b ->
-                    Json.Decode.succeed b
+                    JD.succeed b
 
                 Err err ->
-                    Json.Decode.fail err
+                    JD.fail err
         )
         decoder
