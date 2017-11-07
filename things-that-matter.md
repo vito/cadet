@@ -4,7 +4,7 @@ things to visualize:
 * [x] labels
 * [x] how many reactions/comments
 * [x] issues that are tied to a PR
-* [ ] last activity
+* [x] last activity
 * [ ] who had last word
 * [ ] issues that reference many closed issues (i.e. consolidated)
 * [ ] subscribers? (is that the same as 'participants'?)
@@ -14,6 +14,7 @@ things to visualize:
 features that i care about:
 
 * [x] force-directed graph would probably be nice
+* [x] search to select issues
 * [ ] keeping up to date with active conversations on PRs
 * [ ] know if PR has been updated since last review
 * [ ] reveal where issue is in graph

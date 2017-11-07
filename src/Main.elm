@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import AnimationFrame
+import Date exposing (Date)
 import Debug
 import Dict exposing (Dict)
 import Graph exposing (Graph)
@@ -16,7 +17,7 @@ import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
 import Svg.Lazy
-import Time
+import Time exposing (Time)
 import Visualization.Shape as VS
 import Window
 import GitHub
@@ -26,6 +27,7 @@ import ForceGraph as FG exposing (ForceGraph)
 
 type alias Config =
     { windowSize : Window.Size
+    , initialDate : Time
     }
 
 
@@ -35,6 +37,7 @@ type alias Model =
     , issueGraphs : List (ForceGraph IssueNode)
     , selectedIssues : List GitHub.Issue
     , anticipatedIssues : List GitHub.Issue
+    , currentDate : Date
     }
 
 
@@ -63,7 +66,8 @@ main =
 
 type Msg
     = Noop
-    | Tick Time.Time
+    | Tick Time
+    | SetCurrentDate Date
     | Resize Window.Size
     | DataFetched (Result Http.Error Data)
     | SelectIssue GitHub.Issue
@@ -82,6 +86,7 @@ init config =
       , issueGraphs = []
       , selectedIssues = []
       , anticipatedIssues = []
+      , currentDate = Date.fromTime config.initialDate
       }
     , Data.fetch DataFetched
     )
@@ -91,6 +96,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Window.resizes Resize
+        , Time.every Time.second (SetCurrentDate << Date.fromTime)
         , if List.all FG.isCompleted model.issueGraphs then
             Sub.none
           else
@@ -118,6 +124,9 @@ update msg model =
               }
             , Cmd.none
             )
+
+        SetCurrentDate date ->
+            ( { model | currentDate = date }, Cmd.none )
 
         Resize size ->
             let
@@ -187,7 +196,7 @@ view model =
     let
         svg =
             flowGraphs model.config.windowSize <|
-                List.map viewGraph model.issueGraphs
+                List.map (viewGraph model) model.issueGraphs
 
         anticipatedIssues =
             List.map (viewIssueInfo True) <|
@@ -332,8 +341,8 @@ type alias Subgraph =
     }
 
 
-viewGraph : ForceGraph IssueNode -> Subgraph
-viewGraph { graph } =
+viewGraph : Model -> ForceGraph IssueNode -> Subgraph
+viewGraph model { graph } =
     let
         nodeContexts =
             Graph.fold (::) [] graph
@@ -368,8 +377,8 @@ viewGraph { graph } =
         ( flairs, nodes ) =
             Graph.fold
                 (\{ node } ( fs, ns ) ->
-                    ( Svg.Lazy.lazy viewIssueFlair node :: fs
-                    , Svg.Lazy.lazy viewIssueNode node :: ns
+                    ( Svg.Lazy.lazy (viewIssueFlair model) node :: fs
+                    , Svg.Lazy.lazy (viewIssueNode model) node :: ns
                     )
                 )
                 ( [], [] )
@@ -533,7 +542,7 @@ nodeFlairArcs nc =
                     Svg.g [ SA.class "reveal" ]
                         [ Svg.path
                             [ SA.d (VS.arc arc)
-                            , SA.fill ("rgba(255, 255, 255, .3)")
+                            , SA.fill "#fff"
                             ]
                             []
                         , Svg.text_
@@ -587,8 +596,8 @@ nodeLabelArcs nc =
             labels
 
 
-viewIssueFlair : Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
-viewIssueFlair { label } =
+viewIssueFlair : Model -> Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
+viewIssueFlair { currentDate } { label } =
     let
         x =
             label.x
@@ -598,15 +607,29 @@ viewIssueFlair { label } =
 
         issue =
             label.value.issue
+
+        daysSinceLastUpdate =
+            (Date.toTime currentDate / (24 * Time.hour)) - (Date.toTime issue.updatedAt / (24 * Time.hour))
+
+        opacity =
+            if daysSinceLastUpdate <= 1 then
+                0.75
+            else if daysSinceLastUpdate <= 2 then
+                0.5
+            else if daysSinceLastUpdate <= 7 then
+                0.25
+            else
+                0.1
     in
         Svg.g
-            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+            [ SA.opacity (toString opacity)
+            , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             ]
             label.value.flair
 
 
-viewIssueNode : Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
-viewIssueNode { label } =
+viewIssueNode : Model -> Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
+viewIssueNode model { label } =
     let
         x =
             label.x
