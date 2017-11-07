@@ -31,9 +31,10 @@ type alias Config =
 
 type alias Model =
     { config : Config
+    , allIssues : List GitHub.Issue
     , issueGraphs : List (ForceGraph IssueNode)
     , selectedIssues : List GitHub.Issue
-    , anticipatedIssue : Maybe GitHub.Issue
+    , anticipatedIssues : List GitHub.Issue
     }
 
 
@@ -68,15 +69,19 @@ type Msg
     | SelectIssue GitHub.Issue
     | DeselectIssue GitHub.Issue
     | AnticipateIssue GitHub.Issue
-    | UnanticipateIssue
+    | UnanticipateIssue GitHub.Issue
+    | SearchIssues String
+    | SelectAnticipatedIssues
+    | ClearSelectedIssues
 
 
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
+      , allIssues = []
       , issueGraphs = []
       , selectedIssues = []
-      , anticipatedIssue = Nothing
+      , anticipatedIssues = []
       }
     , Data.fetch DataFetched
     )
@@ -121,6 +126,27 @@ update msg model =
             in
                 ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
+        SearchIssues "" ->
+            ( { model | anticipatedIssues = [] }, Cmd.none )
+
+        SearchIssues query ->
+            let
+                issueMatch issue =
+                    String.contains (String.toLower query) (String.toLower issue.title)
+
+                foundIssues =
+                    List.filter issueMatch model.allIssues
+            in
+                ( { model | anticipatedIssues = foundIssues }, Cmd.none )
+
+        SelectAnticipatedIssues ->
+            ( { model
+                | anticipatedIssues = []
+                , selectedIssues = model.anticipatedIssues ++ model.selectedIssues
+              }
+            , Cmd.none
+            )
+
         SelectIssue issue ->
             ( { model
                 | issueGraphs = List.map (setIssueSelected issue.id True) model.issueGraphs
@@ -128,6 +154,9 @@ update msg model =
               }
             , Cmd.none
             )
+
+        ClearSelectedIssues ->
+            ( { model | selectedIssues = [] }, Cmd.none )
 
         DeselectIssue issue ->
             ( { model
@@ -138,12 +167,12 @@ update msg model =
             )
 
         AnticipateIssue issue ->
-            ( { model | anticipatedIssue = Just issue }
+            ( { model | anticipatedIssues = issue :: model.anticipatedIssues }
             , Cmd.none
             )
 
-        UnanticipateIssue ->
-            ( { model | anticipatedIssue = Nothing }, Cmd.none )
+        UnanticipateIssue issue ->
+            ( { model | anticipatedIssues = List.filter ((/=) issue.id << .id) model.anticipatedIssues }, Cmd.none )
 
         DataFetched (Ok data) ->
             computeGraphs model data
@@ -159,22 +188,33 @@ view model =
         svg =
             flowGraphs model.config.windowSize <|
                 List.map viewGraph model.issueGraphs
+
+        anticipatedIssues =
+            List.map (viewIssueInfo True) <|
+                List.filter (not << flip List.member model.selectedIssues) model.anticipatedIssues
     in
         Html.div [ HA.class "cadet" ]
             [ svg
-            , Html.div [ HA.class "issues" ] <|
-                (case model.anticipatedIssue of
-                    Just issue ->
-                        if List.member issue model.selectedIssues then
-                            Html.text ""
-                        else
-                            viewIssueInfo True issue
-
-                    Nothing ->
-                        Html.text ""
-                )
-                    :: List.map (viewIssueInfo False) model.selectedIssues
+            , Html.div [ HA.class "issue-management" ]
+                [ Html.div [ HA.class "issues" ] <|
+                    anticipatedIssues
+                        ++ List.map (viewIssueInfo False) model.selectedIssues
+                , viewSearch
+                ]
             ]
+
+
+viewSearch : Html Msg
+viewSearch =
+    Html.div [ HA.class "issue-search" ]
+        [ Html.span
+            [ HE.onClick ClearSelectedIssues
+            , HA.class "octicon octicon-x clear-selected"
+            ]
+            [ Html.text "" ]
+        , Html.form [ HE.onSubmit SelectAnticipatedIssues ]
+            [ Html.input [ HE.onInput SearchIssues, HA.placeholder "filter issues" ] [] ]
+        ]
 
 
 setIssueSelected : Int -> Bool -> ForceGraph IssueNode -> ForceGraph IssueNode
@@ -196,7 +236,7 @@ flowGraphs window graphs =
             List.foldl (viewSubgraph window) ( [], 0, 0, 0 ) graphs
     in
         Svg.svg
-            [ SA.width (toString window.width ++ "px")
+            [ SA.width "100%"
             , SA.height (toString (y + nextRow) ++ "px")
             ]
             gs
@@ -263,7 +303,7 @@ computeGraphs model data =
                 |> List.sortWith graphCompare
                 |> List.reverse
     in
-        ( { model | issueGraphs = issueGraphs }, Cmd.none )
+        ( { model | allIssues = allIssues, issueGraphs = issueGraphs }, Cmd.none )
 
 
 graphCompare : ForceGraph IssueNode -> ForceGraph IssueNode -> Order
@@ -603,7 +643,7 @@ viewIssueNode { label } =
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             , SE.onMouseOver (AnticipateIssue issue)
-            , SE.onMouseOut UnanticipateIssue
+            , SE.onMouseOut (UnanticipateIssue issue)
             , SE.onClick
                 (if label.value.selected then
                     DeselectIssue issue

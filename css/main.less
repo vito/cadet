@@ -18,40 +18,70 @@ body {
   background: #C6E5D9;
 }
 
-.issues {
+.issue-management {
   position: fixed;
   right: 0;
   bottom: 0;
+
+  .octicon {
+    cursor: pointer;
+    color: fade(#fff, 50%);
+
+    &:hover {
+      color: white;
+    }
+  }
+}
+
+.issue-search {
+  position: relative;
+
+  .clear-selected {
+    position: absolute;
+    left: -20px;
+    bottom: 12px;
+  }
+
+  input {
+    font-size: 14px;
+    padding: 12px;
+    background: fade(#fff, 20%);
+    border: 0;
+    color: #fff;
+    width: 500px;
+
+    &::placeholder {
+      color: #fff;
+    }
+
+    &:focus, &:hover {
+      background: #fff;
+      color: #333;
+    }
+  }
 }
 
 .issue-controls {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
+  position: relative;
 
-  &:first-child .issue-info {
-    border-top-color: transparent;
+  &:first-of-type .issue-info {
     border-top-left-radius: 10px;
   }
 
   .issue-buttons {
-    margin-top: 23px;
-
-    .octicon {
-      cursor: pointer;
-      color: fade(#fff, 50%);
-
-      &:hover {
-        color: white;
-      }
-    }
+    position: absolute;
+    bottom: 22px;
+    left: -20px;
   }
 }
 
 .issue-info {
   padding: 12px;
   background: #fff;
-  border-top: 1px solid #e1e4e8;
+  border-bottom: 1px solid #e1e4e8;
   width: 500px;
   position: relative;
 
