@@ -691,7 +691,9 @@ viewIssueInfo anticipated issue =
                 Html.text ""
             ]
         , Html.div
-            [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ] ]
+            [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ]
+            , HE.onClick (SelectIssue issue)
+            ]
             [ Html.a [ HA.href issue.htmlURL, HA.target "_blank", HA.class "issue-title" ]
                 [ Html.text issue.title
                 ]

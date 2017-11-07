@@ -17696,8 +17696,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 798, column: 25},
-							end: {line: 812, column: 57}
+							start: {line: 800, column: 25},
+							end: {line: 814, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -17807,8 +17807,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 736, column: 17},
-					end: {line: 744, column: 50}
+					start: {line: 738, column: 17},
+					end: {line: 746, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -17816,8 +17816,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 734, column: 9},
-				end: {line: 747, column: 42}
+				start: {line: 736, column: 9},
+				end: {line: 749, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -18657,163 +18657,6 @@ var _vito$cadet$Main$AnticipateIssue = function (a) {
 var _vito$cadet$Main$DeselectIssue = function (a) {
 	return {ctor: 'DeselectIssue', _0: a};
 };
-var _vito$cadet$Main$viewIssueInfo = F2(
-	function (anticipated, issue) {
-		return A2(
-			_elm_lang$html$Html$div,
-			{
-				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('issue-controls'),
-				_1: {ctor: '[]'}
-			},
-			{
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('issue-buttons'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: (!anticipated) ? A2(
-							_elm_lang$html$Html$span,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onClick(
-									_vito$cadet$Main$DeselectIssue(issue)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
-									_1: {ctor: '[]'}
-								}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(''),
-								_1: {ctor: '[]'}
-							}) : _elm_lang$html$Html$text(''),
-						_1: {ctor: '[]'}
-					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$classList(
-								{
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'issue-info', _1: true},
-									_1: {
-										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'anticipated', _1: anticipated},
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$a,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$href(issue.htmlURL),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$target('_blank'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('issue-title'),
-											_1: {ctor: '[]'}
-										}
-									}
-								},
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html$text(issue.title),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$span,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('issue-labels'),
-										_1: {ctor: '[]'}
-									},
-									A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueLabel, issue.labels)),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('issue-meta'),
-											_1: {ctor: '[]'}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$a,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$href(issue.htmlURL),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$target('_blank'),
-														_1: {ctor: '[]'}
-													}
-												},
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html$text(
-														A2(
-															_elm_lang$core$Basics_ops['++'],
-															'#',
-															_elm_lang$core$Basics$toString(issue.number))),
-													_1: {ctor: '[]'}
-												}),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html$text(' '),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html$text('opened by '),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$a,
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$href(issue.user.url),
-																_1: {
-																	ctor: '::',
-																	_0: _elm_lang$html$Html_Attributes$target('_blank'),
-																	_1: {ctor: '[]'}
-																}
-															},
-															{
-																ctor: '::',
-																_0: _elm_lang$html$Html$text(issue.user.login),
-																_1: {ctor: '[]'}
-															}),
-														_1: {ctor: '[]'}
-													}
-												}
-											}
-										}),
-									_1: {ctor: '[]'}
-								}
-							}
-						}),
-					_1: {ctor: '[]'}
-				}
-			});
-	});
 var _vito$cadet$Main$SelectIssue = function (a) {
 	return {ctor: 'SelectIssue', _0: a};
 };
@@ -19034,6 +18877,168 @@ var _vito$cadet$Main$viewGraph = F2(
 			bounds: {minX: minX, minY: minY, maxX: maxX, maxY: maxY},
 			size: {width: width, height: height}
 		};
+	});
+var _vito$cadet$Main$viewIssueInfo = F2(
+	function (anticipated, issue) {
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('issue-controls'),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('issue-buttons'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: (!anticipated) ? A2(
+							_elm_lang$html$Html$span,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									_vito$cadet$Main$DeselectIssue(issue)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
+									_1: {ctor: '[]'}
+								}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(''),
+								_1: {ctor: '[]'}
+							}) : _elm_lang$html$Html$text(''),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$classList(
+								{
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'issue-info', _1: true},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'anticipated', _1: anticipated},
+										_1: {ctor: '[]'}
+									}
+								}),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Events$onClick(
+									_vito$cadet$Main$SelectIssue(issue)),
+								_1: {ctor: '[]'}
+							}
+						},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$a,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$href(issue.htmlURL),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$target('_blank'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('issue-title'),
+											_1: {ctor: '[]'}
+										}
+									}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(issue.title),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$span,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('issue-labels'),
+										_1: {ctor: '[]'}
+									},
+									A2(_elm_lang$core$List$map, _vito$cadet$Main$viewIssueLabel, issue.labels)),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$div,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('issue-meta'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$a,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$href(issue.htmlURL),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$target('_blank'),
+														_1: {ctor: '[]'}
+													}
+												},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text(
+														A2(
+															_elm_lang$core$Basics_ops['++'],
+															'#',
+															_elm_lang$core$Basics$toString(issue.number))),
+													_1: {ctor: '[]'}
+												}),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html$text(' '),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('opened by '),
+													_1: {
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$a,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$href(issue.user.url),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Attributes$target('_blank'),
+																	_1: {ctor: '[]'}
+																}
+															},
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html$text(issue.user.login),
+																_1: {ctor: '[]'}
+															}),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
 	});
 var _vito$cadet$Main$view = function (model) {
 	var anticipatedIssues = A2(
