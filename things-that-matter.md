@@ -9,10 +9,14 @@ things to visualize:
 * [ ] issues that reference many closed issues (i.e. consolidated)
 * [ ] subscribers? (is that the same as 'participants'?)
 * [ ] has the author ever submitted a PR
+* [ ] has the PR build passed?
 
 features that i care about:
 
 * [x] force-directed graph would probably be nice
+* [ ] keeping up to date with active conversations on PRs
+* [ ] know if PR has been updated since last review
+* [ ] reveal where issue is in graph
 * [ ] view by project
 * [ ] assign to project
 * [ ] view by milestone
