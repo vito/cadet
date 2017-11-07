@@ -7611,10 +7611,27 @@ var _vito$cadet$GitHub$Comment = F7(
 	function (a, b, c, d, e, f, g) {
 		return {id: a, url: b, htmlURL: c, createdAt: d, updatedAt: e, user: f, reactions: g};
 	});
-var _vito$cadet$GitHub$TimelineEvent = F9(
-	function (a, b, c, d, e, f, g, h, i) {
-		return {value: a, event: b, actor: c, commitId: d, label: e, assignee: f, milestone: g, source: h, rename: i};
-	});
+var _vito$cadet$GitHub$TimelineEvent = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return {value: a, event: b, createdAt: c, actor: d, commitId: e, label: f, assignee: g, milestone: h, source: i, rename: j};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 var _vito$cadet$GitHub$TimelineEventSource = F2(
 	function (a, b) {
 		return {type_: a, issueID: b};
@@ -7662,13 +7679,14 @@ var _vito$cadet$GitHub$decodeMilestone = A7(
 	A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'description', _elm_lang$core$Json_Decode$string));
-var _vito$cadet$GitHub$User = F5(
-	function (a, b, c, d, e) {
-		return {id: a, url: b, htmlURL: c, login: d, avatar: e};
+var _vito$cadet$GitHub$User = F6(
+	function (a, b, c, d, e, f) {
+		return {value: a, id: b, url: c, htmlURL: d, login: e, avatar: f};
 	});
-var _vito$cadet$GitHub$decodeUser = A6(
-	_elm_lang$core$Json_Decode$map5,
+var _vito$cadet$GitHub$decodeUser = A7(
+	_elm_lang$core$Json_Decode$map6,
 	_vito$cadet$GitHub$User,
+	_elm_lang$core$Json_Decode$value,
 	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int),
 	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string),
@@ -7726,9 +7744,13 @@ var _vito$cadet$GitHub$decodeTimelineEvent = A2(
 								_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 								A2(
 									_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-									_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$TimelineEvent),
-									_elm_lang$core$Json_Decode$value),
-								A2(_elm_lang$core$Json_Decode$field, 'event', _elm_lang$core$Json_Decode$string)),
+									A2(
+										_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+										_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHub$TimelineEvent),
+										_elm_lang$core$Json_Decode$value),
+									A2(_elm_lang$core$Json_Decode$field, 'event', _elm_lang$core$Json_Decode$string)),
+								_elm_lang$core$Json_Decode$maybe(
+									A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date))),
 							_elm_lang$core$Json_Decode$maybe(
 								A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHub$decodeUser))),
 						_elm_lang$core$Json_Decode$maybe(
@@ -8039,6 +8061,17 @@ var _vito$cadet$Main$setReferences = _elm_lang$core$Native_Platform.outgoingPort
 			})
 		];
 	});
+var _vito$cadet$Main$setActors = _elm_lang$core$Native_Platform.outgoingPort(
+	'setActors',
+	function (v) {
+		return [
+			v._0,
+			_elm_lang$core$Native_List.toArray(v._1).map(
+			function (v) {
+				return {actor: v.actor, created_at: v.created_at};
+			})
+		];
+	});
 var _vito$cadet$Main$Flags = F2(
 	function (a, b) {
 		return {githubToken: a, githubOrg: b};
@@ -8046,6 +8079,10 @@ var _vito$cadet$Main$Flags = F2(
 var _vito$cadet$Main$Model = F6(
 	function (a, b, c, d, e, f) {
 		return {githubToken: a, githubOrg: b, repos: c, issues: d, timelines: e, failedQueue: f};
+	});
+var _vito$cadet$Main$ActorEvent = F2(
+	function (a, b) {
+		return {actor: a, created_at: b};
 	});
 var _vito$cadet$Main$TimelineFetched = F2(
 	function (a, b) {
@@ -8189,29 +8226,54 @@ var _vito$cadet$Main$update = F2(
 				}
 			default:
 				if (_p2._1.ctor === 'Ok') {
-					var findSource = function (event) {
-						var _p7 = event.source;
-						if (_p7.ctor === 'Just') {
-							return _p7._0.issueID;
+					var _p10 = _p2._1._0;
+					var _p9 = _p2._0;
+					var commentActor = function (event) {
+						var _p7 = {ctor: '_Tuple3', _0: event.event, _1: event.createdAt, _2: event.actor};
+						if ((((_p7.ctor === '_Tuple3') && (_p7._0 === 'commented')) && (_p7._1.ctor === 'Just')) && (_p7._2.ctor === 'Just')) {
+							return _elm_lang$core$Maybe$Just(
+								{
+									actor: _p7._2._0.value,
+									created_at: _elm_lang$core$Date$toTime(_p7._1._0)
+								});
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
 						}
 					};
-					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p2._1._0);
+					var actors = A2(_elm_lang$core$List$filterMap, commentActor, _p10);
+					var findSource = function (event) {
+						var _p8 = event.source;
+						if (_p8.ctor === 'Just') {
+							return _p8._0.issueID;
+						} else {
+							return _elm_lang$core$Maybe$Nothing;
+						}
+					};
+					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p10);
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: _vito$cadet$Main$setReferences(
-							{ctor: '_Tuple2', _0: _p2._0.id, _1: edges})
+						_1: _elm_lang$core$Platform_Cmd$batch(
+							{
+								ctor: '::',
+								_0: _vito$cadet$Main$setReferences(
+									{ctor: '_Tuple2', _0: _p9.id, _1: edges}),
+								_1: {
+									ctor: '::',
+									_0: _vito$cadet$Main$setActors(
+										{ctor: '_Tuple2', _0: _p9.id, _1: actors}),
+									_1: {ctor: '[]'}
+								}
+							})
 					};
 				} else {
-					var _p8 = _p2._0;
+					var _p11 = _p2._0;
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
 						A2(
 							_elm_lang$core$Debug$log,
-							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p8.htmlURL),
+							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p11.htmlURL),
 							_p2._1._0),
 						{
 							ctor: '_Tuple2',
@@ -8220,7 +8282,7 @@ var _vito$cadet$Main$update = F2(
 								{
 									failedQueue: {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p8),
+										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p11),
 										_1: model.failedQueue
 									}
 								}),
@@ -8231,14 +8293,14 @@ var _vito$cadet$Main$update = F2(
 	});
 var _vito$cadet$Main$Retry = {ctor: 'Retry'};
 var _vito$cadet$Main$Refresh = {ctor: 'Refresh'};
-var _vito$cadet$Main$init = function (_p9) {
-	var _p10 = _p9;
+var _vito$cadet$Main$init = function (_p12) {
+	var _p13 = _p12;
 	return A2(
 		_vito$cadet$Main$update,
 		_vito$cadet$Main$Refresh,
 		{
-			githubToken: _p10.githubToken,
-			githubOrg: _p10.githubOrg,
+			githubToken: _p13.githubToken,
+			githubOrg: _p13.githubOrg,
 			repos: {ctor: '[]'},
 			issues: _elm_lang$core$Dict$empty,
 			timelines: _elm_lang$core$Dict$empty,

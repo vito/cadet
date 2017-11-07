@@ -26,6 +26,7 @@ module GitHub
         , decodeRepo
         , decodeIssue
         , decodeTimelineEvent
+        , decodeUser
         )
 
 import Date exposing (Date)
@@ -103,6 +104,7 @@ type alias Comment =
 type alias TimelineEvent =
     { value : JD.Value
     , event : String
+    , createdAt : Maybe Date
     , actor : Maybe User
     , commitId : Maybe String
     , label : Maybe IssueLabel
@@ -134,7 +136,8 @@ type alias Milestone =
 
 
 type alias User =
-    { id : Int
+    { value : JD.Value
+    , id : Int
     , url : String
     , htmlURL : String
     , login : String
@@ -384,9 +387,8 @@ decodeTimelineEvent =
     JD.succeed TimelineEvent
         |: JD.value
         |: (JD.field "event" JD.string)
-        -- |: (JD.field "url" JD.string)
-        |:
-            (JD.maybe <| JD.field "actor" decodeUser)
+        |: (JD.maybe <| JD.field "created_at" JDE.date)
+        |: (JD.maybe <| JD.field "actor" decodeUser)
         |: (JD.maybe <| JD.field "commit_id" JD.string)
         |: (JD.maybe <| JD.field "label" decodeIssueLabel)
         |: (JD.maybe <| JD.field "assignee" decodeUser)
@@ -422,7 +424,8 @@ decodeMilestone =
 
 decodeUser : JD.Decoder User
 decodeUser =
-    JD.map5 User
+    JD.map6 User
+        (JD.value)
         (JD.field "id" JD.int)
         (JD.field "url" JD.string)
         (JD.field "html_url" JD.string)

@@ -8,12 +8,16 @@ import Task
 import Process
 import Http
 import GitHub
+import Date
 
 
 port setIssues : ( Int, List Json.Decode.Value ) -> Cmd msg
 
 
 port setReferences : ( Int, List Int ) -> Cmd msg
+
+
+port setActors : ( Int, List ActorEvent ) -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -38,6 +42,12 @@ type alias Model =
     , issues : Dict Int (List GitHub.Issue)
     , timelines : Dict Int (List GitHub.TimelineEvent)
     , failedQueue : List (Cmd Msg)
+    }
+
+
+type alias ActorEvent =
+    { actor : Json.Decode.Value
+    , created_at : Time
     }
 
 
@@ -123,8 +133,27 @@ update msg model =
 
                 edges =
                     List.filterMap findSource timeline
+
+                commentActor event =
+                    case ( event.event, event.createdAt, event.actor ) of
+                        ( "commented", Just createdAt, Just actor ) ->
+                            Just
+                                { actor = actor.value
+                                , created_at = Date.toTime createdAt
+                                }
+
+                        _ ->
+                            Nothing
+
+                actors =
+                    List.filterMap commentActor timeline
             in
-                ( model, setReferences ( issue.id, edges ) )
+                ( model
+                , Cmd.batch
+                    [ setReferences ( issue.id, edges )
+                    , setActors ( issue.id, actors )
+                    ]
+                )
 
         TimelineFetched issue (Err err) ->
             flip always (Debug.log ("failed to fetch timeline for " ++ issue.htmlURL) err) <|
