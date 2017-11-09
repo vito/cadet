@@ -8754,6 +8754,206 @@ var _jamesmacaulay$elm_graphql$GraphQL_Client_Http$sendMutation = function (_p3)
 var _jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendQuery = _jamesmacaulay$elm_graphql$GraphQL_Client_Http$send;
 var _jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendMutation = _jamesmacaulay$elm_graphql$GraphQL_Client_Http$send;
 
+var _lukewestby$elm_http_builder$HttpBuilder$replace = F2(
+	function (old, $new) {
+		return function (_p0) {
+			return A2(
+				_elm_lang$core$String$join,
+				$new,
+				A2(_elm_lang$core$String$split, old, _p0));
+		};
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$queryEscape = function (_p1) {
+	return A3(
+		_lukewestby$elm_http_builder$HttpBuilder$replace,
+		'%20',
+		'+',
+		_elm_lang$http$Http$encodeUri(_p1));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$queryPair = function (_p2) {
+	var _p3 = _p2;
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_lukewestby$elm_http_builder$HttpBuilder$queryEscape(_p3._0),
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'=',
+			_lukewestby$elm_http_builder$HttpBuilder$queryEscape(_p3._1)));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded = function (args) {
+	return A2(
+		_elm_lang$core$String$join,
+		'&',
+		A2(_elm_lang$core$List$map, _lukewestby$elm_http_builder$HttpBuilder$queryPair, args));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$toRequest = function (builder) {
+	var encodedParams = _lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(builder.queryParams);
+	var fullUrl = _elm_lang$core$String$isEmpty(encodedParams) ? builder.url : A2(
+		_elm_lang$core$Basics_ops['++'],
+		builder.url,
+		A2(_elm_lang$core$Basics_ops['++'], '?', encodedParams));
+	return _elm_lang$http$Http$request(
+		{method: builder.method, url: fullUrl, headers: builder.headers, body: builder.body, expect: builder.expect, timeout: builder.timeout, withCredentials: builder.withCredentials});
+};
+var _lukewestby$elm_http_builder$HttpBuilder$toTaskPlain = function (builder) {
+	return _elm_lang$http$Http$toTask(
+		_lukewestby$elm_http_builder$HttpBuilder$toRequest(builder));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withCacheBuster = F2(
+	function (paramName, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				cacheBuster: _elm_lang$core$Maybe$Just(paramName)
+			});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withQueryParams = F2(
+	function (queryParams, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				queryParams: A2(_elm_lang$core$Basics_ops['++'], builder.queryParams, queryParams)
+			});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster = F2(
+	function (paramName, builder) {
+		var request = function (timestamp) {
+			return _lukewestby$elm_http_builder$HttpBuilder$toTaskPlain(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withQueryParams,
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: paramName,
+							_1: _elm_lang$core$Basics$toString(timestamp)
+						},
+						_1: {ctor: '[]'}
+					},
+					builder));
+		};
+		return A2(_elm_lang$core$Task$andThen, request, _elm_lang$core$Time$now);
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$toTask = function (builder) {
+	var _p4 = builder.cacheBuster;
+	if (_p4.ctor === 'Just') {
+		return A2(_lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster, _p4._0, builder);
+	} else {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTaskPlain(builder);
+	}
+};
+var _lukewestby$elm_http_builder$HttpBuilder$send = F2(
+	function (tagger, builder) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			tagger,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(builder));
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withExpect = F2(
+	function (expect, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{expect: expect});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withCredentials = function (builder) {
+	return _elm_lang$core$Native_Utils.update(
+		builder,
+		{withCredentials: true});
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withTimeout = F2(
+	function (timeout, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				timeout: _elm_lang$core$Maybe$Just(timeout)
+			});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withBody = F2(
+	function (body, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{body: body});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withStringBody = F2(
+	function (contentType, value) {
+		return _lukewestby$elm_http_builder$HttpBuilder$withBody(
+			A2(_elm_lang$http$Http$stringBody, contentType, value));
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withUrlEncodedBody = function (_p5) {
+	return A2(
+		_lukewestby$elm_http_builder$HttpBuilder$withStringBody,
+		'application/x-www-form-urlencoded',
+		_lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(_p5));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withJsonBody = function (value) {
+	return _lukewestby$elm_http_builder$HttpBuilder$withBody(
+		_elm_lang$http$Http$jsonBody(value));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withMultipartStringBody = function (partPairs) {
+	return _lukewestby$elm_http_builder$HttpBuilder$withBody(
+		_elm_lang$http$Http$multipartBody(
+			A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$Basics$uncurry(_elm_lang$http$Http$stringPart),
+				partPairs)));
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
+	function (headerPairs, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				headers: A2(
+					_elm_lang$core$Basics_ops['++'],
+					A2(
+						_elm_lang$core$List$map,
+						_elm_lang$core$Basics$uncurry(_elm_lang$http$Http$header),
+						headerPairs),
+					builder.headers)
+			});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$withHeader = F3(
+	function (key, value, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				headers: {
+					ctor: '::',
+					_0: A2(_elm_lang$http$Http$header, key, value),
+					_1: builder.headers
+				}
+			});
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl = F2(
+	function (method, url) {
+		return {
+			method: method,
+			url: url,
+			headers: {ctor: '[]'},
+			body: _elm_lang$http$Http$emptyBody,
+			expect: _elm_lang$http$Http$expectStringResponse(
+				function (_p6) {
+					return _elm_lang$core$Result$Ok(
+						{ctor: '_Tuple0'});
+				}),
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false,
+			queryParams: {ctor: '[]'},
+			cacheBuster: _elm_lang$core$Maybe$Nothing
+		};
+	});
+var _lukewestby$elm_http_builder$HttpBuilder$get = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('GET');
+var _lukewestby$elm_http_builder$HttpBuilder$post = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
+var _lukewestby$elm_http_builder$HttpBuilder$put = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PUT');
+var _lukewestby$elm_http_builder$HttpBuilder$patch = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
+var _lukewestby$elm_http_builder$HttpBuilder$delete = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('DELETE');
+var _lukewestby$elm_http_builder$HttpBuilder$options = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('OPTIONS');
+var _lukewestby$elm_http_builder$HttpBuilder$trace = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('TRACE');
+var _lukewestby$elm_http_builder$HttpBuilder$head = _lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('HEAD');
+var _lukewestby$elm_http_builder$HttpBuilder$RequestBuilder = F9(
+	function (a, b, c, d, e, f, g, h, i) {
+		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g, queryParams: h, cacheBuster: i};
+	});
+
 var _vito$cadet$GitHubGraph$customDecoder = F2(
 	function (decoder, toResult) {
 		return A2(
@@ -10361,6 +10561,76 @@ var _vito$cadet$GitHubGraph$fetchIssueTimeline = F2(
 			{selector: issue, after: _elm_lang$core$Maybe$Nothing});
 	});
 
+var _vito$cadet$Data$encodeActorEvent = function (_p0) {
+	var _p1 = _p0;
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'actor',
+				_1: _vito$cadet$GitHubGraph$encodeUser(_p1.actor)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'createdAt',
+					_1: _elm_lang$core$Json_Encode$string(
+						_elm_lang$core$Basics$toString(_p1.createdAt))
+				},
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _vito$cadet$Data$Data = F3(
+	function (a, b, c) {
+		return {issues: a, references: b, actors: c};
+	});
+var _vito$cadet$Data$ActorEvent = F2(
+	function (a, b) {
+		return {actor: a, createdAt: b};
+	});
+var _vito$cadet$Data$decodeActorEvent = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$ActorEvent),
+		A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHubGraph$decodeUser)),
+	A2(_elm_lang$core$Json_Decode$field, 'createdAt', _elm_community$json_extra$Json_Decode_Extra$date));
+var _vito$cadet$Data$decodeData = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$Data),
+			A2(
+				_elm_lang$core$Json_Decode$field,
+				'issues',
+				_elm_lang$core$Json_Decode$dict(
+					_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeIssue)))),
+		A2(
+			_elm_lang$core$Json_Decode$field,
+			'references',
+			_elm_lang$core$Json_Decode$dict(
+				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)))),
+	A2(
+		_elm_lang$core$Json_Decode$field,
+		'actors',
+		_elm_lang$core$Json_Decode$dict(
+			_elm_lang$core$Json_Decode$list(_vito$cadet$Data$decodeActorEvent))));
+var _vito$cadet$Data$fetch = function (f) {
+	return A2(
+		_elm_lang$core$Task$attempt,
+		f,
+		_lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				_elm_lang$http$Http$expectJson(_vito$cadet$Data$decodeData),
+				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
+};
+
 var _vito$cadet$Main$setIssues = _elm_lang$core$Native_Platform.outgoingPort(
 	'setIssues',
 	function (v) {
@@ -10374,6 +10644,17 @@ var _vito$cadet$Main$setIssues = _elm_lang$core$Native_Platform.outgoingPort(
 	});
 var _vito$cadet$Main$setReferences = _elm_lang$core$Native_Platform.outgoingPort(
 	'setReferences',
+	function (v) {
+		return [
+			v._0,
+			_elm_lang$core$Native_List.toArray(v._1).map(
+			function (v) {
+				return v;
+			})
+		];
+	});
+var _vito$cadet$Main$setActors = _elm_lang$core$Native_Platform.outgoingPort(
+	'setActors',
 	function (v) {
 		return [
 			v._0,
@@ -10536,29 +10817,52 @@ var _vito$cadet$Main$update = F2(
 				}
 			default:
 				if (_p1._1.ctor === 'Ok') {
-					var findSource = function (event) {
+					var _p9 = _p1._1._0;
+					var _p8 = _p1._0;
+					var commentActor = function (event) {
 						var _p6 = event;
-						if (_p6.ctor === 'CrossReferencedEvent') {
-							return _elm_lang$core$Maybe$Just(_p6._0);
+						if ((_p6.ctor === 'IssueCommentEvent') && (_p6._0.ctor === 'Just')) {
+							return _elm_lang$core$Maybe$Just(
+								_vito$cadet$Data$encodeActorEvent(
+									{actor: _p6._0._0, createdAt: _p6._1}));
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
 						}
 					};
-					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p1._1._0);
+					var actors = A2(_elm_lang$core$List$filterMap, commentActor, _p9);
+					var findSource = function (event) {
+						var _p7 = event;
+						if (_p7.ctor === 'CrossReferencedEvent') {
+							return _elm_lang$core$Maybe$Just(_p7._0);
+						} else {
+							return _elm_lang$core$Maybe$Nothing;
+						}
+					};
+					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p9);
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: _vito$cadet$Main$setReferences(
-							{ctor: '_Tuple2', _0: _p1._0.id, _1: edges})
+						_1: _elm_lang$core$Platform_Cmd$batch(
+							{
+								ctor: '::',
+								_0: _vito$cadet$Main$setReferences(
+									{ctor: '_Tuple2', _0: _p8.id, _1: edges}),
+								_1: {
+									ctor: '::',
+									_0: _vito$cadet$Main$setActors(
+										{ctor: '_Tuple2', _0: _p8.id, _1: actors}),
+									_1: {ctor: '[]'}
+								}
+							})
 					};
 				} else {
-					var _p7 = _p1._0;
+					var _p10 = _p1._0;
 					return A3(
 						_elm_lang$core$Basics$flip,
 						_elm_lang$core$Basics$always,
 						A2(
 							_elm_lang$core$Debug$log,
-							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p7.url),
+							A2(_elm_lang$core$Basics_ops['++'], 'failed to fetch timeline for ', _p10.url),
 							_p1._1._0),
 						{
 							ctor: '_Tuple2',
@@ -10567,7 +10871,7 @@ var _vito$cadet$Main$update = F2(
 								{
 									failedQueue: {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p7),
+										_0: A3(_vito$cadet$Main$fetchTimeline, model, 0, _p10),
 										_1: model.failedQueue
 									}
 								}),
@@ -10578,14 +10882,14 @@ var _vito$cadet$Main$update = F2(
 	});
 var _vito$cadet$Main$Retry = {ctor: 'Retry'};
 var _vito$cadet$Main$Refresh = {ctor: 'Refresh'};
-var _vito$cadet$Main$init = function (_p8) {
-	var _p9 = _p8;
+var _vito$cadet$Main$init = function (_p11) {
+	var _p12 = _p11;
 	return A2(
 		_vito$cadet$Main$update,
 		_vito$cadet$Main$Refresh,
 		{
-			githubToken: _p9.githubToken,
-			githubOrg: _p9.githubOrg,
+			githubToken: _p12.githubToken,
+			githubOrg: _p12.githubOrg,
 			repos: {ctor: '[]'},
 			issues: _elm_lang$core$Dict$empty,
 			timelines: _elm_lang$core$Dict$empty,

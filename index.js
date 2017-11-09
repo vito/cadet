@@ -19,7 +19,10 @@ const data = {
   issues: {},
 
   // map from issue to issues that referenced it
-  references: {}
+  references: {},
+
+  // map from issue to actors in timeline
+  actors: {}
 }
 
 worker.ports.setIssues.subscribe(function(args) {
@@ -32,6 +35,12 @@ worker.ports.setReferences.subscribe(function(args) {
   var id = args[0], issueIds = args[1];
   console.log("references refreshed for issue", id);
   data.references[id] = issueIds;
+});
+
+worker.ports.setActors.subscribe(function(args) {
+  var id = args[0], actors = args[1];
+  console.log("actors refreshed for issue", id);
+  data.actors[id] = actors;
 });
 
 app.use(compression())

@@ -35,6 +35,7 @@ type alias Config =
 type alias Model =
     { config : Config
     , allIssues : List GitHubGraph.Issue
+    , issueActors : Dict GitHubGraph.ID (List Data.ActorEvent)
     , issueGraphs : List (ForceGraph IssueNode)
     , selectedIssues : List GitHubGraph.Issue
     , anticipatedIssues : List GitHubGraph.Issue
@@ -84,6 +85,7 @@ init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , allIssues = []
+      , issueActors = Dict.empty
       , issueGraphs = []
       , selectedIssues = []
       , anticipatedIssues = []
@@ -200,7 +202,7 @@ view model =
                 List.map (viewGraph model) model.issueGraphs
 
         anticipatedIssues =
-            List.map (viewIssueInfo True) <|
+            List.map (viewIssueInfo model True) <|
                 List.filter (not << flip List.member model.selectedIssues) model.anticipatedIssues
     in
         Html.div [ HA.class "cadet" ]
@@ -208,7 +210,7 @@ view model =
             , Html.div [ HA.class "issue-management" ]
                 [ Html.div [ HA.class "issues" ] <|
                     anticipatedIssues
-                        ++ List.map (viewIssueInfo False) model.selectedIssues
+                        ++ List.map (viewIssueInfo model False) model.selectedIssues
                 , viewSearch
                 ]
             ]
@@ -315,7 +317,13 @@ computeGraphs model data =
                 |> List.sortWith graphCompare
                 |> List.reverse
     in
-        ( { model | allIssues = allIssues, issueGraphs = issueGraphs }, Cmd.none )
+        ( { model
+            | allIssues = allIssues
+            , issueActors = data.actors
+            , issueGraphs = issueGraphs
+          }
+        , Cmd.none
+        )
 
 
 graphCompare : ForceGraph IssueNode -> ForceGraph IssueNode -> Order
@@ -625,7 +633,7 @@ nodeLabelArcs nc =
 
 
 viewIssueFlair : Model -> Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
-viewIssueFlair { currentDate } { label } =
+viewIssueFlair model { label } =
     let
         x =
             label.x
@@ -635,25 +643,28 @@ viewIssueFlair { currentDate } { label } =
 
         issue =
             label.value.issue
-
-        daysSinceLastUpdate =
-            (Date.toTime currentDate / (24 * Time.hour)) - (Date.toTime issue.updatedAt / (24 * Time.hour))
-
-        opacity =
-            if daysSinceLastUpdate <= 1 then
-                0.75
-            else if daysSinceLastUpdate <= 2 then
-                0.5
-            else if daysSinceLastUpdate <= 7 then
-                0.25
-            else
-                0.1
     in
         Svg.g
-            [ SA.opacity (toString opacity)
+            [ SA.opacity (toString (activityOpacity model issue.updatedAt * 0.75))
             , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
             ]
             label.value.flair
+
+
+activityOpacity : Model -> Date -> Float
+activityOpacity { currentDate } date =
+    let
+        daysSinceLastUpdate =
+            (Date.toTime currentDate / (24 * Time.hour)) - (Date.toTime date / (24 * Time.hour))
+    in
+        if daysSinceLastUpdate <= 1 then
+            1
+        else if daysSinceLastUpdate <= 2 then
+            0.75
+        else if daysSinceLastUpdate <= 7 then
+            0.5
+        else
+            0.25
 
 
 viewIssueNode : Model -> Graph.Node (FG.ForceNode IssueNode) -> Svg Msg
@@ -707,8 +718,8 @@ viewIssueNode model { label } =
             (circleWithNumber ++ label.value.labels)
 
 
-viewIssueInfo : Bool -> GitHubGraph.Issue -> Html Msg
-viewIssueInfo anticipated issue =
+viewIssueInfo : Model -> Bool -> GitHubGraph.Issue -> Html Msg
+viewIssueInfo model anticipated issue =
     Html.div [ HA.class "issue-controls" ]
         [ Html.div [ HA.class "issue-buttons" ]
             [ if not anticipated then
@@ -724,7 +735,9 @@ viewIssueInfo anticipated issue =
             [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ]
             , HE.onClick (SelectIssue issue)
             ]
-            [ Html.a [ HA.href issue.url, HA.target "_blank", HA.class "issue-title" ]
+            [ Html.div [ HA.class "issue-actors" ] <|
+                List.map (viewIssueActor model) (List.reverse <| List.take 3 <| List.reverse <| Maybe.withDefault [] <| Dict.get issue.id model.issueActors)
+            , Html.a [ HA.href issue.url, HA.target "_blank", HA.class "issue-title" ]
                 [ Html.text issue.title
                 ]
             , Html.span [ HA.class "issue-labels" ] <|
@@ -803,6 +816,16 @@ viewIssueLabel { name, color } =
         ]
         [ Html.text name
         ]
+
+
+viewIssueActor : Model -> Data.ActorEvent -> Html Msg
+viewIssueActor model { createdAt, actor } =
+    Html.img
+        [ HA.class "issue-actor"
+        , HA.style [ ( "opacity", toString (activityOpacity model createdAt) ) ]
+        , HA.src (actor.avatar ++ "&s=88")
+        ]
+        []
 
 
 isOrgMember : Maybe (List GitHubGraph.User) -> GitHubGraph.User -> Bool

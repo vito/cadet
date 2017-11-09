@@ -21,6 +21,8 @@ module GitHubGraph
         , reactionScore
         , encodeIssue
         , decodeIssue
+        , encodeUser
+        , decodeUser
         )
 
 import Date exposing (Date)

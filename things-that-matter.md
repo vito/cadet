@@ -5,7 +5,7 @@ things to visualize:
 * [x] how many reactions/comments
 * [x] issues that are tied to a PR
 * [x] last activity
-* [ ] who had last word
+* [x] who had last word
 * [ ] issues that reference many closed issues (i.e. consolidated)
 * [ ] subscribers? (is that the same as 'participants'?)
 * [ ] has the author ever submitted a PR

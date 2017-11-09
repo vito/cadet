@@ -7,12 +7,16 @@ import Time exposing (Time)
 import Task
 import Process
 import GitHubGraph
+import Data
 
 
 port setIssues : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
 port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
+
+
+port setActors : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -122,8 +126,24 @@ update msg model =
 
                 edges =
                     List.filterMap findSource timeline
+
+                commentActor event =
+                    case event of
+                        GitHubGraph.IssueCommentEvent (Just user) date ->
+                            Just (Data.encodeActorEvent { actor = user, createdAt = date })
+
+                        _ ->
+                            Nothing
+
+                actors =
+                    List.filterMap commentActor timeline
             in
-                ( model, setReferences ( issue.id, edges ) )
+                ( model
+                , Cmd.batch
+                    [ setReferences ( issue.id, edges )
+                    , setActors ( issue.id, actors )
+                    ]
+                )
 
         TimelineFetched issue (Err err) ->
             flip always (Debug.log ("failed to fetch timeline for " ++ issue.url) err) <|
