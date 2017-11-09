@@ -18,6 +18,9 @@ const data = {
   // map from repositories to issues
   issues: {},
 
+  // map from repositories to prs
+  prs: {},
+
   // map from issue to issues that referenced it
   references: {},
 
@@ -29,6 +32,12 @@ worker.ports.setIssues.subscribe(function(args) {
   var id = args[0], issues = args[1];
   console.log("issues refreshed for repo", id);
   data.issues[id] = issues;
+});
+
+worker.ports.setPullRequests.subscribe(function(args) {
+  var id = args[0], prs = args[1];
+  console.log("prs refreshed for repo", id);
+  data.prs[id] = prs;
 });
 
 worker.ports.setReferences.subscribe(function(args) {

@@ -13,6 +13,7 @@ import Date exposing (Date)
 
 type alias Data =
     { issues : Dict String (List GitHubGraph.Issue)
+    , prs : Dict String (List GitHubGraph.PullRequest)
     , references : Dict String (List GitHubGraph.ID)
     , actors : Dict String (List ActorEvent)
     }
@@ -36,6 +37,7 @@ decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
         |: (JD.field "issues" <| JD.dict (JD.list GitHubGraph.decodeIssue))
+        |: (JD.field "prs" <| JD.dict (JD.list GitHubGraph.decodePullRequest))
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
 
