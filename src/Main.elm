@@ -20,7 +20,8 @@ import Svg.Lazy
 import Time exposing (Time)
 import Visualization.Shape as VS
 import Window
-import GitHub
+import Hash
+import GitHubGraph
 import Data exposing (Data)
 import ForceGraph as FG exposing (ForceGraph)
 
@@ -33,16 +34,16 @@ type alias Config =
 
 type alias Model =
     { config : Config
-    , allIssues : List GitHub.Issue
+    , allIssues : List GitHubGraph.Issue
     , issueGraphs : List (ForceGraph IssueNode)
-    , selectedIssues : List GitHub.Issue
-    , anticipatedIssues : List GitHub.Issue
+    , selectedIssues : List GitHubGraph.Issue
+    , anticipatedIssues : List GitHubGraph.Issue
     , currentDate : Date
     }
 
 
 type alias IssueNode =
-    { issue : GitHub.Issue
+    { issue : GitHubGraph.Issue
     , flair : List (Svg Msg)
     , labels : List (Svg Msg)
     , radii :
@@ -70,10 +71,10 @@ type Msg
     | SetCurrentDate Date
     | Resize Window.Size
     | DataFetched (Result Http.Error Data)
-    | SelectIssue GitHub.Issue
-    | DeselectIssue GitHub.Issue
-    | AnticipateIssue GitHub.Issue
-    | UnanticipateIssue GitHub.Issue
+    | SelectIssue GitHubGraph.Issue
+    | DeselectIssue GitHubGraph.Issue
+    | AnticipateIssue GitHubGraph.Issue
+    | UnanticipateIssue GitHubGraph.Issue
     | SearchIssues String
     | SelectAnticipatedIssues
     | ClearSelectedIssues
@@ -226,9 +227,12 @@ viewSearch =
         ]
 
 
-setIssueSelected : Int -> Bool -> ForceGraph IssueNode -> ForceGraph IssueNode
-setIssueSelected id val fg =
+setIssueSelected : GitHubGraph.ID -> Bool -> ForceGraph IssueNode -> ForceGraph IssueNode
+setIssueSelected idStr val fg =
     let
+        id =
+            Hash.hash idStr
+
         toggle node =
             { node | selected = val }
     in
@@ -282,20 +286,19 @@ computeGraphs model data =
         references =
             Dict.foldl
                 (\idStr sourceIds refs ->
-                    case String.toInt idStr of
-                        Ok id ->
-                            List.map
-                                (\sourceId ->
-                                    { from = sourceId
-                                    , to = id
-                                    , label = ()
-                                    }
-                                )
-                                sourceIds
-                                ++ refs
-
-                        _ ->
-                            Debug.crash "impossible"
+                    let
+                        id =
+                            Hash.hash idStr
+                    in
+                        List.map
+                            (\sourceId ->
+                                { from = Hash.hash sourceId
+                                , to = id
+                                , label = ()
+                                }
+                            )
+                            sourceIds
+                            ++ refs
                 )
                 []
                 data.references
@@ -303,7 +306,7 @@ computeGraphs model data =
         graph =
             Graph.mapContexts issueNode <|
                 Graph.fromNodesAndEdges
-                    (List.map (\i -> Graph.Node i.id i) allIssues)
+                    (List.map (\i -> Graph.Node (Hash.hash i.id) i) allIssues)
                     references
 
         issueGraphs =
@@ -331,7 +334,7 @@ graphCompare a b =
 
 nodeScore : FG.ForceNode IssueNode -> Int
 nodeScore fn =
-    GitHub.issueScore fn.value.issue
+    GitHubGraph.issueScore fn.value.issue
 
 
 type alias Subgraph =
@@ -424,12 +427,12 @@ linkPath graph edge =
             []
 
 
-issueRadius : Graph.NodeContext GitHub.Issue () -> Float
+issueRadius : Graph.NodeContext GitHubGraph.Issue () -> Float
 issueRadius { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
-issueRadiusWithLabels : Graph.NodeContext GitHub.Issue () -> Float
+issueRadiusWithLabels : Graph.NodeContext GitHubGraph.Issue () -> Float
 issueRadiusWithLabels =
     issueRadius >> ((+) 3)
 
@@ -439,14 +442,14 @@ flairRadiusBase =
     16
 
 
-issueRadiusWithFlair : Graph.NodeContext GitHub.Issue () -> Float
+issueRadiusWithFlair : Graph.NodeContext GitHubGraph.Issue () -> Float
 issueRadiusWithFlair nc =
     let
         issue =
             nc.node.label
 
         reactionCounts =
-            List.map Tuple.second (GitHub.reactionCodes issue.reactions)
+            List.map .count issue.reactions
 
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (issue.commentCount :: reactionCounts)
@@ -454,7 +457,7 @@ issueRadiusWithFlair nc =
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-issueNode : Graph.NodeContext GitHub.Issue () -> Graph.NodeContext IssueNode ()
+issueNode : Graph.NodeContext GitHubGraph.Issue () -> Graph.NodeContext IssueNode ()
 issueNode nc =
     let
         node =
@@ -487,7 +490,7 @@ issueNode nc =
         { nc | node = forceNode }
 
 
-nodeFlairArcs : Graph.NodeContext GitHub.Issue () -> List (Svg Msg)
+nodeFlairArcs : Graph.NodeContext GitHubGraph.Issue () -> List (Svg Msg)
 nodeFlairArcs nc =
     let
         issue =
@@ -496,9 +499,34 @@ nodeFlairArcs nc =
         radius =
             issueRadiusWithLabels nc
 
+        reactionTypeEmoji type_ =
+            case type_ of
+                GitHubGraph.ReactionTypeThumbsUp ->
+                    "👍"
+
+                GitHubGraph.ReactionTypeThumbsDown ->
+                    "👎"
+
+                GitHubGraph.ReactionTypeLaugh ->
+                    "😄"
+
+                GitHubGraph.ReactionTypeConfused ->
+                    "😕"
+
+                GitHubGraph.ReactionTypeHeart ->
+                    "💖"
+
+                GitHubGraph.ReactionTypeHooray ->
+                    "🎉"
+
+        emojiReactions =
+            flip List.map issue.reactions <|
+                \{ type_, count } ->
+                    ( reactionTypeEmoji type_, count )
+
         reactions =
             List.filter (Tuple.second >> flip (>) 0) <|
-                (( "💬", issue.commentCount ) :: GitHub.reactionCodes issue.reactions)
+                (( "💬", issue.commentCount ) :: emojiReactions)
 
         reactionSegment i ( _, count ) =
             let
@@ -558,7 +586,7 @@ nodeFlairArcs nc =
             reactions
 
 
-nodeLabelArcs : Graph.NodeContext GitHub.Issue () -> List (Svg Msg)
+nodeLabelArcs : Graph.NodeContext GitHubGraph.Issue () -> List (Svg Msg)
 nodeLabelArcs nc =
     let
         issue =
@@ -643,21 +671,23 @@ viewIssueNode model { label } =
         circleWithNumber =
             [ Svg.circle
                 [ SA.r (toString label.value.radii.base)
-                , SA.fill <|
-                    if issue.isPullRequest then
-                        "#28a745"
-                    else
-                        "#fff"
+                , SA.fill "#fff"
+                  -- , SA.fill <|
+                  --     if issue.isPullRequest then
+                  --         "#28a745"
+                  --     else
+                  --         "#fff"
                 ]
                 []
             , Svg.text_
                 [ SA.textAnchor "middle"
                 , SA.alignmentBaseline "middle"
-                , SA.fill <|
-                    if issue.isPullRequest then
-                        "#fff"
-                    else
-                        "#C6A49A"
+                , SA.fill "#C6A49A"
+                  -- , SA.fill <|
+                  --     if issue.isPullRequest then
+                  --         "#fff"
+                  --     else
+                  --         "#C6A49A"
                 ]
                 [ Svg.text (toString issue.number)
                 ]
@@ -677,7 +707,7 @@ viewIssueNode model { label } =
             (circleWithNumber ++ label.value.labels)
 
 
-viewIssueInfo : Bool -> GitHub.Issue -> Html Msg
+viewIssueInfo : Bool -> GitHubGraph.Issue -> Html Msg
 viewIssueInfo anticipated issue =
     Html.div [ HA.class "issue-controls" ]
         [ Html.div [ HA.class "issue-buttons" ]
@@ -694,16 +724,21 @@ viewIssueInfo anticipated issue =
             [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ]
             , HE.onClick (SelectIssue issue)
             ]
-            [ Html.a [ HA.href issue.htmlURL, HA.target "_blank", HA.class "issue-title" ]
+            [ Html.a [ HA.href issue.url, HA.target "_blank", HA.class "issue-title" ]
                 [ Html.text issue.title
                 ]
             , Html.span [ HA.class "issue-labels" ] <|
                 List.map viewIssueLabel issue.labels
             , Html.div [ HA.class "issue-meta" ]
-                [ Html.a [ HA.href issue.htmlURL, HA.target "_blank" ] [ Html.text ("#" ++ toString issue.number) ]
+                [ Html.a [ HA.href issue.url, HA.target "_blank" ] [ Html.text ("#" ++ toString issue.number) ]
                 , Html.text " "
                 , Html.text "opened by "
-                , Html.a [ HA.href issue.user.url, HA.target "_blank" ] [ Html.text issue.user.login ]
+                , case issue.author of
+                    Just user ->
+                        Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+
+                    _ ->
+                        Html.text "(deleted user)"
                 ]
             ]
         ]
@@ -749,7 +784,7 @@ colorIsLight hex =
                 Debug.crash "invalid hex"
 
 
-viewIssueLabel : GitHub.IssueLabel -> Html Msg
+viewIssueLabel : GitHubGraph.IssueLabel -> Html Msg
 viewIssueLabel { name, color } =
     Html.span
         [ HA.class "issue-label"
@@ -770,7 +805,7 @@ viewIssueLabel { name, color } =
         ]
 
 
-isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
+isOrgMember : Maybe (List GitHubGraph.User) -> GitHubGraph.User -> Bool
 isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
 

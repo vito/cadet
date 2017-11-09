@@ -2,18 +2,17 @@ port module Main exposing (..)
 
 import Dict exposing (Dict)
 import Platform
-import Json.Decode
+import Json.Decode as JD
 import Time exposing (Time)
 import Task
 import Process
-import Http
-import GitHub
+import GitHubGraph
 
 
-port setIssues : ( Int, List Json.Decode.Value ) -> Cmd msg
+port setIssues : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
-port setReferences : ( Int, List Int ) -> Cmd msg
+port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -34,9 +33,9 @@ type alias Flags =
 type alias Model =
     { githubToken : String
     , githubOrg : String
-    , repos : List GitHub.Repo
-    , issues : Dict Int (List GitHub.Issue)
-    , timelines : Dict Int (List GitHub.TimelineEvent)
+    , repos : List GitHubGraph.Repo
+    , issues : Dict String (List GitHubGraph.Issue)
+    , timelines : Dict String (List GitHubGraph.TimelineEvent)
     , failedQueue : List (Cmd Msg)
     }
 
@@ -44,9 +43,9 @@ type alias Model =
 type Msg
     = Refresh
     | Retry
-    | RepositoriesFetched (Result Http.Error (List GitHub.Repo))
-    | IssuesFetched GitHub.Repo (Result Http.Error (List GitHub.Issue))
-    | TimelineFetched GitHub.Issue (Result Http.Error (List GitHub.TimelineEvent))
+    | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
+    | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
+    | TimelineFetched GitHubGraph.Issue (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -95,7 +94,7 @@ update msg model =
         IssuesFetched repo (Ok issues) ->
             let
                 updateData =
-                    setIssues ( repo.id, List.map .value issues )
+                    setIssues ( repo.id, List.map GitHubGraph.encodeIssue issues )
 
                 staggeredTimelineFetch i =
                     fetchTimeline model (toFloat i * 100 * Time.millisecond)
@@ -108,15 +107,15 @@ update msg model =
                 )
 
         IssuesFetched repo (Err err) ->
-            flip always (Debug.log ("failed to fetch issues for " ++ repo.htmlURL) err) <|
+            flip always (Debug.log ("failed to fetch issues for " ++ repo.url) err) <|
                 ( { model | failedQueue = fetchIssues model 0 repo :: model.failedQueue }, Cmd.none )
 
         TimelineFetched issue (Ok timeline) ->
             let
                 findSource event =
-                    case event.source of
-                        Just { type_, issueID } ->
-                            issueID
+                    case event of
+                        GitHubGraph.CrossReferencedEvent id ->
+                            Just id
 
                         _ ->
                             Nothing
@@ -127,25 +126,25 @@ update msg model =
                 ( model, setReferences ( issue.id, edges ) )
 
         TimelineFetched issue (Err err) ->
-            flip always (Debug.log ("failed to fetch timeline for " ++ issue.htmlURL) err) <|
+            flip always (Debug.log ("failed to fetch timeline for " ++ issue.url) err) <|
                 ( { model | failedQueue = fetchTimeline model 0 issue :: model.failedQueue }, Cmd.none )
 
 
 fetchRepos : Model -> Cmd Msg
 fetchRepos model =
     Task.attempt RepositoriesFetched <|
-        GitHub.fetchOrgRepos model.githubToken model.githubOrg
+        GitHubGraph.fetchOrgRepos model.githubToken { name = model.githubOrg }
 
 
-fetchIssues : Model -> Time -> GitHub.Repo -> Cmd Msg
+fetchIssues : Model -> Time -> GitHubGraph.Repo -> Cmd Msg
 fetchIssues model delay repo =
     Process.sleep delay
-        |> Task.andThen (\_ -> GitHub.fetchRepoIssues model.githubToken repo)
+        |> Task.andThen (always <| GitHubGraph.fetchRepoIssues model.githubToken { owner = repo.owner, name = repo.name })
         |> Task.attempt (IssuesFetched repo)
 
 
-fetchTimeline : Model -> Time -> GitHub.Issue -> Cmd Msg
+fetchTimeline : Model -> Time -> GitHubGraph.Issue -> Cmd Msg
 fetchTimeline model delay issue =
     Process.sleep delay
-        |> Task.andThen (\_ -> GitHub.fetchIssueTimeline model.githubToken issue)
+        |> Task.andThen (\_ -> GitHubGraph.fetchIssueTimeline model.githubToken { id = issue.id })
         |> Task.attempt (TimelineFetched issue)
