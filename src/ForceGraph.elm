@@ -47,7 +47,7 @@ fromGraph g =
             VF.iterations (Graph.size graph * 10) <|
                 VF.simulation forces
     in
-        { graph = graph, simulation = newSimulation }
+        simulate 10 <| { graph = graph, simulation = newSimulation }
 
 
 member : Graph.NodeId -> ForceGraph n -> Bool
@@ -107,6 +107,14 @@ node nc =
                         }
                 }
         }
+
+
+simulate : Int -> ForceGraph n -> ForceGraph n
+simulate num fg =
+    if num == 0 then
+        fg
+    else
+        simulate (num - 1) (tick fg)
 
 
 tick : ForceGraph n -> ForceGraph n

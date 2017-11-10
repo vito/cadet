@@ -21005,6 +21005,21 @@ var _vito$cadet$ForceGraph$tick = function (_p1) {
 		simulation: newState
 	};
 };
+var _vito$cadet$ForceGraph$simulate = F2(
+	function (num, fg) {
+		simulate:
+		while (true) {
+			if (_elm_lang$core$Native_Utils.eq(num, 0)) {
+				return fg;
+			} else {
+				var _v1 = num - 1,
+					_v2 = _vito$cadet$ForceGraph$tick(fg);
+				num = _v1;
+				fg = _v2;
+				continue simulate;
+			}
+		}
+	});
 var _vito$cadet$ForceGraph$node = function (nc) {
 	var canvas = 500;
 	var node = nc.node;
@@ -21131,7 +21146,10 @@ var _vito$cadet$ForceGraph$fromGraph = function (g) {
 		_gampleman$elm_visualization$Visualization_Force$iterations,
 		_elm_community$graph$Graph$size(graph) * 10,
 		_gampleman$elm_visualization$Visualization_Force$simulation(forces));
-	return {graph: graph, simulation: newSimulation};
+	return A2(
+		_vito$cadet$ForceGraph$simulate,
+		10,
+		{graph: graph, simulation: newSimulation});
 };
 var _vito$cadet$ForceGraph$ForceGraph = F2(
 	function (a, b) {
