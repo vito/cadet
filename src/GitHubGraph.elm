@@ -9,7 +9,8 @@ module GitHubGraph
         , User
         , Project
         , ProjectColumn
-        , ProjectCard
+        , ProjectColumnCard
+        , CardLocation
         , PullRequest
         , PullRequestState(..)
         , ReactionGroup
@@ -17,6 +18,7 @@ module GitHubGraph
         , TimelineEvent(..)
         , fetchOrgRepos
         , fetchOrgProjects
+        , fetchProjectColumnCards
         , fetchRepoIssues
         , fetchRepoPullRequests
         , fetchTimeline
@@ -29,6 +31,10 @@ module GitHubGraph
         , decodePullRequest
         , encodeUser
         , decodeUser
+        , encodeProject
+        , decodeProject
+        , encodeProjectColumnCard
+        , decodeProjectColumnCard
         )
 
 import Date exposing (Date)
@@ -77,7 +83,7 @@ type alias Issue =
     , reactions : Reactions
     , author : Maybe User
     , labels : List Label
-    , cards : List ProjectCard
+    , cards : List CardLocation
     }
 
 
@@ -98,7 +104,7 @@ type alias PullRequest =
     , reactions : Reactions
     , author : Maybe User
     , labels : List Label
-    , cards : List ProjectCard
+    , cards : List CardLocation
     , additions : Int
     , deletions : Int
     }
@@ -158,11 +164,17 @@ type alias ProjectColumn =
     }
 
 
-type alias ProjectCard =
+type alias ProjectColumnCard =
+    { id : ID
+    , itemID : Maybe ID
+    , note : Maybe String
+    }
+
+
+type alias CardLocation =
     { id : ID
     , projectID : ID
     , columnID : Maybe ID
-    , note : Maybe String
     }
 
 
@@ -207,6 +219,11 @@ fetchOrgRepos token org =
 fetchOrgProjects : Token -> OrgSelector -> Task Error (List Project)
 fetchOrgProjects token org =
     fetchPaged projectsQuery token { selector = org, after = Nothing }
+
+
+fetchProjectColumnCards : Token -> IDSelector -> Task Error (List ProjectColumnCard)
+fetchProjectColumnCards token col =
+    fetchPaged cardsQuery token { selector = col, after = Nothing }
 
 
 fetchRepoIssues : Token -> RepoSelector -> Task Error (List Issue)
@@ -393,7 +410,7 @@ projectsQuery =
                 |> GB.with (GB.field "url" [] GB.string)
                 |> GB.with (GB.field "name" [] GB.string)
                 |> GB.with (GB.field "number" [] GB.int)
-                |> GB.with (GB.field "columns" [] (GB.extract (GB.field "nodes" [] (GB.list column))))
+                |> GB.with (GB.field "columns" [ ( "first", GA.int 50 ) ] (GB.extract (GB.field "nodes" [] (GB.list column))))
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -417,6 +434,55 @@ projectsQuery =
                     ]
                 <|
                     GB.extract (GB.field "projects" pageArgs paged)
+    in
+        GB.queryDocument queryRoot
+
+
+cardsQuery : GB.Document GB.Query (PagedResult ProjectColumnCard) (PagedSelector IDSelector)
+cardsQuery =
+    let
+        idVar =
+            GV.required "id" (.id << .selector) GV.id
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        itemID =
+            GB.object pickEnum2
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.extract <| GB.field "id" [] GB.string))
+
+        card =
+            GB.object ProjectColumnCard
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "content" [] itemID)
+                |> GB.with (GB.field "note" [] (GB.nullable GB.string))
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list card))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        cards =
+            (GB.extract (GB.field "cards" pageArgs paged))
+
+        queryRoot =
+            GB.extract <|
+                GB.assume <|
+                    GB.field "node"
+                        [ ( "id", GA.variable idVar )
+                        ]
+                        (GB.extract <| GB.inlineFragment (Just <| GB.onType "ProjectColumn") cards)
     in
         GB.queryDocument queryRoot
 
@@ -455,11 +521,10 @@ issuesQuery =
                 |> GB.with (GB.field "color" [] GB.string)
 
         projectCard =
-            GB.object ProjectCard
+            GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
                 |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
                 |> GB.with (GB.field "column" [] (GB.nullable <| GB.extract <| GB.field "id" [] GB.string))
-                |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
         issue =
             GB.object Issue
@@ -538,11 +603,10 @@ pullRequestsQuery =
                 |> GB.with (GB.field "color" [] GB.string)
 
         projectCard =
-            GB.object ProjectCard
+            GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
                 |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
                 |> GB.with (GB.field "column" [] (GB.nullable <| GB.extract <| GB.field "id" [] GB.string))
-                |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
         issue =
             GB.object PullRequest
@@ -695,7 +759,7 @@ decodeIssue =
         |: (JD.field "reactions" <| JD.list decodeReactionGroup)
         |: (JD.field "author" (JD.maybe decodeUser))
         |: (JD.field "labels" <| JD.list decodeLabel)
-        |: (JD.field "cards" <| JD.list decodeProjectCard)
+        |: (JD.field "cards" <| JD.list decodeCardLocation)
 
 
 decodePullRequest : JD.Decoder PullRequest
@@ -712,7 +776,7 @@ decodePullRequest =
         |: (JD.field "reactions" <| JD.list decodeReactionGroup)
         |: (JD.field "author" (JD.maybe decodeUser))
         |: (JD.field "labels" <| JD.list decodeLabel)
-        |: (JD.field "cards" <| JD.list decodeProjectCard)
+        |: (JD.field "cards" <| JD.list decodeCardLocation)
         |: (JD.field "additions" JD.int)
         |: (JD.field "deletions" JD.int)
 
@@ -771,13 +835,20 @@ decodeProjectColumn =
         |: (JD.field "name" JD.string)
 
 
-decodeProjectCard : JD.Decoder ProjectCard
-decodeProjectCard =
-    JD.succeed ProjectCard
+decodeProjectColumnCard : JD.Decoder ProjectColumnCard
+decodeProjectColumnCard =
+    JD.succeed ProjectColumnCard
+        |: (JD.field "id" JD.string)
+        |: (JD.field "item_id" <| JD.maybe JD.string)
+        |: (JD.field "note" <| JD.maybe JD.string)
+
+
+decodeCardLocation : JD.Decoder CardLocation
+decodeCardLocation =
+    JD.succeed CardLocation
         |: (JD.field "id" JD.string)
         |: (JD.field "project_id" JD.string)
         |: (JD.field "column_id" <| JD.maybe JD.string)
-        |: (JD.field "note" <| JD.maybe JD.string)
 
 
 decodeRepoSelector : JD.Decoder RepoSelector
@@ -845,7 +916,7 @@ encodeIssue record =
         , ( "reactions", JE.list (List.map encodeReactionGroup record.reactions) )
         , ( "author", JEE.maybe encodeUser record.author )
         , ( "labels", JE.list <| List.map encodeLabel record.labels )
-        , ( "cards", JE.list <| List.map encodeProjectCard record.cards )
+        , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
         ]
 
 
@@ -863,7 +934,7 @@ encodePullRequest record =
         , ( "reactions", JE.list (List.map encodeReactionGroup record.reactions) )
         , ( "author", JEE.maybe encodeUser record.author )
         , ( "labels", JE.list <| List.map encodeLabel record.labels )
-        , ( "cards", JE.list <| List.map encodeProjectCard record.cards )
+        , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
         , ( "additions", JE.int record.additions )
         , ( "deletions", JE.int record.deletions )
         ]
@@ -928,13 +999,21 @@ encodeProjectColumn record =
         ]
 
 
-encodeProjectCard : ProjectCard -> JE.Value
-encodeProjectCard record =
+encodeProjectColumnCard : ProjectColumnCard -> JE.Value
+encodeProjectColumnCard record =
+    JE.object
+        [ ( "id", JE.string record.id )
+        , ( "item_id", JEE.maybe JE.string record.itemID )
+        , ( "note", JEE.maybe JE.string record.note )
+        ]
+
+
+encodeCardLocation : CardLocation -> JE.Value
+encodeCardLocation record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "project_id", JE.string record.projectID )
         , ( "column_id", JEE.maybe JE.string record.columnID )
-        , ( "note", JEE.maybe JE.string record.note )
         ]
 
 

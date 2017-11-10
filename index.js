@@ -25,31 +25,37 @@ const data = {
   references: {},
 
   // map from issue to actors in timeline
-  actors: {}
+  actors: {},
+
+  // projects
+  projects: [],
+
+  // map from column id to cards
+  cards: {}
 }
 
 worker.ports.setIssues.subscribe(function(args) {
-  var id = args[0], issues = args[1];
-  console.log("issues refreshed for repo", id);
-  data.issues[id] = issues;
+  data.issues[args[0]] = args[1];
 });
 
 worker.ports.setPullRequests.subscribe(function(args) {
-  var id = args[0], prs = args[1];
-  console.log("prs refreshed for repo", id);
-  data.prs[id] = prs;
+  data.prs[args[0]] = args[1];
 });
 
 worker.ports.setReferences.subscribe(function(args) {
-  var id = args[0], issueIds = args[1];
-  console.log("references refreshed for issue", id);
-  data.references[id] = issueIds;
+  data.references[args[0]] = args[1];
 });
 
 worker.ports.setActors.subscribe(function(args) {
-  var id = args[0], actors = args[1];
-  console.log("actors refreshed for issue", id);
-  data.actors[id] = actors;
+  data.actors[args[0]] = args[1];
+});
+
+worker.ports.setProjects.subscribe(function(args) {
+  data.projects = args;
+});
+
+worker.ports.setCards.subscribe(function(args) {
+  data.cards[args[0]] = args[1];
 });
 
 app.use(compression())

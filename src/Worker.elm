@@ -5,7 +5,6 @@ import Platform
 import Json.Decode as JD
 import Time exposing (Time)
 import Task
-import Process
 import GitHubGraph
 import Data
 
@@ -20,6 +19,12 @@ port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
 
 
 port setActors : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+
+
+port setProjects : List JD.Value -> Cmd msg
+
+
+port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
 main : Program Flags Model Msg
@@ -44,14 +49,20 @@ type alias Model =
     , issues : Dict String (List GitHubGraph.Issue)
     , prs : Dict String (List GitHubGraph.PullRequest)
     , timelines : Dict String (List GitHubGraph.TimelineEvent)
+    , projects : List GitHubGraph.Project
+    , columnCards : Dict String (List GitHubGraph.ProjectColumnCard)
+    , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
     }
 
 
 type Msg
-    = Refresh
-    | Retry
+    = Refresh Time
+    | PopQueue Time
+    | RetryQueue Time
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
+    | ProjectsFetched (Result GitHubGraph.Error (List GitHubGraph.Project))
+    | CardsFetched GitHubGraph.ProjectColumn (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
     | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
     | TimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
@@ -59,13 +70,16 @@ type Msg
 
 init : Flags -> ( Model, Cmd Msg )
 init { githubToken, githubOrg } =
-    update Refresh
+    update (Refresh 0)
         { githubToken = githubToken
         , githubOrg = githubOrg
         , repos = []
         , issues = Dict.empty
         , prs = Dict.empty
         , timelines = Dict.empty
+        , projects = []
+        , columnCards = Dict.empty
+        , loadQueue = []
         , failedQueue = []
         }
 
@@ -73,74 +87,111 @@ init { githubToken, githubOrg } =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every Time.hour (always Refresh)
-        , Time.every (10 * Time.second) (always Retry)
+        [ Time.every (100 * Time.millisecond) PopQueue
+        , Time.every (10 * Time.second) RetryQueue
+        , Time.every Time.hour Refresh
         ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Refresh ->
-            ( model, fetchRepos model )
+        Refresh now ->
+            log "refreshing" now <|
+                ( { model | loadQueue = fetchRepos model :: fetchProjects model :: model.loadQueue }, Cmd.none )
 
-        Retry ->
-            ( { model | failedQueue = [] }, Cmd.batch model.failedQueue )
+        PopQueue _ ->
+            case model.loadQueue of
+                first :: rest ->
+                    ( { model | loadQueue = rest }, first )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        RetryQueue now ->
+            log "retrying failed fetches" (List.length model.failedQueue) <|
+                ( { model
+                    | failedQueue = []
+                    , loadQueue = model.failedQueue ++ model.loadQueue
+                  }
+                , Cmd.none
+                )
 
         RepositoriesFetched (Ok repos) ->
-            let
-                staggeredIssuesFetch i repo =
-                    Cmd.batch
-                        [ fetchIssues model (toFloat i * 100 * Time.millisecond) repo
-                        , fetchPullRequests model (toFloat i * 100 * Time.millisecond) repo
+            log "repositories fetched" (List.length repos) <|
+                let
+                    fetch repo =
+                        [ fetchIssues model repo
+                        , fetchPullRequests model repo
                         ]
-
-                fetch =
-                    List.indexedMap staggeredIssuesFetch repos
-            in
-                ( { model | repos = repos }, Cmd.batch fetch )
+                in
+                    ( { model
+                        | repos = repos
+                        , loadQueue = List.concatMap fetch repos ++ model.loadQueue
+                      }
+                    , Cmd.none
+                    )
 
         RepositoriesFetched (Err err) ->
-            flip always (Debug.log "failed to fetch repositories" err) <|
-                ( model, Cmd.none )
+            log "failed to fetch repos" err <|
+                backOff model (fetchRepos model)
+
+        ProjectsFetched (Ok projects) ->
+            log "projects fetched" (List.length projects) <|
+                ( { model
+                    | projects = projects
+                    , loadQueue = List.concatMap (List.map (fetchCards model) << .columns) projects ++ model.loadQueue
+                  }
+                , setProjects (List.map GitHubGraph.encodeProject projects)
+                )
+
+        ProjectsFetched (Err err) ->
+            log "failed to fetch projects" err <|
+                backOff model (fetchProjects model)
+
+        CardsFetched col (Ok cards) ->
+            log "cards fetched for" col.name <|
+                ( { model | columnCards = Dict.insert col.id cards model.columnCards }
+                , setCards ( col.id, List.map GitHubGraph.encodeProjectColumnCard cards )
+                )
+
+        CardsFetched col (Err err) ->
+            log "failed to fetch cards" ( col.name, err ) <|
+                backOff model (fetchCards model col)
 
         IssuesFetched repo (Ok issues) ->
             let
-                updateData =
-                    setIssues ( repo.id, List.map GitHubGraph.encodeIssue issues )
-
-                staggeredTimelineFetch i =
-                    fetchTimeline model (toFloat i * 100 * Time.millisecond) << .id
-
-                fetch =
-                    List.indexedMap staggeredTimelineFetch issues
+                fetchTimelines =
+                    List.map (fetchTimeline model << .id) issues
             in
-                ( { model | issues = Dict.insert repo.id issues model.issues }
-                , Cmd.batch (updateData :: fetch)
-                )
+                log "issues fetched for" repo.url <|
+                    ( { model
+                        | issues = Dict.insert repo.id issues model.issues
+                        , loadQueue = fetchTimelines ++ model.loadQueue
+                      }
+                    , setIssues ( repo.id, List.map GitHubGraph.encodeIssue issues )
+                    )
 
         IssuesFetched repo (Err err) ->
-            flip always (Debug.log ("failed to fetch issues for " ++ repo.url) err) <|
-                ( { model | failedQueue = fetchIssues model 0 repo :: model.failedQueue }, Cmd.none )
+            log "failed to fetch issues" ( repo.url, err ) <|
+                backOff model (fetchIssues model repo)
 
         PullRequestsFetched repo (Ok prs) ->
             let
-                updateData =
-                    setPullRequests ( repo.id, List.map GitHubGraph.encodePullRequest prs )
-
-                staggeredTimelineFetch i =
-                    fetchTimeline model (toFloat i * 100 * Time.millisecond) << .id
-
-                fetch =
-                    List.indexedMap staggeredTimelineFetch prs
+                fetchTimelines =
+                    List.map (fetchTimeline model << .id) prs
             in
-                ( { model | prs = Dict.insert repo.id prs model.prs }
-                , Cmd.batch (updateData :: fetch)
-                )
+                log "prs fetched for" repo.url <|
+                    ( { model
+                        | prs = Dict.insert repo.id prs model.prs
+                        , loadQueue = fetchTimelines ++ model.loadQueue
+                      }
+                    , setPullRequests ( repo.id, List.map GitHubGraph.encodePullRequest prs )
+                    )
 
         PullRequestsFetched repo (Err err) ->
-            flip always (Debug.log ("failed to fetch prs for " ++ repo.url) err) <|
-                ( { model | failedQueue = fetchPullRequests model 0 repo :: model.failedQueue }, Cmd.none )
+            log "failed to fetch prs" ( repo.url, err ) <|
+                backOff model (fetchPullRequests model repo)
 
         TimelineFetched id (Ok timeline) ->
             let
@@ -166,16 +217,27 @@ update msg model =
                 actors =
                     List.filterMap commentActor timeline
             in
-                ( model
-                , Cmd.batch
-                    [ setReferences ( id, edges )
-                    , setActors ( id, actors )
-                    ]
-                )
+                log "timeline fetched for" id <|
+                    ( model
+                    , Cmd.batch
+                        [ setReferences ( id, edges )
+                        , setActors ( id, actors )
+                        ]
+                    )
 
         TimelineFetched id (Err err) ->
-            flip always (Debug.log ("failed to fetch timeline for " ++ id) err) <|
-                ( { model | failedQueue = fetchTimeline model 0 id :: model.failedQueue }, Cmd.none )
+            log "failed to fetch timeline" ( id, err ) <|
+                backOff model (fetchTimeline model id)
+
+
+backOff : Model -> Cmd Msg -> ( Model, Cmd Msg )
+backOff model cmd =
+    ( { model
+        | failedQueue = cmd :: model.loadQueue ++ model.failedQueue
+        , loadQueue = []
+      }
+    , Cmd.none
+    )
 
 
 fetchRepos : Model -> Cmd Msg
@@ -184,22 +246,36 @@ fetchRepos model =
         GitHubGraph.fetchOrgRepos model.githubToken { name = model.githubOrg }
 
 
-fetchIssues : Model -> Time -> GitHubGraph.Repo -> Cmd Msg
-fetchIssues model delay repo =
-    Process.sleep delay
-        |> Task.andThen (always <| GitHubGraph.fetchRepoIssues model.githubToken { owner = repo.owner, name = repo.name })
+fetchProjects : Model -> Cmd Msg
+fetchProjects model =
+    Task.attempt ProjectsFetched <|
+        GitHubGraph.fetchOrgProjects model.githubToken { name = model.githubOrg }
+
+
+fetchCards : Model -> GitHubGraph.ProjectColumn -> Cmd Msg
+fetchCards model col =
+    Task.attempt (CardsFetched col) <|
+        GitHubGraph.fetchProjectColumnCards model.githubToken { id = col.id }
+
+
+fetchIssues : Model -> GitHubGraph.Repo -> Cmd Msg
+fetchIssues model repo =
+    GitHubGraph.fetchRepoIssues model.githubToken { owner = repo.owner, name = repo.name }
         |> Task.attempt (IssuesFetched repo)
 
 
-fetchPullRequests : Model -> Time -> GitHubGraph.Repo -> Cmd Msg
-fetchPullRequests model delay repo =
-    Process.sleep delay
-        |> Task.andThen (always <| GitHubGraph.fetchRepoPullRequests model.githubToken { owner = repo.owner, name = repo.name })
+fetchPullRequests : Model -> GitHubGraph.Repo -> Cmd Msg
+fetchPullRequests model repo =
+    GitHubGraph.fetchRepoPullRequests model.githubToken { owner = repo.owner, name = repo.name }
         |> Task.attempt (PullRequestsFetched repo)
 
 
-fetchTimeline : Model -> Time -> GitHubGraph.ID -> Cmd Msg
-fetchTimeline model delay id =
-    Process.sleep delay
-        |> Task.andThen (\_ -> GitHubGraph.fetchTimeline model.githubToken { id = id })
+fetchTimeline : Model -> GitHubGraph.ID -> Cmd Msg
+fetchTimeline model id =
+    GitHubGraph.fetchTimeline model.githubToken { id = id }
         |> Task.attempt (TimelineFetched id)
+
+
+log : String -> a -> b -> b
+log msg val =
+    flip always (Debug.log msg val)

@@ -16,6 +16,8 @@ type alias Data =
     , prs : Dict String (List GitHubGraph.PullRequest)
     , references : Dict String (List GitHubGraph.ID)
     , actors : Dict String (List ActorEvent)
+    , projects : List GitHubGraph.Project
+    , cards : Dict String (List GitHubGraph.ProjectColumnCard)
     }
 
 
@@ -40,6 +42,8 @@ decodeData =
         |: (JD.field "prs" <| JD.dict (JD.list GitHubGraph.decodePullRequest))
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
+        |: (JD.field "projects" <| JD.list GitHubGraph.decodeProject)
+        |: (JD.field "cards" <| JD.dict (JD.list GitHubGraph.decodeProjectColumnCard))
 
 
 decodeActorEvent : JD.Decoder ActorEvent
