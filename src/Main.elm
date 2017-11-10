@@ -20,7 +20,6 @@ import Svg.Events as SE
 import Svg.Lazy
 import Time exposing (Time)
 import Visualization.Shape as VS
-import Window
 import Hash
 import GitHubGraph
 import Data exposing (Data)
@@ -28,8 +27,7 @@ import ForceGraph as FG exposing (ForceGraph)
 
 
 type alias Config =
-    { windowSize : Window.Size
-    , initialDate : Time
+    { initialDate : Time
     }
 
 
@@ -76,7 +74,6 @@ type Msg
     = Noop
     | Tick Time
     | SetCurrentDate Date
-    | Resize Window.Size
     | DataFetched (Result Http.Error Data)
     | SelectIssueOrPR IssueOrPR
     | DeselectIssueOrPR IssueOrPR
@@ -104,8 +101,7 @@ init config =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Window.resizes Resize
-        , Time.every Time.second (SetCurrentDate << Date.fromTime)
+        [ Time.every Time.second (SetCurrentDate << Date.fromTime)
         , if List.all FG.isCompleted model.issueOrPRGraphs then
             Sub.none
           else
@@ -136,13 +132,6 @@ update msg model =
 
         SetCurrentDate date ->
             ( { model | currentDate = date }, Cmd.none )
-
-        Resize size ->
-            let
-                newConfig =
-                    model.config
-            in
-                ( { model | config = { newConfig | windowSize = size } }, Cmd.none )
 
         SearchIssueOrPRs "" ->
             ( { model | anticipatedIssueOrPRs = [] }, Cmd.none )
