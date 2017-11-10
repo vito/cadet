@@ -35,8 +35,8 @@ type alias Config =
 type alias Model =
     { config : Config
     , allIssueOrPRs : List IssueOrPR
-    , issueActors : Dict GitHubGraph.ID (List Data.ActorEvent)
-    , issueGraphs : List (ForceGraph IssueOrPRNode)
+    , issueOrPRActors : Dict GitHubGraph.ID (List Data.ActorEvent)
+    , issueOrPRGraphs : List (ForceGraph IssueOrPRNode)
     , selectedIssueOrPRs : List IssueOrPR
     , anticipatedIssueOrPRs : List IssueOrPR
     , currentDate : Date
@@ -90,8 +90,8 @@ init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , allIssueOrPRs = []
-      , issueActors = Dict.empty
-      , issueGraphs = []
+      , issueOrPRActors = Dict.empty
+      , issueOrPRGraphs = []
       , selectedIssueOrPRs = []
       , anticipatedIssueOrPRs = []
       , currentDate = Date.fromTime config.initialDate
@@ -105,7 +105,7 @@ subscriptions model =
     Sub.batch
         [ Window.resizes Resize
         , Time.every Time.second (SetCurrentDate << Date.fromTime)
-        , if List.all FG.isCompleted model.issueGraphs then
+        , if List.all FG.isCompleted model.issueOrPRGraphs then
             Sub.none
           else
             AnimationFrame.times Tick
@@ -120,7 +120,7 @@ update msg model =
 
         Tick _ ->
             ( { model
-                | issueGraphs =
+                | issueOrPRGraphs =
                     List.map
                         (\g ->
                             if FG.isCompleted g then
@@ -128,7 +128,7 @@ update msg model =
                             else
                                 FG.tick g
                         )
-                        model.issueGraphs
+                        model.issueOrPRGraphs
               }
             , Cmd.none
             )
@@ -175,7 +175,7 @@ update msg model =
 
         SelectIssueOrPR iop ->
             ( { model
-                | issueGraphs = List.map (setIssueOrPRSelected iop True) model.issueGraphs
+                | issueOrPRGraphs = List.map (setIssueOrPRSelected iop True) model.issueOrPRGraphs
                 , selectedIssueOrPRs = iop :: model.selectedIssueOrPRs
               }
             , Cmd.none
@@ -186,7 +186,7 @@ update msg model =
 
         DeselectIssueOrPR iop ->
             ( { model
-                | issueGraphs = List.map (setIssueOrPRSelected iop False) model.issueGraphs
+                | issueOrPRGraphs = List.map (setIssueOrPRSelected iop False) model.issueOrPRGraphs
                 , selectedIssueOrPRs = List.filter (not << sameIssueOrPR iop) model.selectedIssueOrPRs
               }
             , Cmd.none
@@ -213,7 +213,7 @@ view model =
     let
         svg =
             flowGraphs model.config.windowSize <|
-                List.map (viewGraph model) model.issueGraphs
+                List.map (viewGraph model) model.issueOrPRGraphs
 
         anticipatedIssueOrPRs =
             List.map (viewIssueInfo model True) <|
@@ -343,7 +343,7 @@ computeGraphs model data =
                     (List.map issueOrPRNode allIssueOrPRs)
                     references
 
-        issueGraphs =
+        issueOrPRGraphs =
             subGraphs graph
                 |> List.map FG.fromGraph
                 |> List.sortWith graphCompare
@@ -351,8 +351,8 @@ computeGraphs model data =
     in
         ( { model
             | allIssueOrPRs = allIssueOrPRs
-            , issueActors = data.actors
-            , issueGraphs = issueGraphs
+            , issueOrPRActors = data.actors
+            , issueOrPRGraphs = issueOrPRGraphs
           }
         , Cmd.none
         )
@@ -887,7 +887,11 @@ recentActors model iop =
                 PR pr ->
                     pr.id
     in
-        List.reverse <| List.take 3 <| List.reverse <| Maybe.withDefault [] <| Dict.get id model.issueActors
+        Dict.get id model.issueOrPRActors
+            |> Maybe.withDefault []
+            |> List.reverse
+            |> List.take 3
+            |> List.reverse
 
 
 hexRegex : Regex

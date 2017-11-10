@@ -21094,8 +21094,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 991, column: 25},
-							end: {line: 1005, column: 57}
+							start: {line: 995, column: 25},
+							end: {line: 1009, column: 57}
 						},
 						_p4)('impossible');
 				}
@@ -21205,8 +21205,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 919, column: 17},
-					end: {line: 927, column: 50}
+					start: {line: 923, column: 17},
+					end: {line: 931, column: 50}
 				},
 				_p11)('invalid hex');
 		}
@@ -21214,8 +21214,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 917, column: 9},
-				end: {line: 930, column: 42}
+				start: {line: 921, column: 9},
+				end: {line: 934, column: 42}
 			},
 			_p10)('invalid hex');
 	}
@@ -21275,7 +21275,7 @@ var _vito$cadet$Main$recentActors = F2(
 					A2(
 						_elm_lang$core$Maybe$withDefault,
 						{ctor: '[]'},
-						A2(_elm_lang$core$Dict$get, id, model.issueActors)))));
+						A2(_elm_lang$core$Dict$get, id, model.issueOrPRActors)))));
 	});
 var _vito$cadet$Main$activityOpacity = F2(
 	function (_p18, date) {
@@ -21881,7 +21881,7 @@ var _vito$cadet$Main$Config = F2(
 	});
 var _vito$cadet$Main$Model = F7(
 	function (a, b, c, d, e, f, g) {
-		return {config: a, allIssueOrPRs: b, issueActors: c, issueGraphs: d, selectedIssueOrPRs: e, anticipatedIssueOrPRs: f, currentDate: g};
+		return {config: a, allIssueOrPRs: b, issueOrPRActors: c, issueOrPRGraphs: d, selectedIssueOrPRs: e, anticipatedIssueOrPRs: f, currentDate: g};
 	});
 var _vito$cadet$Main$IssueOrPRNode = F5(
 	function (a, b, c, d, e) {
@@ -21953,7 +21953,7 @@ var _vito$cadet$Main$computeGraphs = F2(
 				_elm_community$graph$Graph$fromNodesAndEdges,
 				A2(_elm_lang$core$List$map, issueOrPRNode, allIssueOrPRs),
 				references));
-		var issueGraphs = _elm_lang$core$List$reverse(
+		var issueOrPRGraphs = _elm_lang$core$List$reverse(
 			A2(
 				_elm_lang$core$List$sortWith,
 				_vito$cadet$Main$graphCompare,
@@ -21965,7 +21965,7 @@ var _vito$cadet$Main$computeGraphs = F2(
 			ctor: '_Tuple2',
 			_0: _elm_lang$core$Native_Utils.update(
 				model,
-				{allIssueOrPRs: allIssueOrPRs, issueActors: data.actors, issueGraphs: issueGraphs}),
+				{allIssueOrPRs: allIssueOrPRs, issueOrPRActors: data.actors, issueOrPRGraphs: issueOrPRGraphs}),
 			_1: _elm_lang$core$Platform_Cmd$none
 		};
 	});
@@ -21981,12 +21981,12 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							issueGraphs: A2(
+							issueOrPRGraphs: A2(
 								_elm_lang$core$List$map,
 								function (g) {
 									return _vito$cadet$ForceGraph$isCompleted(g) ? g : _vito$cadet$ForceGraph$tick(g);
 								},
-								model.issueGraphs)
+								model.issueOrPRGraphs)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
@@ -22064,10 +22064,10 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							issueGraphs: A2(
+							issueOrPRGraphs: A2(
 								_elm_lang$core$List$map,
 								A2(_vito$cadet$Main$setIssueOrPRSelected, _p68, true),
-								model.issueGraphs),
+								model.issueOrPRGraphs),
 							selectedIssueOrPRs: {ctor: '::', _0: _p68, _1: model.selectedIssueOrPRs}
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
@@ -22089,10 +22089,10 @@ var _vito$cadet$Main$update = F2(
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
 						{
-							issueGraphs: A2(
+							issueOrPRGraphs: A2(
 								_elm_lang$core$List$map,
 								A2(_vito$cadet$Main$setIssueOrPRSelected, _p70, false),
-								model.issueGraphs),
+								model.issueOrPRGraphs),
 							selectedIssueOrPRs: A2(
 								_elm_lang$core$List$filter,
 								function (_p69) {
@@ -22712,7 +22712,7 @@ var _vito$cadet$Main$view = function (model) {
 		A2(
 			_elm_lang$core$List$map,
 			_vito$cadet$Main$viewGraph(model),
-			model.issueGraphs));
+			model.issueOrPRGraphs));
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -22767,8 +22767,8 @@ var _vito$cadet$Main$init = function (config) {
 		_0: {
 			config: config,
 			allIssueOrPRs: {ctor: '[]'},
-			issueActors: _elm_lang$core$Dict$empty,
-			issueGraphs: {ctor: '[]'},
+			issueOrPRActors: _elm_lang$core$Dict$empty,
+			issueOrPRGraphs: {ctor: '[]'},
 			selectedIssueOrPRs: {ctor: '[]'},
 			anticipatedIssueOrPRs: {ctor: '[]'},
 			currentDate: _elm_lang$core$Date$fromTime(config.initialDate)
@@ -22801,7 +22801,7 @@ var _vito$cadet$Main$subscriptions = function (model) {
 					}),
 				_1: {
 					ctor: '::',
-					_0: A2(_elm_lang$core$List$all, _vito$cadet$ForceGraph$isCompleted, model.issueGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
+					_0: A2(_elm_lang$core$List$all, _vito$cadet$ForceGraph$isCompleted, model.issueOrPRGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
 					_1: {ctor: '[]'}
 				}
 			}
