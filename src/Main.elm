@@ -33,12 +33,14 @@ type alias Config =
 
 type alias Model =
     { config : Config
-    , allIssueOrPRs : List IssueOrPR
+    , allIssueOrPRs : Dict GitHubGraph.ID IssueOrPR
     , issueOrPRActors : Dict GitHubGraph.ID (List Data.ActorEvent)
     , issueOrPRGraphs : List (ForceGraph IssueOrPRNode)
     , selectedIssueOrPRs : List IssueOrPR
     , anticipatedIssueOrPRs : List IssueOrPR
     , currentDate : Date
+    , projects : List GitHubGraph.Project
+    , cards : Dict String (List GitHubGraph.ProjectColumnCard)
     }
 
 
@@ -87,12 +89,14 @@ type Msg
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
-      , allIssueOrPRs = []
+      , allIssueOrPRs = Dict.empty
       , issueOrPRActors = Dict.empty
       , issueOrPRGraphs = []
       , selectedIssueOrPRs = []
       , anticipatedIssueOrPRs = []
       , currentDate = Date.fromTime config.initialDate
+      , projects = []
+      , cards = Dict.empty
       }
     , Data.fetch DataFetched
     )
@@ -151,7 +155,7 @@ update msg model =
                         String.contains (String.toLower query) (String.toLower title)
 
                 foundIssueOrPRs =
-                    List.filter issueOrPRMatch model.allIssueOrPRs
+                    List.filter issueOrPRMatch (Dict.values model.allIssueOrPRs)
             in
                 ( { model | anticipatedIssueOrPRs = foundIssueOrPRs }, Cmd.none )
 
@@ -191,7 +195,19 @@ update msg model =
             ( { model | anticipatedIssueOrPRs = List.filter (not << sameIssueOrPR iop) model.anticipatedIssueOrPRs }, Cmd.none )
 
         DataFetched (Ok data) ->
-            computeGraphs model data
+            let
+                withIssues =
+                    Dict.foldl (\_ is iops -> List.foldl (\i -> Dict.insert i.id (Issue i)) iops is) Dict.empty data.issues
+
+                withPRs =
+                    Dict.foldl (\_ ps iops -> List.foldl (\p -> Dict.insert p.id (PR p)) iops ps) withIssues data.prs
+
+                allIssueOrPRs =
+                    withPRs
+
+                -- computeGraphs model data
+            in
+                ( { model | allIssueOrPRs = allIssueOrPRs, projects = data.projects, cards = data.cards }, Cmd.none )
 
         DataFetched (Err msg) ->
             flip always (Debug.log "error" msg) <|
@@ -200,24 +216,133 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    let
-        svg =
-            Html.div [] <|
-                List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
+    Html.div [ HA.class "cadet" ]
+        [ viewSpatialGraph model
+        , viewIssueManagement model
+        , viewProjects model
+        ]
 
+
+viewSpatialGraph : Model -> Html Msg
+viewSpatialGraph model =
+    Html.div [] <|
+        List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
+
+
+viewIssueManagement : Model -> Html Msg
+viewIssueManagement model =
+    let
         anticipatedIssueOrPRs =
             List.map (viewIssueInfo model True) <|
                 List.filter (not << flip List.member model.selectedIssueOrPRs) model.anticipatedIssueOrPRs
     in
-        Html.div [ HA.class "cadet" ]
-            [ svg
-            , Html.div [ HA.class "issue-management" ]
-                [ Html.div [ HA.class "issues" ] <|
-                    anticipatedIssueOrPRs
-                        ++ List.map (viewIssueInfo model False) model.selectedIssueOrPRs
-                , viewSearch
-                ]
+        Html.div [ HA.class "issue-management" ]
+            [ Html.div [ HA.class "issues" ] <|
+                anticipatedIssueOrPRs
+                    ++ List.map (viewIssueInfo model False) model.selectedIssueOrPRs
+            , viewSearch
             ]
+
+
+type alias ProjectState =
+    { name : String
+    , backlog : GitHubGraph.ProjectColumn
+    , inFlight : GitHubGraph.ProjectColumn
+    , done : GitHubGraph.ProjectColumn
+    , problemSpace : List GitHubGraph.ProjectColumn
+    }
+
+
+selectStatefulProject : GitHubGraph.Project -> Maybe ProjectState
+selectStatefulProject project =
+    let
+        findColumn name =
+            case List.filter ((==) name << .name) project.columns of
+                [ col ] ->
+                    Just col
+
+                _ ->
+                    Nothing
+
+        backlog =
+            findColumn "Backlog"
+
+        inFlight =
+            findColumn "In Flight"
+
+        done =
+            findColumn "Done"
+
+        rest =
+            List.filter (not << flip List.member [ "Backlog", "In Flight", "Done" ] << .name) project.columns
+    in
+        case ( backlog, inFlight, done ) of
+            ( Just b, Just i, Just d ) ->
+                Just
+                    { name = project.name
+                    , backlog = b
+                    , inFlight = i
+                    , done = d
+                    , problemSpace = rest
+                    }
+
+            _ ->
+                Nothing
+
+
+viewProjects : Model -> Html Msg
+viewProjects model =
+    let
+        statefulProjects =
+            List.filterMap selectStatefulProject model.projects
+    in
+        Html.div [ HA.class "projects" ]
+            (List.map (viewProject model) statefulProjects)
+
+
+viewProject : Model -> ProjectState -> Html Msg
+viewProject model { name, backlog, inFlight, done } =
+    Html.div [ HA.class "project" ]
+        [ Html.div [ HA.class "project-columns" ]
+            [ Html.div [ HA.class "column backlog-column" ]
+                [ viewProjectColumn model backlog ]
+            , Html.div [ HA.class "column in-flight-column" ]
+                [ viewProjectColumn model inFlight ]
+            , Html.div [ HA.class "column done-column" ]
+                [ viewProjectColumn model done ]
+            ]
+        ]
+
+
+viewProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn model { id, name } =
+    let
+        cards =
+            Maybe.withDefault [] (Dict.get id model.cards)
+    in
+        Html.div [ HA.class "cards" ]
+            (List.map (viewProjectColumnCard model) cards)
+
+
+viewProjectColumnCard : Model -> GitHubGraph.ProjectColumnCard -> Html Msg
+viewProjectColumnCard model { itemID, note } =
+    case ( note, itemID ) of
+        ( Just n, Nothing ) ->
+            Html.div [ HA.class "card note-card" ]
+                [ Html.p [] [ Html.text n ]
+                ]
+
+        ( Nothing, Just i ) ->
+            case Dict.get i model.allIssueOrPRs of
+                Just iop ->
+                    viewIssueCard model iop
+
+                Nothing ->
+                    -- closed issue?
+                    Html.text ""
+
+        _ ->
+            Debug.crash "impossible"
 
 
 viewSearch : Html Msg
@@ -256,9 +381,14 @@ setIssueOrPRSelected iop val fg =
 computeGraphs : Model -> Data -> ( Model, Cmd Msg )
 computeGraphs model data =
     let
+        withIssues =
+            Dict.foldl (\_ is iops -> List.foldl (\i -> Dict.insert i.id (Issue i)) iops is) Dict.empty data.issues
+
+        withPRs =
+            Dict.foldl (\_ ps iops -> List.foldl (\p -> Dict.insert p.id (PR p)) iops ps) withIssues data.prs
+
         allIssueOrPRs =
-            List.map Issue (List.concat (Dict.values data.issues))
-                ++ List.map PR (List.concat (Dict.values data.prs))
+            withPRs
 
         references =
             Dict.foldl
@@ -295,7 +425,7 @@ computeGraphs model data =
         graph =
             Graph.mapContexts issueNode <|
                 Graph.fromNodesAndEdges
-                    (List.map issueOrPRNode allIssueOrPRs)
+                    (List.map issueOrPRNode (Dict.values allIssueOrPRs))
                     references
 
         issueOrPRGraphs =
@@ -308,6 +438,8 @@ computeGraphs model data =
             | allIssueOrPRs = allIssueOrPRs
             , issueOrPRActors = data.actors
             , issueOrPRGraphs = issueOrPRGraphs
+            , projects = data.projects
+            , cards = data.cards
           }
         , Cmd.none
         )
@@ -825,6 +957,71 @@ viewIssueInfo model anticipated iop =
             ]
 
 
+viewIssueCard : Model -> IssueOrPR -> Html Msg
+viewIssueCard model iop =
+    let
+        url =
+            case iop of
+                Issue issue ->
+                    issue.url
+
+                PR pr ->
+                    pr.url
+
+        title =
+            case iop of
+                Issue issue ->
+                    issue.title
+
+                PR pr ->
+                    pr.title
+
+        number =
+            case iop of
+                Issue issue ->
+                    issue.number
+
+                PR pr ->
+                    pr.number
+
+        author =
+            case iop of
+                Issue issue ->
+                    issue.author
+
+                PR pr ->
+                    pr.author
+
+        labels =
+            case iop of
+                Issue issue ->
+                    issue.labels
+
+                PR pr ->
+                    pr.labels
+    in
+        Html.div [ HA.class "card issue-card issue-info" ]
+            [ Html.div [ HA.class "issue-actors" ] <|
+                List.map (viewIssueActor model) (recentActors model iop)
+            , Html.a [ HA.href url, HA.target "_blank", HA.class "issue-title" ]
+                [ Html.text title
+                ]
+            , Html.span [ HA.class "issue-labels" ] <|
+                List.map viewLabel labels
+            , Html.div [ HA.class "issue-meta" ]
+                [ Html.a [ HA.href url, HA.target "_blank" ] [ Html.text ("#" ++ toString number) ]
+                , Html.text " "
+                , Html.text "opened by "
+                , case author of
+                    Just user ->
+                        Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+
+                    _ ->
+                        Html.text "(deleted user)"
+                ]
+            ]
+
+
 recentActors : Model -> IssueOrPR -> List Data.ActorEvent
 recentActors model iop =
     let
@@ -900,7 +1097,8 @@ viewLabel { name, color } =
               )
             ]
         ]
-        [ Html.text name
+        [ Html.span [ HA.class "issue-label-text" ]
+            [ Html.text name ]
         ]
 
 

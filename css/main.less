@@ -1,3 +1,5 @@
+@background: #C6E5D9;
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -15,7 +17,7 @@ body {
   font-family: Helvetica, Arial, nimbussansl, liberation, sans-serif;
   font-size: 12px;
   line-height: 1.2;
-  background: #C6E5D9;
+  background: @background;
 }
 
 .issue-management {
@@ -127,7 +129,6 @@ body {
   display: inline-block;
   padding: 3px 4px;
   font-size: 12px;
-  font-weight: 600;
   line-height: 1;
   color: #fff;
   border-radius: 2px;
@@ -135,13 +136,20 @@ body {
   vertical-align: text-top;
   margin-left: 4px;
   width: 18px;
-  text-indent: 999px;
-  text-overflow: clip;
+  height: 18px;
   white-space: nowrap;
+
+  .issue-label-text {
+    display: none;
+    font-weight: 600;
+  }
 
   &:hover {
     width: auto;
-    text-indent: 0;
+
+    .issue-label-text {
+      display: initial;
+    }
   }
 }
 
@@ -162,12 +170,78 @@ body {
   border-radius: 3px;
 }
 
-svg {
-  .hidden {
-    visibility: hidden;
+@card-width: 300px;
+@card-margin: 8px;
+
+.card {
+  display: inline-block;
+  width: @card-width;
+  border: 1px solid #e1e4e8;
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin: @card-margin @card-margin @card-margin 0;
+  background: #fff;
+  cursor: move;
+  white-space: normal;
+  vertical-align: top;
+
+  &:first-child {
+    margin-left: @card-margin;
+  }
+}
+
+.projects {
+  ::-webkit-scrollbar {
+    width: 15px;
+    margin-left: -5px;
   }
 
-  .reveal:hover .hidden {
-    visibility: visible;
+  ::-webkit-scrollbar-track {
+    background: lighten(@background, 10%);
+    border-bottom-right-radius: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background: #fff;
+    border: 5px solid lighten(@background, 50%);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #ccc;
+  }
+}
+
+.project-columns {
+  display: flex;
+  flex-direction: row;
+
+  .column {
+    white-space: nowrap;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    margin-right: @card-margin;
+    background: fade(#fff, 50%);
+    border-radius: 5px;
+    height: 173px; /* 4 lines of text, hopeful limit */
+
+    &:first-child {
+      margin-left: @card-margin;
+    }
+  }
+
+  .backlog-column {
+    flex-grow: 1;
+    position: relative;
+  }
+
+  .in-flight-column {
+    width: @card-width + (2 * @card-margin);
+    flex-shrink: 0;
+  }
+
+  .done-column {
+    width: @card-width + (2 * @card-margin);
+    flex-shrink: 0;
   }
 }
