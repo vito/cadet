@@ -8,6 +8,7 @@ import Graph exposing (Graph)
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
+import Html.Lazy
 import Http
 import IntDict
 import ParseInt
@@ -212,8 +213,8 @@ view : Model -> Html Msg
 view model =
     let
         svg =
-            flowGraphs model.config.windowSize <|
-                List.map (viewGraph model) model.issueOrPRGraphs
+            Html.div [] <|
+                List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
 
         anticipatedIssueOrPRs =
             List.map (viewIssueInfo model True) <|
@@ -261,41 +262,6 @@ setIssueOrPRSelected iop val fg =
             FG.update id toggle fg
         else
             fg
-
-
-flowGraphs : Window.Size -> List Subgraph -> Html Msg
-flowGraphs window graphs =
-    let
-        ( gs, x, y, nextRow ) =
-            List.foldl (viewSubgraph window) ( [], 0, 0, 0 ) graphs
-    in
-        Svg.svg
-            [ SA.width "100%"
-            , SA.height (toString (y + nextRow) ++ "px")
-            ]
-            gs
-
-
-viewSubgraph : Window.Size -> Subgraph -> ( List (Svg Msg), Float, Float, Float ) -> ( List (Svg Msg), Float, Float, Float )
-viewSubgraph window sg ( gs, atX, atY, nextRow ) =
-    let
-        ( wrappedX, wrappedY, wrappedNextRow ) =
-            if atX + sg.size.width > toFloat window.width then
-                ( 0, atY + nextRow, sg.size.height )
-            else
-                ( atX, atY, max sg.size.height nextRow )
-
-        ( x, y ) =
-            ( wrappedX - sg.bounds.minX, wrappedY - sg.bounds.minY )
-
-        transform =
-            "translate(" ++ toString x ++ ", " ++ toString y ++ ")"
-    in
-        ( Svg.g [ SA.transform transform ] sg.content :: gs
-        , wrappedX + sg.size.width
-        , wrappedY
-        , wrappedNextRow
-        )
 
 
 computeGraphs : Model -> Data -> ( Model, Cmd Msg )
@@ -382,14 +348,7 @@ nodeScore fn =
             GitHubGraph.pullRequestScore pr
 
 
-type alias Subgraph =
-    { content : List (Svg Msg)
-    , bounds : { minX : Float, minY : Float, maxX : Float, maxY : Float }
-    , size : { width : Float, height : Float }
-    }
-
-
-viewGraph : Model -> ForceGraph IssueOrPRNode -> Subgraph
+viewGraph : Model -> ForceGraph IssueOrPRNode -> Html Msg
 viewGraph model { graph } =
     let
         nodeContexts =
@@ -432,14 +391,15 @@ viewGraph model { graph } =
                 ( [], [] )
                 graph
     in
-        { content =
+        Svg.svg
+            [ SA.width (toString width ++ "px")
+            , SA.height (toString height ++ "px")
+            , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
+            ]
             [ Svg.g [ SA.class "links" ] links
             , Svg.g [ SA.class "flairs" ] flairs
             , Svg.g [ SA.class "nodes" ] nodes
             ]
-        , bounds = { minX = minX, minY = minY, maxX = maxX, maxY = maxY }
-        , size = { width = width, height = height }
-        }
 
 
 linkPath : Graph (FG.ForceNode n) () -> Graph.Edge () -> Svg Msg
