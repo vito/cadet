@@ -23005,8 +23005,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1318, column: 25},
-							end: {line: 1332, column: 57}
+							start: {line: 1319, column: 25},
+							end: {line: 1333, column: 57}
 						},
 						_p4)('impossible');
 				}
@@ -23116,8 +23116,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1245, column: 17},
-					end: {line: 1253, column: 50}
+					start: {line: 1246, column: 17},
+					end: {line: 1254, column: 50}
 				},
 				_p11)('invalid hex');
 		}
@@ -23125,8 +23125,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1243, column: 9},
-				end: {line: 1256, column: 42}
+				start: {line: 1244, column: 9},
+				end: {line: 1257, column: 42}
 			},
 			_p10)('invalid hex');
 	}
@@ -23679,8 +23679,8 @@ var _vito$cadet$Main$nodeFlairArcs = function (nc) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 834, column: 17},
-						end: {line: 839, column: 49}
+						start: {line: 835, column: 17},
+						end: {line: 840, column: 49}
 					},
 					_p51)('impossible');
 			}
@@ -23982,8 +23982,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F2(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 468, column: 5},
-				end: {line: 482, column: 37}
+				start: {line: 469, column: 5},
+				end: {line: 483, column: 37}
 			},
 			_p68)('impossible');
 	});
@@ -24004,7 +24004,7 @@ var _vito$cadet$Main$viewProjectColumn = F2(
 			A2(
 				_elm_lang$core$List$map,
 				_vito$cadet$Main$viewProjectColumnCard(model),
-				cards));
+				A2(_elm_lang$core$List$take, 3, cards)));
 	});
 var _vito$cadet$Main$viewProject = F2(
 	function (model, _p73) {
@@ -24052,12 +24052,12 @@ var _vito$cadet$Main$viewProject = F2(
 								_elm_lang$html$Html$div,
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('column done-column'),
+									_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
 									_1: {ctor: '[]'}
 								},
 								{
 									ctor: '::',
-									_0: A2(_vito$cadet$Main$viewProjectColumn, model, _p74.done),
+									_0: A2(_vito$cadet$Main$viewProjectColumn, model, _p74.backlog),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -24080,12 +24080,12 @@ var _vito$cadet$Main$viewProject = F2(
 										_elm_lang$html$Html$div,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
+											_0: _elm_lang$html$Html_Attributes$class('column done-column'),
 											_1: {ctor: '[]'}
 										},
 										{
 											ctor: '::',
-											_0: A2(_vito$cadet$Main$viewProjectColumn, model, _p74.backlog),
+											_0: A2(_vito$cadet$Main$viewProjectColumn, model, _p74.done),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -24118,7 +24118,7 @@ var _vito$cadet$Main$viewProject = F2(
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('column done-column'),
+										_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
 										_1: {ctor: '[]'}
 									},
 									{ctor: '[]'}),
@@ -24138,7 +24138,7 @@ var _vito$cadet$Main$viewProject = F2(
 											_elm_lang$html$Html$div,
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
+												_0: _elm_lang$html$Html_Attributes$class('column done-column'),
 												_1: {ctor: '[]'}
 											},
 											{ctor: '[]'}),
@@ -24242,7 +24242,7 @@ var _vito$cadet$Main$viewProjects = function (model) {
 							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('column done-column'),
+								_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
 								_1: {ctor: '[]'}
 							},
 							{
@@ -24252,7 +24252,7 @@ var _vito$cadet$Main$viewProjects = function (model) {
 									{ctor: '[]'},
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html$text('Done'),
+										_0: _elm_lang$html$Html$text('Backlog'),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -24284,7 +24284,7 @@ var _vito$cadet$Main$viewProjects = function (model) {
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
+										_0: _elm_lang$html$Html_Attributes$class('column done-column'),
 										_1: {ctor: '[]'}
 									},
 									{
@@ -24294,7 +24294,7 @@ var _vito$cadet$Main$viewProjects = function (model) {
 											{ctor: '[]'},
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html$text('Backlog'),
+												_0: _elm_lang$html$Html$text('Done'),
 												_1: {ctor: '[]'}
 											}),
 										_1: {ctor: '[]'}
@@ -25106,7 +25106,7 @@ var _vito$cadet$Main$view = function (model) {
 						}),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$core$List$isEmpty(sidebarIssues) ? _elm_lang$html$Html$text('') : A2(
+						_0: A2(
 							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
@@ -25115,7 +25115,18 @@ var _vito$cadet$Main$view = function (model) {
 							},
 							{
 								ctor: '::',
-								_0: A2(
+								_0: _elm_lang$core$List$isEmpty(sidebarIssues) ? A2(
+									_elm_lang$html$Html$div,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('no-issues'),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('no issues selected'),
+										_1: {ctor: '[]'}
+									}) : A2(
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',

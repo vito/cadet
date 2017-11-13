@@ -327,12 +327,13 @@ view model =
                         AllProjectsPage ->
                             viewProjects model
                     ]
-                , if List.isEmpty sidebarIssues then
-                    Html.text ""
-                  else
-                    Html.div [ HA.class "page-sidebar" ]
-                        [ Html.div [ HA.class "issues" ] sidebarIssues
-                        ]
+                , Html.div [ HA.class "page-sidebar" ]
+                    [ if List.isEmpty sidebarIssues then
+                        Html.div [ HA.class "no-issues" ]
+                            [ Html.text "no issues selected" ]
+                      else
+                        Html.div [ HA.class "issues" ] sidebarIssues
+                    ]
                 ]
             , viewNavBar model
             ]
@@ -415,12 +416,12 @@ viewProjects model =
             [ Html.div [ HA.class "project-name-columns" ]
                 [ Html.div [ HA.class "column name-column" ]
                     []
-                , Html.div [ HA.class "column done-column" ]
-                    [ Html.h4 [] [ Html.text "Done" ] ]
-                , Html.div [ HA.class "column in-flight-column" ]
-                    [ Html.h4 [] [ Html.text "In Flight" ] ]
                 , Html.div [ HA.class "column backlog-column" ]
                     [ Html.h4 [] [ Html.text "Backlog" ] ]
+                , Html.div [ HA.class "column in-flight-column" ]
+                    [ Html.h4 [] [ Html.text "In Flight" ] ]
+                , Html.div [ HA.class "column done-column" ]
+                    [ Html.h4 [] [ Html.text "Done" ] ]
                 ]
             , Html.div [ HA.class "projects" ]
                 (List.map (viewProject model) statefulProjects)
@@ -433,21 +434,21 @@ viewProject model { name, backlog, inFlight, done } =
         [ Html.div [ HA.class "project-columns" ]
             [ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text name ] ]
-            , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model done ]
-            , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model inFlight ]
             , Html.div [ HA.class "column backlog-column" ]
                 [ viewProjectColumn model backlog ]
+            , Html.div [ HA.class "column in-flight-column" ]
+                [ viewProjectColumn model inFlight ]
+            , Html.div [ HA.class "column done-column" ]
+                [ viewProjectColumn model done ]
             ]
         , Html.div [ HA.class "project-spacer-columns" ]
             [ Html.div [ HA.class "column name-column" ]
                 []
-            , Html.div [ HA.class "column done-column" ]
+            , Html.div [ HA.class "column backlog-column" ]
                 []
             , Html.div [ HA.class "column in-flight-column" ]
                 []
-            , Html.div [ HA.class "column backlog-column" ]
+            , Html.div [ HA.class "column done-column" ]
                 []
             ]
         ]
@@ -460,7 +461,7 @@ viewProjectColumn model { id, name } =
             Maybe.withDefault [] (Dict.get id model.cards)
     in
         Html.div [ HA.class "cards" ]
-            (List.map (viewProjectColumnCard model) cards)
+            (List.map (viewProjectColumnCard model) (List.take 3 cards))
 
 
 viewProjectColumnCard : Model -> GitHubGraph.ProjectColumnCard -> Html Msg

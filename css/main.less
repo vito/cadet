@@ -51,6 +51,13 @@ body {
       margin-bottom: 0;
       border-color: @black;
     }
+
+    .no-issues {
+      text-align: center;
+      color: @gray-light;
+      font-size: 14px;
+      padding: @card-margin;
+    }
   }
 }
 
@@ -223,12 +230,11 @@ body {
 @card-margin: 8px;
 
 .card {
-  display: inline-block;
   width: @card-width;
   border: 1px solid #e1e4e8;
   border-radius: 3px;
   box-sizing: border-box;
-  margin: @card-margin @card-margin @card-margin 0;
+  margin: @card-margin;
   background: #fff;
   white-space: normal;
   vertical-align: top;
@@ -291,6 +297,16 @@ body {
   }
 }
 
+.column {
+  flex-shrink: 0;
+  width: @card-width + (2 * @card-margin);
+}
+
+.name-column {
+  width: 150px + (@card-margin * 2);
+  text-align: right;
+}
+
 .project-name-columns {
   display: flex;
   flex-direction: row;
@@ -312,22 +328,6 @@ body {
       margin-right: 0;
     }
   }
-
-  .name-column {
-    width: 150px;
-    flex-shrink: 0;
-    border-top: 0;
-    background: transparent;
-  }
-
-  .backlog-column {
-    flex-grow: 1;
-  }
-
-  .in-flight-column, .done-column {
-    width: @card-width + (2 * @card-margin);
-    flex-shrink: 0;
-  }
 }
 
 .project-spacer-columns {
@@ -345,18 +345,7 @@ body {
   }
 
   .name-column {
-    width: 150px;
-    flex-shrink: 0;
     background: transparent;
-  }
-
-  .backlog-column {
-    flex-grow: 1;
-  }
-
-  .in-flight-column, .done-column {
-    width: @card-width + (2 * @card-margin);
-    flex-shrink: 0;
   }
 }
 
@@ -373,6 +362,8 @@ body {
 
     &:last-child {
       border-right: 0;
+      border-top-right-radius: @card-margin;
+      border-bottom-right-radius: @card-margin;
     }
   }
 
@@ -381,10 +372,6 @@ body {
   }
 
   .name-column {
-    width: 150px + (@card-margin * 2);
-    flex-shrink: 0;
-    text-align: right;
-    // background: lighten(@background, 5%);
     background: @project-bg;
     border-top-left-radius: @card-margin;
     border-bottom-left-radius: @card-margin;
@@ -392,10 +379,6 @@ body {
   }
 
   .backlog-column {
-    flex-grow: 1;
-    border-top-right-radius: @card-margin;
-    border-bottom-right-radius: @card-margin;
-
     .card {
       opacity: 0.5;
 
@@ -407,11 +390,6 @@ body {
         opacity: 0.75;
       }
     }
-  }
-
-  .in-flight-column, .done-column {
-    width: @card-width + (2 * @card-margin);
-    flex-shrink: 0;
   }
 }
 
