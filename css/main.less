@@ -147,10 +147,6 @@ body {
     background: #f6f8fa;
   }
 
-  &.anticipated {
-    background: fade(#fff, 50%);
-  }
-
   .issue-title {
     font-size: 16px;
     font-weight: bold;
@@ -243,7 +239,11 @@ body {
     margin-left: @card-margin;
   }
 
-  &.in-flight, &.done {
+  &.anticipated {
+    opacity: 0.5;
+  }
+
+  &.in-flight, &.done, &.backlog {
     &::before {
       content: " ";
       position: absolute;
