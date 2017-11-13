@@ -255,7 +255,11 @@ update msg model =
         SelectIssueOrPR id ->
             ( { model
                 | issueOrPRGraphs = List.map (setIssueOrPRSelected id True) model.issueOrPRGraphs
-                , selectedIssueOrPRs = model.selectedIssueOrPRs ++ [ id ]
+                , selectedIssueOrPRs =
+                    if List.member id model.selectedIssueOrPRs then
+                        model.selectedIssueOrPRs
+                    else
+                        model.selectedIssueOrPRs ++ [ id ]
               }
             , Cmd.none
             )
