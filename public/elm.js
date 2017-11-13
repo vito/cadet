@@ -23005,8 +23005,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1334, column: 25},
-							end: {line: 1348, column: 57}
+							start: {line: 1336, column: 25},
+							end: {line: 1350, column: 57}
 						},
 						_p4)('impossible');
 				}
@@ -23116,8 +23116,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1261, column: 17},
-					end: {line: 1269, column: 50}
+					start: {line: 1263, column: 17},
+					end: {line: 1271, column: 50}
 				},
 				_p11)('invalid hex');
 		}
@@ -23125,8 +23125,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1259, column: 9},
-				end: {line: 1272, column: 42}
+				start: {line: 1261, column: 9},
+				end: {line: 1274, column: 42}
 			},
 			_p10)('invalid hex');
 	}
@@ -23475,8 +23475,8 @@ var _vito$cadet$Main$nodeFlairArcs = function (nc) {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 835, column: 17},
-						end: {line: 840, column: 49}
+						start: {line: 837, column: 17},
+						end: {line: 842, column: 49}
 					},
 					_p44)('impossible');
 			}
@@ -24528,8 +24528,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F2(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 469, column: 5},
-				end: {line: 483, column: 37}
+				start: {line: 471, column: 5},
+				end: {line: 485, column: 37}
 			},
 			_p96)('impossible');
 	});
@@ -24958,10 +24958,7 @@ var _vito$cadet$Main$location2messages = function (loc) {
 		_elm_lang$core$List$map,
 		_vito$cadet$Main$SelectIssueOrPR,
 		A2(_elm_lang$core$String$split, ',', hash));
-	return A2(
-		_elm_lang$core$Debug$log,
-		'messages',
-		{ctor: '::', _0: page, _1: selection});
+	return {ctor: '::', _0: page, _1: selection};
 };
 var _vito$cadet$Main$init = function (config) {
 	return {
@@ -25377,7 +25374,7 @@ var _vito$cadet$Main$update = F2(
 								_elm_lang$core$List$map,
 								A2(_vito$cadet$Main$setIssueOrPRSelected, _p119, true),
 								model.issueOrPRGraphs),
-							selectedIssueOrPRs: A2(
+							selectedIssueOrPRs: A2(_elm_lang$core$List$member, _p119, model.selectedIssueOrPRs) ? model.selectedIssueOrPRs : A2(
 								_elm_lang$core$Basics_ops['++'],
 								model.selectedIssueOrPRs,
 								{

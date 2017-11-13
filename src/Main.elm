@@ -133,9 +133,7 @@ location2messages loc =
         selection =
             List.map SelectIssueOrPR (String.split "," hash)
     in
-        Debug.log "messages" <|
-            page
-                :: selection
+        page :: selection
 
 
 type IssueOrPR

@@ -14,7 +14,7 @@
   font-weight: normal;
 }
 
-html, body, #cadet, .columns {
+html, body {
   height: 100%;
 }
 
@@ -32,8 +32,11 @@ body {
 }
 
 .main-page {
+  flex-grow: 1;
+
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
 
   .page-content {
     overflow-y: auto;

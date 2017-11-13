@@ -8,11 +8,9 @@
     <link rel="shortcut icon" href="public/favicon.png" />
   </head>
   <body>
-    <div id="cadet"></div>
     <script type="text/javascript" src="public/elm.js"></script>
     <script type="text/javascript">
-      var node = document.getElementById("cadet");
-      var app = Elm.Main.embed(node, {
+      var app = Elm.Main.fullscreen({
         initialDate: (new Date()).getTime()
       });
     </script>
