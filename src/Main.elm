@@ -67,6 +67,7 @@ type Msg
 type Page
     = GlobalGraphPage
     | AllProjectsPage
+    | ProjectPage String
 
 
 main : RouteUrl.RouteUrlProgram Config Model Msg
@@ -98,6 +99,9 @@ delta2url a b =
                 AllProjectsPage ->
                     RouteUrl.Builder.replacePath [ "projects" ]
 
+                ProjectPage name ->
+                    RouteUrl.Builder.replacePath [ "projects", name ]
+
         withSelection =
             RouteUrl.Builder.replaceHash (String.join "," b.selectedIssueOrPRs)
 
@@ -126,6 +130,9 @@ location2messages loc =
 
                 [ "projects" ] ->
                     SetPage AllProjectsPage
+
+                [ "projects", name ] ->
+                    SetPage (ProjectPage name)
 
                 _ ->
                     SetPage GlobalGraphPage
@@ -324,10 +331,13 @@ view model =
                 [ Html.div [ HA.class "page-content" ]
                     [ case model.page of
                         GlobalGraphPage ->
-                            viewSpatialGraph model
+                            viewGlobalGraphPage model
 
                         AllProjectsPage ->
-                            viewProjects model
+                            viewAllProjectsPage model
+
+                        ProjectPage id ->
+                            viewProjectPage model id
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
                     [ if List.isEmpty sidebarIssues then
@@ -341,8 +351,8 @@ view model =
             ]
 
 
-viewSpatialGraph : Model -> Html Msg
-viewSpatialGraph model =
+viewGlobalGraphPage : Model -> Html Msg
+viewGlobalGraphPage model =
     Html.div [ HA.class "spatial-graph" ] <|
         List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
 
@@ -363,7 +373,8 @@ viewNavBar model =
 
 
 type alias ProjectState =
-    { name : String
+    { id : GitHubGraph.ID
+    , name : String
     , backlog : GitHubGraph.ProjectColumn
     , inFlight : GitHubGraph.ProjectColumn
     , done : GitHubGraph.ProjectColumn
@@ -397,7 +408,8 @@ selectStatefulProject project =
         case ( backlog, inFlight, done ) of
             ( Just b, Just i, Just d ) ->
                 Just
-                    { name = project.name
+                    { id = project.id
+                    , name = project.name
                     , backlog = b
                     , inFlight = i
                     , done = d
@@ -408,8 +420,8 @@ selectStatefulProject project =
                 Nothing
 
 
-viewProjects : Model -> Html Msg
-viewProjects model =
+viewAllProjectsPage : Model -> Html Msg
+viewAllProjectsPage model =
     let
         statefulProjects =
             List.filterMap selectStatefulProject model.projects
@@ -435,7 +447,11 @@ viewProject model { name, backlog, inFlight, done } =
     Html.div [ HA.class "project" ]
         [ Html.div [ HA.class "project-columns" ]
             [ Html.div [ HA.class "column name-column" ]
-                [ Html.h4 [] [ Html.text name ] ]
+                [ Html.h4 []
+                    [ Html.a [ HA.href ("/projects/" ++ name), StrictEvents.onLeftClick (SetPage (ProjectPage name)) ]
+                        [ Html.text name ]
+                    ]
+                ]
             , Html.div [ HA.class "column backlog-column" ]
                 [ viewProjectColumn model backlog ]
             , Html.div [ HA.class "column in-flight-column" ]
@@ -483,6 +499,64 @@ viewProjectColumnCard model { itemID, note } =
 
         _ ->
             Debug.crash "impossible"
+
+
+viewProjectPage : Model -> String -> Html Msg
+viewProjectPage model name =
+    let
+        statefulProjects =
+            List.filterMap selectStatefulProject model.projects
+
+        mproject =
+            List.head <|
+                List.filter ((==) name << .name) statefulProjects
+    in
+        case mproject of
+            Just project ->
+                viewSingleProject model project
+
+            Nothing ->
+                Html.text "project not found"
+
+
+viewSingleProject : Model -> ProjectState -> Html Msg
+viewSingleProject model { id, name, backlog, inFlight, done } =
+    let
+        relevantGraphs =
+            List.filter (graphContainsIssuesInProject id) model.issueOrPRGraphs
+    in
+        Html.div [ HA.class "project single" ]
+            [ Html.div [ HA.class "project-columns" ]
+                [ Html.div [ HA.class "column name-column" ]
+                    [ Html.h4 [] [ Html.text name ] ]
+                , Html.div [ HA.class "column done-column" ]
+                    [ viewProjectColumn model done ]
+                , Html.div [ HA.class "column in-flight-column" ]
+                    [ viewProjectColumn model inFlight ]
+                , Html.div [ HA.class "column backlog-column" ]
+                    [ viewProjectColumn model backlog ]
+                ]
+            , Html.div [ HA.class "spatial-graph" ] <|
+                List.map (Html.Lazy.lazy (viewGraph model)) relevantGraphs
+            ]
+
+
+graphContainsIssuesInProject : GitHubGraph.ID -> ForceGraph IssueOrPRNode -> Bool
+graphContainsIssuesInProject id { graph } =
+    let
+        nodeIsInProject { label } =
+            let
+                cards =
+                    case label.value.issueOrPR of
+                        Issue i ->
+                            i.cards
+
+                        PR p ->
+                            p.cards
+            in
+                List.any ((==) id << .projectID) cards
+    in
+        List.any nodeIsInProject (Graph.nodes graph)
 
 
 viewSearch : Html Msg
