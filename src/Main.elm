@@ -1125,6 +1125,11 @@ isDone =
     inColumn "Done"
 
 
+isBacklog : IssueOrPR -> Bool
+isBacklog =
+    inColumn "Backlog"
+
+
 viewIssueCard : Model -> IssueOrPR -> Html Msg
 viewIssueCard model iop =
     let
@@ -1167,6 +1172,14 @@ viewIssueCard model iop =
 
                 PR pr ->
                     pr.labels
+
+        id =
+            case iop of
+                Issue issue ->
+                    issue.id
+
+                PR pr ->
+                    pr.id
     in
         Html.div
             [ HA.classList
@@ -1175,8 +1188,10 @@ viewIssueCard model iop =
                 , ( "issue-info", True )
                 , ( "in-flight", isInFlight iop )
                 , ( "done", isDone iop )
+                , ( "backlog", isBacklog iop )
                 , ( "anticipated", isAnticipated model iop )
                 ]
+            , HE.onClick (SelectIssueOrPR id)
             ]
             [ Html.div [ HA.class "issue-actors" ] <|
                 List.map (viewIssueActor model) (recentActors model iop)
