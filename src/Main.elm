@@ -20,10 +20,14 @@ import Svg.Events as SE
 import Svg.Lazy
 import Time exposing (Time)
 import Visualization.Shape as VS
+import RouteUrl
+import RouteUrl.Builder
+import Navigation
 import Hash
 import GitHubGraph
 import Data exposing (Data)
 import ForceGraph as FG exposing (ForceGraph)
+import StrictEvents
 
 
 type alias Config =
@@ -33,15 +37,105 @@ type alias Config =
 
 type alias Model =
     { config : Config
+    , page : Page
     , allIssueOrPRs : Dict GitHubGraph.ID IssueOrPR
     , issueOrPRActors : Dict GitHubGraph.ID (List Data.ActorEvent)
     , issueOrPRGraphs : List (ForceGraph IssueOrPRNode)
-    , selectedIssueOrPRs : List IssueOrPR
-    , anticipatedIssueOrPRs : List IssueOrPR
+    , selectedIssueOrPRs : List GitHubGraph.ID
+    , anticipatedIssueOrPRs : List GitHubGraph.ID
     , currentDate : Date
     , projects : List GitHubGraph.Project
     , cards : Dict String (List GitHubGraph.ProjectColumnCard)
     }
+
+
+type Msg
+    = Noop
+    | SetPage Page
+    | Tick Time
+    | SetCurrentDate Date
+    | DataFetched (Result Http.Error Data)
+    | SelectIssueOrPR GitHubGraph.ID
+    | DeselectIssueOrPR GitHubGraph.ID
+    | AnticipateIssueOrPR GitHubGraph.ID
+    | UnanticipateIssueOrPR GitHubGraph.ID
+    | SearchIssueOrPRs String
+    | SelectAnticipatedIssueOrPRs
+    | ClearSelectedIssueOrPRs
+
+
+type Page
+    = GlobalGraphPage
+    | AllProjectsPage
+
+
+main : RouteUrl.RouteUrlProgram Config Model Msg
+main =
+    RouteUrl.programWithFlags
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = subscriptions
+        , delta2url = delta2url
+        , location2messages = location2messages
+        }
+
+
+delta2url : Model -> Model -> Maybe RouteUrl.UrlChange
+delta2url a b =
+    let
+        withPageEntry =
+            if a.page == b.page then
+                identity
+            else
+                RouteUrl.Builder.newEntry
+
+        withPagePath =
+            case b.page of
+                GlobalGraphPage ->
+                    RouteUrl.Builder.replacePath []
+
+                AllProjectsPage ->
+                    RouteUrl.Builder.replacePath [ "projects" ]
+
+        withSelection =
+            RouteUrl.Builder.replaceHash (String.join "," b.selectedIssueOrPRs)
+
+        builder =
+            List.foldl (\f b -> f b) RouteUrl.Builder.builder [ withPageEntry, withPagePath, withSelection ]
+    in
+        Just (RouteUrl.Builder.toUrlChange builder)
+
+
+location2messages : Navigation.Location -> List Msg
+location2messages loc =
+    let
+        builder =
+            RouteUrl.Builder.fromUrl loc.href
+
+        path =
+            RouteUrl.Builder.path builder
+
+        hash =
+            RouteUrl.Builder.hash builder
+
+        page =
+            case path of
+                [] ->
+                    SetPage GlobalGraphPage
+
+                [ "projects" ] ->
+                    SetPage AllProjectsPage
+
+                _ ->
+                    SetPage GlobalGraphPage
+
+        selection =
+            List.map SelectIssueOrPR (String.split "," hash)
+    in
+        Debug.log "messages" <|
+            page
+                :: selection
 
 
 type IssueOrPR
@@ -62,33 +156,10 @@ type alias IssueOrPRNode =
     }
 
 
-main : Program Config Model Msg
-main =
-    Html.programWithFlags
-        { init = init
-        , update = update
-        , view = view
-        , subscriptions = subscriptions
-        }
-
-
-type Msg
-    = Noop
-    | Tick Time
-    | SetCurrentDate Date
-    | DataFetched (Result Http.Error Data)
-    | SelectIssueOrPR IssueOrPR
-    | DeselectIssueOrPR IssueOrPR
-    | AnticipateIssueOrPR IssueOrPR
-    | UnanticipateIssueOrPR IssueOrPR
-    | SearchIssueOrPRs String
-    | SelectAnticipatedIssueOrPRs
-    | ClearSelectedIssueOrPRs
-
-
 init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
+      , page = GlobalGraphPage
       , allIssueOrPRs = Dict.empty
       , issueOrPRActors = Dict.empty
       , issueOrPRGraphs = []
@@ -119,6 +190,9 @@ update msg model =
         Noop ->
             ( model, Cmd.none )
 
+        SetPage page ->
+            ( { model | page = page }, Cmd.none )
+
         Tick _ ->
             ( { model
                 | issueOrPRGraphs =
@@ -144,6 +218,14 @@ update msg model =
             let
                 issueOrPRMatch issueOrPR =
                     let
+                        id =
+                            case issueOrPR of
+                                Issue issue ->
+                                    issue.id
+
+                                PR pr ->
+                                    pr.id
+
                         title =
                             case issueOrPR of
                                 Issue issue ->
@@ -152,25 +234,28 @@ update msg model =
                                 PR pr ->
                                     pr.title
                     in
-                        String.contains (String.toLower query) (String.toLower title)
+                        if String.contains (String.toLower query) (String.toLower title) then
+                            Just id
+                        else
+                            Nothing
 
                 foundIssueOrPRs =
-                    List.filter issueOrPRMatch (Dict.values model.allIssueOrPRs)
+                    List.filterMap issueOrPRMatch (Dict.values model.allIssueOrPRs)
             in
                 ( { model | anticipatedIssueOrPRs = foundIssueOrPRs }, Cmd.none )
 
         SelectAnticipatedIssueOrPRs ->
             ( { model
                 | anticipatedIssueOrPRs = []
-                , selectedIssueOrPRs = model.anticipatedIssueOrPRs ++ model.selectedIssueOrPRs
+                , selectedIssueOrPRs = model.selectedIssueOrPRs ++ model.anticipatedIssueOrPRs
               }
             , Cmd.none
             )
 
-        SelectIssueOrPR iop ->
+        SelectIssueOrPR id ->
             ( { model
-                | issueOrPRGraphs = List.map (setIssueOrPRSelected iop True) model.issueOrPRGraphs
-                , selectedIssueOrPRs = iop :: model.selectedIssueOrPRs
+                | issueOrPRGraphs = List.map (setIssueOrPRSelected id True) model.issueOrPRGraphs
+                , selectedIssueOrPRs = model.selectedIssueOrPRs ++ [ id ]
               }
             , Cmd.none
             )
@@ -178,21 +263,21 @@ update msg model =
         ClearSelectedIssueOrPRs ->
             ( { model | selectedIssueOrPRs = [] }, Cmd.none )
 
-        DeselectIssueOrPR iop ->
+        DeselectIssueOrPR id ->
             ( { model
-                | issueOrPRGraphs = List.map (setIssueOrPRSelected iop False) model.issueOrPRGraphs
-                , selectedIssueOrPRs = List.filter (not << sameIssueOrPR iop) model.selectedIssueOrPRs
+                | issueOrPRGraphs = List.map (setIssueOrPRSelected id False) model.issueOrPRGraphs
+                , selectedIssueOrPRs = List.filter ((/=) id) model.selectedIssueOrPRs
               }
             , Cmd.none
             )
 
-        AnticipateIssueOrPR issue ->
-            ( { model | anticipatedIssueOrPRs = issue :: model.anticipatedIssueOrPRs }
+        AnticipateIssueOrPR id ->
+            ( { model | anticipatedIssueOrPRs = id :: model.anticipatedIssueOrPRs }
             , Cmd.none
             )
 
-        UnanticipateIssueOrPR iop ->
-            ( { model | anticipatedIssueOrPRs = List.filter (not << sameIssueOrPR iop) model.anticipatedIssueOrPRs }, Cmd.none )
+        UnanticipateIssueOrPR id ->
+            ( { model | anticipatedIssueOrPRs = List.filter ((/=) id) model.anticipatedIssueOrPRs }, Cmd.none )
 
         DataFetched (Ok data) ->
             let
@@ -205,9 +290,12 @@ update msg model =
                 allIssueOrPRs =
                     withPRs
 
-                -- computeGraphs model data
+                ( graphedModel, graphedMsg ) =
+                    computeGraphs model data
             in
-                ( { model | allIssueOrPRs = allIssueOrPRs, projects = data.projects, cards = data.cards }, Cmd.none )
+                ( { graphedModel | allIssueOrPRs = allIssueOrPRs, projects = data.projects, cards = data.cards }
+                , graphedMsg
+                )
 
         DataFetched (Err msg) ->
             flip always (Debug.log "error" msg) <|
@@ -216,32 +304,59 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    Html.div [ HA.class "cadet" ]
-        [ viewSpatialGraph model
-        , viewIssueManagement model
-        , viewProjects model
-        ]
+    let
+        anticipatedIssueOrPRs =
+            List.map (viewIssueInfo model) <|
+                List.filterMap (flip Dict.get model.allIssueOrPRs) <|
+                    List.filter (not << flip List.member model.selectedIssueOrPRs) model.anticipatedIssueOrPRs
+
+        selectedIssueOrPRs =
+            List.map (viewIssueInfo model) <|
+                List.filterMap (flip Dict.get model.allIssueOrPRs) model.selectedIssueOrPRs
+
+        sidebarIssues =
+            selectedIssueOrPRs ++ anticipatedIssueOrPRs
+    in
+        Html.div [ HA.class "cadet" ]
+            [ Html.div [ HA.class "main-page" ]
+                [ Html.div [ HA.class "page-content" ]
+                    [ case model.page of
+                        GlobalGraphPage ->
+                            viewSpatialGraph model
+
+                        AllProjectsPage ->
+                            viewProjects model
+                    ]
+                , if List.isEmpty sidebarIssues then
+                    Html.text ""
+                  else
+                    Html.div [ HA.class "page-sidebar" ]
+                        [ Html.div [ HA.class "issues" ] sidebarIssues
+                        ]
+                ]
+            , viewNavBar model
+            ]
 
 
 viewSpatialGraph : Model -> Html Msg
 viewSpatialGraph model =
-    Html.div [] <|
+    Html.div [ HA.class "spatial-graph" ] <|
         List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
 
 
-viewIssueManagement : Model -> Html Msg
-viewIssueManagement model =
-    let
-        anticipatedIssueOrPRs =
-            List.map (viewIssueInfo model True) <|
-                List.filter (not << flip List.member model.selectedIssueOrPRs) model.anticipatedIssueOrPRs
-    in
-        Html.div [ HA.class "issue-management" ]
-            [ Html.div [ HA.class "issues" ] <|
-                anticipatedIssueOrPRs
-                    ++ List.map (viewIssueInfo model False) model.selectedIssueOrPRs
-            , viewSearch
+viewNavBar : Model -> Html Msg
+viewNavBar model =
+    Html.div [ HA.class "bottom-bar" ]
+        [ Html.div [ HA.class "nav" ]
+            [ Html.a [ HA.class "button", HA.href "/", StrictEvents.onLeftClick (SetPage GlobalGraphPage) ]
+                [ Html.span [ HA.class "octicon octicon-globe" ] []
+                ]
+            , Html.a [ HA.class "button", HA.href "/projects", StrictEvents.onLeftClick (SetPage AllProjectsPage) ]
+                [ Html.span [ HA.class "octicon octicon-list-unordered" ] []
+                ]
             ]
+        , viewSearch
+        ]
 
 
 type alias ProjectState =
@@ -296,20 +411,44 @@ viewProjects model =
         statefulProjects =
             List.filterMap selectStatefulProject model.projects
     in
-        Html.div [ HA.class "projects" ]
-            (List.map (viewProject model) statefulProjects)
+        Html.div [ HA.class "project-table" ]
+            [ Html.div [ HA.class "project-name-columns" ]
+                [ Html.div [ HA.class "column name-column" ]
+                    []
+                , Html.div [ HA.class "column done-column" ]
+                    [ Html.h4 [] [ Html.text "Done" ] ]
+                , Html.div [ HA.class "column in-flight-column" ]
+                    [ Html.h4 [] [ Html.text "In Flight" ] ]
+                , Html.div [ HA.class "column backlog-column" ]
+                    [ Html.h4 [] [ Html.text "Backlog" ] ]
+                ]
+            , Html.div [ HA.class "projects" ]
+                (List.map (viewProject model) statefulProjects)
+            ]
 
 
 viewProject : Model -> ProjectState -> Html Msg
 viewProject model { name, backlog, inFlight, done } =
     Html.div [ HA.class "project" ]
         [ Html.div [ HA.class "project-columns" ]
-            [ Html.div [ HA.class "column backlog-column" ]
-                [ viewProjectColumn model backlog ]
-            , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model inFlight ]
+            [ Html.div [ HA.class "column name-column" ]
+                [ Html.h4 [] [ Html.text name ] ]
             , Html.div [ HA.class "column done-column" ]
                 [ viewProjectColumn model done ]
+            , Html.div [ HA.class "column in-flight-column" ]
+                [ viewProjectColumn model inFlight ]
+            , Html.div [ HA.class "column backlog-column" ]
+                [ viewProjectColumn model backlog ]
+            ]
+        , Html.div [ HA.class "project-spacer-columns" ]
+            [ Html.div [ HA.class "column name-column" ]
+                []
+            , Html.div [ HA.class "column done-column" ]
+                []
+            , Html.div [ HA.class "column in-flight-column" ]
+                []
+            , Html.div [ HA.class "column backlog-column" ]
+                []
             ]
         ]
 
@@ -328,9 +467,7 @@ viewProjectColumnCard : Model -> GitHubGraph.ProjectColumnCard -> Html Msg
 viewProjectColumnCard model { itemID, note } =
     case ( note, itemID ) of
         ( Just n, Nothing ) ->
-            Html.div [ HA.class "card note-card" ]
-                [ Html.p [] [ Html.text n ]
-                ]
+            Html.text ""
 
         ( Nothing, Just i ) ->
             case Dict.get i model.allIssueOrPRs of
@@ -358,22 +495,17 @@ viewSearch =
         ]
 
 
-setIssueOrPRSelected : IssueOrPR -> Bool -> ForceGraph IssueOrPRNode -> ForceGraph IssueOrPRNode
-setIssueOrPRSelected iop val fg =
+setIssueOrPRSelected : GitHubGraph.ID -> Bool -> ForceGraph IssueOrPRNode -> ForceGraph IssueOrPRNode
+setIssueOrPRSelected id val fg =
     let
-        id =
-            case iop of
-                Issue issue ->
-                    Hash.hash issue.id
-
-                PR pr ->
-                    Hash.hash pr.id
+        graphId =
+            Hash.hash id
 
         toggle node =
             { node | selected = val }
     in
-        if FG.member id fg then
-            FG.update id toggle fg
+        if FG.member graphId fg then
+            FG.update graphId toggle fg
         else
             fg
 
@@ -831,6 +963,14 @@ viewIssueOrPRNode model { label } =
         issueOrPR =
             label.value.issueOrPR
 
+        id =
+            case issueOrPR of
+                Issue i ->
+                    i.id
+
+                PR p ->
+                    p.id
+
         circleWithNumber =
             case issueOrPR of
                 Issue issue ->
@@ -842,7 +982,7 @@ viewIssueOrPRNode model { label } =
                     , Svg.text_
                         [ SA.textAnchor "middle"
                         , SA.alignmentBaseline "middle"
-                        , SA.fill "#C6A49A"
+                        , SA.class "issue-number"
                         ]
                         [ Svg.text (toString issue.number)
                         ]
@@ -851,7 +991,7 @@ viewIssueOrPRNode model { label } =
                 PR pr ->
                     [ Svg.circle
                         [ SA.r (toString label.value.radii.base)
-                        , SA.fill "#28a745"
+                        , SA.class "pr-circle"
                         ]
                         []
                     , Svg.text_
@@ -865,20 +1005,20 @@ viewIssueOrPRNode model { label } =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-            , SE.onMouseOver (AnticipateIssueOrPR issueOrPR)
-            , SE.onMouseOut (UnanticipateIssueOrPR issueOrPR)
+            , SE.onMouseOver (AnticipateIssueOrPR id)
+            , SE.onMouseOut (UnanticipateIssueOrPR id)
             , SE.onClick
                 (if label.value.selected then
-                    DeselectIssueOrPR issueOrPR
+                    DeselectIssueOrPR id
                  else
-                    SelectIssueOrPR issueOrPR
+                    SelectIssueOrPR id
                 )
             ]
             (circleWithNumber ++ label.value.labels)
 
 
-viewIssueInfo : Model -> Bool -> IssueOrPR -> Html Msg
-viewIssueInfo model anticipated iop =
+viewIssueInfo : Model -> IssueOrPR -> Html Msg
+viewIssueInfo model iop =
     let
         url =
             case iop of
@@ -887,6 +1027,14 @@ viewIssueInfo model anticipated iop =
 
                 PR pr ->
                     pr.url
+
+        id =
+            case iop of
+                Issue issue ->
+                    issue.id
+
+                PR pr ->
+                    pr.id
 
         title =
             case iop of
@@ -919,42 +1067,61 @@ viewIssueInfo model anticipated iop =
 
                 PR pr ->
                     pr.labels
+
+        anticipated =
+            isAnticipated model iop
     in
         Html.div [ HA.class "issue-controls" ]
             [ Html.div [ HA.class "issue-buttons" ]
                 [ if not anticipated then
                     Html.span
-                        [ HE.onClick (DeselectIssueOrPR iop)
+                        [ HE.onClick (DeselectIssueOrPR id)
                         , HA.class "octicon octicon-x"
                         ]
                         [ Html.text "" ]
                   else
                     Html.text ""
                 ]
-            , Html.div
-                [ HA.classList [ ( "issue-info", True ), ( "anticipated", anticipated ) ]
-                , HE.onClick (SelectIssueOrPR iop)
-                ]
-                [ Html.div [ HA.class "issue-actors" ] <|
-                    List.map (viewIssueActor model) (recentActors model iop)
-                , Html.a [ HA.href url, HA.target "_blank", HA.class "issue-title" ]
-                    [ Html.text title
-                    ]
-                , Html.span [ HA.class "issue-labels" ] <|
-                    List.map viewLabel labels
-                , Html.div [ HA.class "issue-meta" ]
-                    [ Html.a [ HA.href url, HA.target "_blank" ] [ Html.text ("#" ++ toString number) ]
-                    , Html.text " "
-                    , Html.text "opened by "
-                    , case author of
-                        Just user ->
-                            Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
-
-                        _ ->
-                            Html.text "(deleted user)"
-                    ]
-                ]
+            , viewIssueCard model iop
             ]
+
+
+inColumn : String -> IssueOrPR -> Bool
+inColumn name iop =
+    let
+        cards =
+            case iop of
+                Issue i ->
+                    i.cards
+
+                PR p ->
+                    p.cards
+    in
+        List.member name (List.filterMap (Maybe.map .name << .column) cards)
+
+
+isInFlight : IssueOrPR -> Bool
+isInFlight =
+    inColumn "In Flight"
+
+
+isAnticipated : Model -> IssueOrPR -> Bool
+isAnticipated model iop =
+    let
+        id =
+            case iop of
+                Issue issue ->
+                    issue.id
+
+                PR pr ->
+                    pr.id
+    in
+        List.member id model.anticipatedIssueOrPRs && not (List.member id model.selectedIssueOrPRs)
+
+
+isDone : IssueOrPR -> Bool
+isDone =
+    inColumn "Done"
 
 
 viewIssueCard : Model -> IssueOrPR -> Html Msg
@@ -1000,7 +1167,16 @@ viewIssueCard model iop =
                 PR pr ->
                     pr.labels
     in
-        Html.div [ HA.class "card issue-card issue-info" ]
+        Html.div
+            [ HA.classList
+                [ ( "card", True )
+                , ( "issue-card", True )
+                , ( "issue-info", True )
+                , ( "in-flight", isInFlight iop )
+                , ( "done", isDone iop )
+                , ( "anticipated", isAnticipated model iop )
+                ]
+            ]
             [ Html.div [ HA.class "issue-actors" ] <|
                 List.map (viewIssueActor model) (recentActors model iop)
             , Html.a [ HA.href url, HA.target "_blank", HA.class "issue-title" ]

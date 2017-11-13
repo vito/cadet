@@ -174,7 +174,7 @@ type alias ProjectColumnCard =
 type alias CardLocation =
     { id : ID
     , projectID : ID
-    , columnID : Maybe ID
+    , column : Maybe ProjectColumn
     }
 
 
@@ -520,11 +520,16 @@ issuesQuery =
                 |> GB.with (GB.field "name" [] GB.string)
                 |> GB.with (GB.field "color" [] GB.string)
 
+        column =
+            GB.object ProjectColumn
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "name" [] GB.string)
+
         projectCard =
             GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
                 |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
-                |> GB.with (GB.field "column" [] (GB.nullable <| GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.field "column" [] (GB.nullable column))
 
         issue =
             GB.object Issue
@@ -602,11 +607,16 @@ pullRequestsQuery =
                 |> GB.with (GB.field "name" [] GB.string)
                 |> GB.with (GB.field "color" [] GB.string)
 
+        column =
+            GB.object ProjectColumn
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "name" [] GB.string)
+
         projectCard =
             GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
                 |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
-                |> GB.with (GB.field "column" [] (GB.nullable <| GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.field "column" [] (GB.nullable column))
 
         issue =
             GB.object PullRequest
@@ -848,7 +858,7 @@ decodeCardLocation =
     JD.succeed CardLocation
         |: (JD.field "id" JD.string)
         |: (JD.field "project_id" JD.string)
-        |: (JD.field "column_id" <| JD.maybe JD.string)
+        |: (JD.field "column" <| JD.maybe decodeProjectColumn)
 
 
 decodeRepoSelector : JD.Decoder RepoSelector
@@ -1013,7 +1023,7 @@ encodeCardLocation record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "project_id", JE.string record.projectID )
-        , ( "column_id", JEE.maybe JE.string record.columnID )
+        , ( "column", JEE.maybe encodeProjectColumn record.column )
         ]
 
 

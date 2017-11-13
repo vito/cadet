@@ -1,6 +1,5 @@
-const fastify = require('fastify')
+const express = require('express')
 const path = require('path')
-const fstatic = require('fastify-static')
 const compression = require('compression')
 
 global.XMLHttpRequest = require("xhr2");
@@ -11,7 +10,7 @@ const worker = Elm.Main.worker({
   githubToken: process.env.GITHUB_TOKEN
 });
 
-const app = fastify()
+const app = express()
 const port = process.env.PORT || 8000;
 
 const data = {
@@ -60,17 +59,16 @@ worker.ports.setCards.subscribe(function(args) {
 
 app.use(compression())
 
-app.register(fstatic, {
-  root: path.join(__dirname, 'public'),
-  prefix: '/public/'
-});
-
-app.get('/', (req, res) => {
-  res.sendFile('index.html')
-})
+const publicDir = path.join(__dirname, 'public');
 
 app.get('/data', (req, res) => {
   res.send(data)
+})
+
+app.use('/public', express.static(publicDir))
+
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(publicDir, 'index.html'));
 })
 
 app.listen(port, (err) => {

@@ -7276,11 +7276,12 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$extractValuesFro
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$fieldTuple = F2(
 	function (source, _p4) {
 		var _p5 = _p4;
-		return {
-			ctor: '_Tuple2',
-			_0: _p5._0,
-			_1: _p5._2(source)
-		};
+		return A2(
+			_elm_lang$core$Maybe$map,
+			function (value) {
+				return {ctor: '_Tuple2', _0: _p5._0, _1: value};
+			},
+			_p5._2(source));
 	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$VariableSpec = F3(
 	function (a, b, c) {
@@ -7337,7 +7338,7 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$object = F2(
 			function (source) {
 				return _jamesmacaulay$elm_graphql$GraphQL_Request_Document_AST$ObjectValue(
 					A2(
-						_elm_lang$core$List$map,
+						_elm_lang$core$List$filterMap,
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$fieldTuple(source),
 						fields));
 			});
@@ -7390,8 +7391,23 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$field = F3(
 			name,
 			_p21._1,
 			function (_p22) {
-				return _p21._2(
-					extract(_p22));
+				return _elm_lang$core$Maybe$Just(
+					_p21._2(
+						extract(_p22)));
+			});
+	});
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$optionalField = F3(
+	function (name, extract, _p23) {
+		var _p24 = _p23;
+		return A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$Field,
+			name,
+			_p24._1,
+			function (_p25) {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					_p24._2,
+					extract(_p25));
 			});
 	});
 
@@ -8467,6 +8483,17 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$map2 = F3(
 		var joinedSourceType = A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$join, _p78._0, _p79._0);
 		return A4(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$ValueSpec, joinedSourceType, joinedDecoder, mergedVariables, mergedFragments);
 	});
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$withLocalConstant = F2(
+	function (x, objectSpec) {
+		return A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$map2,
+			F2(
+				function (x, y) {
+					return x(y);
+				}),
+			objectSpec,
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$produce(x));
+	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Nullable = {ctor: 'Nullable'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$NonNull = {ctor: 'NonNull'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$NonNullFlag = {ctor: 'NonNullFlag'};
@@ -8996,34 +9023,6 @@ var _vito$cadet$GitHubGraph$encodeRepoSelector = function (record) {
 			}
 		});
 };
-var _vito$cadet$GitHubGraph$encodeCardLocation = function (record) {
-	return _elm_lang$core$Json_Encode$object(
-		{
-			ctor: '::',
-			_0: {
-				ctor: '_Tuple2',
-				_0: 'id',
-				_1: _elm_lang$core$Json_Encode$string(record.id)
-			},
-			_1: {
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'project_id',
-					_1: _elm_lang$core$Json_Encode$string(record.projectID)
-				},
-				_1: {
-					ctor: '::',
-					_0: {
-						ctor: '_Tuple2',
-						_0: 'column_id',
-						_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _elm_lang$core$Json_Encode$string, record.columnID)
-					},
-					_1: {ctor: '[]'}
-				}
-			}
-		});
-};
 var _vito$cadet$GitHubGraph$encodeProjectColumnCard = function (record) {
 	return _elm_lang$core$Json_Encode$object(
 		{
@@ -9069,6 +9068,34 @@ var _vito$cadet$GitHubGraph$encodeProjectColumn = function (record) {
 					_1: _elm_lang$core$Json_Encode$string(record.name)
 				},
 				_1: {ctor: '[]'}
+			}
+		});
+};
+var _vito$cadet$GitHubGraph$encodeCardLocation = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'id',
+				_1: _elm_lang$core$Json_Encode$string(record.id)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'project_id',
+					_1: _elm_lang$core$Json_Encode$string(record.projectID)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'column',
+						_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeProjectColumn, record.column)
+					},
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -9465,7 +9492,7 @@ var _vito$cadet$GitHubGraph$decodeProjectColumnCard = A2(
 		_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$string)));
 var _vito$cadet$GitHubGraph$CardLocation = F3(
 	function (a, b, c) {
-		return {id: a, projectID: b, columnID: c};
+		return {id: a, projectID: b, column: c};
 	});
 var _vito$cadet$GitHubGraph$decodeCardLocation = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
@@ -9478,8 +9505,8 @@ var _vito$cadet$GitHubGraph$decodeCardLocation = A2(
 		A2(_elm_lang$core$Json_Decode$field, 'project_id', _elm_lang$core$Json_Decode$string)),
 	A2(
 		_elm_lang$core$Json_Decode$field,
-		'column_id',
-		_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$string)));
+		'column',
+		_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeProjectColumn)));
 var _vito$cadet$GitHubGraph$OrgSelector = function (a) {
 	return {name: a};
 };
@@ -10470,19 +10497,28 @@ var _vito$cadet$GitHubGraph$issuesQuery = function () {
 				{ctor: '[]'},
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PageInfo)));
+	var column = A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'name',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'id',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
 	var projectCard = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 			'column',
 			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-					A3(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'id',
-						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)))),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(column)),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
@@ -10814,19 +10850,28 @@ var _vito$cadet$GitHubGraph$pullRequestsQuery = function () {
 				{ctor: '[]'},
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PageInfo)));
+	var column = A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'name',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'id',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
 	var projectCard = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 			'column',
 			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-					A3(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'id',
-						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)))),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(column)),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(

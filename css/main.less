@@ -1,4 +1,9 @@
-@background: #C6E5D9;
+@import "colors.less";
+
+@background: @gray-light;
+@project-bg: @gray;
+@project-column-bg: lighten(@project-bg, 5%);
+@column-bg: transparent;
 
 * {
   box-sizing: border-box;
@@ -20,10 +25,62 @@ body {
   background: @background;
 }
 
-.issue-management {
-  position: fixed;
-  right: 0;
-  bottom: 0;
+.cadet {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.main-page {
+  display: flex;
+  flex-direction: row;
+
+  .page-content {
+    overflow-y: auto;
+  }
+
+  .page-sidebar {
+    overflow-y: auto;
+    flex-shrink: 0;
+    width: 300px + (2 * @card-margin);
+
+    background: @gray-dark;
+
+    .card {
+      margin-left: @card-margin;
+      margin-bottom: 0;
+      border-color: @black;
+    }
+  }
+}
+
+.bottom-bar {
+  flex-shrink: 0;
+
+  background: @gray-dark;
+  height: 40px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+
+  .button {
+    font-size: 32px;
+    color: @white;
+    display: inline-block;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+
+    &:hover {
+      background: @gray;
+    }
+  }
+}
+
+.issue-search {
+  position: relative;
 
   .octicon {
     cursor: pointer;
@@ -33,10 +90,6 @@ body {
       color: white;
     }
   }
-}
-
-.issue-search {
-  position: relative;
 
   .clear-selected {
     position: absolute;
@@ -49,16 +102,16 @@ body {
     padding: 12px;
     background: fade(#fff, 20%);
     border: 0;
-    color: #fff;
-    width: 500px;
+    color: @white;
+    width: 300px + (2 * @card-margin);
 
     &::placeholder {
-      color: #fff;
+      color: @white;
     }
 
     &:focus, &:hover {
-      background: #fff;
-      color: #333;
+      background: @white;
+      color: @black;
     }
   }
 }
@@ -69,10 +122,6 @@ body {
   justify-content: flex-end;
   position: relative;
 
-  &:first-of-type .issue-info {
-    border-top-left-radius: 10px;
-  }
-
   .issue-buttons {
     position: absolute;
     bottom: 22px;
@@ -82,7 +131,7 @@ body {
 
 .issue-info {
   padding: 12px;
-  background: #fff;
+  background: @white;
   border-bottom: 1px solid #e1e4e8;
   width: 500px;
   position: relative;
@@ -109,7 +158,7 @@ body {
   }
 
   a:hover {
-    color: #0366d6;
+    color: @blue;
   }
 }
 
@@ -181,34 +230,133 @@ body {
   box-sizing: border-box;
   margin: @card-margin @card-margin @card-margin 0;
   background: #fff;
-  cursor: move;
   white-space: normal;
   vertical-align: top;
 
   &:first-child {
     margin-left: @card-margin;
   }
+
+  &.in-flight, &.done {
+    &::before {
+      content: " ";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-top-left-radius: 2px;
+      border-top-right-radius: 2px;
+    }
+  }
+
+  &.in-flight::before {
+    background: @yellow;
+  }
+
+  &.done::before {
+    background: @green;
+  }
+}
+
+.project-table {
+  padding: @card-margin * 2;
 }
 
 .projects {
   ::-webkit-scrollbar {
     width: 15px;
-    margin-left: -5px;
   }
 
   ::-webkit-scrollbar-track {
-    background: lighten(@background, 10%);
-    border-bottom-right-radius: 10px;
+    background: transparent;
   }
 
   ::-webkit-scrollbar-thumb {
     border-radius: 10px;
-    background: #fff;
-    border: 5px solid lighten(@background, 50%);
+    background: lighten(@project-column-bg, 5%);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #ccc;
+    background: lighten(@project-column-bg, 25%);
+  }
+}
+
+.project {
+  h4 {
+    color: white;
+    font-weight: bold;
+    font-size: 16px;
+    margin: @card-margin;
+  }
+}
+
+.project-name-columns {
+  display: flex;
+  flex-direction: row;
+
+  h4 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #fff;
+    margin: @card-margin;
+  }
+
+  .column {
+    background: @column-bg;
+    border-top-left-radius: @card-margin;
+    border-top-right-radius: @card-margin;
+    margin-right: 2 * @card-margin;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  .name-column {
+    width: 150px;
+    flex-shrink: 0;
+    border-top: 0;
+    background: transparent;
+  }
+
+  .backlog-column {
+    flex-grow: 1;
+  }
+
+  .in-flight-column, .done-column {
+    width: @card-width + (2 * @card-margin);
+    flex-shrink: 0;
+  }
+}
+
+.project-spacer-columns {
+  display: flex;
+  flex-direction: row;
+
+  .column {
+    background: @column-bg;
+    height: @card-margin;
+    margin-right: 2 * @card-margin;
+
+    &:last-child {
+      margin-right: 0;
+    }
+  }
+
+  .name-column {
+    width: 150px;
+    flex-shrink: 0;
+    background: transparent;
+  }
+
+  .backlog-column {
+    flex-grow: 1;
+  }
+
+  .in-flight-column, .done-column {
+    width: @card-width + (2 * @card-margin);
+    flex-shrink: 0;
   }
 }
 
@@ -217,31 +365,74 @@ body {
   flex-direction: row;
 
   .column {
+    box-sizing: content-box;
     white-space: nowrap;
     overflow-x: scroll;
-    overflow-y: hidden;
-    margin-right: @card-margin;
-    background: fade(#fff, 50%);
-    border-radius: 5px;
-    height: 173px; /* 4 lines of text, hopeful limit */
+    border-right: (@card-margin * 2) solid @project-bg;
+    background: @project-column-bg;
 
-    &:first-child {
-      margin-left: @card-margin;
+    &:last-child {
+      border-right: 0;
     }
+  }
+
+  .card {
+    border-color: @project-bg;
+  }
+
+  .name-column {
+    width: 150px + (@card-margin * 2);
+    flex-shrink: 0;
+    text-align: right;
+    // background: lighten(@background, 5%);
+    background: @project-bg;
+    border-top-left-radius: @card-margin;
+    border-bottom-left-radius: @card-margin;
+    border-right: 0;
   }
 
   .backlog-column {
     flex-grow: 1;
-    position: relative;
+    border-top-right-radius: @card-margin;
+    border-bottom-right-radius: @card-margin;
+
+    .card {
+      opacity: 0.5;
+
+      &:first-child {
+        opacity: 1;
+      }
+
+      &:nth-child(2) {
+        opacity: 0.75;
+      }
+    }
   }
 
-  .in-flight-column {
+  .in-flight-column, .done-column {
     width: @card-width + (2 * @card-margin);
     flex-shrink: 0;
   }
+}
 
-  .done-column {
-    width: @card-width + (2 * @card-margin);
-    flex-shrink: 0;
+.spatial-graph {
+  background: @gray-300;
+}
+
+svg {
+  .hidden {
+    visibility: hidden;
+  }
+
+  .reveal:hover .hidden {
+    visibility: visible;
+  }
+
+  .issue-number {
+    fill: @gray;
+  }
+
+  .pr-circle {
+    fill: @green;
   }
 }
