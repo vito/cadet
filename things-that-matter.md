@@ -15,13 +15,14 @@ features that i care about:
 
 * [x] force-directed graph would probably be nice
 * [x] search to select issues
+* [x] see what's in flight
+* [ ] finding things to put into the next milestone
 * [ ] keeping up to date with active conversations on PRs
 * [ ] know if PR has been updated since last review
 * [ ] reveal where issue is in graph
 * [ ] view by project
 * [ ] assign to project
 * [ ] view by milestone
-* [ ] see what's in flight
 * [ ] see where things are prioritized
 * [ ] batch labeling
 * [ ] ephemeral connection management (i.e. without having to leave comment)
