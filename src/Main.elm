@@ -588,15 +588,25 @@ viewSingleProject model { id, name, backlog, inFlight, done } =
             [ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text name ] ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model done ]
+                [ viewFullProjectColumn model done ]
             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model inFlight ]
+                [ viewFullProjectColumn model inFlight ]
             , Html.div [ HA.class "column backlog-column" ]
-                [ viewProjectColumn model backlog ]
+                [ viewFullProjectColumn model backlog ]
             ]
         , Html.div [ HA.class "spatial-graph" ] <|
             List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
         ]
+
+
+viewFullProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
+viewFullProjectColumn model { id, name } =
+    let
+        cards =
+            Maybe.withDefault [] (Dict.get id model.data.cards)
+    in
+        Html.div [ HA.class "cards" ]
+            (List.map (viewProjectColumnCard model) cards)
 
 
 viewSearch : Html Msg
