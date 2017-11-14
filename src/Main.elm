@@ -46,6 +46,7 @@ type alias Model =
     , currentDate : Date
     , projects : List GitHubGraph.Project
     , cards : Dict String (List GitHubGraph.ProjectColumnCard)
+    , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
     }
 
 
@@ -157,7 +158,6 @@ type alias IssueOrPRNode =
         , withLabels : Float
         , withFlair : Float
         }
-    , selected : Bool
     }
 
 
@@ -173,6 +173,7 @@ init config =
       , currentDate = Date.fromTime config.initialDate
       , projects = []
       , cards = Dict.empty
+      , references = Dict.empty
       }
     , Data.fetch DataFetched
     )
@@ -259,8 +260,7 @@ update msg model =
 
         SelectIssueOrPR id ->
             ( { model
-                | issueOrPRGraphs = List.map (setIssueOrPRSelected id True) model.issueOrPRGraphs
-                , selectedIssueOrPRs =
+                | selectedIssueOrPRs =
                     if List.member id model.selectedIssueOrPRs then
                         model.selectedIssueOrPRs
                     else
@@ -274,8 +274,7 @@ update msg model =
 
         DeselectIssueOrPR id ->
             ( { model
-                | issueOrPRGraphs = List.map (setIssueOrPRSelected id False) model.issueOrPRGraphs
-                , selectedIssueOrPRs = List.filter ((/=) id) model.selectedIssueOrPRs
+                | selectedIssueOrPRs = List.filter ((/=) id) model.selectedIssueOrPRs
               }
             , Cmd.none
             )
@@ -298,12 +297,16 @@ update msg model =
 
                 allIssueOrPRs =
                     withPRs
-
-                ( graphedModel, graphedMsg ) =
-                    computeGraphs model data
             in
-                ( { graphedModel | allIssueOrPRs = allIssueOrPRs, projects = data.projects, cards = data.cards }
-                , graphedMsg
+                ( computeGlobalReferenceGraph
+                    { model
+                        | allIssueOrPRs = allIssueOrPRs
+                        , projects = data.projects
+                        , cards = data.cards
+                        , issueOrPRActors = data.actors
+                        , references = data.references
+                    }
+                , Cmd.none
                 )
 
         DataFetched (Err msg) ->
@@ -572,32 +575,11 @@ viewSearch =
         ]
 
 
-setIssueOrPRSelected : GitHubGraph.ID -> Bool -> ForceGraph IssueOrPRNode -> ForceGraph IssueOrPRNode
-setIssueOrPRSelected id val fg =
+computeGlobalReferenceGraph : Model -> Model
+computeGlobalReferenceGraph model =
     let
-        graphId =
-            Hash.hash id
-
-        toggle node =
-            { node | selected = val }
-    in
-        if FG.member graphId fg then
-            FG.update graphId toggle fg
-        else
-            fg
-
-
-computeGraphs : Model -> Data -> ( Model, Cmd Msg )
-computeGraphs model data =
-    let
-        withIssues =
-            Dict.foldl (\_ is iops -> List.foldl (\i -> Dict.insert i.id (Issue i)) iops is) Dict.empty data.issues
-
-        withPRs =
-            Dict.foldl (\_ ps iops -> List.foldl (\p -> Dict.insert p.id (PR p)) iops ps) withIssues data.prs
-
         allIssueOrPRs =
-            withPRs
+            model.allIssueOrPRs
 
         references =
             Dict.foldl
@@ -617,7 +599,7 @@ computeGraphs model data =
                             ++ refs
                 )
                 []
-                data.references
+                model.references
 
         issueOrPRNode i =
             let
@@ -643,15 +625,7 @@ computeGraphs model data =
                 |> List.sortWith graphCompare
                 |> List.reverse
     in
-        ( { model
-            | allIssueOrPRs = allIssueOrPRs
-            , issueOrPRActors = data.actors
-            , issueOrPRGraphs = issueOrPRGraphs
-            , projects = data.projects
-            , cards = data.cards
-          }
-        , Cmd.none
-        )
+        { model | issueOrPRGraphs = issueOrPRGraphs }
 
 
 graphCompare : ForceGraph IssueOrPRNode -> ForceGraph IssueOrPRNode -> Order
@@ -831,7 +805,6 @@ issueNode nc =
                         }
                     , flair = flair
                     , labels = labels
-                    , selected = False
                     }
             }
     in
@@ -1048,6 +1021,9 @@ viewIssueOrPRNode model { label } =
                 PR p ->
                     p.id
 
+        isSelected =
+            List.member id model.selectedIssueOrPRs
+
         circleWithNumber =
             case issueOrPR of
                 Issue issue ->
@@ -1085,7 +1061,7 @@ viewIssueOrPRNode model { label } =
             , SE.onMouseOver (AnticipateIssueOrPR id)
             , SE.onMouseOut (UnanticipateIssueOrPR id)
             , SE.onClick
-                (if label.value.selected then
+                (if isSelected then
                     DeselectIssueOrPR id
                  else
                     SelectIssueOrPR id
