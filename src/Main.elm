@@ -40,13 +40,19 @@ type alias Model =
     , page : Page
     , allCards : Dict GitHubGraph.ID Card
     , cardActors : Dict GitHubGraph.ID (List Data.ActorEvent)
-    , cardGraphs : List (ForceGraph Node)
+    , cardGraphs : List (ForceGraph (Node CardState))
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
     , currentDate : Date
     , projects : List GitHubGraph.Project
     , cards : Dict String (List GitHubGraph.ProjectColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
+    }
+
+
+type alias CardState =
+    { currentDate : Date
+    , selectedCards : List GitHubGraph.ID
     }
 
 
@@ -160,16 +166,32 @@ location2messages loc =
         page :: selection
 
 
-type alias Node =
-    { card : Card
+type alias Position =
+    { x : Float
+    , y : Float
+    }
+
+
+type alias CardNodeRadii =
+    { base : Float
+    , withLabels : Float
+    , withFlair : Float
+    }
+
+
+type alias NodeBounds =
+    { x1 : Float
+    , y1 : Float
+    , x2 : Float
+    , y2 : Float
+    }
+
+
+type alias Node a =
+    { viewLower : Position -> a -> Svg Msg
+    , viewUpper : Position -> a -> Svg Msg
+    , bounds : Position -> NodeBounds
     , score : Int
-    , flair : List (Svg Msg)
-    , labels : List (Svg Msg)
-    , radii :
-        { base : Float
-        , withLabels : Float
-        , withFlair : Float
-        }
     }
 
 
@@ -355,7 +377,7 @@ view model =
             List.map (viewCardEntry model) <|
                 List.filterMap (flip Dict.get model.allCards) model.selectedCards
 
-        sidebarIssues =
+        sidebarCards =
             selectedCards ++ anticipatedCards
     in
         Html.div [ HA.class "cadet" ]
@@ -372,11 +394,11 @@ view model =
                             viewProjectPage model id
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
-                    [ if List.isEmpty sidebarIssues then
+                    [ if List.isEmpty sidebarCards then
                         Html.div [ HA.class "no-cards" ]
                             [ Html.text "no cards selected" ]
                       else
-                        Html.div [ HA.class "cards" ] sidebarIssues
+                        Html.div [ HA.class "cards" ] sidebarCards
                     ]
                 ]
             , viewNavBar model
@@ -553,33 +575,20 @@ viewProjectPage model name =
 
 viewSingleProject : Model -> ProjectState -> Html Msg
 viewSingleProject model { id, name, backlog, inFlight, done } =
-    let
-        relevantGraphs =
-            List.filter (graphContainsIssuesInProject id) model.cardGraphs
-    in
-        Html.div [ HA.class "project single" ]
-            [ Html.div [ HA.class "project-columns" ]
-                [ Html.div [ HA.class "column name-column" ]
-                    [ Html.h4 [] [ Html.text name ] ]
-                , Html.div [ HA.class "column done-column" ]
-                    [ viewProjectColumn model done ]
-                , Html.div [ HA.class "column in-flight-column" ]
-                    [ viewProjectColumn model inFlight ]
-                , Html.div [ HA.class "column backlog-column" ]
-                    [ viewProjectColumn model backlog ]
-                ]
-            , Html.div [ HA.class "spatial-graph" ] <|
-                List.map (Html.Lazy.lazy (viewGraph model)) relevantGraphs
+    Html.div [ HA.class "project single" ]
+        [ Html.div [ HA.class "project-columns" ]
+            [ Html.div [ HA.class "column name-column" ]
+                [ Html.h4 [] [ Html.text name ] ]
+            , Html.div [ HA.class "column done-column" ]
+                [ viewProjectColumn model done ]
+            , Html.div [ HA.class "column in-flight-column" ]
+                [ viewProjectColumn model inFlight ]
+            , Html.div [ HA.class "column backlog-column" ]
+                [ viewProjectColumn model backlog ]
             ]
-
-
-graphContainsIssuesInProject : GitHubGraph.ID -> ForceGraph Node -> Bool
-graphContainsIssuesInProject id { graph } =
-    let
-        nodeIsInProject { label } =
-            List.any ((==) id << .projectID) label.value.card.cards
-    in
-        List.any nodeIsInProject (Graph.nodes graph)
+        , Html.div [ HA.class "spatial-graph" ] <|
+            List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
+        ]
 
 
 viewSearch : Html Msg
@@ -639,7 +648,7 @@ computeGlobalReferenceGraph model =
         { model | cardGraphs = cardGraphs }
 
 
-graphCompare : ForceGraph Node -> ForceGraph Node -> Order
+graphCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
 graphCompare a b =
     case compare (Graph.size a.graph) (Graph.size b.graph) of
         EQ ->
@@ -653,7 +662,7 @@ graphCompare a b =
             x
 
 
-viewGraph : Model -> ForceGraph Node -> Html Msg
+viewGraph : Model -> ForceGraph (Node CardState) -> Html Msg
 viewGraph model { graph } =
     let
         nodeContexts =
@@ -666,16 +675,16 @@ viewGraph model { graph } =
             10
 
         minX =
-            List.foldl (\( x1, _, _, _ ) acc -> min x1 acc) 999999 bounds - padding
+            List.foldl (\{ x1 } acc -> min x1 acc) 999999 bounds - padding
 
         minY =
-            List.foldl (\( _, y1, _, _ ) acc -> min y1 acc) 999999 bounds - padding
+            List.foldl (\{ y1 } acc -> min y1 acc) 999999 bounds - padding
 
         maxX =
-            List.foldl (\( _, _, x2, _ ) acc -> max x2 acc) 0 bounds + padding
+            List.foldl (\{ x2 } acc -> max x2 acc) 0 bounds + padding
 
         maxY =
-            List.foldl (\( _, _, _, y2 ) acc -> max y2 acc) 0 bounds + padding
+            List.foldl (\{ y2 } acc -> max y2 acc) 0 bounds + padding
 
         width =
             maxX - minX
@@ -686,15 +695,13 @@ viewGraph model { graph } =
         links =
             (List.map (Svg.Lazy.lazy <| linkPath graph) (Graph.edges graph))
 
+        state =
+            { currentDate = model.currentDate
+            , selectedCards = model.selectedCards
+            }
+
         ( flairs, nodes ) =
-            Graph.fold
-                (\{ node } ( fs, ns ) ->
-                    ( Svg.Lazy.lazy (viewIssueFlair model) node :: fs
-                    , Svg.Lazy.lazy (viewNode model) node :: ns
-                    )
-                )
-                ( [], [] )
-                graph
+            Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
     in
         Svg.svg
             [ SA.width (toString width ++ "px")
@@ -702,9 +709,20 @@ viewGraph model { graph } =
             , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
             [ Svg.g [ SA.class "links" ] links
-            , Svg.g [ SA.class "flairs" ] flairs
-            , Svg.g [ SA.class "nodes" ] nodes
+            , Svg.g [ SA.class "lower" ] flairs
+            , Svg.g [ SA.class "upper" ] nodes
             ]
+
+
+viewNodeLowerUpper : CardState -> Graph.NodeContext (FG.ForceNode (Node CardState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
+viewNodeLowerUpper state { node } ( fs, ns ) =
+    let
+        pos =
+            { x = node.label.x, y = node.label.y }
+    in
+        ( Svg.Lazy.lazy2 node.label.value.viewLower pos state :: fs
+        , Svg.Lazy.lazy2 node.label.value.viewUpper pos state :: ns
+        )
 
 
 linkPath : Graph (FG.ForceNode n) () -> Graph.Edge () -> Svg Msg
@@ -767,7 +785,7 @@ issueRadiusWithFlair nc =
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-cardNode : Graph.NodeContext Card () -> Graph.NodeContext Node ()
+cardNode : Graph.NodeContext Card () -> Graph.NodeContext (Node CardState) ()
 cardNode nc =
     let
         node =
@@ -782,22 +800,34 @@ cardNode nc =
         labels =
             nodeLabelArcs nc
 
+        radii =
+            { base = issueRadius nc
+            , withLabels = issueRadiusWithLabels nc
+            , withFlair = issueRadiusWithFlair nc
+            }
+
         forceNode =
             { node
                 | label =
-                    { card = card
+                    { viewLower = viewNodeFlair card flair
+                    , viewUpper = viewNode card radii labels
+                    , bounds =
+                        \{ x, y } ->
+                            { x1 = x - radii.withFlair
+                            , y1 = y - radii.withFlair
+                            , x2 = x + radii.withFlair
+                            , y2 = y + radii.withFlair
+                            }
                     , score = card.score
-                    , radii =
-                        { base = issueRadius nc
-                        , withLabels = issueRadiusWithLabels nc
-                        , withFlair = issueRadiusWithFlair nc
-                        }
-                    , flair = flair
-                    , labels = labels
                     }
             }
     in
         { nc | node = forceNode }
+
+
+renderCardNode : Card -> CardState -> List (Svg Msg)
+renderCardNode card state =
+    []
 
 
 nodeFlairArcs : Graph.NodeContext Card () -> List (Svg Msg)
@@ -929,30 +959,20 @@ nodeLabelArcs nc =
             card.labels
 
 
-viewIssueFlair : Model -> Graph.Node (FG.ForceNode Node) -> Svg Msg
-viewIssueFlair model { label } =
-    let
-        x =
-            label.x
-
-        y =
-            label.y
-
-        uat =
-            label.value.card.updatedAt
-    in
-        Svg.g
-            [ SA.opacity (toString (activityOpacity model uat * 0.75))
-            , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-            ]
-            label.value.flair
+viewNodeFlair : Card -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewNodeFlair card flair { x, y } state =
+    Svg.g
+        [ SA.opacity (toString (activityOpacity state.currentDate card.updatedAt * 0.75))
+        , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+        ]
+        flair
 
 
-activityOpacity : Model -> Date -> Float
-activityOpacity { currentDate } date =
+activityOpacity : Date -> Date -> Float
+activityOpacity now date =
     let
         daysSinceLastUpdate =
-            (Date.toTime currentDate / (24 * Time.hour)) - (Date.toTime date / (24 * Time.hour))
+            (Date.toTime now / (24 * Time.hour)) - (Date.toTime date / (24 * Time.hour))
     in
         if daysSinceLastUpdate <= 1 then
             1
@@ -964,25 +984,16 @@ activityOpacity { currentDate } date =
             0.25
 
 
-viewNode : Model -> Graph.Node (FG.ForceNode Node) -> Svg Msg
-viewNode model { label } =
+viewNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewNode card radii labels { x, y } state =
     let
-        x =
-            label.x
-
-        y =
-            label.y
-
-        card =
-            label.value.card
-
         isSelected =
-            List.member card.id model.selectedCards
+            List.member card.id state.selectedCards
 
         circleWithNumber =
             if not card.isPullRequest then
                 [ Svg.circle
-                    [ SA.r (toString label.value.radii.base)
+                    [ SA.r (toString radii.base)
                     , SA.fill "#fff"
                     ]
                     []
@@ -996,7 +1007,7 @@ viewNode model { label } =
                 ]
             else
                 [ Svg.circle
-                    [ SA.r (toString label.value.radii.base)
+                    [ SA.r (toString radii.base)
                     , SA.class "pr-circle"
                     ]
                     []
@@ -1020,7 +1031,7 @@ viewNode model { label } =
                     SelectCard card.id
                 )
             ]
-            (circleWithNumber ++ label.value.labels)
+            (circleWithNumber ++ labels)
 
 
 viewCardEntry : Model -> Card -> Html Msg
@@ -1083,7 +1094,7 @@ viewCard model card =
         , HE.onClick (SelectCard card.id)
         ]
         [ Html.div [ HA.class "card-actors" ] <|
-            List.map (viewIssueActor model) (recentActors model card)
+            List.map (viewCardActor model) (recentActors model card)
         , Html.a [ HA.href card.url, HA.target "_blank", HA.class "card-title" ]
             [ Html.text card.title
             ]
@@ -1174,11 +1185,11 @@ viewLabel { name, color } =
         ]
 
 
-viewIssueActor : Model -> Data.ActorEvent -> Html Msg
-viewIssueActor model { createdAt, actor } =
+viewCardActor : Model -> Data.ActorEvent -> Html Msg
+viewCardActor model { createdAt, actor } =
     Html.img
         [ HA.class "card-actor"
-        , HA.style [ ( "opacity", toString (activityOpacity model createdAt) ) ]
+        , HA.style [ ( "opacity", toString (activityOpacity model.currentDate createdAt) ) ]
         , HA.src (actor.avatar ++ "&s=88")
         ]
         []
@@ -1259,7 +1270,7 @@ subGraphs graph =
         connectedGraphs ++ singletonGraphs
 
 
-nodeBounds : Graph.NodeContext (FG.ForceNode Node) () -> ( Float, Float, Float, Float )
+nodeBounds : Graph.NodeContext (FG.ForceNode (Node a)) () -> NodeBounds
 nodeBounds nc =
     let
         x =
@@ -1267,8 +1278,5 @@ nodeBounds nc =
 
         y =
             nc.node.label.y
-
-        radius =
-            nc.node.label.value.radii.withFlair
     in
-        ( x - radius, y - radius, x + radius, y + radius )
+        nc.node.label.value.bounds { x = x, y = y }
