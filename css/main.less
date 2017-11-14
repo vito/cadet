@@ -54,7 +54,7 @@ body {
       border-color: @black;
     }
 
-    .no-issues {
+    .no-cards {
       text-align: center;
       color: @gray-light;
       font-size: 14px;
@@ -88,7 +88,7 @@ body {
   }
 }
 
-.issue-search {
+.card-search {
   position: relative;
 
   .octicon {
@@ -125,20 +125,20 @@ body {
   }
 }
 
-.issue-controls {
+.card-controls {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
   position: relative;
 
-  .issue-buttons {
+  .card-buttons {
     position: absolute;
     bottom: 22px;
     left: -20px;
   }
 }
 
-.issue-info {
+.card-info {
   padding: 12px;
   background: @white;
   border-bottom: 1px solid #e1e4e8;
@@ -149,14 +149,14 @@ body {
     background: #f6f8fa;
   }
 
-  .issue-title {
+  .card-title {
     font-size: 16px;
     font-weight: bold;
     color: #333;
     line-height: 1.25;
   }
 
-  .issue-meta {
+  .card-meta {
     font-size: 12px;
     color: #767676;
     line-height: 1.4;
@@ -171,7 +171,7 @@ body {
   vertical-align: middle;
 }
 
-.issue-labels {
+.card-labels {
   position: absolute;
   bottom: 10px;
   right: 10px;
@@ -179,7 +179,7 @@ body {
   text-align: right;
 }
 
-.issue-label {
+.card-label {
   display: inline-block;
   padding: 3px 4px;
   font-size: 12px;
@@ -193,7 +193,7 @@ body {
   height: 18px;
   white-space: nowrap;
 
-  .issue-label-text {
+  .card-label-text {
     display: none;
     font-weight: 600;
   }
@@ -201,19 +201,19 @@ body {
   &:hover {
     width: auto;
 
-    .issue-label-text {
+    .card-label-text {
       display: initial;
     }
   }
 }
 
-.issue-actors {
+.card-actors {
   float: right;
   margin-top: -2px;
   margin-right: -2px;
 }
 
-.issue-actor {
+.card-actor {
   position: relative;
   display: inline-block;
   width: 18px;

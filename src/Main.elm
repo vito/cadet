@@ -38,15 +38,31 @@ type alias Config =
 type alias Model =
     { config : Config
     , page : Page
-    , allIssueOrPRs : Dict GitHubGraph.ID IssueOrPR
-    , issueOrPRActors : Dict GitHubGraph.ID (List Data.ActorEvent)
-    , issueOrPRGraphs : List (ForceGraph IssueOrPRNode)
-    , selectedIssueOrPRs : List GitHubGraph.ID
-    , anticipatedIssueOrPRs : List GitHubGraph.ID
+    , allCards : Dict GitHubGraph.ID Card
+    , cardActors : Dict GitHubGraph.ID (List Data.ActorEvent)
+    , cardGraphs : List (ForceGraph Node)
+    , selectedCards : List GitHubGraph.ID
+    , anticipatedCards : List GitHubGraph.ID
     , currentDate : Date
     , projects : List GitHubGraph.Project
     , cards : Dict String (List GitHubGraph.ProjectColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
+    }
+
+
+type alias Card =
+    { isPullRequest : Bool
+    , id : GitHubGraph.ID
+    , url : String
+    , number : Int
+    , title : String
+    , updatedAt : Date
+    , author : Maybe GitHubGraph.User
+    , labels : List GitHubGraph.Label
+    , cards : List GitHubGraph.CardLocation
+    , commentCount : Int
+    , reactions : GitHubGraph.Reactions
+    , score : Int
     }
 
 
@@ -56,13 +72,13 @@ type Msg
     | Tick Time
     | SetCurrentDate Date
     | DataFetched (Result Http.Error Data)
-    | SelectIssueOrPR GitHubGraph.ID
-    | DeselectIssueOrPR GitHubGraph.ID
-    | AnticipateIssueOrPR GitHubGraph.ID
-    | UnanticipateIssueOrPR GitHubGraph.ID
-    | SearchIssueOrPRs String
-    | SelectAnticipatedIssueOrPRs
-    | ClearSelectedIssueOrPRs
+    | SelectCard GitHubGraph.ID
+    | DeselectCard GitHubGraph.ID
+    | AnticipateCard GitHubGraph.ID
+    | UnanticipateCard GitHubGraph.ID
+    | SearchCards String
+    | SelectAnticipatedCards
+    | ClearSelectedCards
 
 
 type Page
@@ -104,7 +120,7 @@ delta2url a b =
                     RouteUrl.Builder.replacePath [ "projects", name ]
 
         withSelection =
-            RouteUrl.Builder.replaceHash (String.join "," b.selectedIssueOrPRs)
+            RouteUrl.Builder.replaceHash (String.join "," b.selectedCards)
 
         builder =
             List.foldl (\f b -> f b) RouteUrl.Builder.builder [ withPageEntry, withPagePath, withSelection ]
@@ -139,18 +155,14 @@ location2messages loc =
                     SetPage GlobalGraphPage
 
         selection =
-            List.map SelectIssueOrPR (String.split "," hash)
+            List.map SelectCard (String.split "," hash)
     in
         page :: selection
 
 
-type IssueOrPR
-    = Issue GitHubGraph.Issue
-    | PR GitHubGraph.PullRequest
-
-
-type alias IssueOrPRNode =
-    { issueOrPR : IssueOrPR
+type alias Node =
+    { card : Card
+    , score : Int
     , flair : List (Svg Msg)
     , labels : List (Svg Msg)
     , radii :
@@ -165,11 +177,11 @@ init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , page = GlobalGraphPage
-      , allIssueOrPRs = Dict.empty
-      , issueOrPRActors = Dict.empty
-      , issueOrPRGraphs = []
-      , selectedIssueOrPRs = []
-      , anticipatedIssueOrPRs = []
+      , allCards = Dict.empty
+      , cardActors = Dict.empty
+      , cardGraphs = []
+      , selectedCards = []
+      , anticipatedCards = []
       , currentDate = Date.fromTime config.initialDate
       , projects = []
       , cards = Dict.empty
@@ -183,7 +195,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every Time.second (SetCurrentDate << Date.fromTime)
-        , if List.all FG.isCompleted model.issueOrPRGraphs then
+        , if List.all FG.isCompleted model.cardGraphs then
             Sub.none
           else
             AnimationFrame.times Tick
@@ -201,7 +213,7 @@ update msg model =
 
         Tick _ ->
             ( { model
-                | issueOrPRGraphs =
+                | cardGraphs =
                     List.map
                         (\g ->
                             if FG.isCompleted g then
@@ -209,7 +221,7 @@ update msg model =
                             else
                                 FG.tick g
                         )
-                        model.issueOrPRGraphs
+                        model.cardGraphs
               }
             , Cmd.none
             )
@@ -217,93 +229,76 @@ update msg model =
         SetCurrentDate date ->
             ( { model | currentDate = date }, Cmd.none )
 
-        SearchIssueOrPRs "" ->
-            ( { model | anticipatedIssueOrPRs = [] }, Cmd.none )
+        SearchCards "" ->
+            ( { model | anticipatedCards = [] }, Cmd.none )
 
-        SearchIssueOrPRs query ->
+        SearchCards query ->
             let
-                issueOrPRMatch issueOrPR =
-                    let
-                        id =
-                            case issueOrPR of
-                                Issue issue ->
-                                    issue.id
-
-                                PR pr ->
-                                    pr.id
-
-                        title =
-                            case issueOrPR of
-                                Issue issue ->
-                                    issue.title
-
-                                PR pr ->
-                                    pr.title
-                    in
-                        if String.contains (String.toLower query) (String.toLower title) then
-                            Just id
-                        else
-                            Nothing
-
-                foundIssueOrPRs =
-                    List.filterMap issueOrPRMatch (Dict.values model.allIssueOrPRs)
-            in
-                ( { model | anticipatedIssueOrPRs = foundIssueOrPRs }, Cmd.none )
-
-        SelectAnticipatedIssueOrPRs ->
-            ( { model
-                | anticipatedIssueOrPRs = []
-                , selectedIssueOrPRs = model.selectedIssueOrPRs ++ model.anticipatedIssueOrPRs
-              }
-            , Cmd.none
-            )
-
-        SelectIssueOrPR id ->
-            ( { model
-                | selectedIssueOrPRs =
-                    if List.member id model.selectedIssueOrPRs then
-                        model.selectedIssueOrPRs
+                cardMatch { id, title } =
+                    if String.contains (String.toLower query) (String.toLower title) then
+                        Just id
                     else
-                        model.selectedIssueOrPRs ++ [ id ]
-              }
-            , Cmd.none
-            )
+                        Nothing
 
-        ClearSelectedIssueOrPRs ->
-            ( { model | selectedIssueOrPRs = [] }, Cmd.none )
+                foundCards =
+                    List.filterMap cardMatch (Dict.values model.allCards)
+            in
+                ( { model | anticipatedCards = foundCards }, Cmd.none )
 
-        DeselectIssueOrPR id ->
+        SelectAnticipatedCards ->
             ( { model
-                | selectedIssueOrPRs = List.filter ((/=) id) model.selectedIssueOrPRs
+                | anticipatedCards = []
+                , selectedCards = model.selectedCards ++ model.anticipatedCards
               }
             , Cmd.none
             )
 
-        AnticipateIssueOrPR id ->
-            ( { model | anticipatedIssueOrPRs = id :: model.anticipatedIssueOrPRs }
+        SelectCard id ->
+            ( { model
+                | selectedCards =
+                    if List.member id model.selectedCards then
+                        model.selectedCards
+                    else
+                        model.selectedCards ++ [ id ]
+              }
             , Cmd.none
             )
 
-        UnanticipateIssueOrPR id ->
-            ( { model | anticipatedIssueOrPRs = List.filter ((/=) id) model.anticipatedIssueOrPRs }, Cmd.none )
+        ClearSelectedCards ->
+            ( { model | selectedCards = [] }, Cmd.none )
+
+        DeselectCard id ->
+            ( { model
+                | selectedCards = List.filter ((/=) id) model.selectedCards
+              }
+            , Cmd.none
+            )
+
+        AnticipateCard id ->
+            ( { model | anticipatedCards = id :: model.anticipatedCards }
+            , Cmd.none
+            )
+
+        UnanticipateCard id ->
+            ( { model | anticipatedCards = List.filter ((/=) id) model.anticipatedCards }, Cmd.none )
 
         DataFetched (Ok data) ->
             let
                 withIssues =
-                    Dict.foldl (\_ is iops -> List.foldl (\i -> Dict.insert i.id (Issue i)) iops is) Dict.empty data.issues
+                    Dict.foldl (\_ is cards -> List.foldl (\i -> Dict.insert i.id (issueCard i)) cards is) Dict.empty data.issues
 
                 withPRs =
-                    Dict.foldl (\_ ps iops -> List.foldl (\p -> Dict.insert p.id (PR p)) iops ps) withIssues data.prs
+                    Dict.foldl (\_ ps cards -> List.foldl (\p -> Dict.insert p.id (prCard p)) cards ps) withIssues data.prs
 
-                allIssueOrPRs =
+                allCards =
                     withPRs
             in
                 ( computeGlobalReferenceGraph
                     { model
-                        | allIssueOrPRs = allIssueOrPRs
+                        | allCards = allCards
                         , projects = data.projects
                         , cards = data.cards
-                        , issueOrPRActors = data.actors
+                        , cardActors = data.actors
                         , references = data.references
                     }
                 , Cmd.none
@@ -314,20 +309,54 @@ update msg model =
                 ( model, Cmd.none )
 
 
+issueCard : GitHubGraph.Issue -> Card
+issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions } as issue) =
+    { isPullRequest = False
+    , id = id
+    , url = url
+    , number = number
+    , title = title
+    , updatedAt = updatedAt
+    , author = author
+    , labels = labels
+    , cards = cards
+    , commentCount = commentCount
+    , reactions = reactions
+    , score = GitHubGraph.pullRequestScore issue
+    }
+
+
+prCard : GitHubGraph.PullRequest -> Card
+prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions } as pr) =
+    { isPullRequest = True
+    , id = id
+    , url = url
+    , number = number
+    , title = title
+    , updatedAt = updatedAt
+    , author = author
+    , labels = labels
+    , cards = cards
+    , commentCount = commentCount
+    , reactions = reactions
+    , score = GitHubGraph.pullRequestScore pr
+    }
+
+
 view : Model -> Html Msg
 view model =
     let
-        anticipatedIssueOrPRs =
-            List.map (viewIssueInfo model) <|
-                List.filterMap (flip Dict.get model.allIssueOrPRs) <|
-                    List.filter (not << flip List.member model.selectedIssueOrPRs) model.anticipatedIssueOrPRs
+        anticipatedCards =
+            List.map (viewCardEntry model) <|
+                List.filterMap (flip Dict.get model.allCards) <|
+                    List.filter (not << flip List.member model.selectedCards) model.anticipatedCards
 
-        selectedIssueOrPRs =
-            List.map (viewIssueInfo model) <|
-                List.filterMap (flip Dict.get model.allIssueOrPRs) model.selectedIssueOrPRs
+        selectedCards =
+            List.map (viewCardEntry model) <|
+                List.filterMap (flip Dict.get model.allCards) model.selectedCards
 
         sidebarIssues =
-            selectedIssueOrPRs ++ anticipatedIssueOrPRs
+            selectedCards ++ anticipatedCards
     in
         Html.div [ HA.class "cadet" ]
             [ Html.div [ HA.class "main-page" ]
@@ -344,10 +373,10 @@ view model =
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
                     [ if List.isEmpty sidebarIssues then
-                        Html.div [ HA.class "no-issues" ]
-                            [ Html.text "no issues selected" ]
+                        Html.div [ HA.class "no-cards" ]
+                            [ Html.text "no cards selected" ]
                       else
-                        Html.div [ HA.class "issues" ] sidebarIssues
+                        Html.div [ HA.class "cards" ] sidebarIssues
                     ]
                 ]
             , viewNavBar model
@@ -357,7 +386,7 @@ view model =
 viewGlobalGraphPage : Model -> Html Msg
 viewGlobalGraphPage model =
     Html.div [ HA.class "spatial-graph" ] <|
-        List.map (Html.Lazy.lazy (viewGraph model)) model.issueOrPRGraphs
+        List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
 
 
 viewNavBar : Model -> Html Msg
@@ -492,9 +521,9 @@ viewProjectColumnCard model { itemID, note } =
             Html.text ""
 
         ( Nothing, Just i ) ->
-            case Dict.get i model.allIssueOrPRs of
-                Just iop ->
-                    viewIssueCard model iop
+            case Dict.get i model.allCards of
+                Just card ->
+                    viewCard model card
 
                 Nothing ->
                     -- closed issue?
@@ -526,7 +555,7 @@ viewSingleProject : Model -> ProjectState -> Html Msg
 viewSingleProject model { id, name, backlog, inFlight, done } =
     let
         relevantGraphs =
-            List.filter (graphContainsIssuesInProject id) model.issueOrPRGraphs
+            List.filter (graphContainsIssuesInProject id) model.cardGraphs
     in
         Html.div [ HA.class "project single" ]
             [ Html.div [ HA.class "project-columns" ]
@@ -544,42 +573,33 @@ viewSingleProject model { id, name, backlog, inFlight, done } =
             ]
 
 
-graphContainsIssuesInProject : GitHubGraph.ID -> ForceGraph IssueOrPRNode -> Bool
+graphContainsIssuesInProject : GitHubGraph.ID -> ForceGraph Node -> Bool
 graphContainsIssuesInProject id { graph } =
     let
         nodeIsInProject { label } =
-            let
-                cards =
-                    case label.value.issueOrPR of
-                        Issue i ->
-                            i.cards
-
-                        PR p ->
-                            p.cards
-            in
-                List.any ((==) id << .projectID) cards
+            List.any ((==) id << .projectID) label.value.card.cards
     in
         List.any nodeIsInProject (Graph.nodes graph)
 
 
 viewSearch : Html Msg
 viewSearch =
-    Html.div [ HA.class "issue-search" ]
+    Html.div [ HA.class "card-search" ]
         [ Html.span
-            [ HE.onClick ClearSelectedIssueOrPRs
+            [ HE.onClick ClearSelectedCards
             , HA.class "octicon octicon-x clear-selected"
             ]
             [ Html.text "" ]
-        , Html.form [ HE.onSubmit SelectAnticipatedIssueOrPRs ]
-            [ Html.input [ HE.onInput SearchIssueOrPRs, HA.placeholder "filter issues" ] [] ]
+        , Html.form [ HE.onSubmit SelectAnticipatedCards ]
+            [ Html.input [ HE.onInput SearchCards, HA.placeholder "filter cards" ] [] ]
         ]
 
 
 computeGlobalReferenceGraph : Model -> Model
 computeGlobalReferenceGraph model =
     let
-        allIssueOrPRs =
-            model.allIssueOrPRs
+        allCards =
+            model.allCards
 
         references =
             Dict.foldl
@@ -601,40 +621,31 @@ computeGlobalReferenceGraph model =
                 []
                 model.references
 
-        issueOrPRNode i =
-            let
-                id =
-                    case i of
-                        Issue issue ->
-                            issue.id
-
-                        PR pr ->
-                            pr.id
-            in
-                Graph.Node (Hash.hash id) i
+        graphNode card =
+            Graph.Node (Hash.hash card.id) card
 
         graph =
-            Graph.mapContexts issueNode <|
+            Graph.mapContexts cardNode <|
                 Graph.fromNodesAndEdges
-                    (List.map issueOrPRNode (Dict.values allIssueOrPRs))
+                    (List.map graphNode (Dict.values allCards))
                     references
 
-        issueOrPRGraphs =
+        cardGraphs =
             subGraphs graph
                 |> List.map FG.fromGraph
                 |> List.sortWith graphCompare
                 |> List.reverse
     in
-        { model | issueOrPRGraphs = issueOrPRGraphs }
+        { model | cardGraphs = cardGraphs }
 
 
-graphCompare : ForceGraph IssueOrPRNode -> ForceGraph IssueOrPRNode -> Order
+graphCompare : ForceGraph Node -> ForceGraph Node -> Order
 graphCompare a b =
     case compare (Graph.size a.graph) (Graph.size b.graph) of
         EQ ->
             let
                 graphScore =
-                    List.foldl (+) 0 << List.map (.label >> nodeScore) << Graph.nodes
+                    List.foldl (+) 0 << List.map (.label >> .value >> .score) << Graph.nodes
             in
                 compare (graphScore a.graph) (graphScore b.graph)
 
@@ -642,24 +653,14 @@ graphCompare a b =
             x
 
 
-nodeScore : FG.ForceNode IssueOrPRNode -> Int
-nodeScore fn =
-    case fn.value.issueOrPR of
-        Issue issue ->
-            GitHubGraph.issueScore issue
-
-        PR pr ->
-            GitHubGraph.pullRequestScore pr
-
-
-viewGraph : Model -> ForceGraph IssueOrPRNode -> Html Msg
+viewGraph : Model -> ForceGraph Node -> Html Msg
 viewGraph model { graph } =
     let
         nodeContexts =
             Graph.fold (::) [] graph
 
         bounds =
-            List.map issueNodeBounds nodeContexts
+            List.map nodeBounds nodeContexts
 
         padding =
             10
@@ -689,7 +690,7 @@ viewGraph model { graph } =
             Graph.fold
                 (\{ node } ( fs, ns ) ->
                     ( Svg.Lazy.lazy (viewIssueFlair model) node :: fs
-                    , Svg.Lazy.lazy (viewIssueOrPRNode model) node :: ns
+                    , Svg.Lazy.lazy (viewNode model) node :: ns
                     )
                 )
                 ( [], [] )
@@ -736,12 +737,12 @@ linkPath graph edge =
             []
 
 
-issueRadius : Graph.NodeContext IssueOrPR () -> Float
+issueRadius : Graph.NodeContext Card () -> Float
 issueRadius { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
-issueRadiusWithLabels : Graph.NodeContext IssueOrPR () -> Float
+issueRadiusWithLabels : Graph.NodeContext Card () -> Float
 issueRadiusWithLabels =
     issueRadius >> ((+) 3)
 
@@ -751,41 +752,28 @@ flairRadiusBase =
     16
 
 
-issueRadiusWithFlair : Graph.NodeContext IssueOrPR () -> Float
+issueRadiusWithFlair : Graph.NodeContext Card () -> Float
 issueRadiusWithFlair nc =
     let
-        commentCount =
-            case nc.node.label of
-                Issue issue ->
-                    issue.commentCount
-
-                PR pr ->
-                    pr.commentCount
-
-        reactions =
-            case nc.node.label of
-                Issue issue ->
-                    issue.reactions
-
-                PR pr ->
-                    pr.reactions
+        card =
+            nc.node.label
 
         reactionCounts =
-            List.map .count reactions
+            List.map .count card.reactions
 
         highestFlair =
-            List.foldl (\num acc -> max num acc) 0 (commentCount :: reactionCounts)
+            List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
         issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
 
 
-issueNode : Graph.NodeContext IssueOrPR () -> Graph.NodeContext IssueOrPRNode ()
-issueNode nc =
+cardNode : Graph.NodeContext Card () -> Graph.NodeContext Node ()
+cardNode nc =
     let
         node =
             nc.node
 
-        issueOrPR =
+        card =
             node.label
 
         flair =
@@ -797,7 +785,8 @@ issueNode nc =
         forceNode =
             { node
                 | label =
-                    { issueOrPR = issueOrPR
+                    { card = card
+                    , score = card.score
                     , radii =
                         { base = issueRadius nc
                         , withLabels = issueRadiusWithLabels nc
@@ -811,10 +800,10 @@ issueNode nc =
         { nc | node = forceNode }
 
 
-nodeFlairArcs : Graph.NodeContext IssueOrPR () -> List (Svg Msg)
+nodeFlairArcs : Graph.NodeContext Card () -> List (Svg Msg)
 nodeFlairArcs nc =
     let
-        issue =
+        card =
             nc.node.label
 
         radius =
@@ -840,30 +829,14 @@ nodeFlairArcs nc =
                 GitHubGraph.ReactionTypeHooray ->
                     "🎉"
 
-        commentCount =
-            case nc.node.label of
-                Issue issue ->
-                    issue.commentCount
-
-                PR pr ->
-                    pr.commentCount
-
-        reactions =
-            case nc.node.label of
-                Issue issue ->
-                    issue.reactions
-
-                PR pr ->
-                    pr.reactions
-
         emojiReactions =
-            flip List.map reactions <|
+            flip List.map card.reactions <|
                 \{ type_, count } ->
                     ( reactionTypeEmoji type_, count )
 
         flairs =
             List.filter (Tuple.second >> flip (>) 0) <|
-                (( "💬", commentCount ) :: emojiReactions)
+                (( "💬", card.commentCount ) :: emojiReactions)
 
         reactionSegment i ( _, count ) =
             let
@@ -921,16 +894,11 @@ nodeFlairArcs nc =
                         ]
 
 
-nodeLabelArcs : Graph.NodeContext IssueOrPR () -> List (Svg Msg)
+nodeLabelArcs : Graph.NodeContext Card () -> List (Svg Msg)
 nodeLabelArcs nc =
     let
-        labels =
-            case nc.node.label of
-                Issue issue ->
-                    issue.labels
-
-                PR pr ->
-                    pr.labels
+        card =
+            nc.node.label
 
         radius =
             issueRadius nc
@@ -947,7 +915,7 @@ nodeLabelArcs nc =
                 , cornerRadius = 0
                 , padRadius = 0
                 }
-                (List.repeat (List.length labels) 1)
+                (List.repeat (List.length card.labels) 1)
     in
         List.map2
             (\arc label ->
@@ -958,10 +926,10 @@ nodeLabelArcs nc =
                     []
             )
             labelSegments
-            labels
+            card.labels
 
 
-viewIssueFlair : Model -> Graph.Node (FG.ForceNode IssueOrPRNode) -> Svg Msg
+viewIssueFlair : Model -> Graph.Node (FG.ForceNode Node) -> Svg Msg
 viewIssueFlair model { label } =
     let
         x =
@@ -971,12 +939,7 @@ viewIssueFlair model { label } =
             label.y
 
         uat =
-            case label.value.issueOrPR of
-                Issue { updatedAt } ->
-                    updatedAt
-
-                PR { updatedAt } ->
-                    updatedAt
+            label.value.card.updatedAt
     in
         Svg.g
             [ SA.opacity (toString (activityOpacity model uat * 0.75))
@@ -1001,8 +964,8 @@ activityOpacity { currentDate } date =
             0.25
 
 
-viewIssueOrPRNode : Model -> Graph.Node (FG.ForceNode IssueOrPRNode) -> Svg Msg
-viewIssueOrPRNode model { label } =
+viewNode : Model -> Graph.Node (FG.ForceNode Node) -> Svg Msg
+viewNode model { label } =
     let
         x =
             label.x
@@ -1010,278 +973,143 @@ viewIssueOrPRNode model { label } =
         y =
             label.y
 
-        issueOrPR =
-            label.value.issueOrPR
-
-        id =
-            case issueOrPR of
-                Issue i ->
-                    i.id
-
-                PR p ->
-                    p.id
+        card =
+            label.value.card
 
         isSelected =
-            List.member id model.selectedIssueOrPRs
+            List.member card.id model.selectedCards
 
         circleWithNumber =
-            case issueOrPR of
-                Issue issue ->
-                    [ Svg.circle
-                        [ SA.r (toString label.value.radii.base)
-                        , SA.fill "#fff"
-                        ]
-                        []
-                    , Svg.text_
-                        [ SA.textAnchor "middle"
-                        , SA.alignmentBaseline "middle"
-                        , SA.class "issue-number"
-                        ]
-                        [ Svg.text (toString issue.number)
-                        ]
+            if not card.isPullRequest then
+                [ Svg.circle
+                    [ SA.r (toString label.value.radii.base)
+                    , SA.fill "#fff"
                     ]
-
-                PR pr ->
-                    [ Svg.circle
-                        [ SA.r (toString label.value.radii.base)
-                        , SA.class "pr-circle"
-                        ]
-                        []
-                    , Svg.text_
-                        [ SA.textAnchor "middle"
-                        , SA.alignmentBaseline "middle"
-                        , SA.fill "#fff"
-                        ]
-                        [ Svg.text (toString pr.number)
-                        ]
+                    []
+                , Svg.text_
+                    [ SA.textAnchor "middle"
+                    , SA.alignmentBaseline "middle"
+                    , SA.class "issue-number"
                     ]
+                    [ Svg.text (toString card.number)
+                    ]
+                ]
+            else
+                [ Svg.circle
+                    [ SA.r (toString label.value.radii.base)
+                    , SA.class "pr-circle"
+                    ]
+                    []
+                , Svg.text_
+                    [ SA.textAnchor "middle"
+                    , SA.alignmentBaseline "middle"
+                    , SA.fill "#fff"
+                    ]
+                    [ Svg.text (toString card.number)
+                    ]
+                ]
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-            , SE.onMouseOver (AnticipateIssueOrPR id)
-            , SE.onMouseOut (UnanticipateIssueOrPR id)
+            , SE.onMouseOver (AnticipateCard card.id)
+            , SE.onMouseOut (UnanticipateCard card.id)
             , SE.onClick
                 (if isSelected then
-                    DeselectIssueOrPR id
+                    DeselectCard card.id
                  else
-                    SelectIssueOrPR id
+                    SelectCard card.id
                 )
             ]
             (circleWithNumber ++ label.value.labels)
 
 
-viewIssueInfo : Model -> IssueOrPR -> Html Msg
-viewIssueInfo model iop =
+viewCardEntry : Model -> Card -> Html Msg
+viewCardEntry model card =
     let
-        url =
-            case iop of
-                Issue issue ->
-                    issue.url
-
-                PR pr ->
-                    pr.url
-
-        id =
-            case iop of
-                Issue issue ->
-                    issue.id
-
-                PR pr ->
-                    pr.id
-
-        title =
-            case iop of
-                Issue issue ->
-                    issue.title
-
-                PR pr ->
-                    pr.title
-
-        number =
-            case iop of
-                Issue issue ->
-                    issue.number
-
-                PR pr ->
-                    pr.number
-
-        author =
-            case iop of
-                Issue issue ->
-                    issue.author
-
-                PR pr ->
-                    pr.author
-
-        labels =
-            case iop of
-                Issue issue ->
-                    issue.labels
-
-                PR pr ->
-                    pr.labels
-
         anticipated =
-            isAnticipated model iop
+            isAnticipated model card
     in
-        Html.div [ HA.class "issue-controls" ]
-            [ Html.div [ HA.class "issue-buttons" ]
+        Html.div [ HA.class "card-controls" ]
+            [ Html.div [ HA.class "card-buttons" ]
                 [ if not anticipated then
                     Html.span
-                        [ HE.onClick (DeselectIssueOrPR id)
+                        [ HE.onClick (DeselectCard card.id)
                         , HA.class "octicon octicon-x"
                         ]
                         [ Html.text "" ]
                   else
                     Html.text ""
                 ]
-            , viewIssueCard model iop
+            , viewCard model card
             ]
 
 
-inColumn : String -> IssueOrPR -> Bool
-inColumn name iop =
-    let
-        cards =
-            case iop of
-                Issue i ->
-                    i.cards
-
-                PR p ->
-                    p.cards
-    in
-        List.member name (List.filterMap (Maybe.map .name << .column) cards)
+inColumn : String -> Card -> Bool
+inColumn name card =
+    List.member name (List.filterMap (Maybe.map .name << .column) card.cards)
 
 
-isInFlight : IssueOrPR -> Bool
+isInFlight : Card -> Bool
 isInFlight =
     inColumn "In Flight"
 
 
-isAnticipated : Model -> IssueOrPR -> Bool
-isAnticipated model iop =
-    let
-        id =
-            case iop of
-                Issue issue ->
-                    issue.id
-
-                PR pr ->
-                    pr.id
-    in
-        List.member id model.anticipatedIssueOrPRs && not (List.member id model.selectedIssueOrPRs)
+isAnticipated : Model -> Card -> Bool
+isAnticipated model card =
+    List.member card.id model.anticipatedCards && not (List.member card.id model.selectedCards)
 
 
-isDone : IssueOrPR -> Bool
+isDone : Card -> Bool
 isDone =
     inColumn "Done"
 
 
-isBacklog : IssueOrPR -> Bool
+isBacklog : Card -> Bool
 isBacklog =
     inColumn "Backlog"
 
 
-viewIssueCard : Model -> IssueOrPR -> Html Msg
-viewIssueCard model iop =
-    let
-        url =
-            case iop of
-                Issue issue ->
-                    issue.url
-
-                PR pr ->
-                    pr.url
-
-        title =
-            case iop of
-                Issue issue ->
-                    issue.title
-
-                PR pr ->
-                    pr.title
-
-        number =
-            case iop of
-                Issue issue ->
-                    issue.number
-
-                PR pr ->
-                    pr.number
-
-        author =
-            case iop of
-                Issue issue ->
-                    issue.author
-
-                PR pr ->
-                    pr.author
-
-        labels =
-            case iop of
-                Issue issue ->
-                    issue.labels
-
-                PR pr ->
-                    pr.labels
-
-        id =
-            case iop of
-                Issue issue ->
-                    issue.id
-
-                PR pr ->
-                    pr.id
-    in
-        Html.div
-            [ HA.classList
-                [ ( "card", True )
-                , ( "issue-card", True )
-                , ( "issue-info", True )
-                , ( "in-flight", isInFlight iop )
-                , ( "done", isDone iop )
-                , ( "backlog", isBacklog iop )
-                , ( "anticipated", isAnticipated model iop )
-                ]
-            , HE.onClick (SelectIssueOrPR id)
+viewCard : Model -> Card -> Html Msg
+viewCard model card =
+    Html.div
+        [ HA.classList
+            [ ( "card", True )
+            , ( "card-info", True )
+            , ( "in-flight", isInFlight card )
+            , ( "done", isDone card )
+            , ( "backlog", isBacklog card )
+            , ( "anticipated", isAnticipated model card )
             ]
-            [ Html.div [ HA.class "issue-actors" ] <|
-                List.map (viewIssueActor model) (recentActors model iop)
-            , Html.a [ HA.href url, HA.target "_blank", HA.class "issue-title" ]
-                [ Html.text title
-                ]
-            , Html.span [ HA.class "issue-labels" ] <|
-                List.map viewLabel labels
-            , Html.div [ HA.class "issue-meta" ]
-                [ Html.a [ HA.href url, HA.target "_blank" ] [ Html.text ("#" ++ toString number) ]
-                , Html.text " "
-                , Html.text "opened by "
-                , case author of
-                    Just user ->
-                        Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
-
-                    _ ->
-                        Html.text "(deleted user)"
-                ]
+        , HE.onClick (SelectCard card.id)
+        ]
+        [ Html.div [ HA.class "card-actors" ] <|
+            List.map (viewIssueActor model) (recentActors model card)
+        , Html.a [ HA.href card.url, HA.target "_blank", HA.class "card-title" ]
+            [ Html.text card.title
             ]
+        , Html.span [ HA.class "card-labels" ] <|
+            List.map viewLabel card.labels
+        , Html.div [ HA.class "card-meta" ]
+            [ Html.a [ HA.href card.url, HA.target "_blank" ] [ Html.text ("#" ++ toString card.number) ]
+            , Html.text " "
+            , Html.text "opened by "
+            , case card.author of
+                Just user ->
+                    Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+
+                _ ->
+                    Html.text "(deleted user)"
+            ]
+        ]
 
 
-recentActors : Model -> IssueOrPR -> List Data.ActorEvent
-recentActors model iop =
-    let
-        id =
-            case iop of
-                Issue issue ->
-                    issue.id
-
-                PR pr ->
-                    pr.id
-    in
-        Dict.get id model.issueOrPRActors
-            |> Maybe.withDefault []
-            |> List.reverse
-            |> List.take 3
-            |> List.reverse
+recentActors : Model -> Card -> List Data.ActorEvent
+recentActors model card =
+    Dict.get card.id model.cardActors
+        |> Maybe.withDefault []
+        |> List.reverse
+        |> List.take 3
+        |> List.reverse
 
 
 hexRegex : Regex
@@ -1327,7 +1155,7 @@ colorIsLight hex =
 viewLabel : GitHubGraph.Label -> Html Msg
 viewLabel { name, color } =
     Html.span
-        [ HA.class "issue-label"
+        [ HA.class "card-label"
         , HA.style
             [ ( "background-color", "#" ++ color )
             , ( "color"
@@ -1341,7 +1169,7 @@ viewLabel { name, color } =
               )
             ]
         ]
-        [ Html.span [ HA.class "issue-label-text" ]
+        [ Html.span [ HA.class "card-label-text" ]
             [ Html.text name ]
         ]
 
@@ -1349,7 +1177,7 @@ viewLabel { name, color } =
 viewIssueActor : Model -> Data.ActorEvent -> Html Msg
 viewIssueActor model { createdAt, actor } =
     Html.img
-        [ HA.class "issue-actor"
+        [ HA.class "card-actor"
         , HA.style [ ( "opacity", toString (activityOpacity model createdAt) ) ]
         , HA.src (actor.avatar ++ "&s=88")
         ]
@@ -1431,8 +1259,8 @@ subGraphs graph =
         connectedGraphs ++ singletonGraphs
 
 
-issueNodeBounds : Graph.NodeContext (FG.ForceNode IssueOrPRNode) () -> ( Float, Float, Float, Float )
-issueNodeBounds nc =
+nodeBounds : Graph.NodeContext (FG.ForceNode Node) () -> ( Float, Float, Float, Float )
+nodeBounds nc =
     let
         x =
             nc.node.label.x
@@ -1444,16 +1272,3 @@ issueNodeBounds nc =
             nc.node.label.value.radii.withFlair
     in
         ( x - radius, y - radius, x + radius, y + radius )
-
-
-sameIssueOrPR : IssueOrPR -> IssueOrPR -> Bool
-sameIssueOrPR a b =
-    case ( a, b ) of
-        ( Issue ai, Issue bi ) ->
-            ai.id == bi.id
-
-        ( PR ap, PR bp ) ->
-            ap.id == bp.id
-
-        _ ->
-            False

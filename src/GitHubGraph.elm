@@ -13,6 +13,7 @@ module GitHubGraph
         , CardLocation
         , PullRequest
         , PullRequestState(..)
+        , Reactions
         , ReactionGroup
         , ReactionType(..)
         , TimelineEvent(..)
@@ -241,13 +242,13 @@ fetchTimeline token issue =
     fetchPaged timelineQuery token { selector = issue, after = Nothing }
 
 
-issueScore : Issue -> Int
+issueScore : { a | reactions : Reactions, commentCount : Int } -> Int
 issueScore { reactions, commentCount } =
     reactionScore reactions
         + (2 * commentCount)
 
 
-pullRequestScore : PullRequest -> Int
+pullRequestScore : { a | reactions : Reactions, commentCount : Int } -> Int
 pullRequestScore { reactions, commentCount } =
     1000
         + reactionScore reactions
