@@ -172,9 +172,17 @@ type alias ProjectColumnCard =
     }
 
 
+type alias ProjectLocation =
+    { id : ID
+    , url : String
+    , name : String
+    , number : Int
+    }
+
+
 type alias CardLocation =
     { id : ID
-    , projectID : ID
+    , project : ProjectLocation
     , column : Maybe ProjectColumn
     }
 
@@ -521,6 +529,13 @@ issuesQuery =
                 |> GB.with (GB.field "name" [] GB.string)
                 |> GB.with (GB.field "color" [] GB.string)
 
+        projectLocation =
+            GB.object ProjectLocation
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "url" [] GB.string)
+                |> GB.with (GB.field "name" [] GB.string)
+                |> GB.with (GB.field "number" [] GB.int)
+
         column =
             GB.object ProjectColumn
                 |> GB.with (GB.field "id" [] GB.string)
@@ -529,7 +544,7 @@ issuesQuery =
         projectCard =
             GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.field "project" [] projectLocation)
                 |> GB.with (GB.field "column" [] (GB.nullable column))
 
         issue =
@@ -608,6 +623,13 @@ pullRequestsQuery =
                 |> GB.with (GB.field "name" [] GB.string)
                 |> GB.with (GB.field "color" [] GB.string)
 
+        projectLocation =
+            GB.object ProjectLocation
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "url" [] GB.string)
+                |> GB.with (GB.field "name" [] GB.string)
+                |> GB.with (GB.field "number" [] GB.int)
+
         column =
             GB.object ProjectColumn
                 |> GB.with (GB.field "id" [] GB.string)
@@ -616,7 +638,7 @@ pullRequestsQuery =
         projectCard =
             GB.object CardLocation
                 |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "project" [] (GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.field "project" [] projectLocation)
                 |> GB.with (GB.field "column" [] (GB.nullable column))
 
         issue =
@@ -839,6 +861,15 @@ decodeProject =
         |: (JD.field "columns" <| JD.list decodeProjectColumn)
 
 
+decodeProjectLocation : JD.Decoder ProjectLocation
+decodeProjectLocation =
+    JD.succeed ProjectLocation
+        |: (JD.field "id" JD.string)
+        |: (JD.field "url" JD.string)
+        |: (JD.field "name" JD.string)
+        |: (JD.field "number" JD.int)
+
+
 decodeProjectColumn : JD.Decoder ProjectColumn
 decodeProjectColumn =
     JD.succeed ProjectColumn
@@ -858,7 +889,7 @@ decodeCardLocation : JD.Decoder CardLocation
 decodeCardLocation =
     JD.succeed CardLocation
         |: (JD.field "id" JD.string)
-        |: (JD.field "project_id" JD.string)
+        |: (JD.field "project" decodeProjectLocation)
         |: (JD.field "column" <| JD.maybe decodeProjectColumn)
 
 
@@ -1002,6 +1033,16 @@ encodeProject record =
         ]
 
 
+encodeProjectLocation : ProjectLocation -> JE.Value
+encodeProjectLocation record =
+    JE.object
+        [ ( "id", JE.string record.id )
+        , ( "url", JE.string record.url )
+        , ( "name", JE.string record.name )
+        , ( "number", JE.int record.number )
+        ]
+
+
 encodeProjectColumn : ProjectColumn -> JE.Value
 encodeProjectColumn record =
     JE.object
@@ -1023,7 +1064,7 @@ encodeCardLocation : CardLocation -> JE.Value
 encodeCardLocation record =
     JE.object
         [ ( "id", JE.string record.id )
-        , ( "project_id", JE.string record.projectID )
+        , ( "project", encodeProjectLocation record.project )
         , ( "column", JEE.maybe encodeProjectColumn record.column )
         ]
 

@@ -44,6 +44,7 @@ type alias Model =
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
     , cardGraphs : List (ForceGraph (Node CardState))
+    , computeGraph : Data -> List Card -> List (ForceGraph (Node CardState))
     }
 
 
@@ -198,10 +199,11 @@ init config =
       , page = GlobalGraphPage
       , data = Data.empty
       , allCards = Dict.empty
-      , cardGraphs = []
       , selectedCards = []
       , anticipatedCards = []
       , currentDate = Date.fromTime config.initialDate
+      , cardGraphs = []
+      , computeGraph = computeReferenceGraph
       }
     , Data.fetch DataFetched
     )
@@ -225,7 +227,22 @@ update msg model =
             ( model, Cmd.none )
 
         SetPage page ->
-            ( { model | page = page }, Cmd.none )
+            let
+                compute data cards =
+                    case page of
+                        ProjectPage name ->
+                            computeReferenceGraph data (List.filter (isInProject name) cards)
+
+                        _ ->
+                            computeReferenceGraph data cards
+            in
+                ( { model
+                    | page = page
+                    , cardGraphs = compute model.data (Dict.values model.allCards)
+                    , computeGraph = compute
+                  }
+                , Cmd.none
+                )
 
         Tick _ ->
             ( { model
@@ -309,11 +326,11 @@ update msg model =
                 allCards =
                     withPRs
             in
-                ( computeGlobalReferenceGraph
-                    { model
-                        | data = data
-                        , allCards = allCards
-                    }
+                ( { model
+                    | data = data
+                    , allCards = allCards
+                    , cardGraphs = model.computeGraph data (Dict.values allCards)
+                  }
                 , Cmd.none
                 )
 
@@ -595,8 +612,8 @@ viewSearch =
         ]
 
 
-computeGlobalReferenceGraph : Model -> Model
-computeGlobalReferenceGraph model =
+computeReferenceGraph : Data -> List Card -> List (ForceGraph (Node CardState))
+computeReferenceGraph data cards =
     let
         cardEdges =
             Dict.foldl
@@ -616,10 +633,10 @@ computeGlobalReferenceGraph model =
                             ++ refs
                 )
                 []
-                model.data.references
+                data.references
 
         cardNodeThunks =
-            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) (Dict.values model.allCards)
+            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) cards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
             let
@@ -633,14 +650,11 @@ computeGlobalReferenceGraph model =
                 Graph.fromNodesAndEdges
                     cardNodeThunks
                     cardEdges
-
-        cardGraphs =
-            subGraphs graph
-                |> List.map FG.fromGraph
-                |> List.sortWith graphCompare
-                |> List.reverse
     in
-        { model | cardGraphs = cardGraphs }
+        subGraphs graph
+            |> List.map FG.fromGraph
+            |> List.sortWith graphCompare
+            |> List.reverse
 
 
 graphCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
@@ -798,8 +812,8 @@ cardNode card context =
             , withFlair = issueRadiusWithFlair card context
             }
     in
-        { viewLower = viewNodeFlair card flair
-        , viewUpper = viewNode card radii labels
+        { viewLower = viewCardNodeFlair card flair
+        , viewUpper = viewCardNode card radii labels
         , bounds =
             \{ x, y } ->
                 { x1 = x - radii.withFlair
@@ -939,8 +953,8 @@ nodeLabelArcs card context =
             card.labels
 
 
-viewNodeFlair : Card -> List (Svg Msg) -> Position -> CardState -> Svg Msg
-viewNodeFlair card flair { x, y } state =
+viewCardNodeFlair : Card -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewCardNodeFlair card flair { x, y } state =
     Svg.g
         [ SA.opacity (toString (activityOpacity state.currentDate card.updatedAt * 0.75))
         , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
@@ -964,8 +978,8 @@ activityOpacity now date =
             0.25
 
 
-viewNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardState -> Svg Msg
-viewNode card radii labels { x, y } state =
+viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewCardNode card radii labels { x, y } state =
     let
         isSelected =
             List.member card.id state.selectedCards
@@ -1033,6 +1047,11 @@ viewCardEntry model card =
                 ]
             , viewCard model card
             ]
+
+
+isInProject : String -> Card -> Bool
+isInProject name card =
+    List.member name (List.map (.project >> .name) card.cards)
 
 
 inColumn : String -> Card -> Bool
