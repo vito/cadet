@@ -10,7 +10,7 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Html.Lazy
 import Http
-import IntDict
+import IntDict exposing (IntDict)
 import ParseInt
 import Regex exposing (Regex)
 import Set
@@ -38,15 +38,12 @@ type alias Config =
 type alias Model =
     { config : Config
     , page : Page
+    , currentDate : Date
+    , data : Data
     , allCards : Dict GitHubGraph.ID Card
-    , cardActors : Dict GitHubGraph.ID (List Data.ActorEvent)
-    , cardGraphs : List (ForceGraph (Node CardState))
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
-    , currentDate : Date
-    , projects : List GitHubGraph.Project
-    , cards : Dict String (List GitHubGraph.ProjectColumnCard)
-    , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
+    , cardGraphs : List (ForceGraph (Node CardState))
     }
 
 
@@ -199,15 +196,12 @@ init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , page = GlobalGraphPage
+      , data = Data.empty
       , allCards = Dict.empty
-      , cardActors = Dict.empty
       , cardGraphs = []
       , selectedCards = []
       , anticipatedCards = []
       , currentDate = Date.fromTime config.initialDate
-      , projects = []
-      , cards = Dict.empty
-      , references = Dict.empty
       }
     , Data.fetch DataFetched
     )
@@ -317,11 +311,8 @@ update msg model =
             in
                 ( computeGlobalReferenceGraph
                     { model
-                        | allCards = allCards
-                        , projects = data.projects
-                        , cards = data.cards
-                        , cardActors = data.actors
-                        , references = data.references
+                        | data = data
+                        , allCards = allCards
                     }
                 , Cmd.none
                 )
@@ -478,7 +469,7 @@ viewAllProjectsPage : Model -> Html Msg
 viewAllProjectsPage model =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject model.projects
+            List.filterMap selectStatefulProject model.data.projects
     in
         Html.div [ HA.class "project-table" ]
             [ Html.div [ HA.class "project-name-columns" ]
@@ -530,7 +521,7 @@ viewProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
 viewProjectColumn model { id, name } =
     let
         cards =
-            Maybe.withDefault [] (Dict.get id model.cards)
+            Maybe.withDefault [] (Dict.get id model.data.cards)
     in
         Html.div [ HA.class "cards" ]
             (List.map (viewProjectColumnCard model) (List.take 3 cards))
@@ -559,7 +550,7 @@ viewProjectPage : Model -> String -> Html Msg
 viewProjectPage model name =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject model.projects
+            List.filterMap selectStatefulProject model.data.projects
 
         mproject =
             List.head <|
@@ -607,10 +598,7 @@ viewSearch =
 computeGlobalReferenceGraph : Model -> Model
 computeGlobalReferenceGraph model =
     let
-        allCards =
-            model.allCards
-
-        references =
+        cardEdges =
             Dict.foldl
                 (\idStr sourceIds refs ->
                     let
@@ -628,16 +616,23 @@ computeGlobalReferenceGraph model =
                             ++ refs
                 )
                 []
-                model.references
+                model.data.references
 
-        graphNode card =
-            Graph.Node (Hash.hash card.id) card
+        cardNodeThunks =
+            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) (Dict.values model.allCards)
+
+        applyWithContext ({ node, incoming, outgoing } as nc) =
+            let
+                context =
+                    { incoming = incoming, outgoing = outgoing }
+            in
+                { nc | node = { node | label = node.label context } }
 
         graph =
-            Graph.mapContexts cardNode <|
+            Graph.mapContexts applyWithContext <|
                 Graph.fromNodesAndEdges
-                    (List.map graphNode (Dict.values allCards))
-                    references
+                    cardNodeThunks
+                    cardEdges
 
         cardGraphs =
             subGraphs graph
@@ -755,14 +750,20 @@ linkPath graph edge =
             []
 
 
-issueRadius : Graph.NodeContext Card () -> Float
-issueRadius { incoming, outgoing } =
+type alias GraphContext =
+    { incoming : IntDict ()
+    , outgoing : IntDict ()
+    }
+
+
+issueRadius : Card -> GraphContext -> Float
+issueRadius card { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
-issueRadiusWithLabels : Graph.NodeContext Card () -> Float
-issueRadiusWithLabels =
-    issueRadius >> ((+) 3)
+issueRadiusWithLabels : Card -> GraphContext -> Float
+issueRadiusWithLabels card context =
+    issueRadius card context + 3
 
 
 flairRadiusBase : Float
@@ -770,59 +771,44 @@ flairRadiusBase =
     16
 
 
-issueRadiusWithFlair : Graph.NodeContext Card () -> Float
-issueRadiusWithFlair nc =
+issueRadiusWithFlair : Card -> GraphContext -> Float
+issueRadiusWithFlair card context =
     let
-        card =
-            nc.node.label
-
         reactionCounts =
             List.map .count card.reactions
 
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
-        issueRadiusWithLabels nc + flairRadiusBase + toFloat highestFlair
+        issueRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
 
 
-cardNode : Graph.NodeContext Card () -> Graph.NodeContext (Node CardState) ()
-cardNode nc =
+cardNode : Card -> GraphContext -> Node CardState
+cardNode card context =
     let
-        node =
-            nc.node
-
-        card =
-            node.label
-
         flair =
-            nodeFlairArcs nc
+            nodeFlairArcs card context
 
         labels =
-            nodeLabelArcs nc
+            nodeLabelArcs card context
 
         radii =
-            { base = issueRadius nc
-            , withLabels = issueRadiusWithLabels nc
-            , withFlair = issueRadiusWithFlair nc
-            }
-
-        forceNode =
-            { node
-                | label =
-                    { viewLower = viewNodeFlair card flair
-                    , viewUpper = viewNode card radii labels
-                    , bounds =
-                        \{ x, y } ->
-                            { x1 = x - radii.withFlair
-                            , y1 = y - radii.withFlair
-                            , x2 = x + radii.withFlair
-                            , y2 = y + radii.withFlair
-                            }
-                    , score = card.score
-                    }
+            { base = issueRadius card context
+            , withLabels = issueRadiusWithLabels card context
+            , withFlair = issueRadiusWithFlair card context
             }
     in
-        { nc | node = forceNode }
+        { viewLower = viewNodeFlair card flair
+        , viewUpper = viewNode card radii labels
+        , bounds =
+            \{ x, y } ->
+                { x1 = x - radii.withFlair
+                , y1 = y - radii.withFlair
+                , x2 = x + radii.withFlair
+                , y2 = y + radii.withFlair
+                }
+        , score = card.score
+        }
 
 
 renderCardNode : Card -> CardState -> List (Svg Msg)
@@ -830,14 +816,11 @@ renderCardNode card state =
     []
 
 
-nodeFlairArcs : Graph.NodeContext Card () -> List (Svg Msg)
-nodeFlairArcs nc =
+nodeFlairArcs : Card -> GraphContext -> List (Svg Msg)
+nodeFlairArcs card context =
     let
-        card =
-            nc.node.label
-
         radius =
-            issueRadiusWithLabels nc
+            issueRadiusWithLabels card context
 
         reactionTypeEmoji type_ =
             case type_ of
@@ -924,14 +907,11 @@ nodeFlairArcs nc =
                         ]
 
 
-nodeLabelArcs : Graph.NodeContext Card () -> List (Svg Msg)
-nodeLabelArcs nc =
+nodeLabelArcs : Card -> GraphContext -> List (Svg Msg)
+nodeLabelArcs card context =
     let
-        card =
-            nc.node.label
-
         radius =
-            issueRadius nc
+            issueRadius card context
 
         labelSegments =
             VS.pie
@@ -1116,7 +1096,7 @@ viewCard model card =
 
 recentActors : Model -> Card -> List Data.ActorEvent
 recentActors model card =
-    Dict.get card.id model.cardActors
+    Dict.get card.id model.data.actors
         |> Maybe.withDefault []
         |> List.reverse
         |> List.take 3

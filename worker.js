@@ -11435,6 +11435,14 @@ var _vito$cadet$Data$encodeActorEvent = function (_p0) {
 			}
 		});
 };
+var _vito$cadet$Data$empty = {
+	issues: _elm_lang$core$Dict$empty,
+	prs: _elm_lang$core$Dict$empty,
+	references: _elm_lang$core$Dict$empty,
+	actors: _elm_lang$core$Dict$empty,
+	projects: {ctor: '[]'},
+	cards: _elm_lang$core$Dict$empty
+};
 var _vito$cadet$Data$Data = F6(
 	function (a, b, c, d, e, f) {
 		return {issues: a, prs: b, references: c, actors: d, projects: e, cards: f};

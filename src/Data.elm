@@ -1,4 +1,4 @@
-module Data exposing (Data, ActorEvent, fetch, encodeActorEvent)
+module Data exposing (Data, ActorEvent, empty, fetch, encodeActorEvent)
 
 import HttpBuilder
 import Json.Decode as JD
@@ -24,6 +24,17 @@ type alias Data =
 type alias ActorEvent =
     { actor : GitHubGraph.User
     , createdAt : Date
+    }
+
+
+empty : Data
+empty =
+    { issues = Dict.empty
+    , prs = Dict.empty
+    , references = Dict.empty
+    , actors = Dict.empty
+    , projects = []
+    , cards = Dict.empty
     }
 
 
