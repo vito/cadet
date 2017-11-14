@@ -73,17 +73,48 @@ body {
   flex-direction: row;
   justify-content: space-between;
 
+  .nav {
+    display: flex;
+    flex-direction: row;
+  }
+
   .button {
-    font-size: 32px;
     color: @white;
     display: inline-block;
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    padding: 12px;
     text-align: center;
 
     &:hover {
       background: @gray;
+    }
+  }
+
+  .user-info {
+    line-height: 40px;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 0 12px;
+
+    .user-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      vertical-align: middle;
+      display: inline-block;
+      margin-right: 10px;
+      margin-top: -2px;
+    }
+
+    .log-in-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+      vertical-align: middle;
+      display: inline-block;
+      margin-right: 7px;
+      margin-top: -2px;
     }
   }
 }

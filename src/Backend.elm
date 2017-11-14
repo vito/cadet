@@ -1,4 +1,4 @@
-module Data exposing (Data, ActorEvent, empty, fetch, encodeActorEvent)
+module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, fetchMe, encodeActorEvent)
 
 import HttpBuilder
 import Json.Decode as JD
@@ -21,14 +21,28 @@ type alias Data =
     }
 
 
+type alias Me =
+    { token : String
+    , user : User
+    }
+
+
+type alias User =
+    { id : Int
+    , login : String
+    , url : String
+    , avatar : String
+    }
+
+
 type alias ActorEvent =
     { actor : GitHubGraph.User
     , createdAt : Date
     }
 
 
-empty : Data
-empty =
+emptyData : Data
+emptyData =
     { issues = Dict.empty
     , prs = Dict.empty
     , references = Dict.empty
@@ -38,10 +52,18 @@ empty =
     }
 
 
-fetch : (Result Http.Error Data -> msg) -> Cmd msg
-fetch f =
+fetchData : (Result Http.Error Data -> msg) -> Cmd msg
+fetchData f =
     HttpBuilder.get "/data"
         |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+fetchMe : (Result Http.Error Me -> msg) -> Cmd msg
+fetchMe f =
+    HttpBuilder.get "/me"
+        |> HttpBuilder.withExpect (Http.expectJson decodeMe)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
@@ -55,6 +77,22 @@ decodeData =
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
         |: (JD.field "projects" <| JD.list GitHubGraph.decodeProject)
         |: (JD.field "cards" <| JD.dict (JD.list GitHubGraph.decodeProjectColumnCard))
+
+
+decodeMe : JD.Decoder Me
+decodeMe =
+    JD.succeed Me
+        |: (JD.field "token" JD.string)
+        |: (JD.field "user" decodeUser)
+
+
+decodeUser : JD.Decoder User
+decodeUser =
+    JD.succeed User
+        |: (JD.field "id" JD.int)
+        |: (JD.field "login" JD.string)
+        |: (JD.field "html_url" JD.string)
+        |: (JD.field "avatar_url" JD.string)
 
 
 decodeActorEvent : JD.Decoder ActorEvent

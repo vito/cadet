@@ -25,7 +25,7 @@ import RouteUrl.Builder
 import Navigation
 import Hash
 import GitHubGraph
-import Data exposing (Data)
+import Backend exposing (Data, Me)
 import ForceGraph as FG exposing (ForceGraph)
 import StrictEvents
 
@@ -37,6 +37,7 @@ type alias Config =
 
 type alias Model =
     { config : Config
+    , me : Maybe Me
     , page : Page
     , currentDate : Date
     , data : Data
@@ -75,6 +76,7 @@ type Msg
     | SetPage Page
     | Tick Time
     | SetCurrentDate Date
+    | MeFetched (Result Http.Error Me)
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
@@ -197,7 +199,8 @@ init : Config -> ( Model, Cmd Msg )
 init config =
     ( { config = config
       , page = GlobalGraphPage
-      , data = Data.empty
+      , me = Nothing
+      , data = Backend.emptyData
       , allCards = Dict.empty
       , selectedCards = []
       , anticipatedCards = []
@@ -205,7 +208,10 @@ init config =
       , cardGraphs = []
       , computeGraph = computeReferenceGraph
       }
-    , Data.fetch DataFetched
+    , Cmd.batch
+        [ Backend.fetchData DataFetched
+        , Backend.fetchMe MeFetched
+        ]
     )
 
 
@@ -315,6 +321,13 @@ update msg model =
         UnanticipateCard id ->
             ( { model | anticipatedCards = List.filter ((/=) id) model.anticipatedCards }, Cmd.none )
 
+        MeFetched (Ok me) ->
+            ( { model | me = Just me }, Cmd.none )
+
+        MeFetched (Err msg) ->
+            flip always (Debug.log "error fetching self" msg) <|
+                ( model, Cmd.none )
+
         DataFetched (Ok data) ->
             let
                 withIssues =
@@ -335,7 +348,7 @@ update msg model =
                 )
 
         DataFetched (Err msg) ->
-            flip always (Debug.log "error" msg) <|
+            flip always (Debug.log "error fetching data" msg) <|
                 ( model, Cmd.none )
 
 
@@ -423,7 +436,19 @@ viewNavBar : Model -> Html Msg
 viewNavBar model =
     Html.div [ HA.class "bottom-bar" ]
         [ Html.div [ HA.class "nav" ]
-            [ Html.a [ HA.class "button", HA.href "/", StrictEvents.onLeftClick (SetPage GlobalGraphPage) ]
+            [ case model.me of
+                Nothing ->
+                    Html.a [ HA.class "button user-info", HA.href "/auth/github" ]
+                        [ Html.span [ HA.class "log-in-icon octicon octicon-sign-in" ] []
+                        , Html.text "log in"
+                        ]
+
+                Just { user } ->
+                    Html.a [ HA.class "button user-info", HA.href user.url ]
+                        [ Html.img [ HA.class "user-avatar", HA.src user.avatar ] []
+                        , Html.text user.login
+                        ]
+            , Html.a [ HA.class "button", HA.href "/", StrictEvents.onLeftClick (SetPage GlobalGraphPage) ]
                 [ Html.span [ HA.class "octicon octicon-globe" ] []
                 ]
             , Html.a [ HA.class "button", HA.href "/projects", StrictEvents.onLeftClick (SetPage AllProjectsPage) ]
@@ -1123,7 +1148,7 @@ viewCard model card =
         ]
 
 
-recentActors : Model -> Card -> List Data.ActorEvent
+recentActors : Model -> Card -> List Backend.ActorEvent
 recentActors model card =
     Dict.get card.id model.data.actors
         |> Maybe.withDefault []
@@ -1194,7 +1219,7 @@ viewLabel { name, color } =
         ]
 
 
-viewCardActor : Model -> Data.ActorEvent -> Html Msg
+viewCardActor : Model -> Backend.ActorEvent -> Html Msg
 viewCardActor model { createdAt, actor } =
     Html.img
         [ HA.class "card-actor"

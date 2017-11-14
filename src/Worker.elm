@@ -6,7 +6,7 @@ import Json.Decode as JD
 import Time exposing (Time)
 import Task
 import GitHubGraph
-import Data
+import Backend
 
 
 port setIssues : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
@@ -209,7 +209,7 @@ update msg model =
                 commentActor event =
                     case event of
                         GitHubGraph.IssueCommentEvent (Just user) date ->
-                            Just (Data.encodeActorEvent { actor = user, createdAt = date })
+                            Just (Backend.encodeActorEvent { actor = user, createdAt = date })
 
                         _ ->
                             Nothing

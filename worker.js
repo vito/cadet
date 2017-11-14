@@ -11514,7 +11514,7 @@ var _vito$cadet$GitHubGraph$fetchTimeline = F2(
 			{selector: issue, after: _elm_lang$core$Maybe$Nothing});
 	});
 
-var _vito$cadet$Data$encodeActorEvent = function (_p0) {
+var _vito$cadet$Backend$encodeActorEvent = function (_p0) {
 	var _p1 = _p0;
 	return _elm_lang$core$Json_Encode$object(
 		{
@@ -11536,7 +11536,7 @@ var _vito$cadet$Data$encodeActorEvent = function (_p0) {
 			}
 		});
 };
-var _vito$cadet$Data$empty = {
+var _vito$cadet$Backend$emptyData = {
 	issues: _elm_lang$core$Dict$empty,
 	prs: _elm_lang$core$Dict$empty,
 	references: _elm_lang$core$Dict$empty,
@@ -11544,22 +11544,60 @@ var _vito$cadet$Data$empty = {
 	projects: {ctor: '[]'},
 	cards: _elm_lang$core$Dict$empty
 };
-var _vito$cadet$Data$Data = F6(
+var _vito$cadet$Backend$Data = F6(
 	function (a, b, c, d, e, f) {
 		return {issues: a, prs: b, references: c, actors: d, projects: e, cards: f};
 	});
-var _vito$cadet$Data$ActorEvent = F2(
+var _vito$cadet$Backend$Me = F2(
 	function (a, b) {
-		return {actor: a, createdAt: b};
+		return {token: a, user: b};
 	});
-var _vito$cadet$Data$decodeActorEvent = A2(
+var _vito$cadet$Backend$User = F4(
+	function (a, b, c, d) {
+		return {id: a, login: b, url: c, avatar: d};
+	});
+var _vito$cadet$Backend$decodeUser = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$ActorEvent),
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			A2(
+				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+				_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$User),
+				A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$int)),
+			A2(_elm_lang$core$Json_Decode$field, 'login', _elm_lang$core$Json_Decode$string)),
+		A2(_elm_lang$core$Json_Decode$field, 'html_url', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'avatar_url', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$Backend$decodeMe = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$Me),
+		A2(_elm_lang$core$Json_Decode$field, 'token', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'user', _vito$cadet$Backend$decodeUser));
+var _vito$cadet$Backend$fetchMe = function (f) {
+	return A2(
+		_elm_lang$core$Task$attempt,
+		f,
+		_lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeMe),
+				_lukewestby$elm_http_builder$HttpBuilder$get('/me'))));
+};
+var _vito$cadet$Backend$ActorEvent = F2(
+	function (a, b) {
+		return {actor: a, createdAt: b};
+	});
+var _vito$cadet$Backend$decodeActorEvent = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$ActorEvent),
 		A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHubGraph$decodeUser)),
 	A2(_elm_lang$core$Json_Decode$field, 'createdAt', _elm_community$json_extra$Json_Decode_Extra$date));
-var _vito$cadet$Data$decodeData = A2(
+var _vito$cadet$Backend$decodeData = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
@@ -11571,7 +11609,7 @@ var _vito$cadet$Data$decodeData = A2(
 					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 					A2(
 						_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-						_elm_lang$core$Json_Decode$succeed(_vito$cadet$Data$Data),
+						_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$Data),
 						A2(
 							_elm_lang$core$Json_Decode$field,
 							'issues',
@@ -11591,7 +11629,7 @@ var _vito$cadet$Data$decodeData = A2(
 				_elm_lang$core$Json_Decode$field,
 				'actors',
 				_elm_lang$core$Json_Decode$dict(
-					_elm_lang$core$Json_Decode$list(_vito$cadet$Data$decodeActorEvent)))),
+					_elm_lang$core$Json_Decode$list(_vito$cadet$Backend$decodeActorEvent)))),
 		A2(
 			_elm_lang$core$Json_Decode$field,
 			'projects',
@@ -11601,14 +11639,14 @@ var _vito$cadet$Data$decodeData = A2(
 		'cards',
 		_elm_lang$core$Json_Decode$dict(
 			_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeProjectColumnCard))));
-var _vito$cadet$Data$fetch = function (f) {
+var _vito$cadet$Backend$fetchData = function (f) {
 	return A2(
 		_elm_lang$core$Task$attempt,
 		f,
 		_lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-				_elm_lang$http$Http$expectJson(_vito$cadet$Data$decodeData),
+				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
 };
 
@@ -12073,7 +12111,7 @@ var _vito$cadet$Main$update = F2(
 						var _p16 = event;
 						if ((_p16.ctor === 'IssueCommentEvent') && (_p16._0.ctor === 'Just')) {
 							return _elm_lang$core$Maybe$Just(
-								_vito$cadet$Data$encodeActorEvent(
+								_vito$cadet$Backend$encodeActorEvent(
 									{actor: _p16._0._0, createdAt: _p16._1}));
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
