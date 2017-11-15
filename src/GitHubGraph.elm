@@ -23,6 +23,7 @@ module GitHubGraph
         , fetchRepoIssues
         , fetchRepoPullRequests
         , fetchTimeline
+        , moveCardAfter
         , issueScore
         , pullRequestScore
         , reactionScore
@@ -248,6 +249,41 @@ fetchRepoPullRequests token repo =
 fetchTimeline : Token -> IDSelector -> Task Error (List TimelineEvent)
 fetchTimeline token issue =
     fetchPaged timelineQuery token { selector = issue, after = Nothing }
+
+
+moveCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ()
+moveCardAfter token columnID cardID mafterID =
+    moveCardMutation
+        |> GB.request { columnId = columnID, cardId = cardID, afterId = mafterID }
+        |> GH.customSendMutation (authedOptions token)
+
+
+moveCardMutation : GB.Document GB.Mutation () { columnId : ID, cardId : ID, afterId : Maybe ID }
+moveCardMutation =
+    let
+        columnIDVar =
+            GV.required "columnId" .columnId GV.id
+
+        cardIDVar =
+            GV.required "cardId" .cardId GV.id
+
+        afterIDVar =
+            GV.required "afterId" .afterId (GV.nullable GV.id)
+    in
+        GB.mutationDocument <|
+            GB.extract <|
+                GB.field "moveProjectCard"
+                    [ ( "input"
+                      , GA.object
+                            [ ( "columnId", GA.variable columnIDVar )
+                            , ( "cardId", GA.variable cardIDVar )
+                            , ( "afterCardId", GA.variable afterIDVar )
+                            ]
+                      )
+                    ]
+                    (GB.object (always ())
+                        |> GB.with (GB.field "clientMutationId" [] (GB.nullable GB.string))
+                    )
 
 
 issueScore : { a | reactions : Reactions, commentCount : Int } -> Int

@@ -11,18 +11,21 @@ import Html.Events as HE
 import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
+import Json.Decode as JD
+import Mouse
+import Navigation
 import ParseInt
 import Regex exposing (Regex)
+import RouteUrl
+import RouteUrl.Builder
 import Set
 import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
 import Svg.Lazy
+import Task
 import Time exposing (Time)
 import Visualization.Shape as VS
-import RouteUrl
-import RouteUrl.Builder
-import Navigation
 import Hash
 import GitHubGraph
 import Backend exposing (Data, Me)
@@ -40,6 +43,7 @@ type alias Model =
     , me : Maybe Me
     , page : Page
     , currentDate : Date
+    , drag : Maybe DragState
     , data : Data
     , allCards : Dict GitHubGraph.ID Card
     , selectedCards : List GitHubGraph.ID
@@ -68,7 +72,12 @@ type alias Card =
     , commentCount : Int
     , reactions : GitHubGraph.Reactions
     , score : Int
+    , dragId : Maybe GitHubGraph.ID
     }
+
+
+type alias CardLocation =
+    { column : GitHubGraph.ID, after : Maybe GitHubGraph.ID }
 
 
 type Msg
@@ -76,6 +85,12 @@ type Msg
     | SetPage Page
     | Tick Time
     | SetCurrentDate Date
+    | DragStart GitHubGraph.ID Mouse.Position
+    | DragAt Mouse.Position
+    | DragOver (Maybe Msg)
+    | DragEnd Mouse.Position
+    | MoveCardAfter CardLocation
+    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error ())
     | MeFetched (Result Http.Error Me)
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
@@ -91,6 +106,19 @@ type Page
     = GlobalGraphPage
     | AllProjectsPage
     | ProjectPage String
+
+
+type alias DragState =
+    { id : GitHubGraph.ID
+    , startPos : Mouse.Position
+    , currentPos : Mouse.Position
+    , msg : Maybe Msg
+    }
+
+
+onDragStart : (Mouse.Position -> msg) -> Html.Attribute msg
+onDragStart msg =
+    HE.on "mousedown" (JD.map msg Mouse.position)
 
 
 main : RouteUrl.RouteUrlProgram Config Model Msg
@@ -207,6 +235,7 @@ init config =
       , currentDate = Date.fromTime config.initialDate
       , cardGraphs = []
       , computeGraph = computeReferenceGraph
+      , drag = Nothing
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -223,6 +252,12 @@ subscriptions model =
             Sub.none
           else
             AnimationFrame.times Tick
+        , case model.drag of
+            Nothing ->
+                Sub.none
+
+            Just _ ->
+                Sub.batch [ Mouse.moves DragAt, Mouse.ups DragEnd ]
         ]
 
 
@@ -267,6 +302,93 @@ update msg model =
 
         SetCurrentDate date ->
             ( { model | currentDate = date }, Cmd.none )
+
+        DragStart id pos ->
+            ( { model | drag = Just { id = id, startPos = pos, currentPos = pos, msg = Nothing } }, Cmd.none )
+
+        DragAt pos ->
+            let
+                newDrag =
+                    case model.drag of
+                        Just drag ->
+                            Just { drag | currentPos = pos }
+
+                        Nothing ->
+                            Nothing
+            in
+                ( { model | drag = newDrag }, Cmd.none )
+
+        DragEnd pos ->
+            case Maybe.andThen .msg model.drag of
+                Just msg ->
+                    update msg
+                        model
+
+                _ ->
+                    ( { model | drag = Nothing }, Cmd.none )
+
+        DragOver msg ->
+            let
+                newDrag =
+                    case model.drag of
+                        Just drag ->
+                            Just { drag | msg = msg }
+
+                        Nothing ->
+                            Nothing
+            in
+                ( { model | drag = newDrag }, Cmd.none )
+
+        MoveCardAfter ({ column, after } as loc) ->
+            case model.drag of
+                Just drag ->
+                    let
+                        data =
+                            model.data
+
+                        cards =
+                            Maybe.withDefault [] <|
+                                Dict.get column data.cards
+
+                        ( dragged, rest ) =
+                            List.partition ((==) drag.id << .id) cards
+
+                        addAfter cards afterId =
+                            case cards of
+                                [] ->
+                                    dragged
+
+                                card :: rest ->
+                                    if card.id == afterId then
+                                        card :: dragged ++ rest
+                                    else
+                                        card :: addAfter rest afterId
+
+                        inserted =
+                            case after of
+                                Just afterId ->
+                                    addAfter rest afterId
+
+                                Nothing ->
+                                    dragged ++ rest
+                    in
+                        ( { model
+                            | drag = Nothing
+                            , data = { data | cards = Dict.insert column inserted model.data.cards }
+                          }
+                        , moveCard model loc drag.id
+                        )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        CardMoved id (Ok ()) ->
+            flip always (Debug.log "card moved" id) <|
+                ( model, Cmd.none )
+
+        CardMoved id (Err msg) ->
+            flip always (Debug.log "failed to move card" msg) <|
+                ( model, Cmd.none )
 
         SearchCards "" ->
             ( { model | anticipatedCards = [] }, Cmd.none )
@@ -366,6 +488,7 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
     , commentCount = commentCount
     , reactions = reactions
     , score = GitHubGraph.pullRequestScore issue
+    , dragId = Nothing
     }
 
 
@@ -383,6 +506,7 @@ prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount
     , commentCount = commentCount
     , reactions = reactions
     , score = GitHubGraph.pullRequestScore pr
+    , dragId = Nothing
     }
 
 
@@ -559,18 +683,61 @@ viewProject model { name, backlog, inFlight, done } =
         ]
 
 
+viewDropArea : Model -> Maybe Msg -> Html Msg
+viewDropArea model mid =
+    Html.div
+        [ HA.classList
+            [ ( "drop-area", True )
+            , ( "active", model.drag /= Nothing )
+            , ( "over"
+              , case model.drag of
+                    Nothing ->
+                        False
+
+                    Just { msg } ->
+                        msg == mid
+              )
+            ]
+        , HE.onMouseEnter (DragOver mid)
+        , HE.onMouseLeave (DragOver Nothing)
+        ]
+        []
+
+
 viewProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
 viewProjectColumn model { id, name } =
     let
         cards =
             Maybe.withDefault [] (Dict.get id model.data.cards)
+
+        cardDrag card =
+            [ viewProjectColumnCard model card
+            , viewDropArea model (Just (MoveCardAfter { column = id, after = Just card.id }))
+            ]
     in
-        Html.div [ HA.class "cards" ]
-            (List.map (viewProjectColumnCard model) (List.take 3 cards))
+        Html.div [ HA.class "cards" ] <|
+            viewDropArea model (Just (MoveCardAfter { column = id, after = Nothing }))
+                :: List.concatMap cardDrag (List.take 3 cards)
+
+
+viewFullProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
+viewFullProjectColumn model { id, name } =
+    let
+        cards =
+            Maybe.withDefault [] (Dict.get id model.data.cards)
+
+        cardDrag card =
+            [ viewProjectColumnCard model card
+            , viewDropArea model (Just (MoveCardAfter { column = id, after = Just card.id }))
+            ]
+    in
+        Html.div [ HA.class "cards" ] <|
+            viewDropArea model (Just (MoveCardAfter { column = id, after = Nothing }))
+                :: List.concatMap cardDrag cards
 
 
 viewProjectColumnCard : Model -> GitHubGraph.ProjectColumnCard -> Html Msg
-viewProjectColumnCard model { itemID, note } =
+viewProjectColumnCard model { id, itemID, note } =
     case ( note, itemID ) of
         ( Just n, Nothing ) ->
             Html.text ""
@@ -578,7 +745,7 @@ viewProjectColumnCard model { itemID, note } =
         ( Nothing, Just i ) ->
             case Dict.get i model.allCards of
                 Just card ->
-                    viewCard model card
+                    viewCard model { card | dragId = Just id }
 
                 Nothing ->
                     -- closed issue?
@@ -622,16 +789,6 @@ viewSingleProject model { id, name, backlog, inFlight, done } =
         , Html.div [ HA.class "spatial-graph" ] <|
             List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
         ]
-
-
-viewFullProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
-viewFullProjectColumn model { id, name } =
-    let
-        cards =
-            Maybe.withDefault [] (Dict.get id model.data.cards)
-    in
-        Html.div [ HA.class "cards" ]
-            (List.map (viewProjectColumnCard model) cards)
 
 
 viewSearch : Html Msg
@@ -1116,36 +1273,64 @@ isBacklog =
 
 viewCard : Model -> Card -> Html Msg
 viewCard model card =
-    Html.div
-        [ HA.classList
-            [ ( "card", True )
-            , ( "card-info", True )
-            , ( "in-flight", isInFlight card )
-            , ( "done", isDone card )
-            , ( "backlog", isBacklog card )
-            , ( "anticipated", isAnticipated model card )
-            ]
-        , HE.onClick (SelectCard card.id)
-        ]
-        [ Html.div [ HA.class "card-actors" ] <|
-            List.map (viewCardActor model) (recentActors model card)
-        , Html.a [ HA.href card.url, HA.target "_blank", HA.class "card-title" ]
-            [ Html.text card.title
-            ]
-        , Html.span [ HA.class "card-labels" ] <|
-            List.map viewLabel card.labels
-        , Html.div [ HA.class "card-meta" ]
-            [ Html.a [ HA.href card.url, HA.target "_blank" ] [ Html.text ("#" ++ toString card.number) ]
-            , Html.text " "
-            , Html.text "opened by "
-            , case card.author of
-                Just user ->
-                    Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+    let
+        moveStyle =
+            case ( card.dragId, model.drag ) of
+                ( Just dragId, Just { id, startPos, currentPos } ) ->
+                    if id == dragId then
+                        [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
+                        , ( "transform", "translateY( " ++ toString (currentPos.y - startPos.y) ++ "px)" )
+                        , ( "will-change", "transform" )
+                        , ( "z-index", "2" )
+                        ]
+                    else
+                        []
 
                 _ ->
-                    Html.text "(deleted user)"
+                    []
+
+        dragEvents =
+            case card.dragId of
+                Just dragId ->
+                    [ onDragStart (DragStart dragId) ]
+
+                Nothing ->
+                    []
+    in
+        Html.div
+            ([ HA.classList
+                [ ( "card", True )
+                , ( "card-info", True )
+                , ( "draggable", card.dragId /= Nothing )
+                , ( "in-flight", isInFlight card )
+                , ( "done", isDone card )
+                , ( "backlog", isBacklog card )
+                , ( "anticipated", isAnticipated model card )
+                ]
+             , HE.onClick (SelectCard card.id)
+             , HA.style moveStyle
+             ]
+                ++ dragEvents
+            )
+            [ Html.div [ HA.class "card-actors" ] <|
+                List.map (viewCardActor model) (recentActors model card)
+            , Html.a [ HA.href card.url, HA.target "_blank", HA.class "card-title" ]
+                [ Html.text card.title
+                ]
+            , Html.span [ HA.class "card-labels" ] <|
+                List.map viewLabel card.labels
+            , Html.div [ HA.class "card-meta" ]
+                [ Html.a [ HA.href card.url, HA.target "_blank" ] [ Html.text ("#" ++ toString card.number) ]
+                , Html.text " "
+                , Html.text "opened by "
+                , case card.author of
+                    Just user ->
+                        Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+
+                    _ ->
+                        Html.text "(deleted user)"
+                ]
             ]
-        ]
 
 
 recentActors : Model -> Card -> List Backend.ActorEvent
@@ -1314,3 +1499,14 @@ nodeBounds nc =
             nc.node.label.y
     in
         nc.node.label.value.bounds { x = x, y = y }
+
+
+moveCard : Model -> CardLocation -> GitHubGraph.ID -> Cmd Msg
+moveCard model { column, after } id =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.moveCardAfter token column id after
+                |> Task.attempt (CardMoved id)
+
+        Nothing ->
+            Cmd.none

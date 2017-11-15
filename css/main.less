@@ -258,6 +258,22 @@ body {
 @card-width: 300px;
 @card-margin: 8px;
 
+.drop-area {
+  height: 50px;
+  position: relative;
+  top: -25px;
+  margin-bottom: -50px;
+  z-index: -1;
+
+  &.active {
+    z-index: 3;
+  }
+
+  &.over {
+    background: linear-gradient(to bottom, transparent 24px, white 24px, white 26px, transparent 26px);
+  }
+}
+
 .card {
   width: @card-width;
   border: 1px solid #e1e4e8;
@@ -267,6 +283,11 @@ body {
   background: #fff;
   white-space: normal;
   vertical-align: top;
+  user-select: none;
+
+  &.draggable {
+    cursor: move;
+  }
 
   &:first-child {
     margin-left: @card-margin;
@@ -418,11 +439,12 @@ body {
     .card {
       opacity: 0.5;
 
-      &:first-child {
+      // XXX: these are awkward because the drop area is a sibling
+      &:nth-child(2) {
         opacity: 1;
       }
 
-      &:nth-child(2) {
+      &:nth-child(4) {
         opacity: 0.75;
       }
     }
