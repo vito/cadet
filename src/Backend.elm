@@ -1,4 +1,4 @@
-module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, fetchMe, encodeActorEvent)
+module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, refreshCards, fetchMe, encodeActorEvent)
 
 import HttpBuilder
 import Json.Decode as JD
@@ -60,6 +60,14 @@ fetchData f =
         |> Task.attempt f
 
 
+refreshCards : GitHubGraph.ID -> (Result Http.Error (List GitHubGraph.ProjectColumnCard) -> msg) -> Cmd msg
+refreshCards col f =
+    HttpBuilder.get ("/refresh?cards=" ++ col)
+        |> HttpBuilder.withExpect (Http.expectJson decodeCards)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
 fetchMe : (Result Http.Error Me -> msg) -> Cmd msg
 fetchMe f =
     HttpBuilder.get "/me"
@@ -76,7 +84,12 @@ decodeData =
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
         |: (JD.field "projects" <| JD.list GitHubGraph.decodeProject)
-        |: (JD.field "cards" <| JD.dict (JD.list GitHubGraph.decodeProjectColumnCard))
+        |: (JD.field "cards" <| JD.dict decodeCards)
+
+
+decodeCards : JD.Decoder (List GitHubGraph.ProjectColumnCard)
+decodeCards =
+    JD.list GitHubGraph.decodeProjectColumnCard
 
 
 decodeMe : JD.Decoder Me

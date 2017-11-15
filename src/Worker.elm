@@ -9,6 +9,9 @@ import GitHubGraph
 import Backend
 
 
+port setProjects : List JD.Value -> Cmd msg
+
+
 port setIssues : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
@@ -21,10 +24,10 @@ port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
 port setActors : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
-port setProjects : List JD.Value -> Cmd msg
-
-
 port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+
+
+port refresh : (( String, GitHubGraph.ID ) -> msg) -> Sub msg
 
 
 main : Program Flags Model Msg
@@ -60,9 +63,10 @@ type Msg
     = Refresh Time
     | PopQueue Time
     | RetryQueue Time
+    | RefreshRequested ( String, GitHubGraph.ID )
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
     | ProjectsFetched (Result GitHubGraph.Error (List GitHubGraph.Project))
-    | CardsFetched GitHubGraph.ProjectColumn (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
+    | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
     | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
     | TimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
@@ -90,6 +94,7 @@ subscriptions model =
         [ Time.every (100 * Time.millisecond) PopQueue
         , Time.every (10 * Time.second) RetryQueue
         , Time.every Time.hour Refresh
+        , refresh RefreshRequested
         ]
 
 
@@ -117,6 +122,13 @@ update msg model =
                 , Cmd.none
                 )
 
+        RefreshRequested ( "cards", colId ) ->
+            ( model, fetchCards model colId )
+
+        RefreshRequested ( field, id ) ->
+            log "cannot refresh" ( field, id ) <|
+                ( model, Cmd.none )
+
         RepositoriesFetched (Ok repos) ->
             log "repositories fetched" (List.length repos) <|
                 let
@@ -140,7 +152,7 @@ update msg model =
             log "projects fetched" (List.length projects) <|
                 ( { model
                     | projects = projects
-                    , loadQueue = List.concatMap (List.map (fetchCards model) << .columns) projects ++ model.loadQueue
+                    , loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue
                   }
                 , setProjects (List.map GitHubGraph.encodeProject projects)
                 )
@@ -149,15 +161,15 @@ update msg model =
             log "failed to fetch projects" err <|
                 backOff model (fetchProjects model)
 
-        CardsFetched col (Ok cards) ->
-            log "cards fetched for" col.name <|
-                ( { model | columnCards = Dict.insert col.id cards model.columnCards }
-                , setCards ( col.id, List.map GitHubGraph.encodeProjectColumnCard cards )
+        CardsFetched colId (Ok cards) ->
+            log "cards fetched for" colId <|
+                ( { model | columnCards = Dict.insert colId cards model.columnCards }
+                , setCards ( colId, List.map GitHubGraph.encodeProjectColumnCard cards )
                 )
 
-        CardsFetched col (Err err) ->
-            log "failed to fetch cards" ( col.name, err ) <|
-                backOff model (fetchCards model col)
+        CardsFetched colId (Err err) ->
+            log "failed to fetch cards" ( colId, err ) <|
+                backOff model (fetchCards model colId)
 
         IssuesFetched repo (Ok issues) ->
             let
@@ -167,7 +179,7 @@ update msg model =
                 log "issues fetched for" repo.url <|
                     ( { model
                         | issues = Dict.insert repo.id issues model.issues
-                        , loadQueue = fetchTimelines ++ model.loadQueue
+                        , loadQueue = model.loadQueue ++ fetchTimelines
                       }
                     , setIssues ( repo.id, List.map GitHubGraph.encodeIssue issues )
                     )
@@ -184,7 +196,7 @@ update msg model =
                 log "prs fetched for" repo.url <|
                     ( { model
                         | prs = Dict.insert repo.id prs model.prs
-                        , loadQueue = fetchTimelines ++ model.loadQueue
+                        , loadQueue = model.loadQueue ++ fetchTimelines
                       }
                     , setPullRequests ( repo.id, List.map GitHubGraph.encodePullRequest prs )
                     )
@@ -252,10 +264,10 @@ fetchProjects model =
         GitHubGraph.fetchOrgProjects model.githubToken { name = model.githubOrg }
 
 
-fetchCards : Model -> GitHubGraph.ProjectColumn -> Cmd Msg
-fetchCards model col =
-    Task.attempt (CardsFetched col) <|
-        GitHubGraph.fetchProjectColumnCards model.githubToken { id = col.id }
+fetchCards : Model -> GitHubGraph.ID -> Cmd Msg
+fetchCards model colId =
+    Task.attempt (CardsFetched colId) <|
+        GitHubGraph.fetchProjectColumnCards model.githubToken { id = colId }
 
 
 fetchIssues : Model -> GitHubGraph.Repo -> Cmd Msg

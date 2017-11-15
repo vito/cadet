@@ -259,18 +259,19 @@ body {
 @card-margin: 8px;
 
 .drop-area {
-  height: 50px;
+  height: 60px;
   position: relative;
-  top: -25px;
-  margin-bottom: -50px;
+  top: -30px;
+  margin-bottom: -60px;
   z-index: -1;
+  transition: all 0.2s ease-in-out;
 
   &.active {
     z-index: 3;
   }
 
   &.over {
-    background: linear-gradient(to bottom, transparent 24px, white 24px, white 26px, transparent 26px);
+    height: 100px;
   }
 }
 
@@ -284,9 +285,14 @@ body {
   white-space: normal;
   vertical-align: top;
   user-select: none;
+  transition: all 0.2s ease-in-out;
 
   &.draggable {
     cursor: move;
+  }
+
+  &.dragging {
+    transition: none;
   }
 
   &:first-child {

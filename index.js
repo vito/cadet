@@ -37,28 +37,67 @@ const data = {
   cards: {}
 }
 
-worker.ports.setIssues.subscribe(function(args) {
-  data.issues[args[0]] = args[1];
-});
+// map from data set to object id to client requests waiting on it
+var refreshing = {
+  issues: {},
+  prs: {},
+  references: {},
+  actors: {},
+  projects: [],
+  cards: {}
+}
 
-worker.ports.setPullRequests.subscribe(function(args) {
-  data.prs[args[0]] = args[1];
-});
+function queueRefresh(field, id, res) {
+  if (!(id in refreshing[field])) {
+    refreshing[field][id] = [];
+  }
 
-worker.ports.setReferences.subscribe(function(args) {
-  data.references[args[0]] = args[1];
-});
+  refreshing[field][id].push(res);
+}
 
-worker.ports.setActors.subscribe(function(args) {
-  data.actors[args[0]] = args[1];
-});
+function popRefresh(field, id, data) {
+  var waiting = refreshing[field][id];
+  if (waiting === undefined) {
+    return;
+  }
+
+  delete refreshing[field][id];
+
+  var res;
+  while (res = waiting.pop()) {
+    res.send(data);
+  }
+}
+
+function hydrate(field, args) {
+  var id = args[0];
+  var val = args[1];
+  data[field][id] = val;
+  popRefresh(field, id, val);
+}
 
 worker.ports.setProjects.subscribe(function(args) {
   data.projects = args;
 });
 
+worker.ports.setIssues.subscribe(function(args) {
+  hydrate("issues", args);
+});
+
+worker.ports.setPullRequests.subscribe(function(args) {
+  hydrate("prs", args);
+});
+
+worker.ports.setReferences.subscribe(function(args) {
+  hydrate("references", args);
+});
+
+worker.ports.setActors.subscribe(function(args) {
+  hydrate("actors", args);
+});
+
 worker.ports.setCards.subscribe(function(args) {
-  data.cards[args[0]] = args[1];
+  hydrate("cards", args);
 });
 
 app.use(compression())
@@ -98,6 +137,14 @@ app.get('/me', (req, res) => {
 
 app.get('/data', (req, res) => {
   res.send(JSON.stringify(data))
+})
+
+app.get('/refresh', (req, res) => {
+  for (const field in req.query) {
+    var id = req.query[field];
+    queueRefresh(field, id, res);
+    worker.ports.refresh.send([field, id]);
+  }
 })
 
 app.use('/public', express.static(publicDir))
