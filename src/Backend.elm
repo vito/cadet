@@ -4,6 +4,7 @@ import HttpBuilder
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
 import Json.Encode as JE
+import Date.Format
 import Dict exposing (Dict)
 import GitHubGraph
 import Task
@@ -119,5 +120,5 @@ encodeActorEvent : ActorEvent -> JE.Value
 encodeActorEvent { actor, createdAt } =
     JE.object
         [ ( "actor", GitHubGraph.encodeUser actor )
-        , ( "createdAt", JE.string (toString createdAt) )
+        , ( "createdAt", JE.string (Date.Format.formatISO8601 createdAt) )
         ]

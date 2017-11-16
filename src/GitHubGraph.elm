@@ -40,6 +40,7 @@ module GitHubGraph
         )
 
 import Date exposing (Date)
+import Date.Format
 import Dict
 import GraphQL.Client.Http as GH
 import GraphQL.Request.Builder as GB
@@ -985,8 +986,8 @@ encodeIssue record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "created_at", JE.string (toString record.createdAt) )
-        , ( "updated_at", JE.string (toString record.updatedAt) )
+        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
+        , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodeIssueState record.state )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
@@ -1003,8 +1004,8 @@ encodePullRequest record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "created_at", JE.string (toString record.createdAt) )
-        , ( "updated_at", JE.string (toString record.updatedAt) )
+        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
+        , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodePullRequestState record.state )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
