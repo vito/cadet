@@ -51,21 +51,24 @@ type alias Model =
     , allCards : Dict GitHubGraph.ID Card
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
-    , cardGraphs : List (ForceGraph (Node CardState))
-    , computeGraph : Data -> List Card -> List (ForceGraph (Node CardState))
+    , cardGraphs : List (ForceGraph (Node CardNodeState))
+    , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
     }
 
 
-type alias CardState =
+type alias CardNodeState =
     { currentDate : Date
     , selectedCards : List GitHubGraph.ID
     }
 
 
+type CardState
+    = IssueState GitHubGraph.IssueState
+    | PullRequestState GitHubGraph.PullRequestState
+
+
 type alias Card =
-    { isPullRequest : Bool
-    , isOpen : Bool
-    , id : GitHubGraph.ID
+    { id : GitHubGraph.ID
     , url : String
     , number : Int
     , title : String
@@ -77,6 +80,7 @@ type alias Card =
     , reactions : GitHubGraph.Reactions
     , score : Int
     , dragId : Maybe CardSource
+    , state : CardState
     }
 
 
@@ -573,9 +577,7 @@ addProjectCards cards allCards =
 
 issueCard : GitHubGraph.Issue -> Card
 issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as issue) =
-    { isPullRequest = False
-    , isOpen = state == GitHubGraph.IssueStateOpen
-    , id = id
+    { id = id
     , url = url
     , number = number
     , title = title
@@ -587,14 +589,13 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
     , reactions = reactions
     , score = GitHubGraph.pullRequestScore issue
     , dragId = Nothing
+    , state = IssueState state
     }
 
 
 prCard : GitHubGraph.PullRequest -> Card
 prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as pr) =
-    { isPullRequest = True
-    , isOpen = state == GitHubGraph.PullRequestStateOpen
-    , id = id
+    { id = id
     , url = url
     , number = number
     , title = title
@@ -606,6 +607,7 @@ prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount
     , reactions = reactions
     , score = GitHubGraph.pullRequestScore pr
     , dragId = Nothing
+    , state = PullRequestState state
     }
 
 
@@ -747,6 +749,21 @@ viewAllProjectsPage model =
             ]
 
 
+onlyOpenContentCards : List GitHubGraph.ProjectColumnCard -> List GitHubGraph.ProjectColumnCard
+onlyOpenContentCards =
+    List.filter <|
+        \{ content } ->
+            case content of
+                Just (GitHubGraph.IssueCardContent issue) ->
+                    issue.state == GitHubGraph.IssueStateOpen
+
+                Just (GitHubGraph.PullRequestCardContent pr) ->
+                    pr.state == GitHubGraph.PullRequestStateOpen
+
+                Nothing ->
+                    False
+
+
 viewProject : Model -> ProjectState -> Html Msg
 viewProject model { name, backlogs, inFlight, done } =
     Html.div [ HA.class "project" ]
@@ -758,11 +775,11 @@ viewProject model { name, backlogs, inFlight, done } =
                     ]
                 ]
             , Html.div [ HA.class "column backlog-column" ]
-                (List.map (\backlog -> viewProjectColumn model (Just 3) backlog) backlogs)
+                (List.map (\backlog -> viewProjectColumn model (List.take 3) backlog) backlogs)
             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model Nothing inFlight ]
+                [ viewProjectColumn model identity inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model Nothing done ]
+                [ viewProjectColumn model onlyOpenContentCards done ]
             ]
         , Html.div [ HA.class "project-spacer-columns" ]
             [ Html.div [ HA.class "column name-column" ]
@@ -838,18 +855,15 @@ viewDropArea model dragId mmsg =
             []
 
 
-viewProjectColumn : Model -> Maybe Int -> GitHubGraph.ProjectColumn -> Html Msg
-viewProjectColumn model mlimit col =
+viewProjectColumn : Model -> (List GitHubGraph.ProjectColumnCard -> List GitHubGraph.ProjectColumnCard) -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn model mod col =
     let
         cards =
             Maybe.withDefault [] (Dict.get col.id model.data.cards)
-
-        limit =
-            Maybe.withDefault identity (Maybe.map List.take mlimit)
     in
         Html.div [ HA.class "cards" ] <|
             viewDropArea model Nothing (Just (MoveCardAfter { columnId = col.id, afterId = Nothing }))
-                :: List.concatMap (viewProjectColumnCard model col) (limit cards)
+                :: List.concatMap (viewProjectColumnCard model col) (mod cards)
 
 
 viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> List (Html Msg)
@@ -910,15 +924,15 @@ viewSingleProject model { id, name, backlogs, inFlight, done } =
             ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text name ] ]
              , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model Nothing done ]
+                [ viewProjectColumn model onlyOpenContentCards done ]
              , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model Nothing inFlight ]
+                [ viewProjectColumn model identity inFlight ]
              ]
                 ++ flip List.map
                     backlogs
                     (\backlog ->
                         Html.div [ HA.class "column backlog-column" ]
-                            [ viewProjectColumn model Nothing backlog ]
+                            [ viewProjectColumn model identity backlog ]
                     )
             )
         , Html.div [ HA.class "spatial-graph" ] <|
@@ -939,7 +953,7 @@ viewSearch =
         ]
 
 
-computeReferenceGraph : Data -> List Card -> List (ForceGraph (Node CardState))
+computeReferenceGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
 computeReferenceGraph data cards =
     let
         cardEdges =
@@ -964,7 +978,7 @@ computeReferenceGraph data cards =
 
         cardNodeThunks =
             List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) <|
-                List.filter .isOpen cards
+                List.filter isOpen cards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
             let
@@ -999,7 +1013,7 @@ graphCompare a b =
             x
 
 
-viewGraph : Model -> ForceGraph (Node CardState) -> Html Msg
+viewGraph : Model -> ForceGraph (Node CardNodeState) -> Html Msg
 viewGraph model { graph } =
     let
         nodeContexts =
@@ -1051,7 +1065,7 @@ viewGraph model { graph } =
             ]
 
 
-viewNodeLowerUpper : CardState -> Graph.NodeContext (FG.ForceNode (Node CardState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
+viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
 viewNodeLowerUpper state { node } ( fs, ns ) =
     let
         pos =
@@ -1125,7 +1139,7 @@ issueRadiusWithFlair card context =
         issueRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
 
 
-cardNode : Card -> GraphContext -> Node CardState
+cardNode : Card -> GraphContext -> Node CardNodeState
 cardNode card context =
     let
         flair =
@@ -1153,7 +1167,7 @@ cardNode card context =
         }
 
 
-renderCardNode : Card -> CardState -> List (Svg Msg)
+renderCardNode : Card -> CardNodeState -> List (Svg Msg)
 renderCardNode card state =
     []
 
@@ -1281,7 +1295,7 @@ nodeLabelArcs card context =
             card.labels
 
 
-viewCardNodeFlair : Card -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewCardNodeFlair : Card -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
 viewCardNodeFlair card flair { x, y } state =
     Svg.g
         [ SA.opacity (toString (activityOpacity state.currentDate card.updatedAt * 0.75))
@@ -1306,41 +1320,43 @@ activityOpacity now date =
             0.25
 
 
-viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardState -> Svg Msg
+viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
 viewCardNode card radii labels { x, y } state =
     let
         isSelected =
             List.member card.id state.selectedCards
 
         circleWithNumber =
-            if not card.isPullRequest then
-                [ Svg.circle
-                    [ SA.r (toString radii.base)
-                    , SA.fill "#fff"
+            case card.state of
+                PullRequestState _ ->
+                    [ Svg.circle
+                        [ SA.r (toString radii.base)
+                        , SA.fill "#fff"
+                        ]
+                        []
+                    , Svg.text_
+                        [ SA.textAnchor "middle"
+                        , SA.alignmentBaseline "middle"
+                        , SA.class "issue-number"
+                        ]
+                        [ Svg.text (toString card.number)
+                        ]
                     ]
-                    []
-                , Svg.text_
-                    [ SA.textAnchor "middle"
-                    , SA.alignmentBaseline "middle"
-                    , SA.class "issue-number"
+
+                _ ->
+                    [ Svg.circle
+                        [ SA.r (toString radii.base)
+                        , SA.class "pr-circle"
+                        ]
+                        []
+                    , Svg.text_
+                        [ SA.textAnchor "middle"
+                        , SA.alignmentBaseline "middle"
+                        , SA.fill "#fff"
+                        ]
+                        [ Svg.text (toString card.number)
+                        ]
                     ]
-                    [ Svg.text (toString card.number)
-                    ]
-                ]
-            else
-                [ Svg.circle
-                    [ SA.r (toString radii.base)
-                    , SA.class "pr-circle"
-                    ]
-                    []
-                , Svg.text_
-                    [ SA.textAnchor "middle"
-                    , SA.alignmentBaseline "middle"
-                    , SA.fill "#fff"
-                    ]
-                    [ Svg.text (toString card.number)
-                    ]
-                ]
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
@@ -1392,6 +1408,19 @@ isAnticipated model card =
     List.member card.id model.anticipatedCards && not (List.member card.id model.selectedCards)
 
 
+isOpen : Card -> Bool
+isOpen card =
+    case card.state of
+        IssueState GitHubGraph.IssueStateOpen ->
+            True
+
+        PullRequestState GitHubGraph.PullRequestStateOpen ->
+            True
+
+        _ ->
+            False
+
+
 isInFlight : Card -> Bool
 isInFlight =
     inColumn detectColumn.inFlight
@@ -1423,7 +1452,24 @@ viewCard model card =
          ]
             ++ dragAttrs model card.dragId
         )
-        [ Html.div [ HA.class "card-info" ]
+        [ Html.div [ HA.class "card-icons" ]
+            [ case card.state of
+                IssueState GitHubGraph.IssueStateOpen ->
+                    Html.span [ HA.class "octicon open octicon-issue-opened" ] []
+
+                IssueState GitHubGraph.IssueStateClosed ->
+                    Html.span [ HA.class "octicon closed octicon-issue-closed" ] []
+
+                PullRequestState GitHubGraph.PullRequestStateOpen ->
+                    Html.span [ HA.class "octicon open octicon-git-pull-request" ] []
+
+                PullRequestState GitHubGraph.PullRequestStateClosed ->
+                    Html.span [ HA.class "octicon closed octicon-git-pull-request" ] []
+
+                PullRequestState GitHubGraph.PullRequestStateMerged ->
+                    Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
+            ]
+        , Html.div [ HA.class "card-info" ]
             [ Html.div [ HA.class "card-actors" ] <|
                 List.map (viewCardActor model) (recentActors model card)
             , Html.a
