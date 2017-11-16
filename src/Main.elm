@@ -45,7 +45,7 @@ type alias Model =
     , me : Maybe Me
     , page : Page
     , currentDate : Date
-    , drag : Maybe DragState
+    , drag : Maybe (DragState CardSource)
     , data : Data
     , allCards : Dict GitHubGraph.ID Card
     , selectedCards : List GitHubGraph.ID
@@ -74,12 +74,16 @@ type alias Card =
     , commentCount : Int
     , reactions : GitHubGraph.Reactions
     , score : Int
-    , dragId : Maybe GitHubGraph.ID
+    , dragId : Maybe CardSource
     }
 
 
-type alias CardLocation =
-    { column : GitHubGraph.ID, after : Maybe GitHubGraph.ID }
+type alias CardDestination =
+    { columnId : GitHubGraph.ID, afterId : Maybe GitHubGraph.ID }
+
+
+type alias CardSource =
+    { columnId : GitHubGraph.ID, cardId : GitHubGraph.ID }
 
 
 type alias DragStartState =
@@ -95,13 +99,13 @@ type Msg
     | SetPage Page
     | Tick Time
     | SetCurrentDate Date
-    | DragStart GitHubGraph.ID DragStartState
+    | DragStart CardSource DragStartState
     | DragAt Mouse.Position
     | DragOver (Maybe Msg)
     | DragEnd Mouse.Position
-    | MoveCardAfter CardLocation
+    | MoveCardAfter CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error ())
-    | CardsFetched GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
+    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
     | MeFetched (Result Http.Error Me)
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
@@ -119,8 +123,8 @@ type Page
     | ProjectPage String
 
 
-type alias DragState =
-    { id : GitHubGraph.ID
+type alias DragState a =
+    { id : a
     , startPos : Mouse.Position
     , currentPos : Mouse.Position
     , rect : DOM.Rectangle
@@ -129,6 +133,7 @@ type alias DragState =
     , msg : Maybe Msg
     , purposeful : Bool
     , dropped : Bool
+    , landed : Bool
     , neverLeft : Bool
     }
 
@@ -350,6 +355,7 @@ update msg model =
                         , msg = Nothing
                         , purposeful = False
                         , dropped = False
+                        , landed = False
                         , neverLeft = True
                         }
               }
@@ -408,29 +414,44 @@ update msg model =
             in
                 ( { model | drag = newDrag }, Cmd.none )
 
-        MoveCardAfter ({ column, after } as loc) ->
+        MoveCardAfter dest ->
             case model.drag of
                 Just drag ->
-                    ( model, moveCard model loc drag.id )
+                    ( model, moveCard model dest drag.id.cardId )
 
                 Nothing ->
                     ( model, Cmd.none )
 
         CardMoved col (Ok ()) ->
-            ( model, Backend.refreshCards col (CardsFetched col) )
+            case model.drag of
+                Just drag ->
+                    let
+                        finishDrag model =
+                            ( { model | drag = Nothing }, Cmd.none )
+
+                        refresh landed id model =
+                            ( { model | drag = Just { drag | landed = landed } }, Backend.refreshCards id (CardsFetched finishDrag id) )
+                    in
+                        if drag.id.columnId == col then
+                            refresh False col model
+                        else
+                            ( model, Backend.refreshCards col (CardsFetched (refresh True drag.id.columnId) col) )
+
+                Nothing ->
+                    ( model, Cmd.none )
 
         CardMoved col (Err msg) ->
             flip always (Debug.log "failed to move card" msg) <|
                 ( model, Cmd.none )
 
-        CardsFetched col (Ok cards) ->
+        CardsFetched cb col (Ok cards) ->
             let
                 data =
                     model.data
             in
-                ( { model | drag = Nothing, data = { data | cards = Dict.insert col cards data.cards } }, Cmd.none )
+                cb { model | data = { data | cards = Dict.insert col cards data.cards } }
 
-        CardsFetched col (Err msg) ->
+        CardsFetched _ col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
                 ( model, Cmd.none )
 
@@ -727,8 +748,8 @@ viewProject model { name, backlog, inFlight, done } =
         ]
 
 
-viewDropArea : Model -> Maybe GitHubGraph.ID -> Maybe Msg -> Html Msg
-viewDropArea model mid mmsg =
+viewDropArea : Model -> Maybe CardSource -> Maybe Msg -> Html Msg
+viewDropArea model dragId mmsg =
     let
         dragEvents =
             case model.drag of
@@ -743,6 +764,14 @@ viewDropArea model mid mmsg =
                 Nothing ->
                     []
 
+        isActive =
+            case model.drag of
+                Nothing ->
+                    False
+
+                Just { purposeful, dropped } ->
+                    purposeful && not dropped
+
         isOver =
             case model.drag of
                 Nothing ->
@@ -751,15 +780,15 @@ viewDropArea model mid mmsg =
                 Just drag ->
                     case drag.msg of
                         Just _ ->
-                            drag.msg == mmsg
+                            drag.msg == mmsg && not (drag.dropped && drag.landed)
 
                         _ ->
-                            drag.neverLeft && drag.purposeful && mid == Just drag.id
+                            drag.neverLeft && drag.purposeful && dragId == Just drag.id
     in
         Html.div
             ([ HA.classList
                 [ ( "drop-area", True )
-                , ( "active", Maybe.withDefault False (Maybe.map .purposeful model.drag) )
+                , ( "active", isActive )
                 , ( "never-left", Maybe.withDefault False (Maybe.map .neverLeft model.drag) )
                 , ( "over", isOver )
                 ]
@@ -787,7 +816,7 @@ viewFullProjectColumn model col =
             Maybe.withDefault [] (Dict.get col.id model.data.cards)
     in
         Html.div [ HA.class "cards" ] <|
-            viewDropArea model Nothing (Just (MoveCardAfter { column = col.id, after = Nothing }))
+            viewDropArea model Nothing (Just (MoveCardAfter { columnId = col.id, afterId = Nothing }))
                 :: List.concatMap (viewProjectColumnCard model col) cards
 
 
@@ -801,9 +830,16 @@ viewProjectColumnCard model col ghCard =
         ( Nothing, Just i ) ->
             case Dict.get i model.allCards of
                 Just card ->
-                    [ viewCard model { card | dragId = Just ghCard.id }
-                    , viewDropArea model (Just ghCard.id) (Just (MoveCardAfter { column = col.id, after = Just ghCard.id }))
-                    ]
+                    let
+                        dragId =
+                            Just { columnId = col.id, cardId = ghCard.id }
+
+                        dragTarget =
+                            { columnId = col.id, afterId = Just ghCard.id }
+                    in
+                        [ viewCard model { card | dragId = dragId }
+                        , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
+                        ]
 
                 Nothing ->
                     -- closed issue?
@@ -1578,12 +1614,12 @@ nodeBounds nc =
         nc.node.label.value.bounds { x = x, y = y }
 
 
-moveCard : Model -> CardLocation -> GitHubGraph.ID -> Cmd Msg
-moveCard model { column, after } id =
+moveCard : Model -> CardDestination -> GitHubGraph.ID -> Cmd Msg
+moveCard model { columnId, afterId } cardId =
     case model.me of
         Just { token } ->
-            GitHubGraph.moveCardAfter token column id after
-                |> Task.attempt (CardMoved column)
+            GitHubGraph.moveCardAfter token columnId cardId afterId
+                |> Task.attempt (CardMoved columnId)
 
         Nothing ->
             Cmd.none
