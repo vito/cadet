@@ -26245,37 +26245,37 @@ var _vito$cadet$Main$viewCardEntry = F2(
 			},
 			{
 				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('card-buttons'),
-						_1: {ctor: '[]'}
-					},
-					{
-						ctor: '::',
-						_0: (!anticipated) ? A2(
-							_elm_lang$html$Html$span,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Events$onClick(
-									_vito$cadet$Main$DeselectCard(card.id)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
-									_1: {ctor: '[]'}
-								}
-							},
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html$text(''),
-								_1: {ctor: '[]'}
-							}) : _elm_lang$html$Html$text(''),
-						_1: {ctor: '[]'}
-					}),
+				_0: A2(_vito$cadet$Main$viewCard, model, card),
 				_1: {
 					ctor: '::',
-					_0: A2(_vito$cadet$Main$viewCard, model, card),
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('card-buttons'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: (!anticipated) ? A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_vito$cadet$Main$DeselectCard(card.id)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
+										_1: {ctor: '[]'}
+									}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(''),
+									_1: {ctor: '[]'}
+								}) : _elm_lang$html$Html$text(''),
+							_1: {ctor: '[]'}
+						}),
 					_1: {ctor: '[]'}
 				}
 			});

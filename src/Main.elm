@@ -1347,7 +1347,8 @@ viewCardEntry model card =
             isAnticipated model card
     in
         Html.div [ HA.class "card-controls" ]
-            [ Html.div [ HA.class "card-buttons" ]
+            [ viewCard model card
+            , Html.div [ HA.class "card-buttons" ]
                 [ if not anticipated then
                     Html.span
                         [ HE.onClick (DeselectCard card.id)
@@ -1357,7 +1358,6 @@ viewCardEntry model card =
                   else
                     Html.text ""
                 ]
-            , viewCard model card
             ]
 
 

@@ -9,7 +9,6 @@
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  color: inherit;
   text-decoration: none;
 }
 
@@ -22,6 +21,10 @@ body {
   font-size: 12px;
   line-height: 1.2;
   background: @background;
+}
+
+a {
+  color: inherit;
 }
 
 .cadet {
@@ -48,7 +51,7 @@ body {
   .page-sidebar {
     overflow-y: auto;
     flex-shrink: 0;
-    width: 300px + (2 * @card-margin);
+    min-width: 300px + (2 * @card-margin) + 15px; // 15px = controls
 
     background: @gray-dark;
 
@@ -168,9 +171,25 @@ body {
   position: relative;
 
   .card-buttons {
-    position: absolute;
-    bottom: 22px;
-    left: -20px;
+    color: @white-fade-50;
+    margin-top: @card-margin;
+    margin-left: -(@card-margin * 2);
+    margin-bottom: 0;
+    padding: 4px 2px 4px (@card-margin + 4px);
+    flex-grow: 1;
+    background: @black;
+    border-top-right-radius: @card-margin;
+    border-bottom-right-radius: @card-margin;
+    border: 1px solid @gray-900;
+    border-left: 0;
+
+    .octicon {
+      cursor: pointer;
+
+      &:hover {
+        color: @white;
+      }
+    }
   }
 }
 
