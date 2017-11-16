@@ -69,10 +69,10 @@ refreshCards col f =
         |> Task.attempt f
 
 
-fetchMe : (Result Http.Error Me -> msg) -> Cmd msg
+fetchMe : (Result Http.Error (Maybe Me) -> msg) -> Cmd msg
 fetchMe f =
     HttpBuilder.get "/me"
-        |> HttpBuilder.withExpect (Http.expectJson decodeMe)
+        |> HttpBuilder.withExpect (Http.expectJson (JD.maybe decodeMe))
         |> HttpBuilder.toTask
         |> Task.attempt f
 

@@ -106,7 +106,7 @@ type Msg
     | MoveCardAfter CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error ())
     | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
-    | MeFetched (Result Http.Error Me)
+    | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
@@ -509,7 +509,7 @@ update msg model =
             ( { model | anticipatedCards = List.filter ((/=) id) model.anticipatedCards }, Cmd.none )
 
         MeFetched (Ok me) ->
-            ( { model | me = Just me }, Cmd.none )
+            ( { model | me = me }, Cmd.none )
 
         MeFetched (Err msg) ->
             flip always (Debug.log "error fetching self" msg) <|

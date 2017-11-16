@@ -149,7 +149,7 @@ if (process.env.GITHUB_CLIENT_ID) {
 const publicDir = path.join(__dirname, 'public');
 
 app.get('/me', (req, res) => {
-  res.send(JSON.stringify(req.user))
+  res.send(JSON.stringify(req.user || null))
 })
 
 app.get('/data', (req, res) => {

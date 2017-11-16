@@ -12144,7 +12144,8 @@ var _vito$cadet$Backend$fetchMe = function (f) {
 		_lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeMe),
+				_elm_lang$http$Http$expectJson(
+					_elm_lang$core$Json_Decode$maybe(_vito$cadet$Backend$decodeMe)),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/me'))));
 };
 var _vito$cadet$Backend$ActorEvent = F2(
