@@ -448,27 +448,11 @@ update msg model =
             let
                 data =
                     model.data
-
-                newAllCards =
-                    List.foldl
-                        (\card ->
-                            case card.content of
-                                Nothing ->
-                                    identity
-
-                                Just (GitHubGraph.IssueCardContent i) ->
-                                    Dict.insert i.id (issueCard i)
-
-                                Just (GitHubGraph.PullRequestCardContent p) ->
-                                    Dict.insert p.id (prCard p)
-                        )
-                        model.allCards
-                        cards
             in
                 cb
                     { model
                         | data = { data | cards = Dict.insert col cards data.cards }
-                        , allCards = newAllCards
+                        , allCards = addProjectCards cards model.allCards
                     }
 
         CardsFetched _ col (Err msg) ->
@@ -544,7 +528,7 @@ update msg model =
                     Dict.foldl (\_ ps cards -> List.foldl (\p -> Dict.insert p.id (prCard p)) cards ps) withIssues data.prs
 
                 allCards =
-                    withPRs
+                    List.foldl addProjectCards withPRs (Dict.values data.cards)
             in
                 ( { model
                     | data = data
@@ -557,6 +541,24 @@ update msg model =
         DataFetched (Err msg) ->
             flip always (Debug.log "error fetching data" msg) <|
                 ( model, Cmd.none )
+
+
+addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
+addProjectCards cards allCards =
+    List.foldl
+        (\card ->
+            case card.content of
+                Nothing ->
+                    identity
+
+                Just (GitHubGraph.IssueCardContent i) ->
+                    Dict.insert i.id (issueCard i)
+
+                Just (GitHubGraph.PullRequestCardContent p) ->
+                    Dict.insert p.id (prCard p)
+        )
+        allCards
+        cards
 
 
 issueCard : GitHubGraph.Issue -> Card
