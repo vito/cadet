@@ -10,6 +10,7 @@
     "exposed-modules": [],
     "native-modules": true,
     "dependencies": {
+        "debois/elm-dom": "1.2.3 <= v < 2.0.0",
         "elm-community/graph": "4.0.1 <= v < 5.0.0",
         "elm-community/intdict": "2.0.0 <= v < 3.0.0",
         "elm-community/json-extra": "2.1.0 <= v < 3.0.0",

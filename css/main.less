@@ -180,7 +180,6 @@ body {
   white-space: normal;
   vertical-align: top;
   user-select: none;
-  transition: all 0.2s ease-in-out;
   display: flex;
   flex-direction: row;
   position: relative;
@@ -322,6 +321,8 @@ body {
 }
 
 @card-width: 300px;
+
+// NOTE: when changing, be sure to update drop area height in elm
 @card-margin: 8px;
 
 .drop-area {
@@ -330,14 +331,18 @@ body {
   top: -30px;
   margin-bottom: -60px;
   z-index: -1;
-  transition: all 0.2s ease-in-out;
 
   &.active {
     z-index: 3;
+    transition: height 0.2s ease-in-out;
   }
 
   &.over {
-    height: 100px;
+    transition: height 0.2s ease-in-out;
+  }
+
+  &.never-left {
+    transition: none;
   }
 }
 

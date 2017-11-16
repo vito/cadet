@@ -12,12 +12,14 @@ import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode as JD
+import Json.Decode.Extra as JDE exposing ((|:))
 import Mouse
 import Navigation
 import ParseInt
 import Regex exposing (Regex)
 import RouteUrl
 import RouteUrl.Builder
+import DOM
 import Set
 import Svg exposing (Svg)
 import Svg.Attributes as SA
@@ -80,12 +82,20 @@ type alias CardLocation =
     { column : GitHubGraph.ID, after : Maybe GitHubGraph.ID }
 
 
+type alias DragStartState =
+    { pos : Mouse.Position
+    , rect : DOM.Rectangle
+    , x : Float
+    , y : Float
+    }
+
+
 type Msg
     = Noop
     | SetPage Page
     | Tick Time
     | SetCurrentDate Date
-    | DragStart GitHubGraph.ID Mouse.Position
+    | DragStart GitHubGraph.ID DragStartState
     | DragAt Mouse.Position
     | DragOver (Maybe Msg)
     | DragEnd Mouse.Position
@@ -113,9 +123,13 @@ type alias DragState =
     { id : GitHubGraph.ID
     , startPos : Mouse.Position
     , currentPos : Mouse.Position
+    , rect : DOM.Rectangle
+    , eleStartX : Float
+    , eleStartY : Float
     , msg : Maybe Msg
     , purposeful : Bool
     , dropped : Bool
+    , neverLeft : Bool
     }
 
 
@@ -124,9 +138,18 @@ purposefulDragTreshold =
     10
 
 
-onDragStart : (Mouse.Position -> msg) -> Html.Attribute msg
+decodeDragStartState : JD.Decoder DragStartState
+decodeDragStartState =
+    JD.succeed DragStartState
+        |: Mouse.position
+        |: JD.field "currentTarget" DOM.boundingClientRect
+        |: JD.field "currentTarget" DOM.offsetLeft
+        |: JD.field "currentTarget" DOM.offsetTop
+
+
+onDragStart : (DragStartState -> msg) -> Html.Attribute msg
 onDragStart msg =
-    HE.on "mousedown" (JD.map msg Mouse.position)
+    HE.on "mousedown" (JD.map msg decodeDragStartState)
 
 
 main : RouteUrl.RouteUrlProgram Config Model Msg
@@ -314,16 +337,20 @@ update msg model =
         SetCurrentDate date ->
             ( { model | currentDate = date }, Cmd.none )
 
-        DragStart id pos ->
+        DragStart id { pos, rect, x, y } ->
             ( { model
                 | drag =
                     Just
                         { id = id
                         , startPos = pos
                         , currentPos = pos
+                        , rect = rect
+                        , eleStartX = x
+                        , eleStartY = y
                         , msg = Nothing
                         , purposeful = False
                         , dropped = False
+                        , neverLeft = True
                         }
               }
             , Cmd.none
@@ -374,7 +401,7 @@ update msg model =
                 newDrag =
                     case model.drag of
                         Just drag ->
-                            Just { drag | msg = msg }
+                            Just { drag | msg = msg, neverLeft = False }
 
                         Nothing ->
                             Nothing
@@ -715,26 +742,40 @@ viewDropArea model mid mmsg =
 
                 Nothing ->
                     []
+
+        isOver =
+            case model.drag of
+                Nothing ->
+                    False
+
+                Just drag ->
+                    case drag.msg of
+                        Just _ ->
+                            drag.msg == mmsg
+
+                        _ ->
+                            drag.neverLeft && drag.purposeful && mid == Just drag.id
     in
         Html.div
-            (HA.classList
+            ([ HA.classList
                 [ ( "drop-area", True )
                 , ( "active", Maybe.withDefault False (Maybe.map .purposeful model.drag) )
-                , ( "over"
-                  , case model.drag of
-                        Nothing ->
-                            False
-
-                        Just drag ->
-                            case drag.msg of
-                                Just _ ->
-                                    drag.msg == mmsg
-
-                                _ ->
-                                    drag.purposeful && mid == Just drag.id
-                  )
+                , ( "never-left", Maybe.withDefault False (Maybe.map .neverLeft model.drag) )
+                , ( "over", isOver )
                 ]
-                :: dragEvents
+             , HA.style <|
+                case model.drag of
+                    Nothing ->
+                        []
+
+                    Just drag ->
+                        if isOver then
+                            -- drop-area height + 2 * card-margin
+                            [ ( "height", toString (60 + (2 * 8) + drag.rect.height) ++ "px" ) ]
+                        else
+                            []
+             ]
+                ++ dragEvents
             )
             []
 
@@ -1293,12 +1334,12 @@ viewCard model card =
     let
         moveStyle =
             case ( card.dragId, model.drag ) of
-                ( Just dragId, Just { purposeful, id, startPos, currentPos } ) ->
+                ( Just dragId, Just { purposeful, id, eleStartX, eleStartY, startPos, currentPos } ) ->
                     if purposeful && id == dragId then
                         [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
                         , ( "position", "absolute" )
-                        , ( "top", toString (currentPos.y) ++ "px" )
-                        , ( "left", toString (currentPos.x) ++ "px" )
+                        , ( "top", toString (eleStartY + toFloat (currentPos.y - startPos.y)) ++ "px" )
+                        , ( "left", toString (eleStartX + toFloat (currentPos.x - startPos.x)) ++ "px" )
                         , ( "z-index", "2" )
                         ]
                     else
