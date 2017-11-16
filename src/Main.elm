@@ -51,6 +51,8 @@ type alias Model =
     , allCards : Dict GitHubGraph.ID Card
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
+    , highlightedCard : Maybe GitHubGraph.ID
+    , highlightedNode : Maybe GitHubGraph.ID
     , cardGraphs : List (ForceGraph (Node CardNodeState))
     , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
     }
@@ -60,6 +62,7 @@ type alias CardNodeState =
     { currentDate : Date
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
+    , highlightedNode : Maybe GitHubGraph.ID
     }
 
 
@@ -119,6 +122,10 @@ type Msg
     | DeselectCard GitHubGraph.ID
     | AnticipateCard GitHubGraph.ID
     | UnanticipateCard GitHubGraph.ID
+    | HighlightCard GitHubGraph.ID
+    | UnhighlightCard GitHubGraph.ID
+    | HighlightNode GitHubGraph.ID
+    | UnhighlightNode GitHubGraph.ID
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
@@ -283,6 +290,8 @@ init config =
       , allCards = Dict.empty
       , selectedCards = []
       , anticipatedCards = []
+      , highlightedCard = Nothing
+      , highlightedNode = Nothing
       , currentDate = Date.fromTime config.initialDate
       , cardGraphs = []
       , computeGraph = computeReferenceGraph
@@ -531,6 +540,22 @@ update msg model =
 
         UnanticipateCard id ->
             ( { model | anticipatedCards = List.filter ((/=) id) model.anticipatedCards }, Cmd.none )
+
+        HighlightCard id ->
+            ( { model | highlightedCard = Just id }
+            , Cmd.none
+            )
+
+        UnhighlightCard id ->
+            ( { model | highlightedCard = Nothing }, Cmd.none )
+
+        HighlightNode id ->
+            ( { model | highlightedNode = Just id }
+            , Cmd.none
+            )
+
+        UnhighlightNode id ->
+            ( { model | highlightedNode = Nothing }, Cmd.none )
 
         MeFetched (Ok me) ->
             ( { model | me = me }, Cmd.none )
@@ -1055,6 +1080,7 @@ viewGraph model { graph } =
             { currentDate = model.currentDate
             , selectedCards = model.selectedCards
             , anticipatedCards = model.anticipatedCards
+            , highlightedNode = model.highlightedNode
             }
 
         ( flairs, nodes ) =
@@ -1304,23 +1330,24 @@ nodeLabelArcs card context =
 viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
 viewCardNodeFlair card radii flair { x, y } state =
     let
-        isAnticipated =
+        isHighlighted =
             List.member card.id state.anticipatedCards
+                || (state.highlightedNode == Just card.id)
 
         ( scale, opacity ) =
-            if isAnticipated then
-                ( "1.1", "1" )
+            if isHighlighted then
+                ( "1.1", toString (activityOpacity state.currentDate card.updatedAt * 0.75) )
             else
                 ( "1", toString (activityOpacity state.currentDate card.updatedAt * 0.75) )
 
         anticipateRadius =
             if List.isEmpty card.labels then
-                radii.withLabels
+                radii.base + 5
             else
-                radii.withLabels + 3
+                radii.withLabels + 5
 
         anticipatedHalo =
-            if isAnticipated then
+            if isHighlighted then
                 [ Svg.circle
                     [ SA.r (toString anticipateRadius)
                     , SA.class "anticipated-circle"
@@ -1331,12 +1358,18 @@ viewCardNodeFlair card radii flair { x, y } state =
                 []
     in
         Svg.g
-            [ SA.opacity opacity
-            , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
+            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
             , SE.onMouseOver (AnticipateCard card.id)
             , SE.onMouseOut (UnanticipateCard card.id)
+            , SE.onMouseOver (HighlightCard card.id)
+            , SE.onMouseOut (UnhighlightCard card.id)
             ]
-            (flair ++ anticipatedHalo)
+            [ Svg.g
+                [ SA.opacity opacity
+                ]
+                flair
+            , Svg.g [] anticipatedHalo
+            ]
 
 
 activityOpacity : Date -> Date -> Float
@@ -1361,8 +1394,9 @@ viewCardNode card radii labels { x, y } state =
         isSelected =
             List.member card.id state.selectedCards
 
-        isAnticipated =
+        isHighlighted =
             List.member card.id state.anticipatedCards
+                || (state.highlightedNode == Just card.id)
 
         circleWithNumber =
             case card.state of
@@ -1397,7 +1431,7 @@ viewCardNode card radii labels { x, y } state =
                     ]
 
         scale =
-            if isAnticipated then
+            if isHighlighted then
                 "1.1"
             else
                 "1"
@@ -1406,6 +1440,8 @@ viewCardNode card radii labels { x, y } state =
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
             , SE.onMouseOver (AnticipateCard card.id)
             , SE.onMouseOut (UnanticipateCard card.id)
+            , SE.onMouseOver (HighlightCard card.id)
+            , SE.onMouseOut (UnhighlightCard card.id)
             , SE.onClick
                 (if isSelected then
                     DeselectCard card.id
@@ -1491,10 +1527,13 @@ viewCard model card =
             , ( "done", isDone card )
             , ( "backlog", isBacklog card )
             , ( "anticipated", isAnticipated model card )
+            , ( "highlighted", model.highlightedCard == Just card.id )
             ]
          , HE.onClick (SelectCard card.id)
          , HE.onMouseOver (AnticipateCard card.id)
          , HE.onMouseOut (UnanticipateCard card.id)
+         , HE.onMouseOver (HighlightNode card.id)
+         , HE.onMouseOut (UnhighlightNode card.id)
          ]
             ++ dragAttrs model card.dragId
         )

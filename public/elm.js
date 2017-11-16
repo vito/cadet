@@ -23875,8 +23875,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1704, column: 25},
-							end: {line: 1718, column: 57}
+							start: {line: 1743, column: 25},
+							end: {line: 1757, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -23986,8 +23986,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1630, column: 17},
-					end: {line: 1638, column: 50}
+					start: {line: 1669, column: 17},
+					end: {line: 1677, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -23995,8 +23995,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1628, column: 9},
-				end: {line: 1641, column: 42}
+				start: {line: 1667, column: 9},
+				end: {line: 1680, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -24289,8 +24289,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1232, column: 17},
-							end: {line: 1237, column: 49}
+							start: {line: 1258, column: 17},
+							end: {line: 1263, column: 49}
 						},
 						_p32)('impossible');
 				}
@@ -24501,7 +24501,7 @@ var _vito$cadet$Main$viewGraph = F2(
 	function (model, _p47) {
 		var _p48 = _p47;
 		var _p58 = _p48.graph;
-		var state = {currentDate: model.currentDate, selectedCards: model.selectedCards, anticipatedCards: model.anticipatedCards};
+		var state = {currentDate: model.currentDate, selectedCards: model.selectedCards, anticipatedCards: model.anticipatedCards, highlightedNode: model.highlightedNode};
 		var _p49 = A3(
 			_elm_community$graph$Graph$fold,
 			_vito$cadet$Main$viewNodeLowerUpper(state),
@@ -24845,7 +24845,11 @@ var _vito$cadet$Main$Model = function (a) {
 								return function (i) {
 									return function (j) {
 										return function (k) {
-											return {config: a, me: b, page: c, currentDate: d, drag: e, data: f, allCards: g, selectedCards: h, anticipatedCards: i, cardGraphs: j, computeGraph: k};
+											return function (l) {
+												return function (m) {
+													return {config: a, me: b, page: c, currentDate: d, drag: e, data: f, allCards: g, selectedCards: h, anticipatedCards: i, highlightedCard: j, highlightedNode: k, cardGraphs: l, computeGraph: m};
+												};
+											};
 										};
 									};
 								};
@@ -24857,9 +24861,9 @@ var _vito$cadet$Main$Model = function (a) {
 		};
 	};
 };
-var _vito$cadet$Main$CardNodeState = F3(
-	function (a, b, c) {
-		return {currentDate: a, selectedCards: b, anticipatedCards: c};
+var _vito$cadet$Main$CardNodeState = F4(
+	function (a, b, c, d) {
+		return {currentDate: a, selectedCards: b, anticipatedCards: c, highlightedNode: d};
 	});
 var _vito$cadet$Main$Card = function (a) {
 	return function (b) {
@@ -25093,6 +25097,18 @@ var _vito$cadet$Main$viewSearch = A2(
 			_1: {ctor: '[]'}
 		}
 	});
+var _vito$cadet$Main$UnhighlightNode = function (a) {
+	return {ctor: 'UnhighlightNode', _0: a};
+};
+var _vito$cadet$Main$HighlightNode = function (a) {
+	return {ctor: 'HighlightNode', _0: a};
+};
+var _vito$cadet$Main$UnhighlightCard = function (a) {
+	return {ctor: 'UnhighlightCard', _0: a};
+};
+var _vito$cadet$Main$HighlightCard = function (a) {
+	return {ctor: 'HighlightCard', _0: a};
+};
 var _vito$cadet$Main$UnanticipateCard = function (a) {
 	return {ctor: 'UnanticipateCard', _0: a};
 };
@@ -25102,9 +25118,16 @@ var _vito$cadet$Main$AnticipateCard = function (a) {
 var _vito$cadet$Main$viewCardNodeFlair = F5(
 	function (card, radii, flair, _p76, state) {
 		var _p77 = _p76;
-		var anticipateRadius = _elm_lang$core$List$isEmpty(card.labels) ? radii.withLabels : (radii.withLabels + 3);
-		var isAnticipated = A2(_elm_lang$core$List$member, card.id, state.anticipatedCards);
-		var _p78 = isAnticipated ? {ctor: '_Tuple2', _0: '1.1', _1: '1'} : {
+		var anticipateRadius = _elm_lang$core$List$isEmpty(card.labels) ? (radii.base + 5) : (radii.withLabels + 5);
+		var isHighlighted = A2(_elm_lang$core$List$member, card.id, state.anticipatedCards) || _elm_lang$core$Native_Utils.eq(
+			state.highlightedNode,
+			_elm_lang$core$Maybe$Just(card.id));
+		var _p78 = isHighlighted ? {
+			ctor: '_Tuple2',
+			_0: '1.1',
+			_1: _elm_lang$core$Basics$toString(
+				A2(_vito$cadet$Main$activityOpacity, state.currentDate, card.updatedAt) * 0.75)
+		} : {
 			ctor: '_Tuple2',
 			_0: '1',
 			_1: _elm_lang$core$Basics$toString(
@@ -25112,7 +25135,7 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 		};
 		var scale = _p78._0;
 		var opacity = _p78._1;
-		var anticipatedHalo = isAnticipated ? {
+		var anticipatedHalo = isHighlighted ? {
 			ctor: '::',
 			_0: A2(
 				_elm_lang$svg$Svg$circle,
@@ -25133,40 +25156,64 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 			_elm_lang$svg$Svg$g,
 			{
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$opacity(opacity),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$transform(
+				_0: _elm_lang$svg$Svg_Attributes$transform(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'translate(',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							'translate(',
+							_elm_lang$core$Basics$toString(_p77.x),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								_elm_lang$core$Basics$toString(_p77.x),
+								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									', ',
+									_elm_lang$core$Basics$toString(_p77.y),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										_elm_lang$core$Basics$toString(_p77.y),
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											') scale(',
-											A2(_elm_lang$core$Basics_ops['++'], scale, ')'))))))),
+										') scale(',
+										A2(_elm_lang$core$Basics_ops['++'], scale, ')'))))))),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Events$onMouseOver(
+						_vito$cadet$Main$AnticipateCard(card.id)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Events$onMouseOver(
-							_vito$cadet$Main$AnticipateCard(card.id)),
+						_0: _elm_lang$svg$Svg_Events$onMouseOut(
+							_vito$cadet$Main$UnanticipateCard(card.id)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Events$onMouseOut(
-								_vito$cadet$Main$UnanticipateCard(card.id)),
-							_1: {ctor: '[]'}
+							_0: _elm_lang$svg$Svg_Events$onMouseOver(
+								_vito$cadet$Main$HighlightCard(card.id)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Events$onMouseOut(
+									_vito$cadet$Main$UnhighlightCard(card.id)),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
 			},
-			A2(_elm_lang$core$Basics_ops['++'], flair, anticipatedHalo));
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$svg$Svg$g,
+					{
+						ctor: '::',
+						_0: _elm_lang$svg$Svg_Attributes$opacity(opacity),
+						_1: {ctor: '[]'}
+					},
+					flair),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$svg$Svg$g,
+						{ctor: '[]'},
+						anticipatedHalo),
+					_1: {ctor: '[]'}
+				}
+			});
 	});
 var _vito$cadet$Main$DeselectCard = function (a) {
 	return {ctor: 'DeselectCard', _0: a};
@@ -25265,8 +25312,10 @@ var _vito$cadet$Main$viewCardNode = F5(
 				};
 			}
 		}();
-		var isAnticipated = A2(_elm_lang$core$List$member, card.id, state.anticipatedCards);
-		var scale = isAnticipated ? '1.1' : '1';
+		var isHighlighted = A2(_elm_lang$core$List$member, card.id, state.anticipatedCards) || _elm_lang$core$Native_Utils.eq(
+			state.highlightedNode,
+			_elm_lang$core$Maybe$Just(card.id));
+		var scale = isHighlighted ? '1.1' : '1';
 		var isSelected = A2(_elm_lang$core$List$member, card.id, state.selectedCards);
 		return A2(
 			_elm_lang$svg$Svg$g,
@@ -25299,9 +25348,19 @@ var _vito$cadet$Main$viewCardNode = F5(
 							_vito$cadet$Main$UnanticipateCard(card.id)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Events$onClick(
-								isSelected ? _vito$cadet$Main$DeselectCard(card.id) : _vito$cadet$Main$SelectCard(card.id)),
-							_1: {ctor: '[]'}
+							_0: _elm_lang$svg$Svg_Events$onMouseOver(
+								_vito$cadet$Main$HighlightCard(card.id)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$svg$Svg_Events$onMouseOut(
+									_vito$cadet$Main$UnhighlightCard(card.id)),
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$svg$Svg_Events$onClick(
+										isSelected ? _vito$cadet$Main$DeselectCard(card.id) : _vito$cadet$Main$SelectCard(card.id)),
+									_1: {ctor: '[]'}
+								}
+							}
 						}
 					}
 				}
@@ -25778,6 +25837,42 @@ var _vito$cadet$Main$update = F2(
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
+				case 'HighlightCard':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								highlightedCard: _elm_lang$core$Maybe$Just(_p93._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'UnhighlightCard':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{highlightedCard: _elm_lang$core$Maybe$Nothing}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'HighlightNode':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{
+								highlightedNode: _elm_lang$core$Maybe$Just(_p93._0)
+							}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
+				case 'UnhighlightNode':
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Native_Utils.update(
+							model,
+							{highlightedNode: _elm_lang$core$Maybe$Nothing}),
+						_1: _elm_lang$core$Platform_Cmd$none
+					};
 				case 'MeFetched':
 					if (_p93._0.ctor === 'Ok') {
 						return {
@@ -26105,7 +26200,17 @@ var _vito$cadet$Main$viewCard = F2(
 														_0: 'anticipated',
 														_1: A2(_vito$cadet$Main$isAnticipated, model, card)
 													},
-													_1: {ctor: '[]'}
+													_1: {
+														ctor: '::',
+														_0: {
+															ctor: '_Tuple2',
+															_0: 'highlighted',
+															_1: _elm_lang$core$Native_Utils.eq(
+																model.highlightedCard,
+																_elm_lang$core$Maybe$Just(card.id))
+														},
+														_1: {ctor: '[]'}
+													}
 												}
 											}
 										}
@@ -26125,7 +26230,17 @@ var _vito$cadet$Main$viewCard = F2(
 								ctor: '::',
 								_0: _elm_lang$html$Html_Events$onMouseOut(
 									_vito$cadet$Main$UnanticipateCard(card.id)),
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onMouseOver(
+										_vito$cadet$Main$HighlightNode(card.id)),
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$html$Html_Events$onMouseOut(
+											_vito$cadet$Main$UnhighlightNode(card.id)),
+										_1: {ctor: '[]'}
+									}
+								}
 							}
 						}
 					}
@@ -26533,8 +26648,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F3(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 884, column: 9},
-				end: {line: 905, column: 41}
+				start: {line: 909, column: 9},
+				end: {line: 930, column: 41}
 			},
 			_p129)('impossible');
 	});
@@ -27071,6 +27186,8 @@ var _vito$cadet$Main$init = function (config) {
 			allCards: _elm_lang$core$Dict$empty,
 			selectedCards: {ctor: '[]'},
 			anticipatedCards: {ctor: '[]'},
+			highlightedCard: _elm_lang$core$Maybe$Nothing,
+			highlightedNode: _elm_lang$core$Maybe$Nothing,
 			currentDate: _elm_lang$core$Date$fromTime(config.initialDate),
 			cardGraphs: {ctor: '[]'},
 			computeGraph: _vito$cadet$Main$computeReferenceGraph,
