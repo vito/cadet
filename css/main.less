@@ -334,6 +334,16 @@ body {
 // NOTE: when changing, be sure to update drop area height in elm
 @card-margin: 8px;
 
+.column {
+  display: flex;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
 .drop-area {
   height: 60px;
   position: relative;
@@ -352,6 +362,13 @@ body {
 
   &.never-left {
     transition: none;
+  }
+
+  &:last-child {
+    flex-grow: 1;
+    height: auto;
+    margin-bottom: 0;
+    top: 0;
   }
 }
 
