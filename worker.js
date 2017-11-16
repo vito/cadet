@@ -3168,1401 +3168,6 @@ var _elm_lang$core$Platform$Task = {ctor: 'Task'};
 var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
 var _elm_lang$core$Platform$Router = {ctor: 'Router'};
 
-//import Result //
-
-var _elm_lang$core$Native_Date = function() {
-
-function fromString(str)
-{
-	var date = new Date(str);
-	return isNaN(date.getTime())
-		? _elm_lang$core$Result$Err('Unable to parse \'' + str + '\' as a date. Dates must be in the ISO 8601 format.')
-		: _elm_lang$core$Result$Ok(date);
-}
-
-var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-var monthTable =
-	['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-	 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-
-return {
-	fromString: fromString,
-	year: function(d) { return d.getFullYear(); },
-	month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
-	day: function(d) { return d.getDate(); },
-	hour: function(d) { return d.getHours(); },
-	minute: function(d) { return d.getMinutes(); },
-	second: function(d) { return d.getSeconds(); },
-	millisecond: function(d) { return d.getMilliseconds(); },
-	toTime: function(d) { return d.getTime(); },
-	fromTime: function(t) { return new Date(t); },
-	dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
-};
-
-}();
-var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
-var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
-var _elm_lang$core$Task$spawnCmd = F2(
-	function (router, _p0) {
-		var _p1 = _p0;
-		return _elm_lang$core$Native_Scheduler.spawn(
-			A2(
-				_elm_lang$core$Task$andThen,
-				_elm_lang$core$Platform$sendToApp(router),
-				_p1._0));
-	});
-var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
-var _elm_lang$core$Task$mapError = F2(
-	function (convert, task) {
-		return A2(
-			_elm_lang$core$Task$onError,
-			function (_p2) {
-				return _elm_lang$core$Task$fail(
-					convert(_p2));
-			},
-			task);
-	});
-var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
-var _elm_lang$core$Task$map = F2(
-	function (func, taskA) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return _elm_lang$core$Task$succeed(
-					func(a));
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map2 = F3(
-	function (func, taskA, taskB) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return _elm_lang$core$Task$succeed(
-							A2(func, a, b));
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map3 = F4(
-	function (func, taskA, taskB, taskC) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return _elm_lang$core$Task$succeed(
-									A3(func, a, b, c));
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map4 = F5(
-	function (func, taskA, taskB, taskC, taskD) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									function (d) {
-										return _elm_lang$core$Task$succeed(
-											A4(func, a, b, c, d));
-									},
-									taskD);
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$map5 = F6(
-	function (func, taskA, taskB, taskC, taskD, taskE) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (a) {
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (b) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (c) {
-								return A2(
-									_elm_lang$core$Task$andThen,
-									function (d) {
-										return A2(
-											_elm_lang$core$Task$andThen,
-											function (e) {
-												return _elm_lang$core$Task$succeed(
-													A5(func, a, b, c, d, e));
-											},
-											taskE);
-									},
-									taskD);
-							},
-							taskC);
-					},
-					taskB);
-			},
-			taskA);
-	});
-var _elm_lang$core$Task$sequence = function (tasks) {
-	var _p3 = tasks;
-	if (_p3.ctor === '[]') {
-		return _elm_lang$core$Task$succeed(
-			{ctor: '[]'});
-	} else {
-		return A3(
-			_elm_lang$core$Task$map2,
-			F2(
-				function (x, y) {
-					return {ctor: '::', _0: x, _1: y};
-				}),
-			_p3._0,
-			_elm_lang$core$Task$sequence(_p3._1));
-	}
-};
-var _elm_lang$core$Task$onEffects = F3(
-	function (router, commands, state) {
-		return A2(
-			_elm_lang$core$Task$map,
-			function (_p4) {
-				return {ctor: '_Tuple0'};
-			},
-			_elm_lang$core$Task$sequence(
-				A2(
-					_elm_lang$core$List$map,
-					_elm_lang$core$Task$spawnCmd(router),
-					commands)));
-	});
-var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
-	{ctor: '_Tuple0'});
-var _elm_lang$core$Task$onSelfMsg = F3(
-	function (_p7, _p6, _p5) {
-		return _elm_lang$core$Task$succeed(
-			{ctor: '_Tuple0'});
-	});
-var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
-var _elm_lang$core$Task$Perform = function (a) {
-	return {ctor: 'Perform', _0: a};
-};
-var _elm_lang$core$Task$perform = F2(
-	function (toMessage, task) {
-		return _elm_lang$core$Task$command(
-			_elm_lang$core$Task$Perform(
-				A2(_elm_lang$core$Task$map, toMessage, task)));
-	});
-var _elm_lang$core$Task$attempt = F2(
-	function (resultToMessage, task) {
-		return _elm_lang$core$Task$command(
-			_elm_lang$core$Task$Perform(
-				A2(
-					_elm_lang$core$Task$onError,
-					function (_p8) {
-						return _elm_lang$core$Task$succeed(
-							resultToMessage(
-								_elm_lang$core$Result$Err(_p8)));
-					},
-					A2(
-						_elm_lang$core$Task$andThen,
-						function (_p9) {
-							return _elm_lang$core$Task$succeed(
-								resultToMessage(
-									_elm_lang$core$Result$Ok(_p9)));
-						},
-						task))));
-	});
-var _elm_lang$core$Task$cmdMap = F2(
-	function (tagger, _p10) {
-		var _p11 = _p10;
-		return _elm_lang$core$Task$Perform(
-			A2(_elm_lang$core$Task$map, tagger, _p11._0));
-	});
-_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
-
-var _elm_lang$core$Dict$foldr = F3(
-	function (f, acc, t) {
-		foldr:
-		while (true) {
-			var _p0 = t;
-			if (_p0.ctor === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var _v1 = f,
-					_v2 = A3(
-					f,
-					_p0._1,
-					_p0._2,
-					A3(_elm_lang$core$Dict$foldr, f, acc, _p0._4)),
-					_v3 = _p0._3;
-				f = _v1;
-				acc = _v2;
-				t = _v3;
-				continue foldr;
-			}
-		}
-	});
-var _elm_lang$core$Dict$keys = function (dict) {
-	return A3(
-		_elm_lang$core$Dict$foldr,
-		F3(
-			function (key, value, keyList) {
-				return {ctor: '::', _0: key, _1: keyList};
-			}),
-		{ctor: '[]'},
-		dict);
-};
-var _elm_lang$core$Dict$values = function (dict) {
-	return A3(
-		_elm_lang$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return {ctor: '::', _0: value, _1: valueList};
-			}),
-		{ctor: '[]'},
-		dict);
-};
-var _elm_lang$core$Dict$toList = function (dict) {
-	return A3(
-		_elm_lang$core$Dict$foldr,
-		F3(
-			function (key, value, list) {
-				return {
-					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: key, _1: value},
-					_1: list
-				};
-			}),
-		{ctor: '[]'},
-		dict);
-};
-var _elm_lang$core$Dict$foldl = F3(
-	function (f, acc, dict) {
-		foldl:
-		while (true) {
-			var _p1 = dict;
-			if (_p1.ctor === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var _v5 = f,
-					_v6 = A3(
-					f,
-					_p1._1,
-					_p1._2,
-					A3(_elm_lang$core$Dict$foldl, f, acc, _p1._3)),
-					_v7 = _p1._4;
-				f = _v5;
-				acc = _v6;
-				dict = _v7;
-				continue foldl;
-			}
-		}
-	});
-var _elm_lang$core$Dict$merge = F6(
-	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
-		var stepState = F3(
-			function (rKey, rValue, _p2) {
-				stepState:
-				while (true) {
-					var _p3 = _p2;
-					var _p9 = _p3._1;
-					var _p8 = _p3._0;
-					var _p4 = _p8;
-					if (_p4.ctor === '[]') {
-						return {
-							ctor: '_Tuple2',
-							_0: _p8,
-							_1: A3(rightStep, rKey, rValue, _p9)
-						};
-					} else {
-						var _p7 = _p4._1;
-						var _p6 = _p4._0._1;
-						var _p5 = _p4._0._0;
-						if (_elm_lang$core$Native_Utils.cmp(_p5, rKey) < 0) {
-							var _v10 = rKey,
-								_v11 = rValue,
-								_v12 = {
-								ctor: '_Tuple2',
-								_0: _p7,
-								_1: A3(leftStep, _p5, _p6, _p9)
-							};
-							rKey = _v10;
-							rValue = _v11;
-							_p2 = _v12;
-							continue stepState;
-						} else {
-							if (_elm_lang$core$Native_Utils.cmp(_p5, rKey) > 0) {
-								return {
-									ctor: '_Tuple2',
-									_0: _p8,
-									_1: A3(rightStep, rKey, rValue, _p9)
-								};
-							} else {
-								return {
-									ctor: '_Tuple2',
-									_0: _p7,
-									_1: A4(bothStep, _p5, _p6, rValue, _p9)
-								};
-							}
-						}
-					}
-				}
-			});
-		var _p10 = A3(
-			_elm_lang$core$Dict$foldl,
-			stepState,
-			{
-				ctor: '_Tuple2',
-				_0: _elm_lang$core$Dict$toList(leftDict),
-				_1: initialResult
-			},
-			rightDict);
-		var leftovers = _p10._0;
-		var intermediateResult = _p10._1;
-		return A3(
-			_elm_lang$core$List$foldl,
-			F2(
-				function (_p11, result) {
-					var _p12 = _p11;
-					return A3(leftStep, _p12._0, _p12._1, result);
-				}),
-			intermediateResult,
-			leftovers);
-	});
-var _elm_lang$core$Dict$reportRemBug = F4(
-	function (msg, c, lgot, rgot) {
-		return _elm_lang$core$Native_Debug.crash(
-			_elm_lang$core$String$concat(
-				{
-					ctor: '::',
-					_0: 'Internal red-black tree invariant violated, expected ',
-					_1: {
-						ctor: '::',
-						_0: msg,
-						_1: {
-							ctor: '::',
-							_0: ' and got ',
-							_1: {
-								ctor: '::',
-								_0: _elm_lang$core$Basics$toString(c),
-								_1: {
-									ctor: '::',
-									_0: '/',
-									_1: {
-										ctor: '::',
-										_0: lgot,
-										_1: {
-											ctor: '::',
-											_0: '/',
-											_1: {
-												ctor: '::',
-												_0: rgot,
-												_1: {
-													ctor: '::',
-													_0: '\nPlease report this bug to <https://github.com/elm-lang/core/issues>',
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}));
-	});
-var _elm_lang$core$Dict$isBBlack = function (dict) {
-	var _p13 = dict;
-	_v14_2:
-	do {
-		if (_p13.ctor === 'RBNode_elm_builtin') {
-			if (_p13._0.ctor === 'BBlack') {
-				return true;
-			} else {
-				break _v14_2;
-			}
-		} else {
-			if (_p13._0.ctor === 'LBBlack') {
-				return true;
-			} else {
-				break _v14_2;
-			}
-		}
-	} while(false);
-	return false;
-};
-var _elm_lang$core$Dict$sizeHelp = F2(
-	function (n, dict) {
-		sizeHelp:
-		while (true) {
-			var _p14 = dict;
-			if (_p14.ctor === 'RBEmpty_elm_builtin') {
-				return n;
-			} else {
-				var _v16 = A2(_elm_lang$core$Dict$sizeHelp, n + 1, _p14._4),
-					_v17 = _p14._3;
-				n = _v16;
-				dict = _v17;
-				continue sizeHelp;
-			}
-		}
-	});
-var _elm_lang$core$Dict$size = function (dict) {
-	return A2(_elm_lang$core$Dict$sizeHelp, 0, dict);
-};
-var _elm_lang$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			var _p15 = dict;
-			if (_p15.ctor === 'RBEmpty_elm_builtin') {
-				return _elm_lang$core$Maybe$Nothing;
-			} else {
-				var _p16 = A2(_elm_lang$core$Basics$compare, targetKey, _p15._1);
-				switch (_p16.ctor) {
-					case 'LT':
-						var _v20 = targetKey,
-							_v21 = _p15._3;
-						targetKey = _v20;
-						dict = _v21;
-						continue get;
-					case 'EQ':
-						return _elm_lang$core$Maybe$Just(_p15._2);
-					default:
-						var _v22 = targetKey,
-							_v23 = _p15._4;
-						targetKey = _v22;
-						dict = _v23;
-						continue get;
-				}
-			}
-		}
-	});
-var _elm_lang$core$Dict$member = F2(
-	function (key, dict) {
-		var _p17 = A2(_elm_lang$core$Dict$get, key, dict);
-		if (_p17.ctor === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var _elm_lang$core$Dict$maxWithDefault = F3(
-	function (k, v, r) {
-		maxWithDefault:
-		while (true) {
-			var _p18 = r;
-			if (_p18.ctor === 'RBEmpty_elm_builtin') {
-				return {ctor: '_Tuple2', _0: k, _1: v};
-			} else {
-				var _v26 = _p18._1,
-					_v27 = _p18._2,
-					_v28 = _p18._4;
-				k = _v26;
-				v = _v27;
-				r = _v28;
-				continue maxWithDefault;
-			}
-		}
-	});
-var _elm_lang$core$Dict$NBlack = {ctor: 'NBlack'};
-var _elm_lang$core$Dict$BBlack = {ctor: 'BBlack'};
-var _elm_lang$core$Dict$Black = {ctor: 'Black'};
-var _elm_lang$core$Dict$blackish = function (t) {
-	var _p19 = t;
-	if (_p19.ctor === 'RBNode_elm_builtin') {
-		var _p20 = _p19._0;
-		return _elm_lang$core$Native_Utils.eq(_p20, _elm_lang$core$Dict$Black) || _elm_lang$core$Native_Utils.eq(_p20, _elm_lang$core$Dict$BBlack);
-	} else {
-		return true;
-	}
-};
-var _elm_lang$core$Dict$Red = {ctor: 'Red'};
-var _elm_lang$core$Dict$moreBlack = function (color) {
-	var _p21 = color;
-	switch (_p21.ctor) {
-		case 'Black':
-			return _elm_lang$core$Dict$BBlack;
-		case 'Red':
-			return _elm_lang$core$Dict$Black;
-		case 'NBlack':
-			return _elm_lang$core$Dict$Red;
-		default:
-			return _elm_lang$core$Native_Debug.crash('Can\'t make a double black node more black!');
-	}
-};
-var _elm_lang$core$Dict$lessBlack = function (color) {
-	var _p22 = color;
-	switch (_p22.ctor) {
-		case 'BBlack':
-			return _elm_lang$core$Dict$Black;
-		case 'Black':
-			return _elm_lang$core$Dict$Red;
-		case 'Red':
-			return _elm_lang$core$Dict$NBlack;
-		default:
-			return _elm_lang$core$Native_Debug.crash('Can\'t make a negative black node less black!');
-	}
-};
-var _elm_lang$core$Dict$LBBlack = {ctor: 'LBBlack'};
-var _elm_lang$core$Dict$LBlack = {ctor: 'LBlack'};
-var _elm_lang$core$Dict$RBEmpty_elm_builtin = function (a) {
-	return {ctor: 'RBEmpty_elm_builtin', _0: a};
-};
-var _elm_lang$core$Dict$empty = _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
-var _elm_lang$core$Dict$isEmpty = function (dict) {
-	return _elm_lang$core$Native_Utils.eq(dict, _elm_lang$core$Dict$empty);
-};
-var _elm_lang$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {ctor: 'RBNode_elm_builtin', _0: a, _1: b, _2: c, _3: d, _4: e};
-	});
-var _elm_lang$core$Dict$ensureBlackRoot = function (dict) {
-	var _p23 = dict;
-	if ((_p23.ctor === 'RBNode_elm_builtin') && (_p23._0.ctor === 'Red')) {
-		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p23._1, _p23._2, _p23._3, _p23._4);
-	} else {
-		return dict;
-	}
-};
-var _elm_lang$core$Dict$lessBlackTree = function (dict) {
-	var _p24 = dict;
-	if (_p24.ctor === 'RBNode_elm_builtin') {
-		return A5(
-			_elm_lang$core$Dict$RBNode_elm_builtin,
-			_elm_lang$core$Dict$lessBlack(_p24._0),
-			_p24._1,
-			_p24._2,
-			_p24._3,
-			_p24._4);
-	} else {
-		return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
-	}
-};
-var _elm_lang$core$Dict$balancedTree = function (col) {
-	return function (xk) {
-		return function (xv) {
-			return function (yk) {
-				return function (yv) {
-					return function (zk) {
-						return function (zv) {
-							return function (a) {
-								return function (b) {
-									return function (c) {
-										return function (d) {
-											return A5(
-												_elm_lang$core$Dict$RBNode_elm_builtin,
-												_elm_lang$core$Dict$lessBlack(col),
-												yk,
-												yv,
-												A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, xk, xv, a, b),
-												A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, zk, zv, c, d));
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var _elm_lang$core$Dict$blacken = function (t) {
-	var _p25 = t;
-	if (_p25.ctor === 'RBEmpty_elm_builtin') {
-		return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
-	} else {
-		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p25._1, _p25._2, _p25._3, _p25._4);
-	}
-};
-var _elm_lang$core$Dict$redden = function (t) {
-	var _p26 = t;
-	if (_p26.ctor === 'RBEmpty_elm_builtin') {
-		return _elm_lang$core$Native_Debug.crash('can\'t make a Leaf red');
-	} else {
-		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Red, _p26._1, _p26._2, _p26._3, _p26._4);
-	}
-};
-var _elm_lang$core$Dict$balanceHelp = function (tree) {
-	var _p27 = tree;
-	_v36_6:
-	do {
-		_v36_5:
-		do {
-			_v36_4:
-			do {
-				_v36_3:
-				do {
-					_v36_2:
-					do {
-						_v36_1:
-						do {
-							_v36_0:
-							do {
-								if (_p27.ctor === 'RBNode_elm_builtin') {
-									if (_p27._3.ctor === 'RBNode_elm_builtin') {
-										if (_p27._4.ctor === 'RBNode_elm_builtin') {
-											switch (_p27._3._0.ctor) {
-												case 'Red':
-													switch (_p27._4._0.ctor) {
-														case 'Red':
-															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
-																break _v36_0;
-															} else {
-																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
-																	break _v36_1;
-																} else {
-																	if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
-																		break _v36_2;
-																	} else {
-																		if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
-																			break _v36_3;
-																		} else {
-																			break _v36_6;
-																		}
-																	}
-																}
-															}
-														case 'NBlack':
-															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
-																break _v36_0;
-															} else {
-																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
-																	break _v36_1;
-																} else {
-																	if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
-																		break _v36_4;
-																	} else {
-																		break _v36_6;
-																	}
-																}
-															}
-														default:
-															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
-																break _v36_0;
-															} else {
-																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
-																	break _v36_1;
-																} else {
-																	break _v36_6;
-																}
-															}
-													}
-												case 'NBlack':
-													switch (_p27._4._0.ctor) {
-														case 'Red':
-															if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
-																break _v36_2;
-															} else {
-																if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
-																	break _v36_3;
-																} else {
-																	if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
-																		break _v36_5;
-																	} else {
-																		break _v36_6;
-																	}
-																}
-															}
-														case 'NBlack':
-															if (_p27._0.ctor === 'BBlack') {
-																if ((((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
-																	break _v36_4;
-																} else {
-																	if ((((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
-																		break _v36_5;
-																	} else {
-																		break _v36_6;
-																	}
-																}
-															} else {
-																break _v36_6;
-															}
-														default:
-															if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
-																break _v36_5;
-															} else {
-																break _v36_6;
-															}
-													}
-												default:
-													switch (_p27._4._0.ctor) {
-														case 'Red':
-															if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
-																break _v36_2;
-															} else {
-																if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
-																	break _v36_3;
-																} else {
-																	break _v36_6;
-																}
-															}
-														case 'NBlack':
-															if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
-																break _v36_4;
-															} else {
-																break _v36_6;
-															}
-														default:
-															break _v36_6;
-													}
-											}
-										} else {
-											switch (_p27._3._0.ctor) {
-												case 'Red':
-													if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
-														break _v36_0;
-													} else {
-														if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
-															break _v36_1;
-														} else {
-															break _v36_6;
-														}
-													}
-												case 'NBlack':
-													if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
-														break _v36_5;
-													} else {
-														break _v36_6;
-													}
-												default:
-													break _v36_6;
-											}
-										}
-									} else {
-										if (_p27._4.ctor === 'RBNode_elm_builtin') {
-											switch (_p27._4._0.ctor) {
-												case 'Red':
-													if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
-														break _v36_2;
-													} else {
-														if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
-															break _v36_3;
-														} else {
-															break _v36_6;
-														}
-													}
-												case 'NBlack':
-													if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
-														break _v36_4;
-													} else {
-														break _v36_6;
-													}
-												default:
-													break _v36_6;
-											}
-										} else {
-											break _v36_6;
-										}
-									}
-								} else {
-									break _v36_6;
-								}
-							} while(false);
-							return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._3._3._1)(_p27._3._3._2)(_p27._3._1)(_p27._3._2)(_p27._1)(_p27._2)(_p27._3._3._3)(_p27._3._3._4)(_p27._3._4)(_p27._4);
-						} while(false);
-						return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._3._1)(_p27._3._2)(_p27._3._4._1)(_p27._3._4._2)(_p27._1)(_p27._2)(_p27._3._3)(_p27._3._4._3)(_p27._3._4._4)(_p27._4);
-					} while(false);
-					return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._1)(_p27._2)(_p27._4._3._1)(_p27._4._3._2)(_p27._4._1)(_p27._4._2)(_p27._3)(_p27._4._3._3)(_p27._4._3._4)(_p27._4._4);
-				} while(false);
-				return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._1)(_p27._2)(_p27._4._1)(_p27._4._2)(_p27._4._4._1)(_p27._4._4._2)(_p27._3)(_p27._4._3)(_p27._4._4._3)(_p27._4._4._4);
-			} while(false);
-			return A5(
-				_elm_lang$core$Dict$RBNode_elm_builtin,
-				_elm_lang$core$Dict$Black,
-				_p27._4._3._1,
-				_p27._4._3._2,
-				A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p27._1, _p27._2, _p27._3, _p27._4._3._3),
-				A5(
-					_elm_lang$core$Dict$balance,
-					_elm_lang$core$Dict$Black,
-					_p27._4._1,
-					_p27._4._2,
-					_p27._4._3._4,
-					_elm_lang$core$Dict$redden(_p27._4._4)));
-		} while(false);
-		return A5(
-			_elm_lang$core$Dict$RBNode_elm_builtin,
-			_elm_lang$core$Dict$Black,
-			_p27._3._4._1,
-			_p27._3._4._2,
-			A5(
-				_elm_lang$core$Dict$balance,
-				_elm_lang$core$Dict$Black,
-				_p27._3._1,
-				_p27._3._2,
-				_elm_lang$core$Dict$redden(_p27._3._3),
-				_p27._3._4._3),
-			A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p27._1, _p27._2, _p27._3._4._4, _p27._4));
-	} while(false);
-	return tree;
-};
-var _elm_lang$core$Dict$balance = F5(
-	function (c, k, v, l, r) {
-		var tree = A5(_elm_lang$core$Dict$RBNode_elm_builtin, c, k, v, l, r);
-		return _elm_lang$core$Dict$blackish(tree) ? _elm_lang$core$Dict$balanceHelp(tree) : tree;
-	});
-var _elm_lang$core$Dict$bubble = F5(
-	function (c, k, v, l, r) {
-		return (_elm_lang$core$Dict$isBBlack(l) || _elm_lang$core$Dict$isBBlack(r)) ? A5(
-			_elm_lang$core$Dict$balance,
-			_elm_lang$core$Dict$moreBlack(c),
-			k,
-			v,
-			_elm_lang$core$Dict$lessBlackTree(l),
-			_elm_lang$core$Dict$lessBlackTree(r)) : A5(_elm_lang$core$Dict$RBNode_elm_builtin, c, k, v, l, r);
-	});
-var _elm_lang$core$Dict$removeMax = F5(
-	function (c, k, v, l, r) {
-		var _p28 = r;
-		if (_p28.ctor === 'RBEmpty_elm_builtin') {
-			return A3(_elm_lang$core$Dict$rem, c, l, r);
-		} else {
-			return A5(
-				_elm_lang$core$Dict$bubble,
-				c,
-				k,
-				v,
-				l,
-				A5(_elm_lang$core$Dict$removeMax, _p28._0, _p28._1, _p28._2, _p28._3, _p28._4));
-		}
-	});
-var _elm_lang$core$Dict$rem = F3(
-	function (color, left, right) {
-		var _p29 = {ctor: '_Tuple2', _0: left, _1: right};
-		if (_p29._0.ctor === 'RBEmpty_elm_builtin') {
-			if (_p29._1.ctor === 'RBEmpty_elm_builtin') {
-				var _p30 = color;
-				switch (_p30.ctor) {
-					case 'Red':
-						return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
-					case 'Black':
-						return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBBlack);
-					default:
-						return _elm_lang$core$Native_Debug.crash('cannot have bblack or nblack nodes at this point');
-				}
-			} else {
-				var _p33 = _p29._1._0;
-				var _p32 = _p29._0._0;
-				var _p31 = {ctor: '_Tuple3', _0: color, _1: _p32, _2: _p33};
-				if ((((_p31.ctor === '_Tuple3') && (_p31._0.ctor === 'Black')) && (_p31._1.ctor === 'LBlack')) && (_p31._2.ctor === 'Red')) {
-					return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p29._1._1, _p29._1._2, _p29._1._3, _p29._1._4);
-				} else {
-					return A4(
-						_elm_lang$core$Dict$reportRemBug,
-						'Black/LBlack/Red',
-						color,
-						_elm_lang$core$Basics$toString(_p32),
-						_elm_lang$core$Basics$toString(_p33));
-				}
-			}
-		} else {
-			if (_p29._1.ctor === 'RBEmpty_elm_builtin') {
-				var _p36 = _p29._1._0;
-				var _p35 = _p29._0._0;
-				var _p34 = {ctor: '_Tuple3', _0: color, _1: _p35, _2: _p36};
-				if ((((_p34.ctor === '_Tuple3') && (_p34._0.ctor === 'Black')) && (_p34._1.ctor === 'Red')) && (_p34._2.ctor === 'LBlack')) {
-					return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p29._0._1, _p29._0._2, _p29._0._3, _p29._0._4);
-				} else {
-					return A4(
-						_elm_lang$core$Dict$reportRemBug,
-						'Black/Red/LBlack',
-						color,
-						_elm_lang$core$Basics$toString(_p35),
-						_elm_lang$core$Basics$toString(_p36));
-				}
-			} else {
-				var _p40 = _p29._0._2;
-				var _p39 = _p29._0._4;
-				var _p38 = _p29._0._1;
-				var newLeft = A5(_elm_lang$core$Dict$removeMax, _p29._0._0, _p38, _p40, _p29._0._3, _p39);
-				var _p37 = A3(_elm_lang$core$Dict$maxWithDefault, _p38, _p40, _p39);
-				var k = _p37._0;
-				var v = _p37._1;
-				return A5(_elm_lang$core$Dict$bubble, color, k, v, newLeft, right);
-			}
-		}
-	});
-var _elm_lang$core$Dict$map = F2(
-	function (f, dict) {
-		var _p41 = dict;
-		if (_p41.ctor === 'RBEmpty_elm_builtin') {
-			return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
-		} else {
-			var _p42 = _p41._1;
-			return A5(
-				_elm_lang$core$Dict$RBNode_elm_builtin,
-				_p41._0,
-				_p42,
-				A2(f, _p42, _p41._2),
-				A2(_elm_lang$core$Dict$map, f, _p41._3),
-				A2(_elm_lang$core$Dict$map, f, _p41._4));
-		}
-	});
-var _elm_lang$core$Dict$Same = {ctor: 'Same'};
-var _elm_lang$core$Dict$Remove = {ctor: 'Remove'};
-var _elm_lang$core$Dict$Insert = {ctor: 'Insert'};
-var _elm_lang$core$Dict$update = F3(
-	function (k, alter, dict) {
-		var up = function (dict) {
-			var _p43 = dict;
-			if (_p43.ctor === 'RBEmpty_elm_builtin') {
-				var _p44 = alter(_elm_lang$core$Maybe$Nothing);
-				if (_p44.ctor === 'Nothing') {
-					return {ctor: '_Tuple2', _0: _elm_lang$core$Dict$Same, _1: _elm_lang$core$Dict$empty};
-				} else {
-					return {
-						ctor: '_Tuple2',
-						_0: _elm_lang$core$Dict$Insert,
-						_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Red, k, _p44._0, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty)
-					};
-				}
-			} else {
-				var _p55 = _p43._2;
-				var _p54 = _p43._4;
-				var _p53 = _p43._3;
-				var _p52 = _p43._1;
-				var _p51 = _p43._0;
-				var _p45 = A2(_elm_lang$core$Basics$compare, k, _p52);
-				switch (_p45.ctor) {
-					case 'EQ':
-						var _p46 = alter(
-							_elm_lang$core$Maybe$Just(_p55));
-						if (_p46.ctor === 'Nothing') {
-							return {
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Dict$Remove,
-								_1: A3(_elm_lang$core$Dict$rem, _p51, _p53, _p54)
-							};
-						} else {
-							return {
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Dict$Same,
-								_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p46._0, _p53, _p54)
-							};
-						}
-					case 'LT':
-						var _p47 = up(_p53);
-						var flag = _p47._0;
-						var newLeft = _p47._1;
-						var _p48 = flag;
-						switch (_p48.ctor) {
-							case 'Same':
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Same,
-									_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p55, newLeft, _p54)
-								};
-							case 'Insert':
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Insert,
-									_1: A5(_elm_lang$core$Dict$balance, _p51, _p52, _p55, newLeft, _p54)
-								};
-							default:
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Remove,
-									_1: A5(_elm_lang$core$Dict$bubble, _p51, _p52, _p55, newLeft, _p54)
-								};
-						}
-					default:
-						var _p49 = up(_p54);
-						var flag = _p49._0;
-						var newRight = _p49._1;
-						var _p50 = flag;
-						switch (_p50.ctor) {
-							case 'Same':
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Same,
-									_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p55, _p53, newRight)
-								};
-							case 'Insert':
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Insert,
-									_1: A5(_elm_lang$core$Dict$balance, _p51, _p52, _p55, _p53, newRight)
-								};
-							default:
-								return {
-									ctor: '_Tuple2',
-									_0: _elm_lang$core$Dict$Remove,
-									_1: A5(_elm_lang$core$Dict$bubble, _p51, _p52, _p55, _p53, newRight)
-								};
-						}
-				}
-			}
-		};
-		var _p56 = up(dict);
-		var flag = _p56._0;
-		var updatedDict = _p56._1;
-		var _p57 = flag;
-		switch (_p57.ctor) {
-			case 'Same':
-				return updatedDict;
-			case 'Insert':
-				return _elm_lang$core$Dict$ensureBlackRoot(updatedDict);
-			default:
-				return _elm_lang$core$Dict$blacken(updatedDict);
-		}
-	});
-var _elm_lang$core$Dict$insert = F3(
-	function (key, value, dict) {
-		return A3(
-			_elm_lang$core$Dict$update,
-			key,
-			_elm_lang$core$Basics$always(
-				_elm_lang$core$Maybe$Just(value)),
-			dict);
-	});
-var _elm_lang$core$Dict$singleton = F2(
-	function (key, value) {
-		return A3(_elm_lang$core$Dict$insert, key, value, _elm_lang$core$Dict$empty);
-	});
-var _elm_lang$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3(_elm_lang$core$Dict$foldl, _elm_lang$core$Dict$insert, t2, t1);
-	});
-var _elm_lang$core$Dict$filter = F2(
-	function (predicate, dictionary) {
-		var add = F3(
-			function (key, value, dict) {
-				return A2(predicate, key, value) ? A3(_elm_lang$core$Dict$insert, key, value, dict) : dict;
-			});
-		return A3(_elm_lang$core$Dict$foldl, add, _elm_lang$core$Dict$empty, dictionary);
-	});
-var _elm_lang$core$Dict$intersect = F2(
-	function (t1, t2) {
-		return A2(
-			_elm_lang$core$Dict$filter,
-			F2(
-				function (k, _p58) {
-					return A2(_elm_lang$core$Dict$member, k, t2);
-				}),
-			t1);
-	});
-var _elm_lang$core$Dict$partition = F2(
-	function (predicate, dict) {
-		var add = F3(
-			function (key, value, _p59) {
-				var _p60 = _p59;
-				var _p62 = _p60._1;
-				var _p61 = _p60._0;
-				return A2(predicate, key, value) ? {
-					ctor: '_Tuple2',
-					_0: A3(_elm_lang$core$Dict$insert, key, value, _p61),
-					_1: _p62
-				} : {
-					ctor: '_Tuple2',
-					_0: _p61,
-					_1: A3(_elm_lang$core$Dict$insert, key, value, _p62)
-				};
-			});
-		return A3(
-			_elm_lang$core$Dict$foldl,
-			add,
-			{ctor: '_Tuple2', _0: _elm_lang$core$Dict$empty, _1: _elm_lang$core$Dict$empty},
-			dict);
-	});
-var _elm_lang$core$Dict$fromList = function (assocs) {
-	return A3(
-		_elm_lang$core$List$foldl,
-		F2(
-			function (_p63, dict) {
-				var _p64 = _p63;
-				return A3(_elm_lang$core$Dict$insert, _p64._0, _p64._1, dict);
-			}),
-		_elm_lang$core$Dict$empty,
-		assocs);
-};
-var _elm_lang$core$Dict$remove = F2(
-	function (key, dict) {
-		return A3(
-			_elm_lang$core$Dict$update,
-			key,
-			_elm_lang$core$Basics$always(_elm_lang$core$Maybe$Nothing),
-			dict);
-	});
-var _elm_lang$core$Dict$diff = F2(
-	function (t1, t2) {
-		return A3(
-			_elm_lang$core$Dict$foldl,
-			F3(
-				function (k, v, t) {
-					return A2(_elm_lang$core$Dict$remove, k, t);
-				}),
-			t1,
-			t2);
-	});
-
-//import Native.Scheduler //
-
-var _elm_lang$core$Native_Time = function() {
-
-var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-{
-	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
-});
-
-function setInterval_(interval, task)
-{
-	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
-	{
-		var id = setInterval(function() {
-			_elm_lang$core$Native_Scheduler.rawSpawn(task);
-		}, interval);
-
-		return function() { clearInterval(id); };
-	});
-}
-
-return {
-	now: now,
-	setInterval_: F2(setInterval_)
-};
-
-}();
-var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
-var _elm_lang$core$Time$spawnHelp = F3(
-	function (router, intervals, processes) {
-		var _p0 = intervals;
-		if (_p0.ctor === '[]') {
-			return _elm_lang$core$Task$succeed(processes);
-		} else {
-			var _p1 = _p0._0;
-			var spawnRest = function (id) {
-				return A3(
-					_elm_lang$core$Time$spawnHelp,
-					router,
-					_p0._1,
-					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
-			};
-			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
-				A2(
-					_elm_lang$core$Time$setInterval,
-					_p1,
-					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
-			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
-		}
-	});
-var _elm_lang$core$Time$addMySub = F2(
-	function (_p2, state) {
-		var _p3 = _p2;
-		var _p6 = _p3._1;
-		var _p5 = _p3._0;
-		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
-		if (_p4.ctor === 'Nothing') {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				{
-					ctor: '::',
-					_0: _p6,
-					_1: {ctor: '[]'}
-				},
-				state);
-		} else {
-			return A3(
-				_elm_lang$core$Dict$insert,
-				_p5,
-				{ctor: '::', _0: _p6, _1: _p4._0},
-				state);
-		}
-	});
-var _elm_lang$core$Time$inMilliseconds = function (t) {
-	return t;
-};
-var _elm_lang$core$Time$millisecond = 1;
-var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
-var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
-var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
-var _elm_lang$core$Time$inHours = function (t) {
-	return t / _elm_lang$core$Time$hour;
-};
-var _elm_lang$core$Time$inMinutes = function (t) {
-	return t / _elm_lang$core$Time$minute;
-};
-var _elm_lang$core$Time$inSeconds = function (t) {
-	return t / _elm_lang$core$Time$second;
-};
-var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
-var _elm_lang$core$Time$onSelfMsg = F3(
-	function (router, interval, state) {
-		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
-		if (_p7.ctor === 'Nothing') {
-			return _elm_lang$core$Task$succeed(state);
-		} else {
-			var tellTaggers = function (time) {
-				return _elm_lang$core$Task$sequence(
-					A2(
-						_elm_lang$core$List$map,
-						function (tagger) {
-							return A2(
-								_elm_lang$core$Platform$sendToApp,
-								router,
-								tagger(time));
-						},
-						_p7._0));
-			};
-			return A2(
-				_elm_lang$core$Task$andThen,
-				function (_p8) {
-					return _elm_lang$core$Task$succeed(state);
-				},
-				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
-		}
-	});
-var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
-var _elm_lang$core$Time$State = F2(
-	function (a, b) {
-		return {taggers: a, processes: b};
-	});
-var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
-	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
-var _elm_lang$core$Time$onEffects = F3(
-	function (router, subs, _p9) {
-		var _p10 = _p9;
-		var rightStep = F3(
-			function (_p12, id, _p11) {
-				var _p13 = _p11;
-				return {
-					ctor: '_Tuple3',
-					_0: _p13._0,
-					_1: _p13._1,
-					_2: A2(
-						_elm_lang$core$Task$andThen,
-						function (_p14) {
-							return _p13._2;
-						},
-						_elm_lang$core$Native_Scheduler.kill(id))
-				};
-			});
-		var bothStep = F4(
-			function (interval, taggers, id, _p15) {
-				var _p16 = _p15;
-				return {
-					ctor: '_Tuple3',
-					_0: _p16._0,
-					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
-					_2: _p16._2
-				};
-			});
-		var leftStep = F3(
-			function (interval, taggers, _p17) {
-				var _p18 = _p17;
-				return {
-					ctor: '_Tuple3',
-					_0: {ctor: '::', _0: interval, _1: _p18._0},
-					_1: _p18._1,
-					_2: _p18._2
-				};
-			});
-		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
-		var _p19 = A6(
-			_elm_lang$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			newTaggers,
-			_p10.processes,
-			{
-				ctor: '_Tuple3',
-				_0: {ctor: '[]'},
-				_1: _elm_lang$core$Dict$empty,
-				_2: _elm_lang$core$Task$succeed(
-					{ctor: '_Tuple0'})
-			});
-		var spawnList = _p19._0;
-		var existingDict = _p19._1;
-		var killTask = _p19._2;
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (newProcesses) {
-				return _elm_lang$core$Task$succeed(
-					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
-			},
-			A2(
-				_elm_lang$core$Task$andThen,
-				function (_p20) {
-					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
-				},
-				killTask));
-	});
-var _elm_lang$core$Time$Every = F2(
-	function (a, b) {
-		return {ctor: 'Every', _0: a, _1: b};
-	});
-var _elm_lang$core$Time$every = F2(
-	function (interval, tagger) {
-		return _elm_lang$core$Time$subscription(
-			A2(_elm_lang$core$Time$Every, interval, tagger));
-	});
-var _elm_lang$core$Time$subMap = F2(
-	function (f, _p21) {
-		var _p22 = _p21;
-		return A2(
-			_elm_lang$core$Time$Every,
-			_p22._0,
-			function (_p23) {
-				return f(
-					_p22._1(_p23));
-			});
-	});
-_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
-
-var _elm_lang$core$Date$millisecond = _elm_lang$core$Native_Date.millisecond;
-var _elm_lang$core$Date$second = _elm_lang$core$Native_Date.second;
-var _elm_lang$core$Date$minute = _elm_lang$core$Native_Date.minute;
-var _elm_lang$core$Date$hour = _elm_lang$core$Native_Date.hour;
-var _elm_lang$core$Date$dayOfWeek = _elm_lang$core$Native_Date.dayOfWeek;
-var _elm_lang$core$Date$day = _elm_lang$core$Native_Date.day;
-var _elm_lang$core$Date$month = _elm_lang$core$Native_Date.month;
-var _elm_lang$core$Date$year = _elm_lang$core$Native_Date.year;
-var _elm_lang$core$Date$fromTime = _elm_lang$core$Native_Date.fromTime;
-var _elm_lang$core$Date$toTime = _elm_lang$core$Native_Date.toTime;
-var _elm_lang$core$Date$fromString = _elm_lang$core$Native_Date.fromString;
-var _elm_lang$core$Date$now = A2(_elm_lang$core$Task$map, _elm_lang$core$Date$fromTime, _elm_lang$core$Time$now);
-var _elm_lang$core$Date$Date = {ctor: 'Date'};
-var _elm_lang$core$Date$Sun = {ctor: 'Sun'};
-var _elm_lang$core$Date$Sat = {ctor: 'Sat'};
-var _elm_lang$core$Date$Fri = {ctor: 'Fri'};
-var _elm_lang$core$Date$Thu = {ctor: 'Thu'};
-var _elm_lang$core$Date$Wed = {ctor: 'Wed'};
-var _elm_lang$core$Date$Tue = {ctor: 'Tue'};
-var _elm_lang$core$Date$Mon = {ctor: 'Mon'};
-var _elm_lang$core$Date$Dec = {ctor: 'Dec'};
-var _elm_lang$core$Date$Nov = {ctor: 'Nov'};
-var _elm_lang$core$Date$Oct = {ctor: 'Oct'};
-var _elm_lang$core$Date$Sep = {ctor: 'Sep'};
-var _elm_lang$core$Date$Aug = {ctor: 'Aug'};
-var _elm_lang$core$Date$Jul = {ctor: 'Jul'};
-var _elm_lang$core$Date$Jun = {ctor: 'Jun'};
-var _elm_lang$core$Date$May = {ctor: 'May'};
-var _elm_lang$core$Date$Apr = {ctor: 'Apr'};
-var _elm_lang$core$Date$Mar = {ctor: 'Mar'};
-var _elm_lang$core$Date$Feb = {ctor: 'Feb'};
-var _elm_lang$core$Date$Jan = {ctor: 'Jan'};
-
 //import Native.List //
 
 var _elm_lang$core$Native_Array = function() {
@@ -5585,6 +4190,923 @@ var _elm_lang$core$Array$repeat = F2(
 	});
 var _elm_lang$core$Array$Array = {ctor: 'Array'};
 
+var _elm_lang$core$Dict$foldr = F3(
+	function (f, acc, t) {
+		foldr:
+		while (true) {
+			var _p0 = t;
+			if (_p0.ctor === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var _v1 = f,
+					_v2 = A3(
+					f,
+					_p0._1,
+					_p0._2,
+					A3(_elm_lang$core$Dict$foldr, f, acc, _p0._4)),
+					_v3 = _p0._3;
+				f = _v1;
+				acc = _v2;
+				t = _v3;
+				continue foldr;
+			}
+		}
+	});
+var _elm_lang$core$Dict$keys = function (dict) {
+	return A3(
+		_elm_lang$core$Dict$foldr,
+		F3(
+			function (key, value, keyList) {
+				return {ctor: '::', _0: key, _1: keyList};
+			}),
+		{ctor: '[]'},
+		dict);
+};
+var _elm_lang$core$Dict$values = function (dict) {
+	return A3(
+		_elm_lang$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return {ctor: '::', _0: value, _1: valueList};
+			}),
+		{ctor: '[]'},
+		dict);
+};
+var _elm_lang$core$Dict$toList = function (dict) {
+	return A3(
+		_elm_lang$core$Dict$foldr,
+		F3(
+			function (key, value, list) {
+				return {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: key, _1: value},
+					_1: list
+				};
+			}),
+		{ctor: '[]'},
+		dict);
+};
+var _elm_lang$core$Dict$foldl = F3(
+	function (f, acc, dict) {
+		foldl:
+		while (true) {
+			var _p1 = dict;
+			if (_p1.ctor === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var _v5 = f,
+					_v6 = A3(
+					f,
+					_p1._1,
+					_p1._2,
+					A3(_elm_lang$core$Dict$foldl, f, acc, _p1._3)),
+					_v7 = _p1._4;
+				f = _v5;
+				acc = _v6;
+				dict = _v7;
+				continue foldl;
+			}
+		}
+	});
+var _elm_lang$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _p2) {
+				stepState:
+				while (true) {
+					var _p3 = _p2;
+					var _p9 = _p3._1;
+					var _p8 = _p3._0;
+					var _p4 = _p8;
+					if (_p4.ctor === '[]') {
+						return {
+							ctor: '_Tuple2',
+							_0: _p8,
+							_1: A3(rightStep, rKey, rValue, _p9)
+						};
+					} else {
+						var _p7 = _p4._1;
+						var _p6 = _p4._0._1;
+						var _p5 = _p4._0._0;
+						if (_elm_lang$core$Native_Utils.cmp(_p5, rKey) < 0) {
+							var _v10 = rKey,
+								_v11 = rValue,
+								_v12 = {
+								ctor: '_Tuple2',
+								_0: _p7,
+								_1: A3(leftStep, _p5, _p6, _p9)
+							};
+							rKey = _v10;
+							rValue = _v11;
+							_p2 = _v12;
+							continue stepState;
+						} else {
+							if (_elm_lang$core$Native_Utils.cmp(_p5, rKey) > 0) {
+								return {
+									ctor: '_Tuple2',
+									_0: _p8,
+									_1: A3(rightStep, rKey, rValue, _p9)
+								};
+							} else {
+								return {
+									ctor: '_Tuple2',
+									_0: _p7,
+									_1: A4(bothStep, _p5, _p6, rValue, _p9)
+								};
+							}
+						}
+					}
+				}
+			});
+		var _p10 = A3(
+			_elm_lang$core$Dict$foldl,
+			stepState,
+			{
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Dict$toList(leftDict),
+				_1: initialResult
+			},
+			rightDict);
+		var leftovers = _p10._0;
+		var intermediateResult = _p10._1;
+		return A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (_p11, result) {
+					var _p12 = _p11;
+					return A3(leftStep, _p12._0, _p12._1, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var _elm_lang$core$Dict$reportRemBug = F4(
+	function (msg, c, lgot, rgot) {
+		return _elm_lang$core$Native_Debug.crash(
+			_elm_lang$core$String$concat(
+				{
+					ctor: '::',
+					_0: 'Internal red-black tree invariant violated, expected ',
+					_1: {
+						ctor: '::',
+						_0: msg,
+						_1: {
+							ctor: '::',
+							_0: ' and got ',
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$core$Basics$toString(c),
+								_1: {
+									ctor: '::',
+									_0: '/',
+									_1: {
+										ctor: '::',
+										_0: lgot,
+										_1: {
+											ctor: '::',
+											_0: '/',
+											_1: {
+												ctor: '::',
+												_0: rgot,
+												_1: {
+													ctor: '::',
+													_0: '\nPlease report this bug to <https://github.com/elm-lang/core/issues>',
+													_1: {ctor: '[]'}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}));
+	});
+var _elm_lang$core$Dict$isBBlack = function (dict) {
+	var _p13 = dict;
+	_v14_2:
+	do {
+		if (_p13.ctor === 'RBNode_elm_builtin') {
+			if (_p13._0.ctor === 'BBlack') {
+				return true;
+			} else {
+				break _v14_2;
+			}
+		} else {
+			if (_p13._0.ctor === 'LBBlack') {
+				return true;
+			} else {
+				break _v14_2;
+			}
+		}
+	} while(false);
+	return false;
+};
+var _elm_lang$core$Dict$sizeHelp = F2(
+	function (n, dict) {
+		sizeHelp:
+		while (true) {
+			var _p14 = dict;
+			if (_p14.ctor === 'RBEmpty_elm_builtin') {
+				return n;
+			} else {
+				var _v16 = A2(_elm_lang$core$Dict$sizeHelp, n + 1, _p14._4),
+					_v17 = _p14._3;
+				n = _v16;
+				dict = _v17;
+				continue sizeHelp;
+			}
+		}
+	});
+var _elm_lang$core$Dict$size = function (dict) {
+	return A2(_elm_lang$core$Dict$sizeHelp, 0, dict);
+};
+var _elm_lang$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			var _p15 = dict;
+			if (_p15.ctor === 'RBEmpty_elm_builtin') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				var _p16 = A2(_elm_lang$core$Basics$compare, targetKey, _p15._1);
+				switch (_p16.ctor) {
+					case 'LT':
+						var _v20 = targetKey,
+							_v21 = _p15._3;
+						targetKey = _v20;
+						dict = _v21;
+						continue get;
+					case 'EQ':
+						return _elm_lang$core$Maybe$Just(_p15._2);
+					default:
+						var _v22 = targetKey,
+							_v23 = _p15._4;
+						targetKey = _v22;
+						dict = _v23;
+						continue get;
+				}
+			}
+		}
+	});
+var _elm_lang$core$Dict$member = F2(
+	function (key, dict) {
+		var _p17 = A2(_elm_lang$core$Dict$get, key, dict);
+		if (_p17.ctor === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var _elm_lang$core$Dict$maxWithDefault = F3(
+	function (k, v, r) {
+		maxWithDefault:
+		while (true) {
+			var _p18 = r;
+			if (_p18.ctor === 'RBEmpty_elm_builtin') {
+				return {ctor: '_Tuple2', _0: k, _1: v};
+			} else {
+				var _v26 = _p18._1,
+					_v27 = _p18._2,
+					_v28 = _p18._4;
+				k = _v26;
+				v = _v27;
+				r = _v28;
+				continue maxWithDefault;
+			}
+		}
+	});
+var _elm_lang$core$Dict$NBlack = {ctor: 'NBlack'};
+var _elm_lang$core$Dict$BBlack = {ctor: 'BBlack'};
+var _elm_lang$core$Dict$Black = {ctor: 'Black'};
+var _elm_lang$core$Dict$blackish = function (t) {
+	var _p19 = t;
+	if (_p19.ctor === 'RBNode_elm_builtin') {
+		var _p20 = _p19._0;
+		return _elm_lang$core$Native_Utils.eq(_p20, _elm_lang$core$Dict$Black) || _elm_lang$core$Native_Utils.eq(_p20, _elm_lang$core$Dict$BBlack);
+	} else {
+		return true;
+	}
+};
+var _elm_lang$core$Dict$Red = {ctor: 'Red'};
+var _elm_lang$core$Dict$moreBlack = function (color) {
+	var _p21 = color;
+	switch (_p21.ctor) {
+		case 'Black':
+			return _elm_lang$core$Dict$BBlack;
+		case 'Red':
+			return _elm_lang$core$Dict$Black;
+		case 'NBlack':
+			return _elm_lang$core$Dict$Red;
+		default:
+			return _elm_lang$core$Native_Debug.crash('Can\'t make a double black node more black!');
+	}
+};
+var _elm_lang$core$Dict$lessBlack = function (color) {
+	var _p22 = color;
+	switch (_p22.ctor) {
+		case 'BBlack':
+			return _elm_lang$core$Dict$Black;
+		case 'Black':
+			return _elm_lang$core$Dict$Red;
+		case 'Red':
+			return _elm_lang$core$Dict$NBlack;
+		default:
+			return _elm_lang$core$Native_Debug.crash('Can\'t make a negative black node less black!');
+	}
+};
+var _elm_lang$core$Dict$LBBlack = {ctor: 'LBBlack'};
+var _elm_lang$core$Dict$LBlack = {ctor: 'LBlack'};
+var _elm_lang$core$Dict$RBEmpty_elm_builtin = function (a) {
+	return {ctor: 'RBEmpty_elm_builtin', _0: a};
+};
+var _elm_lang$core$Dict$empty = _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
+var _elm_lang$core$Dict$isEmpty = function (dict) {
+	return _elm_lang$core$Native_Utils.eq(dict, _elm_lang$core$Dict$empty);
+};
+var _elm_lang$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {ctor: 'RBNode_elm_builtin', _0: a, _1: b, _2: c, _3: d, _4: e};
+	});
+var _elm_lang$core$Dict$ensureBlackRoot = function (dict) {
+	var _p23 = dict;
+	if ((_p23.ctor === 'RBNode_elm_builtin') && (_p23._0.ctor === 'Red')) {
+		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p23._1, _p23._2, _p23._3, _p23._4);
+	} else {
+		return dict;
+	}
+};
+var _elm_lang$core$Dict$lessBlackTree = function (dict) {
+	var _p24 = dict;
+	if (_p24.ctor === 'RBNode_elm_builtin') {
+		return A5(
+			_elm_lang$core$Dict$RBNode_elm_builtin,
+			_elm_lang$core$Dict$lessBlack(_p24._0),
+			_p24._1,
+			_p24._2,
+			_p24._3,
+			_p24._4);
+	} else {
+		return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
+	}
+};
+var _elm_lang$core$Dict$balancedTree = function (col) {
+	return function (xk) {
+		return function (xv) {
+			return function (yk) {
+				return function (yv) {
+					return function (zk) {
+						return function (zv) {
+							return function (a) {
+								return function (b) {
+									return function (c) {
+										return function (d) {
+											return A5(
+												_elm_lang$core$Dict$RBNode_elm_builtin,
+												_elm_lang$core$Dict$lessBlack(col),
+												yk,
+												yv,
+												A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, xk, xv, a, b),
+												A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, zk, zv, c, d));
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var _elm_lang$core$Dict$blacken = function (t) {
+	var _p25 = t;
+	if (_p25.ctor === 'RBEmpty_elm_builtin') {
+		return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
+	} else {
+		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p25._1, _p25._2, _p25._3, _p25._4);
+	}
+};
+var _elm_lang$core$Dict$redden = function (t) {
+	var _p26 = t;
+	if (_p26.ctor === 'RBEmpty_elm_builtin') {
+		return _elm_lang$core$Native_Debug.crash('can\'t make a Leaf red');
+	} else {
+		return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Red, _p26._1, _p26._2, _p26._3, _p26._4);
+	}
+};
+var _elm_lang$core$Dict$balanceHelp = function (tree) {
+	var _p27 = tree;
+	_v36_6:
+	do {
+		_v36_5:
+		do {
+			_v36_4:
+			do {
+				_v36_3:
+				do {
+					_v36_2:
+					do {
+						_v36_1:
+						do {
+							_v36_0:
+							do {
+								if (_p27.ctor === 'RBNode_elm_builtin') {
+									if (_p27._3.ctor === 'RBNode_elm_builtin') {
+										if (_p27._4.ctor === 'RBNode_elm_builtin') {
+											switch (_p27._3._0.ctor) {
+												case 'Red':
+													switch (_p27._4._0.ctor) {
+														case 'Red':
+															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
+																break _v36_0;
+															} else {
+																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
+																	break _v36_1;
+																} else {
+																	if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
+																		break _v36_2;
+																	} else {
+																		if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
+																			break _v36_3;
+																		} else {
+																			break _v36_6;
+																		}
+																	}
+																}
+															}
+														case 'NBlack':
+															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
+																break _v36_0;
+															} else {
+																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
+																	break _v36_1;
+																} else {
+																	if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
+																		break _v36_4;
+																	} else {
+																		break _v36_6;
+																	}
+																}
+															}
+														default:
+															if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
+																break _v36_0;
+															} else {
+																if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
+																	break _v36_1;
+																} else {
+																	break _v36_6;
+																}
+															}
+													}
+												case 'NBlack':
+													switch (_p27._4._0.ctor) {
+														case 'Red':
+															if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
+																break _v36_2;
+															} else {
+																if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
+																	break _v36_3;
+																} else {
+																	if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
+																		break _v36_5;
+																	} else {
+																		break _v36_6;
+																	}
+																}
+															}
+														case 'NBlack':
+															if (_p27._0.ctor === 'BBlack') {
+																if ((((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
+																	break _v36_4;
+																} else {
+																	if ((((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
+																		break _v36_5;
+																	} else {
+																		break _v36_6;
+																	}
+																}
+															} else {
+																break _v36_6;
+															}
+														default:
+															if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
+																break _v36_5;
+															} else {
+																break _v36_6;
+															}
+													}
+												default:
+													switch (_p27._4._0.ctor) {
+														case 'Red':
+															if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
+																break _v36_2;
+															} else {
+																if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
+																	break _v36_3;
+																} else {
+																	break _v36_6;
+																}
+															}
+														case 'NBlack':
+															if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
+																break _v36_4;
+															} else {
+																break _v36_6;
+															}
+														default:
+															break _v36_6;
+													}
+											}
+										} else {
+											switch (_p27._3._0.ctor) {
+												case 'Red':
+													if ((_p27._3._3.ctor === 'RBNode_elm_builtin') && (_p27._3._3._0.ctor === 'Red')) {
+														break _v36_0;
+													} else {
+														if ((_p27._3._4.ctor === 'RBNode_elm_builtin') && (_p27._3._4._0.ctor === 'Red')) {
+															break _v36_1;
+														} else {
+															break _v36_6;
+														}
+													}
+												case 'NBlack':
+													if (((((_p27._0.ctor === 'BBlack') && (_p27._3._3.ctor === 'RBNode_elm_builtin')) && (_p27._3._3._0.ctor === 'Black')) && (_p27._3._4.ctor === 'RBNode_elm_builtin')) && (_p27._3._4._0.ctor === 'Black')) {
+														break _v36_5;
+													} else {
+														break _v36_6;
+													}
+												default:
+													break _v36_6;
+											}
+										}
+									} else {
+										if (_p27._4.ctor === 'RBNode_elm_builtin') {
+											switch (_p27._4._0.ctor) {
+												case 'Red':
+													if ((_p27._4._3.ctor === 'RBNode_elm_builtin') && (_p27._4._3._0.ctor === 'Red')) {
+														break _v36_2;
+													} else {
+														if ((_p27._4._4.ctor === 'RBNode_elm_builtin') && (_p27._4._4._0.ctor === 'Red')) {
+															break _v36_3;
+														} else {
+															break _v36_6;
+														}
+													}
+												case 'NBlack':
+													if (((((_p27._0.ctor === 'BBlack') && (_p27._4._3.ctor === 'RBNode_elm_builtin')) && (_p27._4._3._0.ctor === 'Black')) && (_p27._4._4.ctor === 'RBNode_elm_builtin')) && (_p27._4._4._0.ctor === 'Black')) {
+														break _v36_4;
+													} else {
+														break _v36_6;
+													}
+												default:
+													break _v36_6;
+											}
+										} else {
+											break _v36_6;
+										}
+									}
+								} else {
+									break _v36_6;
+								}
+							} while(false);
+							return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._3._3._1)(_p27._3._3._2)(_p27._3._1)(_p27._3._2)(_p27._1)(_p27._2)(_p27._3._3._3)(_p27._3._3._4)(_p27._3._4)(_p27._4);
+						} while(false);
+						return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._3._1)(_p27._3._2)(_p27._3._4._1)(_p27._3._4._2)(_p27._1)(_p27._2)(_p27._3._3)(_p27._3._4._3)(_p27._3._4._4)(_p27._4);
+					} while(false);
+					return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._1)(_p27._2)(_p27._4._3._1)(_p27._4._3._2)(_p27._4._1)(_p27._4._2)(_p27._3)(_p27._4._3._3)(_p27._4._3._4)(_p27._4._4);
+				} while(false);
+				return _elm_lang$core$Dict$balancedTree(_p27._0)(_p27._1)(_p27._2)(_p27._4._1)(_p27._4._2)(_p27._4._4._1)(_p27._4._4._2)(_p27._3)(_p27._4._3)(_p27._4._4._3)(_p27._4._4._4);
+			} while(false);
+			return A5(
+				_elm_lang$core$Dict$RBNode_elm_builtin,
+				_elm_lang$core$Dict$Black,
+				_p27._4._3._1,
+				_p27._4._3._2,
+				A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p27._1, _p27._2, _p27._3, _p27._4._3._3),
+				A5(
+					_elm_lang$core$Dict$balance,
+					_elm_lang$core$Dict$Black,
+					_p27._4._1,
+					_p27._4._2,
+					_p27._4._3._4,
+					_elm_lang$core$Dict$redden(_p27._4._4)));
+		} while(false);
+		return A5(
+			_elm_lang$core$Dict$RBNode_elm_builtin,
+			_elm_lang$core$Dict$Black,
+			_p27._3._4._1,
+			_p27._3._4._2,
+			A5(
+				_elm_lang$core$Dict$balance,
+				_elm_lang$core$Dict$Black,
+				_p27._3._1,
+				_p27._3._2,
+				_elm_lang$core$Dict$redden(_p27._3._3),
+				_p27._3._4._3),
+			A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p27._1, _p27._2, _p27._3._4._4, _p27._4));
+	} while(false);
+	return tree;
+};
+var _elm_lang$core$Dict$balance = F5(
+	function (c, k, v, l, r) {
+		var tree = A5(_elm_lang$core$Dict$RBNode_elm_builtin, c, k, v, l, r);
+		return _elm_lang$core$Dict$blackish(tree) ? _elm_lang$core$Dict$balanceHelp(tree) : tree;
+	});
+var _elm_lang$core$Dict$bubble = F5(
+	function (c, k, v, l, r) {
+		return (_elm_lang$core$Dict$isBBlack(l) || _elm_lang$core$Dict$isBBlack(r)) ? A5(
+			_elm_lang$core$Dict$balance,
+			_elm_lang$core$Dict$moreBlack(c),
+			k,
+			v,
+			_elm_lang$core$Dict$lessBlackTree(l),
+			_elm_lang$core$Dict$lessBlackTree(r)) : A5(_elm_lang$core$Dict$RBNode_elm_builtin, c, k, v, l, r);
+	});
+var _elm_lang$core$Dict$removeMax = F5(
+	function (c, k, v, l, r) {
+		var _p28 = r;
+		if (_p28.ctor === 'RBEmpty_elm_builtin') {
+			return A3(_elm_lang$core$Dict$rem, c, l, r);
+		} else {
+			return A5(
+				_elm_lang$core$Dict$bubble,
+				c,
+				k,
+				v,
+				l,
+				A5(_elm_lang$core$Dict$removeMax, _p28._0, _p28._1, _p28._2, _p28._3, _p28._4));
+		}
+	});
+var _elm_lang$core$Dict$rem = F3(
+	function (color, left, right) {
+		var _p29 = {ctor: '_Tuple2', _0: left, _1: right};
+		if (_p29._0.ctor === 'RBEmpty_elm_builtin') {
+			if (_p29._1.ctor === 'RBEmpty_elm_builtin') {
+				var _p30 = color;
+				switch (_p30.ctor) {
+					case 'Red':
+						return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
+					case 'Black':
+						return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBBlack);
+					default:
+						return _elm_lang$core$Native_Debug.crash('cannot have bblack or nblack nodes at this point');
+				}
+			} else {
+				var _p33 = _p29._1._0;
+				var _p32 = _p29._0._0;
+				var _p31 = {ctor: '_Tuple3', _0: color, _1: _p32, _2: _p33};
+				if ((((_p31.ctor === '_Tuple3') && (_p31._0.ctor === 'Black')) && (_p31._1.ctor === 'LBlack')) && (_p31._2.ctor === 'Red')) {
+					return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p29._1._1, _p29._1._2, _p29._1._3, _p29._1._4);
+				} else {
+					return A4(
+						_elm_lang$core$Dict$reportRemBug,
+						'Black/LBlack/Red',
+						color,
+						_elm_lang$core$Basics$toString(_p32),
+						_elm_lang$core$Basics$toString(_p33));
+				}
+			}
+		} else {
+			if (_p29._1.ctor === 'RBEmpty_elm_builtin') {
+				var _p36 = _p29._1._0;
+				var _p35 = _p29._0._0;
+				var _p34 = {ctor: '_Tuple3', _0: color, _1: _p35, _2: _p36};
+				if ((((_p34.ctor === '_Tuple3') && (_p34._0.ctor === 'Black')) && (_p34._1.ctor === 'Red')) && (_p34._2.ctor === 'LBlack')) {
+					return A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Black, _p29._0._1, _p29._0._2, _p29._0._3, _p29._0._4);
+				} else {
+					return A4(
+						_elm_lang$core$Dict$reportRemBug,
+						'Black/Red/LBlack',
+						color,
+						_elm_lang$core$Basics$toString(_p35),
+						_elm_lang$core$Basics$toString(_p36));
+				}
+			} else {
+				var _p40 = _p29._0._2;
+				var _p39 = _p29._0._4;
+				var _p38 = _p29._0._1;
+				var newLeft = A5(_elm_lang$core$Dict$removeMax, _p29._0._0, _p38, _p40, _p29._0._3, _p39);
+				var _p37 = A3(_elm_lang$core$Dict$maxWithDefault, _p38, _p40, _p39);
+				var k = _p37._0;
+				var v = _p37._1;
+				return A5(_elm_lang$core$Dict$bubble, color, k, v, newLeft, right);
+			}
+		}
+	});
+var _elm_lang$core$Dict$map = F2(
+	function (f, dict) {
+		var _p41 = dict;
+		if (_p41.ctor === 'RBEmpty_elm_builtin') {
+			return _elm_lang$core$Dict$RBEmpty_elm_builtin(_elm_lang$core$Dict$LBlack);
+		} else {
+			var _p42 = _p41._1;
+			return A5(
+				_elm_lang$core$Dict$RBNode_elm_builtin,
+				_p41._0,
+				_p42,
+				A2(f, _p42, _p41._2),
+				A2(_elm_lang$core$Dict$map, f, _p41._3),
+				A2(_elm_lang$core$Dict$map, f, _p41._4));
+		}
+	});
+var _elm_lang$core$Dict$Same = {ctor: 'Same'};
+var _elm_lang$core$Dict$Remove = {ctor: 'Remove'};
+var _elm_lang$core$Dict$Insert = {ctor: 'Insert'};
+var _elm_lang$core$Dict$update = F3(
+	function (k, alter, dict) {
+		var up = function (dict) {
+			var _p43 = dict;
+			if (_p43.ctor === 'RBEmpty_elm_builtin') {
+				var _p44 = alter(_elm_lang$core$Maybe$Nothing);
+				if (_p44.ctor === 'Nothing') {
+					return {ctor: '_Tuple2', _0: _elm_lang$core$Dict$Same, _1: _elm_lang$core$Dict$empty};
+				} else {
+					return {
+						ctor: '_Tuple2',
+						_0: _elm_lang$core$Dict$Insert,
+						_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _elm_lang$core$Dict$Red, k, _p44._0, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty)
+					};
+				}
+			} else {
+				var _p55 = _p43._2;
+				var _p54 = _p43._4;
+				var _p53 = _p43._3;
+				var _p52 = _p43._1;
+				var _p51 = _p43._0;
+				var _p45 = A2(_elm_lang$core$Basics$compare, k, _p52);
+				switch (_p45.ctor) {
+					case 'EQ':
+						var _p46 = alter(
+							_elm_lang$core$Maybe$Just(_p55));
+						if (_p46.ctor === 'Nothing') {
+							return {
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Dict$Remove,
+								_1: A3(_elm_lang$core$Dict$rem, _p51, _p53, _p54)
+							};
+						} else {
+							return {
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Dict$Same,
+								_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p46._0, _p53, _p54)
+							};
+						}
+					case 'LT':
+						var _p47 = up(_p53);
+						var flag = _p47._0;
+						var newLeft = _p47._1;
+						var _p48 = flag;
+						switch (_p48.ctor) {
+							case 'Same':
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Same,
+									_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p55, newLeft, _p54)
+								};
+							case 'Insert':
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Insert,
+									_1: A5(_elm_lang$core$Dict$balance, _p51, _p52, _p55, newLeft, _p54)
+								};
+							default:
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Remove,
+									_1: A5(_elm_lang$core$Dict$bubble, _p51, _p52, _p55, newLeft, _p54)
+								};
+						}
+					default:
+						var _p49 = up(_p54);
+						var flag = _p49._0;
+						var newRight = _p49._1;
+						var _p50 = flag;
+						switch (_p50.ctor) {
+							case 'Same':
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Same,
+									_1: A5(_elm_lang$core$Dict$RBNode_elm_builtin, _p51, _p52, _p55, _p53, newRight)
+								};
+							case 'Insert':
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Insert,
+									_1: A5(_elm_lang$core$Dict$balance, _p51, _p52, _p55, _p53, newRight)
+								};
+							default:
+								return {
+									ctor: '_Tuple2',
+									_0: _elm_lang$core$Dict$Remove,
+									_1: A5(_elm_lang$core$Dict$bubble, _p51, _p52, _p55, _p53, newRight)
+								};
+						}
+				}
+			}
+		};
+		var _p56 = up(dict);
+		var flag = _p56._0;
+		var updatedDict = _p56._1;
+		var _p57 = flag;
+		switch (_p57.ctor) {
+			case 'Same':
+				return updatedDict;
+			case 'Insert':
+				return _elm_lang$core$Dict$ensureBlackRoot(updatedDict);
+			default:
+				return _elm_lang$core$Dict$blacken(updatedDict);
+		}
+	});
+var _elm_lang$core$Dict$insert = F3(
+	function (key, value, dict) {
+		return A3(
+			_elm_lang$core$Dict$update,
+			key,
+			_elm_lang$core$Basics$always(
+				_elm_lang$core$Maybe$Just(value)),
+			dict);
+	});
+var _elm_lang$core$Dict$singleton = F2(
+	function (key, value) {
+		return A3(_elm_lang$core$Dict$insert, key, value, _elm_lang$core$Dict$empty);
+	});
+var _elm_lang$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3(_elm_lang$core$Dict$foldl, _elm_lang$core$Dict$insert, t2, t1);
+	});
+var _elm_lang$core$Dict$filter = F2(
+	function (predicate, dictionary) {
+		var add = F3(
+			function (key, value, dict) {
+				return A2(predicate, key, value) ? A3(_elm_lang$core$Dict$insert, key, value, dict) : dict;
+			});
+		return A3(_elm_lang$core$Dict$foldl, add, _elm_lang$core$Dict$empty, dictionary);
+	});
+var _elm_lang$core$Dict$intersect = F2(
+	function (t1, t2) {
+		return A2(
+			_elm_lang$core$Dict$filter,
+			F2(
+				function (k, _p58) {
+					return A2(_elm_lang$core$Dict$member, k, t2);
+				}),
+			t1);
+	});
+var _elm_lang$core$Dict$partition = F2(
+	function (predicate, dict) {
+		var add = F3(
+			function (key, value, _p59) {
+				var _p60 = _p59;
+				var _p62 = _p60._1;
+				var _p61 = _p60._0;
+				return A2(predicate, key, value) ? {
+					ctor: '_Tuple2',
+					_0: A3(_elm_lang$core$Dict$insert, key, value, _p61),
+					_1: _p62
+				} : {
+					ctor: '_Tuple2',
+					_0: _p61,
+					_1: A3(_elm_lang$core$Dict$insert, key, value, _p62)
+				};
+			});
+		return A3(
+			_elm_lang$core$Dict$foldl,
+			add,
+			{ctor: '_Tuple2', _0: _elm_lang$core$Dict$empty, _1: _elm_lang$core$Dict$empty},
+			dict);
+	});
+var _elm_lang$core$Dict$fromList = function (assocs) {
+	return A3(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (_p63, dict) {
+				var _p64 = _p63;
+				return A3(_elm_lang$core$Dict$insert, _p64._0, _p64._1, dict);
+			}),
+		_elm_lang$core$Dict$empty,
+		assocs);
+};
+var _elm_lang$core$Dict$remove = F2(
+	function (key, dict) {
+		return A3(
+			_elm_lang$core$Dict$update,
+			key,
+			_elm_lang$core$Basics$always(_elm_lang$core$Maybe$Nothing),
+			dict);
+	});
+var _elm_lang$core$Dict$diff = F2(
+	function (t1, t2) {
+		return A3(
+			_elm_lang$core$Dict$foldl,
+			F3(
+				function (k, v, t) {
+					return A2(_elm_lang$core$Dict$remove, k, t);
+				}),
+			t1,
+			t2);
+	});
+
 //import Maybe, Native.Array, Native.List, Native.Utils, Result //
 
 var _elm_lang$core$Native_Json = function() {
@@ -6234,6 +5756,484 @@ var _elm_lang$core$Json_Decode$int = _elm_lang$core$Native_Json.decodePrimitive(
 var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive('bool');
 var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
 var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
+
+//import Result //
+
+var _elm_lang$core$Native_Date = function() {
+
+function fromString(str)
+{
+	var date = new Date(str);
+	return isNaN(date.getTime())
+		? _elm_lang$core$Result$Err('Unable to parse \'' + str + '\' as a date. Dates must be in the ISO 8601 format.')
+		: _elm_lang$core$Result$Ok(date);
+}
+
+var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var monthTable =
+	['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+	 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+
+return {
+	fromString: fromString,
+	year: function(d) { return d.getFullYear(); },
+	month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+	day: function(d) { return d.getDate(); },
+	hour: function(d) { return d.getHours(); },
+	minute: function(d) { return d.getMinutes(); },
+	second: function(d) { return d.getSeconds(); },
+	millisecond: function(d) { return d.getMilliseconds(); },
+	toTime: function(d) { return d.getTime(); },
+	fromTime: function(t) { return new Date(t); },
+	dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
+};
+
+}();
+var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
+var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
+var _elm_lang$core$Task$spawnCmd = F2(
+	function (router, _p0) {
+		var _p1 = _p0;
+		return _elm_lang$core$Native_Scheduler.spawn(
+			A2(
+				_elm_lang$core$Task$andThen,
+				_elm_lang$core$Platform$sendToApp(router),
+				_p1._0));
+	});
+var _elm_lang$core$Task$fail = _elm_lang$core$Native_Scheduler.fail;
+var _elm_lang$core$Task$mapError = F2(
+	function (convert, task) {
+		return A2(
+			_elm_lang$core$Task$onError,
+			function (_p2) {
+				return _elm_lang$core$Task$fail(
+					convert(_p2));
+			},
+			task);
+	});
+var _elm_lang$core$Task$succeed = _elm_lang$core$Native_Scheduler.succeed;
+var _elm_lang$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return _elm_lang$core$Task$succeed(
+					func(a));
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return _elm_lang$core$Task$succeed(
+							A2(func, a, b));
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map3 = F4(
+	function (func, taskA, taskB, taskC) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return _elm_lang$core$Task$succeed(
+									A3(func, a, b, c));
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map4 = F5(
+	function (func, taskA, taskB, taskC, taskD) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return _elm_lang$core$Task$succeed(
+											A4(func, a, b, c, d));
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$map5 = F6(
+	function (func, taskA, taskB, taskC, taskD, taskE) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (a) {
+				return A2(
+					_elm_lang$core$Task$andThen,
+					function (b) {
+						return A2(
+							_elm_lang$core$Task$andThen,
+							function (c) {
+								return A2(
+									_elm_lang$core$Task$andThen,
+									function (d) {
+										return A2(
+											_elm_lang$core$Task$andThen,
+											function (e) {
+												return _elm_lang$core$Task$succeed(
+													A5(func, a, b, c, d, e));
+											},
+											taskE);
+									},
+									taskD);
+							},
+							taskC);
+					},
+					taskB);
+			},
+			taskA);
+	});
+var _elm_lang$core$Task$sequence = function (tasks) {
+	var _p3 = tasks;
+	if (_p3.ctor === '[]') {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '[]'});
+	} else {
+		return A3(
+			_elm_lang$core$Task$map2,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			_p3._0,
+			_elm_lang$core$Task$sequence(_p3._1));
+	}
+};
+var _elm_lang$core$Task$onEffects = F3(
+	function (router, commands, state) {
+		return A2(
+			_elm_lang$core$Task$map,
+			function (_p4) {
+				return {ctor: '_Tuple0'};
+			},
+			_elm_lang$core$Task$sequence(
+				A2(
+					_elm_lang$core$List$map,
+					_elm_lang$core$Task$spawnCmd(router),
+					commands)));
+	});
+var _elm_lang$core$Task$init = _elm_lang$core$Task$succeed(
+	{ctor: '_Tuple0'});
+var _elm_lang$core$Task$onSelfMsg = F3(
+	function (_p7, _p6, _p5) {
+		return _elm_lang$core$Task$succeed(
+			{ctor: '_Tuple0'});
+	});
+var _elm_lang$core$Task$command = _elm_lang$core$Native_Platform.leaf('Task');
+var _elm_lang$core$Task$Perform = function (a) {
+	return {ctor: 'Perform', _0: a};
+};
+var _elm_lang$core$Task$perform = F2(
+	function (toMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(_elm_lang$core$Task$map, toMessage, task)));
+	});
+var _elm_lang$core$Task$attempt = F2(
+	function (resultToMessage, task) {
+		return _elm_lang$core$Task$command(
+			_elm_lang$core$Task$Perform(
+				A2(
+					_elm_lang$core$Task$onError,
+					function (_p8) {
+						return _elm_lang$core$Task$succeed(
+							resultToMessage(
+								_elm_lang$core$Result$Err(_p8)));
+					},
+					A2(
+						_elm_lang$core$Task$andThen,
+						function (_p9) {
+							return _elm_lang$core$Task$succeed(
+								resultToMessage(
+									_elm_lang$core$Result$Ok(_p9)));
+						},
+						task))));
+	});
+var _elm_lang$core$Task$cmdMap = F2(
+	function (tagger, _p10) {
+		var _p11 = _p10;
+		return _elm_lang$core$Task$Perform(
+			A2(_elm_lang$core$Task$map, tagger, _p11._0));
+	});
+_elm_lang$core$Native_Platform.effectManagers['Task'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Task$init, onEffects: _elm_lang$core$Task$onEffects, onSelfMsg: _elm_lang$core$Task$onSelfMsg, tag: 'cmd', cmdMap: _elm_lang$core$Task$cmdMap};
+
+//import Native.Scheduler //
+
+var _elm_lang$core$Native_Time = function() {
+
+var now = _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+{
+	callback(_elm_lang$core$Native_Scheduler.succeed(Date.now()));
+});
+
+function setInterval_(interval, task)
+{
+	return _elm_lang$core$Native_Scheduler.nativeBinding(function(callback)
+	{
+		var id = setInterval(function() {
+			_elm_lang$core$Native_Scheduler.rawSpawn(task);
+		}, interval);
+
+		return function() { clearInterval(id); };
+	});
+}
+
+return {
+	now: now,
+	setInterval_: F2(setInterval_)
+};
+
+}();
+var _elm_lang$core$Time$setInterval = _elm_lang$core$Native_Time.setInterval_;
+var _elm_lang$core$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		var _p0 = intervals;
+		if (_p0.ctor === '[]') {
+			return _elm_lang$core$Task$succeed(processes);
+		} else {
+			var _p1 = _p0._0;
+			var spawnRest = function (id) {
+				return A3(
+					_elm_lang$core$Time$spawnHelp,
+					router,
+					_p0._1,
+					A3(_elm_lang$core$Dict$insert, _p1, id, processes));
+			};
+			var spawnTimer = _elm_lang$core$Native_Scheduler.spawn(
+				A2(
+					_elm_lang$core$Time$setInterval,
+					_p1,
+					A2(_elm_lang$core$Platform$sendToSelf, router, _p1)));
+			return A2(_elm_lang$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var _elm_lang$core$Time$addMySub = F2(
+	function (_p2, state) {
+		var _p3 = _p2;
+		var _p6 = _p3._1;
+		var _p5 = _p3._0;
+		var _p4 = A2(_elm_lang$core$Dict$get, _p5, state);
+		if (_p4.ctor === 'Nothing') {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{
+					ctor: '::',
+					_0: _p6,
+					_1: {ctor: '[]'}
+				},
+				state);
+		} else {
+			return A3(
+				_elm_lang$core$Dict$insert,
+				_p5,
+				{ctor: '::', _0: _p6, _1: _p4._0},
+				state);
+		}
+	});
+var _elm_lang$core$Time$inMilliseconds = function (t) {
+	return t;
+};
+var _elm_lang$core$Time$millisecond = 1;
+var _elm_lang$core$Time$second = 1000 * _elm_lang$core$Time$millisecond;
+var _elm_lang$core$Time$minute = 60 * _elm_lang$core$Time$second;
+var _elm_lang$core$Time$hour = 60 * _elm_lang$core$Time$minute;
+var _elm_lang$core$Time$inHours = function (t) {
+	return t / _elm_lang$core$Time$hour;
+};
+var _elm_lang$core$Time$inMinutes = function (t) {
+	return t / _elm_lang$core$Time$minute;
+};
+var _elm_lang$core$Time$inSeconds = function (t) {
+	return t / _elm_lang$core$Time$second;
+};
+var _elm_lang$core$Time$now = _elm_lang$core$Native_Time.now;
+var _elm_lang$core$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _p7 = A2(_elm_lang$core$Dict$get, interval, state.taggers);
+		if (_p7.ctor === 'Nothing') {
+			return _elm_lang$core$Task$succeed(state);
+		} else {
+			var tellTaggers = function (time) {
+				return _elm_lang$core$Task$sequence(
+					A2(
+						_elm_lang$core$List$map,
+						function (tagger) {
+							return A2(
+								_elm_lang$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						_p7._0));
+			};
+			return A2(
+				_elm_lang$core$Task$andThen,
+				function (_p8) {
+					return _elm_lang$core$Task$succeed(state);
+				},
+				A2(_elm_lang$core$Task$andThen, tellTaggers, _elm_lang$core$Time$now));
+		}
+	});
+var _elm_lang$core$Time$subscription = _elm_lang$core$Native_Platform.leaf('Time');
+var _elm_lang$core$Time$State = F2(
+	function (a, b) {
+		return {taggers: a, processes: b};
+	});
+var _elm_lang$core$Time$init = _elm_lang$core$Task$succeed(
+	A2(_elm_lang$core$Time$State, _elm_lang$core$Dict$empty, _elm_lang$core$Dict$empty));
+var _elm_lang$core$Time$onEffects = F3(
+	function (router, subs, _p9) {
+		var _p10 = _p9;
+		var rightStep = F3(
+			function (_p12, id, _p11) {
+				var _p13 = _p11;
+				return {
+					ctor: '_Tuple3',
+					_0: _p13._0,
+					_1: _p13._1,
+					_2: A2(
+						_elm_lang$core$Task$andThen,
+						function (_p14) {
+							return _p13._2;
+						},
+						_elm_lang$core$Native_Scheduler.kill(id))
+				};
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _p15) {
+				var _p16 = _p15;
+				return {
+					ctor: '_Tuple3',
+					_0: _p16._0,
+					_1: A3(_elm_lang$core$Dict$insert, interval, id, _p16._1),
+					_2: _p16._2
+				};
+			});
+		var leftStep = F3(
+			function (interval, taggers, _p17) {
+				var _p18 = _p17;
+				return {
+					ctor: '_Tuple3',
+					_0: {ctor: '::', _0: interval, _1: _p18._0},
+					_1: _p18._1,
+					_2: _p18._2
+				};
+			});
+		var newTaggers = A3(_elm_lang$core$List$foldl, _elm_lang$core$Time$addMySub, _elm_lang$core$Dict$empty, subs);
+		var _p19 = A6(
+			_elm_lang$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			_p10.processes,
+			{
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _elm_lang$core$Dict$empty,
+				_2: _elm_lang$core$Task$succeed(
+					{ctor: '_Tuple0'})
+			});
+		var spawnList = _p19._0;
+		var existingDict = _p19._1;
+		var killTask = _p19._2;
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (newProcesses) {
+				return _elm_lang$core$Task$succeed(
+					A2(_elm_lang$core$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				_elm_lang$core$Task$andThen,
+				function (_p20) {
+					return A3(_elm_lang$core$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var _elm_lang$core$Time$Every = F2(
+	function (a, b) {
+		return {ctor: 'Every', _0: a, _1: b};
+	});
+var _elm_lang$core$Time$every = F2(
+	function (interval, tagger) {
+		return _elm_lang$core$Time$subscription(
+			A2(_elm_lang$core$Time$Every, interval, tagger));
+	});
+var _elm_lang$core$Time$subMap = F2(
+	function (f, _p21) {
+		var _p22 = _p21;
+		return A2(
+			_elm_lang$core$Time$Every,
+			_p22._0,
+			function (_p23) {
+				return f(
+					_p22._1(_p23));
+			});
+	});
+_elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
+var _elm_lang$core$Date$millisecond = _elm_lang$core$Native_Date.millisecond;
+var _elm_lang$core$Date$second = _elm_lang$core$Native_Date.second;
+var _elm_lang$core$Date$minute = _elm_lang$core$Native_Date.minute;
+var _elm_lang$core$Date$hour = _elm_lang$core$Native_Date.hour;
+var _elm_lang$core$Date$dayOfWeek = _elm_lang$core$Native_Date.dayOfWeek;
+var _elm_lang$core$Date$day = _elm_lang$core$Native_Date.day;
+var _elm_lang$core$Date$month = _elm_lang$core$Native_Date.month;
+var _elm_lang$core$Date$year = _elm_lang$core$Native_Date.year;
+var _elm_lang$core$Date$fromTime = _elm_lang$core$Native_Date.fromTime;
+var _elm_lang$core$Date$toTime = _elm_lang$core$Native_Date.toTime;
+var _elm_lang$core$Date$fromString = _elm_lang$core$Native_Date.fromString;
+var _elm_lang$core$Date$now = A2(_elm_lang$core$Task$map, _elm_lang$core$Date$fromTime, _elm_lang$core$Time$now);
+var _elm_lang$core$Date$Date = {ctor: 'Date'};
+var _elm_lang$core$Date$Sun = {ctor: 'Sun'};
+var _elm_lang$core$Date$Sat = {ctor: 'Sat'};
+var _elm_lang$core$Date$Fri = {ctor: 'Fri'};
+var _elm_lang$core$Date$Thu = {ctor: 'Thu'};
+var _elm_lang$core$Date$Wed = {ctor: 'Wed'};
+var _elm_lang$core$Date$Tue = {ctor: 'Tue'};
+var _elm_lang$core$Date$Mon = {ctor: 'Mon'};
+var _elm_lang$core$Date$Dec = {ctor: 'Dec'};
+var _elm_lang$core$Date$Nov = {ctor: 'Nov'};
+var _elm_lang$core$Date$Oct = {ctor: 'Oct'};
+var _elm_lang$core$Date$Sep = {ctor: 'Sep'};
+var _elm_lang$core$Date$Aug = {ctor: 'Aug'};
+var _elm_lang$core$Date$Jul = {ctor: 'Jul'};
+var _elm_lang$core$Date$Jun = {ctor: 'Jun'};
+var _elm_lang$core$Date$May = {ctor: 'May'};
+var _elm_lang$core$Date$Apr = {ctor: 'Apr'};
+var _elm_lang$core$Date$Mar = {ctor: 'Mar'};
+var _elm_lang$core$Date$Feb = {ctor: 'Feb'};
+var _elm_lang$core$Date$Jan = {ctor: 'Jan'};
 
 var _elm_lang$core$Set$foldr = F3(
 	function (f, b, _p0) {

@@ -114,8 +114,14 @@ type alias DragState =
     , startPos : Mouse.Position
     , currentPos : Mouse.Position
     , msg : Maybe Msg
+    , purposeful : Bool
     , dropped : Bool
     }
+
+
+purposefulDragTreshold : Int
+purposefulDragTreshold =
+    10
 
 
 onDragStart : (Mouse.Position -> msg) -> Html.Attribute msg
@@ -316,6 +322,7 @@ update msg model =
                         , startPos = pos
                         , currentPos = pos
                         , msg = Nothing
+                        , purposeful = False
                         , dropped = False
                         }
               }
@@ -327,7 +334,18 @@ update msg model =
                 newDrag =
                     case model.drag of
                         Just drag ->
-                            Just { drag | currentPos = pos }
+                            let
+                                purposeful =
+                                    abs (pos.x - drag.startPos.x)
+                                        > purposefulDragTreshold
+                                        || abs (pos.y - drag.startPos.y)
+                                        > purposefulDragTreshold
+                            in
+                                Just
+                                    { drag
+                                        | currentPos = pos
+                                        , purposeful = drag.purposeful || purposeful
+                                    }
 
                         Nothing ->
                             Nothing
@@ -687,8 +705,8 @@ viewDropArea model mid mmsg =
     let
         dragEvents =
             case model.drag of
-                Just { dropped } ->
-                    if not dropped then
+                Just { purposeful, dropped } ->
+                    if purposeful && not dropped then
                         [ HE.onMouseEnter (DragOver mmsg)
                         , HE.onMouseLeave (DragOver Nothing)
                         ]
@@ -701,7 +719,7 @@ viewDropArea model mid mmsg =
         Html.div
             (HA.classList
                 [ ( "drop-area", True )
-                , ( "active", model.drag /= Nothing )
+                , ( "active", Maybe.withDefault False (Maybe.map .purposeful model.drag) )
                 , ( "over"
                   , case model.drag of
                         Nothing ->
@@ -713,7 +731,7 @@ viewDropArea model mid mmsg =
                                     drag.msg == mmsg
 
                                 _ ->
-                                    mid == Just drag.id
+                                    drag.purposeful && mid == Just drag.id
                   )
                 ]
                 :: dragEvents
@@ -1275,8 +1293,8 @@ viewCard model card =
     let
         moveStyle =
             case ( card.dragId, model.drag ) of
-                ( Just dragId, Just { id, startPos, currentPos } ) ->
-                    if id == dragId then
+                ( Just dragId, Just { purposeful, id, startPos, currentPos } ) ->
+                    if purposeful && id == dragId then
                         [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
                         , ( "position", "absolute" )
                         , ( "top", toString (currentPos.y) ++ "px" )
@@ -1300,7 +1318,6 @@ viewCard model card =
         Html.div
             ([ HA.classList
                 [ ( "card", True )
-                , ( "card-info", True )
                 , ( "draggable", card.dragId /= Nothing )
                 , ( "dragging", not <| List.isEmpty moveStyle )
                 , ( "in-flight", isInFlight card )
@@ -1313,23 +1330,40 @@ viewCard model card =
              ]
                 ++ dragEvents
             )
-            [ Html.div [ HA.class "card-actors" ] <|
-                List.map (viewCardActor model) (recentActors model card)
-            , Html.a [ HA.href card.url, HA.target "_blank", HA.class "card-title" ]
-                [ Html.text card.title
-                ]
-            , Html.span [ HA.class "card-labels" ] <|
-                List.map viewLabel card.labels
-            , Html.div [ HA.class "card-meta" ]
-                [ Html.a [ HA.href card.url, HA.target "_blank" ] [ Html.text ("#" ++ toString card.number) ]
-                , Html.text " "
-                , Html.text "opened by "
-                , case card.author of
-                    Just user ->
-                        Html.a [ HA.href user.url, HA.target "_blank" ] [ Html.text user.login ]
+            [ Html.div [ HA.class "card-info" ]
+                [ Html.div [ HA.class "card-actors" ] <|
+                    List.map (viewCardActor model) (recentActors model card)
+                , Html.a
+                    [ HA.href card.url
+                    , HA.target "_blank"
+                    , HA.class "card-title"
+                    , HA.draggable "false"
+                    ]
+                    [ Html.text card.title
+                    ]
+                , Html.span [ HA.class "card-labels" ] <|
+                    List.map viewLabel card.labels
+                , Html.div [ HA.class "card-meta" ]
+                    [ Html.a
+                        [ HA.href card.url
+                        , HA.target "_blank"
+                        , HA.draggable "false"
+                        ]
+                        [ Html.text ("#" ++ toString card.number) ]
+                    , Html.text " "
+                    , Html.text "opened by "
+                    , case card.author of
+                        Just user ->
+                            Html.a
+                                [ HA.href user.url
+                                , HA.target "_blank"
+                                , HA.draggable "false"
+                                ]
+                                [ Html.text user.login ]
 
-                    _ ->
-                        Html.text "(deleted user)"
+                        _ ->
+                            Html.text "(deleted user)"
+                    ]
                 ]
             ]
 
@@ -1411,6 +1445,7 @@ viewCardActor model { createdAt, actor } =
         [ HA.class "card-actor"
         , HA.style [ ( "opacity", toString (activityOpacity model.currentDate createdAt) ) ]
         , HA.src (actor.avatar ++ "&s=88")
+        , HA.draggable "false"
         ]
         []
 

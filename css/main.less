@@ -169,16 +169,82 @@ body {
   }
 }
 
-.card-info {
-  padding: 12px;
+.card {
+  width: @card-width;
   background: @white;
-  border-bottom: 1px solid #e1e4e8;
-  width: 500px;
+  border: 1px solid #e1e4e8;
+  border-radius: 3px;
+  box-sizing: border-box;
+  margin: @card-margin;
+  background: #fff;
+  white-space: normal;
+  vertical-align: top;
+  user-select: none;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  flex-direction: row;
   position: relative;
 
-  &:hover {
-    background: #f6f8fa;
+  &.draggable {
+    cursor: move;
   }
+
+  &.dragging {
+    transition: none;
+  }
+
+  &:first-child {
+    margin-left: @card-margin;
+  }
+
+  &.anticipated {
+    opacity: 0.5;
+  }
+
+  &.in-flight, &.done, &.backlog {
+    &::before {
+      content: " ";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      border-top-left-radius: 2px;
+      border-top-right-radius: 2px;
+    }
+  }
+
+  &.in-flight::before {
+    background: @yellow;
+  }
+
+  &.done::before {
+    background: @green;
+  }
+
+  &.backlog::before {
+    background: @blue;
+  }
+}
+
+.card-icons {
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  padding-right: 0;
+
+  .octicon {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    text-align: center;
+    vertical-align: middle;
+  }
+}
+
+.card-info {
+  padding: 12px;
+  width: 500px;
 
   .card-title {
     font-size: 16px;
@@ -272,60 +338,6 @@ body {
 
   &.over {
     height: 100px;
-  }
-}
-
-.card {
-  width: @card-width;
-  border: 1px solid #e1e4e8;
-  border-radius: 3px;
-  box-sizing: border-box;
-  margin: @card-margin;
-  background: #fff;
-  white-space: normal;
-  vertical-align: top;
-  user-select: none;
-  transition: all 0.2s ease-in-out;
-
-  &.draggable {
-    cursor: move;
-  }
-
-  &.dragging {
-    transition: none;
-  }
-
-  &:first-child {
-    margin-left: @card-margin;
-  }
-
-  &.anticipated {
-    opacity: 0.5;
-  }
-
-  &.in-flight, &.done, &.backlog {
-    &::before {
-      content: " ";
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      border-top-left-radius: 2px;
-      border-top-right-radius: 2px;
-    }
-  }
-
-  &.in-flight::before {
-    background: @yellow;
-  }
-
-  &.done::before {
-    background: @green;
-  }
-
-  &.backlog::before {
-    background: @blue;
   }
 }
 
