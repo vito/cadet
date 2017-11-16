@@ -123,10 +123,6 @@ body {
   }
 }
 
-// .cards {
-//   position: relative;
-// }
-
 .card-search {
   position: relative;
 
@@ -353,11 +349,11 @@ body {
 
   &.active {
     z-index: 3;
-    transition: height 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
   }
 
   &.over {
-    transition: height 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
   }
 
   &.never-left {
@@ -365,10 +361,9 @@ body {
   }
 
   &:last-child {
+    transition: all 0.2s ease-in-out;
     flex-grow: 1;
-    height: auto;
-    margin-bottom: 0;
-    top: 0;
+    min-height: 60px;
   }
 }
 

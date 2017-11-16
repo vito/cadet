@@ -448,8 +448,28 @@ update msg model =
             let
                 data =
                     model.data
+
+                newAllCards =
+                    List.foldl
+                        (\card ->
+                            case card.content of
+                                Nothing ->
+                                    identity
+
+                                Just (GitHubGraph.IssueCardContent i) ->
+                                    Dict.insert i.id (issueCard i)
+
+                                Just (GitHubGraph.PullRequestCardContent p) ->
+                                    Dict.insert p.id (prCard p)
+                        )
+                        model.allCards
+                        cards
             in
-                cb { model | data = { data | cards = Dict.insert col cards data.cards } }
+                cb
+                    { model
+                        | data = { data | cards = Dict.insert col cards data.cards }
+                        , allCards = newAllCards
+                    }
 
         CardsFetched _ col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
@@ -825,29 +845,31 @@ viewProjectColumn model mlimit col =
 
 viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> Maybe (List (Html Msg))
 viewProjectColumnCard model col ghCard =
-    case ( ghCard.note, ghCard.itemID ) of
+    case ( ghCard.note, ghCard.content ) of
         ( Just n, Nothing ) ->
             -- TODO: show note cards!
             Nothing
 
-        ( Nothing, Just i ) ->
-            case Dict.get i model.allCards of
-                Just card ->
-                    let
-                        dragId =
-                            Just { columnId = col.id, cardId = ghCard.id }
+        ( Nothing, Just content ) ->
+            let
+                card =
+                    case content of
+                        GitHubGraph.IssueCardContent issue ->
+                            issueCard issue
 
-                        dragTarget =
-                            { columnId = col.id, afterId = Just ghCard.id }
-                    in
-                        Just
-                            [ viewCard model { card | dragId = dragId }
-                            , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
-                            ]
+                        GitHubGraph.PullRequestCardContent pr ->
+                            prCard pr
 
-                Nothing ->
-                    -- closed issue
-                    Nothing
+                dragId =
+                    Just { columnId = col.id, cardId = ghCard.id }
+
+                dragTarget =
+                    { columnId = col.id, afterId = Just ghCard.id }
+            in
+                Just
+                    [ viewCard model { card | dragId = dragId }
+                    , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
+                    ]
 
         _ ->
             Debug.crash "impossible"

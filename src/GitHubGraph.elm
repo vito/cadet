@@ -11,6 +11,7 @@ module GitHubGraph
         , ProjectColumn
         , ProjectColumnCard
         , CardLocation
+        , CardContent(..)
         , PullRequest
         , PullRequestState(..)
         , Reactions
@@ -169,9 +170,14 @@ type alias ProjectColumn =
 
 type alias ProjectColumnCard =
     { id : ID
-    , itemID : Maybe ID
+    , content : Maybe CardContent
     , note : Maybe String
     }
+
+
+type CardContent
+    = IssueCardContent Issue
+    | PullRequestCardContent PullRequest
 
 
 type alias ProjectLocation =
@@ -493,15 +499,15 @@ cardsQuery =
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
 
-        itemID =
+        content =
             GB.object pickEnum2
-                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.extract <| GB.field "id" [] GB.string))
-                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.extract <| GB.field "id" [] GB.string))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map IssueCardContent issueObject))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map PullRequestCardContent prObject))
 
         card =
             GB.object ProjectColumnCard
                 |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "content" [] itemID)
+                |> GB.with (GB.field "content" [] content)
                 |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
         pageArgs =
@@ -533,6 +539,93 @@ cardsQuery =
         GB.queryDocument queryRoot
 
 
+projectLocationObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectLocation vars
+projectLocationObject =
+    GB.object ProjectLocation
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "number" [] GB.int)
+
+
+labelObject : GB.ValueSpec GB.NonNull GB.ObjectType Label vars
+labelObject =
+    GB.object Label
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "color" [] GB.string)
+
+
+columnObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumn vars
+columnObject =
+    GB.object ProjectColumn
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+
+
+authorObject : GB.SelectionSpec GB.InlineFragment User vars
+authorObject =
+    GB.assume
+        (GB.inlineFragment (Just <| GB.onType "User")
+            (GB.object User
+                |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "url" [] GB.string)
+                |> GB.with (GB.field "login" [] GB.string)
+                |> GB.with (GB.field "avatarUrl" [] GB.string)
+            )
+        )
+
+
+projectCardObject : GB.ValueSpec GB.NonNull GB.ObjectType CardLocation vars
+projectCardObject =
+    GB.object CardLocation
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "project" [] projectLocationObject)
+        |> GB.with (GB.field "column" [] (GB.nullable columnObject))
+
+
+reactionGroupObject : GB.ValueSpec GB.NonNull GB.ObjectType ReactionGroup vars
+reactionGroupObject =
+    GB.object ReactionGroup
+        |> GB.with (GB.field "content" [] (GB.enum reactionTypes))
+        |> GB.with (GB.field "users" [] (GB.extract (GB.field "totalCount" [] GB.int)))
+
+
+issueObject : GB.ValueSpec GB.NonNull GB.ObjectType Issue vars
+issueObject =
+    GB.object Issue
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "state" [] (GB.enum issueStates))
+        |> GB.with (GB.field "number" [] GB.int)
+        |> GB.with (GB.field "title" [] GB.string)
+        |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
+        |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
+        |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+        |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
+        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
+
+
+prObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequest vars
+prObject =
+    GB.object PullRequest
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "state" [] (GB.enum pullRequestStates))
+        |> GB.with (GB.field "number" [] GB.int)
+        |> GB.with (GB.field "title" [] GB.string)
+        |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
+        |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
+        |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+        |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
+        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
+        |> GB.with (GB.field "additions" [] GB.int)
+        |> GB.with (GB.field "deletions" [] GB.int)
+
+
 issuesQuery : GB.Document GB.Query (PagedResult Issue) (PagedSelector RepoSelector)
 issuesQuery =
     let
@@ -544,60 +637,6 @@ issuesQuery =
 
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
-
-        author =
-            GB.assume
-                (GB.inlineFragment (Just <| GB.onType "User")
-                    (GB.object User
-                        |> GB.with (GB.field "id" [] GB.string)
-                        |> GB.with (GB.field "url" [] GB.string)
-                        |> GB.with (GB.field "login" [] GB.string)
-                        |> GB.with (GB.field "avatarUrl" [] GB.string)
-                    )
-                )
-
-        reactionGroup =
-            GB.object ReactionGroup
-                |> GB.with (GB.field "content" [] (GB.enum reactionTypes))
-                |> GB.with (GB.field "users" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-
-        label =
-            GB.object Label
-                |> GB.with (GB.field "name" [] GB.string)
-                |> GB.with (GB.field "color" [] GB.string)
-
-        projectLocation =
-            GB.object ProjectLocation
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-                |> GB.with (GB.field "number" [] GB.int)
-
-        column =
-            GB.object ProjectColumn
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-
-        projectCard =
-            GB.object CardLocation
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "project" [] projectLocation)
-                |> GB.with (GB.field "column" [] (GB.nullable column))
-
-        issue =
-            GB.object Issue
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
-                |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
-                |> GB.with (GB.field "state" [] (GB.enum issueStates))
-                |> GB.with (GB.field "number" [] GB.int)
-                |> GB.with (GB.field "title" [] GB.string)
-                |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-                |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroup))
-                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract author)))
-                |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list label)))
-                |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCard)))
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -612,7 +651,7 @@ issuesQuery =
 
         paged =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.list issue))
+                |> GB.with (GB.field "nodes" [] (GB.list issueObject))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         queryRoot =
@@ -639,62 +678,6 @@ pullRequestsQuery =
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
 
-        author =
-            GB.assume
-                (GB.inlineFragment (Just <| GB.onType "User")
-                    (GB.object User
-                        |> GB.with (GB.field "id" [] GB.string)
-                        |> GB.with (GB.field "url" [] GB.string)
-                        |> GB.with (GB.field "login" [] GB.string)
-                        |> GB.with (GB.field "avatarUrl" [] GB.string)
-                    )
-                )
-
-        reactionGroup =
-            GB.object ReactionGroup
-                |> GB.with (GB.field "content" [] (GB.enum reactionTypes))
-                |> GB.with (GB.field "users" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-
-        label =
-            GB.object Label
-                |> GB.with (GB.field "name" [] GB.string)
-                |> GB.with (GB.field "color" [] GB.string)
-
-        projectLocation =
-            GB.object ProjectLocation
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-                |> GB.with (GB.field "number" [] GB.int)
-
-        column =
-            GB.object ProjectColumn
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-
-        projectCard =
-            GB.object CardLocation
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "project" [] projectLocation)
-                |> GB.with (GB.field "column" [] (GB.nullable column))
-
-        issue =
-            GB.object PullRequest
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
-                |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
-                |> GB.with (GB.field "state" [] (GB.enum pullRequestStates))
-                |> GB.with (GB.field "number" [] GB.int)
-                |> GB.with (GB.field "title" [] GB.string)
-                |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-                |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroup))
-                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract author)))
-                |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list label)))
-                |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCard)))
-                |> GB.with (GB.field "additions" [] GB.int)
-                |> GB.with (GB.field "deletions" [] GB.int)
-
         pageArgs =
             [ ( "first", GA.int 100 )
             , ( "states", GA.list [ GA.enum "OPEN" ] )
@@ -708,7 +691,7 @@ pullRequestsQuery =
 
         paged =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.list issue))
+                |> GB.with (GB.field "nodes" [] (GB.list prObject))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         queryRoot =
@@ -732,20 +715,9 @@ timelineQuery =
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
 
-        author =
-            GB.assume
-                (GB.inlineFragment (Just <| GB.onType "User")
-                    (GB.object User
-                        |> GB.with (GB.field "id" [] GB.string)
-                        |> GB.with (GB.field "url" [] GB.string)
-                        |> GB.with (GB.field "login" [] GB.string)
-                        |> GB.with (GB.field "avatarUrl" [] GB.string)
-                    )
-                )
-
         issueCommentEvent =
             GB.object IssueCommentEvent
-                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract author)))
+                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
 
         sourceID =
@@ -918,8 +890,16 @@ decodeProjectColumnCard : JD.Decoder ProjectColumnCard
 decodeProjectColumnCard =
     JD.succeed ProjectColumnCard
         |: (JD.field "id" JD.string)
-        |: (JD.field "item_id" <| JD.maybe JD.string)
+        |: (JD.field "content" <| JD.maybe decodeCardContent)
         |: (JD.field "note" <| JD.maybe JD.string)
+
+
+decodeCardContent : JD.Decoder CardContent
+decodeCardContent =
+    JD.oneOf
+        [ JD.field "issue" (JD.map IssueCardContent decodeIssue)
+        , JD.field "pull_request" (JD.map PullRequestCardContent decodePullRequest)
+        ]
 
 
 decodeCardLocation : JD.Decoder CardLocation
@@ -1092,7 +1072,17 @@ encodeProjectColumnCard : ProjectColumnCard -> JE.Value
 encodeProjectColumnCard record =
     JE.object
         [ ( "id", JE.string record.id )
-        , ( "item_id", JEE.maybe JE.string record.itemID )
+        , ( "content"
+          , case record.content of
+                Just (IssueCardContent issue) ->
+                    JE.object [ ( "issue", encodeIssue issue ) ]
+
+                Just (PullRequestCardContent pr) ->
+                    JE.object [ ( "pull_request", encodePullRequest pr ) ]
+
+                Nothing ->
+                    JE.null
+          )
         , ( "note", JEE.maybe JE.string record.note )
         ]
 
