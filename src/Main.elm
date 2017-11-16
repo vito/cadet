@@ -59,6 +59,7 @@ type alias Model =
 type alias CardNodeState =
     { currentDate : Date
     , selectedCards : List GitHubGraph.ID
+    , anticipatedCards : List GitHubGraph.ID
     }
 
 
@@ -1048,6 +1049,7 @@ viewGraph model { graph } =
         state =
             { currentDate = model.currentDate
             , selectedCards = model.selectedCards
+            , anticipatedCards = model.anticipatedCards
             }
 
         ( flairs, nodes ) =
@@ -1153,7 +1155,7 @@ cardNode card context =
             , withFlair = issueRadiusWithFlair card context
             }
     in
-        { viewLower = viewCardNodeFlair card flair
+        { viewLower = viewCardNodeFlair card radii flair
         , viewUpper = viewCardNode card radii labels
         , bounds =
             \{ x, y } ->
@@ -1294,13 +1296,42 @@ nodeLabelArcs card context =
             card.labels
 
 
-viewCardNodeFlair : Card -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
-viewCardNodeFlair card flair { x, y } state =
-    Svg.g
-        [ SA.opacity (toString (activityOpacity state.currentDate card.updatedAt * 0.75))
-        , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
-        ]
-        flair
+viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
+viewCardNodeFlair card radii flair { x, y } state =
+    let
+        isAnticipated =
+            List.member card.id state.anticipatedCards
+
+        ( scale, opacity ) =
+            if isAnticipated then
+                ( "1.1", "1" )
+            else
+                ( "1", toString (activityOpacity state.currentDate card.updatedAt * 0.75) )
+
+        anticipateRadius =
+            if List.isEmpty card.labels then
+                radii.withLabels
+            else
+                radii.withLabels + 3
+
+        anticipatedHalo =
+            if isAnticipated then
+                [ Svg.circle
+                    [ SA.r (toString anticipateRadius)
+                    , SA.class "anticipated-circle"
+                    ]
+                    []
+                ]
+            else
+                []
+    in
+        Svg.g
+            [ SA.opacity opacity
+            , SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
+            , SE.onMouseOver (AnticipateCard card.id)
+            , SE.onMouseOut (UnanticipateCard card.id)
+            ]
+            (flair ++ anticipatedHalo)
 
 
 activityOpacity : Date -> Date -> Float
@@ -1324,6 +1355,9 @@ viewCardNode card radii labels { x, y } state =
     let
         isSelected =
             List.member card.id state.selectedCards
+
+        isAnticipated =
+            List.member card.id state.anticipatedCards
 
         circleWithNumber =
             case card.state of
@@ -1356,9 +1390,15 @@ viewCardNode card radii labels { x, y } state =
                         [ Svg.text (toString card.number)
                         ]
                     ]
+
+        scale =
+            if isAnticipated then
+                "1.1"
+            else
+                "1"
     in
         Svg.g
-            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ")")
+            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
             , SE.onMouseOver (AnticipateCard card.id)
             , SE.onMouseOut (UnanticipateCard card.id)
             , SE.onClick
@@ -1448,6 +1488,8 @@ viewCard model card =
             , ( "anticipated", isAnticipated model card )
             ]
          , HE.onClick (SelectCard card.id)
+         , HE.onMouseOver (AnticipateCard card.id)
+         , HE.onMouseOut (UnanticipateCard card.id)
          ]
             ++ dragAttrs model card.dragId
         )
