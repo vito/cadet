@@ -23862,8 +23862,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1557, column: 25},
-							end: {line: 1571, column: 57}
+							start: {line: 1561, column: 25},
+							end: {line: 1575, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -23973,8 +23973,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1483, column: 17},
-					end: {line: 1491, column: 50}
+					start: {line: 1487, column: 17},
+					end: {line: 1495, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -23982,8 +23982,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1481, column: 9},
-				end: {line: 1494, column: 42}
+				start: {line: 1485, column: 9},
+				end: {line: 1498, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -24287,8 +24287,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1170, column: 17},
-							end: {line: 1175, column: 49}
+							start: {line: 1174, column: 17},
+							end: {line: 1179, column: 49}
 						},
 						_p32)('impossible');
 				}
@@ -26116,7 +26116,7 @@ var _vito$cadet$Main$viewProjectColumnCard = F3(
 			if (_p117.ctor === '_Tuple2') {
 				if (_p117._0.ctor === 'Just') {
 					if (_p117._1.ctor === 'Nothing') {
-						return {ctor: '[]'};
+						return _elm_lang$core$Maybe$Nothing;
 					} else {
 						break _v62_2;
 					}
@@ -26130,27 +26130,28 @@ var _vito$cadet$Main$viewProjectColumnCard = F3(
 							};
 							var dragId = _elm_lang$core$Maybe$Just(
 								{columnId: col.id, cardId: ghCard.id});
-							return {
-								ctor: '::',
-								_0: A2(
-									_vito$cadet$Main$viewCard,
-									model,
-									_elm_lang$core$Native_Utils.update(
-										_p118._0,
-										{dragId: dragId})),
-								_1: {
+							return _elm_lang$core$Maybe$Just(
+								{
 									ctor: '::',
-									_0: A3(
-										_vito$cadet$Main$viewDropArea,
+									_0: A2(
+										_vito$cadet$Main$viewCard,
 										model,
-										dragId,
-										_elm_lang$core$Maybe$Just(
-											_vito$cadet$Main$MoveCardAfter(dragTarget))),
-									_1: {ctor: '[]'}
-								}
-							};
+										_elm_lang$core$Native_Utils.update(
+											_p118._0,
+											{dragId: dragId})),
+									_1: {
+										ctor: '::',
+										_0: A3(
+											_vito$cadet$Main$viewDropArea,
+											model,
+											dragId,
+											_elm_lang$core$Maybe$Just(
+												_vito$cadet$Main$MoveCardAfter(dragTarget))),
+										_1: {ctor: '[]'}
+									}
+								});
 						} else {
-							return {ctor: '[]'};
+							return _elm_lang$core$Maybe$Nothing;
 						}
 					} else {
 						break _v62_2;
@@ -26163,13 +26164,17 @@ var _vito$cadet$Main$viewProjectColumnCard = F3(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 825, column: 5},
-				end: {line: 849, column: 37}
+				start: {line: 828, column: 5},
+				end: {line: 853, column: 37}
 			},
 			_p117)('impossible');
 	});
-var _vito$cadet$Main$viewFullProjectColumn = F2(
-	function (model, col) {
+var _vito$cadet$Main$viewProjectColumn = F3(
+	function (model, mlimit, col) {
+		var limit = A2(
+			_elm_lang$core$Maybe$withDefault,
+			_elm_lang$core$Basics$identity,
+			A2(_elm_lang$core$Maybe$map, _elm_lang$core$List$take, mlimit));
 		var cards = A2(
 			_elm_lang$core$Maybe$withDefault,
 			{ctor: '[]'},
@@ -26190,10 +26195,12 @@ var _vito$cadet$Main$viewFullProjectColumn = F2(
 					_elm_lang$core$Maybe$Just(
 						_vito$cadet$Main$MoveCardAfter(
 							{columnId: col.id, afterId: _elm_lang$core$Maybe$Nothing}))),
-				_1: A2(
-					_elm_lang$core$List$concatMap,
-					A2(_vito$cadet$Main$viewProjectColumnCard, model, col),
-					cards)
+				_1: _elm_lang$core$List$concat(
+					limit(
+						A2(
+							_elm_lang$core$List$filterMap,
+							A2(_vito$cadet$Main$viewProjectColumnCard, model, col),
+							cards)))
 			});
 	});
 var _vito$cadet$Main$viewSingleProject = F2(
@@ -26247,7 +26254,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 								},
 								{
 									ctor: '::',
-									_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p121.done),
+									_0: A3(_vito$cadet$Main$viewProjectColumn, model, _elm_lang$core$Maybe$Nothing, _p121.done),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -26261,7 +26268,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 									},
 									{
 										ctor: '::',
-										_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p121.inFlight),
+										_0: A3(_vito$cadet$Main$viewProjectColumn, model, _elm_lang$core$Maybe$Nothing, _p121.inFlight),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -26275,7 +26282,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 										},
 										{
 											ctor: '::',
-											_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p121.backlog),
+											_0: A3(_vito$cadet$Main$viewProjectColumn, model, _elm_lang$core$Maybe$Nothing, _p121.backlog),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -26494,7 +26501,11 @@ var _vito$cadet$Main$viewProject = F2(
 								},
 								{
 									ctor: '::',
-									_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p127.backlog),
+									_0: A3(
+										_vito$cadet$Main$viewProjectColumn,
+										model,
+										_elm_lang$core$Maybe$Just(3),
+										_p127.backlog),
 									_1: {ctor: '[]'}
 								}),
 							_1: {
@@ -26508,7 +26519,7 @@ var _vito$cadet$Main$viewProject = F2(
 									},
 									{
 										ctor: '::',
-										_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p127.inFlight),
+										_0: A3(_vito$cadet$Main$viewProjectColumn, model, _elm_lang$core$Maybe$Nothing, _p127.inFlight),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -26522,7 +26533,7 @@ var _vito$cadet$Main$viewProject = F2(
 										},
 										{
 											ctor: '::',
-											_0: A2(_vito$cadet$Main$viewFullProjectColumn, model, _p127.done),
+											_0: A3(_vito$cadet$Main$viewProjectColumn, model, _elm_lang$core$Maybe$Nothing, _p127.done),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}

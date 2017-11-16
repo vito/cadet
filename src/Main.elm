@@ -729,11 +729,11 @@ viewProject model { name, backlog, inFlight, done } =
                     ]
                 ]
             , Html.div [ HA.class "column backlog-column" ]
-                [ viewFullProjectColumn model backlog ]
+                [ viewProjectColumn model (Just 3) backlog ]
             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewFullProjectColumn model inFlight ]
+                [ viewProjectColumn model Nothing inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewFullProjectColumn model done ]
+                [ viewProjectColumn model Nothing done ]
             ]
         , Html.div [ HA.class "project-spacer-columns" ]
             [ Html.div [ HA.class "column name-column" ]
@@ -809,23 +809,26 @@ viewDropArea model dragId mmsg =
             []
 
 
-viewFullProjectColumn : Model -> GitHubGraph.ProjectColumn -> Html Msg
-viewFullProjectColumn model col =
+viewProjectColumn : Model -> Maybe Int -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn model mlimit col =
     let
         cards =
             Maybe.withDefault [] (Dict.get col.id model.data.cards)
+
+        limit =
+            Maybe.withDefault identity (Maybe.map List.take mlimit)
     in
         Html.div [ HA.class "cards" ] <|
             viewDropArea model Nothing (Just (MoveCardAfter { columnId = col.id, afterId = Nothing }))
-                :: List.concatMap (viewProjectColumnCard model col) cards
+                :: List.concat (limit (List.filterMap (viewProjectColumnCard model col) cards))
 
 
-viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> List (Html Msg)
+viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> Maybe (List (Html Msg))
 viewProjectColumnCard model col ghCard =
     case ( ghCard.note, ghCard.itemID ) of
         ( Just n, Nothing ) ->
-            -- TODO
-            []
+            -- TODO: show note cards!
+            Nothing
 
         ( Nothing, Just i ) ->
             case Dict.get i model.allCards of
@@ -837,13 +840,14 @@ viewProjectColumnCard model col ghCard =
                         dragTarget =
                             { columnId = col.id, afterId = Just ghCard.id }
                     in
-                        [ viewCard model { card | dragId = dragId }
-                        , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
-                        ]
+                        Just
+                            [ viewCard model { card | dragId = dragId }
+                            , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
+                            ]
 
                 Nothing ->
-                    -- closed issue?
-                    []
+                    -- closed issue
+                    Nothing
 
         _ ->
             Debug.crash "impossible"
@@ -874,11 +878,11 @@ viewSingleProject model { id, name, backlog, inFlight, done } =
             [ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text name ] ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewFullProjectColumn model done ]
+                [ viewProjectColumn model Nothing done ]
             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewFullProjectColumn model inFlight ]
+                [ viewProjectColumn model Nothing inFlight ]
             , Html.div [ HA.class "column backlog-column" ]
-                [ viewFullProjectColumn model backlog ]
+                [ viewProjectColumn model Nothing backlog ]
             ]
         , Html.div [ HA.class "spatial-graph" ] <|
             List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
