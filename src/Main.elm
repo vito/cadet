@@ -1328,7 +1328,7 @@ viewCardNode card radii labels { x, y } state =
 
         circleWithNumber =
             case card.state of
-                PullRequestState _ ->
+                IssueState _ ->
                     [ Svg.circle
                         [ SA.r (toString radii.base)
                         , SA.fill "#fff"
@@ -1343,7 +1343,7 @@ viewCardNode card radii labels { x, y } state =
                         ]
                     ]
 
-                _ ->
+                PullRequestState _ ->
                     [ Svg.circle
                         [ SA.r (toString radii.base)
                         , SA.class "pr-circle"
@@ -1442,7 +1442,7 @@ viewCard model card =
         ([ HA.classList
             [ ( "card", True )
             , ( "draggable", card.dragId /= Nothing )
-            , ( "dragging", model.drag /= Nothing )
+            , ( "dragging", card.dragId /= Nothing && Maybe.map .id model.drag == card.dragId )
             , ( "in-flight", isInFlight card )
             , ( "done", isDone card )
             , ( "backlog", isBacklog card )
@@ -1533,11 +1533,9 @@ dragAttrs model dragId =
                 if purposeful && id == dragId then
                     Just <|
                         HA.style
-                            [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
-                            , ( "position", "absolute" )
+                            [ ( "position", "absolute" )
                             , ( "top", toString (eleStartY + toFloat (currentPos.y - startPos.y)) ++ "px" )
                             , ( "left", toString (eleStartX + toFloat (currentPos.x - startPos.x)) ++ "px" )
-                            , ( "z-index", "2" )
                             ]
                 else
                     Nothing

@@ -23875,8 +23875,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1660, column: 25},
-							end: {line: 1674, column: 57}
+							start: {line: 1658, column: 25},
+							end: {line: 1672, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -23986,8 +23986,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1586, column: 17},
-					end: {line: 1594, column: 50}
+					start: {line: 1584, column: 17},
+					end: {line: 1592, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -23995,8 +23995,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1584, column: 9},
-				end: {line: 1597, column: 42}
+				start: {line: 1582, column: 9},
+				end: {line: 1595, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -25141,7 +25141,7 @@ var _vito$cadet$Main$viewCardNode = F5(
 		var _p79 = _p78;
 		var circleWithNumber = function () {
 			var _p80 = card.state;
-			if (_p80.ctor === 'PullRequestState') {
+			if (_p80.ctor === 'IssueState') {
 				return {
 					ctor: '::',
 					_0: A2(
@@ -25950,38 +25950,30 @@ var _vito$cadet$Main$dragAttrs = F2(
 							_elm_lang$html$Html_Attributes$style(
 								{
 									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'box-shadow', _1: '0 3px 6px rgba(0,0,0,0.24)'},
+									_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
 									_1: {
 										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
+										_0: {
+											ctor: '_Tuple2',
+											_0: 'top',
+											_1: A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(
+													_p120._1._0.eleStartY + _elm_lang$core$Basics$toFloat(_p121.y - _p122.y)),
+												'px')
+										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'top',
+												_0: 'left',
 												_1: A2(
 													_elm_lang$core$Basics_ops['++'],
 													_elm_lang$core$Basics$toString(
-														_p120._1._0.eleStartY + _elm_lang$core$Basics$toFloat(_p121.y - _p122.y)),
+														_p120._1._0.eleStartX + _elm_lang$core$Basics$toFloat(_p121.x - _p122.x)),
 													'px')
 											},
-											_1: {
-												ctor: '::',
-												_0: {
-													ctor: '_Tuple2',
-													_0: 'left',
-													_1: A2(
-														_elm_lang$core$Basics_ops['++'],
-														_elm_lang$core$Basics$toString(
-															_p120._1._0.eleStartX + _elm_lang$core$Basics$toFloat(_p121.x - _p122.x)),
-														'px')
-												},
-												_1: {
-													ctor: '::',
-													_0: {ctor: '_Tuple2', _0: 'z-index', _1: '2'},
-													_1: {ctor: '[]'}
-												}
-											}
+											_1: {ctor: '[]'}
 										}
 									}
 								})) : _elm_lang$core$Maybe$Nothing;
@@ -26026,7 +26018,14 @@ var _vito$cadet$Main$viewCard = F2(
 									_0: {
 										ctor: '_Tuple2',
 										_0: 'dragging',
-										_1: !_elm_lang$core$Native_Utils.eq(model.drag, _elm_lang$core$Maybe$Nothing)
+										_1: (!_elm_lang$core$Native_Utils.eq(card.dragId, _elm_lang$core$Maybe$Nothing)) && _elm_lang$core$Native_Utils.eq(
+											A2(
+												_elm_lang$core$Maybe$map,
+												function (_) {
+													return _.id;
+												},
+												model.drag),
+											card.dragId)
 									},
 									_1: {
 										ctor: '::',

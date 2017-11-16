@@ -59,6 +59,11 @@ a {
       margin-left: @card-margin;
       margin-bottom: 0;
       border-color: @black;
+
+      &.anticipated {
+        opacity: 0.5;
+        box-shadow: none;
+      }
     }
 
     .no-cards {
@@ -151,7 +156,7 @@ a {
     background: fade(#fff, 20%);
     border: 0;
     color: @white;
-    width: 300px + (2 * @card-margin);
+    width: 300px + (2 * @card-margin) + 15px;
 
     &::placeholder {
       color: @white;
@@ -214,14 +219,16 @@ a {
 
   &.dragging {
     cursor: grab;
+    box-shadow: 0 3px 6px @black-fade-30;
+    z-index: 2;
+  }
+
+  &.anticipated {
+    box-shadow: 0 0 0 5px @yellow;
   }
 
   &:first-child {
     margin-left: @card-margin;
-  }
-
-  &.anticipated {
-    opacity: 0.5;
   }
 
   &.in-flight, &.done, &.backlog {
