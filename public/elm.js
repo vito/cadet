@@ -23735,8 +23735,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1585, column: 25},
-							end: {line: 1599, column: 57}
+							start: {line: 1589, column: 25},
+							end: {line: 1603, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -23846,8 +23846,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1511, column: 17},
-					end: {line: 1519, column: 50}
+					start: {line: 1515, column: 17},
+					end: {line: 1523, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -23855,8 +23855,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1509, column: 9},
-				end: {line: 1522, column: 42}
+				start: {line: 1513, column: 9},
+				end: {line: 1526, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -24160,8 +24160,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1198, column: 17},
-							end: {line: 1203, column: 49}
+							start: {line: 1202, column: 17},
+							end: {line: 1207, column: 49}
 						},
 						_p32)('impossible');
 				}
@@ -24627,6 +24627,7 @@ var _vito$cadet$Main$prCard = function (_p66) {
 	var _p67 = _p66;
 	return {
 		isPullRequest: true,
+		isOpen: _elm_lang$core$Native_Utils.eq(_p67.state, _vito$cadet$GitHubGraph$PullRequestStateOpen),
 		id: _p67.id,
 		url: _p67.url,
 		number: _p67.number,
@@ -24645,6 +24646,7 @@ var _vito$cadet$Main$issueCard = function (_p68) {
 	var _p69 = _p68;
 	return {
 		isPullRequest: false,
+		isOpen: _elm_lang$core$Native_Utils.eq(_p69.state, _vito$cadet$GitHubGraph$IssueStateOpen),
 		id: _p69.id,
 		url: _p69.url,
 		number: _p69.number,
@@ -24784,7 +24786,9 @@ var _vito$cadet$Main$Card = function (a) {
 										return function (k) {
 											return function (l) {
 												return function (m) {
-													return {isPullRequest: a, id: b, url: c, number: d, title: e, updatedAt: f, author: g, labels: h, cards: i, commentCount: j, reactions: k, score: l, dragId: m};
+													return function (n) {
+														return {isPullRequest: a, isOpen: b, id: c, url: d, number: e, title: f, updatedAt: g, author: h, labels: i, cards: j, commentCount: k, reactions: l, score: m, dragId: n};
+													};
 												};
 											};
 										};
@@ -25113,7 +25117,12 @@ var _vito$cadet$Main$computeReferenceGraph = F2(
 					_vito$cadet$Hash$hash(card.id),
 					_vito$cadet$Main$cardNode(card));
 			},
-			cards);
+			A2(
+				_elm_lang$core$List$filter,
+				function (_) {
+					return _.isOpen;
+				},
+				cards));
 		var cardEdges = A3(
 			_elm_lang$core$Dict$foldl,
 			F3(
@@ -26071,8 +26080,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F3(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 850, column: 5},
-				end: {line: 877, column: 37}
+				start: {line: 853, column: 5},
+				end: {line: 880, column: 37}
 			},
 			_p121)('impossible');
 	});

@@ -63,6 +63,7 @@ type alias CardState =
 
 type alias Card =
     { isPullRequest : Bool
+    , isOpen : Bool
     , id : GitHubGraph.ID
     , url : String
     , number : Int
@@ -562,8 +563,9 @@ addProjectCards cards allCards =
 
 
 issueCard : GitHubGraph.Issue -> Card
-issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions } as issue) =
+issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as issue) =
     { isPullRequest = False
+    , isOpen = state == GitHubGraph.IssueStateOpen
     , id = id
     , url = url
     , number = number
@@ -580,8 +582,9 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
 
 
 prCard : GitHubGraph.PullRequest -> Card
-prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions } as pr) =
+prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as pr) =
     { isPullRequest = True
+    , isOpen = state == GitHubGraph.PullRequestStateOpen
     , id = id
     , url = url
     , number = number
@@ -950,7 +953,8 @@ computeReferenceGraph data cards =
                 data.references
 
         cardNodeThunks =
-            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) cards
+            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) <|
+                List.filter .isOpen cards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
             let
