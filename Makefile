@@ -15,4 +15,4 @@ public/elm.js: $(ELM_FILES)
 	elm make --warn --output $@ --yes src/Main.elm
 
 public/main.css: css/main.less
-	lessc --clean-css="--advanced" css/main.less $@
+	lessc --clean-css="--advanced" --autoprefix='last 2 Chrome versions, last 2 Firefox versions' css/main.less $@
