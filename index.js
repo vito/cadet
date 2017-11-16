@@ -102,32 +102,49 @@ worker.ports.setCards.subscribe(function(args) {
 
 app.use(compression())
 
-passport.use(new GitHubStrategy({
-    clientID: process.env.GITHUB_CLIENT_ID,
-    clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    callbackURL: process.env.GITHUB_AUTH_CALLBACK_URL,
-    scope: "repo"
-  },
-  function(accessToken, refreshToken, profile, cb) {
-    return cb(null, {
-      token: accessToken,
-      user: profile._json
-    });
-  }
-));
+if (process.env.GITHUB_CLIENT_ID) {
+  passport.use(new GitHubStrategy({
+      clientID: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      callbackURL: process.env.GITHUB_AUTH_CALLBACK_URL,
+      scope: "repo"
+    },
+    function(accessToken, refreshToken, profile, cb) {
+      return cb(null, {
+        token: accessToken,
+        user: profile._json
+      });
+    }
+  ));
 
-passport.serializeUser(function(user, cb) {
-  cb(null, user);
-});
+  passport.serializeUser(function(user, cb) {
+    cb(null, user);
+  });
 
-passport.deserializeUser(function(obj, cb) {
-  cb(null, obj);
-});
+  passport.deserializeUser(function(obj, cb) {
+    cb(null, obj);
+  });
 
-app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+  app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+  app.use(passport.initialize());
+  app.use(passport.session());
+
+  app.get('/auth/github', passport.authenticate('github'));
+
+  app.get('/auth/github/callback',
+    passport.authenticate('github', { failureRedirect: '/login' }),
+    function(req, res) {
+      // Successful authentication, redirect home.
+      res.redirect('/');
+    }
+  );
+
+  app.get('/logout', function(req, res){
+    req.logout();
+    res.redirect('/');
+  });
+}
 
 const publicDir = path.join(__dirname, 'public');
 
@@ -148,21 +165,6 @@ app.get('/refresh', (req, res) => {
 })
 
 app.use('/public', express.static(publicDir))
-
-app.get('/auth/github', passport.authenticate('github'));
-
-app.get('/auth/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login' }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  }
-);
-
-app.get('/logout', function(req, res){
-  req.logout();
-  res.redirect('/');
-});
 
 app.get('/*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
