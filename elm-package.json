@@ -22,6 +22,7 @@
         "elm-lang/navigation": "2.1.0 <= v < 3.0.0",
         "elm-lang/svg": "2.0.0 <= v < 3.0.0",
         "elm-lang/window": "1.0.1 <= v < 2.0.0",
+        "evancz/elm-markdown": "3.0.2 <= v < 4.0.0",
         "fredcy/elm-parseint": "2.0.0 <= v < 3.0.0",
         "gampleman/elm-visualization": "1.5.0 <= v < 2.0.0",
         "jamesmacaulay/elm-graphql": "1.7.0 <= v < 2.0.0",

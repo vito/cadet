@@ -213,7 +213,7 @@ a {
   }
 
   &.dragging {
-    transition: none;
+    cursor: grab;
   }
 
   &:first-child {
@@ -267,7 +267,6 @@ a {
 
 .card-info {
   padding: 12px;
-  width: 500px;
 
   .card-title {
     font-size: 16px;
@@ -285,6 +284,10 @@ a {
   a:hover {
     color: @blue;
   }
+}
+
+.card-note {
+  font-size: 14px;
 }
 
 .octicon {
@@ -368,6 +371,7 @@ a {
 
   &.active {
     z-index: 3;
+    cursor: grabbing;
     transition: all 0.2s ease-in-out;
   }
 

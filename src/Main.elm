@@ -28,6 +28,7 @@ import Svg.Lazy
 import Task
 import Time exposing (Time)
 import Visualization.Shape as VS
+import Markdown
 import Hash
 import GitHubGraph
 import Backend exposing (Data, Me)
@@ -845,39 +846,40 @@ viewProjectColumn model mlimit col =
     in
         Html.div [ HA.class "cards" ] <|
             viewDropArea model Nothing (Just (MoveCardAfter { columnId = col.id, afterId = Nothing }))
-                :: List.concat (limit (List.filterMap (viewProjectColumnCard model col) cards))
+                :: List.concatMap (viewProjectColumnCard model col) (limit cards)
 
 
-viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> Maybe (List (Html Msg))
+viewProjectColumnCard : Model -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> List (Html Msg)
 viewProjectColumnCard model col ghCard =
-    case ( ghCard.note, ghCard.content ) of
-        ( Just n, Nothing ) ->
-            -- TODO: show note cards!
-            Nothing
+    let
+        dragId =
+            Just { columnId = col.id, cardId = ghCard.id }
 
-        ( Nothing, Just content ) ->
-            let
-                card =
-                    case content of
-                        GitHubGraph.IssueCardContent issue ->
-                            issueCard issue
+        dragTarget =
+            { columnId = col.id, afterId = Just ghCard.id }
+    in
+        case ( ghCard.note, ghCard.content ) of
+            ( Just n, Nothing ) ->
+                [ viewNoteCard model col dragId n
+                , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
+                ]
 
-                        GitHubGraph.PullRequestCardContent pr ->
-                            prCard pr
+            ( Nothing, Just content ) ->
+                let
+                    card =
+                        case content of
+                            GitHubGraph.IssueCardContent issue ->
+                                issueCard issue
 
-                dragId =
-                    Just { columnId = col.id, cardId = ghCard.id }
-
-                dragTarget =
-                    { columnId = col.id, afterId = Just ghCard.id }
-            in
-                Just
+                            GitHubGraph.PullRequestCardContent pr ->
+                                prCard pr
+                in
                     [ viewCard model { card | dragId = dragId }
                     , viewDropArea model dragId (Just (MoveCardAfter dragTarget))
                     ]
 
-        _ ->
-            Debug.crash "impossible"
+            _ ->
+                Debug.crash "impossible"
 
 
 viewProjectPage : Model -> String -> Html Msg
@@ -1399,82 +1401,97 @@ isBacklog =
 
 viewCard : Model -> Card -> Html Msg
 viewCard model card =
-    let
-        moveStyle =
-            case ( card.dragId, model.drag ) of
-                ( Just dragId, Just { purposeful, id, eleStartX, eleStartY, startPos, currentPos } ) ->
-                    if purposeful && id == dragId then
-                        [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
-                        , ( "position", "absolute" )
-                        , ( "top", toString (eleStartY + toFloat (currentPos.y - startPos.y)) ++ "px" )
-                        , ( "left", toString (eleStartX + toFloat (currentPos.x - startPos.x)) ++ "px" )
-                        , ( "z-index", "2" )
-                        ]
-                    else
-                        []
-
-                _ ->
-                    []
-
-        dragEvents =
-            case card.dragId of
-                Just dragId ->
-                    [ onDragStart (DragStart dragId) ]
-
-                Nothing ->
-                    []
-    in
-        Html.div
-            ([ HA.classList
-                [ ( "card", True )
-                , ( "draggable", card.dragId /= Nothing )
-                , ( "dragging", not <| List.isEmpty moveStyle )
-                , ( "in-flight", isInFlight card )
-                , ( "done", isDone card )
-                , ( "backlog", isBacklog card )
-                , ( "anticipated", isAnticipated model card )
+    Html.div
+        ([ HA.classList
+            [ ( "card", True )
+            , ( "draggable", card.dragId /= Nothing )
+            , ( "dragging", model.drag /= Nothing )
+            , ( "in-flight", isInFlight card )
+            , ( "done", isDone card )
+            , ( "backlog", isBacklog card )
+            , ( "anticipated", isAnticipated model card )
+            ]
+         , HE.onClick (SelectCard card.id)
+         ]
+            ++ dragAttrs model card.dragId
+        )
+        [ Html.div [ HA.class "card-info" ]
+            [ Html.div [ HA.class "card-actors" ] <|
+                List.map (viewCardActor model) (recentActors model card)
+            , Html.a
+                [ HA.href card.url
+                , HA.target "_blank"
+                , HA.class "card-title"
+                , HA.draggable "false"
                 ]
-             , HE.onClick (SelectCard card.id)
-             , HA.style moveStyle
-             ]
-                ++ dragEvents
-            )
-            [ Html.div [ HA.class "card-info" ]
-                [ Html.div [ HA.class "card-actors" ] <|
-                    List.map (viewCardActor model) (recentActors model card)
-                , Html.a
+                [ Html.text card.title
+                ]
+            , Html.span [ HA.class "card-labels" ] <|
+                List.map viewLabel card.labels
+            , Html.div [ HA.class "card-meta" ]
+                [ Html.a
                     [ HA.href card.url
                     , HA.target "_blank"
-                    , HA.class "card-title"
                     , HA.draggable "false"
                     ]
-                    [ Html.text card.title
-                    ]
-                , Html.span [ HA.class "card-labels" ] <|
-                    List.map viewLabel card.labels
-                , Html.div [ HA.class "card-meta" ]
-                    [ Html.a
-                        [ HA.href card.url
-                        , HA.target "_blank"
-                        , HA.draggable "false"
-                        ]
-                        [ Html.text ("#" ++ toString card.number) ]
-                    , Html.text " "
-                    , Html.text "opened by "
-                    , case card.author of
-                        Just user ->
-                            Html.a
-                                [ HA.href user.url
-                                , HA.target "_blank"
-                                , HA.draggable "false"
-                                ]
-                                [ Html.text user.login ]
+                    [ Html.text ("#" ++ toString card.number) ]
+                , Html.text " "
+                , Html.text "opened by "
+                , case card.author of
+                    Just user ->
+                        Html.a
+                            [ HA.href user.url
+                            , HA.target "_blank"
+                            , HA.draggable "false"
+                            ]
+                            [ Html.text user.login ]
 
-                        _ ->
-                            Html.text "(deleted user)"
-                    ]
+                    _ ->
+                        Html.text "(deleted user)"
                 ]
             ]
+        ]
+
+
+viewNoteCard : Model -> GitHubGraph.ProjectColumn -> Maybe CardSource -> String -> Html Msg
+viewNoteCard model col dragId text =
+    Html.div
+        (HA.classList
+            [ ( "card", True )
+            , ( "draggable", dragId /= Nothing )
+            , ( "dragging", model.drag /= Nothing )
+            , ( "in-flight", col.name == "In Flight" )
+            , ( "done", col.name == "Done" )
+            , ( "backlog", col.name == "Backlog" )
+            ]
+            :: dragAttrs model dragId
+        )
+        [ Html.div [ HA.class "card-info card-note" ]
+            [ Markdown.toHtml [] text ]
+        ]
+
+
+dragAttrs : Model -> Maybe CardSource -> List (Html.Attribute Msg)
+dragAttrs model dragId =
+    List.filterMap identity
+        [ case ( dragId, model.drag ) of
+            ( Just dragId, Just { purposeful, id, eleStartX, eleStartY, startPos, currentPos } ) ->
+                if purposeful && id == dragId then
+                    Just <|
+                        HA.style
+                            [ ( "box-shadow", "0 3px 6px rgba(0,0,0,0.24)" )
+                            , ( "position", "absolute" )
+                            , ( "top", toString (eleStartY + toFloat (currentPos.y - startPos.y)) ++ "px" )
+                            , ( "left", toString (eleStartX + toFloat (currentPos.x - startPos.x)) ++ "px" )
+                            , ( "z-index", "2" )
+                            ]
+                else
+                    Nothing
+
+            _ ->
+                Nothing
+        , Maybe.map (onDragStart << DragStart) dragId
+        ]
 
 
 recentActors : Model -> Card -> List Backend.ActorEvent
