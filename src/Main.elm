@@ -631,7 +631,7 @@ view model =
                 [ Html.div [ HA.class "page-content" ]
                     [ case model.page of
                         GlobalGraphPage ->
-                            viewGlobalGraphPage model
+                            viewSpatialGraph model
 
                         AllProjectsPage ->
                             viewAllProjectsPage model
@@ -651,8 +651,8 @@ view model =
             ]
 
 
-viewGlobalGraphPage : Model -> Html Msg
-viewGlobalGraphPage model =
+viewSpatialGraph : Model -> Html Msg
+viewSpatialGraph model =
     Html.div [ HA.class "spatial-graph" ] <|
         List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
 
@@ -935,8 +935,7 @@ viewSingleProject model { id, name, backlogs, inFlight, done } =
                             [ viewProjectColumn model identity backlog ]
                     )
             )
-        , Html.div [ HA.class "spatial-graph" ] <|
-            List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
+        , viewSpatialGraph model
         ]
 
 

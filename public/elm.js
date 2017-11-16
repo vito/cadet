@@ -23875,8 +23875,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1658, column: 25},
-							end: {line: 1672, column: 57}
+							start: {line: 1657, column: 25},
+							end: {line: 1671, column: 57}
 						},
 						_p3)('impossible');
 				}
@@ -23986,8 +23986,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1584, column: 17},
-					end: {line: 1592, column: 50}
+					start: {line: 1583, column: 17},
+					end: {line: 1591, column: 50}
 				},
 				_p10)('invalid hex');
 		}
@@ -23995,8 +23995,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1582, column: 9},
-				end: {line: 1595, column: 42}
+				start: {line: 1581, column: 9},
+				end: {line: 1594, column: 42}
 			},
 			_p9)('invalid hex');
 	}
@@ -24320,8 +24320,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1226, column: 17},
-							end: {line: 1231, column: 49}
+							start: {line: 1225, column: 17},
+							end: {line: 1230, column: 49}
 						},
 						_p34)('impossible');
 				}
@@ -24726,7 +24726,7 @@ var _vito$cadet$Main$onlyOpenContentCards = _elm_lang$core$List$filter(
 			return false;
 		}
 	});
-var _vito$cadet$Main$viewGlobalGraphPage = function (model) {
+var _vito$cadet$Main$viewSpatialGraph = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -26600,18 +26600,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 							}))),
 				_1: {
 					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('spatial-graph'),
-							_1: {ctor: '[]'}
-						},
-						A2(
-							_elm_lang$core$List$map,
-							_elm_lang$html$Html_Lazy$lazy(
-								_vito$cadet$Main$viewGraph(model)),
-							model.cardGraphs)),
+					_0: _vito$cadet$Main$viewSpatialGraph(model),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -27246,7 +27235,7 @@ var _vito$cadet$Main$view = function (model) {
 								var _p143 = model.page;
 								switch (_p143.ctor) {
 									case 'GlobalGraphPage':
-										return _vito$cadet$Main$viewGlobalGraphPage(model);
+										return _vito$cadet$Main$viewSpatialGraph(model);
 									case 'AllProjectsPage':
 										return _vito$cadet$Main$viewAllProjectsPage(model);
 									default:
