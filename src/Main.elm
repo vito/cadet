@@ -358,22 +358,27 @@ update msg model =
             ( { model | currentDate = date }, Cmd.none )
 
         DragStart id { pos, rect, x, y } ->
-            ( { model
-                | drag =
-                    Just
-                        { id = id
-                        , startPos = pos
-                        , currentPos = pos
-                        , rect = rect
-                        , eleStartX = x
-                        , eleStartY = y
-                        , msg = Nothing
-                        , purposeful = False
-                        , dropped = False
-                        , landed = False
-                        , neverLeft = True
-                        }
-              }
+            ( case model.drag of
+                Nothing ->
+                    { model
+                        | drag =
+                            Just
+                                { id = id
+                                , startPos = pos
+                                , currentPos = pos
+                                , rect = rect
+                                , eleStartX = x
+                                , eleStartY = y
+                                , msg = Nothing
+                                , purposeful = False
+                                , dropped = False
+                                , landed = False
+                                , neverLeft = True
+                                }
+                    }
+
+                Just _ ->
+                    model
             , Cmd.none
             )
 
