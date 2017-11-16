@@ -145,6 +145,14 @@ purposefulDragTreshold =
     10
 
 
+detectColumn : { backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
+detectColumn =
+    { backlog = String.startsWith "Backlog"
+    , inFlight = (==) "In Flight"
+    , done = (==) "Done"
+    }
+
+
 decodeDragStartState : JD.Decoder DragStartState
 decodeDragStartState =
     JD.succeed DragStartState
@@ -677,7 +685,7 @@ viewNavBar model =
 type alias ProjectState =
     { id : GitHubGraph.ID
     , name : String
-    , backlog : GitHubGraph.ProjectColumn
+    , backlogs : List GitHubGraph.ProjectColumn
     , inFlight : GitHubGraph.ProjectColumn
     , done : GitHubGraph.ProjectColumn
     , problemSpace : List GitHubGraph.ProjectColumn
@@ -687,32 +695,27 @@ type alias ProjectState =
 selectStatefulProject : GitHubGraph.Project -> Maybe ProjectState
 selectStatefulProject project =
     let
-        findColumn name =
-            case List.filter ((==) name << .name) project.columns of
-                [ col ] ->
-                    Just col
+        findColumns match =
+            List.filter (match << .name) project.columns
 
-                _ ->
-                    Nothing
+        backlogs =
+            findColumns (detectColumn.backlog)
 
-        backlog =
-            findColumn "Backlog"
+        inFlights =
+            findColumns (detectColumn.inFlight)
 
-        inFlight =
-            findColumn "In Flight"
-
-        done =
-            findColumn "Done"
+        dones =
+            findColumns (detectColumn.done)
 
         rest =
-            List.filter (not << flip List.member [ "Backlog", "In Flight", "Done" ] << .name) project.columns
+            List.filter (not << flip List.member (List.map .id (List.concat [ backlogs, inFlights, dones ])) << .id) project.columns
     in
-        case ( backlog, inFlight, done ) of
-            ( Just b, Just i, Just d ) ->
+        case ( backlogs, inFlights, dones ) of
+            ( (_ :: _) as bs, [ i ], [ d ] ) ->
                 Just
                     { id = project.id
                     , name = project.name
-                    , backlog = b
+                    , backlogs = bs
                     , inFlight = i
                     , done = d
                     , problemSpace = rest
@@ -745,7 +748,7 @@ viewAllProjectsPage model =
 
 
 viewProject : Model -> ProjectState -> Html Msg
-viewProject model { name, backlog, inFlight, done } =
+viewProject model { name, backlogs, inFlight, done } =
     Html.div [ HA.class "project" ]
         [ Html.div [ HA.class "project-columns" ]
             [ Html.div [ HA.class "column name-column" ]
@@ -755,7 +758,7 @@ viewProject model { name, backlog, inFlight, done } =
                     ]
                 ]
             , Html.div [ HA.class "column backlog-column" ]
-                [ viewProjectColumn model (Just 3) backlog ]
+                (List.map (\backlog -> viewProjectColumn model (Just 3) backlog) backlogs)
             , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model Nothing inFlight ]
             , Html.div [ HA.class "column done-column" ]
@@ -901,18 +904,23 @@ viewProjectPage model name =
 
 
 viewSingleProject : Model -> ProjectState -> Html Msg
-viewSingleProject model { id, name, backlog, inFlight, done } =
+viewSingleProject model { id, name, backlogs, inFlight, done } =
     Html.div [ HA.class "project single" ]
         [ Html.div [ HA.class "project-columns" ]
-            [ Html.div [ HA.class "column name-column" ]
+            ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text name ] ]
-            , Html.div [ HA.class "column done-column" ]
+             , Html.div [ HA.class "column done-column" ]
                 [ viewProjectColumn model Nothing done ]
-            , Html.div [ HA.class "column in-flight-column" ]
+             , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model Nothing inFlight ]
-            , Html.div [ HA.class "column backlog-column" ]
-                [ viewProjectColumn model Nothing backlog ]
-            ]
+             ]
+                ++ flip List.map
+                    backlogs
+                    (\backlog ->
+                        Html.div [ HA.class "column backlog-column" ]
+                            [ viewProjectColumn model Nothing backlog ]
+                    )
+            )
         , Html.div [ HA.class "spatial-graph" ] <|
             List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
         ]
@@ -1374,14 +1382,9 @@ isInProject name card =
     List.member name (List.map (.project >> .name) card.cards)
 
 
-inColumn : String -> Card -> Bool
-inColumn name card =
-    List.member name (List.filterMap (Maybe.map .name << .column) card.cards)
-
-
-isInFlight : Card -> Bool
-isInFlight =
-    inColumn "In Flight"
+inColumn : (String -> Bool) -> Card -> Bool
+inColumn match card =
+    List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column) card.cards
 
 
 isAnticipated : Model -> Card -> Bool
@@ -1389,14 +1392,19 @@ isAnticipated model card =
     List.member card.id model.anticipatedCards && not (List.member card.id model.selectedCards)
 
 
+isInFlight : Card -> Bool
+isInFlight =
+    inColumn detectColumn.inFlight
+
+
 isDone : Card -> Bool
 isDone =
-    inColumn "Done"
+    inColumn detectColumn.done
 
 
 isBacklog : Card -> Bool
 isBacklog =
-    inColumn "Backlog"
+    inColumn detectColumn.backlog
 
 
 viewCard : Model -> Card -> Html Msg
@@ -1460,9 +1468,9 @@ viewNoteCard model col dragId text =
             [ ( "card", True )
             , ( "draggable", dragId /= Nothing )
             , ( "dragging", model.drag /= Nothing )
-            , ( "in-flight", col.name == "In Flight" )
-            , ( "done", col.name == "Done" )
-            , ( "backlog", col.name == "Backlog" )
+            , ( "in-flight", detectColumn.inFlight col.name )
+            , ( "done", detectColumn.done col.name )
+            , ( "backlog", detectColumn.backlog col.name )
             ]
             :: dragAttrs model dragId
         )

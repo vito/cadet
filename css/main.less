@@ -353,7 +353,11 @@ a {
 @card-margin: 8px;
 
 .column {
+  flex-shrink: 0;
+  width: @card-width + (2 * @card-margin);
+
   display: flex;
+  flex-direction: column;
 }
 
 .cards {
@@ -420,11 +424,6 @@ a {
     font-size: 16px;
     margin: @card-margin;
   }
-}
-
-.column {
-  flex-shrink: 0;
-  width: @card-width + (2 * @card-margin);
 }
 
 .name-column {
