@@ -36,6 +36,9 @@ body {
   display: flex;
   flex-direction: row;
 
+  // convince firefox to make the sub-panes individually scrollable
+  min-height: 0;
+
   .page-content {
     overflow-y: auto;
     flex-grow: 1;
@@ -144,7 +147,8 @@ body {
 
   input {
     font-size: 14px;
-    padding: 12px;
+    padding: 0 12px;
+    line-height: 40px;
     background: fade(#fff, 20%);
     border: 0;
     color: @white;
