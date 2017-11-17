@@ -120,12 +120,10 @@ type Msg
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
-    | AnticipateCard GitHubGraph.ID
-    | UnanticipateCard GitHubGraph.ID
-    | HighlightCard GitHubGraph.ID
-    | UnhighlightCard GitHubGraph.ID
-    | HighlightNode GitHubGraph.ID
-    | UnhighlightNode GitHubGraph.ID
+    | AnticipateCardFromCard GitHubGraph.ID
+    | UnanticipateCardFromCard GitHubGraph.ID
+    | AnticipateCardFromNode GitHubGraph.ID
+    | UnanticipateCardFromNode GitHubGraph.ID
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
@@ -533,29 +531,37 @@ update msg model =
             , Cmd.none
             )
 
-        AnticipateCard id ->
-            ( { model | anticipatedCards = id :: model.anticipatedCards }
+        AnticipateCardFromCard id ->
+            ( { model
+                | anticipatedCards = id :: model.anticipatedCards
+                , highlightedNode = Just id
+              }
             , Cmd.none
             )
 
-        UnanticipateCard id ->
-            ( { model | anticipatedCards = List.filter ((/=) id) model.anticipatedCards }, Cmd.none )
-
-        HighlightCard id ->
-            ( { model | highlightedCard = Just id }
+        UnanticipateCardFromCard id ->
+            ( { model
+                | anticipatedCards = List.filter ((/=) id) model.anticipatedCards
+                , highlightedNode = Nothing
+              }
             , Cmd.none
             )
 
-        UnhighlightCard id ->
-            ( { model | highlightedCard = Nothing }, Cmd.none )
-
-        HighlightNode id ->
-            ( { model | highlightedNode = Just id }
+        AnticipateCardFromNode id ->
+            ( { model
+                | anticipatedCards = id :: model.anticipatedCards
+                , highlightedCard = Just id
+              }
             , Cmd.none
             )
 
-        UnhighlightNode id ->
-            ( { model | highlightedNode = Nothing }, Cmd.none )
+        UnanticipateCardFromNode id ->
+            ( { model
+                | anticipatedCards = List.filter ((/=) id) model.anticipatedCards
+                , highlightedCard = Nothing
+              }
+            , Cmd.none
+            )
 
         MeFetched (Ok me) ->
             ( { model | me = me }, Cmd.none )
@@ -1359,10 +1365,8 @@ viewCardNodeFlair card radii flair { x, y } state =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
-            , SE.onMouseOver (AnticipateCard card.id)
-            , SE.onMouseOut (UnanticipateCard card.id)
-            , SE.onMouseOver (HighlightCard card.id)
-            , SE.onMouseOut (UnhighlightCard card.id)
+            , SE.onMouseOver (AnticipateCardFromNode card.id)
+            , SE.onMouseOut (UnanticipateCardFromNode card.id)
             ]
             [ Svg.g
                 [ SA.opacity opacity
@@ -1438,10 +1442,8 @@ viewCardNode card radii labels { x, y } state =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
-            , SE.onMouseOver (AnticipateCard card.id)
-            , SE.onMouseOut (UnanticipateCard card.id)
-            , SE.onMouseOver (HighlightCard card.id)
-            , SE.onMouseOut (UnhighlightCard card.id)
+            , SE.onMouseOver (AnticipateCardFromNode card.id)
+            , SE.onMouseOut (UnanticipateCardFromNode card.id)
             , SE.onClick
                 (if isSelected then
                     DeselectCard card.id
@@ -1491,10 +1493,10 @@ isAnticipated model card =
 isOpen : Card -> Bool
 isOpen card =
     case card.state of
-        IssueState (GitHubGraph.IssueStateOpen) ->
+        IssueState GitHubGraph.IssueStateOpen ->
             True
 
-        PullRequestState (GitHubGraph.PullRequestStateOpen) ->
+        PullRequestState GitHubGraph.PullRequestStateOpen ->
             True
 
         _ ->
@@ -1530,28 +1532,26 @@ viewCard model card =
             , ( "highlighted", model.highlightedCard == Just card.id )
             ]
          , HE.onClick (SelectCard card.id)
-         , HE.onMouseOver (AnticipateCard card.id)
-         , HE.onMouseOut (UnanticipateCard card.id)
-         , HE.onMouseOver (HighlightNode card.id)
-         , HE.onMouseOut (UnhighlightNode card.id)
+         , HE.onMouseOver (AnticipateCardFromCard card.id)
+         , HE.onMouseOut (UnanticipateCardFromCard card.id)
          ]
             ++ dragAttrs model card.dragId
         )
         [ Html.div [ HA.class "card-icons" ]
             [ case card.state of
-                IssueState (GitHubGraph.IssueStateOpen) ->
+                IssueState GitHubGraph.IssueStateOpen ->
                     Html.span [ HA.class "octicon open octicon-issue-opened" ] []
 
-                IssueState (GitHubGraph.IssueStateClosed) ->
+                IssueState GitHubGraph.IssueStateClosed ->
                     Html.span [ HA.class "octicon closed octicon-issue-closed" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateOpen) ->
+                PullRequestState GitHubGraph.PullRequestStateOpen ->
                     Html.span [ HA.class "octicon open octicon-git-pull-request" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateClosed) ->
+                PullRequestState GitHubGraph.PullRequestStateClosed ->
                     Html.span [ HA.class "octicon closed octicon-git-pull-request" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateMerged) ->
+                PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
             ]
         , Html.div [ HA.class "card-info" ]
