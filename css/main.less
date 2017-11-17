@@ -21,6 +21,7 @@ body {
   font-size: 12px;
   line-height: 1.2;
   background: @background;
+  overflow-x: hidden;
 }
 
 a {
@@ -31,7 +32,6 @@ a {
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-x: hidden;
 }
 
 .main-page {
@@ -230,7 +230,7 @@ a {
     margin-left: @card-margin;
   }
 
-  &.in-flight, &.done, &.backlog {
+  &.in-flight, &.done, &.backlog, &.icebox {
     &::before {
       content: " ";
       position: absolute;
@@ -241,6 +241,10 @@ a {
       border-top-left-radius: 2px;
       border-top-right-radius: 2px;
     }
+  }
+
+  &.icebox::before {
+    background: @gray;
   }
 
   &.in-flight::before {
@@ -411,6 +415,7 @@ a {
 
 .icebox-graph {
   position: relative;
+  background: @gray-300;
 
   .drop-area {
     height: auto !important;
@@ -421,6 +426,10 @@ a {
     left: 0;
     right: 0;
     min-height: 0;
+
+    &.over {
+      background: @white-fade-70;
+    }
   }
 }
 

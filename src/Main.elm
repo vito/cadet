@@ -1573,6 +1573,11 @@ isBacklog =
     inColumn detectColumn.backlog
 
 
+isIcebox : Card -> Bool
+isIcebox =
+    not << List.isEmpty << .cards
+
+
 viewCard : Model -> Card -> Html Msg
 viewCard model card =
     Html.div
@@ -1580,6 +1585,7 @@ viewCard model card =
             [ ( "card", True )
             , ( "in-flight", isInFlight card )
             , ( "done", isDone card )
+            , ( "icebox", isIcebox card )
             , ( "backlog", isBacklog card )
             , ( "anticipated", isAnticipated model card )
             , ( "highlighted", model.highlightedCard == Just card.id )
