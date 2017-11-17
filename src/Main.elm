@@ -139,8 +139,8 @@ type Msg
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
-    | AnticipateCardFromCard GitHubGraph.ID
-    | UnanticipateCardFromCard GitHubGraph.ID
+    | HighlightNode GitHubGraph.ID
+    | UnhighlightNode GitHubGraph.ID
     | AnticipateCardFromNode GitHubGraph.ID
     | UnanticipateCardFromNode GitHubGraph.ID
     | SearchCards String
@@ -159,9 +159,10 @@ purposefulDragTreshold =
     10
 
 
-detectColumn : { backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
+detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
 detectColumn =
-    { backlog = String.startsWith "Backlog"
+    { icebox = (==) "Icebox"
+    , backlog = String.startsWith "Backlog"
     , inFlight = (==) "In Flight"
     , done = (==) "Done"
     }
@@ -464,7 +465,12 @@ update msg model =
                 Just drag ->
                     let
                         finishDrag model =
-                            ( { model | drag = Nothing }, Cmd.none )
+                            ( { model
+                                | drag = Nothing
+                                , cardGraphs = model.computeGraph model.data (Dict.values model.allCards)
+                              }
+                            , Cmd.none
+                            )
 
                         refresh landed id model =
                             ( { model | drag = Just { drag | landed = landed } }, Backend.refreshCards id (CardsFetched finishDrag id) )
@@ -546,21 +552,11 @@ update msg model =
             , Cmd.none
             )
 
-        AnticipateCardFromCard id ->
-            ( { model
-                | anticipatedCards = id :: model.anticipatedCards
-                , highlightedNode = Just id
-              }
-            , Cmd.none
-            )
+        HighlightNode id ->
+            ( { model | highlightedNode = Just id }, Cmd.none )
 
-        UnanticipateCardFromCard id ->
-            ( { model
-                | anticipatedCards = List.filter ((/=) id) model.anticipatedCards
-                , highlightedNode = Nothing
-              }
-            , Cmd.none
-            )
+        UnhighlightNode id ->
+            ( { model | highlightedNode = Nothing }, Cmd.none )
 
         AnticipateCardFromNode id ->
             ( { model
@@ -755,10 +751,10 @@ viewNavBar model =
 
 type alias ProjectState =
     { project : GitHubGraph.Project
+    , icebox : GitHubGraph.ProjectColumn
     , backlogs : List GitHubGraph.ProjectColumn
     , inFlight : GitHubGraph.ProjectColumn
     , done : GitHubGraph.ProjectColumn
-    , problemSpace : List GitHubGraph.ProjectColumn
     }
 
 
@@ -768,6 +764,9 @@ selectStatefulProject project =
         findColumns match =
             List.filter (match << .name) project.columns
 
+        icebox =
+            findColumns (detectColumn.icebox)
+
         backlogs =
             findColumns (detectColumn.backlog)
 
@@ -776,18 +775,15 @@ selectStatefulProject project =
 
         dones =
             findColumns (detectColumn.done)
-
-        rest =
-            List.filter (not << flip List.member (List.map .id (List.concat [ backlogs, inFlights, dones ])) << .id) project.columns
     in
-        case ( backlogs, inFlights, dones ) of
-            ( (_ :: _) as bs, [ i ], [ d ] ) ->
+        case ( icebox, backlogs, inFlights, dones ) of
+            ( [ ib ], (_ :: _) as bs, [ i ], [ d ] ) ->
                 Just
                     { project = project
+                    , icebox = ib
                     , backlogs = bs
                     , inFlight = i
                     , done = d
-                    , problemSpace = rest
                     }
 
             _ ->
@@ -864,14 +860,14 @@ viewProject model { project, backlogs, inFlight, done } =
         ]
 
 
-viewDropArea : Model -> Maybe CardSource -> Maybe Msg -> Html Msg
-viewDropArea model dragId mmsg =
+viewDropArea : Model -> Msg -> Maybe CardSource -> Html Msg
+viewDropArea model msg selfDragId =
     let
         dragEvents =
             case model.drag of
                 Just { purposeful, dropped } ->
                     if purposeful && not dropped then
-                        [ HE.onMouseEnter (DragOver mmsg)
+                        [ HE.onMouseEnter (DragOver (Just msg))
                         , HE.onMouseLeave (DragOver Nothing)
                         ]
                     else
@@ -895,11 +891,11 @@ viewDropArea model dragId mmsg =
 
                 Just drag ->
                     case drag.msg of
-                        Just _ ->
-                            drag.msg == mmsg && not (drag.dropped && drag.landed)
+                        Just m ->
+                            m == msg && not (drag.dropped && drag.landed)
 
                         _ ->
-                            drag.neverLeft && drag.purposeful && dragId == Just drag.id
+                            drag.neverLeft && drag.purposeful && selfDragId == Just drag.id
     in
         Html.div
             ([ HA.classList
@@ -939,7 +935,7 @@ viewProjectColumn model project mod col =
                 }
     in
         Html.div [ HA.class "cards" ] <|
-            viewDropArea model Nothing (Just dragMsg)
+            viewDropArea model dragMsg Nothing
                 :: List.concatMap (viewProjectColumnCard model project col) (mod cards)
 
 
@@ -959,7 +955,7 @@ viewProjectColumnCard model project col ghCard =
         case ( ghCard.note, ghCard.content ) of
             ( Just n, Nothing ) ->
                 [ draggable model dragId Nothing (viewNoteCard model col n)
-                , viewDropArea model (Just dragId) (Just dragMsg)
+                , viewDropArea model dragMsg (Just dragId)
                 ]
 
             ( Nothing, Just content ) ->
@@ -973,7 +969,7 @@ viewProjectColumnCard model project col ghCard =
                                 prCard pr
                 in
                     [ draggable model dragId Nothing (viewCard model card)
-                    , viewDropArea model (Just dragId) (Just dragMsg)
+                    , viewDropArea model dragMsg (Just dragId)
                     ]
 
             _ ->
@@ -999,7 +995,7 @@ viewProjectPage model name =
 
 
 viewSingleProject : Model -> ProjectState -> Html Msg
-viewSingleProject model { project, backlogs, inFlight, done } =
+viewSingleProject model { project, icebox, backlogs, inFlight, done } =
     Html.div [ HA.class "project single" ]
         [ Html.div [ HA.class "project-columns" ]
             ([ Html.div [ HA.class "column name-column" ]
@@ -1016,7 +1012,18 @@ viewSingleProject model { project, backlogs, inFlight, done } =
                             [ viewProjectColumn model project identity backlog ]
                     )
             )
-        , viewSpatialGraph model
+        , Html.div [ HA.class "icebox-graph" ]
+            [ viewSpatialGraph model
+            , let
+                iceboxMsg =
+                    MoveCardAfter
+                        { projectId = project.id
+                        , columnId = icebox.id
+                        , afterId = Nothing
+                        }
+              in
+                viewDropArea model iceboxMsg Nothing
+            ]
         ]
 
 
@@ -1578,8 +1585,8 @@ viewCard model card =
             , ( "highlighted", model.highlightedCard == Just card.id )
             ]
         , HE.onClick (SelectCard card.id)
-        , HE.onMouseOver (AnticipateCardFromCard card.id)
-        , HE.onMouseOut (UnanticipateCardFromCard card.id)
+        , HE.onMouseOver (HighlightNode card.id)
+        , HE.onMouseOut (UnhighlightNode card.id)
         ]
         [ Html.div [ HA.class "card-icons" ]
             [ case card.state of
