@@ -133,7 +133,7 @@ type Msg
     | DragOver (Maybe Msg)
     | DragEnd Mouse.Position
     | MoveCardAfter CardDestination
-    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error ())
+    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ID)
     | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error Data)
@@ -459,7 +459,7 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
-        CardMoved col (Ok ()) ->
+        CardMoved col (Ok _) ->
             case model.drag of
                 Just drag ->
                     let

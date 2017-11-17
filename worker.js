@@ -9931,16 +9931,22 @@ var _vito$cadet$GitHubGraph$moveCardMutation = function () {
 					},
 					_1: {ctor: '[]'}
 				},
-				A2(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
 					A3(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'clientMutationId',
+						'cardEdge',
 						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(
-						_elm_lang$core$Basics$always(
-							{ctor: '_Tuple0'}))))));
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'node',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+									A3(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+										'id',
+										{ctor: '[]'},
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$id)))))))));
 }();
 var _vito$cadet$GitHubGraph$addContentCard = F3(
 	function (token, columnID, contentID) {

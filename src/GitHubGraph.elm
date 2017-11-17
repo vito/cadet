@@ -260,7 +260,7 @@ fetchTimeline token issue =
     fetchPaged timelineQuery token { selector = issue, after = Nothing }
 
 
-moveCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ()
+moveCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ID
 moveCardAfter token columnID cardID mafterID =
     moveCardMutation
         |> GB.request { columnId = columnID, cardId = cardID, afterId = mafterID }
@@ -274,13 +274,13 @@ addContentCard token columnID contentID =
         |> GH.customSendMutation (authedOptions token)
 
 
-addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ()
+addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ID
 addContentCardAfter token columnID contentID mafterID =
     addContentCard token columnID contentID
         |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
 
 
-moveCardMutation : GB.Document GB.Mutation () { columnId : ID, cardId : ID, afterId : Maybe ID }
+moveCardMutation : GB.Document GB.Mutation ID { columnId : ID, cardId : ID, afterId : Maybe ID }
 moveCardMutation =
     let
         columnIDVar =
@@ -303,8 +303,12 @@ moveCardMutation =
                             ]
                       )
                     ]
-                    (GB.object (always ())
-                        |> GB.with (GB.field "clientMutationId" [] (GB.nullable GB.string))
+                    (GB.extract <|
+                        GB.field "cardEdge"
+                            []
+                            (GB.extract <|
+                                GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)
+                            )
                     )
 
 
@@ -327,7 +331,13 @@ addCardMutation =
                             ]
                       )
                     ]
-                    (GB.extract <| GB.field "cardEdge" [] (GB.extract <| GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)))
+                    (GB.extract <|
+                        GB.field "cardEdge"
+                            []
+                            (GB.extract <|
+                                GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)
+                            )
+                    )
 
 
 issueScore : { a | reactions : Reactions, commentCount : Int } -> Int
