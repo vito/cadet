@@ -11205,11 +11205,14 @@ var _vito$cadet$GitHubGraph$issueObject = A2(
 								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 							A2(
 								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-								A3(
-									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-									'state',
-									{ctor: '[]'},
-									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$issueStates)),
+								A2(
+									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$aliasAs,
+									'issueState',
+									A3(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+										'state',
+										{ctor: '[]'},
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$issueStates))),
 								A2(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 									A3(
@@ -11461,11 +11464,14 @@ var _vito$cadet$GitHubGraph$prObject = A2(
 										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 									A2(
 										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-										A3(
-											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-											'state',
-											{ctor: '[]'},
-											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestStates)),
+										A2(
+											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$aliasAs,
+											'prState',
+											A3(
+												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+												'state',
+												{ctor: '[]'},
+												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestStates))),
 										A2(
 											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 											A3(
