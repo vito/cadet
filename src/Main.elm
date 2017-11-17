@@ -1493,6 +1493,16 @@ viewCardNode card radii labels { x, y } state =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
+            , if isInFlight card then
+                SA.class "in-flight"
+              else if isDone card then
+                SA.class "done"
+              else if isIcebox card then
+                SA.class "icebox"
+              else if isBacklog card then
+                SA.class "backlog"
+              else
+                SA.class "untriaged"
             , SE.onMouseOver (AnticipateCardFromNode card.id)
             , SE.onMouseOut (UnanticipateCardFromNode card.id)
             , SE.onClick
@@ -1575,7 +1585,7 @@ isBacklog =
 
 isIcebox : Card -> Bool
 isIcebox =
-    not << List.isEmpty << .cards
+    inColumn detectColumn.icebox
 
 
 viewCard : Model -> Card -> Html Msg
