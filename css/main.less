@@ -31,6 +31,7 @@ a {
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow-x: hidden;
 }
 
 .main-page {
@@ -132,7 +133,8 @@ a {
 }
 
 .card-search {
-  position: relative;
+  display: flex;
+  flex-direction: row;
 
   .octicon {
     cursor: pointer;
@@ -141,12 +143,6 @@ a {
     &:hover {
       color: white;
     }
-  }
-
-  .clear-selected {
-    position: absolute;
-    left: -20px;
-    bottom: 12px;
   }
 
   input {
@@ -173,7 +169,6 @@ a {
   display: flex;
   flex-direction: row;
   justify-content: flex-end;
-  position: relative;
 
   .card-buttons {
     color: @white-fade-50;
@@ -198,10 +193,24 @@ a {
   }
 }
 
+.draggable {
+  cursor: move;
+}
+
+.dragging, .drag-overlay {
+  cursor: grab;
+  z-index: 2;
+
+  .card {
+    box-shadow: 0 3px 6px @black-fade-30;
+    border: 1px solid @gray;
+  }
+}
+
 .card {
   width: @card-width;
   background: @white;
-  border: 1px solid #e1e4e8;
+  border: 1px solid @gray-200;
   border-radius: 3px;
   box-sizing: border-box;
   margin: @card-margin;
@@ -212,16 +221,6 @@ a {
   display: flex;
   flex-direction: row;
   position: relative;
-
-  &.draggable {
-    cursor: move;
-  }
-
-  &.dragging {
-    cursor: grab;
-    box-shadow: 0 3px 6px @black-fade-30;
-    z-index: 2;
-  }
 
   &.highlighted {
     box-shadow: 0 0 0 5px @yellow;

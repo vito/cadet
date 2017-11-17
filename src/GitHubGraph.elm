@@ -25,6 +25,8 @@ module GitHubGraph
         , fetchRepoPullRequests
         , fetchTimeline
         , moveCardAfter
+        , addContentCard
+        , addContentCardAfter
         , issueScore
         , pullRequestScore
         , reactionScore
@@ -265,6 +267,19 @@ moveCardAfter token columnID cardID mafterID =
         |> GH.customSendMutation (authedOptions token)
 
 
+addContentCard : Token -> ID -> ID -> Task Error ID
+addContentCard token columnID contentID =
+    addCardMutation
+        |> GB.request { columnId = columnID, contentId = contentID }
+        |> GH.customSendMutation (authedOptions token)
+
+
+addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ()
+addContentCardAfter token columnID contentID mafterID =
+    addContentCard token columnID contentID
+        |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
+
+
 moveCardMutation : GB.Document GB.Mutation () { columnId : ID, cardId : ID, afterId : Maybe ID }
 moveCardMutation =
     let
@@ -291,6 +306,28 @@ moveCardMutation =
                     (GB.object (always ())
                         |> GB.with (GB.field "clientMutationId" [] (GB.nullable GB.string))
                     )
+
+
+addCardMutation : GB.Document GB.Mutation ID { columnId : ID, contentId : ID }
+addCardMutation =
+    let
+        columnIDVar =
+            GV.required "columnId" .columnId GV.id
+
+        contentIDVar =
+            GV.required "contentId" .contentId GV.id
+    in
+        GB.mutationDocument <|
+            GB.extract <|
+                GB.field "addProjectCard"
+                    [ ( "input"
+                      , GA.object
+                            [ ( "projectColumnId", GA.variable columnIDVar )
+                            , ( "contentId", GA.variable contentIDVar )
+                            ]
+                      )
+                    ]
+                    (GB.extract <| GB.field "cardEdge" [] (GB.extract <| GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)))
 
 
 issueScore : { a | reactions : Reactions, commentCount : Int } -> Int

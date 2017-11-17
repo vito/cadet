@@ -9807,6 +9807,69 @@ var _vito$cadet$GitHubGraph$issueScore = function (_p13) {
 	var _p14 = _p13;
 	return _vito$cadet$GitHubGraph$reactionScore(_p14.reactions) + (2 * _p14.commentCount);
 };
+var _vito$cadet$GitHubGraph$addCardMutation = function () {
+	var contentIDVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'contentId',
+		function (_) {
+			return _.contentId;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$id);
+	var columnIDVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'columnId',
+		function (_) {
+			return _.columnId;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$id);
+	return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$mutationDocument(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'addProjectCard',
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'input',
+						_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$object(
+							{
+								ctor: '::',
+								_0: {
+									ctor: '_Tuple2',
+									_0: 'projectColumnId',
+									_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(columnIDVar)
+								},
+								_1: {
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'contentId',
+										_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(contentIDVar)
+									},
+									_1: {ctor: '[]'}
+								}
+							})
+					},
+					_1: {ctor: '[]'}
+				},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+					A3(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+						'cardEdge',
+						{ctor: '[]'},
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'node',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+									A3(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+										'id',
+										{ctor: '[]'},
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$id)))))))));
+}();
 var _vito$cadet$GitHubGraph$moveCardMutation = function () {
 	var afterIDVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
@@ -9879,6 +9942,16 @@ var _vito$cadet$GitHubGraph$moveCardMutation = function () {
 						_elm_lang$core$Basics$always(
 							{ctor: '_Tuple0'}))))));
 }();
+var _vito$cadet$GitHubGraph$addContentCard = F3(
+	function (token, columnID, contentID) {
+		return A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendMutation,
+			_vito$cadet$GitHubGraph$authedOptions(token),
+			A2(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request,
+				{columnId: columnID, contentId: contentID},
+				_vito$cadet$GitHubGraph$addCardMutation));
+	});
 var _vito$cadet$GitHubGraph$moveCardAfter = F4(
 	function (token, columnID, cardID, mafterID) {
 		return A2(
@@ -9888,6 +9961,15 @@ var _vito$cadet$GitHubGraph$moveCardAfter = F4(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request,
 				{columnId: columnID, cardId: cardID, afterId: mafterID},
 				_vito$cadet$GitHubGraph$moveCardMutation));
+	});
+var _vito$cadet$GitHubGraph$addContentCardAfter = F4(
+	function (token, columnID, contentID, mafterID) {
+		return A2(
+			_elm_lang$core$Task$andThen,
+			function (cardID) {
+				return A4(_vito$cadet$GitHubGraph$moveCardAfter, token, columnID, cardID, mafterID);
+			},
+			A3(_vito$cadet$GitHubGraph$addContentCard, token, columnID, contentID));
 	});
 var _vito$cadet$GitHubGraph$Repo = F4(
 	function (a, b, c, d) {
