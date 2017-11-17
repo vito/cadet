@@ -18,7 +18,7 @@
     "xhr2": "^0.1.4"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": "^8.0.0"
   },
   "devDependencies": {
     "elm-format": "^0.6.1-alpha",
