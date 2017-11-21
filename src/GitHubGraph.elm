@@ -18,11 +18,15 @@ module GitHubGraph
         , ReactionGroup
         , ReactionType(..)
         , TimelineEvent(..)
+        , IssueOrPRSelector
         , fetchOrgRepos
         , fetchOrgProjects
+        , fetchOrgProject
         , fetchProjectColumnCards
         , fetchRepoIssues
+        , fetchRepoIssue
         , fetchRepoPullRequests
+        , fetchRepoPullRequest
         , fetchTimeline
         , moveCardAfter
         , addContentCard
@@ -210,8 +214,16 @@ type alias RepoSelector =
     { owner : String, name : String }
 
 
+type alias ProjectSelector =
+    { owner : String, number : Int }
+
+
 type alias IDSelector =
     { id : ID }
+
+
+type alias IssueOrPRSelector =
+    { owner : String, repo : String, number : Int }
 
 
 type alias PagedSelector a =
@@ -240,6 +252,13 @@ fetchOrgProjects token org =
     fetchPaged projectsQuery token { selector = org, after = Nothing }
 
 
+fetchOrgProject : Token -> ProjectSelector -> Task Error Project
+fetchOrgProject token project =
+    projectQuery
+        |> GB.request project
+        |> GH.customSendQuery (authedOptions token)
+
+
 fetchProjectColumnCards : Token -> IDSelector -> Task Error (List ProjectColumnCard)
 fetchProjectColumnCards token col =
     fetchPaged cardsQuery token { selector = col, after = Nothing }
@@ -250,9 +269,23 @@ fetchRepoIssues token repo =
     fetchPaged issuesQuery token { selector = repo, after = Nothing }
 
 
+fetchRepoIssue : Token -> IssueOrPRSelector -> Task Error Issue
+fetchRepoIssue token sel =
+    issueQuery
+        |> GB.request sel
+        |> GH.customSendQuery (authedOptions token)
+
+
 fetchRepoPullRequests : Token -> RepoSelector -> Task Error (List PullRequest)
 fetchRepoPullRequests token repo =
     fetchPaged pullRequestsQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoPullRequest : Token -> IssueOrPRSelector -> Task Error PullRequest
+fetchRepoPullRequest token sel =
+    pullRequestQuery
+        |> GB.request sel
+        |> GH.customSendQuery (authedOptions token)
 
 
 fetchTimeline : Token -> IDSelector -> Task Error (List TimelineEvent)
@@ -489,6 +522,36 @@ reposQuery =
         GB.queryDocument queryRoot
 
 
+projectObject : GB.ValueSpec GB.NonNull GB.ObjectType Project vars
+projectObject =
+    GB.object Project
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "number" [] GB.int)
+        |> GB.with (GB.field "columns" [ ( "first", GA.int 50 ) ] (GB.extract (GB.field "nodes" [] (GB.list columnObject))))
+
+
+projectQuery : GB.Document GB.Query Project ProjectSelector
+projectQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" .owner GV.string
+
+        projectNumberVar =
+            GV.required "projectNumber" .number GV.int
+
+        queryRoot =
+            GB.extract <|
+                GB.field "organization"
+                    [ ( "login", GA.variable orgNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "project" [ ( "number", GA.variable projectNumberVar ) ] projectObject)
+    in
+        GB.queryDocument queryRoot
+
+
 projectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector OrgSelector)
 projectsQuery =
     let
@@ -713,6 +776,30 @@ issuesQuery =
         GB.queryDocument queryRoot
 
 
+issueQuery : GB.Document GB.Query Issue IssueOrPRSelector
+issueQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" .owner GV.string
+
+        repoNameVar =
+            GV.required "repoName" .repo GV.string
+
+        numberVar =
+            GV.required "number" .number GV.int
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "issue" [ ( "number", GA.variable numberVar ) ] issueObject)
+    in
+        GB.queryDocument queryRoot
+
+
 pullRequestsQuery : GB.Document GB.Query (PagedResult PullRequest) (PagedSelector RepoSelector)
 pullRequestsQuery =
     let
@@ -749,6 +836,30 @@ pullRequestsQuery =
                     ]
                 <|
                     GB.extract (GB.field "pullRequests" pageArgs paged)
+    in
+        GB.queryDocument queryRoot
+
+
+pullRequestQuery : GB.Document GB.Query PullRequest IssueOrPRSelector
+pullRequestQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" .owner GV.string
+
+        repoNameVar =
+            GV.required "repoName" .repo GV.string
+
+        numberVar =
+            GV.required "number" .number GV.int
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "pullRequest" [ ( "number", GA.variable numberVar ) ] prObject)
     in
         GB.queryDocument queryRoot
 

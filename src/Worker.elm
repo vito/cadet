@@ -30,6 +30,9 @@ port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 port refresh : (( String, GitHubGraph.ID ) -> msg) -> Sub msg
 
 
+port hook : (( String, JD.Value ) -> msg) -> Sub msg
+
+
 main : Program Flags Model Msg
 main =
     Platform.programWithFlags
@@ -48,7 +51,6 @@ type alias Flags =
 type alias Model =
     { githubToken : String
     , githubOrg : String
-    , repos : List GitHubGraph.Repo
     , issues : Dict String (List GitHubGraph.Issue)
     , prs : Dict String (List GitHubGraph.PullRequest)
     , timelines : Dict String (List GitHubGraph.TimelineEvent)
@@ -60,15 +62,20 @@ type alias Model =
 
 
 type Msg
-    = Refresh Time
+    = Noop
+    | Refresh Time
     | PopQueue Time
     | RetryQueue Time
-    | RefreshRequested ( String, GitHubGraph.ID )
+    | RefreshRequested String GitHubGraph.ID
+    | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
-    | ProjectsFetched (Result GitHubGraph.Error (List GitHubGraph.Project))
+    | ProjectsFetched (List GitHubGraph.Project -> Msg) (Result GitHubGraph.Error (List GitHubGraph.Project))
+    | FetchCards (List GitHubGraph.Project)
     | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
     | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
+    | IssueFetched GitHubGraph.IssueOrPRSelector (Result GitHubGraph.Error GitHubGraph.Issue)
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
+    | PullRequestFetched GitHubGraph.IssueOrPRSelector (Result GitHubGraph.Error GitHubGraph.PullRequest)
     | TimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
 
 
@@ -77,7 +84,6 @@ init { githubToken, githubOrg } =
     update (Refresh 0)
         { githubToken = githubToken
         , githubOrg = githubOrg
-        , repos = []
         , issues = Dict.empty
         , prs = Dict.empty
         , timelines = Dict.empty
@@ -94,16 +100,20 @@ subscriptions model =
         [ Time.every (100 * Time.millisecond) PopQueue
         , Time.every (10 * Time.second) RetryQueue
         , Time.every Time.hour Refresh
-        , refresh RefreshRequested
+        , refresh (uncurry RefreshRequested)
+        , hook (uncurry HookReceived)
         ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Noop ->
+            ( model, Cmd.none )
+
         Refresh now ->
             log "refreshing" now <|
-                ( { model | loadQueue = fetchRepos model :: fetchProjects model :: model.loadQueue }, Cmd.none )
+                ( { model | loadQueue = fetchRepos model :: fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
 
         PopQueue _ ->
             case model.loadQueue of
@@ -122,25 +132,65 @@ update msg model =
                 , Cmd.none
                 )
 
-        RefreshRequested ( "cards", colId ) ->
+        RefreshRequested "cards" colId ->
             ( model, fetchCards model colId )
 
-        RefreshRequested ( field, id ) ->
+        RefreshRequested field id ->
             log "cannot refresh" ( field, id ) <|
                 ( model, Cmd.none )
 
+        HookReceived "issues" payload ->
+            ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
+
+        HookReceived "issue_comment" payload ->
+            ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
+
+        HookReceived "pull_request" payload ->
+            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+
+        HookReceived "pull_request_review" payload ->
+            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+
+        HookReceived "pull_request_review_comment" payload ->
+            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+
+        HookReceived "milestone" payload ->
+            -- TODO: nothing yet
+            ( model, Cmd.none )
+
+        HookReceived "project" payload ->
+            ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+
+        HookReceived "project_column" payload ->
+            ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+
+        HookReceived "project_card" payload ->
+            -- TODO: take changes.column_id.from and project_card.column_id
+            -- fetch all projects
+            -- refresh columns with matching database id
+            ( { model | loadQueue = fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
+
+        HookReceived "repository" payload ->
+            -- TODO: fetch repositories, GC issues and PRs
+            ( model, Cmd.none )
+
+        HookReceived "status" payload ->
+            -- TODO: nothing yet
+            ( model, Cmd.none )
+
+        HookReceived event payload ->
+            log "hook received" ( event, payload ) <|
+                ( model, Cmd.none )
+
         RepositoriesFetched (Ok repos) ->
-            log "repositories fetched" (List.length repos) <|
+            log "repositories fetched" (List.map .name repos) <|
                 let
                     fetch repo =
                         [ fetchIssues model repo
                         , fetchPullRequests model repo
                         ]
                 in
-                    ( { model
-                        | repos = repos
-                        , loadQueue = List.concatMap fetch repos ++ model.loadQueue
-                      }
+                    ( { model | loadQueue = List.concatMap fetch repos ++ model.loadQueue }
                     , Cmd.none
                     )
 
@@ -148,18 +198,24 @@ update msg model =
             log "failed to fetch repos" err <|
                 backOff model (fetchRepos model)
 
-        ProjectsFetched (Ok projects) ->
-            log "projects fetched" (List.length projects) <|
-                ( { model
-                    | projects = projects
-                    , loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue
-                  }
-                , setProjects (List.map GitHubGraph.encodeProject projects)
-                )
+        ProjectsFetched nextMsg (Ok projects) ->
+            log "projects fetched" (List.map .name projects) <|
+                let
+                    ( next, cmd ) =
+                        update (nextMsg projects) { model | projects = projects }
+                in
+                    ( next
+                    , Cmd.batch
+                        [ setProjects (List.map GitHubGraph.encodeProject projects)
+                        ]
+                    )
 
-        ProjectsFetched (Err err) ->
+        ProjectsFetched nextMsg (Err err) ->
             log "failed to fetch projects" err <|
-                backOff model (fetchProjects model)
+                backOff model (fetchProjects model nextMsg)
+
+        FetchCards projects ->
+            ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects }, Cmd.none )
 
         CardsFetched colId (Ok cards) ->
             log "cards fetched for" colId <|
@@ -188,6 +244,14 @@ update msg model =
             log "failed to fetch issues" ( repo.url, err ) <|
                 backOff model (fetchIssues model repo)
 
+        IssueFetched sel (Ok issue) ->
+            log "issue fetched" issue.url <|
+                updateIssue issue { model | loadQueue = fetchTimeline model issue.id :: model.loadQueue }
+
+        IssueFetched sel (Err err) ->
+            log "failed to fetch issue" ( sel, err ) <|
+                backOff model (fetchIssue model sel)
+
         PullRequestsFetched repo (Ok prs) ->
             let
                 fetchTimelines =
@@ -204,6 +268,14 @@ update msg model =
         PullRequestsFetched repo (Err err) ->
             log "failed to fetch prs" ( repo.url, err ) <|
                 backOff model (fetchPullRequests model repo)
+
+        PullRequestFetched sel (Ok pr) ->
+            log "pr fetched" pr.url <|
+                updatePullRequest pr { model | loadQueue = fetchTimeline model pr.id :: model.loadQueue }
+
+        PullRequestFetched sel (Err err) ->
+            log "failed to fetch pr" ( sel, err ) <|
+                backOff model (fetchPullRequest model sel)
 
         TimelineFetched id (Ok timeline) ->
             let
@@ -258,9 +330,9 @@ fetchRepos model =
         GitHubGraph.fetchOrgRepos model.githubToken { name = model.githubOrg }
 
 
-fetchProjects : Model -> Cmd Msg
-fetchProjects model =
-    Task.attempt ProjectsFetched <|
+fetchProjects : Model -> (List GitHubGraph.Project -> Msg) -> Cmd Msg
+fetchProjects model nextMsg =
+    Task.attempt (ProjectsFetched nextMsg) <|
         GitHubGraph.fetchOrgProjects model.githubToken { name = model.githubOrg }
 
 
@@ -276,10 +348,32 @@ fetchIssues model repo =
         |> Task.attempt (IssuesFetched repo)
 
 
+fetchIssue : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchIssue model sel =
+    GitHubGraph.fetchRepoIssue model.githubToken sel
+        |> Task.attempt (IssueFetched sel)
+
+
 fetchPullRequests : Model -> GitHubGraph.Repo -> Cmd Msg
 fetchPullRequests model repo =
     GitHubGraph.fetchRepoPullRequests model.githubToken { owner = repo.owner, name = repo.name }
         |> Task.attempt (PullRequestsFetched repo)
+
+
+fetchPullRequest : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchPullRequest model sel =
+    GitHubGraph.fetchRepoPullRequest model.githubToken sel
+        |> Task.attempt (PullRequestFetched sel)
+
+
+decodeAndFetchIssueOrPR : String -> JD.Value -> (Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg) -> Model -> Model
+decodeAndFetchIssueOrPR field payload fetch model =
+    case JD.decodeValue (decodeIssueOrPRSelector field) payload of
+        Ok sel ->
+            { model | loadQueue = fetch model sel :: model.loadQueue }
+
+        _ ->
+            model
 
 
 fetchTimeline : Model -> GitHubGraph.ID -> Cmd Msg
@@ -291,3 +385,135 @@ fetchTimeline model id =
 log : String -> a -> b -> b
 log msg val =
     flip always (Debug.log msg val)
+
+
+decodeIssueOrPRSelector : String -> JD.Decoder GitHubGraph.IssueOrPRSelector
+decodeIssueOrPRSelector field =
+    JD.field field
+        (JD.map2 (,) (JD.field "number" JD.int) (JD.field "repository_url" JD.string)
+            |> JD.andThen (\( number, repoURL ) -> fromNumberAndURL number repoURL)
+        )
+
+
+fromNumberAndURL : Int -> String -> JD.Decoder GitHubGraph.IssueOrPRSelector
+fromNumberAndURL number url =
+    case List.reverse (String.split "/" url) of
+        repo :: owner :: "repos" :: _ ->
+            JD.succeed { owner = owner, repo = repo, number = number }
+
+        _ ->
+            JD.fail "invalid repository url"
+
+
+updateIssue : GitHubGraph.Issue -> Model -> ( Model, Cmd Msg )
+updateIssue issue model =
+    let
+        newIssues =
+            Dict.map
+                (\_ issues ->
+                    List.map
+                        (\i ->
+                            if i.id == issue.id then
+                                issue
+                            else
+                                i
+                        )
+                        issues
+                )
+                model.issues
+
+        setAllIssues =
+            Dict.foldl
+                (\id issues cmds ->
+                    setIssues ( id, List.map GitHubGraph.encodeIssue issues ) :: cmds
+                )
+                []
+                newIssues
+
+        newCards =
+            Dict.map
+                (\_ cards ->
+                    List.map
+                        (\c ->
+                            case c.content of
+                                Just (GitHubGraph.IssueCardContent i) ->
+                                    if i.id == issue.id then
+                                        { c | content = Just (GitHubGraph.IssueCardContent issue) }
+                                    else
+                                        c
+
+                                _ ->
+                                    c
+                        )
+                        cards
+                )
+                model.columnCards
+
+        setAllCards =
+            Dict.foldl
+                (\id cards cmds ->
+                    setCards ( id, List.map GitHubGraph.encodeProjectColumnCard cards ) :: cmds
+                )
+                []
+                newCards
+    in
+        ( { model | issues = newIssues, columnCards = newCards }
+        , Cmd.batch (setAllIssues ++ setAllCards)
+        )
+
+
+updatePullRequest : GitHubGraph.PullRequest -> Model -> ( Model, Cmd Msg )
+updatePullRequest pr model =
+    let
+        newPullRequests =
+            Dict.map
+                (\_ prs ->
+                    List.map
+                        (\i ->
+                            if i.id == pr.id then
+                                pr
+                            else
+                                i
+                        )
+                        prs
+                )
+                model.prs
+
+        setAllPRs =
+            Dict.foldl
+                (\id prs cmds ->
+                    setPullRequests ( id, List.map GitHubGraph.encodePullRequest prs ) :: cmds
+                )
+                []
+                newPullRequests
+
+        newCards =
+            Dict.map
+                (\_ cards ->
+                    List.map
+                        (\c ->
+                            case c.content of
+                                Just (GitHubGraph.PullRequestCardContent i) ->
+                                    if i.id == pr.id then
+                                        { c | content = Just (GitHubGraph.PullRequestCardContent pr) }
+                                    else
+                                        c
+
+                                _ ->
+                                    c
+                        )
+                        cards
+                )
+                model.columnCards
+
+        setAllCards =
+            Dict.foldl
+                (\id cards cmds ->
+                    setCards ( id, List.map GitHubGraph.encodeProjectColumnCard cards ) :: cmds
+                )
+                []
+                newCards
+    in
+        ( { model | prs = newPullRequests, columnCards = newCards }
+        , Cmd.batch (setAllPRs ++ setAllCards)
+        )

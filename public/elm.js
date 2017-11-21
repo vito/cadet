@@ -21410,6 +21410,106 @@ var _vito$cadet$GitHubGraph$columnObject = A2(
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
+var _vito$cadet$GitHubGraph$projectObject = A2(
+	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+	A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+		'columns',
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'first',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(50)
+			},
+			_1: {ctor: '[]'}
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'nodes',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$columnObject)))),
+	A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'number',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'name',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			A2(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'url',
+					{ctor: '[]'},
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+				A2(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+					A3(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+						'id',
+						{ctor: '[]'},
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Project))))));
+var _vito$cadet$GitHubGraph$projectQuery = function () {
+	var projectNumberVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'projectNumber',
+		function (_) {
+			return _.number;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$int);
+	var orgNameVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'orgName',
+		function (_) {
+			return _.owner;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
+	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'organization',
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'login',
+					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(orgNameVar)
+				},
+				_1: {ctor: '[]'}
+			},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'project',
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'number',
+							_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(projectNumberVar)
+						},
+						_1: {ctor: '[]'}
+					},
+					_vito$cadet$GitHubGraph$projectObject))));
+	return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument(queryRoot);
+}();
+var _vito$cadet$GitHubGraph$fetchOrgProject = F2(
+	function (token, project) {
+		return A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendQuery,
+			_vito$cadet$GitHubGraph$authedOptions(token),
+			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, project, _vito$cadet$GitHubGraph$projectQuery));
+	});
 var _vito$cadet$GitHubGraph$decodeProjectColumn = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -21543,9 +21643,17 @@ var _vito$cadet$GitHubGraph$decodeRepoSelector = A2(
 		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$RepoSelector),
 		A2(_elm_lang$core$Json_Decode$field, 'owner', _elm_lang$core$Json_Decode$string)),
 	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHubGraph$ProjectSelector = F2(
+	function (a, b) {
+		return {owner: a, number: b};
+	});
 var _vito$cadet$GitHubGraph$IDSelector = function (a) {
 	return {id: a};
 };
+var _vito$cadet$GitHubGraph$IssueOrPRSelector = F3(
+	function (a, b, c) {
+		return {owner: a, repo: b, number: c};
+	});
 var _vito$cadet$GitHubGraph$PagedSelector = F2(
 	function (a, b) {
 		return {selector: a, after: b};
@@ -22713,6 +22821,72 @@ var _vito$cadet$GitHubGraph$fetchRepoIssues = F2(
 			token,
 			{selector: repo, after: _elm_lang$core$Maybe$Nothing});
 	});
+var _vito$cadet$GitHubGraph$issueQuery = function () {
+	var numberVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'number',
+		function (_) {
+			return _.number;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$int);
+	var repoNameVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'repoName',
+		function (_) {
+			return _.repo;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
+	var orgNameVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'orgName',
+		function (_) {
+			return _.owner;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
+	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'repository',
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'owner',
+					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(orgNameVar)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'name',
+						_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(repoNameVar)
+					},
+					_1: {ctor: '[]'}
+				}
+			},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'issue',
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'number',
+							_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(numberVar)
+						},
+						_1: {ctor: '[]'}
+					},
+					_vito$cadet$GitHubGraph$issueObject))));
+	return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument(queryRoot);
+}();
+var _vito$cadet$GitHubGraph$fetchRepoIssue = F2(
+	function (token, sel) {
+		return A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendQuery,
+			_vito$cadet$GitHubGraph$authedOptions(token),
+			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, sel, _vito$cadet$GitHubGraph$issueQuery));
+	});
 var _vito$cadet$GitHubGraph$prObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -23108,6 +23282,72 @@ var _vito$cadet$GitHubGraph$fetchRepoPullRequests = F2(
 			token,
 			{selector: repo, after: _elm_lang$core$Maybe$Nothing});
 	});
+var _vito$cadet$GitHubGraph$pullRequestQuery = function () {
+	var numberVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'number',
+		function (_) {
+			return _.number;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$int);
+	var repoNameVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'repoName',
+		function (_) {
+			return _.repo;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
+	var orgNameVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'orgName',
+		function (_) {
+			return _.owner;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
+	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'repository',
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'owner',
+					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(orgNameVar)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'name',
+						_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(repoNameVar)
+					},
+					_1: {ctor: '[]'}
+				}
+			},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'pullRequest',
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'number',
+							_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(numberVar)
+						},
+						_1: {ctor: '[]'}
+					},
+					_vito$cadet$GitHubGraph$prObject))));
+	return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument(queryRoot);
+}();
+var _vito$cadet$GitHubGraph$fetchRepoPullRequest = F2(
+	function (token, sel) {
+		return A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$customSendQuery,
+			_vito$cadet$GitHubGraph$authedOptions(token),
+			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, sel, _vito$cadet$GitHubGraph$pullRequestQuery));
+	});
 var _vito$cadet$GitHubGraph$timelineQuery = function () {
 	var pageInfo = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
@@ -23433,6 +23673,215 @@ var _vito$cadet$Backend$fetchData = function (f) {
 				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
 				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
+};
+
+var _vito$cadet$StrictEvents$customDecoder = F2(
+	function (decoder, toResult) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (a) {
+				var _p0 = toResult(a);
+				if (_p0.ctor === 'Ok') {
+					return _elm_lang$core$Json_Decode$succeed(_p0._0);
+				} else {
+					return _elm_lang$core$Json_Decode$fail(_p0._0);
+				}
+			},
+			decoder);
+	});
+var _vito$cadet$StrictEvents$assertLeftButton = A2(
+	_vito$cadet$StrictEvents$customDecoder,
+	A2(_elm_lang$core$Json_Decode$field, 'button', _elm_lang$core$Json_Decode$int),
+	function (button) {
+		return _elm_lang$core$Native_Utils.eq(button, 0) ? _elm_lang$core$Result$Ok(
+			{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err('not left button');
+	});
+var _vito$cadet$StrictEvents$assertNo = function (prop) {
+	return A2(
+		_vito$cadet$StrictEvents$customDecoder,
+		A2(_elm_lang$core$Json_Decode$field, prop, _elm_lang$core$Json_Decode$bool),
+		function (val) {
+			return (!val) ? _elm_lang$core$Result$Ok(
+				{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err(
+				A2(_elm_lang$core$Basics_ops['++'], prop, ' used - skipping'));
+		});
+};
+var _vito$cadet$StrictEvents$assertNoModifier = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p1) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (_p2) {
+				return A2(
+					_elm_lang$core$Json_Decode$andThen,
+					function (_p3) {
+						return _vito$cadet$StrictEvents$assertNo('shiftKey');
+					},
+					_vito$cadet$StrictEvents$assertNo('metaKey'));
+			},
+			_vito$cadet$StrictEvents$assertNo('altKey'));
+	},
+	_vito$cadet$StrictEvents$assertNo('ctrlKey'));
+var _vito$cadet$StrictEvents$determineClickMsg = F2(
+	function (clickMsg, shiftClickMsg) {
+		return A2(
+			_vito$cadet$StrictEvents$customDecoder,
+			A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool),
+			function (shiftKey) {
+				return shiftKey ? _elm_lang$core$Result$Ok(shiftClickMsg) : _elm_lang$core$Result$Ok(clickMsg);
+			});
+	});
+var _vito$cadet$StrictEvents$onLeftMouseDownCapturing = F2(
+	function (captured, msg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'mousedown',
+			{stopPropagation: false, preventDefault: true},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p4) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p5) {
+							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
+						},
+						_vito$cadet$StrictEvents$assertLeftButton);
+				},
+				_vito$cadet$StrictEvents$assertNoModifier));
+	});
+var _vito$cadet$StrictEvents$onLeftMouseDown = function (msg) {
+	return A2(
+		_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$onLeftClickOrShiftLeftClick = F2(
+	function (msg, shiftMsg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'click',
+			{stopPropagation: false, preventDefault: true},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p6) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p7) {
+							return A2(
+								_elm_lang$core$Json_Decode$andThen,
+								function (_p8) {
+									return A2(
+										_elm_lang$core$Json_Decode$andThen,
+										function (_p9) {
+											return A2(_vito$cadet$StrictEvents$determineClickMsg, msg, shiftMsg);
+										},
+										_vito$cadet$StrictEvents$assertNo('metaKey'));
+								},
+								_vito$cadet$StrictEvents$assertNo('altKey'));
+						},
+						_vito$cadet$StrictEvents$assertNo('ctrlKey'));
+				},
+				_vito$cadet$StrictEvents$assertLeftButton));
+	});
+var _vito$cadet$StrictEvents$onLeftClickCapturing = F3(
+	function (preventDefault, captured, msg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'click',
+			{stopPropagation: false, preventDefault: preventDefault},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p10) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p11) {
+							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
+						},
+						_vito$cadet$StrictEvents$assertLeftButton);
+				},
+				_vito$cadet$StrictEvents$assertNoModifier));
+	});
+var _vito$cadet$StrictEvents$onLeftClickNoPreventDefault = function (msg) {
+	return A3(
+		_vito$cadet$StrictEvents$onLeftClickCapturing,
+		false,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$onLeftClick = function (msg) {
+	return A3(
+		_vito$cadet$StrictEvents$onLeftClickCapturing,
+		true,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$MouseWheelEvent = F2(
+	function (a, b) {
+		return {deltaX: a, deltaY: b};
+	});
+var _vito$cadet$StrictEvents$decodeMouseWheelEvent = A3(
+	_elm_lang$core$Json_Decode$map2,
+	_vito$cadet$StrictEvents$MouseWheelEvent,
+	A2(_elm_lang$core$Json_Decode$field, 'deltaX', _elm_lang$core$Json_Decode$float),
+	A2(_elm_lang$core$Json_Decode$field, 'deltaY', _elm_lang$core$Json_Decode$float));
+var _vito$cadet$StrictEvents$onMouseWheel = function (cons) {
+	return A3(
+		_elm_lang$html$Html_Events$onWithOptions,
+		'mousewheel',
+		{stopPropagation: false, preventDefault: true},
+		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeMouseWheelEvent));
+};
+var _vito$cadet$StrictEvents$ScrollState = F3(
+	function (a, b, c) {
+		return {scrollHeight: a, scrollTop: b, clientHeight: c};
+	});
+var _vito$cadet$StrictEvents$decodeScrollEvent = A4(
+	_elm_lang$core$Json_Decode$map3,
+	_vito$cadet$StrictEvents$ScrollState,
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'scrollHeight',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'scrollTop',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'clientHeight',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float));
+var _vito$cadet$StrictEvents$onScroll = function (cons) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'scroll',
+		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeScrollEvent));
 };
 
 var _vito$cadet$Drag$purposefulDragTreshold = 10;
@@ -23779,15 +24228,12 @@ var _vito$cadet$Drag$Start = F3(
 var _vito$cadet$Drag$onStart = F3(
 	function (source, overlay, f) {
 		return A2(
-			_elm_lang$html$Html_Events$on,
-			'mousedown',
-			A2(
-				_elm_lang$core$Json_Decode$map,
-				function (_p18) {
-					return f(
-						A3(_vito$cadet$Drag$Start, source, overlay, _p18));
-				},
-				_vito$cadet$Drag$decodeStartState));
+			_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
+			_vito$cadet$Drag$decodeStartState,
+			function (_p18) {
+				return f(
+					A3(_vito$cadet$Drag$Start, source, overlay, _p18));
+			});
 	});
 var _vito$cadet$Drag$draggable = F5(
 	function (model, wrap, source, overlay, view) {
@@ -24114,215 +24560,6 @@ var _vito$cadet$Hash$updateHash = F2(
 	});
 var _vito$cadet$Hash$hash = function (str) {
 	return A3(_elm_lang$core$String$foldl, _vito$cadet$Hash$updateHash, 5381, str);
-};
-
-var _vito$cadet$StrictEvents$customDecoder = F2(
-	function (decoder, toResult) {
-		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (a) {
-				var _p0 = toResult(a);
-				if (_p0.ctor === 'Ok') {
-					return _elm_lang$core$Json_Decode$succeed(_p0._0);
-				} else {
-					return _elm_lang$core$Json_Decode$fail(_p0._0);
-				}
-			},
-			decoder);
-	});
-var _vito$cadet$StrictEvents$assertLeftButton = A2(
-	_vito$cadet$StrictEvents$customDecoder,
-	A2(_elm_lang$core$Json_Decode$field, 'button', _elm_lang$core$Json_Decode$int),
-	function (button) {
-		return _elm_lang$core$Native_Utils.eq(button, 0) ? _elm_lang$core$Result$Ok(
-			{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err('not left button');
-	});
-var _vito$cadet$StrictEvents$assertNo = function (prop) {
-	return A2(
-		_vito$cadet$StrictEvents$customDecoder,
-		A2(_elm_lang$core$Json_Decode$field, prop, _elm_lang$core$Json_Decode$bool),
-		function (val) {
-			return (!val) ? _elm_lang$core$Result$Ok(
-				{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err(
-				A2(_elm_lang$core$Basics_ops['++'], prop, ' used - skipping'));
-		});
-};
-var _vito$cadet$StrictEvents$assertNoModifier = A2(
-	_elm_lang$core$Json_Decode$andThen,
-	function (_p1) {
-		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (_p2) {
-				return A2(
-					_elm_lang$core$Json_Decode$andThen,
-					function (_p3) {
-						return _vito$cadet$StrictEvents$assertNo('shiftKey');
-					},
-					_vito$cadet$StrictEvents$assertNo('metaKey'));
-			},
-			_vito$cadet$StrictEvents$assertNo('altKey'));
-	},
-	_vito$cadet$StrictEvents$assertNo('ctrlKey'));
-var _vito$cadet$StrictEvents$determineClickMsg = F2(
-	function (clickMsg, shiftClickMsg) {
-		return A2(
-			_vito$cadet$StrictEvents$customDecoder,
-			A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool),
-			function (shiftKey) {
-				return shiftKey ? _elm_lang$core$Result$Ok(shiftClickMsg) : _elm_lang$core$Result$Ok(clickMsg);
-			});
-	});
-var _vito$cadet$StrictEvents$onLeftMouseDownCapturing = F2(
-	function (captured, msg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'mousedown',
-			{stopPropagation: false, preventDefault: true},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p4) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p5) {
-							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
-						},
-						_vito$cadet$StrictEvents$assertLeftButton);
-				},
-				_vito$cadet$StrictEvents$assertNoModifier));
-	});
-var _vito$cadet$StrictEvents$onLeftMouseDown = function (msg) {
-	return A2(
-		_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$onLeftClickOrShiftLeftClick = F2(
-	function (msg, shiftMsg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'click',
-			{stopPropagation: false, preventDefault: true},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p6) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p7) {
-							return A2(
-								_elm_lang$core$Json_Decode$andThen,
-								function (_p8) {
-									return A2(
-										_elm_lang$core$Json_Decode$andThen,
-										function (_p9) {
-											return A2(_vito$cadet$StrictEvents$determineClickMsg, msg, shiftMsg);
-										},
-										_vito$cadet$StrictEvents$assertNo('metaKey'));
-								},
-								_vito$cadet$StrictEvents$assertNo('altKey'));
-						},
-						_vito$cadet$StrictEvents$assertNo('ctrlKey'));
-				},
-				_vito$cadet$StrictEvents$assertLeftButton));
-	});
-var _vito$cadet$StrictEvents$onLeftClickCapturing = F3(
-	function (preventDefault, captured, msg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'click',
-			{stopPropagation: false, preventDefault: preventDefault},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p10) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p11) {
-							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
-						},
-						_vito$cadet$StrictEvents$assertLeftButton);
-				},
-				_vito$cadet$StrictEvents$assertNoModifier));
-	});
-var _vito$cadet$StrictEvents$onLeftClickNoPreventDefault = function (msg) {
-	return A3(
-		_vito$cadet$StrictEvents$onLeftClickCapturing,
-		false,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$onLeftClick = function (msg) {
-	return A3(
-		_vito$cadet$StrictEvents$onLeftClickCapturing,
-		true,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$MouseWheelEvent = F2(
-	function (a, b) {
-		return {deltaX: a, deltaY: b};
-	});
-var _vito$cadet$StrictEvents$decodeMouseWheelEvent = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_vito$cadet$StrictEvents$MouseWheelEvent,
-	A2(_elm_lang$core$Json_Decode$field, 'deltaX', _elm_lang$core$Json_Decode$float),
-	A2(_elm_lang$core$Json_Decode$field, 'deltaY', _elm_lang$core$Json_Decode$float));
-var _vito$cadet$StrictEvents$onMouseWheel = function (cons) {
-	return A3(
-		_elm_lang$html$Html_Events$onWithOptions,
-		'mousewheel',
-		{stopPropagation: false, preventDefault: true},
-		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeMouseWheelEvent));
-};
-var _vito$cadet$StrictEvents$ScrollState = F3(
-	function (a, b, c) {
-		return {scrollHeight: a, scrollTop: b, clientHeight: c};
-	});
-var _vito$cadet$StrictEvents$decodeScrollEvent = A4(
-	_elm_lang$core$Json_Decode$map3,
-	_vito$cadet$StrictEvents$ScrollState,
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'scrollHeight',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'scrollTop',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'clientHeight',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float));
-var _vito$cadet$StrictEvents$onScroll = function (cons) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'scroll',
-		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeScrollEvent));
 };
 
 var _vito$cadet$Main$findCardColumns = F2(

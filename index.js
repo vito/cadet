@@ -3,6 +3,7 @@ const path = require('path')
 const compression = require('compression')
 const passport = require('passport')
 const session = require('express-session')
+const bodyParser = require('body-parser')
 
 const GitHubStrategy = require('passport-github').Strategy
 
@@ -101,6 +102,7 @@ worker.ports.setCards.subscribe(function(args) {
 });
 
 app.use(compression())
+app.use(bodyParser.json())
 
 if (process.env.GITHUB_CLIENT_ID) {
   passport.use(new GitHubStrategy({
@@ -165,6 +167,11 @@ app.get('/refresh', (req, res) => {
 })
 
 app.use('/public', express.static(publicDir))
+
+app.post('/hook', (req, res) => {
+  worker.ports.hook.send([req.get('X-GitHub-Event'), req.body]);
+  res.send("ok")
+})
 
 app.get('/*', (req, res) => {
   res.sendFile(path.join(publicDir, 'index.html'));
