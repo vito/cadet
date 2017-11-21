@@ -485,7 +485,7 @@ update msg model =
 
         DataFetched (Err msg) ->
             flip always (Debug.log "error fetching data" msg) <|
-                ( model, Cmd.none )
+                ( model, Backend.pollData DataFetched )
 
 
 addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card

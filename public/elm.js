@@ -27016,7 +27016,11 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
 							A2(_elm_lang$core$Debug$log, 'error fetching data', _p106._0._0),
-							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+							{
+								ctor: '_Tuple2',
+								_0: model,
+								_1: _vito$cadet$Backend$pollData(_vito$cadet$Main$DataFetched)
+							});
 					}
 			}
 		}
