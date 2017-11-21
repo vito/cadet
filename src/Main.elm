@@ -662,17 +662,7 @@ viewAllProjectsPage model =
             List.filterMap selectStatefulProject model.data.projects
     in
         Html.div [ HA.class "project-table" ]
-            [ Html.div [ HA.class "project-name-columns" ]
-                [ Html.div [ HA.class "column name-column" ]
-                    []
-                , Html.div [ HA.class "column backlog-column" ]
-                    [ Html.h4 [] [ Html.text "Backlog" ] ]
-                , Html.div [ HA.class "column in-flight-column" ]
-                    [ Html.h4 [] [ Html.text "In Flight" ] ]
-                , Html.div [ HA.class "column done-column" ]
-                    [ Html.h4 [] [ Html.text "Done" ] ]
-                ]
-            , Html.div [ HA.class "projects" ]
+            [ Html.div [ HA.class "projects" ]
                 (List.map (viewProject model) statefulProjects)
             ]
 
@@ -712,16 +702,6 @@ viewProject model { project, backlogs, inFlight, done } =
             , Html.div [ HA.class "column done-column" ]
                 [ viewProjectColumn model project onlyOpenContentCards done ]
             ]
-        , Html.div [ HA.class "project-spacer-columns" ]
-            [ Html.div [ HA.class "column name-column" ]
-                []
-            , Html.div [ HA.class "column backlog-column" ]
-                []
-            , Html.div [ HA.class "column in-flight-column" ]
-                []
-            , Html.div [ HA.class "column done-column" ]
-                []
-            ]
         ]
 
 
@@ -740,9 +720,16 @@ viewProjectColumn model project mod col =
                 }
             }
     in
-        Html.div [ HA.class "cards" ] <|
-            Drag.viewDropArea model.drag Drag dropCandidate Nothing
-                :: List.concatMap (viewProjectColumnCard model project col) (mod cards)
+        Html.div [ HA.class "project-column" ]
+            [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
+            , if List.isEmpty cards then
+                Html.div [ HA.class "no-cards" ]
+                    [ Html.text "no cards" ]
+              else
+                Html.div [ HA.class "cards" ] <|
+                    Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                        :: List.concatMap (viewProjectColumnCard model project col) (mod cards)
+            ]
 
 
 viewProjectColumnCard : Model -> GitHubGraph.Project -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> List (Html Msg)

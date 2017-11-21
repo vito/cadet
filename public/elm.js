@@ -24753,8 +24753,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1599, column: 25},
-							end: {line: 1613, column: 57}
+							start: {line: 1586, column: 25},
+							end: {line: 1600, column: 57}
 						},
 						_p7)('impossible');
 				}
@@ -24864,8 +24864,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1525, column: 17},
-					end: {line: 1533, column: 50}
+					start: {line: 1512, column: 17},
+					end: {line: 1520, column: 50}
 				},
 				_p14)('invalid hex');
 		}
@@ -24873,8 +24873,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1523, column: 9},
-				end: {line: 1536, column: 42}
+				start: {line: 1510, column: 9},
+				end: {line: 1523, column: 42}
 			},
 			_p13)('invalid hex');
 	}
@@ -25167,8 +25167,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1125, column: 17},
-							end: {line: 1130, column: 49}
+							start: {line: 1112, column: 17},
+							end: {line: 1117, column: 49}
 						},
 						_p36)('impossible');
 				}
@@ -27114,8 +27114,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 763, column: 9},
-				end: {line: 784, column: 41}
+				start: {line: 750, column: 9},
+				end: {line: 771, column: 41}
 			},
 			_p124)('impossible');
 	});
@@ -27133,16 +27133,53 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 			_elm_lang$html$Html$div,
 			{
 				ctor: '::',
-				_0: _elm_lang$html$Html_Attributes$class('cards'),
+				_0: _elm_lang$html$Html_Attributes$class('project-column'),
 				_1: {ctor: '[]'}
 			},
 			{
 				ctor: '::',
-				_0: A4(_vito$cadet$Drag$viewDropArea, model.drag, _vito$cadet$Main$Drag, dropCandidate, _elm_lang$core$Maybe$Nothing),
-				_1: A2(
-					_elm_lang$core$List$concatMap,
-					A3(_vito$cadet$Main$viewProjectColumnCard, model, project, col),
-					mod(cards))
+				_0: A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class('column-name'),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(col.name),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$core$List$isEmpty(cards) ? A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('no-cards'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text('no cards'),
+							_1: {ctor: '[]'}
+						}) : A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('cards'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: A4(_vito$cadet$Drag$viewDropArea, model.drag, _vito$cadet$Main$Drag, dropCandidate, _elm_lang$core$Maybe$Nothing),
+							_1: A2(
+								_elm_lang$core$List$concatMap,
+								A3(_vito$cadet$Main$viewProjectColumnCard, model, project, col),
+								mod(cards))
+						}),
+					_1: {ctor: '[]'}
+				}
 			});
 	});
 var _vito$cadet$Main$viewSingleProject = F2(
@@ -27500,62 +27537,7 @@ var _vito$cadet$Main$viewProject = F2(
 							}
 						}
 					}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('project-spacer-columns'),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('column name-column'),
-									_1: {ctor: '[]'}
-								},
-								{ctor: '[]'}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$div,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
-										_1: {ctor: '[]'}
-									},
-									{ctor: '[]'}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('column in-flight-column'),
-											_1: {ctor: '[]'}
-										},
-										{ctor: '[]'}),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$div,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('column done-column'),
-												_1: {ctor: '[]'}
-											},
-											{ctor: '[]'}),
-										_1: {ctor: '[]'}
-									}
-								}
-							}
-						}),
-					_1: {ctor: '[]'}
-				}
+				_1: {ctor: '[]'}
 			});
 	});
 var _vito$cadet$Main$viewAllProjectsPage = function (model) {
@@ -27573,102 +27555,14 @@ var _vito$cadet$Main$viewAllProjectsPage = function (model) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('project-name-columns'),
+					_0: _elm_lang$html$Html_Attributes$class('projects'),
 					_1: {ctor: '[]'}
 				},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$div,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('column name-column'),
-							_1: {ctor: '[]'}
-						},
-						{ctor: '[]'}),
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('column backlog-column'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$h4,
-									{ctor: '[]'},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('Backlog'),
-										_1: {ctor: '[]'}
-									}),
-								_1: {ctor: '[]'}
-							}),
-						_1: {
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('column in-flight-column'),
-									_1: {ctor: '[]'}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$h4,
-										{ctor: '[]'},
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html$text('In Flight'),
-											_1: {ctor: '[]'}
-										}),
-									_1: {ctor: '[]'}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A2(
-									_elm_lang$html$Html$div,
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('column done-column'),
-										_1: {ctor: '[]'}
-									},
-									{
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$h4,
-											{ctor: '[]'},
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('Done'),
-												_1: {ctor: '[]'}
-											}),
-										_1: {ctor: '[]'}
-									}),
-								_1: {ctor: '[]'}
-							}
-						}
-					}
-				}),
-			_1: {
-				ctor: '::',
-				_0: A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('projects'),
-						_1: {ctor: '[]'}
-					},
-					A2(
-						_elm_lang$core$List$map,
-						_vito$cadet$Main$viewProject(model),
-						statefulProjects)),
-				_1: {ctor: '[]'}
-			}
+				A2(
+					_elm_lang$core$List$map,
+					_vito$cadet$Main$viewProject(model),
+					statefulProjects)),
+			_1: {ctor: '[]'}
 		});
 };
 var _vito$cadet$Main$AllProjectsPage = {ctor: 'AllProjectsPage'};

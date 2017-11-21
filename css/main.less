@@ -285,14 +285,15 @@ a {
 
   .card-title {
     font-size: 16px;
-    font-weight: bold;
-    color: #333;
+    font-weight: 600;
+    color: @gray-900;
     line-height: 1.25;
+    padding: 1px 0; /* eliminate unclickable gap */
   }
 
   .card-meta {
     font-size: 12px;
-    color: #767676;
+    color: @gray-600;
     line-height: 1.4;
   }
 
@@ -457,6 +458,8 @@ a {
 }
 
 .project {
+  margin-bottom: @card-margin * 4;
+
   h4 {
     color: white;
     font-weight: bold;
@@ -466,50 +469,8 @@ a {
 }
 
 .name-column {
-  width: 150px + (@card-margin * 2);
+  width: 100px + (@card-margin * 2);
   text-align: right;
-}
-
-.project-name-columns {
-  display: flex;
-  flex-direction: row;
-
-  h4 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #fff;
-    margin: @card-margin;
-  }
-
-  .column {
-    background: @column-bg;
-    border-top-left-radius: @card-margin;
-    border-top-right-radius: @card-margin;
-    margin-right: 2 * @card-margin;
-
-    &:last-child {
-      margin-right: 0;
-    }
-  }
-}
-
-.project-spacer-columns {
-  display: flex;
-  flex-direction: row;
-
-  .column {
-    background: @column-bg;
-    height: @card-margin;
-    margin-right: 2 * @card-margin;
-
-    &:last-child {
-      margin-right: 0;
-    }
-  }
-
-  .name-column {
-    background: transparent;
-  }
 }
 
 .project-columns {
@@ -519,13 +480,12 @@ a {
   .column {
     box-sizing: content-box;
     white-space: nowrap;
-    border-right: (@card-margin * 2) solid @project-bg;
+    margin-right: @card-margin * 2;
     background: @project-column-bg;
+    border-radius: @card-margin;
 
     &:last-child {
-      border-right: 0;
-      border-top-right-radius: @card-margin;
-      border-bottom-right-radius: @card-margin;
+      margin-right: 0;
     }
   }
 
@@ -533,11 +493,16 @@ a {
     border-color: @project-bg;
   }
 
+  .no-cards {
+    text-align: center;
+    color: @gray-400;
+    font-size: 14px;
+    padding: @card-margin * 2;
+  }
+
   .name-column {
-    background: @project-bg;
-    border-top-left-radius: @card-margin;
-    border-bottom-left-radius: @card-margin;
-    border-right: 0;
+    background: transparent;
+    margin-right: @card-margin;
   }
 
   .backlog-column {
@@ -556,6 +521,22 @@ a {
   }
 }
 
+.project-column {
+  .column-name {
+    color: @gray-200;
+    font-size: 12px;
+    padding: @card-margin;
+    background: @gray-500;
+    user-select: none;
+    cursor: default;
+  }
+
+  &:first-child .column-name {
+    border-top-left-radius: @card-margin;
+    border-top-right-radius: @card-margin;
+  }
+}
+
 .project.single {
   display: flex;
   flex-direction: row;
@@ -568,21 +549,23 @@ a {
     background: @gray;
 
     .column {
-      border-right: 0;
-      border-bottom: (@card-margin * 2) solid @project-bg;
+      margin-right: 0;
+      border-radius: 0;
 
       &:last-child {
         border-bottom: 0;
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
       }
     }
 
     .name-column {
       width: @card-width + (2 * @card-margin);
+      background: @gray-600;
       border-radius: 0;
       text-align: left;
-      border-bottom: 0;
+    }
+
+    .column-name {
+      border-radius: 0;
     }
   }
 }
