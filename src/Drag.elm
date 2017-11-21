@@ -7,6 +7,7 @@ import Html.Events as HE
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
 import Mouse
+import StrictEvents
 
 
 type alias StartState =
@@ -63,7 +64,7 @@ type Model source target msg
 
 onStart : source -> Maybe (Html msg) -> (Msg source target msg -> msg) -> Html.Attribute msg
 onStart source overlay f =
-    HE.on "mousedown" (JD.map (f << Start source overlay) decodeStartState)
+    StrictEvents.onLeftMouseDownCapturing decodeStartState (f << Start source overlay)
 
 
 onDrop : DropCandidate source target dropMsg -> (Msg source target dropMsg -> msg) -> List (Html.Attribute msg)
