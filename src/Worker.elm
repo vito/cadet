@@ -223,7 +223,7 @@ update msg model =
                 backOff model (fetchProjects model nextMsg)
 
         FetchCards projects ->
-            ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects }, Cmd.none )
+            ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue }, Cmd.none )
 
         CardsFetched colId (Ok cards) ->
             log "cards fetched for" colId <|

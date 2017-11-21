@@ -13203,23 +13203,26 @@ var _vito$cadet$Main$update = F2(
 						model,
 						{
 							loadQueue: A2(
-								_elm_lang$core$List$concatMap,
-								function (_p15) {
-									return A2(
-										_elm_lang$core$List$map,
-										function (_p16) {
-											return A2(
-												_vito$cadet$Main$fetchCards,
-												model,
-												function (_) {
-													return _.id;
-												}(_p16));
-										},
-										function (_) {
-											return _.columns;
-										}(_p15));
-								},
-								_p10._0)
+								_elm_lang$core$Basics_ops['++'],
+								A2(
+									_elm_lang$core$List$concatMap,
+									function (_p15) {
+										return A2(
+											_elm_lang$core$List$map,
+											function (_p16) {
+												return A2(
+													_vito$cadet$Main$fetchCards,
+													model,
+													function (_) {
+														return _.id;
+													}(_p16));
+											},
+											function (_) {
+												return _.columns;
+											}(_p15));
+									},
+									_p10._0),
+								model.loadQueue)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
