@@ -12972,89 +12972,133 @@ var _vito$cadet$Main$update = F2(
 			case 'HookReceived':
 				switch (_p10._0) {
 					case 'issues':
-						return {
-							ctor: '_Tuple2',
-							_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p10._1, _vito$cadet$Main$fetchIssue, model),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'issue hook received; refreshing issue and timeline',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p10._1, _vito$cadet$Main$fetchIssue, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'issue_comment':
-						return {
-							ctor: '_Tuple2',
-							_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p10._1, _vito$cadet$Main$fetchIssue, model),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'issue_comment hook received; refreshing issue and timeline',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p10._1, _vito$cadet$Main$fetchIssue, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'pull_request':
-						return {
-							ctor: '_Tuple2',
-							_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'pull_request hook received; refreshing pr and timeline',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'pull_request_review':
-						return {
-							ctor: '_Tuple2',
-							_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'pull_request_review hook received; refreshing pr and timeline',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'pull_request_review_comment':
-						return {
-							ctor: '_Tuple2',
-							_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'pull_request_review_comment hook received; refreshing pr and timeline',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p10._1, _vito$cadet$Main$fetchIssue, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'milestone':
-						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						return A3(
+							_vito$cadet$Main$log,
+							'milestone hook received; ignoring',
+							{ctor: '_Tuple0'},
+							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					case 'project':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									loadQueue: {
-										ctor: '::',
-										_0: A2(
-											_vito$cadet$Main$fetchProjects,
-											model,
-											_elm_lang$core$Basics$always(_vito$cadet$Main$Noop)),
-										_1: model.loadQueue
-									}
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'project hook received; refreshing projects',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Native_Utils.update(
+									model,
+									{
+										loadQueue: {
+											ctor: '::',
+											_0: A2(
+												_vito$cadet$Main$fetchProjects,
+												model,
+												_elm_lang$core$Basics$always(_vito$cadet$Main$Noop)),
+											_1: model.loadQueue
+										}
+									}),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'project_column':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									loadQueue: {
-										ctor: '::',
-										_0: A2(
-											_vito$cadet$Main$fetchProjects,
-											model,
-											_elm_lang$core$Basics$always(_vito$cadet$Main$Noop)),
-										_1: model.loadQueue
-									}
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'project_column hook received; refreshing projects',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Native_Utils.update(
+									model,
+									{
+										loadQueue: {
+											ctor: '::',
+											_0: A2(
+												_vito$cadet$Main$fetchProjects,
+												model,
+												_elm_lang$core$Basics$always(_vito$cadet$Main$Noop)),
+											_1: model.loadQueue
+										}
+									}),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'project_card':
-						return {
-							ctor: '_Tuple2',
-							_0: _elm_lang$core$Native_Utils.update(
-								model,
-								{
-									loadQueue: {
-										ctor: '::',
-										_0: A2(_vito$cadet$Main$fetchProjects, model, _vito$cadet$Main$FetchCards),
-										_1: model.loadQueue
-									}
-								}),
-							_1: _elm_lang$core$Platform_Cmd$none
-						};
+						return A3(
+							_vito$cadet$Main$log,
+							'project_card hook received; refreshing projects and cards',
+							{ctor: '_Tuple0'},
+							{
+								ctor: '_Tuple2',
+								_0: _elm_lang$core$Native_Utils.update(
+									model,
+									{
+										loadQueue: {
+											ctor: '::',
+											_0: A2(_vito$cadet$Main$fetchProjects, model, _vito$cadet$Main$FetchCards),
+											_1: model.loadQueue
+										}
+									}),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'repository':
-						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						return A3(
+							_vito$cadet$Main$log,
+							'repository hook received; ignoring',
+							{ctor: '_Tuple0'},
+							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					case 'status':
-						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
+						return A3(
+							_vito$cadet$Main$log,
+							'status hook received; ignoring',
+							{ctor: '_Tuple0'},
+							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					default:
 						return A3(
 							_vito$cadet$Main$log,

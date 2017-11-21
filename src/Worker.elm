@@ -140,43 +140,51 @@ update msg model =
                 ( model, Cmd.none )
 
         HookReceived "issues" payload ->
-            ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
+            log "issue hook received; refreshing issue and timeline" () <|
+                ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
 
         HookReceived "issue_comment" payload ->
-            ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
+            log "issue_comment hook received; refreshing issue and timeline" () <|
+                ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
 
         HookReceived "pull_request" payload ->
-            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+            log "pull_request hook received; refreshing pr and timeline" () <|
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
 
         HookReceived "pull_request_review" payload ->
-            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+            log "pull_request_review hook received; refreshing pr and timeline" () <|
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
 
         HookReceived "pull_request_review_comment" payload ->
-            ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+            log "pull_request_review_comment hook received; refreshing pr and timeline" () <|
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
 
         HookReceived "milestone" payload ->
-            -- TODO: nothing yet
-            ( model, Cmd.none )
+            log "milestone hook received; ignoring" () <|
+                ( model, Cmd.none )
 
         HookReceived "project" payload ->
-            ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+            log "project hook received; refreshing projects" () <|
+                ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
 
         HookReceived "project_column" payload ->
-            ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+            log "project_column hook received; refreshing projects" () <|
+                ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
 
         HookReceived "project_card" payload ->
-            -- TODO: take changes.column_id.from and project_card.column_id
-            -- fetch all projects
-            -- refresh columns with matching database id
-            ( { model | loadQueue = fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
+            log "project_card hook received; refreshing projects and cards" () <|
+                -- TODO: take changes.column_id.from and project_card.column_id
+                -- fetch all projects
+                -- refresh columns with matching database id
+                ( { model | loadQueue = fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
 
         HookReceived "repository" payload ->
-            -- TODO: fetch repositories, GC issues and PRs
-            ( model, Cmd.none )
+            log "repository hook received; ignoring" () <|
+                ( model, Cmd.none )
 
         HookReceived "status" payload ->
-            -- TODO: nothing yet
-            ( model, Cmd.none )
+            log "status hook received; ignoring" () <|
+                ( model, Cmd.none )
 
         HookReceived event payload ->
             log "hook received" ( event, payload ) <|
