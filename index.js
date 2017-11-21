@@ -66,15 +66,31 @@ function popRefresh(field, id, data) {
 
   var res;
   while (res = waiting.pop()) {
-    res.send(data);
+    res.send(JSON.stringify(data));
   }
 }
+
+var polling = [];
+
+function queuePoll(res) {
+  polling.push(res);
+}
+
+function popPoll() {
+  var res;
+  while (res = polling.pop()) {
+    res.send(JSON.stringify(data));
+  }
+}
+
+setInterval(popPoll, 30 * 1000);
 
 function hydrate(field, args) {
   var id = args[0];
   var val = args[1];
   data[field][id] = val;
   popRefresh(field, id, val);
+  popPoll();
 }
 
 worker.ports.setProjects.subscribe(function(args) {
@@ -164,6 +180,10 @@ app.get('/refresh', (req, res) => {
     queueRefresh(field, id, res);
     worker.ports.refresh.send([field, id]);
   }
+})
+
+app.get('/poll', (req, res) => {
+  queuePoll(res);
 })
 
 app.use('/public', express.static(publicDir))

@@ -1,4 +1,4 @@
-module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, refreshCards, fetchMe, encodeActorEvent)
+module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, pollData, refreshCards, fetchMe, encodeActorEvent)
 
 import HttpBuilder
 import Json.Decode as JD
@@ -10,6 +10,7 @@ import GitHubGraph
 import Task
 import Http
 import Date exposing (Date)
+import Time
 
 
 type alias Data =
@@ -57,6 +58,15 @@ fetchData : (Result Http.Error Data -> msg) -> Cmd msg
 fetchData f =
     HttpBuilder.get "/data"
         |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+pollData : (Result Http.Error Data -> msg) -> Cmd msg
+pollData f =
+    HttpBuilder.get "/poll"
+        |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.withTimeout (60 * Time.second)
         |> HttpBuilder.toTask
         |> Task.attempt f
 

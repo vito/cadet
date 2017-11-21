@@ -480,7 +480,7 @@ update msg model =
                     , allCards = allCards
                     , cardGraphs = model.computeGraph data (Dict.values allCards)
                   }
-                , Cmd.none
+                , Backend.pollData DataFetched
                 )
 
         DataFetched (Err msg) ->
