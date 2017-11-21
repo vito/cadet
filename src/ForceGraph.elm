@@ -43,8 +43,17 @@ fromGraph g =
             , VF.manyBodyStrength -120 <| List.map .id <| Graph.nodes graph
             ]
 
+        size =
+            Graph.size graph
+
+        iterations =
+            if size == 1 then
+                1
+            else
+                size * 10
+
         newSimulation =
-            VF.iterations (Graph.size graph * 10) <|
+            VF.iterations iterations <|
                 VF.simulation forces
     in
         computeSimulation { graph = graph, simulation = newSimulation }
