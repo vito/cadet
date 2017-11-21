@@ -280,11 +280,14 @@ update msg model =
             let
                 compute data cards =
                     case page of
+                        GlobalGraphPage ->
+                            computeReferenceGraph data cards
+
+                        AllProjectsPage ->
+                            []
+
                         ProjectPage name ->
                             computeReferenceGraph data (List.filter (isInProject name) cards)
-
-                        _ ->
-                            computeReferenceGraph data cards
             in
                 ( { model
                     | page = page

@@ -24755,8 +24755,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1586, column: 25},
-							end: {line: 1600, column: 57}
+							start: {line: 1589, column: 25},
+							end: {line: 1603, column: 57}
 						},
 						_p7)('impossible');
 				}
@@ -24866,8 +24866,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1512, column: 17},
-					end: {line: 1520, column: 50}
+					start: {line: 1515, column: 17},
+					end: {line: 1523, column: 50}
 				},
 				_p14)('invalid hex');
 		}
@@ -24875,8 +24875,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1510, column: 9},
-				end: {line: 1523, column: 42}
+				start: {line: 1513, column: 9},
+				end: {line: 1526, column: 42}
 			},
 			_p13)('invalid hex');
 	}
@@ -25169,8 +25169,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1112, column: 17},
-							end: {line: 1117, column: 49}
+							start: {line: 1115, column: 17},
+							end: {line: 1120, column: 49}
 						},
 						_p36)('impossible');
 				}
@@ -26644,16 +26644,19 @@ var _vito$cadet$Main$update = F2(
 					var compute = F2(
 						function (data, cards) {
 							var _p107 = _p108;
-							if (_p107.ctor === 'ProjectPage') {
-								return A2(
-									_vito$cadet$Main$computeReferenceGraph,
-									data,
-									A2(
-										_elm_lang$core$List$filter,
-										_vito$cadet$Main$isInProject(_p107._0),
-										cards));
-							} else {
-								return A2(_vito$cadet$Main$computeReferenceGraph, data, cards);
+							switch (_p107.ctor) {
+								case 'GlobalGraphPage':
+									return A2(_vito$cadet$Main$computeReferenceGraph, data, cards);
+								case 'AllProjectsPage':
+									return {ctor: '[]'};
+								default:
+									return A2(
+										_vito$cadet$Main$computeReferenceGraph,
+										data,
+										A2(
+											_elm_lang$core$List$filter,
+											_vito$cadet$Main$isInProject(_p107._0),
+											cards));
 							}
 						});
 					return {
@@ -27116,8 +27119,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 750, column: 9},
-				end: {line: 771, column: 41}
+				start: {line: 753, column: 9},
+				end: {line: 774, column: 41}
 			},
 			_p124)('impossible');
 	});
