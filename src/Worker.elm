@@ -146,7 +146,7 @@ update msg model =
 
         HookReceived "issue_comment" payload ->
             log "issue_comment hook received; refreshing issue and timeline" () <|
-                ( decodeAndFetchIssueOrPR "issue" payload fetchIssue model, Cmd.none )
+                ( decodeAndFetchIssueOrPR "issue" payload fetchIssueOrPR model, Cmd.none )
 
         HookReceived "pull_request" payload ->
             log "pull_request hook received; refreshing pr and timeline" () <|
@@ -259,7 +259,7 @@ update msg model =
 
         IssueFetched sel (Err err) ->
             log "failed to fetch issue" ( sel, err ) <|
-                backOff model (fetchIssue model sel)
+                ( model, Cmd.none )
 
         PullRequestsFetched repo (Ok prs) ->
             let
@@ -284,7 +284,7 @@ update msg model =
 
         PullRequestFetched sel (Err err) ->
             log "failed to fetch pr" ( sel, err ) <|
-                backOff model (fetchPullRequest model sel)
+                ( model, Cmd.none )
 
         TimelineFetched id (Ok timeline) ->
             let
@@ -361,6 +361,14 @@ fetchIssue : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
 fetchIssue model sel =
     GitHubGraph.fetchRepoIssue model.githubToken sel
         |> Task.attempt (IssueFetched sel)
+
+
+fetchIssueOrPR : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchIssueOrPR model sel =
+    Cmd.batch
+        [ fetchIssue model sel
+        , fetchPullRequest model sel
+        ]
 
 
 fetchPullRequests : Model -> GitHubGraph.Repo -> Cmd Msg
