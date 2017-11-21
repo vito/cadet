@@ -171,6 +171,9 @@ type alias Project =
 type alias ProjectColumn =
     { id : ID
     , name : String
+
+    -- used to cross-reference with v3 hooks API
+    , databaseId : Int
     }
 
 
@@ -561,19 +564,6 @@ projectsQuery =
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
 
-        column =
-            GB.object ProjectColumn
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-
-        project =
-            GB.object Project
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "name" [] GB.string)
-                |> GB.with (GB.field "number" [] GB.int)
-                |> GB.with (GB.field "columns" [ ( "first", GA.int 50 ) ] (GB.extract (GB.field "nodes" [] (GB.list column))))
-
         pageArgs =
             [ ( "first", GA.int 100 )
             , ( "after", GA.variable afterVar )
@@ -586,7 +576,7 @@ projectsQuery =
 
         paged =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.list project))
+                |> GB.with (GB.field "nodes" [] (GB.list projectObject))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         queryRoot =
@@ -670,6 +660,7 @@ columnObject =
     GB.object ProjectColumn
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "databaseId" [] GB.int)
 
 
 authorObject : GB.SelectionSpec GB.InlineFragment User vars
@@ -1042,6 +1033,7 @@ decodeProjectColumn =
     JD.succeed ProjectColumn
         |: (JD.field "id" JD.string)
         |: (JD.field "name" JD.string)
+        |: (JD.field "database_id" JD.int)
 
 
 decodeProjectColumnCard : JD.Decoder ProjectColumnCard
@@ -1223,6 +1215,7 @@ encodeProjectColumn record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "name", JE.string record.name )
+        , ( "database_id", JE.int record.databaseId )
         ]
 
 

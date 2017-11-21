@@ -9505,7 +9505,15 @@ var _vito$cadet$GitHubGraph$encodeProjectColumn = function (record) {
 					_0: 'name',
 					_1: _elm_lang$core$Json_Encode$string(record.name)
 				},
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'database_id',
+						_1: _elm_lang$core$Json_Encode$int(record.databaseId)
+					},
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -10133,25 +10141,32 @@ var _vito$cadet$GitHubGraph$Project = F5(
 	function (a, b, c, d, e) {
 		return {id: a, url: b, name: c, number: d, columns: e};
 	});
-var _vito$cadet$GitHubGraph$ProjectColumn = F2(
-	function (a, b) {
-		return {id: a, name: b};
+var _vito$cadet$GitHubGraph$ProjectColumn = F3(
+	function (a, b, c) {
+		return {id: a, name: b, databaseId: c};
 	});
 var _vito$cadet$GitHubGraph$columnObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-		'name',
+		'databaseId',
 		{ctor: '[]'},
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'id',
+			'name',
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'id',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn))));
 var _vito$cadet$GitHubGraph$projectObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -10256,9 +10271,12 @@ var _vito$cadet$GitHubGraph$decodeProjectColumn = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumn),
-		A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumn),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int));
 var _vito$cadet$GitHubGraph$decodeProject = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -10550,70 +10568,6 @@ var _vito$cadet$GitHubGraph$projectsQuery = function () {
 				{ctor: '[]'},
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PageInfo)));
-	var column = A2(
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-		A3(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'name',
-			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-		A2(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-			A3(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'id',
-				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
-	var project = A2(
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-		A3(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'columns',
-			{
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'first',
-					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(50)
-				},
-				_1: {ctor: '[]'}
-			},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-				A3(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'nodes',
-					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(column)))),
-		A2(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-			A3(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'number',
-				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
-			A2(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-				A3(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'name',
-					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-				A2(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-					A3(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'url',
-						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-					A2(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-						A3(
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'id',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Project))))));
 	var paged = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
@@ -10627,7 +10581,7 @@ var _vito$cadet$GitHubGraph$projectsQuery = function () {
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 				'nodes',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(project)),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectObject)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PagedResult)));
 	var afterVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
@@ -12430,6 +12384,58 @@ var _vito$cadet$Backend$pollData = function (f) {
 					_lukewestby$elm_http_builder$HttpBuilder$get('/poll')))));
 };
 
+var _vito$cadet$Main$decodeAffectedColumnIds = A3(
+	_elm_lang$core$Json_Decode$map2,
+	F2(
+		function (id, from) {
+			var _p0 = from;
+			if (_p0.ctor === 'Nothing') {
+				return {
+					ctor: '::',
+					_0: id,
+					_1: {ctor: '[]'}
+				};
+			} else {
+				return {
+					ctor: '::',
+					_0: id,
+					_1: {
+						ctor: '::',
+						_0: _p0._0,
+						_1: {ctor: '[]'}
+					}
+				};
+			}
+		}),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'project_card',
+			_1: {
+				ctor: '::',
+				_0: 'column_id',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$int),
+	_elm_lang$core$Json_Decode$maybe(
+		A2(
+			_elm_lang$core$Json_Decode$at,
+			{
+				ctor: '::',
+				_0: 'changes',
+				_1: {
+					ctor: '::',
+					_0: 'column_id',
+					_1: {
+						ctor: '::',
+						_0: 'from',
+						_1: {ctor: '[]'}
+					}
+				}
+			},
+			_elm_lang$core$Json_Decode$int)));
 var _vito$cadet$Main$decodeIssueOrPRSelector = function (field) {
 	return A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
@@ -12488,17 +12494,17 @@ var _vito$cadet$Main$log = F2(
 	});
 var _vito$cadet$Main$decodeAndFetchIssueOrPR = F4(
 	function (field, payload, fetch, model) {
-		var _p0 = A2(
+		var _p1 = A2(
 			_elm_lang$core$Json_Decode$decodeValue,
 			_vito$cadet$Main$decodeIssueOrPRSelector(field),
 			payload);
-		if (_p0.ctor === 'Ok') {
+		if (_p1.ctor === 'Ok') {
 			return _elm_lang$core$Native_Utils.update(
 				model,
 				{
 					loadQueue: {
 						ctor: '::',
-						_0: A2(fetch, model, _p0._0),
+						_0: A2(fetch, model, _p1._0),
 						_1: model.loadQueue
 					}
 				});
@@ -12506,7 +12512,7 @@ var _vito$cadet$Main$decodeAndFetchIssueOrPR = F4(
 			return A3(
 				_vito$cadet$Main$log,
 				'failed to decode issue or PR',
-				{ctor: '_Tuple3', _0: _p0._0, _1: field, _2: payload},
+				{ctor: '_Tuple3', _0: _p1._0, _1: field, _2: payload},
 				model);
 		}
 	});
@@ -12595,13 +12601,13 @@ var _vito$cadet$Main$updateIssue = F2(
 		var newCards = A2(
 			_elm_lang$core$Dict$map,
 			F2(
-				function (_p1, cards) {
+				function (_p2, cards) {
 					return A2(
 						_elm_lang$core$List$map,
 						function (c) {
-							var _p2 = c.content;
-							if ((_p2.ctor === 'Just') && (_p2._0.ctor === 'IssueCardContent')) {
-								return _elm_lang$core$Native_Utils.eq(_p2._0._0.id, issue.id) ? _elm_lang$core$Native_Utils.update(
+							var _p3 = c.content;
+							if ((_p3.ctor === 'Just') && (_p3._0.ctor === 'IssueCardContent')) {
+								return _elm_lang$core$Native_Utils.eq(_p3._0._0.id, issue.id) ? _elm_lang$core$Native_Utils.update(
 									c,
 									{
 										content: _elm_lang$core$Maybe$Just(
@@ -12634,7 +12640,7 @@ var _vito$cadet$Main$updateIssue = F2(
 		var newIssues = A2(
 			_elm_lang$core$Dict$map,
 			F2(
-				function (_p3, issues) {
+				function (_p4, issues) {
 					return A2(
 						_elm_lang$core$List$map,
 						function (i) {
@@ -12674,13 +12680,13 @@ var _vito$cadet$Main$updatePullRequest = F2(
 		var newCards = A2(
 			_elm_lang$core$Dict$map,
 			F2(
-				function (_p4, cards) {
+				function (_p5, cards) {
 					return A2(
 						_elm_lang$core$List$map,
 						function (c) {
-							var _p5 = c.content;
-							if ((_p5.ctor === 'Just') && (_p5._0.ctor === 'PullRequestCardContent')) {
-								return _elm_lang$core$Native_Utils.eq(_p5._0._0.id, pr.id) ? _elm_lang$core$Native_Utils.update(
+							var _p6 = c.content;
+							if ((_p6.ctor === 'Just') && (_p6._0.ctor === 'PullRequestCardContent')) {
+								return _elm_lang$core$Native_Utils.eq(_p6._0._0.id, pr.id) ? _elm_lang$core$Native_Utils.update(
 									c,
 									{
 										content: _elm_lang$core$Maybe$Just(
@@ -12713,7 +12719,7 @@ var _vito$cadet$Main$updatePullRequest = F2(
 		var newPullRequests = A2(
 			_elm_lang$core$Dict$map,
 			F2(
-				function (_p6, prs) {
+				function (_p7, prs) {
 					return A2(
 						_elm_lang$core$List$map,
 						function (i) {
@@ -12950,15 +12956,15 @@ var _vito$cadet$Main$subscriptions = function (model) {
 var _vito$cadet$Main$Noop = {ctor: 'Noop'};
 var _vito$cadet$Main$update = F2(
 	function (msg, model) {
-		var _p7 = msg;
-		switch (_p7.ctor) {
+		var _p8 = msg;
+		switch (_p8.ctor) {
 			case 'Noop':
 				return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 			case 'Refresh':
 				return A3(
 					_vito$cadet$Main$log,
 					'refreshing',
-					_p7._0,
+					_p8._0,
 					{
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -12977,14 +12983,14 @@ var _vito$cadet$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					});
 			case 'PopQueue':
-				var _p8 = model.loadQueue;
-				if (_p8.ctor === '::') {
+				var _p9 = model.loadQueue;
+				if (_p9.ctor === '::') {
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{loadQueue: _p8._1}),
-						_1: _p8._0
+							{loadQueue: _p9._1}),
+						_1: _p9._0
 					};
 				} else {
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
@@ -13005,21 +13011,21 @@ var _vito$cadet$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					});
 			case 'RefreshRequested':
-				if (_p7._0 === 'cards') {
+				if (_p8._0 === 'cards') {
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: A2(_vito$cadet$Main$fetchCards, model, _p7._1)
+						_1: A2(_vito$cadet$Main$fetchCards, model, _p8._1)
 					};
 				} else {
 					return A3(
 						_vito$cadet$Main$log,
 						'cannot refresh',
-						{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1},
+						{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1},
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 			case 'HookReceived':
-				switch (_p7._0) {
+				switch (_p8._0) {
 					case 'issues':
 						return A3(
 							_vito$cadet$Main$log,
@@ -13027,7 +13033,7 @@ var _vito$cadet$Main$update = F2(
 							{ctor: '_Tuple0'},
 							{
 								ctor: '_Tuple2',
-								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p7._1, _vito$cadet$Main$fetchIssue, model),
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p8._1, _vito$cadet$Main$fetchIssue, model),
 								_1: _elm_lang$core$Platform_Cmd$none
 							});
 					case 'issue_comment':
@@ -13037,7 +13043,7 @@ var _vito$cadet$Main$update = F2(
 							{ctor: '_Tuple0'},
 							{
 								ctor: '_Tuple2',
-								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p7._1, _vito$cadet$Main$fetchIssueOrPR, model),
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'issue', _p8._1, _vito$cadet$Main$fetchIssueOrPR, model),
 								_1: _elm_lang$core$Platform_Cmd$none
 							});
 					case 'pull_request':
@@ -13047,7 +13053,7 @@ var _vito$cadet$Main$update = F2(
 							{ctor: '_Tuple0'},
 							{
 								ctor: '_Tuple2',
-								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p7._1, _vito$cadet$Main$fetchPullRequest, model),
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p8._1, _vito$cadet$Main$fetchPullRequest, model),
 								_1: _elm_lang$core$Platform_Cmd$none
 							});
 					case 'pull_request_review':
@@ -13057,7 +13063,7 @@ var _vito$cadet$Main$update = F2(
 							{ctor: '_Tuple0'},
 							{
 								ctor: '_Tuple2',
-								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p7._1, _vito$cadet$Main$fetchPullRequest, model),
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p8._1, _vito$cadet$Main$fetchPullRequest, model),
 								_1: _elm_lang$core$Platform_Cmd$none
 							});
 					case 'pull_request_review_comment':
@@ -13067,7 +13073,7 @@ var _vito$cadet$Main$update = F2(
 							{ctor: '_Tuple0'},
 							{
 								ctor: '_Tuple2',
-								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p7._1, _vito$cadet$Main$fetchPullRequest, model),
+								_0: A4(_vito$cadet$Main$decodeAndFetchIssueOrPR, 'pull_request', _p8._1, _vito$cadet$Main$fetchPullRequest, model),
 								_1: _elm_lang$core$Platform_Cmd$none
 							});
 					case 'milestone':
@@ -13123,19 +13129,56 @@ var _vito$cadet$Main$update = F2(
 							_vito$cadet$Main$log,
 							'project_card hook received; refreshing projects and cards',
 							{ctor: '_Tuple0'},
-							{
-								ctor: '_Tuple2',
-								_0: _elm_lang$core$Native_Utils.update(
-									model,
-									{
-										loadQueue: {
-											ctor: '::',
-											_0: A2(_vito$cadet$Main$fetchProjects, model, _vito$cadet$Main$FetchCards),
-											_1: model.loadQueue
-										}
-									}),
-								_1: _elm_lang$core$Platform_Cmd$none
-							});
+							function () {
+								var _p10 = A2(_elm_lang$core$Json_Decode$decodeValue, _vito$cadet$Main$decodeAffectedColumnIds, _p8._1);
+								if (_p10.ctor === 'Err') {
+									return A3(
+										_vito$cadet$Main$log,
+										'failed to decode column ids',
+										_p10._0,
+										{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+								} else {
+									var affectedColumns = A2(
+										_elm_lang$core$List$filter,
+										function (_p11) {
+											return A3(
+												_elm_lang$core$Basics$flip,
+												_elm_lang$core$List$member,
+												_p10._0,
+												function (_) {
+													return _.databaseId;
+												}(_p11));
+										},
+										A2(
+											_elm_lang$core$List$concatMap,
+											function (_) {
+												return _.columns;
+											},
+											model.projects));
+									return {
+										ctor: '_Tuple2',
+										_0: _elm_lang$core$Native_Utils.update(
+											model,
+											{
+												loadQueue: A2(
+													_elm_lang$core$Basics_ops['++'],
+													A2(
+														_elm_lang$core$List$map,
+														function (_p12) {
+															return A2(
+																_vito$cadet$Main$fetchCards,
+																model,
+																function (_) {
+																	return _.id;
+																}(_p12));
+														},
+														affectedColumns),
+													model.loadQueue)
+											}),
+										_1: _elm_lang$core$Platform_Cmd$none
+									};
+								}
+							}());
 					case 'repository':
 						return A3(
 							_vito$cadet$Main$log,
@@ -13152,12 +13195,12 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_vito$cadet$Main$log,
 							'hook received',
-							{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1},
+							{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1},
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 			case 'RepositoriesFetched':
-				if (_p7._0.ctor === 'Ok') {
-					var _p9 = _p7._0._0;
+				if (_p8._0.ctor === 'Ok') {
+					var _p13 = _p8._0._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'repositories fetched',
@@ -13166,7 +13209,7 @@ var _vito$cadet$Main$update = F2(
 							function (_) {
 								return _.name;
 							},
-							_p9),
+							_p13),
 						function () {
 							var fetch = function (repo) {
 								return {
@@ -13186,7 +13229,7 @@ var _vito$cadet$Main$update = F2(
 									{
 										loadQueue: A2(
 											_elm_lang$core$Basics_ops['++'],
-											A2(_elm_lang$core$List$concatMap, fetch, _p9),
+											A2(_elm_lang$core$List$concatMap, fetch, _p13),
 											model.loadQueue)
 									}),
 								_1: _elm_lang$core$Platform_Cmd$none
@@ -13196,15 +13239,15 @@ var _vito$cadet$Main$update = F2(
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch repos',
-						_p7._0._0,
+						_p8._0._0,
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
 							_vito$cadet$Main$fetchRepos(model)));
 				}
 			case 'ProjectsFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p11 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p15 = _p8._1._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'projects fetched',
@@ -13213,16 +13256,16 @@ var _vito$cadet$Main$update = F2(
 							function (_) {
 								return _.name;
 							},
-							_p11),
+							_p15),
 						function () {
-							var _p10 = A2(
+							var _p14 = A2(
 								_vito$cadet$Main$update,
-								_p7._0(_p11),
+								_p8._0(_p15),
 								_elm_lang$core$Native_Utils.update(
 									model,
-									{projects: _p11}));
-							var next = _p10._0;
-							var cmd = _p10._1;
+									{projects: _p15}));
+							var next = _p14._0;
+							var cmd = _p14._1;
 							return {
 								ctor: '_Tuple2',
 								_0: next,
@@ -13230,7 +13273,7 @@ var _vito$cadet$Main$update = F2(
 									{
 										ctor: '::',
 										_0: _vito$cadet$Main$setProjects(
-											A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeProject, _p11)),
+											A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeProject, _p15)),
 										_1: {ctor: '[]'}
 									})
 							};
@@ -13239,11 +13282,11 @@ var _vito$cadet$Main$update = F2(
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch projects',
-						_p7._1._0,
+						_p8._1._0,
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
-							A2(_vito$cadet$Main$fetchProjects, model, _p7._0)));
+							A2(_vito$cadet$Main$fetchProjects, model, _p8._0)));
 				}
 			case 'FetchCards':
 				return {
@@ -13255,120 +13298,120 @@ var _vito$cadet$Main$update = F2(
 								_elm_lang$core$Basics_ops['++'],
 								A2(
 									_elm_lang$core$List$concatMap,
-									function (_p12) {
+									function (_p16) {
 										return A2(
 											_elm_lang$core$List$map,
-											function (_p13) {
+											function (_p17) {
 												return A2(
 													_vito$cadet$Main$fetchCards,
 													model,
 													function (_) {
 														return _.id;
-													}(_p13));
+													}(_p17));
 											},
 											function (_) {
 												return _.columns;
-											}(_p12));
+											}(_p16));
 									},
-									_p7._0),
+									_p8._0),
 								model.loadQueue)
 						}),
 					_1: _elm_lang$core$Platform_Cmd$none
 				};
 			case 'CardsFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p15 = _p7._0;
-					var _p14 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p19 = _p8._0;
+					var _p18 = _p8._1._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'cards fetched for',
-						_p15,
+						_p19,
 						{
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									columnCards: A3(_elm_lang$core$Dict$insert, _p15, _p14, model.columnCards)
+									columnCards: A3(_elm_lang$core$Dict$insert, _p19, _p18, model.columnCards)
 								}),
 							_1: _vito$cadet$Main$setCards(
 								{
 									ctor: '_Tuple2',
-									_0: _p15,
-									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeProjectColumnCard, _p14)
+									_0: _p19,
+									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeProjectColumnCard, _p18)
 								})
 						});
 				} else {
-					var _p16 = _p7._0;
+					var _p20 = _p8._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch cards',
-						{ctor: '_Tuple2', _0: _p16, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p20, _1: _p8._1._0},
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
-							A2(_vito$cadet$Main$fetchCards, model, _p16)));
+							A2(_vito$cadet$Main$fetchCards, model, _p20)));
 				}
 			case 'IssuesFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p19 = _p7._0;
-					var _p18 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p23 = _p8._0;
+					var _p22 = _p8._1._0;
 					var fetchTimelines = A2(
 						_elm_lang$core$List$map,
-						function (_p17) {
+						function (_p21) {
 							return A2(
 								_vito$cadet$Main$fetchTimeline,
 								model,
 								function (_) {
 									return _.id;
-								}(_p17));
+								}(_p21));
 						},
-						_p18);
+						_p22);
 					return A3(
 						_vito$cadet$Main$log,
 						'issues fetched for',
-						_p19.url,
+						_p23.url,
 						{
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									issues: A3(_elm_lang$core$Dict$insert, _p19.id, _p18, model.issues),
+									issues: A3(_elm_lang$core$Dict$insert, _p23.id, _p22, model.issues),
 									loadQueue: A2(_elm_lang$core$Basics_ops['++'], model.loadQueue, fetchTimelines)
 								}),
 							_1: _vito$cadet$Main$setIssues(
 								{
 									ctor: '_Tuple2',
-									_0: _p19.id,
-									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeIssue, _p18)
+									_0: _p23.id,
+									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeIssue, _p22)
 								})
 						});
 				} else {
-					var _p20 = _p7._0;
+					var _p24 = _p8._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch issues',
-						{ctor: '_Tuple2', _0: _p20.url, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p24.url, _1: _p8._1._0},
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
-							A2(_vito$cadet$Main$fetchIssues, model, _p20)));
+							A2(_vito$cadet$Main$fetchIssues, model, _p24)));
 				}
 			case 'IssueFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p21 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p25 = _p8._1._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'issue fetched',
-						_p21.url,
+						_p25.url,
 						A2(
 							_vito$cadet$Main$updateIssue,
-							_p21,
+							_p25,
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
 									loadQueue: {
 										ctor: '::',
-										_0: A2(_vito$cadet$Main$fetchTimeline, model, _p21.id),
+										_0: A2(_vito$cadet$Main$fetchTimeline, model, _p25.id),
 										_1: model.loadQueue
 									}
 								})));
@@ -13376,70 +13419,70 @@ var _vito$cadet$Main$update = F2(
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch issue',
-						{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1._0},
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 			case 'PullRequestsFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p24 = _p7._0;
-					var _p23 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p28 = _p8._0;
+					var _p27 = _p8._1._0;
 					var fetchTimelines = A2(
 						_elm_lang$core$List$map,
-						function (_p22) {
+						function (_p26) {
 							return A2(
 								_vito$cadet$Main$fetchTimeline,
 								model,
 								function (_) {
 									return _.id;
-								}(_p22));
+								}(_p26));
 						},
-						_p23);
+						_p27);
 					return A3(
 						_vito$cadet$Main$log,
 						'prs fetched for',
-						_p24.url,
+						_p28.url,
 						{
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
 								model,
 								{
-									prs: A3(_elm_lang$core$Dict$insert, _p24.id, _p23, model.prs),
+									prs: A3(_elm_lang$core$Dict$insert, _p28.id, _p27, model.prs),
 									loadQueue: A2(_elm_lang$core$Basics_ops['++'], model.loadQueue, fetchTimelines)
 								}),
 							_1: _vito$cadet$Main$setPullRequests(
 								{
 									ctor: '_Tuple2',
-									_0: _p24.id,
-									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodePullRequest, _p23)
+									_0: _p28.id,
+									_1: A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodePullRequest, _p27)
 								})
 						});
 				} else {
-					var _p25 = _p7._0;
+					var _p29 = _p8._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch prs',
-						{ctor: '_Tuple2', _0: _p25.url, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p29.url, _1: _p8._1._0},
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
-							A2(_vito$cadet$Main$fetchPullRequests, model, _p25)));
+							A2(_vito$cadet$Main$fetchPullRequests, model, _p29)));
 				}
 			case 'PullRequestFetched':
-				if (_p7._1.ctor === 'Ok') {
-					var _p26 = _p7._1._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p30 = _p8._1._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'pr fetched',
-						_p26.url,
+						_p30.url,
 						A2(
 							_vito$cadet$Main$updatePullRequest,
-							_p26,
+							_p30,
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
 									loadQueue: {
 										ctor: '::',
-										_0: A2(_vito$cadet$Main$fetchTimeline, model, _p26.id),
+										_0: A2(_vito$cadet$Main$fetchTimeline, model, _p30.id),
 										_1: model.loadQueue
 									}
 								})));
@@ -13447,37 +13490,37 @@ var _vito$cadet$Main$update = F2(
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch pr',
-						{ctor: '_Tuple2', _0: _p7._0, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p8._0, _1: _p8._1._0},
 						{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 				}
 			default:
-				if (_p7._1.ctor === 'Ok') {
-					var _p30 = _p7._1._0;
-					var _p29 = _p7._0;
+				if (_p8._1.ctor === 'Ok') {
+					var _p34 = _p8._1._0;
+					var _p33 = _p8._0;
 					var commentActor = function (event) {
-						var _p27 = event;
-						if ((_p27.ctor === 'IssueCommentEvent') && (_p27._0.ctor === 'Just')) {
+						var _p31 = event;
+						if ((_p31.ctor === 'IssueCommentEvent') && (_p31._0.ctor === 'Just')) {
 							return _elm_lang$core$Maybe$Just(
 								_vito$cadet$Backend$encodeActorEvent(
-									{actor: _p27._0._0, createdAt: _p27._1}));
+									{actor: _p31._0._0, createdAt: _p31._1}));
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
 						}
 					};
-					var actors = A2(_elm_lang$core$List$filterMap, commentActor, _p30);
+					var actors = A2(_elm_lang$core$List$filterMap, commentActor, _p34);
 					var findSource = function (event) {
-						var _p28 = event;
-						if (_p28.ctor === 'CrossReferencedEvent') {
-							return _elm_lang$core$Maybe$Just(_p28._0);
+						var _p32 = event;
+						if (_p32.ctor === 'CrossReferencedEvent') {
+							return _elm_lang$core$Maybe$Just(_p32._0);
 						} else {
 							return _elm_lang$core$Maybe$Nothing;
 						}
 					};
-					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p30);
+					var edges = A2(_elm_lang$core$List$filterMap, findSource, _p34);
 					return A3(
 						_vito$cadet$Main$log,
 						'timeline fetched for',
-						_p29,
+						_p33,
 						{
 							ctor: '_Tuple2',
 							_0: model,
@@ -13485,36 +13528,36 @@ var _vito$cadet$Main$update = F2(
 								{
 									ctor: '::',
 									_0: _vito$cadet$Main$setReferences(
-										{ctor: '_Tuple2', _0: _p29, _1: edges}),
+										{ctor: '_Tuple2', _0: _p33, _1: edges}),
 									_1: {
 										ctor: '::',
 										_0: _vito$cadet$Main$setActors(
-											{ctor: '_Tuple2', _0: _p29, _1: actors}),
+											{ctor: '_Tuple2', _0: _p33, _1: actors}),
 										_1: {ctor: '[]'}
 									}
 								})
 						});
 				} else {
-					var _p31 = _p7._0;
+					var _p35 = _p8._0;
 					return A3(
 						_vito$cadet$Main$log,
 						'failed to fetch timeline',
-						{ctor: '_Tuple2', _0: _p31, _1: _p7._1._0},
+						{ctor: '_Tuple2', _0: _p35, _1: _p8._1._0},
 						A2(
 							_vito$cadet$Main$backOff,
 							model,
-							A2(_vito$cadet$Main$fetchTimeline, model, _p31)));
+							A2(_vito$cadet$Main$fetchTimeline, model, _p35)));
 				}
 		}
 	});
-var _vito$cadet$Main$init = function (_p32) {
-	var _p33 = _p32;
+var _vito$cadet$Main$init = function (_p36) {
+	var _p37 = _p36;
 	return A2(
 		_vito$cadet$Main$update,
 		_vito$cadet$Main$Refresh(0),
 		{
-			githubToken: _p33.githubToken,
-			githubOrg: _p33.githubOrg,
+			githubToken: _p37.githubToken,
+			githubOrg: _p37.githubOrg,
 			issues: _elm_lang$core$Dict$empty,
 			prs: _elm_lang$core$Dict$empty,
 			timelines: _elm_lang$core$Dict$empty,

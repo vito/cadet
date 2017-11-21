@@ -20763,7 +20763,15 @@ var _vito$cadet$GitHubGraph$encodeProjectColumn = function (record) {
 					_0: 'name',
 					_1: _elm_lang$core$Json_Encode$string(record.name)
 				},
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'database_id',
+						_1: _elm_lang$core$Json_Encode$int(record.databaseId)
+					},
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -21391,25 +21399,32 @@ var _vito$cadet$GitHubGraph$Project = F5(
 	function (a, b, c, d, e) {
 		return {id: a, url: b, name: c, number: d, columns: e};
 	});
-var _vito$cadet$GitHubGraph$ProjectColumn = F2(
-	function (a, b) {
-		return {id: a, name: b};
+var _vito$cadet$GitHubGraph$ProjectColumn = F3(
+	function (a, b, c) {
+		return {id: a, name: b, databaseId: c};
 	});
 var _vito$cadet$GitHubGraph$columnObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-		'name',
+		'databaseId',
 		{ctor: '[]'},
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'id',
+			'name',
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'id',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn))));
 var _vito$cadet$GitHubGraph$projectObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -21514,9 +21529,12 @@ var _vito$cadet$GitHubGraph$decodeProjectColumn = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumn),
-		A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-	A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string));
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumn),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int));
 var _vito$cadet$GitHubGraph$decodeProject = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -21808,70 +21826,6 @@ var _vito$cadet$GitHubGraph$projectsQuery = function () {
 				{ctor: '[]'},
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PageInfo)));
-	var column = A2(
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-		A3(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'name',
-			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-		A2(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-			A3(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'id',
-				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumn)));
-	var project = A2(
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-		A3(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'columns',
-			{
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'first',
-					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(50)
-				},
-				_1: {ctor: '[]'}
-			},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-				A3(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'nodes',
-					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(column)))),
-		A2(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-			A3(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'number',
-				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
-			A2(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-				A3(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'name',
-					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-				A2(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-					A3(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'url',
-						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-					A2(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-						A3(
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'id',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Project))))));
 	var paged = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
@@ -21885,7 +21839,7 @@ var _vito$cadet$GitHubGraph$projectsQuery = function () {
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 				'nodes',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(project)),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectObject)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PagedResult)));
 	var afterVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,

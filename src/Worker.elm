@@ -174,10 +174,20 @@ update msg model =
 
         HookReceived "project_card" payload ->
             log "project_card hook received; refreshing projects and cards" () <|
-                -- TODO: take changes.column_id.from and project_card.column_id
-                -- fetch all projects
-                -- refresh columns with matching database id
-                ( { model | loadQueue = fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
+                case JD.decodeValue decodeAffectedColumnIds payload of
+                    Err err ->
+                        log "failed to decode column ids" err <|
+                            ( model, Cmd.none )
+
+                    Ok ids ->
+                        let
+                            affectedColumns =
+                                List.filter (flip List.member ids << .databaseId) <|
+                                    List.concatMap .columns model.projects
+                        in
+                            ( { model | loadQueue = List.map (fetchCards model << .id) affectedColumns ++ model.loadQueue }
+                            , Cmd.none
+                            )
 
         HookReceived "repository" payload ->
             log "repository hook received; ignoring" () <|
@@ -411,6 +421,21 @@ decodeIssueOrPRSelector field =
         |: JD.at [ "repository", "owner", "login" ] JD.string
         |: JD.at [ "repository", "name" ] JD.string
         |: JD.at [ field, "number" ] JD.int
+
+
+decodeAffectedColumnIds : JD.Decoder (List Int)
+decodeAffectedColumnIds =
+    JD.map2
+        (\id from ->
+            case from of
+                Nothing ->
+                    [ id ]
+
+                Just fromId ->
+                    [ id, fromId ]
+        )
+        (JD.at [ "project_card", "column_id" ] JD.int)
+        (JD.maybe <| JD.at [ "changes", "column_id", "from" ] JD.int)
 
 
 updateIssue : GitHubGraph.Issue -> Model -> ( Model, Cmd Msg )
