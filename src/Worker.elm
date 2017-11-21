@@ -3,6 +3,7 @@ port module Main exposing (..)
 import Dict exposing (Dict)
 import Platform
 import Json.Decode as JD
+import Json.Decode.Extra as JDE exposing ((|:))
 import Time exposing (Time)
 import Task
 import GitHubGraph
@@ -149,15 +150,15 @@ update msg model =
 
         HookReceived "pull_request" payload ->
             log "pull_request hook received; refreshing pr and timeline" () <|
-                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchPullRequest model, Cmd.none )
 
         HookReceived "pull_request_review" payload ->
             log "pull_request_review hook received; refreshing pr and timeline" () <|
-                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchPullRequest model, Cmd.none )
 
         HookReceived "pull_request_review_comment" payload ->
             log "pull_request_review_comment hook received; refreshing pr and timeline" () <|
-                ( decodeAndFetchIssueOrPR "pull_request" payload fetchIssue model, Cmd.none )
+                ( decodeAndFetchIssueOrPR "pull_request" payload fetchPullRequest model, Cmd.none )
 
         HookReceived "milestone" payload ->
             log "milestone hook received; ignoring" () <|
@@ -380,8 +381,9 @@ decodeAndFetchIssueOrPR field payload fetch model =
         Ok sel ->
             { model | loadQueue = fetch model sel :: model.loadQueue }
 
-        _ ->
-            model
+        Err err ->
+            log "failed to decode issue or PR" ( err, field, payload ) <|
+                model
 
 
 fetchTimeline : Model -> GitHubGraph.ID -> Cmd Msg
@@ -397,20 +399,10 @@ log msg val =
 
 decodeIssueOrPRSelector : String -> JD.Decoder GitHubGraph.IssueOrPRSelector
 decodeIssueOrPRSelector field =
-    JD.field field
-        (JD.map2 (,) (JD.field "number" JD.int) (JD.field "repository_url" JD.string)
-            |> JD.andThen (\( number, repoURL ) -> fromNumberAndURL number repoURL)
-        )
-
-
-fromNumberAndURL : Int -> String -> JD.Decoder GitHubGraph.IssueOrPRSelector
-fromNumberAndURL number url =
-    case List.reverse (String.split "/" url) of
-        repo :: owner :: "repos" :: _ ->
-            JD.succeed { owner = owner, repo = repo, number = number }
-
-        _ ->
-            JD.fail "invalid repository url"
+    JD.succeed GitHubGraph.IssueOrPRSelector
+        |: JD.at [ "repository", "owner", "login" ] JD.string
+        |: JD.at [ "repository", "name" ] JD.string
+        |: JD.at [ field, "number" ] JD.int
 
 
 updateIssue : GitHubGraph.Issue -> Model -> ( Model, Cmd Msg )
