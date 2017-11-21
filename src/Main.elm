@@ -1371,10 +1371,10 @@ isAnticipated model card =
 isOpen : Card -> Bool
 isOpen card =
     case card.state of
-        IssueState (GitHubGraph.IssueStateOpen) ->
+        IssueState GitHubGraph.IssueStateOpen ->
             True
 
-        PullRequestState (GitHubGraph.PullRequestStateOpen) ->
+        PullRequestState GitHubGraph.PullRequestStateOpen ->
             True
 
         _ ->
@@ -1419,19 +1419,19 @@ viewCard model card =
         ]
         [ Html.div [ HA.class "card-icons" ]
             [ case card.state of
-                IssueState (GitHubGraph.IssueStateOpen) ->
+                IssueState GitHubGraph.IssueStateOpen ->
                     Html.span [ HA.class "octicon open octicon-issue-opened" ] []
 
-                IssueState (GitHubGraph.IssueStateClosed) ->
+                IssueState GitHubGraph.IssueStateClosed ->
                     Html.span [ HA.class "octicon closed octicon-issue-closed" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateOpen) ->
+                PullRequestState GitHubGraph.PullRequestStateOpen ->
                     Html.span [ HA.class "octicon open octicon-git-pull-request" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateClosed) ->
+                PullRequestState GitHubGraph.PullRequestStateClosed ->
                     Html.span [ HA.class "octicon closed octicon-git-pull-request" ] []
 
-                PullRequestState (GitHubGraph.PullRequestStateMerged) ->
+                PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
             ]
         , Html.div [ HA.class "card-info" ]

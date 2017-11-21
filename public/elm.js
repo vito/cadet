@@ -23674,6 +23674,19 @@ var _vito$cadet$Backend$fetchData = function (f) {
 				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
 };
+var _vito$cadet$Backend$pollData = function (f) {
+	return A2(
+		_elm_lang$core$Task$attempt,
+		f,
+		_lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withTimeout,
+				60 * _elm_lang$core$Time$second,
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
+					_lukewestby$elm_http_builder$HttpBuilder$get('/poll')))));
+};
 
 var _vito$cadet$StrictEvents$customDecoder = F2(
 	function (decoder, toResult) {
@@ -24418,6 +24431,18 @@ var _vito$cadet$ForceGraph$simulate = F2(
 			}
 		}
 	});
+var _vito$cadet$ForceGraph$computeSimulation = function (fg) {
+	computeSimulation:
+	while (true) {
+		if (_vito$cadet$ForceGraph$isCompleted(fg)) {
+			return fg;
+		} else {
+			var _v3 = _vito$cadet$ForceGraph$tick(fg);
+			fg = _v3;
+			continue computeSimulation;
+		}
+	}
+};
 var _vito$cadet$ForceGraph$node = function (nc) {
 	var canvas = 500;
 	var node = nc.node;
@@ -24544,9 +24569,7 @@ var _vito$cadet$ForceGraph$fromGraph = function (g) {
 		_gampleman$elm_visualization$Visualization_Force$iterations,
 		_elm_community$graph$Graph$size(graph) * 10,
 		_gampleman$elm_visualization$Visualization_Force$simulation(forces));
-	return A2(
-		_vito$cadet$ForceGraph$simulate,
-		10,
+	return _vito$cadet$ForceGraph$computeSimulation(
 		{graph: graph, simulation: newSimulation});
 };
 var _vito$cadet$ForceGraph$ForceGraph = F2(
@@ -26986,7 +27009,7 @@ var _vito$cadet$Main$update = F2(
 										_p123,
 										_elm_lang$core$Dict$values(allCards))
 								}),
-							_1: _elm_lang$core$Platform_Cmd$none
+							_1: _vito$cadet$Backend$pollData(_vito$cadet$Main$DataFetched)
 						};
 					} else {
 						return A3(

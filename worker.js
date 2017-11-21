@@ -12416,6 +12416,19 @@ var _vito$cadet$Backend$fetchData = function (f) {
 				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
 };
+var _vito$cadet$Backend$pollData = function (f) {
+	return A2(
+		_elm_lang$core$Task$attempt,
+		f,
+		_lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withTimeout,
+				60 * _elm_lang$core$Time$second,
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
+					_lukewestby$elm_http_builder$HttpBuilder$get('/poll')))));
+};
 
 var _vito$cadet$Main$decodeIssueOrPRSelector = function (field) {
 	return A2(
