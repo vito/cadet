@@ -712,7 +712,8 @@ viewProjectColumn : Model -> GitHubGraph.Project -> (List GitHubGraph.ProjectCol
 viewProjectColumn model project mod col =
     let
         cards =
-            Maybe.withDefault [] (Dict.get col.id model.data.cards)
+            mod <|
+                Maybe.withDefault [] (Dict.get col.id model.data.cards)
 
         dropCandidate =
             { msgFunc = MoveCardAfter
@@ -727,11 +728,13 @@ viewProjectColumn model project mod col =
             [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
             , if List.isEmpty cards then
                 Html.div [ HA.class "no-cards" ]
-                    [ Html.text "no cards" ]
+                    [ Html.text "no cards"
+                    , Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                    ]
               else
                 Html.div [ HA.class "cards" ] <|
                     Drag.viewDropArea model.drag Drag dropCandidate Nothing
-                        :: List.concatMap (viewProjectColumnCard model project col) (mod cards)
+                        :: List.concatMap (viewProjectColumnCard model project col) cards
             ]
 
 

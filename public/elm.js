@@ -24709,8 +24709,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1589, column: 25},
-							end: {line: 1603, column: 57}
+							start: {line: 1592, column: 25},
+							end: {line: 1606, column: 57}
 						},
 						_p7)('impossible');
 				}
@@ -24820,8 +24820,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1515, column: 17},
-					end: {line: 1523, column: 50}
+					start: {line: 1518, column: 17},
+					end: {line: 1526, column: 50}
 				},
 				_p14)('invalid hex');
 		}
@@ -24829,8 +24829,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1513, column: 9},
-				end: {line: 1526, column: 42}
+				start: {line: 1516, column: 9},
+				end: {line: 1529, column: 42}
 			},
 			_p13)('invalid hex');
 	}
@@ -25123,8 +25123,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1115, column: 17},
-							end: {line: 1120, column: 49}
+							start: {line: 1118, column: 17},
+							end: {line: 1123, column: 49}
 						},
 						_p36)('impossible');
 				}
@@ -27073,8 +27073,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 753, column: 9},
-				end: {line: 774, column: 41}
+				start: {line: 756, column: 9},
+				end: {line: 777, column: 41}
 			},
 			_p124)('impossible');
 	});
@@ -27084,10 +27084,11 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 			msgFunc: _vito$cadet$Main$MoveCardAfter,
 			target: {projectId: project.id, columnId: col.id, afterId: _elm_lang$core$Maybe$Nothing}
 		};
-		var cards = A2(
-			_elm_lang$core$Maybe$withDefault,
-			{ctor: '[]'},
-			A2(_elm_lang$core$Dict$get, col.id, model.data.cards));
+		var cards = mod(
+			A2(
+				_elm_lang$core$Maybe$withDefault,
+				{ctor: '[]'},
+				A2(_elm_lang$core$Dict$get, col.id, model.data.cards)));
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -27121,7 +27122,11 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 						{
 							ctor: '::',
 							_0: _elm_lang$html$Html$text('no cards'),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A4(_vito$cadet$Drag$viewDropArea, model.drag, _vito$cadet$Main$Drag, dropCandidate, _elm_lang$core$Maybe$Nothing),
+								_1: {ctor: '[]'}
+							}
 						}) : A2(
 						_elm_lang$html$Html$div,
 						{
@@ -27135,7 +27140,7 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 							_1: A2(
 								_elm_lang$core$List$concatMap,
 								A3(_vito$cadet$Main$viewProjectColumnCard, model, project, col),
-								mod(cards))
+								cards)
 						}),
 					_1: {ctor: '[]'}
 				}

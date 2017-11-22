@@ -385,7 +385,9 @@ a {
   top: -30px;
   margin-bottom: -60px;
   z-index: -1;
+  // z-index: 3;
   // opacity: 0.1;
+  // background: yellow;
 
   &.active {
     z-index: 3;
@@ -494,7 +496,10 @@ a {
     text-align: center;
     color: @gray-400;
     font-size: 14px;
-    padding: @card-margin * 2;
+    padding: (@card-margin * 2) 0;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
   }
 
   .name-column {
@@ -519,7 +524,10 @@ a {
 }
 
 .project-column {
+  display: flex;
+  flex-direction: column;
   padding-bottom: @card-margin;
+  flex-grow: 1;
 
   .column-name {
     color: @gray-200;
