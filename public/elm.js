@@ -25821,7 +25821,7 @@ var _vito$cadet$Main$issueCard = function (_p74) {
 		cards: _p75.cards,
 		commentCount: _p75.commentCount,
 		reactions: _p75.reactions,
-		score: _vito$cadet$GitHubGraph$pullRequestScore(_p75),
+		score: _vito$cadet$GitHubGraph$issueScore(_p75),
 		state: _vito$cadet$Main$IssueState(_p75.state)
 	};
 };

@@ -521,7 +521,7 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
     , cards = cards
     , commentCount = commentCount
     , reactions = reactions
-    , score = GitHubGraph.pullRequestScore issue
+    , score = GitHubGraph.issueScore issue
     , state = IssueState state
     }
 
