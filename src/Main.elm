@@ -266,7 +266,6 @@ subscriptions model =
             Sub.none
           else
             AnimationFrame.times Tick
-        , Sub.map Drag (Drag.subscriptions model.drag)
         ]
 
 
@@ -580,7 +579,6 @@ view model =
                     ]
                 ]
             , viewNavBar model
-            , Drag.viewOverlay model.drag
             ]
 
 
@@ -728,8 +726,7 @@ viewProjectColumn model project mod col =
             [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
             , if List.isEmpty cards then
                 Html.div [ HA.class "no-cards" ]
-                    [ Html.text "no cards"
-                    , Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                    [ Drag.viewDropArea model.drag Drag dropCandidate Nothing
                     ]
               else
                 Html.div [ HA.class "cards" ] <|
@@ -755,7 +752,7 @@ viewProjectColumnCard model project col ghCard =
     in
         case ( ghCard.note, ghCard.content ) of
             ( Just n, Nothing ) ->
-                [ Drag.draggable model.drag Drag dragId Nothing (viewNoteCard model col n)
+                [ Drag.draggable model.drag Drag dragId (viewNoteCard model col n)
                 , Drag.viewDropArea model.drag Drag dropCandidate (Just dragId)
                 ]
 
@@ -769,7 +766,7 @@ viewProjectColumnCard model project col ghCard =
                             GitHubGraph.PullRequestCardContent pr ->
                                 prCard pr
                 in
-                    [ Drag.draggable model.drag Drag dragId Nothing (viewCard model card)
+                    [ Drag.draggable model.drag Drag dragId (viewCard model card)
                     , Drag.viewDropArea model.drag Drag dropCandidate (Just dragId)
                     ]
 
@@ -1330,20 +1327,20 @@ viewCardEntry model card =
         dragSource =
             NewContentCardSource { contentId = card.id }
     in
-        Drag.draggable model.drag Drag dragSource (Just cardView) <|
-            Html.div [ HA.class "card-controls" ]
-                [ cardView
-                , Html.div [ HA.class "card-buttons" ]
-                    [ if not anticipated then
-                        Html.span
-                            [ HE.onClick (DeselectCard card.id)
-                            , HA.class "octicon octicon-x"
-                            ]
-                            [ Html.text "" ]
-                      else
-                        Html.text ""
-                    ]
+        Html.div [ HA.class "card-controls" ]
+            [ Drag.draggable model.drag Drag dragSource <|
+                cardView
+            , Html.div [ HA.class "card-buttons" ]
+                [ if not anticipated then
+                    Html.span
+                        [ HE.onClick (DeselectCard card.id)
+                        , HA.class "octicon octicon-x"
+                        ]
+                        [ Html.text "" ]
+                  else
+                    Html.text ""
                 ]
+            ]
 
 
 isInProject : String -> Card -> Bool

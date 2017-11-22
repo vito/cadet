@@ -13946,189 +13946,6 @@ var _elm_lang$http$Http$StringPart = F2(
 	});
 var _elm_lang$http$Http$stringPart = _elm_lang$http$Http$StringPart;
 
-var _elm_lang$mouse$Mouse_ops = _elm_lang$mouse$Mouse_ops || {};
-_elm_lang$mouse$Mouse_ops['&>'] = F2(
-	function (t1, t2) {
-		return A2(
-			_elm_lang$core$Task$andThen,
-			function (_p0) {
-				return t2;
-			},
-			t1);
-	});
-var _elm_lang$mouse$Mouse$onSelfMsg = F3(
-	function (router, _p1, state) {
-		var _p2 = _p1;
-		var _p3 = A2(_elm_lang$core$Dict$get, _p2.category, state);
-		if (_p3.ctor === 'Nothing') {
-			return _elm_lang$core$Task$succeed(state);
-		} else {
-			var send = function (tagger) {
-				return A2(
-					_elm_lang$core$Platform$sendToApp,
-					router,
-					tagger(_p2.position));
-			};
-			return A2(
-				_elm_lang$mouse$Mouse_ops['&>'],
-				_elm_lang$core$Task$sequence(
-					A2(_elm_lang$core$List$map, send, _p3._0.taggers)),
-				_elm_lang$core$Task$succeed(state));
-		}
-	});
-var _elm_lang$mouse$Mouse$init = _elm_lang$core$Task$succeed(_elm_lang$core$Dict$empty);
-var _elm_lang$mouse$Mouse$categorizeHelpHelp = F2(
-	function (value, maybeValues) {
-		var _p4 = maybeValues;
-		if (_p4.ctor === 'Nothing') {
-			return _elm_lang$core$Maybe$Just(
-				{
-					ctor: '::',
-					_0: value,
-					_1: {ctor: '[]'}
-				});
-		} else {
-			return _elm_lang$core$Maybe$Just(
-				{ctor: '::', _0: value, _1: _p4._0});
-		}
-	});
-var _elm_lang$mouse$Mouse$categorizeHelp = F2(
-	function (subs, subDict) {
-		categorizeHelp:
-		while (true) {
-			var _p5 = subs;
-			if (_p5.ctor === '[]') {
-				return subDict;
-			} else {
-				var _v4 = _p5._1,
-					_v5 = A3(
-					_elm_lang$core$Dict$update,
-					_p5._0._0,
-					_elm_lang$mouse$Mouse$categorizeHelpHelp(_p5._0._1),
-					subDict);
-				subs = _v4;
-				subDict = _v5;
-				continue categorizeHelp;
-			}
-		}
-	});
-var _elm_lang$mouse$Mouse$categorize = function (subs) {
-	return A2(_elm_lang$mouse$Mouse$categorizeHelp, subs, _elm_lang$core$Dict$empty);
-};
-var _elm_lang$mouse$Mouse$subscription = _elm_lang$core$Native_Platform.leaf('Mouse');
-var _elm_lang$mouse$Mouse$Position = F2(
-	function (a, b) {
-		return {x: a, y: b};
-	});
-var _elm_lang$mouse$Mouse$position = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_elm_lang$mouse$Mouse$Position,
-	A2(_elm_lang$core$Json_Decode$field, 'pageX', _elm_lang$core$Json_Decode$int),
-	A2(_elm_lang$core$Json_Decode$field, 'pageY', _elm_lang$core$Json_Decode$int));
-var _elm_lang$mouse$Mouse$Watcher = F2(
-	function (a, b) {
-		return {taggers: a, pid: b};
-	});
-var _elm_lang$mouse$Mouse$Msg = F2(
-	function (a, b) {
-		return {category: a, position: b};
-	});
-var _elm_lang$mouse$Mouse$onEffects = F3(
-	function (router, newSubs, oldState) {
-		var rightStep = F3(
-			function (category, taggers, task) {
-				var tracker = A3(
-					_elm_lang$dom$Dom_LowLevel$onDocument,
-					category,
-					_elm_lang$mouse$Mouse$position,
-					function (_p6) {
-						return A2(
-							_elm_lang$core$Platform$sendToSelf,
-							router,
-							A2(_elm_lang$mouse$Mouse$Msg, category, _p6));
-					});
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (state) {
-						return A2(
-							_elm_lang$core$Task$andThen,
-							function (pid) {
-								return _elm_lang$core$Task$succeed(
-									A3(
-										_elm_lang$core$Dict$insert,
-										category,
-										A2(_elm_lang$mouse$Mouse$Watcher, taggers, pid),
-										state));
-							},
-							_elm_lang$core$Process$spawn(tracker));
-					},
-					task);
-			});
-		var bothStep = F4(
-			function (category, _p7, taggers, task) {
-				var _p8 = _p7;
-				return A2(
-					_elm_lang$core$Task$andThen,
-					function (state) {
-						return _elm_lang$core$Task$succeed(
-							A3(
-								_elm_lang$core$Dict$insert,
-								category,
-								A2(_elm_lang$mouse$Mouse$Watcher, taggers, _p8.pid),
-								state));
-					},
-					task);
-			});
-		var leftStep = F3(
-			function (category, _p9, task) {
-				var _p10 = _p9;
-				return A2(
-					_elm_lang$mouse$Mouse_ops['&>'],
-					_elm_lang$core$Process$kill(_p10.pid),
-					task);
-			});
-		return A6(
-			_elm_lang$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			oldState,
-			_elm_lang$mouse$Mouse$categorize(newSubs),
-			_elm_lang$core$Task$succeed(_elm_lang$core$Dict$empty));
-	});
-var _elm_lang$mouse$Mouse$MySub = F2(
-	function (a, b) {
-		return {ctor: 'MySub', _0: a, _1: b};
-	});
-var _elm_lang$mouse$Mouse$clicks = function (tagger) {
-	return _elm_lang$mouse$Mouse$subscription(
-		A2(_elm_lang$mouse$Mouse$MySub, 'click', tagger));
-};
-var _elm_lang$mouse$Mouse$moves = function (tagger) {
-	return _elm_lang$mouse$Mouse$subscription(
-		A2(_elm_lang$mouse$Mouse$MySub, 'mousemove', tagger));
-};
-var _elm_lang$mouse$Mouse$downs = function (tagger) {
-	return _elm_lang$mouse$Mouse$subscription(
-		A2(_elm_lang$mouse$Mouse$MySub, 'mousedown', tagger));
-};
-var _elm_lang$mouse$Mouse$ups = function (tagger) {
-	return _elm_lang$mouse$Mouse$subscription(
-		A2(_elm_lang$mouse$Mouse$MySub, 'mouseup', tagger));
-};
-var _elm_lang$mouse$Mouse$subMap = F2(
-	function (func, _p11) {
-		var _p12 = _p11;
-		return A2(
-			_elm_lang$mouse$Mouse$MySub,
-			_p12._0,
-			function (_p13) {
-				return func(
-					_p12._1(_p13));
-			});
-	});
-_elm_lang$core$Native_Platform.effectManagers['Mouse'] = {pkg: 'elm-lang/mouse', init: _elm_lang$mouse$Mouse$init, onEffects: _elm_lang$mouse$Mouse$onEffects, onSelfMsg: _elm_lang$mouse$Mouse$onSelfMsg, tag: 'sub', subMap: _elm_lang$mouse$Mouse$subMap};
-
 var _elm_lang$navigation$Native_Navigation = function() {
 
 
@@ -23642,216 +23459,6 @@ var _vito$cadet$Backend$pollData = function (f) {
 					_lukewestby$elm_http_builder$HttpBuilder$get('/poll')))));
 };
 
-var _vito$cadet$StrictEvents$customDecoder = F2(
-	function (decoder, toResult) {
-		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (a) {
-				var _p0 = toResult(a);
-				if (_p0.ctor === 'Ok') {
-					return _elm_lang$core$Json_Decode$succeed(_p0._0);
-				} else {
-					return _elm_lang$core$Json_Decode$fail(_p0._0);
-				}
-			},
-			decoder);
-	});
-var _vito$cadet$StrictEvents$assertLeftButton = A2(
-	_vito$cadet$StrictEvents$customDecoder,
-	A2(_elm_lang$core$Json_Decode$field, 'button', _elm_lang$core$Json_Decode$int),
-	function (button) {
-		return _elm_lang$core$Native_Utils.eq(button, 0) ? _elm_lang$core$Result$Ok(
-			{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err('not left button');
-	});
-var _vito$cadet$StrictEvents$assertNo = function (prop) {
-	return A2(
-		_vito$cadet$StrictEvents$customDecoder,
-		A2(_elm_lang$core$Json_Decode$field, prop, _elm_lang$core$Json_Decode$bool),
-		function (val) {
-			return (!val) ? _elm_lang$core$Result$Ok(
-				{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err(
-				A2(_elm_lang$core$Basics_ops['++'], prop, ' used - skipping'));
-		});
-};
-var _vito$cadet$StrictEvents$assertNoModifier = A2(
-	_elm_lang$core$Json_Decode$andThen,
-	function (_p1) {
-		return A2(
-			_elm_lang$core$Json_Decode$andThen,
-			function (_p2) {
-				return A2(
-					_elm_lang$core$Json_Decode$andThen,
-					function (_p3) {
-						return _vito$cadet$StrictEvents$assertNo('shiftKey');
-					},
-					_vito$cadet$StrictEvents$assertNo('metaKey'));
-			},
-			_vito$cadet$StrictEvents$assertNo('altKey'));
-	},
-	_vito$cadet$StrictEvents$assertNo('ctrlKey'));
-var _vito$cadet$StrictEvents$determineClickMsg = F2(
-	function (clickMsg, shiftClickMsg) {
-		return A2(
-			_vito$cadet$StrictEvents$customDecoder,
-			A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool),
-			function (shiftKey) {
-				return shiftKey ? _elm_lang$core$Result$Ok(shiftClickMsg) : _elm_lang$core$Result$Ok(clickMsg);
-			});
-	});
-var _vito$cadet$StrictEvents$onLeftMouseDownCapturing = F2(
-	function (captured, msg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'mousedown',
-			{stopPropagation: false, preventDefault: true},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p4) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p5) {
-							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
-						},
-						_vito$cadet$StrictEvents$assertLeftButton);
-				},
-				_vito$cadet$StrictEvents$assertNoModifier));
-	});
-var _vito$cadet$StrictEvents$onLeftMouseDown = function (msg) {
-	return A2(
-		_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$onLeftClickOrShiftLeftClick = F2(
-	function (msg, shiftMsg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'click',
-			{stopPropagation: false, preventDefault: true},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p6) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p7) {
-							return A2(
-								_elm_lang$core$Json_Decode$andThen,
-								function (_p8) {
-									return A2(
-										_elm_lang$core$Json_Decode$andThen,
-										function (_p9) {
-											return A2(_vito$cadet$StrictEvents$determineClickMsg, msg, shiftMsg);
-										},
-										_vito$cadet$StrictEvents$assertNo('metaKey'));
-								},
-								_vito$cadet$StrictEvents$assertNo('altKey'));
-						},
-						_vito$cadet$StrictEvents$assertNo('ctrlKey'));
-				},
-				_vito$cadet$StrictEvents$assertLeftButton));
-	});
-var _vito$cadet$StrictEvents$onLeftClickCapturing = F3(
-	function (preventDefault, captured, msg) {
-		return A3(
-			_elm_lang$html$Html_Events$onWithOptions,
-			'click',
-			{stopPropagation: false, preventDefault: preventDefault},
-			A2(
-				_elm_lang$core$Json_Decode$andThen,
-				function (_p10) {
-					return A2(
-						_elm_lang$core$Json_Decode$andThen,
-						function (_p11) {
-							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
-						},
-						_vito$cadet$StrictEvents$assertLeftButton);
-				},
-				_vito$cadet$StrictEvents$assertNoModifier));
-	});
-var _vito$cadet$StrictEvents$onLeftClickNoPreventDefault = function (msg) {
-	return A3(
-		_vito$cadet$StrictEvents$onLeftClickCapturing,
-		false,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$onLeftClick = function (msg) {
-	return A3(
-		_vito$cadet$StrictEvents$onLeftClickCapturing,
-		true,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}),
-		_elm_lang$core$Basics$always(msg));
-};
-var _vito$cadet$StrictEvents$MouseWheelEvent = F2(
-	function (a, b) {
-		return {deltaX: a, deltaY: b};
-	});
-var _vito$cadet$StrictEvents$decodeMouseWheelEvent = A3(
-	_elm_lang$core$Json_Decode$map2,
-	_vito$cadet$StrictEvents$MouseWheelEvent,
-	A2(_elm_lang$core$Json_Decode$field, 'deltaX', _elm_lang$core$Json_Decode$float),
-	A2(_elm_lang$core$Json_Decode$field, 'deltaY', _elm_lang$core$Json_Decode$float));
-var _vito$cadet$StrictEvents$onMouseWheel = function (cons) {
-	return A3(
-		_elm_lang$html$Html_Events$onWithOptions,
-		'mousewheel',
-		{stopPropagation: false, preventDefault: true},
-		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeMouseWheelEvent));
-};
-var _vito$cadet$StrictEvents$ScrollState = F3(
-	function (a, b, c) {
-		return {scrollHeight: a, scrollTop: b, clientHeight: c};
-	});
-var _vito$cadet$StrictEvents$decodeScrollEvent = A4(
-	_elm_lang$core$Json_Decode$map3,
-	_vito$cadet$StrictEvents$ScrollState,
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'scrollHeight',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'scrollTop',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float),
-	A2(
-		_elm_lang$core$Json_Decode$at,
-		{
-			ctor: '::',
-			_0: 'target',
-			_1: {
-				ctor: '::',
-				_0: 'clientHeight',
-				_1: {ctor: '[]'}
-			}
-		},
-		_elm_lang$core$Json_Decode$float));
-var _vito$cadet$StrictEvents$onScroll = function (cons) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
-		'scroll',
-		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeScrollEvent));
-};
-
-var _vito$cadet$Drag$purposefulDragTreshold = 10;
 var _vito$cadet$Drag$hasNeverLeft = function (model) {
 	var _p0 = model;
 	if (_p0.ctor === 'Dragging') {
@@ -23860,194 +23467,42 @@ var _vito$cadet$Drag$hasNeverLeft = function (model) {
 		return false;
 	}
 };
-var _vito$cadet$Drag$isPurposeful = function (model) {
-	var _p1 = model;
-	if (_p1.ctor === 'Dragging') {
-		return _p1._0.purposeful;
-	} else {
-		return false;
-	}
-};
-var _vito$cadet$Drag$nonOverlayStyle = F2(
-	function (source, model) {
-		return _elm_lang$html$Html_Attributes$style(
-			function () {
-				var _p2 = model;
-				switch (_p2.ctor) {
-					case 'NotDragging':
-						return {ctor: '[]'};
-					case 'Dragging':
-						var _p3 = _p2._0;
-						return (_elm_lang$core$Native_Utils.eq(_p3.source, source) && (_p3.purposeful && _elm_lang$core$Native_Utils.eq(_p3.overlay, _elm_lang$core$Maybe$Nothing))) ? {
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-							_1: {
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'top',
-									_1: A2(
-										_elm_lang$core$Basics_ops['++'],
-										_elm_lang$core$Basics$toString((_p3.start.elementPosition.y + _p3.mousePosition.y) - _p3.start.mousePosition.y),
-										'px')
-								},
-								_1: {
-									ctor: '::',
-									_0: {
-										ctor: '_Tuple2',
-										_0: 'left',
-										_1: A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString((_p3.start.elementPosition.x + _p3.mousePosition.x) - _p3.start.mousePosition.x),
-											'px')
-									},
-									_1: {ctor: '[]'}
-								}
-							}
-						} : {ctor: '[]'};
-					default:
-						var _p4 = _p2._0;
-						return (_elm_lang$core$Native_Utils.eq(_p4.source, source) && _elm_lang$core$Native_Utils.eq(_p4.overlay, _elm_lang$core$Maybe$Nothing)) ? {
-							ctor: '::',
-							_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-							_1: {
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'top',
-									_1: A2(
-										_elm_lang$core$Basics_ops['++'],
-										_elm_lang$core$Basics$toString((_p4.start.elementPosition.y + _p4.mousePosition.y) - _p4.start.mousePosition.y),
-										'px')
-								},
-								_1: {
-									ctor: '::',
-									_0: {
-										ctor: '_Tuple2',
-										_0: 'left',
-										_1: A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString((_p4.start.elementPosition.x + _p4.mousePosition.x) - _p4.start.mousePosition.x),
-											'px')
-									},
-									_1: {ctor: '[]'}
-								}
-							}
-						} : {ctor: '[]'};
-				}
-			}());
-	});
 var _vito$cadet$Drag$isDragging = F2(
 	function (source, model) {
-		var _p5 = model;
-		switch (_p5.ctor) {
+		var _p1 = model;
+		switch (_p1.ctor) {
 			case 'Dragging':
-				return _elm_lang$core$Native_Utils.eq(_p5._0.source, source);
+				return _elm_lang$core$Native_Utils.eq(_p1._0.source, source);
 			case 'Dropped':
-				return _elm_lang$core$Native_Utils.eq(_p5._0.source, source);
+				return _elm_lang$core$Native_Utils.eq(_p1._0.source, source);
 			default:
 				return false;
 		}
 	});
-var _vito$cadet$Drag$viewOverlay = function (model) {
-	var _p6 = model;
-	switch (_p6.ctor) {
-		case 'Dragging':
-			var _p9 = _p6._0.start;
-			var _p8 = _p6._0.mousePosition;
-			var _p7 = {ctor: '_Tuple2', _0: _p6._0.purposeful, _1: _p6._0.overlay};
-			if (((_p7.ctor === '_Tuple2') && (_p7._0 === true)) && (_p7._1.ctor === 'Just')) {
-				return A2(
-					_elm_lang$html$Html$div,
-					{
-						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('drag-overlay'),
-						_1: {
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$style(
-								{
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'position', _1: 'absolute'},
-									_1: {
-										ctor: '::',
-										_0: {
-											ctor: '_Tuple2',
-											_0: 'top',
-											_1: A2(
-												_elm_lang$core$Basics_ops['++'],
-												_elm_lang$core$Basics$toString(_p8.y - (_p9.elementBounds.height / 2)),
-												'px')
-										},
-										_1: {
-											ctor: '::',
-											_0: {
-												ctor: '_Tuple2',
-												_0: 'left',
-												_1: A2(
-													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString(_p8.x - (_p9.elementBounds.width / 2)),
-													'px')
-											},
-											_1: {ctor: '[]'}
-										}
-									}
-								}),
-							_1: {ctor: '[]'}
-						}
-					},
-					{
-						ctor: '::',
-						_0: _p7._1._0,
-						_1: {ctor: '[]'}
-					});
-			} else {
-				return _elm_lang$html$Html$text('');
-			}
-		case 'Dropped':
-			return _elm_lang$html$Html$text('');
-		default:
-			return _elm_lang$html$Html$text('');
-	}
-};
-var _vito$cadet$Drag$StartState = F3(
-	function (a, b, c) {
-		return {mousePosition: a, elementBounds: b, elementPosition: c};
-	});
-var _vito$cadet$Drag$Position = F2(
+var _vito$cadet$Drag$StartState = F2(
 	function (a, b) {
-		return {x: a, y: b};
+		return {elementBounds: a, element: b};
 	});
-var _vito$cadet$Drag$floatPos = function (_p10) {
-	var _p11 = _p10;
+var _vito$cadet$Drag$decodeStartState = function (view) {
 	return A2(
-		_vito$cadet$Drag$Position,
-		_elm_lang$core$Basics$toFloat(_p11.x),
-		_elm_lang$core$Basics$toFloat(_p11.y));
-};
-var _vito$cadet$Drag$decodeStartState = A2(
-	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 		A2(
 			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 			_elm_lang$core$Json_Decode$succeed(_vito$cadet$Drag$StartState),
-			A2(_elm_lang$core$Json_Decode$map, _vito$cadet$Drag$floatPos, _elm_lang$mouse$Mouse$position)),
-		A2(_elm_lang$core$Json_Decode$field, 'currentTarget', _debois$elm_dom$DOM$boundingClientRect)),
-	A2(
-		_elm_lang$core$Json_Decode$field,
-		'currentTarget',
-		A3(_elm_lang$core$Json_Decode$map2, _vito$cadet$Drag$Position, _debois$elm_dom$DOM$offsetLeft, _debois$elm_dom$DOM$offsetTop)));
-var _vito$cadet$Drag$DragState = F7(
-	function (a, b, c, d, e, f, g) {
-		return {source: a, overlay: b, start: c, mousePosition: d, purposeful: e, neverLeft: f, dropCandidate: g};
+			A2(_elm_lang$core$Json_Decode$field, 'currentTarget', _debois$elm_dom$DOM$boundingClientRect)),
+		_elm_lang$core$Json_Decode$succeed(view));
+};
+var _vito$cadet$Drag$DragState = F4(
+	function (a, b, c, d) {
+		return {source: a, start: b, neverLeft: c, dropCandidate: d};
 	});
 var _vito$cadet$Drag$DropCandidate = F2(
 	function (a, b) {
 		return {target: a, msgFunc: b};
 	});
-var _vito$cadet$Drag$DropState = F7(
-	function (a, b, c, d, e, f, g) {
-		return {source: a, target: b, msg: c, start: d, mousePosition: e, overlay: f, landed: g};
+var _vito$cadet$Drag$DropState = F5(
+	function (a, b, c, d, e) {
+		return {source: a, target: b, msg: c, start: d, landed: e};
 	});
 var _vito$cadet$Drag$End = {ctor: 'End'};
 var _vito$cadet$Drag$Over = function (a) {
@@ -24057,41 +23512,82 @@ var _vito$cadet$Drag$onDrop = F2(
 	function (candidate, f) {
 		return {
 			ctor: '::',
-			_0: _elm_lang$html$Html_Events$onMouseOver(
-				f(
-					_vito$cadet$Drag$Over(
-						_elm_lang$core$Maybe$Just(candidate)))),
+			_0: A2(
+				_elm_lang$html$Html_Events$on,
+				'dragenter',
+				_elm_lang$core$Json_Decode$succeed(
+					f(
+						_vito$cadet$Drag$Over(
+							_elm_lang$core$Maybe$Just(candidate))))),
 			_1: {
 				ctor: '::',
-				_0: _elm_lang$html$Html_Events$onMouseLeave(
-					f(
-						_vito$cadet$Drag$Over(_elm_lang$core$Maybe$Nothing))),
-				_1: {ctor: '[]'}
+				_0: A2(
+					_elm_lang$html$Html_Events$on,
+					'dragleave',
+					_elm_lang$core$Json_Decode$succeed(
+						f(
+							_vito$cadet$Drag$Over(_elm_lang$core$Maybe$Nothing)))),
+				_1: {
+					ctor: '::',
+					_0: A3(
+						_elm_lang$html$Html_Events$onWithOptions,
+						'dragover',
+						{stopPropagation: false, preventDefault: true},
+						_elm_lang$core$Json_Decode$succeed(
+							f(
+								_vito$cadet$Drag$Over(
+									_elm_lang$core$Maybe$Just(candidate))))),
+					_1: {
+						ctor: '::',
+						_0: A3(
+							_elm_lang$html$Html_Events$onWithOptions,
+							'drop',
+							{stopPropagation: true, preventDefault: false},
+							_elm_lang$core$Json_Decode$succeed(
+								f(_vito$cadet$Drag$End))),
+						_1: {ctor: '[]'}
+					}
+				}
 			}
 		};
 	});
 var _vito$cadet$Drag$viewDropArea = F4(
 	function (model, wrap, candidate, ownSource) {
 		var isOver = function () {
-			var _p12 = model;
-			switch (_p12.ctor) {
+			var _p2 = model;
+			switch (_p2.ctor) {
 				case 'NotDragging':
 					return false;
 				case 'Dropped':
-					return _elm_lang$core$Native_Utils.eq(_p12._0.target, candidate.target) && (!_p12._0.landed);
+					return _elm_lang$core$Native_Utils.eq(_p2._0.target, candidate.target) && (!_p2._0.landed);
 				default:
-					var _p14 = _p12._0;
-					var _p13 = _p14.dropCandidate;
-					if (_p13.ctor === 'Just') {
-						return _elm_lang$core$Native_Utils.eq(_p13._0.target, candidate.target);
+					var _p4 = _p2._0;
+					var _p3 = _p4.dropCandidate;
+					if (_p3.ctor === 'Just') {
+						return _elm_lang$core$Native_Utils.eq(_p3._0.target, candidate.target);
 					} else {
-						return _p14.neverLeft && (_p14.purposeful && _elm_lang$core$Native_Utils.eq(
-							_elm_lang$core$Maybe$Just(_p14.source),
-							ownSource));
+						return _p4.neverLeft && _elm_lang$core$Native_Utils.eq(
+							_elm_lang$core$Maybe$Just(_p4.source),
+							ownSource);
 					}
 			}
 		}();
-		var isActive = _vito$cadet$Drag$isPurposeful(model);
+		var droppedElement = function () {
+			var _p5 = model;
+			if (_p5.ctor === 'Dropped') {
+				return isOver ? _p5._0.start.element : _elm_lang$html$Html$text('');
+			} else {
+				return _elm_lang$html$Html$text('');
+			}
+		}();
+		var isActive = function () {
+			var _p6 = model;
+			if (_p6.ctor === 'Dragging') {
+				return true;
+			} else {
+				return false;
+			}
+		}();
 		var dragEvents = isActive ? A2(_vito$cadet$Drag$onDrop, candidate, wrap) : {ctor: '[]'};
 		return A2(
 			_elm_lang$html$Html$div,
@@ -24125,8 +23621,8 @@ var _vito$cadet$Drag$viewDropArea = F4(
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$style(
 							function () {
-								var _p15 = model;
-								switch (_p15.ctor) {
+								var _p7 = model;
+								switch (_p7.ctor) {
 									case 'NotDragging':
 										return {ctor: '[]'};
 									case 'Dragging':
@@ -24134,10 +23630,10 @@ var _vito$cadet$Drag$viewDropArea = F4(
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'height',
+												_0: 'min-height',
 												_1: A2(
 													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString((60 + (2 * 8)) + _p15._0.start.elementBounds.height),
+													_elm_lang$core$Basics$toString(_p7._0.start.elementBounds.height),
 													'px')
 											},
 											_1: {ctor: '[]'}
@@ -24147,10 +23643,10 @@ var _vito$cadet$Drag$viewDropArea = F4(
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'height',
+												_0: 'min-height',
 												_1: A2(
 													_elm_lang$core$Basics_ops['++'],
-													_elm_lang$core$Basics$toString((60 + (2 * 8)) + _p15._0.start.elementBounds.height),
+													_elm_lang$core$Basics$toString(_p7._0.start.elementBounds.height),
 													'px')
 											},
 											_1: {ctor: '[]'}
@@ -24161,49 +23657,18 @@ var _vito$cadet$Drag$viewDropArea = F4(
 					}
 				},
 				dragEvents),
-			{ctor: '[]'});
-	});
-var _vito$cadet$Drag$At = function (a) {
-	return {ctor: 'At', _0: a};
-};
-var _vito$cadet$Drag$subscriptions = function (model) {
-	var _p16 = model;
-	if (_p16.ctor === 'Dragging') {
-		return _elm_lang$core$Platform_Sub$batch(
 			{
 				ctor: '::',
-				_0: _elm_lang$mouse$Mouse$moves(
-					function (_p17) {
-						return _vito$cadet$Drag$At(
-							_vito$cadet$Drag$floatPos(_p17));
-					}),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$mouse$Mouse$ups(
-						_elm_lang$core$Basics$always(_vito$cadet$Drag$End)),
-					_1: {ctor: '[]'}
-				}
-			});
-	} else {
-		return _elm_lang$core$Platform_Sub$none;
-	}
-};
-var _vito$cadet$Drag$Start = F3(
-	function (a, b, c) {
-		return {ctor: 'Start', _0: a, _1: b, _2: c};
-	});
-var _vito$cadet$Drag$onStart = F3(
-	function (source, overlay, f) {
-		return A2(
-			_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
-			_vito$cadet$Drag$decodeStartState,
-			function (_p18) {
-				return f(
-					A3(_vito$cadet$Drag$Start, source, overlay, _p18));
+				_0: droppedElement,
+				_1: {ctor: '[]'}
 			});
 	});
-var _vito$cadet$Drag$draggable = F5(
-	function (model, wrap, source, overlay, view) {
+var _vito$cadet$Drag$Start = F2(
+	function (a, b) {
+		return {ctor: 'Start', _0: a, _1: b};
+	});
+var _vito$cadet$Drag$draggable = F4(
+	function (model, wrap, source, view) {
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -24224,11 +23689,28 @@ var _vito$cadet$Drag$draggable = F5(
 					}),
 				_1: {
 					ctor: '::',
-					_0: A3(_vito$cadet$Drag$onStart, source, overlay, wrap),
+					_0: _elm_lang$html$Html_Attributes$draggable('true'),
 					_1: {
 						ctor: '::',
-						_0: A2(_vito$cadet$Drag$nonOverlayStyle, source, model),
-						_1: {ctor: '[]'}
+						_0: A2(
+							_elm_lang$html$Html_Events$on,
+							'dragstart',
+							A2(
+								_elm_lang$core$Json_Decode$map,
+								function (_p8) {
+									return wrap(
+										A2(_vito$cadet$Drag$Start, source, _p8));
+								},
+								_vito$cadet$Drag$decodeStartState(view))),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html_Events$on,
+								'dragend',
+								_elm_lang$core$Json_Decode$succeed(
+									wrap(_vito$cadet$Drag$End))),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			},
@@ -24242,11 +23724,11 @@ var _vito$cadet$Drag$Dropped = function (a) {
 	return {ctor: 'Dropped', _0: a};
 };
 var _vito$cadet$Drag$land = function (model) {
-	var _p19 = model;
-	if (_p19.ctor === 'Dropped') {
+	var _p9 = model;
+	if (_p9.ctor === 'Dropped') {
 		return _vito$cadet$Drag$Dropped(
 			_elm_lang$core$Native_Utils.update(
-				_p19._0,
+				_p9._0,
 				{landed: true}));
 	} else {
 		return model;
@@ -24259,53 +23741,39 @@ var _vito$cadet$Drag$NotDragging = {ctor: 'NotDragging'};
 var _vito$cadet$Drag$init = _vito$cadet$Drag$NotDragging;
 var _vito$cadet$Drag$update = F2(
 	function (msg, model) {
-		var _p20 = model;
-		switch (_p20.ctor) {
+		var _p10 = model;
+		switch (_p10.ctor) {
 			case 'NotDragging':
-				var _p21 = msg;
-				if (_p21.ctor === 'Start') {
-					var _p22 = _p21._2;
+				var _p11 = msg;
+				if (_p11.ctor === 'Start') {
 					return _vito$cadet$Drag$Dragging(
-						{source: _p21._0, overlay: _p21._1, start: _p22, mousePosition: _p22.mousePosition, purposeful: false, neverLeft: true, dropCandidate: _elm_lang$core$Maybe$Nothing});
+						{source: _p11._0, start: _p11._1, neverLeft: true, dropCandidate: _elm_lang$core$Maybe$Nothing});
 				} else {
 					return _vito$cadet$Drag$NotDragging;
 				}
 			case 'Dragging':
-				var _p27 = _p20._0;
-				var _p23 = msg;
-				switch (_p23.ctor) {
+				var _p15 = _p10._0;
+				var _p12 = msg;
+				switch (_p12.ctor) {
 					case 'Start':
 						return model;
-					case 'At':
-						var _p24 = _p23._0;
-						var purposeful = (_elm_lang$core$Native_Utils.cmp(
-							_elm_lang$core$Basics$abs(_p24.x - _p27.start.mousePosition.x),
-							_vito$cadet$Drag$purposefulDragTreshold) > 0) || (_elm_lang$core$Native_Utils.cmp(
-							_elm_lang$core$Basics$abs(_p24.y - _p27.start.mousePosition.y),
-							_vito$cadet$Drag$purposefulDragTreshold) > 0);
-						return _vito$cadet$Drag$Dragging(
-							_elm_lang$core$Native_Utils.update(
-								_p27,
-								{mousePosition: _p24, purposeful: _p27.purposeful || purposeful}));
 					case 'Over':
 						return _vito$cadet$Drag$Dragging(
 							_elm_lang$core$Native_Utils.update(
-								_p27,
-								{dropCandidate: _p23._0, neverLeft: false}));
+								_p15,
+								{dropCandidate: _p12._0, neverLeft: false}));
 					default:
-						var _p25 = _p27.dropCandidate;
-						if (_p25.ctor === 'Nothing') {
+						var _p13 = _p15.dropCandidate;
+						if (_p13.ctor === 'Nothing') {
 							return _vito$cadet$Drag$NotDragging;
 						} else {
-							var _p26 = _p25._0.target;
+							var _p14 = _p13._0.target;
 							return _vito$cadet$Drag$Dropped(
 								{
-									source: _p27.source,
-									target: _p26,
-									msg: A2(_p25._0.msgFunc, _p27.source, _p26),
-									overlay: _p27.overlay,
-									start: _p27.start,
-									mousePosition: _p27.mousePosition,
+									source: _p15.source,
+									target: _p14,
+									msg: A2(_p13._0.msgFunc, _p15.source, _p14),
+									start: _p15.start,
 									landed: false
 								});
 						}
@@ -24541,6 +24009,215 @@ var _vito$cadet$Hash$hash = function (str) {
 	return A3(_elm_lang$core$String$foldl, _vito$cadet$Hash$updateHash, 5381, str);
 };
 
+var _vito$cadet$StrictEvents$customDecoder = F2(
+	function (decoder, toResult) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (a) {
+				var _p0 = toResult(a);
+				if (_p0.ctor === 'Ok') {
+					return _elm_lang$core$Json_Decode$succeed(_p0._0);
+				} else {
+					return _elm_lang$core$Json_Decode$fail(_p0._0);
+				}
+			},
+			decoder);
+	});
+var _vito$cadet$StrictEvents$assertLeftButton = A2(
+	_vito$cadet$StrictEvents$customDecoder,
+	A2(_elm_lang$core$Json_Decode$field, 'button', _elm_lang$core$Json_Decode$int),
+	function (button) {
+		return _elm_lang$core$Native_Utils.eq(button, 0) ? _elm_lang$core$Result$Ok(
+			{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err('not left button');
+	});
+var _vito$cadet$StrictEvents$assertNo = function (prop) {
+	return A2(
+		_vito$cadet$StrictEvents$customDecoder,
+		A2(_elm_lang$core$Json_Decode$field, prop, _elm_lang$core$Json_Decode$bool),
+		function (val) {
+			return (!val) ? _elm_lang$core$Result$Ok(
+				{ctor: '_Tuple0'}) : _elm_lang$core$Result$Err(
+				A2(_elm_lang$core$Basics_ops['++'], prop, ' used - skipping'));
+		});
+};
+var _vito$cadet$StrictEvents$assertNoModifier = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p1) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (_p2) {
+				return A2(
+					_elm_lang$core$Json_Decode$andThen,
+					function (_p3) {
+						return _vito$cadet$StrictEvents$assertNo('shiftKey');
+					},
+					_vito$cadet$StrictEvents$assertNo('metaKey'));
+			},
+			_vito$cadet$StrictEvents$assertNo('altKey'));
+	},
+	_vito$cadet$StrictEvents$assertNo('ctrlKey'));
+var _vito$cadet$StrictEvents$determineClickMsg = F2(
+	function (clickMsg, shiftClickMsg) {
+		return A2(
+			_vito$cadet$StrictEvents$customDecoder,
+			A2(_elm_lang$core$Json_Decode$field, 'shiftKey', _elm_lang$core$Json_Decode$bool),
+			function (shiftKey) {
+				return shiftKey ? _elm_lang$core$Result$Ok(shiftClickMsg) : _elm_lang$core$Result$Ok(clickMsg);
+			});
+	});
+var _vito$cadet$StrictEvents$onLeftMouseDownCapturing = F2(
+	function (captured, msg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'mousedown',
+			{stopPropagation: false, preventDefault: true},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p4) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p5) {
+							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
+						},
+						_vito$cadet$StrictEvents$assertLeftButton);
+				},
+				_vito$cadet$StrictEvents$assertNoModifier));
+	});
+var _vito$cadet$StrictEvents$onLeftMouseDown = function (msg) {
+	return A2(
+		_vito$cadet$StrictEvents$onLeftMouseDownCapturing,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$onLeftClickOrShiftLeftClick = F2(
+	function (msg, shiftMsg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'click',
+			{stopPropagation: false, preventDefault: true},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p6) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p7) {
+							return A2(
+								_elm_lang$core$Json_Decode$andThen,
+								function (_p8) {
+									return A2(
+										_elm_lang$core$Json_Decode$andThen,
+										function (_p9) {
+											return A2(_vito$cadet$StrictEvents$determineClickMsg, msg, shiftMsg);
+										},
+										_vito$cadet$StrictEvents$assertNo('metaKey'));
+								},
+								_vito$cadet$StrictEvents$assertNo('altKey'));
+						},
+						_vito$cadet$StrictEvents$assertNo('ctrlKey'));
+				},
+				_vito$cadet$StrictEvents$assertLeftButton));
+	});
+var _vito$cadet$StrictEvents$onLeftClickCapturing = F3(
+	function (preventDefault, captured, msg) {
+		return A3(
+			_elm_lang$html$Html_Events$onWithOptions,
+			'click',
+			{stopPropagation: false, preventDefault: preventDefault},
+			A2(
+				_elm_lang$core$Json_Decode$andThen,
+				function (_p10) {
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (_p11) {
+							return A2(_elm_lang$core$Json_Decode$map, msg, captured);
+						},
+						_vito$cadet$StrictEvents$assertLeftButton);
+				},
+				_vito$cadet$StrictEvents$assertNoModifier));
+	});
+var _vito$cadet$StrictEvents$onLeftClickNoPreventDefault = function (msg) {
+	return A3(
+		_vito$cadet$StrictEvents$onLeftClickCapturing,
+		false,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$onLeftClick = function (msg) {
+	return A3(
+		_vito$cadet$StrictEvents$onLeftClickCapturing,
+		true,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}),
+		_elm_lang$core$Basics$always(msg));
+};
+var _vito$cadet$StrictEvents$MouseWheelEvent = F2(
+	function (a, b) {
+		return {deltaX: a, deltaY: b};
+	});
+var _vito$cadet$StrictEvents$decodeMouseWheelEvent = A3(
+	_elm_lang$core$Json_Decode$map2,
+	_vito$cadet$StrictEvents$MouseWheelEvent,
+	A2(_elm_lang$core$Json_Decode$field, 'deltaX', _elm_lang$core$Json_Decode$float),
+	A2(_elm_lang$core$Json_Decode$field, 'deltaY', _elm_lang$core$Json_Decode$float));
+var _vito$cadet$StrictEvents$onMouseWheel = function (cons) {
+	return A3(
+		_elm_lang$html$Html_Events$onWithOptions,
+		'mousewheel',
+		{stopPropagation: false, preventDefault: true},
+		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeMouseWheelEvent));
+};
+var _vito$cadet$StrictEvents$ScrollState = F3(
+	function (a, b, c) {
+		return {scrollHeight: a, scrollTop: b, clientHeight: c};
+	});
+var _vito$cadet$StrictEvents$decodeScrollEvent = A4(
+	_elm_lang$core$Json_Decode$map3,
+	_vito$cadet$StrictEvents$ScrollState,
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'scrollHeight',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'scrollTop',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float),
+	A2(
+		_elm_lang$core$Json_Decode$at,
+		{
+			ctor: '::',
+			_0: 'target',
+			_1: {
+				ctor: '::',
+				_0: 'clientHeight',
+				_1: {ctor: '[]'}
+			}
+		},
+		_elm_lang$core$Json_Decode$float));
+var _vito$cadet$StrictEvents$onScroll = function (cons) {
+	return A2(
+		_elm_lang$html$Html_Events$on,
+		'scroll',
+		A2(_elm_lang$core$Json_Decode$map, cons, _vito$cadet$StrictEvents$decodeScrollEvent));
+};
+
 var _vito$cadet$Main$findCardColumns = F2(
 	function (model, cardId) {
 		return A3(
@@ -24709,8 +24386,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1592, column: 25},
-							end: {line: 1606, column: 57}
+							start: {line: 1589, column: 25},
+							end: {line: 1603, column: 57}
 						},
 						_p7)('impossible');
 				}
@@ -24820,8 +24497,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 1518, column: 17},
-					end: {line: 1526, column: 50}
+					start: {line: 1515, column: 17},
+					end: {line: 1523, column: 50}
 				},
 				_p14)('invalid hex');
 		}
@@ -24829,8 +24506,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1516, column: 9},
-				end: {line: 1529, column: 42}
+				start: {line: 1513, column: 9},
+				end: {line: 1526, column: 42}
 			},
 			_p13)('invalid hex');
 	}
@@ -25123,8 +24800,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1118, column: 17},
-							end: {line: 1123, column: 49}
+							start: {line: 1115, column: 17},
+							end: {line: 1120, column: 49}
 						},
 						_p36)('impossible');
 				}
@@ -27011,12 +26688,11 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 					if (_p124._1.ctor === 'Nothing') {
 						return {
 							ctor: '::',
-							_0: A5(
+							_0: A4(
 								_vito$cadet$Drag$draggable,
 								model.drag,
 								_vito$cadet$Main$Drag,
 								dragId,
-								_elm_lang$core$Maybe$Nothing,
 								A3(_vito$cadet$Main$viewNoteCard, model, col, _p124._0._0)),
 							_1: {
 								ctor: '::',
@@ -27044,12 +26720,11 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 						}();
 						return {
 							ctor: '::',
-							_0: A5(
+							_0: A4(
 								_vito$cadet$Drag$draggable,
 								model.drag,
 								_vito$cadet$Main$Drag,
 								dragId,
-								_elm_lang$core$Maybe$Nothing,
 								A2(_vito$cadet$Main$viewCard, model, card)),
 							_1: {
 								ctor: '::',
@@ -27073,8 +26748,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 756, column: 9},
-				end: {line: 777, column: 41}
+				start: {line: 753, column: 9},
+				end: {line: 774, column: 41}
 			},
 			_p124)('impossible');
 	});
@@ -27121,12 +26796,8 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text('no cards'),
-							_1: {
-								ctor: '::',
-								_0: A4(_vito$cadet$Drag$viewDropArea, model.drag, _vito$cadet$Main$Drag, dropCandidate, _elm_lang$core$Maybe$Nothing),
-								_1: {ctor: '[]'}
-							}
+							_0: A4(_vito$cadet$Drag$viewDropArea, model.drag, _vito$cadet$Main$Drag, dropCandidate, _elm_lang$core$Maybe$Nothing),
+							_1: {ctor: '[]'}
 						}) : A2(
 						_elm_lang$html$Html$div,
 						{
@@ -27301,55 +26972,49 @@ var _vito$cadet$Main$viewCardEntry = F2(
 			{contentId: card.id});
 		var cardView = A2(_vito$cadet$Main$viewCard, model, card);
 		var anticipated = A2(_vito$cadet$Main$isAnticipated, model, card);
-		return A5(
-			_vito$cadet$Drag$draggable,
-			model.drag,
-			_vito$cadet$Main$Drag,
-			dragSource,
-			_elm_lang$core$Maybe$Just(cardView),
-			A2(
-				_elm_lang$html$Html$div,
-				{
+		return A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$class('card-controls'),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: A4(_vito$cadet$Drag$draggable, model.drag, _vito$cadet$Main$Drag, dragSource, cardView),
+				_1: {
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('card-controls'),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: cardView,
-					_1: {
-						ctor: '::',
-						_0: A2(
-							_elm_lang$html$Html$div,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('card-buttons'),
-								_1: {ctor: '[]'}
-							},
-							{
-								ctor: '::',
-								_0: (!anticipated) ? A2(
-									_elm_lang$html$Html$span,
-									{
+					_0: A2(
+						_elm_lang$html$Html$div,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class('card-buttons'),
+							_1: {ctor: '[]'}
+						},
+						{
+							ctor: '::',
+							_0: (!anticipated) ? A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Events$onClick(
+										_vito$cadet$Main$DeselectCard(card.id)),
+									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_vito$cadet$Main$DeselectCard(card.id)),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
-											_1: {ctor: '[]'}
-										}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(''),
+										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-x'),
 										_1: {ctor: '[]'}
-									}) : _elm_lang$html$Html$text(''),
-								_1: {ctor: '[]'}
-							}),
-						_1: {ctor: '[]'}
-					}
-				}));
+									}
+								},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(''),
+									_1: {ctor: '[]'}
+								}) : _elm_lang$html$Html$text(''),
+							_1: {ctor: '[]'}
+						}),
+					_1: {ctor: '[]'}
+				}
+			});
 	});
 var _vito$cadet$Main$SetCurrentDate = function (a) {
 	return {ctor: 'SetCurrentDate', _0: a};
@@ -27371,14 +27036,7 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			_1: {
 				ctor: '::',
 				_0: A2(_elm_lang$core$List$all, _vito$cadet$ForceGraph$isCompleted, model.cardGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						_elm_lang$core$Platform_Sub$map,
-						_vito$cadet$Main$Drag,
-						_vito$cadet$Drag$subscriptions(model.drag)),
-					_1: {ctor: '[]'}
-				}
+				_1: {ctor: '[]'}
 			}
 		});
 };
@@ -27850,11 +27508,7 @@ var _vito$cadet$Main$view = function (model) {
 			_1: {
 				ctor: '::',
 				_0: _vito$cadet$Main$viewNavBar(model),
-				_1: {
-					ctor: '::',
-					_0: _vito$cadet$Drag$viewOverlay(model.drag),
-					_1: {ctor: '[]'}
-				}
+				_1: {ctor: '[]'}
 			}
 		});
 };
