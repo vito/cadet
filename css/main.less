@@ -214,6 +214,7 @@ a {
   border-radius: 3px;
   box-sizing: border-box;
   margin: @card-margin;
+  margin-bottom: 0;
   background: #fff;
   white-space: normal;
   vertical-align: top;
@@ -224,10 +225,6 @@ a {
 
   &.highlighted {
     box-shadow: 0 0 0 5px @yellow;
-  }
-
-  &:first-child {
-    margin-left: @card-margin;
   }
 
   &.in-flight, &.done, &.backlog, &.icebox {
@@ -522,6 +519,8 @@ a {
 }
 
 .project-column {
+  padding-bottom: @card-margin;
+
   .column-name {
     color: @gray-200;
     font-size: 12px;
