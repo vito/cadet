@@ -52,7 +52,7 @@ a {
   .page-sidebar {
     overflow-y: auto;
     flex-shrink: 0;
-    min-width: 300px + (2 * @card-margin) + 15px; // 15px = controls
+    min-width: 300px + (2 * @card-margin) + (31px - @card-margin);
 
     background: @gray-dark;
 
@@ -150,7 +150,7 @@ a {
     background: fade(#fff, 20%);
     border: 0;
     color: @white;
-    width: 300px + (2 * @card-margin) + 15px;
+    width: 300px + (2 * @card-margin) + (31px - @card-margin);
 
     &::placeholder {
       color: @white;
