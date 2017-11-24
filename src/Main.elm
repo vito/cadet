@@ -1138,7 +1138,6 @@ nodeFlairArcs card context =
                     Svg.g [ SA.class "reveal" ]
                         [ Svg.path
                             [ SA.d (VS.arc arc)
-                            , SA.fill "#fff"
                             ]
                             []
                         , Svg.text_
@@ -1191,11 +1190,11 @@ viewCardNodeFlair card radii flair { x, y } state =
             List.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
-        ( scale, opacity ) =
+        scale =
             if isHighlighted then
-                ( "1.1", toString (activityOpacity state.currentDate card.updatedAt * 0.75) )
+                "1.1"
             else
-                ( "1", toString (activityOpacity state.currentDate card.updatedAt * 0.75) )
+                "1"
 
         anticipateRadius =
             if List.isEmpty card.labels then
@@ -1205,42 +1204,54 @@ viewCardNodeFlair card radii flair { x, y } state =
 
         anticipatedHalo =
             if isHighlighted then
-                [ Svg.circle
+                Svg.circle
                     [ SA.r (toString anticipateRadius)
                     , SA.class "anticipated-circle"
                     ]
                     []
-                ]
             else
+                Svg.text ""
+
+        projectHalo =
+            Svg.circle
+                [ SA.strokeWidth "2px"
+                , SA.r (toString (radii.base + 4))
+                , if isInFlight card then
+                    SA.class "project-status in-flight"
+                  else if isDone card then
+                    SA.class "project-status done"
+                  else if isIcebox card then
+                    SA.class "project-status icebox"
+                  else if isBacklog card then
+                    SA.class "project-status backlog"
+                  else
+                    SA.class "project-status untriaged"
+                ]
                 []
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
             , SE.onMouseOver (AnticipateCardFromNode card.id)
             , SE.onMouseOut (UnanticipateCardFromNode card.id)
+            , SA.class ("flair " ++ activityClass state.currentDate card.updatedAt)
             ]
-            [ Svg.g
-                [ SA.opacity opacity
-                ]
-                flair
-            , Svg.g [] anticipatedHalo
-            ]
+            (flair ++ [ projectHalo, anticipatedHalo ])
 
 
-activityOpacity : Date -> Date -> Float
-activityOpacity now date =
+activityClass : Date -> Date -> String
+activityClass now date =
     let
         daysSinceLastUpdate =
             (Date.toTime now / (24 * Time.hour)) - (Date.toTime date / (24 * Time.hour))
     in
         if daysSinceLastUpdate <= 1 then
-            1
+            "active-today"
         else if daysSinceLastUpdate <= 2 then
-            0.75
+            "active-yesterday"
         else if daysSinceLastUpdate <= 7 then
-            0.5
+            "active-this-week"
         else
-            0.25
+            "active-long-ago"
 
 
 viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
@@ -1551,8 +1562,7 @@ viewLabel { name, color } =
 viewCardActor : Model -> Backend.ActorEvent -> Html Msg
 viewCardActor model { createdAt, actor } =
     Html.img
-        [ HA.class "card-actor"
-        , HA.style [ ( "opacity", toString (activityOpacity model.currentDate createdAt) ) ]
+        [ HA.class ("card-actor " ++ activityClass model.currentDate createdAt)
         , HA.src (actor.avatar ++ "&s=88")
         , HA.draggable "false"
         ]

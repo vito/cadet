@@ -342,6 +342,22 @@ a {
   margin-left: 4px;
   background-color: #fff;
   border-radius: 3px;
+
+  &.active-today {
+    opacity: 1;
+  }
+
+  &.active-yesterday {
+    opacity: 0.75;
+  }
+
+  &.active-this-week {
+    opacity: 0.5;
+  }
+
+  &.active-long-ago {
+    opacity: 0.25;
+  }
 }
 
 @card-width: 300px;
@@ -649,6 +665,22 @@ svg {
     visibility: hidden;
   }
 
+  .flair.active-today path {
+    fill: fade(@white, 100%);
+  }
+
+  .flair.active-yesterday path {
+    fill: fade(@white, 75%);
+  }
+
+  .flair.active-this-week path {
+    fill: fade(@white, 50%);
+  }
+
+  .flair.active-long-ago path {
+    fill: fade(@white, 25%);
+  }
+
   .reveal:hover .hidden {
     visibility: visible;
   }
@@ -663,5 +695,26 @@ svg {
 
   .anticipated-circle {
     fill: @yellow;
+  }
+
+  .project-status {
+    stroke: transparent;
+    fill: transparent;
+  }
+
+  .icebox .project-status {
+    stroke: @gray;
+  }
+
+  .in-flight .project-status {
+    stroke: @yellow;
+  }
+
+  .done .project-status {
+    stroke: @green;
+  }
+
+  .backlog .project-status {
+    stroke: @blue;
   }
 }
