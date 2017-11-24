@@ -40,7 +40,7 @@ fromGraph g =
 
         forces =
             [ VF.customLinks 1 <| List.map link <| Graph.edges graph
-            , VF.manyBodyStrength -120 <| List.map .id <| Graph.nodes graph
+            , VF.manyBodyStrength -200 <| List.map .id <| Graph.nodes graph
             ]
 
         size =

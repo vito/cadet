@@ -23977,7 +23977,7 @@ var _vito$cadet$ForceGraph$fromGraph = function (g) {
 			ctor: '::',
 			_0: A2(
 				_gampleman$elm_visualization$Visualization_Force$manyBodyStrength,
-				-120,
+				-200,
 				A2(
 					_elm_lang$core$List$map,
 					function (_) {
