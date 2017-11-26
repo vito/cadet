@@ -89,18 +89,6 @@ a {
     flex-direction: row;
   }
 
-  .button {
-    color: @white;
-    display: inline-block;
-    flex-shrink: 0;
-    padding: 12px;
-    text-align: center;
-
-    &:hover {
-      background: @gray;
-    }
-  }
-
   .user-info {
     line-height: 40px;
     font-weight: bold;
@@ -160,6 +148,18 @@ a {
       background: @white;
       color: @black;
     }
+  }
+}
+
+.button {
+  color: @white;
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 12px;
+  text-align: center;
+
+  &:hover {
+    background: @gray;
   }
 }
 
@@ -299,7 +299,7 @@ a {
   text-align: right;
 }
 
-.card-label {
+.label {
   display: inline-block;
   padding: 3px 4px;
   font-size: 12px;
@@ -309,19 +309,25 @@ a {
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
   vertical-align: text-top;
   margin-left: 4px;
-  width: 18px;
-  height: 18px;
   white-space: nowrap;
 
-  .card-label-text {
-    display: none;
+  .label-text {
     font-weight: 600;
+  }
+}
+
+.card .label {
+  height: 18px;
+  width: 18px;
+
+  .label-text {
+    display: none;
   }
 
   &:hover {
     width: auto;
 
-    .card-label-text {
+    .label-text {
       display: initial;
     }
   }
@@ -716,5 +722,106 @@ svg {
 
   .project-status.backlog {
     stroke: @blue;
+  }
+}
+
+.all-labels {
+  margin: 50px;
+  display: table;
+}
+
+.label-row {
+  display: table-row;
+  vertical-align: top;
+}
+
+.label-cell {
+  display: table-cell;
+  line-height: 1;
+  vertical-align: top;
+}
+
+.label-name, .label-repos, .label-controls {
+  margin-bottom: 10px;
+}
+
+.label-name {
+  text-align: right;
+
+  .label-background {
+    display: inline-block;
+    padding: 9px;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    background: @white;
+  }
+
+  .label {
+    margin: 0;
+    padding: 0 10px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 2;
+    border-radius: 3px;
+    text-align: center;
+  }
+}
+
+.label-repos {
+  font-size: 16px;
+  background: @gray-dark;
+  color: @white;
+  padding: 0 20px;
+  line-height: 50px;
+}
+
+.label-controls {
+  background: @gray;
+  display: inline-block;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  position: relative;
+  z-index: 3;
+
+  .button {
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 5px;
+
+    &:hover {
+      background: @gray-light;
+    }
+  }
+}
+
+.label-delete-confirm {
+  background: @gray-700;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  padding-left: 10px;
+  position: relative;
+  left: -110px;
+  opacity: 0;
+  z-index: 2;
+  transition: all 0.2s ease-in-out;
+  // display: none;
+  display: inline-block;
+
+  &.active {
+    // display: inline-block;
+    opacity: 1;
+    left: -10px;
+  }
+
+  .button {
+    cursor: pointer;
+    border-radius: 10px;
+    margin: 5px;
+  }
+
+  .delete {
+    &:hover {
+      background: @red;
+    }
   }
 }

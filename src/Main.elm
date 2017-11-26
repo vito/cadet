@@ -16,7 +16,7 @@ import ParseInt
 import Regex exposing (Regex)
 import RouteUrl
 import RouteUrl.Builder
-import Set
+import Set exposing (Set)
 import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
@@ -52,6 +52,8 @@ type alias Model =
     , highlightedNode : Maybe GitHubGraph.ID
     , cardGraphs : List (ForceGraph (Node CardNodeState))
     , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
+    , deletingLabels : Set ( String, String )
+    , editingLabels : Set ( String, String )
     }
 
 
@@ -116,12 +118,19 @@ type Msg
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
+    | MirrorLabel String String
+    | StartDeletingLabel String String
+    | StopDeletingLabel String String
+    | DeleteLabel String String
+    | LabelChanged GitHubGraph.Repo (Result Http.Error ())
+    | RepoRefreshed (Result Http.Error GitHubGraph.Repo)
 
 
 type Page
     = GlobalGraphPage
     | AllProjectsPage
     | ProjectPage String
+    | LabelsPage
 
 
 detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
@@ -165,6 +174,9 @@ delta2url a b =
                 ProjectPage name ->
                     RouteUrl.Builder.replacePath [ "projects", name ]
 
+                LabelsPage ->
+                    RouteUrl.Builder.replacePath [ "labels" ]
+
         withSelection =
             RouteUrl.Builder.replaceHash (String.join "," b.selectedCards)
 
@@ -196,6 +208,9 @@ location2messages loc =
 
                 [ "projects", name ] ->
                     SetPage (ProjectPage name)
+
+                [ "labels" ] ->
+                    SetPage LabelsPage
 
                 _ ->
                     SetPage GlobalGraphPage
@@ -250,6 +265,8 @@ init config =
       , cardGraphs = []
       , computeGraph = computeReferenceGraph
       , drag = Drag.init
+      , deletingLabels = Set.empty
+      , editingLabels = Set.empty
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -287,6 +304,9 @@ update msg model =
 
                         ProjectPage name ->
                             computeReferenceGraph data (List.filter (isInProject name) cards)
+
+                        LabelsPage ->
+                            []
             in
                 ( { model
                     | page = page
@@ -489,6 +509,90 @@ update msg model =
             flip always (Debug.log "error fetching data" msg) <|
                 ( model, Backend.pollData DataFetched )
 
+        MirrorLabel name color ->
+            let
+                newLabel =
+                    { name = name, color = color }
+
+                cmds =
+                    List.map
+                        (\r ->
+                            case List.filter ((==) name << .name) r.labels of
+                                [] ->
+                                    createLabel model r newLabel
+
+                                label :: _ ->
+                                    if label.color /= color then
+                                        updateLabel model r label newLabel
+                                    else
+                                        Cmd.none
+                        )
+                        model.data.repos
+            in
+                ( model, Cmd.batch cmds )
+
+        StartDeletingLabel name color ->
+            ( { model | deletingLabels = Set.insert ( name, color ) model.deletingLabels }, Cmd.none )
+
+        StopDeletingLabel name color ->
+            ( { model | deletingLabels = Set.remove ( name, color ) model.deletingLabels }, Cmd.none )
+
+        DeleteLabel name color ->
+            let
+                cmds =
+                    List.map
+                        (\r ->
+                            case List.filter ((==) name << .name) r.labels of
+                                [] ->
+                                    Cmd.none
+
+                                label :: _ ->
+                                    if label.color == color then
+                                        deleteLabel model r label
+                                    else
+                                        Cmd.none
+                        )
+                        model.data.repos
+            in
+                ( model, Cmd.batch cmds )
+
+        LabelChanged repo (Ok ()) ->
+            let
+                repoSel =
+                    { owner = repo.owner, name = repo.name }
+            in
+                ( model, Backend.refreshRepo repoSel RepoRefreshed )
+
+        LabelChanged repo (Err msg) ->
+            flip always (Debug.log "failed to modify labels" msg) <|
+                ( model, Cmd.none )
+
+        RepoRefreshed (Ok repo) ->
+            let
+                data =
+                    model.data
+            in
+                ( { model
+                    | data =
+                        { data
+                            | repos =
+                                List.map
+                                    (\r ->
+                                        if r.id == repo.id then
+                                            repo
+                                        else
+                                            r
+                                    )
+                                    data.repos
+                        }
+                  }
+                , Cmd.none
+                )
+
+        RepoRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh repo" msg) <|
+                ( model, Cmd.none )
+
 
 addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
 addProjectCards cards allCards =
@@ -569,6 +673,9 @@ view model =
 
                         ProjectPage id ->
                             viewProjectPage model id
+
+                        LabelsPage ->
+                            viewLabelsPage model
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
                     [ if List.isEmpty sidebarCards then
@@ -609,6 +716,9 @@ viewNavBar model =
                 ]
             , Html.a [ HA.class "button", HA.href "/projects", StrictEvents.onLeftClick (SetPage AllProjectsPage) ]
                 [ Html.span [ HA.class "octicon octicon-list-unordered" ] []
+                ]
+            , Html.a [ HA.class "button", HA.href "/labels", StrictEvents.onLeftClick (SetPage LabelsPage) ]
+                [ Html.span [ HA.class "octicon octicon-tag" ] []
                 ]
             ]
         , viewSearch
@@ -666,6 +776,95 @@ viewAllProjectsPage model =
             [ Html.div [ HA.class "projects" ]
                 (List.map (viewProject model) statefulProjects)
             ]
+
+
+viewLabelsPage : Model -> Html Msg
+viewLabelsPage model =
+    let
+        reposByLabel =
+            List.foldl
+                (\repo cbn ->
+                    List.foldl
+                        (\label cbn2 ->
+                            Dict.update ( label.name, label.color ) (Just << ((::) repo) << Maybe.withDefault []) cbn2
+                        )
+                        cbn
+                        repo.labels
+                )
+                Dict.empty
+                model.data.repos
+    in
+        Html.div [ HA.class "all-labels" ] <|
+            flip List.map (Dict.toList reposByLabel) <|
+                \( ( name, color ), repos ) ->
+                    Html.div [ HA.class "label-row" ] <|
+                        [ Html.div [ HA.class "label-cell" ]
+                            [ Html.div [ HA.class "label-name" ]
+                                [ Html.div [ HA.class "label-background" ]
+                                    [ viewLabelBig { name = name, color = color } ]
+                                ]
+                            ]
+                        , Html.div [ HA.class "label-cell" ]
+                            [ Html.div [ HA.class "label-repos" ] <|
+                                [ Html.text (toString (List.length repos) ++ " repos") ]
+                            ]
+                        , Html.div [ HA.class "label-cell" ]
+                            [ Html.div [ HA.class "label-controls" ]
+                                [ Html.span
+                                    [ HE.onClick (MirrorLabel name color)
+                                    , HA.class "button octicon octicon-mirror"
+                                    ]
+                                    []
+                                , Html.span
+                                    [ HE.onClick (StartDeletingLabel name color)
+                                    , HA.class "button octicon octicon-trashcan"
+                                    ]
+                                    []
+                                ]
+                            , Html.div
+                                [ HA.classList
+                                    [ ( "label-delete-confirm", True )
+                                    , ( "active", Set.member ( name, color ) model.deletingLabels )
+                                    ]
+                                ]
+                                [ Html.span
+                                    [ HE.onClick (DeleteLabel name color)
+                                    , HA.class "button delete octicon octicon-check"
+                                    ]
+                                    []
+                                , Html.span
+                                    [ HE.onClick (StopDeletingLabel name color)
+                                    , HA.class "button close octicon octicon-x"
+                                    ]
+                                    []
+                                ]
+                            ]
+                        ]
+
+
+viewLabelBig : GitHubGraph.Label -> Html Msg
+viewLabelBig { name, color } =
+    Html.span
+        [ HA.class "label big"
+        , HA.style
+            [ ( "background-color", "#" ++ color )
+            , ( "color"
+              , if colorIsLight color then
+                    -- GitHub appears to pre-compute a hex code, but this seems to be
+                    -- pretty much all it's doing
+                    "rgba(0, 0, 0, .8)"
+                else
+                    -- for darker backgrounds they just do white
+                    "#fff"
+              )
+            ]
+        ]
+        [ Html.span [ HA.class "octicon octicon-tag" ]
+            [ Html.text "" ]
+        , Html.text " "
+        , Html.span [ HA.class "label-text" ]
+            [ Html.text name ]
+        ]
 
 
 onlyOpenContentCards : List GitHubGraph.ProjectColumnCard -> List GitHubGraph.ProjectColumnCard
@@ -1540,7 +1739,7 @@ colorIsLight hex =
 viewLabel : GitHubGraph.Label -> Html Msg
 viewLabel { name, color } =
     Html.span
-        [ HA.class "card-label"
+        [ HA.class "label"
         , HA.style
             [ ( "background-color", "#" ++ color )
             , ( "color"
@@ -1554,7 +1753,7 @@ viewLabel { name, color } =
               )
             ]
         ]
-        [ Html.span [ HA.class "card-label-text" ]
+        [ Html.span [ HA.class "label-text" ]
             [ Html.text name ]
         ]
 
@@ -1710,3 +1909,36 @@ findCardColumns model cardId =
         )
         []
         model.data.cards
+
+
+createLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg
+createLabel model repo label =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.createRepoLabel token repo label
+                |> Task.attempt (LabelChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+updateLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> GitHubGraph.Label -> Cmd Msg
+updateLabel model repo label1 label2 =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.updateRepoLabel token repo label1 label2
+                |> Task.attempt (LabelChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+deleteLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg
+deleteLabel model repo label =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.deleteRepoLabel token repo label
+                |> Task.attempt (LabelChanged repo)
+
+        Nothing ->
+            Cmd.none

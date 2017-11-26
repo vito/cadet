@@ -19,10 +19,12 @@ module GitHubGraph
         , ReactionType(..)
         , TimelineEvent(..)
         , IssueOrPRSelector
+        , RepoSelector
         , fetchOrgRepos
         , fetchOrgProjects
         , fetchOrgProject
         , fetchProjectColumnCards
+        , fetchRepo
         , fetchRepoIssues
         , fetchRepoIssue
         , fetchRepoPullRequests
@@ -31,9 +33,14 @@ module GitHubGraph
         , moveCardAfter
         , addContentCard
         , addContentCardAfter
+        , createRepoLabel
+        , updateRepoLabel
+        , deleteRepoLabel
         , issueScore
         , pullRequestScore
         , reactionScore
+        , encodeRepo
+        , decodeRepo
         , encodeIssue
         , decodeIssue
         , encodePullRequest
@@ -54,6 +61,7 @@ import GraphQL.Request.Builder as GB
 import GraphQL.Request.Builder.Arg as GA
 import GraphQL.Request.Builder.Variable as GV
 import Http
+import HttpBuilder
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
 import Json.Encode as JE
@@ -78,6 +86,7 @@ type alias Repo =
     , url : String
     , owner : String
     , name : String
+    , labels : List Label
     }
 
 
@@ -267,6 +276,13 @@ fetchProjectColumnCards token col =
     fetchPaged cardsQuery token { selector = col, after = Nothing }
 
 
+fetchRepo : Token -> RepoSelector -> Task Error Repo
+fetchRepo token repo =
+    repoQuery
+        |> GB.request repo
+        |> GH.customSendQuery (authedOptions token)
+
+
 fetchRepoIssues : Token -> RepoSelector -> Task Error (List Issue)
 fetchRepoIssues token repo =
     fetchPaged issuesQuery token { selector = repo, after = Nothing }
@@ -314,6 +330,29 @@ addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ID
 addContentCardAfter token columnID contentID mafterID =
     addContentCard token columnID contentID
         |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
+
+
+createRepoLabel : Token -> Repo -> Label -> Task Http.Error ()
+createRepoLabel token repo label =
+    HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels")
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (encodeLabel label)
+        |> HttpBuilder.toTask
+
+
+deleteRepoLabel : Token -> Repo -> Label -> Task Http.Error ()
+deleteRepoLabel token repo label =
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.toTask
+
+
+updateRepoLabel : Token -> Repo -> Label -> Label -> Task Http.Error ()
+updateRepoLabel token repo label1 label2 =
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label1.name)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (encodeLabel label2)
+        |> HttpBuilder.toTask
 
 
 moveCardMutation : GB.Document GB.Mutation ID { columnId : ID, cardId : ID, afterId : Maybe ID }
@@ -483,6 +522,36 @@ reactionTypes =
     ]
 
 
+repoObject : GB.ValueSpec GB.NonNull GB.ObjectType Repo vars
+repoObject =
+    GB.object Repo
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
+
+
+repoQuery : GB.Document GB.Query Repo RepoSelector
+repoQuery =
+    let
+        ownerVar =
+            GV.required "owner" .owner GV.string
+
+        nameVar =
+            GV.required "name" .name GV.string
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable ownerVar )
+                    , ( "name", GA.variable nameVar )
+                    ]
+                    repoObject
+    in
+        GB.queryDocument queryRoot
+
+
 reposQuery : GB.Document GB.Query (PagedResult Repo) (PagedSelector OrgSelector)
 reposQuery =
     let
@@ -491,13 +560,6 @@ reposQuery =
 
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
-
-        repo =
-            GB.object Repo
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
-                |> GB.with (GB.field "name" [] GB.string)
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -511,7 +573,7 @@ reposQuery =
 
         paged =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.list repo))
+                |> GB.with (GB.field "nodes" [] (GB.list repoObject))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         queryRoot =
@@ -934,6 +996,7 @@ decodeRepo =
         |: (JD.field "url" JD.string)
         |: (JD.field "owner" JD.string)
         |: (JD.field "name" JD.string)
+        |: (JD.field "labels" (JD.list decodeLabel))
 
 
 decodeIssue : JD.Decoder Issue
@@ -1108,6 +1171,7 @@ encodeRepo record =
         , ( "url", JE.string record.url )
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
+        , ( "labels", JE.list (List.map encodeLabel record.labels) )
         ]
 
 

@@ -40,6 +40,7 @@ const data = {
 
 // map from data set to object id to client requests waiting on it
 var refreshing = {
+  repo: {},
   issues: {},
   prs: {},
   references: {},
@@ -49,20 +50,30 @@ var refreshing = {
 }
 
 function queueRefresh(field, id, res) {
-  if (!(id in refreshing[field])) {
-    refreshing[field][id] = [];
+  var reqs = refreshing[field];
+  if (reqs === undefined) {
+    return;
   }
 
-  refreshing[field][id].push(res);
+  if (!(id in reqs)) {
+    reqs[id] = [];
+  }
+
+  reqs[id].push(res);
 }
 
 function popRefresh(field, id, data) {
-  var waiting = refreshing[field][id];
+  var reqs = refreshing[field];
+  if (reqs === undefined) {
+    return;
+  }
+
+  var waiting = reqs[id];
   if (waiting === undefined) {
     return;
   }
 
-  delete refreshing[field][id];
+  delete reqs[id];
 
   var res;
   while (res = waiting.pop()) {
@@ -93,8 +104,23 @@ function hydrate(field, args) {
   popPoll();
 }
 
-worker.ports.setProjects.subscribe(function(args) {
-  data.projects = args;
+worker.ports.setRepos.subscribe(function(repos) {
+  data.repos = repos;
+  popPoll();
+});
+
+worker.ports.setRepo.subscribe(function(repo) {
+  for (var i = 0; i < data.repos.length; i++) {
+    if (data.repos[i].id == repo.id) {
+      data.repos[i] = repo;
+      popRefresh("repo", repo.owner+"/"+repo.name, repo);
+    }
+  }
+});
+
+worker.ports.setProjects.subscribe(function(projects) {
+  data.projects = projects;
+  popPoll();
 });
 
 worker.ports.setIssues.subscribe(function(args) {

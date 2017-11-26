@@ -10,6 +10,12 @@ import GitHubGraph
 import Backend
 
 
+port setRepos : List JD.Value -> Cmd msg
+
+
+port setRepo : JD.Value -> Cmd msg
+
+
 port setProjects : List JD.Value -> Cmd msg
 
 
@@ -70,6 +76,7 @@ type Msg
     | RefreshRequested String GitHubGraph.ID
     | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
+    | RepositoryFetched (Result GitHubGraph.Error GitHubGraph.Repo)
     | ProjectsFetched (List GitHubGraph.Project -> Msg) (Result GitHubGraph.Error (List GitHubGraph.Project))
     | FetchCards (List GitHubGraph.Project)
     | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
@@ -136,9 +143,21 @@ update msg model =
         RefreshRequested "cards" colId ->
             ( model, fetchCards model colId )
 
+        RefreshRequested "repo" ownerAndName ->
+            case String.split "/" ownerAndName of
+                owner :: name :: _ ->
+                    ( model, fetchRepo model { owner = owner, name = name } )
+
+                _ ->
+                    ( model, Cmd.none )
+
         RefreshRequested field id ->
             log "cannot refresh" ( field, id ) <|
                 ( model, Cmd.none )
+
+        HookReceived "label" payload ->
+            log "label hook received; refreshing repo" () <|
+                ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "issues" payload ->
             log "issue hook received; refreshing issue and timeline" () <|
@@ -210,12 +229,20 @@ update msg model =
                         ]
                 in
                     ( { model | loadQueue = List.concatMap fetch repos ++ model.loadQueue }
-                    , Cmd.none
+                    , setRepos (List.map GitHubGraph.encodeRepo repos)
                     )
 
         RepositoriesFetched (Err err) ->
             log "failed to fetch repos" err <|
                 backOff model (fetchRepos model)
+
+        RepositoryFetched (Ok repo) ->
+            log "repository fetched" repo.name <|
+                ( model, setRepo (GitHubGraph.encodeRepo repo) )
+
+        RepositoryFetched (Err err) ->
+            log "failed to fetch repos" err <|
+                ( model, Cmd.none )
 
         ProjectsFetched nextMsg (Ok projects) ->
             log "projects fetched" (List.map .name projects) <|
@@ -393,6 +420,23 @@ fetchPullRequest model sel =
         |> Task.attempt (PullRequestFetched sel)
 
 
+fetchRepo : Model -> GitHubGraph.RepoSelector -> Cmd Msg
+fetchRepo model sel =
+    GitHubGraph.fetchRepo model.githubToken sel
+        |> Task.attempt RepositoryFetched
+
+
+decodeAndFetchRepo : JD.Value -> Model -> Model
+decodeAndFetchRepo payload model =
+    case JD.decodeValue decodeRepoSelector payload of
+        Ok sel ->
+            { model | loadQueue = fetchRepo model sel :: model.loadQueue }
+
+        Err err ->
+            log "failed to decode repo" ( err, payload ) <|
+                model
+
+
 decodeAndFetchIssueOrPR : String -> JD.Value -> (Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg) -> Model -> Model
 decodeAndFetchIssueOrPR field payload fetch model =
     case JD.decodeValue (decodeIssueOrPRSelector field) payload of
@@ -413,6 +457,13 @@ fetchTimeline model id =
 log : String -> a -> b -> b
 log msg val =
     flip always (Debug.log msg val)
+
+
+decodeRepoSelector : JD.Decoder GitHubGraph.RepoSelector
+decodeRepoSelector =
+    JD.succeed GitHubGraph.RepoSelector
+        |: JD.at [ "repository", "owner", "login" ] JD.string
+        |: JD.at [ "repository", "name" ] JD.string
 
 
 decodeIssueOrPRSelector : String -> JD.Decoder GitHubGraph.IssueOrPRSelector

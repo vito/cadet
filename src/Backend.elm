@@ -1,4 +1,17 @@
-module Backend exposing (Data, Me, User, ActorEvent, emptyData, fetchData, pollData, refreshCards, fetchMe, encodeActorEvent)
+module Backend
+    exposing
+        ( Data
+        , Me
+        , User
+        , ActorEvent
+        , emptyData
+        , fetchData
+        , pollData
+        , refreshCards
+        , refreshRepo
+        , fetchMe
+        , encodeActorEvent
+        )
 
 import HttpBuilder
 import Json.Decode as JD
@@ -14,7 +27,8 @@ import Time
 
 
 type alias Data =
-    { issues : Dict String (List GitHubGraph.Issue)
+    { repos : List GitHubGraph.Repo
+    , issues : Dict String (List GitHubGraph.Issue)
     , prs : Dict String (List GitHubGraph.PullRequest)
     , references : Dict String (List GitHubGraph.ID)
     , actors : Dict String (List ActorEvent)
@@ -45,7 +59,8 @@ type alias ActorEvent =
 
 emptyData : Data
 emptyData =
-    { issues = Dict.empty
+    { repos = []
+    , issues = Dict.empty
     , prs = Dict.empty
     , references = Dict.empty
     , actors = Dict.empty
@@ -79,6 +94,14 @@ refreshCards col f =
         |> Task.attempt f
 
 
+refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error GitHubGraph.Repo -> msg) -> Cmd msg
+refreshRepo repo f =
+    HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
+        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodeRepo)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
 fetchMe : (Result Http.Error (Maybe Me) -> msg) -> Cmd msg
 fetchMe f =
     HttpBuilder.get "/me"
@@ -90,6 +113,7 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
+        |: (JD.field "repos" <| JD.list GitHubGraph.decodeRepo)
         |: (JD.field "issues" <| JD.dict (JD.list GitHubGraph.decodeIssue))
         |: (JD.field "prs" <| JD.dict (JD.list GitHubGraph.decodePullRequest))
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
