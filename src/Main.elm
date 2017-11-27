@@ -55,6 +55,7 @@ type alias Model =
     , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) GitHubGraph.Label
+    , newLabel : GitHubGraph.Label
     }
 
 
@@ -129,6 +130,9 @@ type Msg
     | SetLabelColor String
     | RandomizeLabelColor GitHubGraph.Label
     | EditLabel GitHubGraph.Label
+    | CreateLabel
+    | RandomizeNewLabelColor
+    | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result Http.Error ())
     | RepoRefreshed (Result Http.Error GitHubGraph.Repo)
 
@@ -274,6 +278,7 @@ init config =
       , drag = Drag.init
       , deletingLabels = Set.empty
       , editingLabels = Dict.empty
+      , newLabel = { name = "", color = "ffffff" }
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -585,22 +590,12 @@ update msg model =
                     ( model, Cmd.none )
 
                 Just newLabel ->
-                    let
-                        currentColor =
-                            Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex newLabel.color
-
-                        ( randomColor, _ ) =
-                            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed currentColor)
-
-                        randomHex =
-                            String.padLeft 6 '0' (ParseInt.toHex randomColor)
-                    in
-                        ( { model
-                            | editingLabels =
-                                Dict.insert (labelKey label) { newLabel | color = randomHex } model.editingLabels
-                          }
-                        , Cmd.none
-                        )
+                    ( { model
+                        | editingLabels =
+                            Dict.insert (labelKey label) (randomizeColor newLabel) model.editingLabels
+                      }
+                    , Cmd.none
+                    )
 
         EditLabel oldLabel ->
             case Dict.get (labelKey oldLabel) model.editingLabels of
@@ -620,6 +615,22 @@ update msg model =
                                 model.data.repos
                     in
                         ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
+
+        CreateLabel ->
+            if model.newLabel.name == "" then
+                ( model, Cmd.none )
+            else
+                update (MirrorLabel model.newLabel) model
+
+        RandomizeNewLabelColor ->
+            ( { model | newLabel = randomizeColor model.newLabel }, Cmd.none )
+
+        SetNewLabelName name ->
+            let
+                label =
+                    model.newLabel
+            in
+                ( { model | newLabel = { label | name = name } }, Cmd.none )
 
         LabelChanged repo (Ok ()) ->
             let
@@ -862,11 +873,57 @@ viewLabelsPage model =
 
         allCards =
             Dict.values model.allCards
-    in
-        Html.div [ HA.class "all-labels" ] <|
+
+        newLabel =
+            Html.div [ HA.class "label-row" ]
+                [ Html.div [ HA.class "label-cell" ]
+                    [ Html.div [ HA.class "label-name" ]
+                        [ Html.form [ HA.class "label-edit", HE.onSubmit CreateLabel ]
+                            [ Html.span
+                                [ HA.class "label-icon label-color-control octicon octicon-sync"
+                                , HE.onClick RandomizeNewLabelColor
+                                , labelColorStyle model.newLabel.color
+                                ]
+                                []
+                            , Html.input
+                                [ HE.onInput SetNewLabelName
+                                , HA.value model.newLabel.name
+                                , labelColorStyle model.newLabel.color
+                                ]
+                                []
+                            ]
+                        ]
+                    ]
+                , Html.div [ HA.class "label-cell" ]
+                    [ Html.div [ HA.class "label-controls" ]
+                        [ Html.span
+                            [ HE.onClick CreateLabel
+                            , HA.class "button octicon octicon-plus"
+                            ]
+                            []
+                        ]
+                    ]
+                , Html.div [ HA.class "label-cell" ]
+                    [ Html.div [ HA.class "label-counts first" ]
+                        []
+                    ]
+                , Html.div [ HA.class "label-cell" ]
+                    [ Html.div [ HA.class "label-counts" ]
+                        []
+                    ]
+                , Html.div [ HA.class "label-cell" ]
+                    [ Html.div [ HA.class "label-counts last" ]
+                        []
+                    ]
+                ]
+
+        labelRows =
             flip List.map (Dict.toList reposByLabel) <|
                 \( ( name, color ), repos ) ->
                     viewLabelRow model { name = name, color = color } repos allCards
+    in
+        Html.div [ HA.class "all-labels" ]
+            (newLabel :: labelRows)
 
 
 viewLabelRow : Model -> GitHubGraph.Label -> List GitHubGraph.Repo -> List Card -> Html Msg
@@ -878,7 +935,7 @@ viewLabelRow model label repos allCards =
         ( prs, issues ) =
             List.partition isPR (List.filter (\c -> isOpen c && List.member label c.labels) allCards)
     in
-        Html.div [ HA.class "label-row" ] <|
+        Html.div [ HA.class "label-row" ]
             [ Html.div [ HA.class "label-cell" ]
                 [ Html.div [ HA.class "label-name" ]
                     [ case Dict.get stateKey model.editingLabels of
@@ -2135,3 +2192,18 @@ deleteLabel model repo label =
 
         Nothing ->
             Cmd.none
+
+
+randomizeColor : GitHubGraph.Label -> GitHubGraph.Label
+randomizeColor label =
+    let
+        currentColor =
+            Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex label.color
+
+        ( randomColor, _ ) =
+            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed currentColor)
+
+        randomHex =
+            String.padLeft 6 '0' (ParseInt.toHex randomColor)
+    in
+        { label | color = randomHex }
