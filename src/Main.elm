@@ -882,13 +882,13 @@ viewLabelsPage model =
                                         Html.div [ HA.class "label-background" ]
                                             [ if Dict.isEmpty model.editingLabels then
                                                 Html.span
-                                                    [ HA.class "label-color-control octicon octicon-tag"
+                                                    [ HA.class "label-icon octicon octicon-tag"
                                                     , labelColorStyle color
                                                     ]
                                                     []
                                               else
                                                 Html.span
-                                                    [ HA.class "label-color-control octicon octicon-paintcan"
+                                                    [ HA.class "label-icon label-color-control octicon octicon-paintcan"
                                                     , HE.onClick (SetLabelColor color)
                                                     , labelColorStyle color
                                                     ]
@@ -905,7 +905,7 @@ viewLabelsPage model =
                                     Just ( newName, newColor ) ->
                                         Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel name color) ]
                                             [ Html.span
-                                                [ HA.class "label-color-control octicon octicon-sync"
+                                                [ HA.class "label-icon label-color-control octicon octicon-sync"
                                                 , HE.onClick (RandomizeLabelColor name color)
                                                 , labelColorStyle newColor
                                                 ]

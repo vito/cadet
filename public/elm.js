@@ -25947,7 +25947,7 @@ var _vito$cadet$Main$viewLabelsPage = function (model) {
 															_elm_lang$html$Html$span,
 															{
 																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$class('label-color-control octicon octicon-tag'),
+																_0: _elm_lang$html$Html_Attributes$class('label-icon octicon octicon-tag'),
 																_1: {
 																	ctor: '::',
 																	_0: _vito$cadet$Main$labelColorStyle(_p87),
@@ -25958,7 +25958,7 @@ var _vito$cadet$Main$viewLabelsPage = function (model) {
 															_elm_lang$html$Html$span,
 															{
 																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$class('label-color-control octicon octicon-paintcan'),
+																_0: _elm_lang$html$Html_Attributes$class('label-icon label-color-control octicon octicon-paintcan'),
 																_1: {
 																	ctor: '::',
 																	_0: _elm_lang$html$Html_Events$onClick(
@@ -26023,7 +26023,7 @@ var _vito$cadet$Main$viewLabelsPage = function (model) {
 															_elm_lang$html$Html$span,
 															{
 																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$class('label-color-control octicon octicon-sync'),
+																_0: _elm_lang$html$Html_Attributes$class('label-icon label-color-control octicon octicon-sync'),
 																_1: {
 																	ctor: '::',
 																	_0: _elm_lang$html$Html_Events$onClick(
