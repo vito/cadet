@@ -126,6 +126,7 @@ type Msg
     | StartEditingLabel String String
     | StopEditingLabel String String
     | SetLabelName String String String
+    | SetLabelColor String
     | RandomizeLabelColor String String
     | EditLabel String String
     | LabelChanged GitHubGraph.Repo (Result Http.Error ())
@@ -576,6 +577,14 @@ update msg model =
             , Cmd.none
             )
 
+        SetLabelColor color ->
+            ( { model
+                | editingLabels =
+                    Dict.map (\_ ( newName, _ ) -> ( newName, color )) model.editingLabels
+              }
+            , Cmd.none
+            )
+
         RandomizeLabelColor name color ->
             case Dict.get ( name, color ) model.editingLabels of
                 Nothing ->
@@ -871,13 +880,32 @@ viewLabelsPage model =
                                 [ case Dict.get ( name, color ) model.editingLabels of
                                     Nothing ->
                                         Html.div [ HA.class "label-background" ]
-                                            [ viewLabelBig { name = name, color = color }
+                                            [ if Dict.isEmpty model.editingLabels then
+                                                Html.span
+                                                    [ HA.class "label-color-control octicon octicon-tag"
+                                                    , labelColorStyle color
+                                                    ]
+                                                    []
+                                              else
+                                                Html.span
+                                                    [ HA.class "label-color-control octicon octicon-paintcan"
+                                                    , HE.onClick (SetLabelColor color)
+                                                    , labelColorStyle color
+                                                    ]
+                                                    []
+                                            , Html.span
+                                                [ HA.class "label big"
+                                                , labelColorStyle color
+                                                ]
+                                                [ Html.span [ HA.class "label-text" ]
+                                                    [ Html.text name ]
+                                                ]
                                             ]
 
                                     Just ( newName, newColor ) ->
                                         Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel name color) ]
                                             [ Html.span
-                                                [ HA.class "label-randomize-color octicon octicon-sync"
+                                                [ HA.class "label-color-control octicon octicon-sync"
                                                 , HE.onClick (RandomizeLabelColor name color)
                                                 , labelColorStyle newColor
                                                 ]
