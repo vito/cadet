@@ -56,6 +56,7 @@ type alias Model =
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) GitHubGraph.Label
     , newLabel : GitHubGraph.Label
+    , newLabelColored : Bool
     }
 
 
@@ -279,6 +280,7 @@ init config =
       , deletingLabels = Set.empty
       , editingLabels = Dict.empty
       , newLabel = { name = "", color = "ffffff" }
+      , newLabelColored = False
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -577,12 +579,22 @@ update msg model =
             )
 
         SetLabelColor newColor ->
-            ( { model
-                | editingLabels =
-                    Dict.map (\_ label -> { label | color = newColor }) model.editingLabels
-              }
-            , Cmd.none
-            )
+            let
+                newLabel =
+                    model.newLabel
+            in
+                ( { model
+                    | newLabel =
+                        if String.isEmpty newLabel.name then
+                            newLabel
+                        else
+                            { newLabel | color = newColor }
+                    , newLabelColored = not (String.isEmpty newLabel.name)
+                    , editingLabels =
+                        Dict.map (\_ label -> { label | color = newColor }) model.editingLabels
+                  }
+                , Cmd.none
+                )
 
         RandomizeLabelColor label ->
             case Dict.get (labelKey label) model.editingLabels of
@@ -620,17 +632,27 @@ update msg model =
             if model.newLabel.name == "" then
                 ( model, Cmd.none )
             else
-                update (MirrorLabel model.newLabel) model
+                update (MirrorLabel model.newLabel)
+                    { model
+                        | newLabel = { name = "", color = "ffffff" }
+                        , newLabelColored = False
+                    }
 
         RandomizeNewLabelColor ->
-            ( { model | newLabel = randomizeColor model.newLabel }, Cmd.none )
+            ( { model | newLabel = randomizeColor model.newLabel, newLabelColored = True }, Cmd.none )
 
         SetNewLabelName name ->
             let
-                label =
+                newLabel =
                     model.newLabel
+
+                newColor =
+                    if model.newLabelColored then
+                        model.newLabel.color
+                    else
+                        generateColor (Hash.hash name)
             in
-                ( { model | newLabel = { label | name = name } }, Cmd.none )
+                ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
 
         LabelChanged repo (Ok ()) ->
             let
@@ -941,7 +963,7 @@ viewLabelRow model label repos allCards =
                     [ case Dict.get stateKey model.editingLabels of
                         Nothing ->
                             Html.div [ HA.class "label-background" ]
-                                [ if Dict.isEmpty model.editingLabels then
+                                [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                     Html.span
                                         [ HA.class "label-icon octicon octicon-tag"
                                         , labelColorStyle label.color
@@ -2200,10 +2222,16 @@ randomizeColor label =
         currentColor =
             Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex label.color
 
-        ( randomColor, _ ) =
-            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed currentColor)
-
         randomHex =
-            String.padLeft 6 '0' (ParseInt.toHex randomColor)
+            generateColor currentColor
     in
         { label | color = randomHex }
+
+
+generateColor : Int -> String
+generateColor seed =
+    let
+        ( randomColor, _ ) =
+            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed seed)
+    in
+        String.padLeft 6 '0' (ParseInt.toHex randomColor)
