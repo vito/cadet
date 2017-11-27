@@ -13,6 +13,7 @@ import Http
 import IntDict exposing (IntDict)
 import Navigation
 import ParseInt
+import Random
 import Regex exposing (Regex)
 import RouteUrl
 import RouteUrl.Builder
@@ -53,7 +54,7 @@ type alias Model =
     , cardGraphs : List (ForceGraph (Node CardNodeState))
     , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
     , deletingLabels : Set ( String, String )
-    , editingLabels : Set ( String, String )
+    , editingLabels : Dict ( String, String ) ( String, String )
     }
 
 
@@ -122,6 +123,11 @@ type Msg
     | StartDeletingLabel String String
     | StopDeletingLabel String String
     | DeleteLabel String String
+    | StartEditingLabel String String
+    | StopEditingLabel String String
+    | SetLabelName String String String
+    | RandomizeLabelColor String String
+    | EditLabel String String
     | LabelChanged GitHubGraph.Repo (Result Http.Error ())
     | RepoRefreshed (Result Http.Error GitHubGraph.Repo)
 
@@ -266,7 +272,7 @@ init config =
       , computeGraph = computeReferenceGraph
       , drag = Drag.init
       , deletingLabels = Set.empty
-      , editingLabels = Set.empty
+      , editingLabels = Dict.empty
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -556,6 +562,68 @@ update msg model =
             in
                 ( model, Cmd.batch cmds )
 
+        StartEditingLabel name color ->
+            ( { model | editingLabels = Dict.insert ( name, color ) ( name, color ) model.editingLabels }, Cmd.none )
+
+        StopEditingLabel name color ->
+            ( { model | editingLabels = Dict.remove ( name, color ) model.editingLabels }, Cmd.none )
+
+        SetLabelName name color newName ->
+            ( { model
+                | editingLabels =
+                    Dict.update ( name, color ) (Maybe.map (\( _, c ) -> ( newName, c ))) model.editingLabels
+              }
+            , Cmd.none
+            )
+
+        RandomizeLabelColor name color ->
+            case Dict.get ( name, color ) model.editingLabels of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just ( newName, newColor ) ->
+                    let
+                        currentColor =
+                            Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex newColor
+
+                        ( randomColor, _ ) =
+                            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed currentColor)
+
+                        randomHex =
+                            String.padLeft 6 '0' (ParseInt.toHex randomColor)
+                    in
+                        ( { model
+                            | editingLabels =
+                                Dict.insert ( name, color ) ( newName, randomHex ) model.editingLabels
+                          }
+                        , Cmd.none
+                        )
+
+        EditLabel name color ->
+            case Dict.get ( name, color ) model.editingLabels of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just ( newName, newColor ) ->
+                    let
+                        oldLabel =
+                            { name = name, color = color }
+
+                        newLabel =
+                            { name = newName, color = newColor }
+
+                        cmds =
+                            List.map
+                                (\r ->
+                                    if List.member oldLabel r.labels then
+                                        updateLabel model r oldLabel newLabel
+                                    else
+                                        Cmd.none
+                                )
+                                model.data.repos
+                    in
+                        ( model, Cmd.batch cmds )
+
         LabelChanged repo (Ok ()) ->
             let
                 repoSel =
@@ -800,70 +868,122 @@ viewLabelsPage model =
                     Html.div [ HA.class "label-row" ] <|
                         [ Html.div [ HA.class "label-cell" ]
                             [ Html.div [ HA.class "label-name" ]
-                                [ Html.div [ HA.class "label-background" ]
-                                    [ viewLabelBig { name = name, color = color } ]
+                                [ case Dict.get ( name, color ) model.editingLabels of
+                                    Nothing ->
+                                        Html.div [ HA.class "label-background" ]
+                                            [ viewLabelBig { name = name, color = color }
+                                            ]
+
+                                    Just ( newName, newColor ) ->
+                                        Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel name color) ]
+                                            [ Html.span
+                                                [ HA.class "label-randomize-color octicon octicon-sync"
+                                                , HE.onClick (RandomizeLabelColor name color)
+                                                , labelColorStyle newColor
+                                                ]
+                                                []
+                                            , Html.input
+                                                [ HE.onInput (SetLabelName name color)
+                                                , HA.value (Maybe.withDefault name (Maybe.map Tuple.first (Dict.get ( name, color ) model.editingLabels)))
+                                                , labelColorStyle newColor
+                                                ]
+                                                []
+                                            ]
                                 ]
                             ]
                         , Html.div [ HA.class "label-cell" ]
                             [ Html.div [ HA.class "label-repos" ] <|
                                 [ Html.text (toString (List.length repos) ++ " repos") ]
                             ]
-                        , Html.div [ HA.class "label-cell" ]
+                        , Html.div [ HA.class "label-cell drawer-cell" ]
                             [ Html.div [ HA.class "label-controls" ]
                                 [ Html.span
                                     [ HE.onClick (MirrorLabel name color)
                                     , HA.class "button octicon octicon-mirror"
                                     ]
                                     []
-                                , Html.span
-                                    [ HE.onClick (StartDeletingLabel name color)
-                                    , HA.class "button octicon octicon-trashcan"
-                                    ]
-                                    []
+                                , if Dict.member ( name, color ) model.editingLabels then
+                                    Html.span
+                                        [ HE.onClick (StopEditingLabel name color)
+                                        , HA.class "button octicon octicon-x"
+                                        ]
+                                        []
+                                  else
+                                    Html.span
+                                        [ HE.onClick (StartEditingLabel name color)
+                                        , HA.class "button octicon octicon-pencil"
+                                        ]
+                                        []
+                                , if Set.member ( name, color ) model.deletingLabels then
+                                    Html.span
+                                        [ HE.onClick (StopDeletingLabel name color)
+                                        , HA.class "button close octicon octicon-x"
+                                        ]
+                                        []
+                                  else
+                                    Html.span
+                                        [ HE.onClick (StartDeletingLabel name color)
+                                        , HA.class "button octicon octicon-trashcan"
+                                        ]
+                                        []
                                 ]
-                            , Html.div
-                                [ HA.classList
-                                    [ ( "label-delete-confirm", True )
-                                    , ( "active", Set.member ( name, color ) model.deletingLabels )
+                            , let
+                                isDeleting =
+                                    Set.member ( name, color ) model.deletingLabels
+
+                                isEditing =
+                                    Dict.member ( name, color ) model.editingLabels
+                              in
+                                Html.div
+                                    [ HA.classList
+                                        [ ( "label-confirm", True )
+                                        , ( "active", isDeleting || isEditing )
+                                        ]
                                     ]
-                                ]
-                                [ Html.span
-                                    [ HE.onClick (DeleteLabel name color)
-                                    , HA.class "button delete octicon octicon-check"
+                                    [ if isDeleting then
+                                        Html.span
+                                            [ HE.onClick (DeleteLabel name color)
+                                            , HA.class "button delete octicon octicon-check"
+                                            ]
+                                            []
+                                      else
+                                        Html.span
+                                            [ HE.onClick (EditLabel name color)
+                                            , HA.class "button edit octicon octicon-check"
+                                            ]
+                                            []
                                     ]
-                                    []
-                                , Html.span
-                                    [ HE.onClick (StopDeletingLabel name color)
-                                    , HA.class "button close octicon octicon-x"
-                                    ]
-                                    []
-                                ]
                             ]
                         ]
 
 
+labelColorStyle : String -> Html.Attribute Msg
+labelColorStyle color =
+    HA.style
+        [ ( "background-color", "#" ++ color )
+        , ( "color"
+          , if colorIsLight color then
+                -- GitHub appears to pre-compute a hex code, but this seems to be
+                -- pretty much all it's doing
+                "rgba(0, 0, 0, .8)"
+            else
+                -- for darker backgrounds they just do white
+                "#fff"
+          )
+        ]
+
+
 viewLabelBig : GitHubGraph.Label -> Html Msg
-viewLabelBig { name, color } =
+viewLabelBig label =
     Html.span
         [ HA.class "label big"
-        , HA.style
-            [ ( "background-color", "#" ++ color )
-            , ( "color"
-              , if colorIsLight color then
-                    -- GitHub appears to pre-compute a hex code, but this seems to be
-                    -- pretty much all it's doing
-                    "rgba(0, 0, 0, .8)"
-                else
-                    -- for darker backgrounds they just do white
-                    "#fff"
-              )
-            ]
+        , labelColorStyle label.color
         ]
         [ Html.span [ HA.class "octicon octicon-tag" ]
             [ Html.text "" ]
         , Html.text " "
         , Html.span [ HA.class "label-text" ]
-            [ Html.text name ]
+            [ Html.text label.name ]
         ]
 
 
