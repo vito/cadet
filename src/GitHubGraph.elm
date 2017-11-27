@@ -86,7 +86,7 @@ type alias Repo =
     , url : String
     , owner : String
     , name : String
-    , labels : List Label
+    , labels : List LabelInfo
     }
 
 
@@ -138,6 +138,12 @@ type PullRequestState
 type alias Label =
     { name : String
     , color : String
+    }
+
+
+type alias LabelInfo =
+    { label : Label
+    , openIssues : Int
     }
 
 
@@ -529,7 +535,7 @@ repoObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
         |> GB.with (GB.field "name" [] GB.string)
-        |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
+        |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelInfoObject)))
 
 
 repoQuery : GB.Document GB.Query Repo RepoSelector
@@ -715,6 +721,14 @@ labelObject =
     GB.object Label
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "color" [] GB.string)
+
+
+labelInfoObject : GB.ValueSpec GB.NonNull GB.ObjectType LabelInfo vars
+labelInfoObject =
+    GB.object (\n c is -> LabelInfo (Label n c) is)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "color" [] GB.string)
+        |> GB.with (GB.field "issues" [ ( "states", GA.list [ GA.enum "OPEN" ] ) ] (GB.extract (GB.field "totalCount" [] GB.int)))
 
 
 columnObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumn vars
@@ -996,7 +1010,7 @@ decodeRepo =
         |: (JD.field "url" JD.string)
         |: (JD.field "owner" JD.string)
         |: (JD.field "name" JD.string)
-        |: (JD.field "labels" (JD.list decodeLabel))
+        |: (JD.field "labels" (JD.list decodeLabelInfo))
 
 
 decodeIssue : JD.Decoder Issue
@@ -1040,6 +1054,13 @@ decodeLabel =
     JD.succeed Label
         |: (JD.field "name" JD.string)
         |: (JD.field "color" JD.string)
+
+
+decodeLabelInfo : JD.Decoder LabelInfo
+decodeLabelInfo =
+    JD.succeed LabelInfo
+        |: (JD.field "label" decodeLabel)
+        |: (JD.field "open_issues" JD.int)
 
 
 decodeReactionGroup : JD.Decoder ReactionGroup
@@ -1171,7 +1192,7 @@ encodeRepo record =
         , ( "url", JE.string record.url )
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
-        , ( "labels", JE.list (List.map encodeLabel record.labels) )
+        , ( "labels", JE.list (List.map encodeLabelInfo record.labels) )
         ]
 
 
@@ -1218,6 +1239,14 @@ encodeLabel record =
     JE.object
         [ ( "name", JE.string record.name )
         , ( "color", JE.string record.color )
+        ]
+
+
+encodeLabelInfo : LabelInfo -> JE.Value
+encodeLabelInfo record =
+    JE.object
+        [ ( "label", encodeLabel record.label )
+        , ( "open_issues", JE.int record.openIssues )
         ]
 
 

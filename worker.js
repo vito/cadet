@@ -9682,6 +9682,26 @@ var _vito$cadet$GitHubGraph$encodeLabel = function (record) {
 			}
 		});
 };
+var _vito$cadet$GitHubGraph$encodeLabelInfo = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'label',
+				_1: _vito$cadet$GitHubGraph$encodeLabel(record.label)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'open_issues',
+					_1: _elm_lang$core$Json_Encode$int(record.openIssues)
+				},
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _vito$cadet$GitHubGraph$encodeRepo = function (record) {
 	return _elm_lang$core$Json_Encode$object(
 		{
@@ -9718,7 +9738,7 @@ var _vito$cadet$GitHubGraph$encodeRepo = function (record) {
 								ctor: '_Tuple2',
 								_0: 'labels',
 								_1: _elm_lang$core$Json_Encode$list(
-									A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
+									A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabelInfo, record.labels))
 							},
 							_1: {ctor: '[]'}
 						}
@@ -10137,6 +10157,64 @@ var _vito$cadet$GitHubGraph$labelObject = A2(
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Label)));
+var _vito$cadet$GitHubGraph$decodeLabel = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Label),
+		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'color', _elm_lang$core$Json_Decode$string));
+var _vito$cadet$GitHubGraph$LabelInfo = F2(
+	function (a, b) {
+		return {label: a, openIssues: b};
+	});
+var _vito$cadet$GitHubGraph$labelInfoObject = A2(
+	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+	A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+		'issues',
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'states',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$list(
+					{
+						ctor: '::',
+						_0: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$enum('OPEN'),
+						_1: {ctor: '[]'}
+					})
+			},
+			_1: {ctor: '[]'}
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'totalCount',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int))),
+	A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'color',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'name',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(
+				F3(
+					function (n, c, is) {
+						return A2(
+							_vito$cadet$GitHubGraph$LabelInfo,
+							A2(_vito$cadet$GitHubGraph$Label, n, c),
+							is);
+					})))));
 var _vito$cadet$GitHubGraph$repoObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -10156,7 +10234,7 @@ var _vito$cadet$GitHubGraph$repoObject = A2(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 				'nodes',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$labelObject)))),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$labelInfoObject)))),
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
@@ -10237,13 +10315,13 @@ var _vito$cadet$GitHubGraph$fetchRepo = F2(
 			_vito$cadet$GitHubGraph$authedOptions(token),
 			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, repo, _vito$cadet$GitHubGraph$repoQuery));
 	});
-var _vito$cadet$GitHubGraph$decodeLabel = A2(
+var _vito$cadet$GitHubGraph$decodeLabelInfo = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Label),
-		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
-	A2(_elm_lang$core$Json_Decode$field, 'color', _elm_lang$core$Json_Decode$string));
+		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$LabelInfo),
+		A2(_elm_lang$core$Json_Decode$field, 'label', _vito$cadet$GitHubGraph$decodeLabel)),
+	A2(_elm_lang$core$Json_Decode$field, 'open_issues', _elm_lang$core$Json_Decode$int));
 var _vito$cadet$GitHubGraph$decodeRepo = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -10262,7 +10340,7 @@ var _vito$cadet$GitHubGraph$decodeRepo = A2(
 	A2(
 		_elm_lang$core$Json_Decode$field,
 		'labels',
-		_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeLabel)));
+		_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeLabelInfo)));
 var _vito$cadet$GitHubGraph$ReactionGroup = F2(
 	function (a, b) {
 		return {type_: a, count: b};

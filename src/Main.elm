@@ -524,11 +524,11 @@ update msg model =
                 cmds =
                     List.map
                         (\r ->
-                            case List.filter ((==) name << .name) r.labels of
+                            case List.filter ((==) name << .name << .label) r.labels of
                                 [] ->
                                     createLabel model r newLabel
 
-                                label :: _ ->
+                                { label } :: _ ->
                                     if label.color /= color then
                                         updateLabel model r label newLabel
                                     else
@@ -549,11 +549,11 @@ update msg model =
                 cmds =
                     List.map
                         (\r ->
-                            case List.filter ((==) name << .name) r.labels of
+                            case List.filter ((==) name << .name << .label) r.labels of
                                 [] ->
                                     Cmd.none
 
-                                label :: _ ->
+                                { label } :: _ ->
                                     if label.color == color then
                                         deleteLabel model r label
                                     else
@@ -624,7 +624,7 @@ update msg model =
                         cmds =
                             List.map
                                 (\r ->
-                                    if List.member oldLabel r.labels then
+                                    if List.member oldLabel (List.map .label r.labels) then
                                         updateLabel model r oldLabel newLabel
                                     else
                                         Cmd.none
@@ -858,12 +858,20 @@ viewAllProjectsPage model =
 viewLabelsPage : Model -> Html Msg
 viewLabelsPage model =
     let
+        addRepo repo openIssues mstate =
+            case mstate of
+                Nothing ->
+                    Just ( [ repo ], openIssues )
+
+                Just ( repos, count ) ->
+                    Just ( repo :: repos, count + openIssues )
+
         reposByLabel =
             List.foldl
                 (\repo cbn ->
                     List.foldl
-                        (\label cbn2 ->
-                            Dict.update ( label.name, label.color ) (Just << ((::) repo) << Maybe.withDefault []) cbn2
+                        (\{ label, openIssues } cbn2 ->
+                            Dict.update ( label.name, label.color ) (addRepo repo openIssues) cbn2
                         )
                         cbn
                         repo.labels
@@ -873,7 +881,7 @@ viewLabelsPage model =
     in
         Html.div [ HA.class "all-labels" ] <|
             flip List.map (Dict.toList reposByLabel) <|
-                \( ( name, color ), repos ) ->
+                \( ( name, color ), ( repos, openIssues ) ) ->
                     Html.div [ HA.class "label-row" ] <|
                         [ Html.div [ HA.class "label-cell" ]
                             [ Html.div [ HA.class "label-name" ]
@@ -921,7 +929,19 @@ viewLabelsPage model =
                             ]
                         , Html.div [ HA.class "label-cell" ]
                             [ Html.div [ HA.class "label-repos" ] <|
-                                [ Html.text (toString (List.length repos) ++ " repos") ]
+                                [ case openIssues of
+                                    1 ->
+                                        Html.text ("1 issue")
+
+                                    n ->
+                                        Html.text (toString n ++ " issues")
+                                , case List.length repos of
+                                    1 ->
+                                        Html.text (" in 1 repo")
+
+                                    n ->
+                                        Html.text (" across " ++ toString n ++ " repos")
+                                ]
                             ]
                         , Html.div [ HA.class "label-cell drawer-cell" ]
                             [ Html.div [ HA.class "label-controls" ]
