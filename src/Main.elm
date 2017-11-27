@@ -935,12 +935,14 @@ viewLabelsPage model =
 
                                     n ->
                                         Html.text (toString n ++ " issues")
-                                , case List.length repos of
-                                    1 ->
-                                        Html.text (" in 1 repo")
+                                , Html.span [ HA.title (String.join ", " (List.map .name repos)) ]
+                                    [ case List.length repos of
+                                        1 ->
+                                            Html.text " in 1 repo"
 
-                                    n ->
-                                        Html.text (" across " ++ toString n ++ " repos")
+                                        n ->
+                                            Html.text (" across " ++ toString n ++ " repos")
+                                    ]
                                 ]
                             ]
                         , Html.div [ HA.class "label-cell drawer-cell" ]
