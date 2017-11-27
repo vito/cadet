@@ -561,7 +561,7 @@ update msg model =
                         )
                         model.data.repos
             in
-                ( model, Cmd.batch cmds )
+                ( { model | deletingLabels = Set.remove ( name, color ) model.deletingLabels }, Cmd.batch cmds )
 
         StartEditingLabel name color ->
             ( { model | editingLabels = Dict.insert ( name, color ) ( name, color ) model.editingLabels }, Cmd.none )
@@ -631,7 +631,7 @@ update msg model =
                                 )
                                 model.data.repos
                     in
-                        ( model, Cmd.batch cmds )
+                        ( { model | editingLabels = Dict.remove ( name, color ) model.editingLabels }, Cmd.batch cmds )
 
         LabelChanged repo (Ok ()) ->
             let
