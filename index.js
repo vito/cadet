@@ -169,7 +169,7 @@ if (process.env.GITHUB_CLIENT_ID) {
     cb(null, obj);
   });
 
-  app.use(session({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+  app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: true }));
 
   app.use(passport.initialize());
   app.use(passport.session());
