@@ -9790,6 +9790,12 @@ var _vito$cadet$GitHubGraph$fetchPaged = F3(
 				_vito$cadet$GitHubGraph$authedOptions(token),
 				A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, psel, doc)));
 	});
+var _vito$cadet$GitHubGraph$labelEq = F2(
+	function (a, b) {
+		return _elm_lang$core$Native_Utils.eq(a.name, b.name) && _elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$String$toLower(a.color),
+			_elm_lang$core$String$toLower(b.color));
+	});
 var _vito$cadet$GitHubGraph$reactionScore = function (reactions) {
 	return _elm_lang$core$List$sum(
 		A3(

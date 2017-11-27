@@ -526,50 +526,47 @@ update msg model =
                                     createLabel model r newLabel
 
                                 label :: _ ->
-                                    if label.color /= newLabel.color then
-                                        updateLabel model r label newLabel
-                                    else
+                                    if GitHubGraph.labelEq label newLabel then
                                         Cmd.none
+                                    else
+                                        updateLabel model r label newLabel
                         )
                         model.data.repos
             in
                 ( model, Cmd.batch cmds )
 
-        StartDeletingLabel { name, color } ->
-            ( { model | deletingLabels = Set.insert ( name, color ) model.deletingLabels }, Cmd.none )
+        StartDeletingLabel label ->
+            ( { model | deletingLabels = Set.insert (labelKey label) model.deletingLabels }, Cmd.none )
 
-        StopDeletingLabel { name, color } ->
-            ( { model | deletingLabels = Set.remove ( name, color ) model.deletingLabels }, Cmd.none )
+        StopDeletingLabel label ->
+            ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.none )
 
-        DeleteLabel { name, color } ->
+        DeleteLabel label ->
             let
                 cmds =
                     List.map
                         (\r ->
-                            case List.filter ((==) name << .name) r.labels of
+                            case List.filter (GitHubGraph.labelEq label) r.labels of
                                 [] ->
                                     Cmd.none
 
-                                label :: _ ->
-                                    if label.color == color then
-                                        deleteLabel model r label
-                                    else
-                                        Cmd.none
+                                repoLabel :: _ ->
+                                    deleteLabel model r repoLabel
                         )
                         model.data.repos
             in
-                ( { model | deletingLabels = Set.remove ( name, color ) model.deletingLabels }, Cmd.batch cmds )
+                ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
 
-        StartEditingLabel ({ name, color } as label) ->
-            ( { model | editingLabels = Dict.insert ( name, color ) label model.editingLabels }, Cmd.none )
+        StartEditingLabel label ->
+            ( { model | editingLabels = Dict.insert (labelKey label) label model.editingLabels }, Cmd.none )
 
-        StopEditingLabel { name, color } ->
-            ( { model | editingLabels = Dict.remove ( name, color ) model.editingLabels }, Cmd.none )
+        StopEditingLabel label ->
+            ( { model | editingLabels = Dict.remove (labelKey label) model.editingLabels }, Cmd.none )
 
-        SetLabelName { name, color } newName ->
+        SetLabelName label newName ->
             ( { model
                 | editingLabels =
-                    Dict.update ( name, color ) (Maybe.map (\label -> { label | name = newName })) model.editingLabels
+                    Dict.update (labelKey label) (Maybe.map (\newLabel -> { newLabel | name = newName })) model.editingLabels
               }
             , Cmd.none
             )
@@ -582,8 +579,8 @@ update msg model =
             , Cmd.none
             )
 
-        RandomizeLabelColor { name, color } ->
-            case Dict.get ( name, color ) model.editingLabels of
+        RandomizeLabelColor label ->
+            case Dict.get (labelKey label) model.editingLabels of
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -600,13 +597,13 @@ update msg model =
                     in
                         ( { model
                             | editingLabels =
-                                Dict.insert ( name, color ) { newLabel | color = randomHex } model.editingLabels
+                                Dict.insert (labelKey label) { newLabel | color = randomHex } model.editingLabels
                           }
                         , Cmd.none
                         )
 
-        EditLabel ({ name, color } as oldLabel) ->
-            case Dict.get ( name, color ) model.editingLabels of
+        EditLabel oldLabel ->
+            case Dict.get (labelKey oldLabel) model.editingLabels of
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -615,14 +612,14 @@ update msg model =
                         cmds =
                             List.map
                                 (\r ->
-                                    if List.member oldLabel r.labels then
+                                    if List.any (GitHubGraph.labelEq oldLabel) r.labels then
                                         updateLabel model r oldLabel newLabel
                                     else
                                         Cmd.none
                                 )
                                 model.data.repos
                     in
-                        ( { model | editingLabels = Dict.remove ( name, color ) model.editingLabels }, Cmd.batch cmds )
+                        ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
 
         LabelChanged repo (Ok ()) ->
             let
@@ -856,9 +853,7 @@ viewLabelsPage model =
             List.foldl
                 (\repo cbn ->
                     List.foldl
-                        (\label cbn2 ->
-                            Dict.update ( label.name, label.color ) (addRepo repo) cbn2
-                        )
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addRepo repo))
                         cbn
                         repo.labels
                 )
@@ -875,10 +870,10 @@ viewLabelsPage model =
 
 
 viewLabelRow : Model -> GitHubGraph.Label -> List GitHubGraph.Repo -> List Card -> Html Msg
-viewLabelRow model ({ name, color } as label) repos allCards =
+viewLabelRow model label repos allCards =
     let
         stateKey =
-            ( name, color )
+            labelKey label
 
         ( prs, issues ) =
             List.partition isPR (List.filter (\c -> isOpen c && List.member label c.labels) allCards)
@@ -892,22 +887,22 @@ viewLabelRow model ({ name, color } as label) repos allCards =
                                 [ if Dict.isEmpty model.editingLabels then
                                     Html.span
                                         [ HA.class "label-icon octicon octicon-tag"
-                                        , labelColorStyle color
+                                        , labelColorStyle label.color
                                         ]
                                         []
                                   else
                                     Html.span
                                         [ HA.class "label-icon label-color-control octicon octicon-paintcan"
-                                        , HE.onClick (SetLabelColor color)
-                                        , labelColorStyle color
+                                        , HE.onClick (SetLabelColor label.color)
+                                        , labelColorStyle label.color
                                         ]
                                         []
                                 , Html.span
                                     [ HA.class "label big"
-                                    , labelColorStyle color
+                                    , labelColorStyle label.color
                                     ]
                                     [ Html.span [ HA.class "label-text" ]
-                                        [ Html.text name ]
+                                        [ Html.text label.name ]
                                     ]
                                 ]
 
@@ -965,7 +960,7 @@ viewLabelRow model ({ name, color } as label) repos allCards =
                         , HA.class "button octicon octicon-mirror"
                         ]
                         []
-                    , if Dict.member ( name, color ) model.editingLabels then
+                    , if Dict.member stateKey model.editingLabels then
                         Html.span
                             [ HE.onClick (StopEditingLabel label)
                             , HA.class "button octicon octicon-x"
@@ -977,7 +972,7 @@ viewLabelRow model ({ name, color } as label) repos allCards =
                             , HA.class "button octicon octicon-pencil"
                             ]
                             []
-                    , if Set.member ( name, color ) model.deletingLabels then
+                    , if Set.member stateKey model.deletingLabels then
                         Html.span
                             [ HE.onClick (StopDeletingLabel label)
                             , HA.class "button close octicon octicon-x"
@@ -2102,6 +2097,11 @@ findCardColumns model cardId =
         )
         []
         model.data.cards
+
+
+labelKey : GitHubGraph.Label -> ( String, String )
+labelKey label =
+    ( label.name, String.toLower label.color )
 
 
 createLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg

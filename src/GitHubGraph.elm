@@ -39,6 +39,7 @@ module GitHubGraph
         , issueScore
         , pullRequestScore
         , reactionScore
+        , labelEq
         , encodeRepo
         , decodeRepo
         , encodeIssue
@@ -451,6 +452,11 @@ reactionScore reactions =
 
                     ReactionTypeHooray ->
                         3 * count
+
+
+labelEq : Label -> Label -> Bool
+labelEq a b =
+    a.name == b.name && String.toLower a.color == String.toLower b.color
 
 
 auth : String -> List ( String, String )
