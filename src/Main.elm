@@ -879,6 +879,9 @@ viewLabelRow model ({ name, color } as label) repos allCards =
     let
         stateKey =
             ( name, color )
+
+        ( prs, issues ) =
+            List.partition isPR (List.filter (\c -> isOpen c && List.member label c.labels) allCards)
     in
         Html.div [ HA.class "label-row" ] <|
             [ Html.div [ HA.class "label-cell" ]
@@ -926,33 +929,34 @@ viewLabelRow model ({ name, color } as label) repos allCards =
                     ]
                 ]
             , Html.div [ HA.class "label-cell" ]
-                [ Html.div [ HA.class "label-repos" ] <|
-                    let
-                        ( prs, issues ) =
-                            List.partition isPR (List.filter (\c -> isOpen c && List.member label c.labels) allCards)
-                    in
-                        [ case List.length issues of
-                            1 ->
-                                Html.text ("1 issue")
-
-                            n ->
-                                Html.text (toString n ++ " issues")
-                        , Html.text ", "
-                        , case List.length prs of
-                            1 ->
-                                Html.text ("1 pr")
-
-                            n ->
-                                Html.text (toString n ++ " prs")
-                        , Html.span [ HA.title (String.join ", " (List.map .name repos)) ]
-                            [ case List.length repos of
-                                1 ->
-                                    Html.text " in 1 repo"
-
-                                n ->
-                                    Html.text (" across " ++ toString n ++ " repos")
+                [ Html.div [ HA.class "label-counts first" ]
+                    [ Html.span [ HA.class "count" ]
+                        [ Html.span [ HA.class "octicon octicon-issue-opened" ] []
+                        , Html.span [ HA.class "count-number" ]
+                            [ Html.text (toString (List.length issues))
                             ]
                         ]
+                    ]
+                ]
+            , Html.div [ HA.class "label-cell" ]
+                [ Html.div [ HA.class "label-counts" ]
+                    [ Html.span [ HA.class "count" ]
+                        [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                        , Html.span [ HA.class "count-number" ]
+                            [ Html.text (toString (List.length prs))
+                            ]
+                        ]
+                    ]
+                ]
+            , Html.div [ HA.class "label-cell" ]
+                [ Html.div [ HA.class "label-counts last" ]
+                    [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
+                        [ Html.span [ HA.class "octicon octicon-repo" ] []
+                        , Html.span [ HA.class "count-number" ]
+                            [ Html.text (toString (List.length repos))
+                            ]
+                        ]
+                    ]
                 ]
             , Html.div [ HA.class "label-cell drawer-cell" ]
                 [ Html.div [ HA.class "label-controls" ]

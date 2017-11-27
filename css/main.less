@@ -748,7 +748,7 @@ svg {
   z-index: 2;
 }
 
-.label-name, .label-repos, .label-controls {
+.label-name, .label-counts, .label-controls {
   margin-bottom: 10px;
 }
 
@@ -826,12 +826,32 @@ svg {
   cursor: pointer;
 }
 
-.label-repos {
+.label-counts {
   font-size: 16px;
   background: @gray-dark;
   color: @white;
-  padding: 0 20px;
   line-height: 50px;
+  padding: 0 10px;
+
+  .count-number {
+    display: inline-block;
+    min-width: 20px;
+    text-align: right;
+  }
+
+  &.first {
+    padding-left: 20px;
+  }
+
+  &.last {
+    padding: 0 20px;
+  }
+
+  .count {
+    .octicon {
+      margin-right: 5px;
+    }
+  }
 }
 
 .label-controls {
