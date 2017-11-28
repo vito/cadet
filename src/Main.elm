@@ -1427,8 +1427,8 @@ viewGraph model { graph } =
             , SA.height (toString height ++ "px")
             , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
             ]
-            [ Svg.g [ SA.class "links" ] links
-            , Svg.g [ SA.class "lower" ] flairs
+            [ Svg.g [ SA.class "lower" ] flairs
+            , Svg.g [ SA.class "links" ] links
             , Svg.g [ SA.class "upper" ] nodes
             ]
 
@@ -2035,7 +2035,7 @@ viewLabel model id =
                     ( name, color )
 
                 Nothing ->
-                    ( "unknown", "#ff00ff" )
+                    ( "unknown", "ff00ff" )
     in
         Html.span
             [ HA.class "label"

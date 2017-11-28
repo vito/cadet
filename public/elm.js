@@ -24766,7 +24766,7 @@ var _vito$cadet$Main$viewLabel = F2(
 			if (_p19.ctor === 'Just') {
 				return {ctor: '_Tuple2', _0: _p19._0.name, _1: _p19._0.color};
 			} else {
-				return {ctor: '_Tuple2', _0: 'unknown', _1: '#ff00ff'};
+				return {ctor: '_Tuple2', _0: 'unknown', _1: 'ff00ff'};
 			}
 		}();
 		var name = _p18._0;
@@ -25378,20 +25378,20 @@ var _vito$cadet$Main$viewGraph = F2(
 					_elm_lang$svg$Svg$g,
 					{
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$class('links'),
+						_0: _elm_lang$svg$Svg_Attributes$class('lower'),
 						_1: {ctor: '[]'}
 					},
-					links),
+					flairs),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						_elm_lang$svg$Svg$g,
 						{
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$class('lower'),
+							_0: _elm_lang$svg$Svg_Attributes$class('links'),
 							_1: {ctor: '[]'}
 						},
-						flairs),
+						links),
 					_1: {
 						ctor: '::',
 						_0: A2(
