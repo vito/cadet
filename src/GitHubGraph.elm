@@ -137,7 +137,8 @@ type PullRequestState
 
 
 type alias Label =
-    { name : String
+    { id : ID
+    , name : String
     , color : String
     }
 
@@ -333,27 +334,35 @@ addContentCardAfter token columnID contentID mafterID =
         |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
 
 
-createRepoLabel : Token -> Repo -> Label -> Task Http.Error ()
-createRepoLabel token repo label =
+createRepoLabel : Token -> Repo -> String -> String -> Task Http.Error ()
+createRepoLabel token repo name color =
     HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
-        |> HttpBuilder.withJsonBody (encodeLabel label)
+        |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
         |> HttpBuilder.toTask
 
 
-deleteRepoLabel : Token -> Repo -> Label -> Task Http.Error ()
-deleteRepoLabel token repo label =
-    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
+deleteRepoLabel : Token -> Repo -> String -> Task Http.Error ()
+deleteRepoLabel token repo name =
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
 
 
-updateRepoLabel : Token -> Repo -> Label -> Label -> Task Http.Error ()
-updateRepoLabel token repo label1 label2 =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label1.name)
+updateRepoLabel : Token -> Repo -> Label -> String -> String -> Task Http.Error ()
+updateRepoLabel token repo label name color =
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
         |> HttpBuilder.withHeaders (auth token)
-        |> HttpBuilder.withJsonBody (encodeLabel label2)
+        |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
         |> HttpBuilder.toTask
+
+
+encodeLabelPatch : String -> String -> JE.Value
+encodeLabelPatch name color =
+    JE.object
+        [ ( "name", JE.string name )
+        , ( "color", JE.string color )
+        ]
 
 
 moveCardMutation : GB.Document GB.Mutation ID { columnId : ID, cardId : ID, afterId : Maybe ID }
@@ -719,6 +728,7 @@ projectLocationObject =
 labelObject : GB.ValueSpec GB.NonNull GB.ObjectType Label vars
 labelObject =
     GB.object Label
+        |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "color" [] GB.string)
 
@@ -1044,6 +1054,7 @@ decodePullRequest =
 decodeLabel : JD.Decoder Label
 decodeLabel =
     JD.succeed Label
+        |: (JD.field "id" JD.string)
         |: (JD.field "name" JD.string)
         |: (JD.field "color" JD.string)
 
@@ -1222,7 +1233,8 @@ encodePullRequest record =
 encodeLabel : Label -> JE.Value
 encodeLabel record =
     JE.object
-        [ ( "name", JE.string record.name )
+        [ ( "id", JE.string record.id )
+        , ( "name", JE.string record.name )
         , ( "color", JE.string record.color )
         ]
 

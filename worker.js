@@ -9668,17 +9668,25 @@ var _vito$cadet$GitHubGraph$encodeLabel = function (record) {
 			ctor: '::',
 			_0: {
 				ctor: '_Tuple2',
-				_0: 'name',
-				_1: _elm_lang$core$Json_Encode$string(record.name)
+				_0: 'id',
+				_1: _elm_lang$core$Json_Encode$string(record.id)
 			},
 			_1: {
 				ctor: '::',
 				_0: {
 					ctor: '_Tuple2',
-					_0: 'color',
-					_1: _elm_lang$core$Json_Encode$string(record.color)
+					_0: 'name',
+					_1: _elm_lang$core$Json_Encode$string(record.name)
 				},
-				_1: {ctor: '[]'}
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'color',
+						_1: _elm_lang$core$Json_Encode$string(record.color)
+					},
+					_1: {ctor: '[]'}
+				}
 			}
 		});
 };
@@ -9971,12 +9979,33 @@ var _vito$cadet$GitHubGraph$moveCardMutation = function () {
 										{ctor: '[]'},
 										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$id)))))))));
 }();
-var _vito$cadet$GitHubGraph$updateRepoLabel = F4(
-	function (token, repo, label1, label2) {
+var _vito$cadet$GitHubGraph$encodeLabelPatch = F2(
+	function (name, color) {
+		return _elm_lang$core$Json_Encode$object(
+			{
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'name',
+					_1: _elm_lang$core$Json_Encode$string(name)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'color',
+						_1: _elm_lang$core$Json_Encode$string(color)
+					},
+					_1: {ctor: '[]'}
+				}
+			});
+	});
+var _vito$cadet$GitHubGraph$updateRepoLabel = F5(
+	function (token, repo, label, name, color) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_vito$cadet$GitHubGraph$encodeLabel(label2),
+				A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
@@ -9993,10 +10022,10 @@ var _vito$cadet$GitHubGraph$updateRepoLabel = F4(
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										repo.name,
-										A2(_elm_lang$core$Basics_ops['++'], '/labels/', label1.name)))))))));
+										A2(_elm_lang$core$Basics_ops['++'], '/labels/', label.name)))))))));
 	});
 var _vito$cadet$GitHubGraph$deleteRepoLabel = F3(
-	function (token, repo, label) {
+	function (token, repo, name) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
@@ -10014,14 +10043,14 @@ var _vito$cadet$GitHubGraph$deleteRepoLabel = F3(
 								A2(
 									_elm_lang$core$Basics_ops['++'],
 									repo.name,
-									A2(_elm_lang$core$Basics_ops['++'], '/labels/', label.name))))))));
+									A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))));
 	});
-var _vito$cadet$GitHubGraph$createRepoLabel = F3(
-	function (token, repo, label) {
+var _vito$cadet$GitHubGraph$createRepoLabel = F4(
+	function (token, repo, name, color) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_vito$cadet$GitHubGraph$encodeLabel(label),
+				A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
@@ -10124,9 +10153,9 @@ var _vito$cadet$GitHubGraph$PullRequest = function (a) {
 		};
 	};
 };
-var _vito$cadet$GitHubGraph$Label = F2(
-	function (a, b) {
-		return {name: a, color: b};
+var _vito$cadet$GitHubGraph$Label = F3(
+	function (a, b, c) {
+		return {id: a, name: b, color: c};
 	});
 var _vito$cadet$GitHubGraph$labelObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
@@ -10142,7 +10171,14 @@ var _vito$cadet$GitHubGraph$labelObject = A2(
 			'name',
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Label)));
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'id',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Label))));
 var _vito$cadet$GitHubGraph$repoObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -10247,7 +10283,10 @@ var _vito$cadet$GitHubGraph$decodeLabel = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Label),
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Label),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
 		A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
 	A2(_elm_lang$core$Json_Decode$field, 'color', _elm_lang$core$Json_Decode$string));
 var _vito$cadet$GitHubGraph$decodeRepo = A2(

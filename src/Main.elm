@@ -47,6 +47,7 @@ type alias Model =
     , drag : Drag.Model CardSource CardDestination Msg
     , data : Data
     , allCards : Dict GitHubGraph.ID Card
+    , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
@@ -54,9 +55,15 @@ type alias Model =
     , cardGraphs : List (ForceGraph (Node CardNodeState))
     , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
     , deletingLabels : Set ( String, String )
-    , editingLabels : Dict ( String, String ) GitHubGraph.Label
-    , newLabel : GitHubGraph.Label
+    , editingLabels : Dict ( String, String ) SharedLabel
+    , newLabel : SharedLabel
     , newLabelColored : Bool
+    }
+
+
+type alias SharedLabel =
+    { name : String
+    , color : String
     }
 
 
@@ -75,7 +82,7 @@ type alias Card =
     , title : String
     , updatedAt : Date
     , author : Maybe GitHubGraph.User
-    , labels : List GitHubGraph.Label
+    , labels : List GitHubGraph.ID
     , cards : List GitHubGraph.CardLocation
     , commentCount : Int
     , reactions : GitHubGraph.Reactions
@@ -121,16 +128,16 @@ type Msg
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
-    | MirrorLabel GitHubGraph.Label
-    | StartDeletingLabel GitHubGraph.Label
-    | StopDeletingLabel GitHubGraph.Label
-    | DeleteLabel GitHubGraph.Label
-    | StartEditingLabel GitHubGraph.Label
-    | StopEditingLabel GitHubGraph.Label
-    | SetLabelName GitHubGraph.Label String
+    | MirrorLabel SharedLabel
+    | StartDeletingLabel SharedLabel
+    | StopDeletingLabel SharedLabel
+    | DeleteLabel SharedLabel
+    | StartEditingLabel SharedLabel
+    | StopEditingLabel SharedLabel
+    | SetLabelName SharedLabel String
     | SetLabelColor String
-    | RandomizeLabelColor GitHubGraph.Label
-    | EditLabel GitHubGraph.Label
+    | RandomizeLabelColor SharedLabel
+    | EditLabel SharedLabel
     | CreateLabel
     | RandomizeNewLabelColor
     | SetNewLabelName String
@@ -269,6 +276,7 @@ init config =
       , me = Nothing
       , data = Backend.emptyData
       , allCards = Dict.empty
+      , allLabels = Dict.empty
       , selectedCards = []
       , anticipatedCards = []
       , highlightedCard = Nothing
@@ -510,10 +518,14 @@ update msg model =
 
                 allCards =
                     List.foldl addProjectCards withPRs (Dict.values data.cards)
+
+                allLabels =
+                    List.foldl (\r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
             in
                 ( { model
                     | data = data
                     , allCards = allCards
+                    , allLabels = allLabels
                     , cardGraphs = model.computeGraph data (Dict.values allCards)
                   }
                 , Backend.pollData DataFetched
@@ -533,7 +545,7 @@ update msg model =
                                     createLabel model r newLabel
 
                                 label :: _ ->
-                                    if GitHubGraph.labelEq label newLabel then
+                                    if label.color == newLabel.color then
                                         Cmd.none
                                     else
                                         updateLabel model r label newLabel
@@ -553,7 +565,7 @@ update msg model =
                 cmds =
                     List.map
                         (\r ->
-                            case List.filter (GitHubGraph.labelEq label) r.labels of
+                            case List.filter (matchesLabel label) r.labels of
                                 [] ->
                                     Cmd.none
 
@@ -619,10 +631,12 @@ update msg model =
                         cmds =
                             List.map
                                 (\r ->
-                                    if List.any (GitHubGraph.labelEq oldLabel) r.labels then
-                                        updateLabel model r oldLabel newLabel
-                                    else
-                                        Cmd.none
+                                    case List.filter (matchesLabel oldLabel) r.labels of
+                                        repoLabel :: _ ->
+                                            updateLabel model r repoLabel newLabel
+
+                                        _ ->
+                                            Cmd.none
                                 )
                                 model.data.repos
                     in
@@ -683,6 +697,7 @@ update msg model =
                                     )
                                     data.repos
                         }
+                    , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels repo.labels
                   }
                 , Cmd.none
                 )
@@ -718,7 +733,7 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
     , title = title
     , updatedAt = updatedAt
     , author = author
-    , labels = labels
+    , labels = List.map .id labels
     , cards = cards
     , commentCount = commentCount
     , reactions = reactions
@@ -735,7 +750,7 @@ prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount
     , title = title
     , updatedAt = updatedAt
     , author = author
-    , labels = labels
+    , labels = List.map .id labels
     , cards = cards
     , commentCount = commentCount
     , reactions = reactions
@@ -948,14 +963,33 @@ viewLabelsPage model =
             (newLabel :: labelRows)
 
 
-viewLabelRow : Model -> GitHubGraph.Label -> List GitHubGraph.Repo -> List Card -> Html Msg
+matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool
+matchesLabel sl l =
+    l.name == sl.name && String.toLower l.color == String.toLower sl.color
+
+
+includesLabel : Model -> SharedLabel -> List GitHubGraph.ID -> Bool
+includesLabel model label labelIds =
+    List.any
+        (\id ->
+            case Dict.get id model.allLabels of
+                Just l ->
+                    matchesLabel label l
+
+                Nothing ->
+                    False
+        )
+        labelIds
+
+
+viewLabelRow : Model -> SharedLabel -> List GitHubGraph.Repo -> List Card -> Html Msg
 viewLabelRow model label repos allCards =
     let
         stateKey =
             labelKey label
 
         ( prs, issues ) =
-            List.partition isPR (List.filter (\c -> isOpen c && List.member label c.labels) allCards)
+            List.partition isPR (List.filter (\c -> isOpen c && includesLabel model label c.labels) allCards)
     in
         Html.div [ HA.class "label-row" ]
             [ Html.div [ HA.class "label-cell" ]
@@ -1107,20 +1141,6 @@ labelColorStyle color =
                 -- for darker backgrounds they just do white
                 "#fff"
           )
-        ]
-
-
-viewLabelBig : GitHubGraph.Label -> Html Msg
-viewLabelBig label =
-    Html.span
-        [ HA.class "label big"
-        , labelColorStyle label.color
-        ]
-        [ Html.span [ HA.class "octicon octicon-tag" ]
-            [ Html.text "" ]
-        , Html.text " "
-        , Html.span [ HA.class "label-text" ]
-            [ Html.text label.name ]
         ]
 
 
@@ -1319,8 +1339,11 @@ computeReferenceGraph data cards =
                 []
                 data.references
 
+        allLabels =
+            List.foldl (\r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
+
         cardNodeThunks =
-            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode card)) <|
+            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode allLabels card)) <|
                 List.filter isOpen cards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
@@ -1484,14 +1507,14 @@ issueRadiusWithFlair card context =
         issueRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
 
 
-cardNode : Card -> GraphContext -> Node CardNodeState
-cardNode card context =
+cardNode : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> Node CardNodeState
+cardNode allLabels card context =
     let
         flair =
             nodeFlairArcs card context
 
         labels =
-            nodeLabelArcs card context
+            nodeLabelArcs allLabels card context
 
         radii =
             { base = issueRadius card context
@@ -1607,8 +1630,8 @@ nodeFlairArcs card context =
                         ]
 
 
-nodeLabelArcs : Card -> GraphContext -> List (Svg Msg)
-nodeLabelArcs card context =
+nodeLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> List (Svg Msg)
+nodeLabelArcs allLabels card context =
     let
         radius =
             issueRadius card context
@@ -1636,7 +1659,7 @@ nodeLabelArcs card context =
                     []
             )
             labelSegments
-            card.labels
+            (List.filterMap (flip Dict.get allLabels) card.labels)
 
 
 viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
@@ -1913,7 +1936,7 @@ viewCard model card =
                 [ Html.text card.title
                 ]
             , Html.span [ HA.class "card-labels" ] <|
-                List.map viewLabel card.labels
+                List.map (viewLabel model) card.labels
             , Html.div [ HA.class "card-meta" ]
                 [ Html.a
                     [ HA.href card.url
@@ -2003,26 +2026,35 @@ colorIsLight hex =
                 Debug.crash "invalid hex"
 
 
-viewLabel : GitHubGraph.Label -> Html Msg
-viewLabel { name, color } =
-    Html.span
-        [ HA.class "label"
-        , HA.style
-            [ ( "background-color", "#" ++ color )
-            , ( "color"
-              , if colorIsLight color then
-                    -- GitHub appears to pre-compute a hex code, but this seems to be
-                    -- pretty much all it's doing
-                    "rgba(0, 0, 0, .8)"
-                else
-                    -- for darker backgrounds they just do white
-                    "#fff"
-              )
+viewLabel : Model -> GitHubGraph.ID -> Html Msg
+viewLabel model id =
+    let
+        ( name, color ) =
+            case Dict.get id model.allLabels of
+                Just { name, color } ->
+                    ( name, color )
+
+                Nothing ->
+                    ( "unknown", "#ff00ff" )
+    in
+        Html.span
+            [ HA.class "label"
+            , HA.style
+                [ ( "background-color", "#" ++ color )
+                , ( "color"
+                  , if colorIsLight color then
+                        -- GitHub appears to pre-compute a hex code, but this seems to be
+                        -- pretty much all it's doing
+                        "rgba(0, 0, 0, .8)"
+                    else
+                        -- for darker backgrounds they just do white
+                        "#fff"
+                  )
+                ]
             ]
-        ]
-        [ Html.span [ HA.class "label-text" ]
-            [ Html.text name ]
-        ]
+            [ Html.span [ HA.class "label-text" ]
+                [ Html.text name ]
+            ]
 
 
 viewCardActor : Model -> Backend.ActorEvent -> Html Msg
@@ -2178,27 +2210,27 @@ findCardColumns model cardId =
         model.data.cards
 
 
-labelKey : GitHubGraph.Label -> ( String, String )
+labelKey : SharedLabel -> ( String, String )
 labelKey label =
     ( label.name, String.toLower label.color )
 
 
-createLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg
+createLabel : Model -> GitHubGraph.Repo -> SharedLabel -> Cmd Msg
 createLabel model repo label =
     case model.me of
         Just { token } ->
-            GitHubGraph.createRepoLabel token repo label
+            GitHubGraph.createRepoLabel token repo label.name label.color
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
             Cmd.none
 
 
-updateLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> GitHubGraph.Label -> Cmd Msg
+updateLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> SharedLabel -> Cmd Msg
 updateLabel model repo label1 label2 =
     case model.me of
         Just { token } ->
-            GitHubGraph.updateRepoLabel token repo label1 label2
+            GitHubGraph.updateRepoLabel token repo label1 label2.name label2.color
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
@@ -2209,14 +2241,14 @@ deleteLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg
 deleteLabel model repo label =
     case model.me of
         Just { token } ->
-            GitHubGraph.deleteRepoLabel token repo label
+            GitHubGraph.deleteRepoLabel token repo label.name
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
             Cmd.none
 
 
-randomizeColor : GitHubGraph.Label -> GitHubGraph.Label
+randomizeColor : SharedLabel -> SharedLabel
 randomizeColor label =
     let
         currentColor =
