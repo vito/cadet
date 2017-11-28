@@ -49,6 +49,8 @@ fromGraph g =
         iterations =
             if size == 1 then
                 1
+            else if size < 5 then
+                50
             else
                 size * 10
 

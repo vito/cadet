@@ -24205,7 +24205,7 @@ var _vito$cadet$ForceGraph$fromGraph = function (g) {
 		}
 	};
 	var size = _elm_community$graph$Graph$size(graph);
-	var iterations = _elm_lang$core$Native_Utils.eq(size, 1) ? 1 : (size * 10);
+	var iterations = _elm_lang$core$Native_Utils.eq(size, 1) ? 1 : ((_elm_lang$core$Native_Utils.cmp(size, 5) < 0) ? 50 : (size * 10));
 	var newSimulation = A2(
 		_gampleman$elm_visualization$Visualization_Force$iterations,
 		iterations,
