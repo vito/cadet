@@ -27728,7 +27728,7 @@ var _vito$cadet$Main$viewCard = F2(
 						}(),
 						_1: {
 							ctor: '::',
-							_0: _vito$cadet$Main$isDone(card) ? A2(
+							_0: (_vito$cadet$Main$isOpen(card) && _vito$cadet$Main$isDone(card)) ? A2(
 								_elm_lang$html$Html$span,
 								{
 									ctor: '::',
@@ -27743,7 +27743,7 @@ var _vito$cadet$Main$viewCard = F2(
 								{ctor: '[]'}) : _elm_lang$html$Html$text(''),
 							_1: {
 								ctor: '::',
-								_0: _vito$cadet$Main$isDone(card) ? A2(
+								_0: (_vito$cadet$Main$isOpen(card) && _vito$cadet$Main$isDone(card)) ? A2(
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',

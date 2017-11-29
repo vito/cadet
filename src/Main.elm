@@ -1960,7 +1960,7 @@ viewCard model card =
 
                 PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
-            , if isDone card then
+            , if isOpen card && isDone card then
                 Html.span
                     [ HA.class "octicon accept octicon-thumbsup"
                     , HE.onClick (AcceptCard card)
@@ -1968,7 +1968,7 @@ viewCard model card =
                     []
               else
                 Html.text ""
-            , if isDone card then
+            , if isOpen card && isDone card then
                 Html.span
                     [ HA.class "octicon reject octicon-thumbsdown"
                     , HE.onClick (RejectCard card)
