@@ -91,6 +91,7 @@ type alias Repo =
     , owner : String
     , name : String
     , labels : List Label
+    , milestones : List Milestone
     }
 
 
@@ -108,6 +109,7 @@ type alias Issue =
     , author : Maybe User
     , labels : List Label
     , cards : List CardLocation
+    , milestone : Maybe Milestone
     }
 
 
@@ -131,6 +133,7 @@ type alias PullRequest =
     , cards : List CardLocation
     , additions : Int
     , deletions : Int
+    , milestone : Maybe Milestone
     }
 
 
@@ -145,6 +148,20 @@ type alias Label =
     , name : String
     , color : String
     }
+
+
+type alias Milestone =
+    { id : ID
+    , number : Int
+    , title : String
+    , state : MilestoneState
+    , description : Maybe String
+    }
+
+
+type MilestoneState
+    = MilestoneStateOpen
+    | MilestoneStateClosed
 
 
 type alias ReactionGroup =
@@ -553,6 +570,13 @@ pullRequestStates =
     ]
 
 
+milestoneStates : List ( String, MilestoneState )
+milestoneStates =
+    [ ( "OPEN", MilestoneStateOpen )
+    , ( "CLOSED", MilestoneStateClosed )
+    ]
+
+
 reactionTypes : List ( String, ReactionType )
 reactionTypes =
     [ ( "THUMBS_UP", ReactionTypeThumbsUp )
@@ -572,6 +596,7 @@ repoObject =
         |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
+        |> GB.with (GB.field "milestones" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list milestoneObject)))
 
 
 repoQuery : GB.Document GB.Query Repo RepoSelector
@@ -760,6 +785,16 @@ labelObject =
         |> GB.with (GB.field "color" [] GB.string)
 
 
+milestoneObject : GB.ValueSpec GB.NonNull GB.ObjectType Milestone vars
+milestoneObject =
+    GB.object Milestone
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "number" [] GB.int)
+        |> GB.with (GB.field "title" [] GB.string)
+        |> GB.with (GB.field "state" [] (GB.enum milestoneStates))
+        |> GB.with (GB.field "description" [] (GB.nullable GB.string))
+
+
 columnObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumn vars
 columnObject =
     GB.object ProjectColumn
@@ -812,6 +847,7 @@ issueObject =
         |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
+        |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
 
 
 prObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequest vars
@@ -831,6 +867,7 @@ prObject =
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
         |> GB.with (GB.field "additions" [] GB.int)
         |> GB.with (GB.field "deletions" [] GB.int)
+        |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
 
 
 issuesQuery : GB.Document GB.Query (PagedResult Issue) (PagedSelector RepoSelector)
@@ -1041,6 +1078,7 @@ decodeRepo =
         |: (JD.field "owner" JD.string)
         |: (JD.field "name" JD.string)
         |: (JD.field "labels" (JD.list decodeLabel))
+        |: (JD.field "milestones" (JD.list decodeMilestone))
 
 
 decodeIssue : JD.Decoder Issue
@@ -1059,6 +1097,7 @@ decodeIssue =
         |: (JD.field "author" (JD.maybe decodeUser))
         |: (JD.field "labels" <| JD.list decodeLabel)
         |: (JD.field "cards" <| JD.list decodeCardLocation)
+        |: (JD.field "milestone" <| JD.maybe decodeMilestone)
 
 
 decodePullRequest : JD.Decoder PullRequest
@@ -1078,6 +1117,7 @@ decodePullRequest =
         |: (JD.field "cards" <| JD.list decodeCardLocation)
         |: (JD.field "additions" JD.int)
         |: (JD.field "deletions" JD.int)
+        |: (JD.field "milestone" <| JD.maybe decodeMilestone)
 
 
 decodeLabel : JD.Decoder Label
@@ -1086,6 +1126,16 @@ decodeLabel =
         |: (JD.field "id" JD.string)
         |: (JD.field "name" JD.string)
         |: (JD.field "color" JD.string)
+
+
+decodeMilestone : JD.Decoder Milestone
+decodeMilestone =
+    JD.succeed Milestone
+        |: (JD.field "id" JD.string)
+        |: (JD.field "number" JD.int)
+        |: (JD.field "title" JD.string)
+        |: (JD.field "state" decodeMilestoneState)
+        |: (JD.field "description" (JD.maybe JD.string))
 
 
 decodeReactionGroup : JD.Decoder ReactionGroup
@@ -1105,6 +1155,20 @@ decodeReactionType =
 
                 Nothing ->
                     Result.Err ("Not valid pattern for decoder to ReactionType. Pattern: " ++ (toString string))
+    in
+        customDecoder JD.string decodeToType
+
+
+decodeMilestoneState : JD.Decoder MilestoneState
+decodeMilestoneState =
+    let
+        decodeToType string =
+            case Dict.get string (Dict.fromList milestoneStates) of
+                Just type_ ->
+                    Result.Ok type_
+
+                Nothing ->
+                    Result.Err ("Not valid pattern for decoder to MilestoneState. Pattern: " ++ (toString string))
     in
         customDecoder JD.string decodeToType
 
@@ -1218,6 +1282,7 @@ encodeRepo record =
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
         , ( "labels", JE.list (List.map encodeLabel record.labels) )
+        , ( "milestones", JE.list (List.map encodeMilestone record.milestones) )
         ]
 
 
@@ -1237,6 +1302,7 @@ encodeIssue record =
         , ( "author", JEE.maybe encodeUser record.author )
         , ( "labels", JE.list <| List.map encodeLabel record.labels )
         , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
+        , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         ]
 
 
@@ -1257,6 +1323,7 @@ encodePullRequest record =
         , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
         , ( "additions", JE.int record.additions )
         , ( "deletions", JE.int record.deletions )
+        , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         ]
 
 
@@ -1267,6 +1334,31 @@ encodeLabel record =
         , ( "name", JE.string record.name )
         , ( "color", JE.string record.color )
         ]
+
+
+encodeMilestone : Milestone -> JE.Value
+encodeMilestone record =
+    JE.object
+        [ ( "id", JE.string record.id )
+        , ( "number", JE.int record.number )
+        , ( "title", JE.string record.title )
+        , ( "state", encodeMilestoneState record.state )
+        , ( "description", JEE.maybe JE.string record.description )
+        ]
+
+
+encodeMilestoneState : MilestoneState -> JE.Value
+encodeMilestoneState item =
+    JE.string <|
+        List.foldl
+            (\( a, b ) default ->
+                if b == item then
+                    a
+                else
+                    default
+            )
+            "UNKNOWN"
+            milestoneStates
 
 
 encodeReactionGroup : ReactionGroup -> JE.Value
