@@ -29,13 +29,13 @@ import Time
 
 
 type alias Data =
-    { repos : List GitHubGraph.Repo
-    , issues : Dict String (List GitHubGraph.Issue)
-    , prs : Dict String (List GitHubGraph.PullRequest)
-    , references : Dict String (List GitHubGraph.ID)
-    , actors : Dict String (List ActorEvent)
-    , projects : List GitHubGraph.Project
-    , cards : Dict String (List GitHubGraph.ProjectColumnCard)
+    { repos : Dict GitHubGraph.ID GitHubGraph.Repo
+    , issues : Dict GitHubGraph.ID GitHubGraph.Issue
+    , prs : Dict GitHubGraph.ID GitHubGraph.PullRequest
+    , projects : Dict GitHubGraph.ID GitHubGraph.Project
+    , columnCards : Dict GitHubGraph.ID (List GitHubGraph.ProjectColumnCard)
+    , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
+    , actors : Dict GitHubGraph.ID (List ActorEvent)
     }
 
 
@@ -61,13 +61,13 @@ type alias ActorEvent =
 
 emptyData : Data
 emptyData =
-    { repos = []
+    { repos = Dict.empty
     , issues = Dict.empty
     , prs = Dict.empty
+    , projects = Dict.empty
+    , columnCards = Dict.empty
     , references = Dict.empty
     , actors = Dict.empty
-    , projects = []
-    , cards = Dict.empty
     }
 
 
@@ -131,13 +131,13 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
-        |: (JD.field "repos" <| JD.list GitHubGraph.decodeRepo)
-        |: (JD.field "issues" <| JD.dict (JD.list GitHubGraph.decodeIssue))
-        |: (JD.field "prs" <| JD.dict (JD.list GitHubGraph.decodePullRequest))
+        |: (JD.field "repos" <| JD.dict GitHubGraph.decodeRepo)
+        |: (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
+        |: (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
+        |: (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
+        |: (JD.field "columnCards" <| JD.dict decodeCards)
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
-        |: (JD.field "projects" <| JD.list GitHubGraph.decodeProject)
-        |: (JD.field "cards" <| JD.dict decodeCards)
 
 
 decodeCards : JD.Decoder (List GitHubGraph.ProjectColumnCard)

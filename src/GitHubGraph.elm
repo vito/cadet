@@ -32,6 +32,8 @@ module GitHubGraph
         , fetchRepoIssue
         , fetchRepoPullRequests
         , fetchRepoPullRequest
+        , fetchIssue
+        , fetchPullRequest
         , fetchTimeline
         , moveCardAfter
         , addContentCard
@@ -346,6 +348,20 @@ fetchRepoPullRequest : Token -> IssueOrPRSelector -> Task Error PullRequest
 fetchRepoPullRequest token sel =
     pullRequestQuery
         |> GB.request sel
+        |> GH.customSendQuery (authedOptions token)
+
+
+fetchIssue : Token -> ID -> Task Error Issue
+fetchIssue token id =
+    objectQuery "Issue" issueObject
+        |> GB.request { id = id }
+        |> GH.customSendQuery (authedOptions token)
+
+
+fetchPullRequest : Token -> ID -> Task Error PullRequest
+fetchPullRequest token id =
+    objectQuery "PullRequest" prObject
+        |> GB.request { id = id }
         |> GH.customSendQuery (authedOptions token)
 
 
@@ -1064,6 +1080,21 @@ pullRequestQuery =
                     ]
                 <|
                     GB.extract (GB.field "pullRequest" [ ( "number", GA.variable numberVar ) ] prObject)
+    in
+        GB.queryDocument queryRoot
+
+
+objectQuery : String -> GB.ValueSpec GB.NonNull GB.ObjectType a IDSelector -> GB.Document GB.Query a IDSelector
+objectQuery t obj =
+    let
+        idVar =
+            GV.required "id" .id GV.id
+
+        queryRoot =
+            GB.extract <|
+                GB.assume <|
+                    GB.field "node" [ ( "id", GA.variable idVar ) ] <|
+                        GB.extract (GB.inlineFragment (Just (GB.onType t)) obj)
     in
         GB.queryDocument queryRoot
 

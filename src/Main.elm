@@ -472,8 +472,7 @@ update msg model =
             in
                 cb
                     { model
-                        | data = { data | cards = Dict.insert col cards data.cards }
-                        , allCards = addProjectCards cards model.allCards
+                        | data = { data | columnCards = Dict.insert col cards data.columnCards }
                     }
 
         CardsFetched _ col (Err msg) ->
@@ -556,17 +555,17 @@ update msg model =
 
         DataFetched (Ok data) ->
             let
-                withIssues =
-                    Dict.foldl (\_ is cards -> List.foldl (\i -> Dict.insert i.id (issueCard i)) cards is) Dict.empty data.issues
+                issueCards =
+                    Dict.map (\_ -> issueCard) data.issues
 
-                withPRs =
-                    Dict.foldl (\_ ps cards -> List.foldl (\p -> Dict.insert p.id (prCard p)) cards ps) withIssues data.prs
+                prCards =
+                    Dict.map (\_ -> prCard) data.prs
 
                 allCards =
-                    List.foldl addProjectCards withPRs (Dict.values data.cards)
+                    Dict.union issueCards prCards
 
                 allLabels =
-                    List.foldl (\r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
+                    Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
             in
                 ( { model
                     | data = data
@@ -584,18 +583,19 @@ update msg model =
         MirrorLabel newLabel ->
             let
                 cmds =
-                    List.map
-                        (\r ->
+                    Dict.foldl
+                        (\_ r acc ->
                             case List.filter ((==) newLabel.name << .name) r.labels of
                                 [] ->
-                                    createLabel model r newLabel
+                                    createLabel model r newLabel :: acc
 
                                 label :: _ ->
                                     if label.color == newLabel.color then
-                                        Cmd.none
+                                        acc
                                     else
-                                        updateLabel model r label newLabel
+                                        updateLabel model r label newLabel :: acc
                         )
+                        []
                         model.data.repos
             in
                 ( model, Cmd.batch cmds )
@@ -609,15 +609,16 @@ update msg model =
         DeleteLabel label ->
             let
                 cmds =
-                    List.map
-                        (\r ->
+                    Dict.foldl
+                        (\_ r acc ->
                             case List.filter (matchesLabel label) r.labels of
                                 [] ->
-                                    Cmd.none
+                                    acc
 
                                 repoLabel :: _ ->
-                                    deleteLabel model r repoLabel
+                                    deleteLabel model r repoLabel :: acc
                         )
+                        []
                         model.data.repos
             in
                 ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
@@ -675,15 +676,16 @@ update msg model =
                 Just newLabel ->
                     let
                         cmds =
-                            List.map
-                                (\r ->
+                            Dict.foldl
+                                (\_ r acc ->
                                     case List.filter (matchesLabel oldLabel) r.labels of
                                         repoLabel :: _ ->
-                                            updateLabel model r repoLabel newLabel
+                                            updateLabel model r repoLabel newLabel :: acc
 
                                         _ ->
-                                            Cmd.none
+                                            acc
                                 )
+                                []
                                 model.data.repos
                     in
                         ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
@@ -732,17 +734,7 @@ update msg model =
             in
                 ( { model
                     | data =
-                        { data
-                            | repos =
-                                List.map
-                                    (\r ->
-                                        if r.id == repo.id then
-                                            repo
-                                        else
-                                            r
-                                    )
-                                    data.repos
-                        }
+                        { data | repos = Dict.insert repo.id repo data.repos }
                     , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels repo.labels
                   }
                 , Cmd.none
@@ -785,13 +777,14 @@ update msg model =
         MirrorMilestone title ->
             let
                 cmds =
-                    List.map
-                        (\r ->
+                    Dict.foldl
+                        (\_ r acc ->
                             if List.any ((==) title << .title) r.milestones then
-                                Cmd.none
+                                acc
                             else
-                                createMilestone model r title
+                                createMilestone model r title :: acc
                         )
+                        []
                         model.data.repos
             in
                 ( model, Cmd.batch cmds )
@@ -799,15 +792,16 @@ update msg model =
         CloseMilestone title ->
             let
                 cmds =
-                    List.map
-                        (\r ->
+                    Dict.foldl
+                        (\_ r acc ->
                             case List.filter ((==) title << .title) r.milestones of
                                 m :: _ ->
-                                    closeMilestone model r m
+                                    closeMilestone model r m :: acc
 
                                 [] ->
-                                    Cmd.none
+                                    acc
                         )
+                        []
                         model.data.repos
             in
                 ( model, Cmd.batch cmds )
@@ -815,15 +809,16 @@ update msg model =
         DeleteMilestone title ->
             let
                 cmds =
-                    List.map
-                        (\r ->
+                    Dict.foldl
+                        (\_ r acc ->
                             case List.filter ((==) title << .title) r.milestones of
                                 m :: _ ->
-                                    deleteMilestone model r m
+                                    deleteMilestone model r m :: acc
 
                                 [] ->
-                                    Cmd.none
+                                    acc
                         )
+                        []
                         model.data.repos
             in
                 ( model, Cmd.batch cmds )
@@ -865,8 +860,8 @@ update msg model =
                         ( model, set Nothing )
 
                     Just title ->
-                        case List.filter ((==) card.repo.id << .id) model.data.repos of
-                            repo :: _ ->
+                        case Dict.get card.repo.id model.data.repos of
+                            Just repo ->
                                 case List.filter ((==) title << .title) repo.milestones of
                                     milestone :: _ ->
                                         ( model, set (Just milestone) )
@@ -874,7 +869,7 @@ update msg model =
                                     [] ->
                                         ( model, Cmd.none )
 
-                            [] ->
+                            Nothing ->
                                 ( model, Cmd.none )
 
         IssueMilestoneChanged card (Ok ()) ->
@@ -892,24 +887,6 @@ update msg model =
         PRMilestoneChanged card (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
                 ( model, Cmd.none )
-
-
-addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
-addProjectCards cards allCards =
-    List.foldl
-        (\card ->
-            case card.content of
-                Nothing ->
-                    identity
-
-                Just (GitHubGraph.IssueCardContent i) ->
-                    Dict.insert i.id (issueCard i)
-
-                Just (GitHubGraph.PullRequestCardContent p) ->
-                    Dict.insert p.id (prCard p)
-        )
-        allCards
-        cards
 
 
 issueCard : GitHubGraph.Issue -> Card
@@ -1082,7 +1059,7 @@ viewAllProjectsPage : Model -> Html Msg
 viewAllProjectsPage model =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject model.data.projects
+            List.filterMap selectStatefulProject (Dict.values model.data.projects)
     in
         Html.div [ HA.class "project-table" ]
             [ Html.div [ HA.class "projects" ]
@@ -1097,8 +1074,8 @@ viewLabelsPage model =
             Just << Maybe.withDefault [ repo ] << Maybe.map ((::) repo)
 
         reposByLabel =
-            List.foldl
-                (\repo cbn ->
+            Dict.foldl
+                (\_ repo cbn ->
                     List.foldl
                         (\label -> Dict.update ( label.name, String.toLower label.color ) (addRepo repo))
                         cbn
@@ -1169,8 +1146,8 @@ viewMilestonesPage model =
             Just << Maybe.withDefault [ repo ] << Maybe.map ((::) repo)
 
         reposByMilestone =
-            List.foldl
-                (\repo acc ->
+            Dict.foldl
+                (\_ repo acc ->
                     List.foldl
                         (\milestone ->
                             if milestone.state == GitHubGraph.MilestoneStateOpen then
@@ -1520,7 +1497,7 @@ viewProjectColumn model project mod col =
     let
         cards =
             mod <|
-                Maybe.withDefault [] (Dict.get col.id model.data.cards)
+                Maybe.withDefault [] (Dict.get col.id model.data.columnCards)
 
         dropCandidate =
             { msgFunc = MoveCardAfter
@@ -1587,7 +1564,7 @@ viewProjectPage : Model -> String -> Html Msg
 viewProjectPage model name =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject model.data.projects
+            List.filterMap selectStatefulProject (Dict.values model.data.projects)
 
         mproject =
             List.head <|
@@ -1673,7 +1650,7 @@ computeReferenceGraph data cards =
                 data.references
 
         allLabels =
-            List.foldl (\r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
+            Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
 
         cardNodeThunks =
             List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode allLabels card)) <|
@@ -2576,7 +2553,7 @@ findCardColumns model cardId =
                 columnIds
         )
         []
-        model.data.cards
+        model.data.columnCards
 
 
 labelKey : SharedLabel -> ( String, String )
@@ -2638,7 +2615,7 @@ rejectIssue model issue =
         Just { token } ->
             let
                 moveCardToBacklog card =
-                    case List.head (List.filter ((==) card.project.id << .id) model.data.projects) of
+                    case Dict.get card.project.id model.data.projects of
                         Just project ->
                             case List.filter (detectColumn.backlog << .name) project.columns of
                                 [ column ] ->

@@ -19,43 +19,38 @@ const app = express()
 const port = process.env.PORT || 8000;
 
 const data = {
-  // repos
-  repos: [],
+  // repos by id
+  repos: {},
 
-  // map from repositories to issues
+  // issues by id
   issues: {},
 
-  // map from repositories to prs
+  // prs by id
   prs: {},
 
-  // map from issue to issues that referenced it
+  // map from issue/pr id to issues/pr ids that referenced it
   references: {},
 
-  // map from issue to actors in timeline
+  // map from issue/pr id to actors in timeline
   actors: {},
 
-  // projects
-  projects: [],
+  // projects by id
+  projects: {},
 
-  // map from column id to cards
-  cards: {}
+  // cards by column id
+  columnCards: {}
 }
 
 // map from data set to object id to client requests waiting on it
-var refreshing = {
-  repo: {},
-  issues: {},
-  prs: {},
-  references: {},
-  actors: {},
-  projects: [],
-  cards: {}
-}
+var refreshing = {}
 
 function queueRefresh(field, id, res) {
+  console.log("queue refresh", field, id);
+
   var reqs = refreshing[field];
   if (reqs === undefined) {
-    return;
+    reqs = {};
+    refreshing[field] = reqs;
   }
 
   if (!(id in reqs)) {
@@ -80,6 +75,7 @@ function popRefresh(field, id, data) {
 
   var res;
   while (res = waiting.pop()) {
+    console.log("sending refreshed data for", field, id);
     res.send(JSON.stringify(data));
   }
 }
@@ -99,51 +95,105 @@ function popPoll() {
 
 setInterval(popPoll, 30 * 1000);
 
-function hydrate(field, args) {
-  var id = args[0];
-  var val = args[1];
-  data[field][id] = val;
-  popRefresh(field, id, val);
-  popPoll();
-}
-
 worker.ports.setRepos.subscribe(function(repos) {
-  data.repos = repos;
+  for (var i = 0; i < repos.length; i++) {
+    var repo = repos[i];
+    data.repos[repo.id] = repo;
+    popRefresh("repo", repo.owner+"/"+repo.name, repo);
+    popRefresh("repo", repo.id, repo);
+  }
+
   popPoll();
 });
 
 worker.ports.setRepo.subscribe(function(repo) {
-  for (var i = 0; i < data.repos.length; i++) {
-    if (data.repos[i].id == repo.id) {
-      data.repos[i] = repo;
-      popRefresh("repo", repo.owner+"/"+repo.name, repo);
-    }
-  }
-});
-
-worker.ports.setProjects.subscribe(function(projects) {
-  data.projects = projects;
+  data.repos[repo.id] = repo;
+  popRefresh("repo", repo.owner+"/"+repo.name, repo);
+  popRefresh("repo", repo.id, repo);
   popPoll();
 });
 
-worker.ports.setIssues.subscribe(function(args) {
-  hydrate("issues", args);
+worker.ports.setProjects.subscribe(function(projects) {
+  for (var i = 0; i < projects.length; i++) {
+    var project = projects[i];
+    data.projects[project.id] = project;
+    popRefresh("project", project.name, project);
+    popRefresh("project", project.id, project);
+  }
+
+  popPoll();
 });
 
-worker.ports.setPullRequests.subscribe(function(args) {
-  hydrate("prs", args);
+worker.ports.setIssues.subscribe(function(issues) {
+  for (var i = 0; i < issues.length; i++) {
+    var issue = issues[i];
+    data.issues[issue.id] = issue;
+    popRefresh("issue", issue.id, issue);
+  }
+
+  popPoll();
+});
+
+worker.ports.setIssue.subscribe(function(issue) {
+  data.issues[issue.id] = issue;
+  popRefresh("issue", issue.id, issue);
+  popPoll();
+});
+
+worker.ports.setPullRequests.subscribe(function(prs) {
+  for (var i = 0; i < prs.length; i++) {
+    var pr = prs[i];
+    data.prs[pr.id] = pr;
+    popRefresh("pr", pr.id, pr);
+  }
+
+  popPoll();
+});
+
+worker.ports.setPullRequest.subscribe(function(pr) {
+  data.prs[pr.id] = pr;
+  popRefresh("pr", pr.id, pr);
+  popPoll();
 });
 
 worker.ports.setReferences.subscribe(function(args) {
-  hydrate("references", args);
+  var id = args[0];
+  var val = args[1];
+  data.references[id] = val;
+  popPoll();
 });
 
 worker.ports.setActors.subscribe(function(args) {
-  hydrate("actors", args);
+  var id = args[0];
+  var val = args[1];
+  data.actors[id] = val;
+  popPoll();
 });
 
 worker.ports.setCards.subscribe(function(args) {
-  hydrate("cards", args);
+  var id = args[0];
+  var val = args[1];
+  data.columnCards[id] = val;
+  popRefresh("columnCards", id, val);
+
+  for (var i = 0; i < val.length; i++) {
+    var card = val[i];
+    if (card.content) {
+      var issue = card.content.issue;
+      if (issue) {
+        data.issues[issue.id] = issue;
+        popRefresh("issue", issue.id, issue);
+      }
+
+      var pr = card.content.pull_request;
+      if (pr) {
+        data.prs[pr.id] = pr;
+        popRefresh("pr", pr.id, pr);
+      }
+    }
+  }
+
+  popPoll();
 });
 
 app.use(compression())
