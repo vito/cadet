@@ -21124,7 +21124,22 @@ var _vito$cadet$GitHubGraph$setPullRequestMilestone = F3(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
 					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(_elm_lang$core$Basics_ops['++'], 'https://api.github.com/repos', pr.resourcePath)))));
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								pr.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										pr.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											_elm_lang$core$Basics$toString(pr.number))))))))));
 	});
 var _vito$cadet$GitHubGraph$setIssueMilestone = F3(
 	function (token, issue, mmilestone) {
@@ -21153,7 +21168,22 @@ var _vito$cadet$GitHubGraph$setIssueMilestone = F3(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
 					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(_elm_lang$core$Basics_ops['++'], 'https://api.github.com/repos', issue.resourcePath)))));
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								issue.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										issue.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											_elm_lang$core$Basics$toString(issue.number))))))))));
 	});
 var _vito$cadet$GitHubGraph$removeIssueLabel = F3(
 	function (token, issue, name) {
@@ -21164,11 +21194,23 @@ var _vito$cadet$GitHubGraph$removeIssueLabel = F3(
 				_lukewestby$elm_http_builder$HttpBuilder$delete(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						'https://api.github.com/repos',
+						'https://api.github.com/repos/',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							issue.resourcePath,
-							A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))));
+							issue.repo.owner,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									issue.repo.name,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/issues/',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(issue.number),
+											A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))))));
 	});
 var _vito$cadet$GitHubGraph$addIssueLabels = F3(
 	function (token, issue, names) {
@@ -21183,8 +21225,23 @@ var _vito$cadet$GitHubGraph$addIssueLabels = F3(
 					_lukewestby$elm_http_builder$HttpBuilder$post(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos',
-							A2(_elm_lang$core$Basics_ops['++'], issue.resourcePath, '/labels'))))));
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								issue.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										issue.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(issue.number),
+												'/labels'))))))))));
 	});
 var _vito$cadet$GitHubGraph$closeIssue = F2(
 	function (token, issue) {
@@ -21205,7 +21262,22 @@ var _vito$cadet$GitHubGraph$closeIssue = F2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
 					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(_elm_lang$core$Basics_ops['++'], 'https://api.github.com/repos', issue.resourcePath)))));
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								issue.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										issue.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											_elm_lang$core$Basics$toString(issue.number))))))))));
 	});
 var _vito$cadet$GitHubGraph$deleteRepoMilestone = F3(
 	function (token, repo, milestone) {
@@ -21410,9 +21482,7 @@ var _vito$cadet$GitHubGraph$Issue = function (a) {
 											return function (l) {
 												return function (m) {
 													return function (n) {
-														return function (o) {
-															return {id: a, url: b, resourcePath: c, createdAt: d, updatedAt: e, state: f, repo: g, number: h, title: i, commentCount: j, reactions: k, author: l, labels: m, cards: n, milestone: o};
-														};
+														return {id: a, url: b, createdAt: c, updatedAt: d, state: e, repo: f, number: g, title: h, commentCount: i, reactions: j, author: k, labels: l, cards: m, milestone: n};
 													};
 												};
 											};
@@ -21443,9 +21513,7 @@ var _vito$cadet$GitHubGraph$PullRequest = function (a) {
 													return function (n) {
 														return function (o) {
 															return function (p) {
-																return function (q) {
-																	return {id: a, url: b, resourcePath: c, createdAt: d, updatedAt: e, state: f, repo: g, number: h, title: i, commentCount: j, reactions: k, author: l, labels: m, cards: n, additions: o, deletions: p, milestone: q};
-																};
+																return {id: a, url: b, createdAt: c, updatedAt: d, state: e, repo: f, number: g, title: h, commentCount: i, reactions: j, author: k, labels: l, cards: m, additions: n, deletions: o, milestone: p};
 															};
 														};
 													};
@@ -22611,12 +22679,9 @@ var _vito$cadet$GitHubGraph$decodeIssue = A2(
 													_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 													A2(
 														_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-														A2(
-															_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-															_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Issue),
-															A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-														A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
-													A2(_elm_lang$core$Json_Decode$field, 'resource_path', _elm_lang$core$Json_Decode$string)),
+														_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Issue),
+														A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+													A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
 												A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 											A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 										A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodeIssueState)),
@@ -22676,12 +22741,9 @@ var _vito$cadet$GitHubGraph$decodePullRequest = A2(
 															_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 															A2(
 																_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-																A2(
-																	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-																	_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$PullRequest),
-																	A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-																A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
-															A2(_elm_lang$core$Json_Decode$field, 'resource_path', _elm_lang$core$Json_Decode$string)),
+																_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$PullRequest),
+																A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+															A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
 														A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 													A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 												A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodePullRequestState)),
@@ -22763,100 +22825,92 @@ var _vito$cadet$GitHubGraph$encodeIssue = function (record) {
 					ctor: '::',
 					_0: {
 						ctor: '_Tuple2',
-						_0: 'resource_path',
-						_1: _elm_lang$core$Json_Encode$string(record.resourcePath)
+						_0: 'created_at',
+						_1: _elm_lang$core$Json_Encode$string(
+							_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
 					},
 					_1: {
 						ctor: '::',
 						_0: {
 							ctor: '_Tuple2',
-							_0: 'created_at',
+							_0: 'updated_at',
 							_1: _elm_lang$core$Json_Encode$string(
-								_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
+								_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
 						},
 						_1: {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'updated_at',
-								_1: _elm_lang$core$Json_Encode$string(
-									_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
+								_0: 'state',
+								_1: _vito$cadet$GitHubGraph$encodeIssueState(record.state)
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'state',
-									_1: _vito$cadet$GitHubGraph$encodeIssueState(record.state)
+									_0: 'repo',
+									_1: _vito$cadet$GitHubGraph$encodeRepoLocation(record.repo)
 								},
 								_1: {
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple2',
-										_0: 'repo',
-										_1: _vito$cadet$GitHubGraph$encodeRepoLocation(record.repo)
+										_0: 'number',
+										_1: _elm_lang$core$Json_Encode$int(record.number)
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'number',
-											_1: _elm_lang$core$Json_Encode$int(record.number)
+											_0: 'title',
+											_1: _elm_lang$core$Json_Encode$string(record.title)
 										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'title',
-												_1: _elm_lang$core$Json_Encode$string(record.title)
+												_0: 'comment_count',
+												_1: _elm_lang$core$Json_Encode$int(record.commentCount)
 											},
 											_1: {
 												ctor: '::',
 												_0: {
 													ctor: '_Tuple2',
-													_0: 'comment_count',
-													_1: _elm_lang$core$Json_Encode$int(record.commentCount)
+													_0: 'reactions',
+													_1: _elm_lang$core$Json_Encode$list(
+														A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
 												},
 												_1: {
 													ctor: '::',
 													_0: {
 														ctor: '_Tuple2',
-														_0: 'reactions',
-														_1: _elm_lang$core$Json_Encode$list(
-															A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
+														_0: 'author',
+														_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
 													},
 													_1: {
 														ctor: '::',
 														_0: {
 															ctor: '_Tuple2',
-															_0: 'author',
-															_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
+															_0: 'labels',
+															_1: _elm_lang$core$Json_Encode$list(
+																A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
 														},
 														_1: {
 															ctor: '::',
 															_0: {
 																ctor: '_Tuple2',
-																_0: 'labels',
+																_0: 'cards',
 																_1: _elm_lang$core$Json_Encode$list(
-																	A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
+																	A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
 															},
 															_1: {
 																ctor: '::',
 																_0: {
 																	ctor: '_Tuple2',
-																	_0: 'cards',
-																	_1: _elm_lang$core$Json_Encode$list(
-																		A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
+																	_0: 'milestone',
+																	_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeMilestone, record.milestone)
 																},
-																_1: {
-																	ctor: '::',
-																	_0: {
-																		ctor: '_Tuple2',
-																		_0: 'milestone',
-																		_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeMilestone, record.milestone)
-																	},
-																	_1: {ctor: '[]'}
-																}
+																_1: {ctor: '[]'}
 															}
 														}
 													}
@@ -22892,114 +22946,106 @@ var _vito$cadet$GitHubGraph$encodePullRequest = function (record) {
 					ctor: '::',
 					_0: {
 						ctor: '_Tuple2',
-						_0: 'resource_path',
-						_1: _elm_lang$core$Json_Encode$string(record.resourcePath)
+						_0: 'created_at',
+						_1: _elm_lang$core$Json_Encode$string(
+							_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
 					},
 					_1: {
 						ctor: '::',
 						_0: {
 							ctor: '_Tuple2',
-							_0: 'created_at',
+							_0: 'updated_at',
 							_1: _elm_lang$core$Json_Encode$string(
-								_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
+								_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
 						},
 						_1: {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'updated_at',
-								_1: _elm_lang$core$Json_Encode$string(
-									_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
+								_0: 'state',
+								_1: _vito$cadet$GitHubGraph$encodePullRequestState(record.state)
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'state',
-									_1: _vito$cadet$GitHubGraph$encodePullRequestState(record.state)
+									_0: 'repo',
+									_1: _vito$cadet$GitHubGraph$encodeRepoLocation(record.repo)
 								},
 								_1: {
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple2',
-										_0: 'repo',
-										_1: _vito$cadet$GitHubGraph$encodeRepoLocation(record.repo)
+										_0: 'number',
+										_1: _elm_lang$core$Json_Encode$int(record.number)
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'number',
-											_1: _elm_lang$core$Json_Encode$int(record.number)
+											_0: 'title',
+											_1: _elm_lang$core$Json_Encode$string(record.title)
 										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'title',
-												_1: _elm_lang$core$Json_Encode$string(record.title)
+												_0: 'comment_count',
+												_1: _elm_lang$core$Json_Encode$int(record.commentCount)
 											},
 											_1: {
 												ctor: '::',
 												_0: {
 													ctor: '_Tuple2',
-													_0: 'comment_count',
-													_1: _elm_lang$core$Json_Encode$int(record.commentCount)
+													_0: 'reactions',
+													_1: _elm_lang$core$Json_Encode$list(
+														A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
 												},
 												_1: {
 													ctor: '::',
 													_0: {
 														ctor: '_Tuple2',
-														_0: 'reactions',
-														_1: _elm_lang$core$Json_Encode$list(
-															A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
+														_0: 'author',
+														_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
 													},
 													_1: {
 														ctor: '::',
 														_0: {
 															ctor: '_Tuple2',
-															_0: 'author',
-															_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
+															_0: 'labels',
+															_1: _elm_lang$core$Json_Encode$list(
+																A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
 														},
 														_1: {
 															ctor: '::',
 															_0: {
 																ctor: '_Tuple2',
-																_0: 'labels',
+																_0: 'cards',
 																_1: _elm_lang$core$Json_Encode$list(
-																	A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
+																	A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
 															},
 															_1: {
 																ctor: '::',
 																_0: {
 																	ctor: '_Tuple2',
-																	_0: 'cards',
-																	_1: _elm_lang$core$Json_Encode$list(
-																		A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
+																	_0: 'additions',
+																	_1: _elm_lang$core$Json_Encode$int(record.additions)
 																},
 																_1: {
 																	ctor: '::',
 																	_0: {
 																		ctor: '_Tuple2',
-																		_0: 'additions',
-																		_1: _elm_lang$core$Json_Encode$int(record.additions)
+																		_0: 'deletions',
+																		_1: _elm_lang$core$Json_Encode$int(record.deletions)
 																	},
 																	_1: {
 																		ctor: '::',
 																		_0: {
 																			ctor: '_Tuple2',
-																			_0: 'deletions',
-																			_1: _elm_lang$core$Json_Encode$int(record.deletions)
+																			_0: 'milestone',
+																			_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeMilestone, record.milestone)
 																		},
-																		_1: {
-																			ctor: '::',
-																			_0: {
-																				ctor: '_Tuple2',
-																				_0: 'milestone',
-																				_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeMilestone, record.milestone)
-																			},
-																			_1: {ctor: '[]'}
-																		}
+																		_1: {ctor: '[]'}
 																	}
 																}
 															}
@@ -23243,24 +23289,17 @@ var _vito$cadet$GitHubGraph$issueObject = A2(
 													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 													A3(
 														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-														'resourcePath',
+														'url',
 														{ctor: '[]'},
 														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 													A2(
 														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 														A3(
 															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-															'url',
+															'id',
 															{ctor: '[]'},
 															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-														A2(
-															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-															A3(
-																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																'id',
-																{ctor: '[]'},
-																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Issue))))))))))))))));
+														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Issue)))))))))))))));
 var _vito$cadet$GitHubGraph$fetchIssue = F2(
 	function (token, id) {
 		return A2(
@@ -23599,24 +23638,17 @@ var _vito$cadet$GitHubGraph$prObject = A2(
 															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 															A3(
 																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																'resourcePath',
+																'url',
 																{ctor: '[]'},
 																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 															A2(
 																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 																A3(
 																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																	'url',
+																	'id',
 																	{ctor: '[]'},
 																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-																A2(
-																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-																	A3(
-																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																		'id',
-																		{ctor: '[]'},
-																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequest))))))))))))))))));
+																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequest)))))))))))))))));
 var _vito$cadet$GitHubGraph$fetchPullRequest = F2(
 	function (token, id) {
 		return A2(

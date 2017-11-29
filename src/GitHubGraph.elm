@@ -108,7 +108,6 @@ type alias Repo =
 type alias Issue =
     { id : ID
     , url : String
-    , resourcePath : String
     , createdAt : Date
     , updatedAt : Date
     , state : IssueState
@@ -132,7 +131,6 @@ type IssueState
 type alias PullRequest =
     { id : ID
     , url : String
-    , resourcePath : String
     , createdAt : Date
     , updatedAt : Date
     , state : PullRequestState
@@ -438,7 +436,7 @@ deleteRepoMilestone token repo milestone =
 
 closeIssue : Token -> Issue -> Task Http.Error ()
 closeIssue token issue =
-    HttpBuilder.patch ("https://api.github.com/repos" ++ issue.resourcePath)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
         |> HttpBuilder.toTask
@@ -446,7 +444,7 @@ closeIssue token issue =
 
 addIssueLabels : Token -> Issue -> List String -> Task Http.Error ()
 addIssueLabels token issue names =
-    HttpBuilder.post ("https://api.github.com/repos" ++ issue.resourcePath ++ "/labels")
+    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
         |> HttpBuilder.toTask
@@ -454,14 +452,14 @@ addIssueLabels token issue names =
 
 removeIssueLabel : Token -> Issue -> String -> Task Http.Error ()
 removeIssueLabel token issue name =
-    HttpBuilder.delete ("https://api.github.com/repos" ++ issue.resourcePath ++ "/labels/" ++ name)
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
 
 
 setIssueMilestone : Token -> Issue -> Maybe Milestone -> Task Http.Error ()
 setIssueMilestone token issue mmilestone =
-    HttpBuilder.patch ("https://api.github.com/repos" ++ issue.resourcePath)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
@@ -469,7 +467,7 @@ setIssueMilestone token issue mmilestone =
 
 setPullRequestMilestone : Token -> PullRequest -> Maybe Milestone -> Task Http.Error ()
 setPullRequestMilestone token pr mmilestone =
-    HttpBuilder.patch ("https://api.github.com/repos" ++ pr.resourcePath)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ pr.repo.owner ++ "/" ++ pr.repo.name ++ "/issues/" ++ toString pr.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
@@ -910,7 +908,6 @@ issueObject =
     GB.object Issue
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.field "resourcePath" [] GB.string)
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.aliasAs "issueState" <| GB.field "state" [] (GB.enum issueStates))
@@ -930,7 +927,6 @@ prObject =
     GB.object PullRequest
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.field "resourcePath" [] GB.string)
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.aliasAs "prState" <| GB.field "state" [] (GB.enum pullRequestStates))
@@ -1187,7 +1183,6 @@ decodeIssue =
     JD.succeed Issue
         |: (JD.field "id" JD.string)
         |: (JD.field "url" JD.string)
-        |: (JD.field "resource_path" JD.string)
         |: (JD.field "created_at" JDE.date)
         |: (JD.field "updated_at" JDE.date)
         |: (JD.field "state" decodeIssueState)
@@ -1207,7 +1202,6 @@ decodePullRequest =
     JD.succeed PullRequest
         |: (JD.field "id" JD.string)
         |: (JD.field "url" JD.string)
-        |: (JD.field "resource_path" JD.string)
         |: (JD.field "created_at" JDE.date)
         |: (JD.field "updated_at" JDE.date)
         |: (JD.field "state" decodePullRequestState)
@@ -1404,7 +1398,6 @@ encodeIssue record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "resource_path", JE.string record.resourcePath )
         , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodeIssueState record.state )
@@ -1425,7 +1418,6 @@ encodePullRequest record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "resource_path", JE.string record.resourcePath )
         , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodePullRequestState record.state )
