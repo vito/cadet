@@ -1166,23 +1166,16 @@ viewLabelsPage model =
 viewMilestonesPage : Model -> Html Msg
 viewMilestonesPage model =
     let
-        addRepo repo =
-            Just << Maybe.withDefault [ repo ] << Maybe.map ((::) repo)
-
-        reposByMilestone =
+        allMilestones =
             Dict.foldl
-                (\_ repo acc ->
-                    List.foldl
-                        (\milestone ->
-                            if milestone.state == GitHubGraph.MilestoneStateOpen then
-                                Dict.update milestone.title (addRepo repo)
-                            else
-                                identity
-                        )
-                        acc
-                        repo.milestones
+                (\_ repo ->
+                    repo.milestones
+                        |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                        |> List.map .title
+                        |> Set.fromList
+                        |> Set.union
                 )
-                Dict.empty
+                Set.empty
                 model.data.repos
 
         addCard card =
@@ -1220,7 +1213,7 @@ viewMilestonesPage model =
                 (\title ->
                     viewMilestone model title (Maybe.withDefault [] (Dict.get title cardsByMilestone))
                 )
-                (Dict.keys reposByMilestone)
+                (Set.toList allMilestones)
     in
         Html.div [ HA.class "all-milestones" ]
             (newMilestone model :: nextMilestone :: milestones)

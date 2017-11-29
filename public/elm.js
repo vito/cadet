@@ -25306,8 +25306,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2465, column: 25},
-							end: {line: 2479, column: 57}
+							start: {line: 2458, column: 25},
+							end: {line: 2472, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25417,8 +25417,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2383, column: 17},
-					end: {line: 2391, column: 50}
+					start: {line: 2376, column: 17},
+					end: {line: 2384, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25426,8 +25426,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2381, column: 9},
-				end: {line: 2394, column: 42}
+				start: {line: 2374, column: 9},
+				end: {line: 2387, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25753,8 +25753,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 1926, column: 17},
-							end: {line: 1931, column: 49}
+							start: {line: 1919, column: 17},
+							end: {line: 1924, column: 49}
 						},
 						_p38)('impossible');
 				}
@@ -28778,41 +28778,33 @@ var _vito$cadet$Main$viewMilestonesPage = function (model) {
 			}),
 		_elm_lang$core$Dict$empty,
 		model.allCards);
-	var addRepo = function (repo) {
-		return function (_p141) {
-			return _elm_lang$core$Maybe$Just(
-				A2(
-					_elm_lang$core$Maybe$withDefault,
-					{
-						ctor: '::',
-						_0: repo,
-						_1: {ctor: '[]'}
-					},
-					A2(
-						_elm_lang$core$Maybe$map,
-						F2(
-							function (x, y) {
-								return {ctor: '::', _0: x, _1: y};
-							})(repo),
-						_p141)));
-		};
-	};
-	var reposByMilestone = A3(
+	var allMilestones = A3(
 		_elm_lang$core$Dict$foldl,
-		F3(
-			function (_p142, repo, acc) {
-				return A3(
-					_elm_lang$core$List$foldl,
-					function (milestone) {
-						return _elm_lang$core$Native_Utils.eq(milestone.state, _vito$cadet$GitHubGraph$MilestoneStateOpen) ? A2(
-							_elm_lang$core$Dict$update,
-							milestone.title,
-							addRepo(repo)) : _elm_lang$core$Basics$identity;
-					},
-					acc,
-					repo.milestones);
+		F2(
+			function (_p141, repo) {
+				return _elm_lang$core$Set$union(
+					_elm_lang$core$Set$fromList(
+						A2(
+							_elm_lang$core$List$map,
+							function (_) {
+								return _.title;
+							},
+							A2(
+								_elm_lang$core$List$filter,
+								function (_p142) {
+									return A2(
+										F2(
+											function (x, y) {
+												return _elm_lang$core$Native_Utils.eq(x, y);
+											}),
+										_vito$cadet$GitHubGraph$MilestoneStateOpen,
+										function (_) {
+											return _.state;
+										}(_p142));
+								},
+								repo.milestones))));
 			}),
-		_elm_lang$core$Dict$empty,
+		_elm_lang$core$Set$empty,
 		model.data.repos);
 	var milestones = A2(
 		_elm_lang$core$List$map,
@@ -28826,7 +28818,7 @@ var _vito$cadet$Main$viewMilestonesPage = function (model) {
 					{ctor: '[]'},
 					A2(_elm_lang$core$Dict$get, title, cardsByMilestone)));
 		},
-		_elm_lang$core$Dict$keys(reposByMilestone));
+		_elm_lang$core$Set$toList(allMilestones));
 	return A2(
 		_elm_lang$html$Html$div,
 		{
@@ -28910,8 +28902,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 1572, column: 17},
-									end: {line: 1579, column: 70}
+									start: {line: 1565, column: 17},
+									end: {line: 1572, column: 70}
 								},
 								_p144)('impossible: content has no card');
 						}
@@ -28926,8 +28918,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1565, column: 9},
-				end: {line: 1582, column: 41}
+				start: {line: 1558, column: 9},
+				end: {line: 1575, column: 41}
 			},
 			_p143)('impossible');
 	});
