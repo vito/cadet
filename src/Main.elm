@@ -330,7 +330,7 @@ init config =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every Time.second (SetCurrentDate << Date.fromTime)
+        [ Time.every Time.hour (SetCurrentDate << Date.fromTime)
         , if List.all FG.isCompleted model.cardGraphs then
             Sub.none
           else

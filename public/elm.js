@@ -29214,7 +29214,7 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			ctor: '::',
 			_0: A2(
 				_elm_lang$core$Time$every,
-				_elm_lang$core$Time$second,
+				_elm_lang$core$Time$hour,
 				function (_p152) {
 					return _vito$cadet$Main$SetCurrentDate(
 						_elm_lang$core$Date$fromTime(_p152));
