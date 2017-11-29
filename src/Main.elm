@@ -2188,7 +2188,10 @@ viewNoteCard model col text =
             , ( "backlog", detectColumn.backlog col.name )
             ]
         ]
-        [ Html.div [ HA.class "card-info card-note" ]
+        [ Html.div [ HA.class "card-icons" ]
+            [ Html.span [ HA.class "octicon octicon-book" ] []
+            ]
+        , Html.div [ HA.class "card-info card-note" ]
             [ Markdown.toHtml [] text ]
         ]
 
