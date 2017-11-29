@@ -10007,6 +10007,96 @@ var _vito$cadet$GitHubGraph$closeIssue = F2(
 					_lukewestby$elm_http_builder$HttpBuilder$patch(
 						A2(_elm_lang$core$Basics_ops['++'], 'https://api.github.com/repos', issue.resourcePath)))));
 	});
+var _vito$cadet$GitHubGraph$deleteRepoMilestone = F3(
+	function (token, repo, milestone) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+				_vito$cadet$GitHubGraph$auth(token),
+				_lukewestby$elm_http_builder$HttpBuilder$delete(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'https://api.github.com/repos/',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							repo.owner,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									repo.name,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/milestones/',
+										_elm_lang$core$Basics$toString(milestone.number)))))))));
+	});
+var _vito$cadet$GitHubGraph$closeRepoMilestone = F3(
+	function (token, repo, milestone) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$object(
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'state',
+							_1: _elm_lang$core$Json_Encode$string('closed')
+						},
+						_1: {ctor: '[]'}
+					}),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$patch(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/milestones/',
+											_elm_lang$core$Basics$toString(milestone.number))))))))));
+	});
+var _vito$cadet$GitHubGraph$createRepoMilestone = F3(
+	function (token, repo, title) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$object(
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'title',
+							_1: _elm_lang$core$Json_Encode$string(title)
+						},
+						_1: {ctor: '[]'}
+					}),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$post(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(_elm_lang$core$Basics_ops['++'], repo.name, '/milestones'))))))));
+	});
 var _vito$cadet$GitHubGraph$updateRepoLabel = F5(
 	function (token, repo, label, name, color) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(

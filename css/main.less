@@ -925,3 +925,69 @@ svg {
     }
   }
 }
+
+.all-milestones {
+  display: flex;
+  flex-direction: row;
+  padding: @card-margin * 2;
+
+  .milestone {
+    flex-shrink: 0;
+    margin-right: @card-margin * 2;
+
+    display: flex;
+    flex-direction: column;
+
+    .cards {
+      flex-grow: 1;
+      width: @card-width + (@card-margin * 2);
+      background: @gray;
+      border-bottom-left-radius: @card-margin;
+      border-bottom-right-radius: @card-margin;
+    }
+
+    .card {
+      border-color: @gray-600;
+    }
+  }
+
+  .milestone-title {
+    flex-grow: 0;
+    flex-shrink: 0;
+    background: @gray-dark;
+    color: @white;
+    padding: @card-margin;
+    font-size: 14px;
+    padding: @card-margin;
+    user-select: none;
+    cursor: default;
+    border-top-left-radius: @card-margin;
+    border-top-right-radius: @card-margin;
+
+    display: flex;
+    flex-direction: row;
+
+    .milestone-title-label {
+      flex-grow: 1;
+
+      .octicon {
+        margin: -2px 5px 0 2px;
+        font-size: 12px;
+      }
+    }
+
+    .milestone-title-controls {
+      color: @white-fade-30;
+
+      .octicon {
+        margin: -2px 2px 0 5px;
+        font-size: 12px;
+
+        &:hover {
+          cursor: pointer;
+          color: @white;
+        }
+      }
+    }
+  }
+}

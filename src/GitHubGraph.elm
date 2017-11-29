@@ -18,6 +18,8 @@ module GitHubGraph
         , ReactionGroup
         , ReactionType(..)
         , TimelineEvent(..)
+        , Milestone
+        , MilestoneState(..)
         , IssueOrPRSelector
         , RepoSelector
         , fetchOrgRepos
@@ -39,6 +41,9 @@ module GitHubGraph
         , closeIssue
         , addIssueLabels
         , removeIssueLabel
+        , createRepoMilestone
+        , deleteRepoMilestone
+        , closeRepoMilestone
         , issueScore
         , pullRequestScore
         , reactionScore
@@ -375,6 +380,29 @@ updateRepoLabel token repo label name color =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
+        |> HttpBuilder.toTask
+
+
+createRepoMilestone : Token -> Repo -> String -> Task Http.Error ()
+createRepoMilestone token repo title =
+    HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones")
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "title", JE.string title ) ])
+        |> HttpBuilder.toTask
+
+
+closeRepoMilestone : Token -> Repo -> Milestone -> Task Http.Error ()
+closeRepoMilestone token repo milestone =
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
+        |> HttpBuilder.toTask
+
+
+deleteRepoMilestone : Token -> Repo -> Milestone -> Task Http.Error ()
+deleteRepoMilestone token repo milestone =
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
+        |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
 
 

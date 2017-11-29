@@ -89,6 +89,7 @@ type alias Card =
     , reactions : GitHubGraph.Reactions
     , score : Int
     , state : CardState
+    , milestone : Maybe GitHubGraph.Milestone
     }
 
 
@@ -148,6 +149,10 @@ type Msg
     | RejectCard Card
     | CardAccepted (List GitHubGraph.ID) (Result String ())
     | CardRejected (List GitHubGraph.ID) (Result String ())
+    | MirrorMilestone String
+    | CloseMilestone String
+    | DeleteMilestone String
+    | MilestoneChanged GitHubGraph.Repo (Result Http.Error ())
 
 
 type Page
@@ -155,6 +160,7 @@ type Page
     | AllProjectsPage
     | ProjectPage String
     | LabelsPage
+    | MilestonesPage
 
 
 detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
@@ -201,6 +207,9 @@ delta2url a b =
                 LabelsPage ->
                     RouteUrl.Builder.replacePath [ "labels" ]
 
+                MilestonesPage ->
+                    RouteUrl.Builder.replacePath [ "milestones" ]
+
         withSelection =
             RouteUrl.Builder.replaceHash (String.join "," b.selectedCards)
 
@@ -235,6 +244,9 @@ location2messages loc =
 
                 [ "labels" ] ->
                     SetPage LabelsPage
+
+                [ "milestones" ] ->
+                    SetPage MilestonesPage
 
                 _ ->
                     SetPage GlobalGraphPage
@@ -333,6 +345,9 @@ update msg model =
                             computeReferenceGraph data (List.filter (isInProject name) cards)
 
                         LabelsPage ->
+                            []
+
+                        MilestonesPage ->
                             []
             in
                 ( { model
@@ -741,6 +756,63 @@ update msg model =
             flip always (Debug.log "failed to reject card" msg) <|
                 ( model, Cmd.none )
 
+        MirrorMilestone title ->
+            let
+                cmds =
+                    List.map
+                        (\r ->
+                            if List.any ((==) title << .title) r.milestones then
+                                Cmd.none
+                            else
+                                createMilestone model r title
+                        )
+                        model.data.repos
+            in
+                ( model, Cmd.batch cmds )
+
+        CloseMilestone title ->
+            let
+                cmds =
+                    List.map
+                        (\r ->
+                            case List.filter ((==) title << .title) r.milestones of
+                                m :: _ ->
+                                    closeMilestone model r m
+
+                                [] ->
+                                    Cmd.none
+                        )
+                        model.data.repos
+            in
+                ( model, Cmd.batch cmds )
+
+        DeleteMilestone title ->
+            let
+                cmds =
+                    List.map
+                        (\r ->
+                            case List.filter ((==) title << .title) r.milestones of
+                                m :: _ ->
+                                    deleteMilestone model r m
+
+                                [] ->
+                                    Cmd.none
+                        )
+                        model.data.repos
+            in
+                ( model, Cmd.batch cmds )
+
+        MilestoneChanged repo (Ok ()) ->
+            let
+                repoSel =
+                    { owner = repo.owner, name = repo.name }
+            in
+                ( model, Backend.refreshRepo repoSel RepoRefreshed )
+
+        MilestoneChanged repo (Err msg) ->
+            flip always (Debug.log "failed to modify labels" msg) <|
+                ( model, Cmd.none )
+
 
 addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
 addProjectCards cards allCards =
@@ -761,7 +833,7 @@ addProjectCards cards allCards =
 
 
 issueCard : GitHubGraph.Issue -> Card
-issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as issue) =
+issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
     , content = GitHubGraph.IssueCardContent issue
     , url = url
@@ -775,11 +847,12 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
     , reactions = reactions
     , score = GitHubGraph.issueScore issue
     , state = IssueState state
+    , milestone = milestone
     }
 
 
 prCard : GitHubGraph.PullRequest -> Card
-prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as pr) =
+prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
     { id = id
     , content = GitHubGraph.PullRequestCardContent pr
     , url = url
@@ -793,6 +866,7 @@ prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount
     , reactions = reactions
     , score = GitHubGraph.pullRequestScore pr
     , state = PullRequestState state
+    , milestone = milestone
     }
 
 
@@ -826,6 +900,9 @@ view model =
 
                         LabelsPage ->
                             viewLabelsPage model
+
+                        MilestonesPage ->
+                            viewMilestonesPage model
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
                     [ if List.isEmpty sidebarCards then
@@ -869,6 +946,9 @@ viewNavBar model =
                 ]
             , Html.a [ HA.class "button", HA.href "/labels", StrictEvents.onLeftClick (SetPage LabelsPage) ]
                 [ Html.span [ HA.class "octicon octicon-tag" ] []
+                ]
+            , Html.a [ HA.class "button", HA.href "/milestones", StrictEvents.onLeftClick (SetPage MilestonesPage) ]
+                [ Html.span [ HA.class "octicon octicon-milestone" ] []
                 ]
             ]
         , viewSearch
@@ -998,6 +1078,89 @@ viewLabelsPage model =
     in
         Html.div [ HA.class "all-labels" ]
             (newLabel :: labelRows)
+
+
+viewMilestonesPage : Model -> Html Msg
+viewMilestonesPage model =
+    let
+        addRepo repo =
+            Just << Maybe.withDefault [ repo ] << Maybe.map ((::) repo)
+
+        reposByMilestone =
+            List.foldl
+                (\repo acc ->
+                    List.foldl
+                        (\milestone ->
+                            if milestone.state == GitHubGraph.MilestoneStateOpen then
+                                Dict.update milestone.title (addRepo repo)
+                            else
+                                identity
+                        )
+                        acc
+                        repo.milestones
+                )
+                Dict.empty
+                model.data.repos
+
+        addCard card =
+            Just << Maybe.withDefault [ card ] << Maybe.map ((::) card)
+
+        cardsByMilestone =
+            Dict.foldl
+                (\_ card acc ->
+                    case card.milestone of
+                        Just milestone ->
+                            Dict.update milestone.title (addCard card) acc
+
+                        Nothing ->
+                            acc
+                )
+                Dict.empty
+                model.allCards
+
+        nextMilestone =
+            Html.text ""
+
+        milestones =
+            List.map
+                (\title ->
+                    viewMilestone model title (Maybe.withDefault [] (Dict.get title cardsByMilestone))
+                )
+                (Dict.keys reposByMilestone)
+    in
+        Html.div [ HA.class "all-milestones" ]
+            (nextMilestone :: milestones)
+
+
+viewMilestone : Model -> String -> List Card -> Html Msg
+viewMilestone model title cards =
+    Html.div [ HA.class "milestone" ]
+        [ Html.div [ HA.class "milestone-title" ]
+            [ Html.div [ HA.class "milestone-title-label" ]
+                [ Html.span [ HA.class "octicon octicon-milestone" ] []
+                , Html.text title
+                ]
+            , Html.div [ HA.class "milestone-title-controls" ]
+                [ Html.span
+                    [ HA.class "octicon octicon-mirror"
+                    , HE.onClick (MirrorMilestone title)
+                    ]
+                    []
+                , Html.span
+                    [ HA.class "octicon octicon-check"
+                    , HE.onClick (CloseMilestone title)
+                    ]
+                    []
+                , Html.span
+                    [ HA.class "octicon octicon-trashcan"
+                    , HE.onClick (DeleteMilestone title)
+                    ]
+                    []
+                ]
+            ]
+        , Html.div [ HA.class "cards" ] <|
+            List.map (viewCard model) cards
+        ]
 
 
 matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool
@@ -2361,6 +2524,39 @@ rejectIssue model issue =
                 Task.sequence (addLabel :: moves)
                     |> Task.map (always ())
                     |> Task.attempt (CardRejected columnsToRefresh)
+
+        Nothing ->
+            Cmd.none
+
+
+createMilestone : Model -> GitHubGraph.Repo -> String -> Cmd Msg
+createMilestone model repo title =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.createRepoMilestone token repo title
+                |> Task.attempt (MilestoneChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+closeMilestone : Model -> GitHubGraph.Repo -> GitHubGraph.Milestone -> Cmd Msg
+closeMilestone model repo milestone =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.closeRepoMilestone token repo milestone
+                |> Task.attempt (MilestoneChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+deleteMilestone : Model -> GitHubGraph.Repo -> GitHubGraph.Milestone -> Cmd Msg
+deleteMilestone model repo milestone =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.deleteRepoMilestone token repo milestone
+                |> Task.attempt (MilestoneChanged repo)
 
         Nothing ->
             Cmd.none
