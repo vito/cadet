@@ -122,7 +122,7 @@ type Msg
     | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ID)
-    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
+    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List Backend.ColumnCard))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error Data)
     | SelectCard GitHubGraph.ID
@@ -162,6 +162,8 @@ type Msg
     | SetCardMilestone Card (Maybe String)
     | IssueMilestoneChanged GitHubGraph.Issue (Result Http.Error ())
     | PRMilestoneChanged GitHubGraph.PullRequest (Result Http.Error ())
+    | IssueRefreshed (Result Http.Error GitHubGraph.Issue)
+    | PRRefreshed (Result Http.Error GitHubGraph.PullRequest)
 
 
 type Page
@@ -873,19 +875,41 @@ update msg model =
                                 ( model, Cmd.none )
 
         IssueMilestoneChanged card (Ok ()) ->
-            -- TODO: refresh issue, complete drag
-            ( model, Cmd.none )
+            ( { model | milestoneDrag = Drag.land model.milestoneDrag }, Backend.refreshIssue card.id IssueRefreshed )
 
         IssueMilestoneChanged card (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
                 ( model, Cmd.none )
 
+        IssueRefreshed (Ok issue) ->
+            ( { model
+                | milestoneDrag = Drag.complete model.milestoneDrag
+                , allCards = Dict.insert issue.id (issueCard issue) model.allCards
+              }
+            , Cmd.none
+            )
+
+        IssueRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh issue" msg) <|
+                ( model, Cmd.none )
+
         PRMilestoneChanged card (Ok ()) ->
-            -- TODO: refresh PR, complete drag
-            ( model, Cmd.none )
+            ( { model | milestoneDrag = Drag.land model.milestoneDrag }, Backend.refreshPR card.id PRRefreshed )
 
         PRMilestoneChanged card (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
+                ( model, Cmd.none )
+
+        PRRefreshed (Ok pr) ->
+            ( { model
+                | milestoneDrag = Drag.complete model.milestoneDrag
+                , allCards = Dict.insert pr.id (prCard pr) model.allCards
+              }
+            , Cmd.none
+            )
+
+        PRRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh pr" msg) <|
                 ( model, Cmd.none )
 
 
@@ -1180,7 +1204,7 @@ viewMilestonesPage model =
         nextMilestoneCards =
             Dict.foldl
                 (\_ card acc ->
-                    if card.milestone == Nothing && isMerged card || isAccepted model card then
+                    if (isMerged card || isAccepted model card) && card.milestone == Nothing then
                         card :: acc
                     else
                         acc
@@ -1454,19 +1478,21 @@ labelColorStyle color =
         ]
 
 
-onlyOpenContentCards : List GitHubGraph.ProjectColumnCard -> List GitHubGraph.ProjectColumnCard
-onlyOpenContentCards =
+onlyOpenContentCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
+onlyOpenContentCards model =
     List.filter <|
-        \{ content } ->
-            case content of
-                Just (GitHubGraph.IssueCardContent issue) ->
-                    issue.state == GitHubGraph.IssueStateOpen
+        \{ contentId } ->
+            case contentId of
+                Just id ->
+                    case Dict.get id model.allCards of
+                        Just card ->
+                            isOpen card
 
-                Just (GitHubGraph.PullRequestCardContent pr) ->
-                    pr.state == GitHubGraph.PullRequestStateOpen
+                        Nothing ->
+                            False
 
                 Nothing ->
-                    False
+                    True
 
 
 viewProject : Model -> ProjectState -> Html Msg
@@ -1487,12 +1513,12 @@ viewProject model { project, backlogs, inFlight, done } =
             , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project onlyOpenContentCards done ]
+                [ viewProjectColumn model project (onlyOpenContentCards model) done ]
             ]
         ]
 
 
-viewProjectColumn : Model -> GitHubGraph.Project -> (List GitHubGraph.ProjectColumnCard -> List GitHubGraph.ProjectColumnCard) -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn : Model -> GitHubGraph.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> GitHubGraph.ProjectColumn -> Html Msg
 viewProjectColumn model project mod col =
     let
         cards =
@@ -1521,7 +1547,7 @@ viewProjectColumn model project mod col =
             ]
 
 
-viewProjectColumnCard : Model -> GitHubGraph.Project -> GitHubGraph.ProjectColumn -> GitHubGraph.ProjectColumnCard -> List (Html Msg)
+viewProjectColumnCard : Model -> GitHubGraph.Project -> GitHubGraph.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
 viewProjectColumnCard model project col ghCard =
     let
         dragId =
@@ -1536,25 +1562,21 @@ viewProjectColumnCard model project col ghCard =
                 }
             }
     in
-        case ( ghCard.note, ghCard.content ) of
+        case ( ghCard.note, ghCard.contentId ) of
             ( Just n, Nothing ) ->
                 [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNoteCard model col n)
                 , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
                 ]
 
-            ( Nothing, Just content ) ->
-                let
-                    card =
-                        case content of
-                            GitHubGraph.IssueCardContent issue ->
-                                issueCard issue
+            ( Nothing, Just contentId ) ->
+                case Dict.get contentId model.allCards of
+                    Just card ->
+                        [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
+                        , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+                        ]
 
-                            GitHubGraph.PullRequestCardContent pr ->
-                                prCard pr
-                in
-                    [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
-                    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-                    ]
+                    Nothing ->
+                        Debug.crash "impossible: content has no card"
 
             _ ->
                 Debug.crash "impossible"
@@ -1585,7 +1607,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
             ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text project.name ] ]
              , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project onlyOpenContentCards done ]
+                [ viewProjectColumn model project (onlyOpenContentCards model) done ]
              , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
              ]

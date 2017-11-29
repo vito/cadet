@@ -13079,7 +13079,6 @@ var _vito$cadet$Backend$encodeActorEvent = function (_p0) {
 			}
 		});
 };
-var _vito$cadet$Backend$decodeCards = _elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeProjectColumnCard);
 var _vito$cadet$Backend$refreshPR = F2(
 	function (id, f) {
 		return A2(
@@ -13121,18 +13120,6 @@ var _vito$cadet$Backend$refreshRepo = F2(
 								_elm_lang$core$Basics_ops['++'],
 								repo.owner,
 								A2(_elm_lang$core$Basics_ops['++'], '/', repo.name)))))));
-	});
-var _vito$cadet$Backend$refreshCards = F2(
-	function (col, f) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			f,
-			_lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeCards),
-					_lukewestby$elm_http_builder$HttpBuilder$get(
-						A2(_elm_lang$core$Basics_ops['++'], '/refresh?cards=', col)))));
 	});
 var _vito$cadet$Backend$emptyData = {repos: _elm_lang$core$Dict$empty, issues: _elm_lang$core$Dict$empty, prs: _elm_lang$core$Dict$empty, projects: _elm_lang$core$Dict$empty, columnCards: _elm_lang$core$Dict$empty, references: _elm_lang$core$Dict$empty, actors: _elm_lang$core$Dict$empty};
 var _vito$cadet$Backend$Data = F7(
@@ -13189,6 +13176,35 @@ var _vito$cadet$Backend$decodeActorEvent = A2(
 		_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$ActorEvent),
 		A2(_elm_lang$core$Json_Decode$field, 'actor', _vito$cadet$GitHubGraph$decodeUser)),
 	A2(_elm_lang$core$Json_Decode$field, 'createdAt', _elm_community$json_extra$Json_Decode_Extra$date));
+var _vito$cadet$Backend$ColumnCard = F3(
+	function (a, b, c) {
+		return {id: a, contentId: b, note: c};
+	});
+var _vito$cadet$Backend$decodeColumnCard = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$Backend$ColumnCard),
+			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+		_elm_lang$core$Json_Decode$maybe(
+			A2(_elm_lang$core$Json_Decode$field, 'contentId', _elm_lang$core$Json_Decode$string))),
+	_elm_lang$core$Json_Decode$maybe(
+		A2(_elm_lang$core$Json_Decode$field, 'note', _elm_lang$core$Json_Decode$string)));
+var _vito$cadet$Backend$decodeCards = _elm_lang$core$Json_Decode$list(_vito$cadet$Backend$decodeColumnCard);
+var _vito$cadet$Backend$refreshCards = F2(
+	function (col, f) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			f,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeCards),
+					_lukewestby$elm_http_builder$HttpBuilder$get(
+						A2(_elm_lang$core$Basics_ops['++'], '/refresh?columnCards=', col)))));
+	});
 var _vito$cadet$Backend$decodeData = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -13821,7 +13837,7 @@ var _vito$cadet$Main$update = F2(
 					});
 			case 'RefreshRequested':
 				switch (_p3._0) {
-					case 'cards':
+					case 'columnCards':
 						return {
 							ctor: '_Tuple2',
 							_0: model,

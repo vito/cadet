@@ -137,7 +137,7 @@ update msg model =
                 , Cmd.none
                 )
 
-        RefreshRequested "cards" colId ->
+        RefreshRequested "columnCards" colId ->
             ( model, fetchCards model colId )
 
         RefreshRequested "repo" ownerAndName ->

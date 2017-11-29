@@ -4,6 +4,7 @@ module Backend
         , Me
         , User
         , ActorEvent
+        , ColumnCard
         , emptyData
         , fetchData
         , pollData
@@ -33,7 +34,7 @@ type alias Data =
     , issues : Dict GitHubGraph.ID GitHubGraph.Issue
     , prs : Dict GitHubGraph.ID GitHubGraph.PullRequest
     , projects : Dict GitHubGraph.ID GitHubGraph.Project
-    , columnCards : Dict GitHubGraph.ID (List GitHubGraph.ProjectColumnCard)
+    , columnCards : Dict GitHubGraph.ID (List ColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
     , actors : Dict GitHubGraph.ID (List ActorEvent)
     }
@@ -56,6 +57,13 @@ type alias User =
 type alias ActorEvent =
     { actor : GitHubGraph.User
     , createdAt : Date
+    }
+
+
+type alias ColumnCard =
+    { id : GitHubGraph.ID
+    , contentId : Maybe GitHubGraph.ID
+    , note : Maybe String
     }
 
 
@@ -88,9 +96,9 @@ pollData f =
         |> Task.attempt f
 
 
-refreshCards : GitHubGraph.ID -> (Result Http.Error (List GitHubGraph.ProjectColumnCard) -> msg) -> Cmd msg
+refreshCards : GitHubGraph.ID -> (Result Http.Error (List ColumnCard) -> msg) -> Cmd msg
 refreshCards col f =
-    HttpBuilder.get ("/refresh?cards=" ++ col)
+    HttpBuilder.get ("/refresh?columnCards=" ++ col)
         |> HttpBuilder.withExpect (Http.expectJson decodeCards)
         |> HttpBuilder.toTask
         |> Task.attempt f
@@ -140,9 +148,17 @@ decodeData =
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
 
 
-decodeCards : JD.Decoder (List GitHubGraph.ProjectColumnCard)
+decodeCards : JD.Decoder (List ColumnCard)
 decodeCards =
-    JD.list GitHubGraph.decodeProjectColumnCard
+    JD.list decodeColumnCard
+
+
+decodeColumnCard : JD.Decoder ColumnCard
+decodeColumnCard =
+    JD.succeed ColumnCard
+        |: (JD.field "id" JD.string)
+        |: (JD.maybe <| JD.field "contentId" JD.string)
+        |: (JD.maybe <| JD.field "note" JD.string)
 
 
 decodeMe : JD.Decoder Me

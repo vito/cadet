@@ -173,9 +173,8 @@ worker.ports.setActors.subscribe(function(args) {
 worker.ports.setCards.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.columnCards[id] = val;
-  popRefresh("columnCards", id, val);
 
+  var newColumnCards = [];
   for (var i = 0; i < val.length; i++) {
     var card = val[i];
     if (card.content) {
@@ -183,16 +182,33 @@ worker.ports.setCards.subscribe(function(args) {
       if (issue) {
         data.issues[issue.id] = issue;
         popRefresh("issue", issue.id, issue);
+
+        newColumnCards.push({
+          id: card.id,
+          contentId: issue.id
+        });
       }
 
       var pr = card.content.pull_request;
       if (pr) {
         data.prs[pr.id] = pr;
         popRefresh("pr", pr.id, pr);
+
+        newColumnCards.push({
+          id: card.id,
+          contentId: pr.id
+        });
       }
+    } else {
+      newColumnCards.push({
+        id: card.id,
+        note: card.note
+      });
     }
   }
 
+  data.columnCards[id] = newColumnCards;
+  popRefresh("columnCards", id, newColumnCards);
   popPoll();
 });
 
