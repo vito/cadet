@@ -3,6 +3,7 @@ module GitHubGraph
         ( Error
         , ID
         , Repo
+        , RepoLocation
         , Issue
         , IssueState(..)
         , Label
@@ -41,6 +42,8 @@ module GitHubGraph
         , closeIssue
         , addIssueLabels
         , removeIssueLabel
+        , setIssueMilestone
+        , setPullRequestMilestone
         , createRepoMilestone
         , deleteRepoMilestone
         , closeRepoMilestone
@@ -107,6 +110,7 @@ type alias Issue =
     , createdAt : Date
     , updatedAt : Date
     , state : IssueState
+    , repo : RepoLocation
     , number : Int
     , title : String
     , commentCount : Int
@@ -126,9 +130,11 @@ type IssueState
 type alias PullRequest =
     { id : ID
     , url : String
+    , resourcePath : String
     , createdAt : Date
     , updatedAt : Date
     , state : PullRequestState
+    , repo : RepoLocation
     , number : Int
     , title : String
     , commentCount : Int
@@ -146,6 +152,14 @@ type PullRequestState
     = PullRequestStateOpen
     | PullRequestStateClosed
     | PullRequestStateMerged
+
+
+type alias RepoLocation =
+    { id : ID
+    , url : String
+    , owner : String
+    , name : String
+    }
 
 
 type alias Label =
@@ -426,6 +440,22 @@ removeIssueLabel : Token -> Issue -> String -> Task Http.Error ()
 removeIssueLabel token issue name =
     HttpBuilder.delete ("https://api.github.com/repos" ++ issue.resourcePath ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.toTask
+
+
+setIssueMilestone : Token -> Issue -> Maybe Milestone -> Task Http.Error ()
+setIssueMilestone token issue mmilestone =
+    HttpBuilder.patch ("https://api.github.com/repos" ++ issue.resourcePath)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
+        |> HttpBuilder.toTask
+
+
+setPullRequestMilestone : Token -> PullRequest -> Maybe Milestone -> Task Http.Error ()
+setPullRequestMilestone token pr mmilestone =
+    HttpBuilder.patch ("https://api.github.com/repos" ++ pr.resourcePath)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
 
 
@@ -868,6 +898,7 @@ issueObject =
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.aliasAs "issueState" <| GB.field "state" [] (GB.enum issueStates))
+        |> GB.with (GB.field "repository" [] repoLocationObject)
         |> GB.with (GB.field "number" [] GB.int)
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
@@ -883,9 +914,11 @@ prObject =
     GB.object PullRequest
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "resourcePath" [] GB.string)
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.aliasAs "prState" <| GB.field "state" [] (GB.enum pullRequestStates))
+        |> GB.with (GB.field "repository" [] repoLocationObject)
         |> GB.with (GB.field "number" [] GB.int)
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
@@ -896,6 +929,15 @@ prObject =
         |> GB.with (GB.field "additions" [] GB.int)
         |> GB.with (GB.field "deletions" [] GB.int)
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
+
+
+repoLocationObject : GB.ValueSpec GB.NonNull GB.ObjectType RepoLocation vars
+repoLocationObject =
+    GB.object RepoLocation
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
+        |> GB.with (GB.field "name" [] GB.string)
 
 
 issuesQuery : GB.Document GB.Query (PagedResult Issue) (PagedSelector RepoSelector)
@@ -1118,6 +1160,7 @@ decodeIssue =
         |: (JD.field "created_at" JDE.date)
         |: (JD.field "updated_at" JDE.date)
         |: (JD.field "state" decodeIssueState)
+        |: (JD.field "repo" decodeRepoLocation)
         |: (JD.field "number" JD.int)
         |: (JD.field "title" JD.string)
         |: (JD.field "comment_count" JD.int)
@@ -1133,9 +1176,11 @@ decodePullRequest =
     JD.succeed PullRequest
         |: (JD.field "id" JD.string)
         |: (JD.field "url" JD.string)
+        |: (JD.field "resource_path" JD.string)
         |: (JD.field "created_at" JDE.date)
         |: (JD.field "updated_at" JDE.date)
         |: (JD.field "state" decodePullRequestState)
+        |: (JD.field "repo" decodeRepoLocation)
         |: (JD.field "number" JD.int)
         |: (JD.field "title" JD.string)
         |: (JD.field "comment_count" JD.int)
@@ -1146,6 +1191,15 @@ decodePullRequest =
         |: (JD.field "additions" JD.int)
         |: (JD.field "deletions" JD.int)
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
+
+
+decodeRepoLocation : JD.Decoder RepoLocation
+decodeRepoLocation =
+    JD.succeed RepoLocation
+        |: (JD.field "id" JD.string)
+        |: (JD.field "url" JD.string)
+        |: (JD.field "owner" JD.string)
+        |: (JD.field "name" JD.string)
 
 
 decodeLabel : JD.Decoder Label
@@ -1323,6 +1377,7 @@ encodeIssue record =
         , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodeIssueState record.state )
+        , ( "repo", encodeRepoLocation record.repo )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
         , ( "comment_count", JE.int record.commentCount )
@@ -1339,9 +1394,11 @@ encodePullRequest record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
+        , ( "resource_path", JE.string record.resourcePath )
         , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodePullRequestState record.state )
+        , ( "repo", encodeRepoLocation record.repo )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
         , ( "comment_count", JE.int record.commentCount )
@@ -1352,6 +1409,16 @@ encodePullRequest record =
         , ( "additions", JE.int record.additions )
         , ( "deletions", JE.int record.deletions )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
+        ]
+
+
+encodeRepoLocation : RepoLocation -> JE.Value
+encodeRepoLocation record =
+    JE.object
+        [ ( "id", JE.string record.id )
+        , ( "url", JE.string record.url )
+        , ( "owner", JE.string record.owner )
+        , ( "name", JE.string record.name )
         ]
 
 

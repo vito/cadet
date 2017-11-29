@@ -9,6 +9,8 @@ module Backend
         , pollData
         , refreshCards
         , refreshRepo
+        , refreshIssue
+        , refreshPR
         , fetchMe
         , encodeActorEvent
         )
@@ -98,6 +100,22 @@ refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error GitHubGraph.Repo ->
 refreshRepo repo f =
     HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
         |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodeRepo)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+refreshIssue : GitHubGraph.ID -> (Result Http.Error GitHubGraph.Issue -> msg) -> Cmd msg
+refreshIssue id f =
+    HttpBuilder.get ("/refresh?issue=" ++ id)
+        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodeIssue)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+refreshPR : GitHubGraph.ID -> (Result Http.Error GitHubGraph.PullRequest -> msg) -> Cmd msg
+refreshPR id f =
+    HttpBuilder.get ("/refresh?pr=" ++ id)
+        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodePullRequest)
         |> HttpBuilder.toTask
         |> Task.attempt f
 

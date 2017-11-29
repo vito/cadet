@@ -946,6 +946,8 @@ svg {
     display: flex;
     flex-direction: column;
 
+    position: relative;
+
     .cards {
       flex-grow: 1;
       width: @card-width + (@card-margin * 2);
@@ -954,48 +956,68 @@ svg {
       border-bottom-right-radius: @card-margin;
     }
 
+    .drop-area {
+      height: auto !important;
+      border-radius: @card-margin;
+      margin: 0;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      min-height: 0;
+
+      &.over {
+        background: @white-fade-70;
+      }
+    }
+
     .card {
       border-color: @gray-600;
     }
-  }
 
-  .milestone-title {
-    flex-grow: 0;
-    flex-shrink: 0;
-    background: @gray-dark;
-    color: @white;
-    padding: @card-margin;
-    font-size: 14px;
-    padding: @card-margin;
-    user-select: none;
-    cursor: default;
-    border-top-left-radius: @card-margin;
-    border-top-right-radius: @card-margin;
+    .milestone-title {
+      flex-grow: 0;
+      flex-shrink: 0;
+      background: @gray-dark;
+      color: @white;
+      padding: @card-margin;
+      font-size: 14px;
+      padding: @card-margin;
+      user-select: none;
+      cursor: default;
+      border-top-left-radius: @card-margin;
+      border-top-right-radius: @card-margin;
 
-    display: flex;
-    flex-direction: row;
+      display: flex;
+      flex-direction: row;
 
-    .milestone-title-label {
-      flex-grow: 1;
+      .milestone-title-label {
+        flex-grow: 1;
 
-      .octicon {
-        margin: -2px 5px 0 2px;
-        font-size: 12px;
+        .octicon {
+          margin: -2px 5px 0 2px;
+          font-size: 12px;
+        }
+      }
+
+      .milestone-title-controls {
+        color: @white-fade-30;
+
+        .octicon {
+          margin: -2px 2px 0 5px;
+          font-size: 12px;
+
+          &:hover {
+            cursor: pointer;
+            color: @white;
+          }
+        }
       }
     }
 
-    .milestone-title-controls {
-      color: @white-fade-30;
-
-      .octicon {
-        margin: -2px 2px 0 5px;
-        font-size: 12px;
-
-        &:hover {
-          cursor: pointer;
-          color: @white;
-        }
-      }
+    &.inbox .milestone-title {
+      background: @gray;
     }
   }
 }

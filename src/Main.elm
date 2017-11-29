@@ -44,7 +44,8 @@ type alias Model =
     , me : Maybe Me
     , page : Page
     , currentDate : Date
-    , drag : Drag.Model CardSource CardDestination Msg
+    , projectDrag : Drag.Model CardSource CardDestination Msg
+    , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
@@ -58,6 +59,7 @@ type alias Model =
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
     , newLabelColored : Bool
+    , newMilestoneName : String
     }
 
 
@@ -79,6 +81,7 @@ type alias Card =
     { id : GitHubGraph.ID
     , content : GitHubGraph.CardContent
     , url : String
+    , repo : GitHubGraph.RepoLocation
     , number : Int
     , title : String
     , updatedAt : Date
@@ -115,7 +118,8 @@ type Msg
     | SetPage Page
     | Tick Time
     | SetCurrentDate Date
-    | Drag (Drag.Msg CardSource CardDestination Msg)
+    | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
+    | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ID)
     | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List GitHubGraph.ProjectColumnCard))
@@ -153,6 +157,11 @@ type Msg
     | CloseMilestone String
     | DeleteMilestone String
     | MilestoneChanged GitHubGraph.Repo (Result Http.Error ())
+    | SetNewMilestoneName String
+    | CreateMilestone
+    | SetCardMilestone Card (Maybe String)
+    | IssueMilestoneChanged GitHubGraph.Issue (Result Http.Error ())
+    | PRMilestoneChanged GitHubGraph.PullRequest (Result Http.Error ())
 
 
 type Page
@@ -301,11 +310,13 @@ init config =
       , currentDate = Date.fromTime config.initialDate
       , cardGraphs = []
       , computeGraph = computeReferenceGraph
-      , drag = Drag.init
+      , projectDrag = Drag.init
+      , milestoneDrag = Drag.init
       , deletingLabels = Set.empty
       , editingLabels = Dict.empty
       , newLabel = { name = "", color = "ffffff" }
       , newLabelColored = False
+      , newMilestoneName = ""
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -376,13 +387,28 @@ update msg model =
         SetCurrentDate date ->
             ( { model | currentDate = date }, Cmd.none )
 
-        Drag msg ->
+        ProjectDrag msg ->
             let
                 dragModel =
-                    Drag.update msg model.drag
+                    Drag.update msg model.projectDrag
 
                 newModel =
-                    { model | drag = dragModel }
+                    { model | projectDrag = dragModel }
+            in
+                case dragModel of
+                    Drag.Dropped { msg } ->
+                        update msg newModel
+
+                    _ ->
+                        ( newModel, Cmd.none )
+
+        MilestoneDrag msg ->
+            let
+                dragModel =
+                    Drag.update msg model.milestoneDrag
+
+                newModel =
+                    { model | milestoneDrag = dragModel }
             in
                 case dragModel of
                     Drag.Dropped { msg } ->
@@ -400,12 +426,12 @@ update msg model =
                     ( model, addCard model dest contentId )
 
         CardMoved col (Ok cardId) ->
-            case model.drag of
+            case model.projectDrag of
                 Drag.Dropped drag ->
                     let
                         finishDrag model =
                             ( { model
-                                | drag = Drag.complete model.drag
+                                | projectDrag = Drag.complete model.projectDrag
                                 , cardGraphs = model.computeGraph model.data (Dict.values model.allCards)
                               }
                             , Cmd.none
@@ -413,11 +439,11 @@ update msg model =
 
                         refresh landed id model =
                             ( { model
-                                | drag =
+                                | projectDrag =
                                     if landed then
-                                        Drag.land model.drag
+                                        Drag.land model.projectDrag
                                     else
-                                        model.drag
+                                        model.projectDrag
                               }
                             , Backend.refreshCards id (CardsFetched finishDrag id)
                             )
@@ -813,6 +839,60 @@ update msg model =
             flip always (Debug.log "failed to modify labels" msg) <|
                 ( model, Cmd.none )
 
+        SetNewMilestoneName name ->
+            ( { model | newMilestoneName = name }, Cmd.none )
+
+        CreateMilestone ->
+            case model.newMilestoneName of
+                "" ->
+                    ( model, Cmd.none )
+
+                name ->
+                    update (MirrorMilestone name) model
+
+        SetCardMilestone card mtitle ->
+            let
+                set =
+                    case card.content of
+                        GitHubGraph.IssueCardContent issue ->
+                            setIssueMilestone model issue
+
+                        GitHubGraph.PullRequestCardContent pr ->
+                            setPRMilestone model pr
+            in
+                case mtitle of
+                    Nothing ->
+                        ( model, set Nothing )
+
+                    Just title ->
+                        case List.filter ((==) card.repo.id << .id) model.data.repos of
+                            repo :: _ ->
+                                case List.filter ((==) title << .title) repo.milestones of
+                                    milestone :: _ ->
+                                        ( model, set (Just milestone) )
+
+                                    [] ->
+                                        ( model, Cmd.none )
+
+                            [] ->
+                                ( model, Cmd.none )
+
+        IssueMilestoneChanged card (Ok ()) ->
+            -- TODO: refresh issue, complete drag
+            ( model, Cmd.none )
+
+        IssueMilestoneChanged card (Err msg) ->
+            flip always (Debug.log "failed to change milestone" msg) <|
+                ( model, Cmd.none )
+
+        PRMilestoneChanged card (Ok ()) ->
+            -- TODO: refresh PR, complete drag
+            ( model, Cmd.none )
+
+        PRMilestoneChanged card (Err msg) ->
+            flip always (Debug.log "failed to change milestone" msg) <|
+                ( model, Cmd.none )
+
 
 addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
 addProjectCards cards allCards =
@@ -833,10 +913,11 @@ addProjectCards cards allCards =
 
 
 issueCard : GitHubGraph.Issue -> Card
-issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
+issueCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
     , content = GitHubGraph.IssueCardContent issue
     , url = url
+    , repo = repo
     , number = number
     , title = title
     , updatedAt = updatedAt
@@ -852,10 +933,11 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
 
 
 prCard : GitHubGraph.PullRequest -> Card
-prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
+prCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
     { id = id
     , content = GitHubGraph.PullRequestCardContent pr
     , url = url
+    , repo = repo
     , number = number
     , title = title
     , updatedAt = updatedAt
@@ -1118,8 +1200,19 @@ viewMilestonesPage model =
                 Dict.empty
                 model.allCards
 
+        nextMilestoneCards =
+            Dict.foldl
+                (\_ card acc ->
+                    if card.milestone == Nothing && isMerged card || isAccepted model card then
+                        card :: acc
+                    else
+                        acc
+                )
+                []
+                model.allCards
+
         nextMilestone =
-            Html.text ""
+            viewInbox model nextMilestoneCards
 
         milestones =
             List.map
@@ -1129,7 +1222,42 @@ viewMilestonesPage model =
                 (Dict.keys reposByMilestone)
     in
         Html.div [ HA.class "all-milestones" ]
-            (nextMilestone :: milestones)
+            (newMilestone model :: nextMilestone :: milestones)
+
+
+newMilestone : Model -> Html Msg
+newMilestone model =
+    Html.form [ HA.class "new-milestone", HE.onSubmit CreateMilestone ]
+        [ Html.input
+            [ HE.onInput SetNewMilestoneName
+            , HA.value model.newMilestoneName
+            ]
+            []
+        , Html.span
+            [ HE.onClick CreateMilestone
+            , HA.class "button octicon octicon-plus"
+            ]
+            []
+        ]
+
+
+viewInbox : Model -> List Card -> Html Msg
+viewInbox model cards =
+    Html.div [ HA.class "milestone inbox" ]
+        [ Html.div [ HA.class "milestone-title" ]
+            [ Html.div [ HA.class "milestone-title-label" ]
+                [ Html.span [ HA.class "octicon octicon-inbox" ] []
+                , Html.text "Inbox"
+                ]
+            ]
+        , Html.div [ HA.class "cards" ] <|
+            List.map
+                (\card ->
+                    Drag.draggable model.milestoneDrag MilestoneDrag card (viewCard model card)
+                )
+                cards
+        , Drag.viewDropArea model.milestoneDrag MilestoneDrag { msgFunc = SetCardMilestone, target = Nothing } Nothing
+        ]
 
 
 viewMilestone : Model -> String -> List Card -> Html Msg
@@ -1159,7 +1287,12 @@ viewMilestone model title cards =
                 ]
             ]
         , Html.div [ HA.class "cards" ] <|
-            List.map (viewCard model) cards
+            List.map
+                (\card ->
+                    Drag.draggable model.milestoneDrag MilestoneDrag card (viewCard model card)
+                )
+                cards
+        , Drag.viewDropArea model.milestoneDrag MilestoneDrag { msgFunc = SetCardMilestone, target = Just title } Nothing
         ]
 
 
@@ -1402,11 +1535,11 @@ viewProjectColumn model project mod col =
             [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
             , if List.isEmpty cards then
                 Html.div [ HA.class "no-cards" ]
-                    [ Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                    [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
                     ]
               else
                 Html.div [ HA.class "cards" ] <|
-                    Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                    Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
                         :: List.concatMap (viewProjectColumnCard model project col) cards
             ]
 
@@ -1428,8 +1561,8 @@ viewProjectColumnCard model project col ghCard =
     in
         case ( ghCard.note, ghCard.content ) of
             ( Just n, Nothing ) ->
-                [ Drag.draggable model.drag Drag dragId (viewNoteCard model col n)
-                , Drag.viewDropArea model.drag Drag dropCandidate (Just dragId)
+                [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNoteCard model col n)
+                , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
                 ]
 
             ( Nothing, Just content ) ->
@@ -1442,8 +1575,8 @@ viewProjectColumnCard model project col ghCard =
                             GitHubGraph.PullRequestCardContent pr ->
                                 prCard pr
                 in
-                    [ Drag.draggable model.drag Drag dragId (viewCard model card)
-                    , Drag.viewDropArea model.drag Drag dropCandidate (Just dragId)
+                    [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
+                    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
                     ]
 
             _ ->
@@ -1498,7 +1631,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
                         }
                     }
               in
-                Drag.viewDropArea model.drag Drag dropCandidate Nothing
+                Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
             ]
         ]
 
@@ -2018,7 +2151,7 @@ viewCardEntry model card =
             NewContentCardSource { contentId = card.id }
     in
         Html.div [ HA.class "card-controls" ]
-            [ Drag.draggable model.drag Drag dragSource <|
+            [ Drag.draggable model.projectDrag ProjectDrag dragSource <|
                 cardView
             , Html.div [ HA.class "card-buttons" ]
                 [ if not anticipated then
@@ -2056,6 +2189,23 @@ isPR card =
 
         IssueState _ ->
             False
+
+
+isMerged : Card -> Bool
+isMerged card =
+    card.state == PullRequestState (GitHubGraph.PullRequestStateMerged)
+
+
+isAccepted : Model -> Card -> Bool
+isAccepted model card =
+    let
+        acceptedLabels =
+            model.allLabels
+                |> Dict.values
+                |> List.filter ((==) "accepted" << .name)
+                |> List.map .id
+    in
+        List.any (flip List.member acceptedLabels) card.labels
 
 
 isOpen : Card -> Bool
@@ -2560,6 +2710,28 @@ deleteMilestone model repo milestone =
         Just { token } ->
             GitHubGraph.deleteRepoMilestone token repo milestone
                 |> Task.attempt (MilestoneChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+setIssueMilestone : Model -> GitHubGraph.Issue -> Maybe GitHubGraph.Milestone -> Cmd Msg
+setIssueMilestone model issue mmilestone =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.setIssueMilestone token issue mmilestone
+                |> Task.attempt (IssueMilestoneChanged issue)
+
+        Nothing ->
+            Cmd.none
+
+
+setPRMilestone : Model -> GitHubGraph.PullRequest -> Maybe GitHubGraph.Milestone -> Cmd Msg
+setPRMilestone model pr mmilestone =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.setPullRequestMilestone token pr mmilestone
+                |> Task.attempt (PRMilestoneChanged pr)
 
         Nothing ->
             Cmd.none
