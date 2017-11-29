@@ -26189,7 +26189,7 @@ var _vito$cadet$Main$onlyOpenContentCards = function (model) {
 					return false;
 				}
 			} else {
-				return true;
+				return false;
 			}
 		});
 };

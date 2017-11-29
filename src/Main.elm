@@ -1485,7 +1485,7 @@ onlyOpenContentCards model =
                             False
 
                 Nothing ->
-                    True
+                    False
 
 
 viewProject : Model -> ProjectState -> Html Msg
