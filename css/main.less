@@ -253,11 +253,29 @@ a {
     font-size: 16px;
     text-align: center;
     vertical-align: middle;
+    margin-bottom: 10px;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
   }
 
   .open { color: @green; }
   .closed { color: @red; }
   .merged { color: @purple; }
+
+  .accept, .reject {
+    color: @gray-300;
+    cursor: pointer;
+  }
+
+  .accept:hover {
+    color: @green;
+  }
+
+  .reject:hover {
+    color: @orange;
+  }
 }
 
 .card-info {

@@ -10000,6 +10000,58 @@ var _vito$cadet$GitHubGraph$encodeLabelPatch = F2(
 				}
 			});
 	});
+var _vito$cadet$GitHubGraph$removeIssueLabel = F3(
+	function (token, issue, name) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+				_vito$cadet$GitHubGraph$auth(token),
+				_lukewestby$elm_http_builder$HttpBuilder$delete(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'https://api.github.com/repos',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							issue.resourcePath,
+							A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))));
+	});
+var _vito$cadet$GitHubGraph$addIssueLabels = F3(
+	function (token, issue, names) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$list(
+					A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$post(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos',
+							A2(_elm_lang$core$Basics_ops['++'], issue.resourcePath, '/labels'))))));
+	});
+var _vito$cadet$GitHubGraph$closeIssue = F2(
+	function (token, issue) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$object(
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'state',
+							_1: _elm_lang$core$Json_Encode$string('closed')
+						},
+						_1: {ctor: '[]'}
+					}),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$patch(
+						A2(_elm_lang$core$Basics_ops['++'], 'https://api.github.com/repos', issue.resourcePath)))));
+	});
 var _vito$cadet$GitHubGraph$updateRepoLabel = F5(
 	function (token, repo, label, name, color) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
@@ -10111,7 +10163,9 @@ var _vito$cadet$GitHubGraph$Issue = function (a) {
 									return function (j) {
 										return function (k) {
 											return function (l) {
-												return {id: a, url: b, createdAt: c, updatedAt: d, state: e, number: f, title: g, commentCount: h, reactions: i, author: j, labels: k, cards: l};
+												return function (m) {
+													return {id: a, url: b, resourcePath: c, createdAt: d, updatedAt: e, state: f, number: g, title: h, commentCount: i, reactions: j, author: k, labels: l, cards: m};
+												};
 											};
 										};
 									};
@@ -11023,9 +11077,12 @@ var _vito$cadet$GitHubGraph$decodeIssue = A2(
 											_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 											A2(
 												_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-												_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Issue),
-												A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-											A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+												A2(
+													_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+													_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Issue),
+													A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+												A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+											A2(_elm_lang$core$Json_Decode$field, 'resource_path', _elm_lang$core$Json_Decode$string)),
 										A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 									A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
 								A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodeIssueState)),
@@ -11155,78 +11212,86 @@ var _vito$cadet$GitHubGraph$encodeIssue = function (record) {
 					ctor: '::',
 					_0: {
 						ctor: '_Tuple2',
-						_0: 'created_at',
-						_1: _elm_lang$core$Json_Encode$string(
-							_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
+						_0: 'resource_path',
+						_1: _elm_lang$core$Json_Encode$string(record.resourcePath)
 					},
 					_1: {
 						ctor: '::',
 						_0: {
 							ctor: '_Tuple2',
-							_0: 'updated_at',
+							_0: 'created_at',
 							_1: _elm_lang$core$Json_Encode$string(
-								_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
+								_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
 						},
 						_1: {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'state',
-								_1: _vito$cadet$GitHubGraph$encodeIssueState(record.state)
+								_0: 'updated_at',
+								_1: _elm_lang$core$Json_Encode$string(
+									_mgold$elm_date_format$Date_Format$formatISO8601(record.updatedAt))
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'number',
-									_1: _elm_lang$core$Json_Encode$int(record.number)
+									_0: 'state',
+									_1: _vito$cadet$GitHubGraph$encodeIssueState(record.state)
 								},
 								_1: {
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple2',
-										_0: 'title',
-										_1: _elm_lang$core$Json_Encode$string(record.title)
+										_0: 'number',
+										_1: _elm_lang$core$Json_Encode$int(record.number)
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'comment_count',
-											_1: _elm_lang$core$Json_Encode$int(record.commentCount)
+											_0: 'title',
+											_1: _elm_lang$core$Json_Encode$string(record.title)
 										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'reactions',
-												_1: _elm_lang$core$Json_Encode$list(
-													A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
+												_0: 'comment_count',
+												_1: _elm_lang$core$Json_Encode$int(record.commentCount)
 											},
 											_1: {
 												ctor: '::',
 												_0: {
 													ctor: '_Tuple2',
-													_0: 'author',
-													_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
+													_0: 'reactions',
+													_1: _elm_lang$core$Json_Encode$list(
+														A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeReactionGroup, record.reactions))
 												},
 												_1: {
 													ctor: '::',
 													_0: {
 														ctor: '_Tuple2',
-														_0: 'labels',
-														_1: _elm_lang$core$Json_Encode$list(
-															A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
+														_0: 'author',
+														_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeUser, record.author)
 													},
 													_1: {
 														ctor: '::',
 														_0: {
 															ctor: '_Tuple2',
-															_0: 'cards',
+															_0: 'labels',
 															_1: _elm_lang$core$Json_Encode$list(
-																A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
+																A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
 														},
-														_1: {ctor: '[]'}
+														_1: {
+															ctor: '::',
+															_0: {
+																ctor: '_Tuple2',
+																_0: 'cards',
+																_1: _elm_lang$core$Json_Encode$list(
+																	A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeCardLocation, record.cards))
+															},
+															_1: {ctor: '[]'}
+														}
 													}
 												}
 											}
@@ -11573,17 +11638,24 @@ var _vito$cadet$GitHubGraph$issueObject = A2(
 											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 											A3(
 												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-												'url',
+												'resourcePath',
 												{ctor: '[]'},
 												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 											A2(
 												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 												A3(
 													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-													'id',
+													'url',
 													{ctor: '[]'},
 													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Issue)))))))))))));
+												A2(
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+													A3(
+														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+														'id',
+														{ctor: '[]'},
+														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Issue))))))))))))));
 var _vito$cadet$GitHubGraph$issuesQuery = function () {
 	var pageInfo = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,

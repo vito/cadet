@@ -36,6 +36,9 @@ module GitHubGraph
         , createRepoLabel
         , updateRepoLabel
         , deleteRepoLabel
+        , closeIssue
+        , addIssueLabels
+        , removeIssueLabel
         , issueScore
         , pullRequestScore
         , reactionScore
@@ -94,6 +97,7 @@ type alias Repo =
 type alias Issue =
     { id : ID
     , url : String
+    , resourcePath : String
     , createdAt : Date
     , updatedAt : Date
     , state : IssueState
@@ -354,6 +358,29 @@ updateRepoLabel token repo label name color =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
+        |> HttpBuilder.toTask
+
+
+closeIssue : Token -> Issue -> Task Http.Error ()
+closeIssue token issue =
+    HttpBuilder.patch ("https://api.github.com/repos" ++ issue.resourcePath)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
+        |> HttpBuilder.toTask
+
+
+addIssueLabels : Token -> Issue -> List String -> Task Http.Error ()
+addIssueLabels token issue names =
+    HttpBuilder.post ("https://api.github.com/repos" ++ issue.resourcePath ++ "/labels")
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
+        |> HttpBuilder.toTask
+
+
+removeIssueLabel : Token -> Issue -> String -> Task Http.Error ()
+removeIssueLabel token issue name =
+    HttpBuilder.delete ("https://api.github.com/repos" ++ issue.resourcePath ++ "/labels/" ++ name)
+        |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
 
 
@@ -774,6 +801,7 @@ issueObject =
     GB.object Issue
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "resourcePath" [] GB.string)
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
         |> GB.with (GB.aliasAs "issueState" <| GB.field "state" [] (GB.enum issueStates))
@@ -1020,6 +1048,7 @@ decodeIssue =
     JD.succeed Issue
         |: (JD.field "id" JD.string)
         |: (JD.field "url" JD.string)
+        |: (JD.field "resource_path" JD.string)
         |: (JD.field "created_at" JDE.date)
         |: (JD.field "updated_at" JDE.date)
         |: (JD.field "state" decodeIssueState)
@@ -1197,6 +1226,7 @@ encodeIssue record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
+        , ( "resource_path", JE.string record.resourcePath )
         , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
         , ( "state", encodeIssueState record.state )

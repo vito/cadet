@@ -77,6 +77,7 @@ type alias CardNodeState =
 
 type alias Card =
     { id : GitHubGraph.ID
+    , content : GitHubGraph.CardContent
     , url : String
     , number : Int
     , title : String
@@ -143,6 +144,10 @@ type Msg
     | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result Http.Error ())
     | RepoRefreshed (Result Http.Error GitHubGraph.Repo)
+    | AcceptCard Card
+    | RejectCard Card
+    | CardAccepted (List GitHubGraph.ID) (Result String ())
+    | CardRejected (List GitHubGraph.ID) (Result String ())
 
 
 type Page
@@ -706,6 +711,36 @@ update msg model =
             flip always (Debug.log "failed to refresh repo" msg) <|
                 ( model, Cmd.none )
 
+        AcceptCard card ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, acceptIssue model issue )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        CardAccepted colIds (Ok ()) ->
+            ( model, Cmd.batch (List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id)) colIds) )
+
+        CardAccepted colIds (Err msg) ->
+            flip always (Debug.log "failed to accept card" msg) <|
+                ( model, Cmd.none )
+
+        RejectCard card ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, rejectIssue model issue )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        CardRejected colIds (Ok ()) ->
+            ( model, Cmd.batch (List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id)) colIds) )
+
+        CardRejected colIds (Err msg) ->
+            flip always (Debug.log "failed to reject card" msg) <|
+                ( model, Cmd.none )
+
 
 addProjectCards : List GitHubGraph.ProjectColumnCard -> Dict GitHubGraph.ID Card -> Dict GitHubGraph.ID Card
 addProjectCards cards allCards =
@@ -728,6 +763,7 @@ addProjectCards cards allCards =
 issueCard : GitHubGraph.Issue -> Card
 issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as issue) =
     { id = id
+    , content = GitHubGraph.IssueCardContent issue
     , url = url
     , number = number
     , title = title
@@ -745,6 +781,7 @@ issueCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCo
 prCard : GitHubGraph.PullRequest -> Card
 prCard ({ id, url, number, title, updatedAt, author, labels, cards, commentCount, reactions, state } as pr) =
     { id = id
+    , content = GitHubGraph.PullRequestCardContent pr
     , url = url
     , number = number
     , title = title
@@ -1923,6 +1960,22 @@ viewCard model card =
 
                 PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
+            , if isDone card then
+                Html.span
+                    [ HA.class "octicon accept octicon-thumbsup"
+                    , HE.onClick (AcceptCard card)
+                    ]
+                    []
+              else
+                Html.text ""
+            , if isDone card then
+                Html.span
+                    [ HA.class "octicon reject octicon-thumbsdown"
+                    , HE.onClick (RejectCard card)
+                    ]
+                    []
+              else
+                Html.text ""
             ]
         , Html.div [ HA.class "card-info" ]
             [ Html.div [ HA.class "card-actors" ] <|
@@ -2243,6 +2296,71 @@ deleteLabel model repo label =
         Just { token } ->
             GitHubGraph.deleteRepoLabel token repo label.name
                 |> Task.attempt (LabelChanged repo)
+
+        Nothing ->
+            Cmd.none
+
+
+acceptIssue : Model -> GitHubGraph.Issue -> Cmd Msg
+acceptIssue model issue =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.removeIssueLabel token issue "rejected"
+                |> Task.onError (always (Task.succeed ()))
+                |> Task.andThen (\_ -> GitHubGraph.addIssueLabels token issue [ "accepted" ])
+                |> Task.andThen (\_ -> GitHubGraph.closeIssue token issue)
+                |> Task.mapError toString
+                |> Task.attempt (CardAccepted (List.filterMap (Maybe.map .id << .column) issue.cards))
+
+        Nothing ->
+            Cmd.none
+
+
+rejectIssue : Model -> GitHubGraph.Issue -> Cmd Msg
+rejectIssue model issue =
+    case model.me of
+        Just { token } ->
+            let
+                moveCardToBacklog card =
+                    case List.head (List.filter ((==) card.project.id << .id) model.data.projects) of
+                        Just project ->
+                            case List.filter (detectColumn.backlog << .name) project.columns of
+                                [ column ] ->
+                                    Just ( column.id, card.id )
+
+                                _ ->
+                                    -- multiple or no backlogs; do nothing
+                                    Nothing
+
+                        Nothing ->
+                            Nothing
+
+                addLabel =
+                    Task.map (always ()) <|
+                        Task.mapError toString <|
+                            GitHubGraph.addIssueLabels token issue [ "rejected" ]
+
+                cardsToMove =
+                    List.filterMap moveCardToBacklog issue.cards
+
+                columnsToRefresh =
+                    Set.toList <|
+                        Set.union
+                            (Set.fromList <| List.filterMap (Maybe.map .id << .column) issue.cards)
+                            (Set.fromList <| List.map Tuple.first cardsToMove)
+
+                moves =
+                    List.map
+                        (\( colId, cardId ) ->
+                            Task.map (always ()) <|
+                                Task.mapError toString <|
+                                    GitHubGraph.moveCardAfter token colId cardId Nothing
+                        )
+                        cardsToMove
+            in
+                Task.sequence (addLabel :: moves)
+                    |> Task.map (always ())
+                    |> Task.attempt (CardRejected columnsToRefresh)
 
         Nothing ->
             Cmd.none
