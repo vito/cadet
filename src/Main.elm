@@ -2200,6 +2200,18 @@ isAccepted model card =
         List.any (flip List.member acceptedLabels) card.labels
 
 
+isRejected : Model -> Card -> Bool
+isRejected model card =
+    let
+        acceptedLabels =
+            model.allLabels
+                |> Dict.values
+                |> List.filter ((==) "rejected" << .name)
+                |> List.map .id
+    in
+        List.any (flip List.member acceptedLabels) card.labels
+
+
 isOpen : Card -> Bool
 isOpen card =
     case card.state of
@@ -2271,11 +2283,22 @@ viewCard model card =
                     , HE.onClick (AcceptCard card)
                     ]
                     []
+              else if isAccepted model card then
+                Html.span
+                    [ HA.class "octicon accepted octicon-thumbsup"
+                    ]
+                    []
               else
                 Html.text ""
             , if isOpen card && isDone card then
                 Html.span
                     [ HA.class "octicon reject octicon-thumbsdown"
+                    , HE.onClick (RejectCard card)
+                    ]
+                    []
+              else if isRejected model card then
+                Html.span
+                    [ HA.class "octicon rejected octicon-thumbsdown"
                     , HE.onClick (RejectCard card)
                     ]
                     []
