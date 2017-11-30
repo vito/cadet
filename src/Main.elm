@@ -378,11 +378,12 @@ update msg model =
                         MilestonesPage ->
                             []
             in
-                ( { model
-                    | page = page
-                    , cardGraphs = compute model.data model.allCards
-                    , computeGraph = compute
-                  }
+                ( computeDataView
+                    { model
+                        | page = page
+                        , cardGraphs = compute model.data model.allCards
+                        , computeGraph = compute
+                    }
                 , Cmd.none
                 )
 
@@ -936,62 +937,75 @@ computeDataView model =
         add x =
             Just << Maybe.withDefault [ x ] << Maybe.map ((::) x)
 
-        reposByLabel =
-            Dict.foldl
-                (\_ repo cbn ->
-                    List.foldl
-                        (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
-                        cbn
-                        repo.labels
-                )
-                Dict.empty
-                model.data.repos
-
-        allMilestones =
-            Set.toList <|
-                Dict.foldl
-                    (\_ repo ->
-                        repo.milestones
-                            |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                            |> List.map .title
-                            |> Set.fromList
-                            |> Set.union
-                    )
-                    Set.empty
-                    model.data.repos
-
-        cardsByMilestone =
-            Dict.foldl
-                (\_ card acc ->
-                    case card.milestone of
-                        Just milestone ->
-                            Dict.update milestone.title (add card) acc
-
-                        Nothing ->
-                            acc
-                )
-                Dict.empty
-                model.allCards
-
-        nextMilestoneCards =
-            Dict.foldl
-                (\_ card acc ->
-                    if (isMerged card || isAccepted model card) && card.milestone == Nothing then
-                        card :: acc
-                    else
-                        acc
-                )
-                []
-                model.allCards
+        dataView =
+            model.dataView
     in
-        { model
-            | dataView =
-                { cardsByMilestone = cardsByMilestone
-                , allMilestones = allMilestones
-                , nextMilestoneCards = nextMilestoneCards
-                , reposByLabel = reposByLabel
-                }
-        }
+        case model.page of
+            MilestonesPage ->
+                let
+                    allMilestones =
+                        Set.toList <|
+                            Dict.foldl
+                                (\_ repo ->
+                                    repo.milestones
+                                        |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                        |> List.map .title
+                                        |> Set.fromList
+                                        |> Set.union
+                                )
+                                Set.empty
+                                model.data.repos
+
+                    cardsByMilestone =
+                        Dict.foldl
+                            (\_ card acc ->
+                                case card.milestone of
+                                    Just milestone ->
+                                        Dict.update milestone.title (add card) acc
+
+                                    Nothing ->
+                                        acc
+                            )
+                            Dict.empty
+                            model.allCards
+
+                    nextMilestoneCards =
+                        Dict.foldl
+                            (\_ card acc ->
+                                if (isMerged card || isAccepted model card) && card.milestone == Nothing then
+                                    card :: acc
+                                else
+                                    acc
+                            )
+                            []
+                            model.allCards
+                in
+                    { model
+                        | dataView =
+                            { dataView
+                                | cardsByMilestone = cardsByMilestone
+                                , allMilestones = allMilestones
+                                , nextMilestoneCards = nextMilestoneCards
+                            }
+                    }
+
+            LabelsPage ->
+                let
+                    reposByLabel =
+                        Dict.foldl
+                            (\_ repo cbn ->
+                                List.foldl
+                                    (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
+                                    cbn
+                                    repo.labels
+                            )
+                            Dict.empty
+                            model.data.repos
+                in
+                    { model | dataView = { dataView | reposByLabel = reposByLabel } }
+
+            _ ->
+                model
 
 
 issueCard : GitHubGraph.Issue -> Card
