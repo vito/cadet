@@ -13596,13 +13596,13 @@ var _vito$cadet$Main$hook = _elm_lang$core$Native_Platform.incomingPort(
 				A2(_elm_lang$core$Json_Decode$index, 1, _elm_lang$core$Json_Decode$value));
 		},
 		A2(_elm_lang$core$Json_Decode$index, 0, _elm_lang$core$Json_Decode$string)));
-var _vito$cadet$Main$Flags = F2(
-	function (a, b) {
-		return {githubToken: a, githubOrg: b};
+var _vito$cadet$Main$Flags = F3(
+	function (a, b, c) {
+		return {githubToken: a, githubOrg: b, skipTimeline: c};
 	});
-var _vito$cadet$Main$Model = F5(
-	function (a, b, c, d, e) {
-		return {githubToken: a, githubOrg: b, projects: c, loadQueue: d, failedQueue: e};
+var _vito$cadet$Main$Model = F6(
+	function (a, b, c, d, e, f) {
+		return {githubToken: a, githubOrg: b, skipTimeline: c, projects: d, loadQueue: e, failedQueue: f};
 	});
 var _vito$cadet$Main$TimelineFetched = F2(
 	function (a, b) {
@@ -13610,7 +13610,7 @@ var _vito$cadet$Main$TimelineFetched = F2(
 	});
 var _vito$cadet$Main$fetchTimeline = F2(
 	function (model, id) {
-		return A2(
+		return model.skipTimeline ? _elm_lang$core$Platform_Cmd$none : A2(
 			_elm_lang$core$Task$attempt,
 			_vito$cadet$Main$TimelineFetched(id),
 			A2(
@@ -14460,6 +14460,7 @@ var _vito$cadet$Main$init = function (_p30) {
 		{
 			githubToken: _p31.githubToken,
 			githubOrg: _p31.githubOrg,
+			skipTimeline: _p31.skipTimeline,
 			projects: {ctor: '[]'},
 			loadQueue: {ctor: '[]'},
 			failedQueue: {ctor: '[]'}
@@ -14473,8 +14474,13 @@ var _vito$cadet$Main$main = _elm_lang$core$Platform$programWithFlags(
 			return A2(
 				_elm_lang$core$Json_Decode$andThen,
 				function (githubToken) {
-					return _elm_lang$core$Json_Decode$succeed(
-						{githubOrg: githubOrg, githubToken: githubToken});
+					return A2(
+						_elm_lang$core$Json_Decode$andThen,
+						function (skipTimeline) {
+							return _elm_lang$core$Json_Decode$succeed(
+								{githubOrg: githubOrg, githubToken: githubToken, skipTimeline: skipTimeline});
+						},
+						A2(_elm_lang$core$Json_Decode$field, 'skipTimeline', _elm_lang$core$Json_Decode$bool));
 				},
 				A2(_elm_lang$core$Json_Decode$field, 'githubToken', _elm_lang$core$Json_Decode$string));
 		},

@@ -12,7 +12,8 @@ global.XMLHttpRequest = require("xhr2")
 const Elm = require('./worker');
 const worker = Elm.Main.worker({
   githubOrg: process.env.GITHUB_ORG,
-  githubToken: process.env.GITHUB_TOKEN
+  githubToken: process.env.GITHUB_TOKEN,
+  skipTimeline: process.env.SKIP_TIMELINE == "true"
 });
 
 const app = express()

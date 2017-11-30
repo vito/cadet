@@ -57,12 +57,14 @@ main =
 type alias Flags =
     { githubToken : String
     , githubOrg : String
+    , skipTimeline : Bool
     }
 
 
 type alias Model =
     { githubToken : String
     , githubOrg : String
+    , skipTimeline : Bool
     , projects : List GitHubGraph.Project
     , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
@@ -89,10 +91,11 @@ type Msg
 
 
 init : Flags -> ( Model, Cmd Msg )
-init { githubToken, githubOrg } =
+init { githubToken, githubOrg, skipTimeline } =
     update (Refresh 0)
         { githubToken = githubToken
         , githubOrg = githubOrg
+        , skipTimeline = skipTimeline
         , projects = []
         , loadQueue = []
         , failedQueue = []
@@ -463,8 +466,11 @@ decodeAndFetchIssueOrPR field payload fetch model =
 
 fetchTimeline : Model -> GitHubGraph.ID -> Cmd Msg
 fetchTimeline model id =
-    GitHubGraph.fetchTimeline model.githubToken { id = id }
-        |> Task.attempt (TimelineFetched id)
+    if model.skipTimeline then
+        Cmd.none
+    else
+        GitHubGraph.fetchTimeline model.githubToken { id = id }
+            |> Task.attempt (TimelineFetched id)
 
 
 log : String -> a -> b -> b
