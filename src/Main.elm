@@ -55,7 +55,7 @@ type alias Model =
     , highlightedCard : Maybe GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , cardGraphs : List (ForceGraph (Node CardNodeState))
-    , computeGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
+    , computeGraph : Data -> Dict GitHubGraph.ID Card -> List (ForceGraph (Node CardNodeState))
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
@@ -370,7 +370,7 @@ update msg model =
                             []
 
                         ProjectPage name ->
-                            computeReferenceGraph data (List.filter (isInProject name) cards)
+                            computeReferenceGraph data (Dict.filter (\_ -> isInProject name) cards)
 
                         LabelsPage ->
                             []
@@ -380,7 +380,7 @@ update msg model =
             in
                 ( { model
                     | page = page
-                    , cardGraphs = compute model.data (Dict.values model.allCards)
+                    , cardGraphs = compute model.data model.allCards
                     , computeGraph = compute
                   }
                 , Cmd.none
@@ -449,7 +449,7 @@ update msg model =
                         finishDrag model =
                             ( { model
                                 | projectDrag = Drag.complete model.projectDrag
-                                , cardGraphs = model.computeGraph model.data (Dict.values model.allCards)
+                                , cardGraphs = model.computeGraph model.data model.allCards
                               }
                             , Cmd.none
                             )
@@ -590,7 +590,7 @@ update msg model =
                         | data = data
                         , allCards = allCards
                         , allLabels = allLabels
-                        , cardGraphs = model.computeGraph data (Dict.values allCards)
+                        , cardGraphs = model.computeGraph data allCards
                     }
                 , Backend.pollData DataFetched
                 )
@@ -1681,8 +1681,8 @@ viewSearch =
         ]
 
 
-computeReferenceGraph : Data -> List Card -> List (ForceGraph (Node CardNodeState))
-computeReferenceGraph data cards =
+computeReferenceGraph : Data -> Dict GitHubGraph.ID Card -> List (ForceGraph (Node CardNodeState))
+computeReferenceGraph data allCards =
     let
         cardEdges =
             Dict.foldl
@@ -1708,8 +1708,15 @@ computeReferenceGraph data cards =
             Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
 
         cardNodeThunks =
-            List.map (\card -> Graph.Node (Hash.hash card.id) (cardNode allLabels card)) <|
-                List.filter isOpen cards
+            Dict.foldl
+                (\_ card thunks ->
+                    if isOpen card then
+                        Graph.Node (Hash.hash card.id) (cardNode allLabels card) :: thunks
+                    else
+                        thunks
+                )
+                []
+                allCards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
             let
