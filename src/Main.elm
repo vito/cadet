@@ -1525,15 +1525,15 @@ labelColorStyle color =
         ]
 
 
-onlyOpenContentCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
-onlyOpenContentCards model =
+onlyAcceptableCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
+onlyAcceptableCards model =
     List.filter <|
         \{ contentId } ->
             case contentId of
                 Just id ->
                     case Dict.get id model.allCards of
                         Just card ->
-                            isOpen card
+                            isOpen card || ((needsAcceptance model card) && not (isAccepted model card))
 
                         Nothing ->
                             False
@@ -1560,7 +1560,7 @@ viewProject model { project, backlogs, inFlight, done } =
             , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenContentCards model) done ]
+                [ viewProjectColumn model project (onlyAcceptableCards model) done ]
             ]
         ]
 
@@ -1654,7 +1654,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
             ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text project.name ] ]
              , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenContentCards model) done ]
+                [ viewProjectColumn model project (onlyAcceptableCards model) done ]
              , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
              ]
@@ -2249,24 +2249,44 @@ isMerged card =
     card.state == PullRequestState (GitHubGraph.PullRequestStateMerged)
 
 
-isAccepted : Model -> Card -> Bool
-isAccepted model card =
+hasLabel : Model -> String -> Card -> Bool
+hasLabel model name card =
     let
-        acceptedLabels =
+        matchingLabels =
             model.allLabels
-                |> Dict.filter (\_ l -> l.name == "accepted")
+                |> Dict.filter (\_ l -> l.name == name)
     in
-        List.any (flip Dict.member acceptedLabels) card.labels
+        List.any (flip Dict.member matchingLabels) card.labels
+
+
+isEnhancement : Model -> Card -> Bool
+isEnhancement model =
+    hasLabel model "enhancement"
+
+
+isBug : Model -> Card -> Bool
+isBug model =
+    hasLabel model "bug"
+
+
+isWontfix : Model -> Card -> Bool
+isWontfix model =
+    hasLabel model "wontfix"
+
+
+needsAcceptance : Model -> Card -> Bool
+needsAcceptance model card =
+    (isEnhancement model card || isBug model card) && not (isWontfix model card)
+
+
+isAccepted : Model -> Card -> Bool
+isAccepted model =
+    hasLabel model "accepted"
 
 
 isRejected : Model -> Card -> Bool
-isRejected model card =
-    let
-        acceptedLabels =
-            model.allLabels
-                |> Dict.filter (\_ l -> l.name == "rejected")
-    in
-        List.any (flip Dict.member acceptedLabels) card.labels
+isRejected model =
+    hasLabel model "rejected"
 
 
 isOpen : Card -> Bool
@@ -2334,7 +2354,7 @@ viewCard model card =
 
                 PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
-            , if isOpen card && isDone card then
+            , if needsAcceptance model card && isDone card then
                 Html.span
                     [ HA.class "octicon accept octicon-thumbsup"
                     , HE.onClick (AcceptCard card)
@@ -2347,7 +2367,7 @@ viewCard model card =
                     []
               else
                 Html.text ""
-            , if isOpen card && isDone card then
+            , if needsAcceptance model card && isDone card then
                 Html.span
                     [ HA.class "octicon reject octicon-thumbsdown"
                     , HE.onClick (RejectCard card)

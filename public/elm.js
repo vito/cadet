@@ -25338,8 +25338,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2538, column: 25},
-							end: {line: 2552, column: 57}
+							start: {line: 2558, column: 25},
+							end: {line: 2572, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25449,8 +25449,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2456, column: 17},
-					end: {line: 2464, column: 50}
+					start: {line: 2476, column: 17},
+					end: {line: 2484, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25458,8 +25458,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2454, column: 9},
-				end: {line: 2467, column: 42}
+				start: {line: 2474, column: 9},
+				end: {line: 2487, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25553,37 +25553,42 @@ var _vito$cadet$Main$isOpen = function (card) {
 	} while(false);
 	return false;
 };
-var _vito$cadet$Main$isRejected = F2(
-	function (model, card) {
-		var acceptedLabels = A2(
+var _vito$cadet$Main$hasLabel = F3(
+	function (model, name, card) {
+		var matchingLabels = A2(
 			_elm_lang$core$Dict$filter,
 			F2(
 				function (_p21, l) {
-					return _elm_lang$core$Native_Utils.eq(l.name, 'rejected');
+					return _elm_lang$core$Native_Utils.eq(l.name, name);
 				}),
 			model.allLabels);
 		return A2(
 			_elm_lang$core$List$any,
-			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$member, acceptedLabels),
+			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$member, matchingLabels),
 			card.labels);
 	});
-var _vito$cadet$Main$isAccepted = F2(
+var _vito$cadet$Main$isEnhancement = function (model) {
+	return A2(_vito$cadet$Main$hasLabel, model, 'enhancement');
+};
+var _vito$cadet$Main$isBug = function (model) {
+	return A2(_vito$cadet$Main$hasLabel, model, 'bug');
+};
+var _vito$cadet$Main$isWontfix = function (model) {
+	return A2(_vito$cadet$Main$hasLabel, model, 'wontfix');
+};
+var _vito$cadet$Main$needsAcceptance = F2(
 	function (model, card) {
-		var acceptedLabels = A2(
-			_elm_lang$core$Dict$filter,
-			F2(
-				function (_p22, l) {
-					return _elm_lang$core$Native_Utils.eq(l.name, 'accepted');
-				}),
-			model.allLabels);
-		return A2(
-			_elm_lang$core$List$any,
-			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$member, acceptedLabels),
-			card.labels);
+		return (A2(_vito$cadet$Main$isEnhancement, model, card) || A2(_vito$cadet$Main$isBug, model, card)) && (!A2(_vito$cadet$Main$isWontfix, model, card));
 	});
+var _vito$cadet$Main$isAccepted = function (model) {
+	return A2(_vito$cadet$Main$hasLabel, model, 'accepted');
+};
+var _vito$cadet$Main$isRejected = function (model) {
+	return A2(_vito$cadet$Main$hasLabel, model, 'rejected');
+};
 var _vito$cadet$Main$isPR = function (card) {
-	var _p23 = card.state;
-	if (_p23.ctor === 'PullRequestState') {
+	var _p22 = card.state;
+	if (_p22.ctor === 'PullRequestState') {
 		return true;
 	} else {
 		return false;
@@ -25597,21 +25602,21 @@ var _vito$cadet$Main$inColumn = F2(
 	function (match, card) {
 		return A2(
 			_elm_lang$core$List$any,
-			function (_p24) {
+			function (_p23) {
 				return A2(
 					_elm_lang$core$Maybe$withDefault,
 					false,
 					A2(
 						_elm_lang$core$Maybe$map,
-						function (_p25) {
+						function (_p24) {
 							return match(
 								function (_) {
 									return _.name;
-								}(_p25));
+								}(_p24));
 						},
 						function (_) {
 							return _.column;
-						}(_p24)));
+						}(_p23)));
 			},
 			card.cards);
 	});
@@ -25622,13 +25627,13 @@ var _vito$cadet$Main$isInProject = F2(
 			name,
 			A2(
 				_elm_lang$core$List$map,
-				function (_p26) {
+				function (_p25) {
 					return function (_) {
 						return _.name;
 					}(
 						function (_) {
 							return _.project;
-						}(_p26));
+						}(_p25));
 				},
 				card.cards));
 	});
@@ -25638,8 +25643,8 @@ var _vito$cadet$Main$activityClass = F2(
 		return (_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 1) < 1) ? 'active-today' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 2) < 1) ? 'active-yesterday' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 7) < 1) ? 'active-this-week' : 'active-long-ago'));
 	});
 var _vito$cadet$Main$viewCardActor = F2(
-	function (model, _p27) {
-		var _p28 = _p27;
+	function (model, _p26) {
+		var _p27 = _p26;
 		return A2(
 			_elm_lang$html$Html$img,
 			{
@@ -25648,11 +25653,11 @@ var _vito$cadet$Main$viewCardActor = F2(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'card-actor ',
-						A2(_vito$cadet$Main$activityClass, model.currentDate, _p28.createdAt))),
+						A2(_vito$cadet$Main$activityClass, model.currentDate, _p27.createdAt))),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$html$Html_Attributes$src(
-						A2(_elm_lang$core$Basics_ops['++'], _p28.actor.avatar, '&s=88')),
+						A2(_elm_lang$core$Basics_ops['++'], _p27.actor.avatar, '&s=88')),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$draggable('false'),
@@ -25668,11 +25673,11 @@ var _vito$cadet$Main$renderCardNode = F2(
 	});
 var _vito$cadet$Main$flairRadiusBase = 16;
 var _vito$cadet$Main$issueRadius = F2(
-	function (card, _p29) {
-		var _p30 = _p29;
+	function (card, _p28) {
+		var _p29 = _p28;
 		return 15 + ((_elm_lang$core$Basics$toFloat(
-			_elm_community$intdict$IntDict$size(_p30.incoming)) / 2) + _elm_lang$core$Basics$toFloat(
-			_elm_community$intdict$IntDict$size(_p30.outgoing) * 2));
+			_elm_community$intdict$IntDict$size(_p29.incoming)) / 2) + _elm_lang$core$Basics$toFloat(
+			_elm_community$intdict$IntDict$size(_p29.outgoing) * 2));
 	});
 var _vito$cadet$Main$issueRadiusWithLabels = F2(
 	function (card, context) {
@@ -25708,8 +25713,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 			};
 		};
 		var reactionTypeEmoji = function (type_) {
-			var _p31 = type_;
-			switch (_p31.ctor) {
+			var _p30 = type_;
+			switch (_p30.ctor) {
 				case 'ReactionTypeThumbsUp':
 					return '👍';
 				case 'ReactionTypeThumbsDown':
@@ -25728,17 +25733,17 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 			_elm_lang$core$Basics$flip,
 			_elm_lang$core$List$map,
 			card.reactions,
-			function (_p32) {
-				var _p33 = _p32;
+			function (_p31) {
+				var _p32 = _p31;
 				return {
 					ctor: '_Tuple2',
-					_0: reactionTypeEmoji(_p33.type_),
-					_1: _p33.count
+					_0: reactionTypeEmoji(_p32.type_),
+					_1: _p32.count
 				};
 			});
 		var flairs = A2(
 			_elm_lang$core$List$filter,
-			function (_p34) {
+			function (_p33) {
 				return A3(
 					_elm_lang$core$Basics$flip,
 					F2(
@@ -25746,7 +25751,7 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 							return _elm_lang$core$Native_Utils.cmp(x, y) > 0;
 						}),
 					0,
-					_elm_lang$core$Tuple$second(_p34));
+					_elm_lang$core$Tuple$second(_p33));
 			},
 			{
 				ctor: '::',
@@ -25755,8 +25760,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 			});
 		var radius = A2(_vito$cadet$Main$issueRadiusWithLabels, card, context);
 		var reactionSegment = F2(
-			function (i, _p35) {
-				var _p36 = _p35;
+			function (i, _p34) {
+				var _p35 = _p34;
 				var segments = A2(
 					_gampleman$elm_visualization$Visualization_Shape$pie,
 					{
@@ -25764,12 +25769,12 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 						endAngle: 2 * _elm_lang$core$Basics$pi,
 						padAngle: 3.0e-2,
 						sortingFn: F2(
-							function (_p38, _p37) {
+							function (_p37, _p36) {
 								return _elm_lang$core$Basics$EQ;
 							}),
 						valueFn: _elm_lang$core$Basics$always(1.0),
 						innerRadius: radius,
-						outerRadius: (radius + _vito$cadet$Main$flairRadiusBase) + _elm_lang$core$Basics$toFloat(_p36._1),
+						outerRadius: (radius + _vito$cadet$Main$flairRadiusBase) + _elm_lang$core$Basics$toFloat(_p35._1),
 						cornerRadius: 3,
 						padRadius: 0
 					},
@@ -25777,12 +25782,12 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 						_elm_lang$core$List$repeat,
 						_elm_lang$core$List$length(flairs),
 						1));
-				var _p39 = A2(
+				var _p38 = A2(
 					_elm_lang$core$List$take,
 					1,
 					A2(_elm_lang$core$List$drop, i, segments));
-				if ((_p39.ctor === '::') && (_p39._1.ctor === '[]')) {
-					return _p39._0;
+				if ((_p38.ctor === '::') && (_p38._1.ctor === '[]')) {
+					return _p38._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
@@ -25790,7 +25795,7 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 							start: {line: 1980, column: 17},
 							end: {line: 1985, column: 49}
 						},
-						_p39)('impossible');
+						_p38)('impossible');
 				}
 			});
 		return A3(
@@ -25798,9 +25803,9 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 			_elm_lang$core$List$indexedMap,
 			flairs,
 			F2(
-				function (i, _p41) {
-					var _p42 = _p41;
-					var arc = A2(reactionSegment, i, _p42);
+				function (i, _p40) {
+					var _p41 = _p40;
+					var arc = A2(reactionSegment, i, _p41);
 					return A2(
 						_elm_lang$svg$Svg$g,
 						{
@@ -25847,7 +25852,7 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 									},
 									{
 										ctor: '::',
-										_0: _elm_lang$svg$Svg$text(_p42._0),
+										_0: _elm_lang$svg$Svg$text(_p41._0),
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -25865,7 +25870,7 @@ var _vito$cadet$Main$nodeLabelArcs = F3(
 				endAngle: 2 * _elm_lang$core$Basics$pi,
 				padAngle: 0,
 				sortingFn: F2(
-					function (_p44, _p43) {
+					function (_p43, _p42) {
 						return _elm_lang$core$Basics$EQ;
 					}),
 				valueFn: _elm_lang$core$Basics$always(1.0),
@@ -25906,37 +25911,37 @@ var _vito$cadet$Main$nodeLabelArcs = F3(
 var _vito$cadet$Main$linkPath = F2(
 	function (graph, edge) {
 		var target = function () {
-			var _p46 = A2(
+			var _p45 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p45) {
+				function (_p44) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p45));
+						}(_p44));
 				},
 				A2(_elm_community$graph$Graph$get, edge.to, graph));
-			if (_p46.ctor === 'Just') {
-				return {x: _p46._0.x, y: _p46._0.y};
+			if (_p45.ctor === 'Just') {
+				return {x: _p45._0.x, y: _p45._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
 		}();
 		var source = function () {
-			var _p48 = A2(
+			var _p47 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p47) {
+				function (_p46) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p47));
+						}(_p46));
 				},
 				A2(_elm_community$graph$Graph$get, edge.from, graph));
-			if (_p48.ctor === 'Just') {
-				return {x: _p48._0.x, y: _p48._0.y};
+			if (_p47.ctor === 'Just') {
+				return {x: _p47._0.x, y: _p47._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
@@ -25975,31 +25980,31 @@ var _vito$cadet$Main$linkPath = F2(
 			{ctor: '[]'});
 	});
 var _vito$cadet$Main$viewNodeLowerUpper = F3(
-	function (state, _p50, _p49) {
-		var _p51 = _p50;
-		var _p53 = _p51.node;
-		var _p52 = _p49;
-		var pos = {x: _p53.label.x, y: _p53.label.y};
+	function (state, _p49, _p48) {
+		var _p50 = _p49;
+		var _p52 = _p50.node;
+		var _p51 = _p48;
+		var pos = {x: _p52.label.x, y: _p52.label.y};
 		return {
 			ctor: '_Tuple2',
 			_0: {
 				ctor: '::',
-				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p53.label.value.viewLower, pos, state),
-				_1: _p52._0
+				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p52.label.value.viewLower, pos, state),
+				_1: _p51._0
 			},
 			_1: {
 				ctor: '::',
-				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p53.label.value.viewUpper, pos, state),
-				_1: _p52._1
+				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p52.label.value.viewUpper, pos, state),
+				_1: _p51._1
 			}
 		};
 	});
 var _vito$cadet$Main$viewGraph = F2(
-	function (model, _p54) {
-		var _p55 = _p54;
-		var _p65 = _p55.graph;
+	function (model, _p53) {
+		var _p54 = _p53;
+		var _p64 = _p54.graph;
 		var state = {currentDate: model.currentDate, selectedCards: model.selectedCards, anticipatedCards: model.anticipatedCards, highlightedNode: model.highlightedNode};
-		var _p56 = A3(
+		var _p55 = A3(
 			_elm_community$graph$Graph$fold,
 			_vito$cadet$Main$viewNodeLowerUpper(state),
 			{
@@ -26007,14 +26012,14 @@ var _vito$cadet$Main$viewGraph = F2(
 				_0: {ctor: '[]'},
 				_1: {ctor: '[]'}
 			},
-			_p65);
-		var flairs = _p56._0;
-		var nodes = _p56._1;
+			_p64);
+		var flairs = _p55._0;
+		var nodes = _p55._1;
 		var links = A2(
 			_elm_lang$core$List$map,
 			_elm_lang$svg$Svg_Lazy$lazy(
-				_vito$cadet$Main$linkPath(_p65)),
-			_elm_community$graph$Graph$edges(_p65));
+				_vito$cadet$Main$linkPath(_p64)),
+			_elm_community$graph$Graph$edges(_p64));
 		var padding = 10;
 		var nodeContexts = A3(
 			_elm_community$graph$Graph$fold,
@@ -26023,32 +26028,32 @@ var _vito$cadet$Main$viewGraph = F2(
 					return {ctor: '::', _0: x, _1: y};
 				}),
 			{ctor: '[]'},
-			_p65);
+			_p64);
 		var bounds = A2(_elm_lang$core$List$map, _vito$cadet$Main$nodeBounds, nodeContexts);
 		var minX = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p57, acc) {
-					var _p58 = _p57;
-					return A2(_elm_lang$core$Basics$min, _p58.x1, acc);
+				function (_p56, acc) {
+					var _p57 = _p56;
+					return A2(_elm_lang$core$Basics$min, _p57.x1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var minY = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p59, acc) {
-					var _p60 = _p59;
-					return A2(_elm_lang$core$Basics$min, _p60.y1, acc);
+				function (_p58, acc) {
+					var _p59 = _p58;
+					return A2(_elm_lang$core$Basics$min, _p59.y1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var maxX = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p61, acc) {
-					var _p62 = _p61;
-					return A2(_elm_lang$core$Basics$max, _p62.x2, acc);
+				function (_p60, acc) {
+					var _p61 = _p60;
+					return A2(_elm_lang$core$Basics$max, _p61.x2, acc);
 				}),
 			0,
 			bounds) + padding;
@@ -26056,9 +26061,9 @@ var _vito$cadet$Main$viewGraph = F2(
 		var maxY = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p63, acc) {
-					var _p64 = _p63;
-					return A2(_elm_lang$core$Basics$max, _p64.y2, acc);
+				function (_p62, acc) {
+					var _p63 = _p62;
+					return A2(_elm_lang$core$Basics$max, _p63.y2, acc);
 				}),
 			0,
 			bounds) + padding;
@@ -26142,12 +26147,12 @@ var _vito$cadet$Main$viewGraph = F2(
 	});
 var _vito$cadet$Main$graphCompare = F2(
 	function (a, b) {
-		var _p66 = A2(
+		var _p65 = A2(
 			_elm_lang$core$Basics$compare,
 			_elm_community$graph$Graph$size(a.graph),
 			_elm_community$graph$Graph$size(b.graph));
-		if (_p66.ctor === 'EQ') {
-			var graphScore = function (_p67) {
+		if (_p65.ctor === 'EQ') {
+			var graphScore = function (_p66) {
 				return A3(
 					_elm_lang$core$List$foldl,
 					F2(
@@ -26157,7 +26162,7 @@ var _vito$cadet$Main$graphCompare = F2(
 					0,
 					A2(
 						_elm_lang$core$List$map,
-						function (_p68) {
+						function (_p67) {
 							return function (_) {
 								return _.score;
 							}(
@@ -26166,27 +26171,28 @@ var _vito$cadet$Main$graphCompare = F2(
 								}(
 									function (_) {
 										return _.label;
-									}(_p68)));
+									}(_p67)));
 						},
-						_elm_community$graph$Graph$nodes(_p67)));
+						_elm_community$graph$Graph$nodes(_p66)));
 			};
 			return A2(
 				_elm_lang$core$Basics$compare,
 				graphScore(a.graph),
 				graphScore(b.graph));
 		} else {
-			return _p66;
+			return _p65;
 		}
 	});
-var _vito$cadet$Main$onlyOpenContentCards = function (model) {
+var _vito$cadet$Main$onlyAcceptableCards = function (model) {
 	return _elm_lang$core$List$filter(
-		function (_p69) {
-			var _p70 = _p69;
-			var _p71 = _p70.contentId;
-			if (_p71.ctor === 'Just') {
-				var _p72 = A2(_elm_lang$core$Dict$get, _p71._0, model.allCards);
-				if (_p72.ctor === 'Just') {
-					return _vito$cadet$Main$isOpen(_p72._0);
+		function (_p68) {
+			var _p69 = _p68;
+			var _p70 = _p69.contentId;
+			if (_p70.ctor === 'Just') {
+				var _p71 = A2(_elm_lang$core$Dict$get, _p70._0, model.allCards);
+				if (_p71.ctor === 'Just') {
+					var _p72 = _p71._0;
+					return _vito$cadet$Main$isOpen(_p72) || (A2(_vito$cadet$Main$needsAcceptance, model, _p72) && (!A2(_vito$cadet$Main$isAccepted, model, _p72)));
 				} else {
 					return false;
 				}
@@ -28413,7 +28419,7 @@ var _vito$cadet$Main$viewCard = F2(
 						}(),
 						_1: {
 							ctor: '::',
-							_0: (_vito$cadet$Main$isOpen(card) && _vito$cadet$Main$isDone(card)) ? A2(
+							_0: (A2(_vito$cadet$Main$needsAcceptance, model, card) && _vito$cadet$Main$isDone(card)) ? A2(
 								_elm_lang$html$Html$span,
 								{
 									ctor: '::',
@@ -28435,7 +28441,7 @@ var _vito$cadet$Main$viewCard = F2(
 								{ctor: '[]'}) : _elm_lang$html$Html$text('')),
 							_1: {
 								ctor: '::',
-								_0: (_vito$cadet$Main$isOpen(card) && _vito$cadet$Main$isDone(card)) ? A2(
+								_0: (A2(_vito$cadet$Main$needsAcceptance, model, card) && _vito$cadet$Main$isDone(card)) ? A2(
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
@@ -29125,7 +29131,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 											_vito$cadet$Main$viewProjectColumn,
 											model,
 											_p156,
-											_vito$cadet$Main$onlyOpenContentCards(model),
+											_vito$cadet$Main$onlyAcceptableCards(model),
 											_p155.done),
 										_1: {ctor: '[]'}
 									}),
@@ -30489,7 +30495,7 @@ var _vito$cadet$Main$viewProject = F2(
 												_vito$cadet$Main$viewProjectColumn,
 												model,
 												_p223,
-												_vito$cadet$Main$onlyOpenContentCards(model),
+												_vito$cadet$Main$onlyAcceptableCards(model),
 												_p222.done),
 											_1: {ctor: '[]'}
 										}),
