@@ -502,14 +502,14 @@ update msg model =
 
         SearchCards query ->
             let
-                cardMatch { id, title } =
+                cardMatch { title } =
                     if String.contains (String.toLower query) (String.toLower title) then
-                        Just id
+                        True
                     else
-                        Nothing
+                        False
 
                 foundCards =
-                    List.filterMap cardMatch (Dict.values model.allCards)
+                    Dict.keys (Dict.filter (always cardMatch) model.allCards)
             in
                 ( { model | anticipatedCards = foundCards }, Cmd.none )
 
@@ -2233,11 +2233,9 @@ isAccepted model card =
     let
         acceptedLabels =
             model.allLabels
-                |> Dict.values
-                |> List.filter ((==) "accepted" << .name)
-                |> List.map .id
+                |> Dict.filter (\_ l -> l.name == "accepted")
     in
-        List.any (flip List.member acceptedLabels) card.labels
+        List.any (flip Dict.member acceptedLabels) card.labels
 
 
 isRejected : Model -> Card -> Bool
@@ -2245,11 +2243,9 @@ isRejected model card =
     let
         acceptedLabels =
             model.allLabels
-                |> Dict.values
-                |> List.filter ((==) "rejected" << .name)
-                |> List.map .id
+                |> Dict.filter (\_ l -> l.name == "rejected")
     in
-        List.any (flip List.member acceptedLabels) card.labels
+        List.any (flip Dict.member acceptedLabels) card.labels
 
 
 isOpen : Card -> Bool

@@ -25338,8 +25338,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2521, column: 25},
-							end: {line: 2535, column: 57}
+							start: {line: 2517, column: 25},
+							end: {line: 2531, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25449,8 +25449,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2439, column: 17},
-					end: {line: 2447, column: 50}
+					start: {line: 2435, column: 17},
+					end: {line: 2443, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25458,8 +25458,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2437, column: 9},
-				end: {line: 2450, column: 42}
+				start: {line: 2433, column: 9},
+				end: {line: 2446, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25556,53 +25556,29 @@ var _vito$cadet$Main$isOpen = function (card) {
 var _vito$cadet$Main$isRejected = F2(
 	function (model, card) {
 		var acceptedLabels = A2(
-			_elm_lang$core$List$map,
-			function (_) {
-				return _.id;
-			},
-			A2(
-				_elm_lang$core$List$filter,
-				function (_p21) {
-					return A2(
-						F2(
-							function (x, y) {
-								return _elm_lang$core$Native_Utils.eq(x, y);
-							}),
-						'rejected',
-						function (_) {
-							return _.name;
-						}(_p21));
-				},
-				_elm_lang$core$Dict$values(model.allLabels)));
+			_elm_lang$core$Dict$filter,
+			F2(
+				function (_p21, l) {
+					return _elm_lang$core$Native_Utils.eq(l.name, 'rejected');
+				}),
+			model.allLabels);
 		return A2(
 			_elm_lang$core$List$any,
-			A2(_elm_lang$core$Basics$flip, _elm_lang$core$List$member, acceptedLabels),
+			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$member, acceptedLabels),
 			card.labels);
 	});
 var _vito$cadet$Main$isAccepted = F2(
 	function (model, card) {
 		var acceptedLabels = A2(
-			_elm_lang$core$List$map,
-			function (_) {
-				return _.id;
-			},
-			A2(
-				_elm_lang$core$List$filter,
-				function (_p22) {
-					return A2(
-						F2(
-							function (x, y) {
-								return _elm_lang$core$Native_Utils.eq(x, y);
-							}),
-						'accepted',
-						function (_) {
-							return _.name;
-						}(_p22));
-				},
-				_elm_lang$core$Dict$values(model.allLabels)));
+			_elm_lang$core$Dict$filter,
+			F2(
+				function (_p22, l) {
+					return _elm_lang$core$Native_Utils.eq(l.name, 'accepted');
+				}),
+			model.allLabels);
 		return A2(
 			_elm_lang$core$List$any,
-			A2(_elm_lang$core$Basics$flip, _elm_lang$core$List$member, acceptedLabels),
+			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$member, acceptedLabels),
 			card.labels);
 	});
 var _vito$cadet$Main$isPR = function (card) {
@@ -29517,12 +29493,13 @@ var _vito$cadet$Main$update = F2(
 							return A2(
 								_elm_lang$core$String$contains,
 								_elm_lang$core$String$toLower(_p158._0),
-								_elm_lang$core$String$toLower(_p170.title)) ? _elm_lang$core$Maybe$Just(_p170.id) : _elm_lang$core$Maybe$Nothing;
+								_elm_lang$core$String$toLower(_p170.title)) ? true : false;
 						};
-						var foundCards = A2(
-							_elm_lang$core$List$filterMap,
-							cardMatch,
-							_elm_lang$core$Dict$values(model.allCards));
+						var foundCards = _elm_lang$core$Dict$keys(
+							A2(
+								_elm_lang$core$Dict$filter,
+								_elm_lang$core$Basics$always(cardMatch),
+								model.allCards));
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
