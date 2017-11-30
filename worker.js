@@ -10168,6 +10168,42 @@ var _vito$cadet$GitHubGraph$addIssueLabels = F3(
 												_elm_lang$core$Basics$toString(issue.number),
 												'/labels'))))))))));
 	});
+var _vito$cadet$GitHubGraph$reopenIssue = F2(
+	function (token, issue) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$object(
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'state',
+							_1: _elm_lang$core$Json_Encode$string('open')
+						},
+						_1: {ctor: '[]'}
+					}),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$patch(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								issue.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										issue.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											_elm_lang$core$Basics$toString(issue.number))))))))));
+	});
 var _vito$cadet$GitHubGraph$closeIssue = F2(
 	function (token, issue) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(

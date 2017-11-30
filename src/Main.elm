@@ -1533,7 +1533,7 @@ onlyAcceptableCards model =
                 Just id ->
                     case Dict.get id model.allCards of
                         Just card ->
-                            isOpen card || ((needsAcceptance model card) && not (isAccepted model card))
+                            isOpen card || needsAcceptance model card
 
                         Nothing ->
                             False
@@ -2276,7 +2276,7 @@ isWontfix model =
 
 needsAcceptance : Model -> Card -> Bool
 needsAcceptance model card =
-    (isEnhancement model card || isBug model card) && not (isWontfix model card)
+    (isEnhancement model card || isBug model card) && not (isWontfix model card) && not (isAccepted model card)
 
 
 isAccepted : Model -> Card -> Bool
@@ -2341,7 +2341,10 @@ viewCard model card =
         [ Html.div [ HA.class "card-icons" ]
             [ case card.state of
                 IssueState GitHubGraph.IssueStateOpen ->
-                    Html.span [ HA.class "octicon open octicon-issue-opened" ] []
+                    if isRejected model card then
+                        Html.span [ HA.class "octicon open rejected octicon-issue-reopened" ] []
+                    else
+                        Html.span [ HA.class "octicon open octicon-issue-opened" ] []
 
                 IssueState GitHubGraph.IssueStateClosed ->
                     Html.span [ HA.class "octicon closed octicon-issue-closed" ] []
@@ -2370,12 +2373,6 @@ viewCard model card =
             , if needsAcceptance model card && isDone card then
                 Html.span
                     [ HA.class "octicon reject octicon-thumbsdown"
-                    , HE.onClick (RejectCard card)
-                    ]
-                    []
-              else if isRejected model card then
-                Html.span
-                    [ HA.class "octicon rejected octicon-thumbsdown"
                     , HE.onClick (RejectCard card)
                     ]
                     []
@@ -2729,45 +2726,31 @@ rejectIssue model issue =
     case model.me of
         Just { token } ->
             let
-                moveCardToBacklog card =
-                    case Dict.get card.project.id model.data.projects of
-                        Just project ->
-                            case List.filter (detectColumn.backlog << .name) project.columns of
-                                [ column ] ->
-                                    Just ( column.id, card.id )
-
-                                _ ->
-                                    -- multiple or no backlogs; do nothing
-                                    Nothing
-
-                        Nothing ->
-                            Nothing
+                backlogs card =
+                    Dict.get card.project.id model.data.projects
+                        |> Maybe.map .columns
+                        |> Maybe.withDefault []
+                        |> List.filter (detectColumn.backlog << .name)
+                        |> List.map .id
 
                 addLabel =
                     Task.map (always ()) <|
                         Task.mapError toString <|
                             GitHubGraph.addIssueLabels token issue [ "rejected" ]
 
-                cardsToMove =
-                    List.filterMap moveCardToBacklog issue.cards
+                reopen =
+                    Task.map (always ()) <|
+                        Task.mapError toString <|
+                            GitHubGraph.reopenIssue token issue
 
                 columnsToRefresh =
                     Set.toList <|
                         Set.union
                             (Set.fromList <| List.filterMap (Maybe.map .id << .column) issue.cards)
-                            (Set.fromList <| List.map Tuple.first cardsToMove)
-
-                moves =
-                    List.map
-                        (\( colId, cardId ) ->
-                            Task.map (always ()) <|
-                                Task.mapError toString <|
-                                    GitHubGraph.moveCardAfter token colId cardId Nothing
-                        )
-                        cardsToMove
+                            (Set.fromList <| List.concatMap backlogs issue.cards)
             in
-                Task.sequence (addLabel :: moves)
-                    |> Task.map (always ())
+                addLabel
+                    |> Task.andThen (\_ -> reopen)
                     |> Task.attempt (CardRejected columnsToRefresh)
 
         Nothing ->

@@ -42,6 +42,7 @@ module GitHubGraph
         , updateRepoLabel
         , deleteRepoLabel
         , closeIssue
+        , reopenIssue
         , addIssueLabels
         , removeIssueLabel
         , setIssueMilestone
@@ -439,6 +440,14 @@ closeIssue token issue =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
+        |> HttpBuilder.toTask
+
+
+reopenIssue : Token -> Issue -> Task Http.Error ()
+reopenIssue token issue =
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "open" ) ])
         |> HttpBuilder.toTask
 
 
