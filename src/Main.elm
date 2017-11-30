@@ -47,6 +47,7 @@ type alias Model =
     , projectDrag : Drag.Model CardSource CardDestination Msg
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
+    , dataView : DataView
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , selectedCards : List GitHubGraph.ID
@@ -60,6 +61,14 @@ type alias Model =
     , newLabel : SharedLabel
     , newLabelColored : Bool
     , newMilestoneName : String
+    }
+
+
+type alias DataView =
+    { cardsByMilestone : Dict String (List Card)
+    , allMilestones : List String
+    , nextMilestoneCards : List Card
+    , reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     }
 
 
@@ -303,6 +312,12 @@ init config =
       , page = GlobalGraphPage
       , me = Nothing
       , data = Backend.emptyData
+      , dataView =
+            { cardsByMilestone = Dict.empty
+            , allMilestones = []
+            , nextMilestoneCards = []
+            , reposByLabel = Dict.empty
+            }
       , allCards = Dict.empty
       , allLabels = Dict.empty
       , selectedCards = []
@@ -471,11 +486,12 @@ update msg model =
             let
                 data =
                     model.data
+
+                newData =
+                    { data | columnCards = Dict.insert col cards data.columnCards }
             in
-                cb
-                    { model
-                        | data = { data | columnCards = Dict.insert col cards data.columnCards }
-                    }
+                cb <|
+                    computeDataView { model | data = newData }
 
         CardsFetched _ col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
@@ -569,12 +585,13 @@ update msg model =
                 allLabels =
                     Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
             in
-                ( { model
-                    | data = data
-                    , allCards = allCards
-                    , allLabels = allLabels
-                    , cardGraphs = model.computeGraph data (Dict.values allCards)
-                  }
+                ( computeDataView
+                    { model
+                        | data = data
+                        , allCards = allCards
+                        , allLabels = allLabels
+                        , cardGraphs = model.computeGraph data (Dict.values allCards)
+                    }
                 , Backend.pollData DataFetched
                 )
 
@@ -734,11 +751,11 @@ update msg model =
                 data =
                     model.data
             in
-                ( { model
-                    | data =
-                        { data | repos = Dict.insert repo.id repo data.repos }
-                    , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels repo.labels
-                  }
+                ( computeDataView
+                    { model
+                        | data = { data | repos = Dict.insert repo.id repo data.repos }
+                        , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels repo.labels
+                    }
                 , Cmd.none
                 )
 
@@ -911,6 +928,70 @@ update msg model =
         PRRefreshed (Err msg) ->
             flip always (Debug.log "failed to refresh pr" msg) <|
                 ( model, Cmd.none )
+
+
+computeDataView : Model -> Model
+computeDataView model =
+    let
+        add x =
+            Just << Maybe.withDefault [ x ] << Maybe.map ((::) x)
+
+        reposByLabel =
+            Dict.foldl
+                (\_ repo cbn ->
+                    List.foldl
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
+                        cbn
+                        repo.labels
+                )
+                Dict.empty
+                model.data.repos
+
+        allMilestones =
+            Set.toList <|
+                Dict.foldl
+                    (\_ repo ->
+                        repo.milestones
+                            |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                            |> List.map .title
+                            |> Set.fromList
+                            |> Set.union
+                    )
+                    Set.empty
+                    model.data.repos
+
+        cardsByMilestone =
+            Dict.foldl
+                (\_ card acc ->
+                    case card.milestone of
+                        Just milestone ->
+                            Dict.update milestone.title (add card) acc
+
+                        Nothing ->
+                            acc
+                )
+                Dict.empty
+                model.allCards
+
+        nextMilestoneCards =
+            Dict.foldl
+                (\_ card acc ->
+                    if (isMerged card || isAccepted model card) && card.milestone == Nothing then
+                        card :: acc
+                    else
+                        acc
+                )
+                []
+                model.allCards
+    in
+        { model
+            | dataView =
+                { cardsByMilestone = cardsByMilestone
+                , allMilestones = allMilestones
+                , nextMilestoneCards = nextMilestoneCards
+                , reposByLabel = reposByLabel
+                }
+        }
 
 
 issueCard : GitHubGraph.Issue -> Card
@@ -1094,23 +1175,6 @@ viewAllProjectsPage model =
 viewLabelsPage : Model -> Html Msg
 viewLabelsPage model =
     let
-        addRepo repo =
-            Just << Maybe.withDefault [ repo ] << Maybe.map ((::) repo)
-
-        reposByLabel =
-            Dict.foldl
-                (\_ repo cbn ->
-                    List.foldl
-                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addRepo repo))
-                        cbn
-                        repo.labels
-                )
-                Dict.empty
-                model.data.repos
-
-        allCards =
-            Dict.values model.allCards
-
         newLabel =
             Html.div [ HA.class "label-row" ]
                 [ Html.div [ HA.class "label-cell" ]
@@ -1155,9 +1219,9 @@ viewLabelsPage model =
                 ]
 
         labelRows =
-            flip List.map (Dict.toList reposByLabel) <|
+            flip List.map (Dict.toList model.dataView.reposByLabel) <|
                 \( ( name, color ), repos ) ->
-                    viewLabelRow model { name = name, color = color } repos allCards
+                    viewLabelRow model { name = name, color = color } repos
     in
         Html.div [ HA.class "all-labels" ]
             (newLabel :: labelRows)
@@ -1166,54 +1230,19 @@ viewLabelsPage model =
 viewMilestonesPage : Model -> Html Msg
 viewMilestonesPage model =
     let
-        allMilestones =
-            Dict.foldl
-                (\_ repo ->
-                    repo.milestones
-                        |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                        |> List.map .title
-                        |> Set.fromList
-                        |> Set.union
-                )
-                Set.empty
-                model.data.repos
-
-        addCard card =
-            Just << Maybe.withDefault [ card ] << Maybe.map ((::) card)
-
-        cardsByMilestone =
-            Dict.foldl
-                (\_ card acc ->
-                    case card.milestone of
-                        Just milestone ->
-                            Dict.update milestone.title (addCard card) acc
-
-                        Nothing ->
-                            acc
-                )
-                Dict.empty
-                model.allCards
-
-        nextMilestoneCards =
-            Dict.foldl
-                (\_ card acc ->
-                    if (isMerged card || isAccepted model card) && card.milestone == Nothing then
-                        card :: acc
-                    else
-                        acc
-                )
-                []
-                model.allCards
-
         nextMilestone =
-            viewInbox model nextMilestoneCards
+            viewInbox model model.dataView.nextMilestoneCards
 
         milestones =
             List.map
                 (\title ->
-                    viewMilestone model title (Maybe.withDefault [] (Dict.get title cardsByMilestone))
+                    let
+                        milestoneCards =
+                            Maybe.withDefault [] (Dict.get title model.dataView.cardsByMilestone)
+                    in
+                        viewMilestone model title milestoneCards
                 )
-                (Set.toList allMilestones)
+                model.dataView.allMilestones
     in
         Html.div [ HA.class "all-milestones" ]
             (newMilestone model :: nextMilestone :: milestones)
@@ -1309,14 +1338,25 @@ includesLabel model label labelIds =
         labelIds
 
 
-viewLabelRow : Model -> SharedLabel -> List GitHubGraph.Repo -> List Card -> Html Msg
-viewLabelRow model label repos allCards =
+viewLabelRow : Model -> SharedLabel -> List GitHubGraph.Repo -> Html Msg
+viewLabelRow model label repos =
     let
         stateKey =
             labelKey label
 
         ( prs, issues ) =
-            List.partition isPR (List.filter (\c -> isOpen c && includesLabel model label c.labels) allCards)
+            Dict.foldl
+                (\_ c ( ps, is ) ->
+                    if isOpen c && includesLabel model label c.labels then
+                        if isPR c then
+                            ( c :: ps, is )
+                        else
+                            ( ps, c :: is )
+                    else
+                        ( ps, is )
+                )
+                ( [], [] )
+                model.allCards
     in
         Html.div [ HA.class "label-row" ]
             [ Html.div [ HA.class "label-cell" ]
