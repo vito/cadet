@@ -975,7 +975,6 @@ issuesQuery =
 
         pageArgs =
             [ ( "first", GA.int 100 )
-            , ( "states", GA.list [ GA.enum "OPEN" ] )
             , ( "after", GA.variable afterVar )
             ]
 
@@ -1039,7 +1038,6 @@ pullRequestsQuery =
 
         pageArgs =
             [ ( "first", GA.int 100 )
-            , ( "states", GA.list [ GA.enum "OPEN" ] )
             , ( "after", GA.variable afterVar )
             ]
 

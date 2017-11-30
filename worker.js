@@ -12320,23 +12320,10 @@ var _vito$cadet$GitHubGraph$issuesQuery = function () {
 			ctor: '::',
 			_0: {
 				ctor: '_Tuple2',
-				_0: 'states',
-				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$list(
-					{
-						ctor: '::',
-						_0: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$enum('OPEN'),
-						_1: {ctor: '[]'}
-					})
+				_0: 'after',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
 			},
-			_1: {
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'after',
-					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
-				},
-				_1: {ctor: '[]'}
-			}
+			_1: {ctor: '[]'}
 		}
 	};
 	var repoNameVar = A3(
@@ -12805,23 +12792,10 @@ var _vito$cadet$GitHubGraph$pullRequestsQuery = function () {
 			ctor: '::',
 			_0: {
 				ctor: '_Tuple2',
-				_0: 'states',
-				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$list(
-					{
-						ctor: '::',
-						_0: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$enum('OPEN'),
-						_1: {ctor: '[]'}
-					})
+				_0: 'after',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
 			},
-			_1: {
-				ctor: '::',
-				_0: {
-					ctor: '_Tuple2',
-					_0: 'after',
-					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
-				},
-				_1: {ctor: '[]'}
-			}
+			_1: {ctor: '[]'}
 		}
 	};
 	var repoNameVar = A3(
