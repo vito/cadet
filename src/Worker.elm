@@ -282,7 +282,9 @@ update msg model =
         IssuesFetched repo (Ok issues) ->
             let
                 fetchTimelines =
-                    List.map (fetchTimeline model << .id) issues
+                    issues
+                        |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
+                        |> List.map (fetchTimeline model << .id)
             in
                 log "issues fetched for" repo.url <|
                     ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
@@ -306,7 +308,9 @@ update msg model =
         PullRequestsFetched repo (Ok prs) ->
             let
                 fetchTimelines =
-                    List.map (fetchTimeline model << .id) prs
+                    prs
+                        |> List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen)
+                        |> List.map (fetchTimeline model << .id)
             in
                 log "prs fetched for" repo.url <|
                     ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
