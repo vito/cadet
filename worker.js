@@ -9639,24 +9639,32 @@ var _vito$cadet$GitHubGraph$encodeUser = function (record) {
 				ctor: '::',
 				_0: {
 					ctor: '_Tuple2',
-					_0: 'url',
-					_1: _elm_lang$core$Json_Encode$string(record.url)
+					_0: 'database_id',
+					_1: _elm_lang$core$Json_Encode$int(record.databaseId)
 				},
 				_1: {
 					ctor: '::',
 					_0: {
 						ctor: '_Tuple2',
-						_0: 'login',
-						_1: _elm_lang$core$Json_Encode$string(record.login)
+						_0: 'url',
+						_1: _elm_lang$core$Json_Encode$string(record.url)
 					},
 					_1: {
 						ctor: '::',
 						_0: {
 							ctor: '_Tuple2',
-							_0: 'avatar',
-							_1: _elm_lang$core$Json_Encode$string(record.avatar)
+							_0: 'login',
+							_1: _elm_lang$core$Json_Encode$string(record.login)
 						},
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'avatar',
+								_1: _elm_lang$core$Json_Encode$string(record.avatar)
+							},
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			}
@@ -10586,9 +10594,9 @@ var _vito$cadet$GitHubGraph$ReactionGroup = F2(
 	function (a, b) {
 		return {type_: a, count: b};
 	});
-var _vito$cadet$GitHubGraph$User = F4(
-	function (a, b, c, d) {
-		return {id: a, url: b, login: c, avatar: d};
+var _vito$cadet$GitHubGraph$User = F5(
+	function (a, b, c, d, e) {
+		return {id: a, databaseId: b, url: c, login: d, avatar: e};
 	});
 var _vito$cadet$GitHubGraph$authorObject = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$assume(
 	A2(
@@ -10620,10 +10628,17 @@ var _vito$cadet$GitHubGraph$authorObject = _jamesmacaulay$elm_graphql$GraphQL_Re
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 						A3(
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'id',
+							'databaseId',
 							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$User)))))));
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
+						A2(
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'id',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$User))))))));
 var _vito$cadet$GitHubGraph$decodeUser = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -10632,8 +10647,11 @@ var _vito$cadet$GitHubGraph$decodeUser = A2(
 			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 			A2(
 				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-				_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$User),
-				A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+				A2(
+					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+					_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$User),
+					A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+				A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int)),
 			A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
 		A2(_elm_lang$core$Json_Decode$field, 'login', _elm_lang$core$Json_Decode$string)),
 	A2(_elm_lang$core$Json_Decode$field, 'avatar', _elm_lang$core$Json_Decode$string));
@@ -13801,7 +13819,7 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			_0: A2(_elm_lang$core$Time$every, 100 * _elm_lang$core$Time$millisecond, _vito$cadet$Main$PopQueue),
 			_1: {
 				ctor: '::',
-				_0: A2(_elm_lang$core$Time$every, 10 * _elm_lang$core$Time$second, _vito$cadet$Main$RetryQueue),
+				_0: A2(_elm_lang$core$Time$every, _elm_lang$core$Time$minute, _vito$cadet$Main$RetryQueue),
 				_1: {
 					ctor: '::',
 					_0: A2(_elm_lang$core$Time$every, _elm_lang$core$Time$hour, _vito$cadet$Main$Refresh),
@@ -13863,7 +13881,7 @@ var _vito$cadet$Main$update = F2(
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				}
 			case 'RetryQueue':
-				return A3(
+				return _elm_lang$core$List$isEmpty(model.failedQueue) ? {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none} : A3(
 					_vito$cadet$Main$log,
 					'retrying failed fetches',
 					_elm_lang$core$List$length(model.failedQueue),

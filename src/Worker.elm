@@ -106,7 +106,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every (100 * Time.millisecond) PopQueue
-        , Time.every (10 * Time.second) RetryQueue
+        , Time.every Time.minute RetryQueue
         , Time.every Time.hour Refresh
         , refresh (uncurry RefreshRequested)
         , hook (uncurry HookReceived)
@@ -132,13 +132,16 @@ update msg model =
                     ( model, Cmd.none )
 
         RetryQueue now ->
-            log "retrying failed fetches" (List.length model.failedQueue) <|
-                ( { model
-                    | failedQueue = []
-                    , loadQueue = model.failedQueue ++ model.loadQueue
-                  }
-                , Cmd.none
-                )
+            if List.isEmpty model.failedQueue then
+                ( model, Cmd.none )
+            else
+                log "retrying failed fetches" (List.length model.failedQueue) <|
+                    ( { model
+                        | failedQueue = []
+                        , loadQueue = model.failedQueue ++ model.loadQueue
+                      }
+                    , Cmd.none
+                    )
 
         RefreshRequested "columnCards" colId ->
             ( model, fetchCards model colId )
