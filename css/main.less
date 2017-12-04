@@ -700,20 +700,36 @@ svg {
     visibility: hidden;
   }
 
-  .flair.active-today path {
+  .flair.active-today .flair-arcs {
     fill: @white-fade-70;
   }
 
-  .flair.active-yesterday path {
+  .flair.active-yesterday .flair-arcs {
     fill: @white-fade-50;
   }
 
-  .flair.active-this-week path {
+  .flair.active-this-week .flair-arcs {
     fill: @white-fade-30;
   }
 
-  .flair.active-long-ago path {
+  .flair.active-long-ago .flair-arcs {
     fill: @white-fade-15;
+  }
+
+  .flair.last-activity-is-me.active-today .flair-arcs {
+    fill: fade(@gray-light, 70%);
+  }
+
+  .flair.last-activity-is-me.active-yesterday .flair-arcs {
+    fill: fade(@gray-light, 50%);
+  }
+
+  .flair.last-activity-is-me.active-this-week .flair-arcs {
+    fill: fade(@gray-light, 30%);
+  }
+
+  .flair.last-activity-is-me.active-long-ago .flair-arcs {
+    fill: fade(@gray-light, 15%);
   }
 
   .reveal:hover .hidden {

@@ -97,6 +97,8 @@ type alias CardNodeState =
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
+    , me : Maybe Me
+    , cardEvents : Dict GitHubGraph.ID (List Backend.ActorEvent)
     }
 
 
@@ -1968,6 +1970,8 @@ viewGraph model { graph } =
             , selectedCards = model.selectedCards
             , anticipatedCards = model.anticipatedCards
             , highlightedNode = model.highlightedNode
+            , me = model.me
+            , cardEvents = model.data.actors
             }
 
         ( flairs, nodes ) =
@@ -2169,6 +2173,7 @@ nodeFlairArcs card context =
                     Svg.g [ SA.class "reveal" ]
                         [ Svg.path
                             [ SA.d (VS.arc arc)
+                            , SA.class "flair-arcs"
                             ]
                             []
                         , Svg.text_
@@ -2259,12 +2264,25 @@ viewCardNodeFlair card radii flair { x, y } state =
                     SA.class "project-status untriaged"
                 ]
                 []
+
+        classes =
+            [ "flair", activityClass state.currentDate card.updatedAt ]
+                ++ (case state.me of
+                        Nothing ->
+                            []
+
+                        Just { user } ->
+                            if lastActivityIsByUser state.cardEvents user.login card then
+                                [ "last-activity-is-me" ]
+                            else
+                                []
+                   )
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
             , SE.onMouseOver (AnticipateCardFromNode card.id)
             , SE.onMouseOut (UnanticipateCardFromNode card.id)
-            , SA.class ("flair " ++ activityClass state.currentDate card.updatedAt)
+            , SA.class (String.join " " classes)
             ]
             (flair ++ [ projectHalo, anticipatedHalo ])
 
@@ -2392,16 +2410,22 @@ isInProject name card =
 
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
+    Maybe.withDefault [] (Dict.get card.id model.data.actors)
+        |> List.any (.actor >> .login >> (==) login)
+
+
+lastActivityIsByUser : Dict GitHubGraph.ID (List Backend.ActorEvent) -> String -> Card -> Bool
+lastActivityIsByUser cardEvents login card =
     let
-        actors =
-            Maybe.withDefault [] (Dict.get card.id model.data.actors)
+        events =
+            Maybe.withDefault [] (Dict.get card.id cardEvents)
     in
-        case model.me of
-            Just { user } ->
-                List.any (.actor >> .login >> (==) login) actors
+        case List.head (List.reverse events) of
+            Just event ->
+                event.actor.login == login
 
             Nothing ->
-                True
+                False
 
 
 inColumn : (String -> Bool) -> Card -> Bool
