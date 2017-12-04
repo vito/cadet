@@ -1045,6 +1045,7 @@ svg {
   position: fixed;
   bottom: @bottom-bar-height;
   margin: 8px;
+  text-align: left;
 
   .control-group {
     display: inline-block;
@@ -1081,6 +1082,49 @@ svg {
     &:last-child {
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
+    }
+  }
+
+  .label-selection {
+    position: relative;
+    display: inline-block;
+  }
+
+  .label-filters {
+    position: absolute;
+    top: -408px;
+    width: 200px;
+    height: 400px;
+    background: @white;
+    border-radius: 5px;
+    padding: 8px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    visibility: hidden;
+
+    &.visible {
+      visibility: visible;
+    }
+
+    .label-options {
+      overflow: auto;
+      max-height: 350px;
+      margin-bottom: 8px;
+
+      .label {
+        margin: 0;
+        margin-bottom: 5px;
+        vertical-align: initial;
+        cursor: pointer;
+      }
+    }
+
+    input {
+      border: 1px solid @gray-light;
+      padding: 5px;
+      width: 200px - (2 * 8px);
     }
   }
 }

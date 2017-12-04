@@ -63,6 +63,8 @@ type alias Model =
     , newLabel : SharedLabel
     , newLabelColored : Bool
     , newMilestoneName : String
+    , showLabelFilters : Bool
+    , labelSearch : String
     }
 
 
@@ -77,7 +79,7 @@ type alias DataView =
 type GraphFilter
     = ExcludeAllFilter
     | InProjectFilter String
-    | HasLabelFilter String
+    | HasLabelFilter String String
     | InvolvesUserFilter String
 
 
@@ -192,6 +194,8 @@ type Msg
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
+    | ToggleLabelFilters
+    | SetLabelSearch String
 
 
 type Page
@@ -359,6 +363,8 @@ init config =
       , newLabel = { name = "", color = "ffffff" }
       , newLabelColored = False
       , newMilestoneName = ""
+      , showLabelFilters = False
+      , labelSearch = ""
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -970,6 +976,12 @@ update msg model =
         SetGraphSort sort ->
             ( computeGraph { model | graphSort = sort }, Cmd.none )
 
+        ToggleLabelFilters ->
+            ( { model | showLabelFilters = not model.showLabelFilters }, Cmd.none )
+
+        SetLabelSearch string ->
+            ( { model | labelSearch = string }, Cmd.none )
+
 
 computeDataView : Model -> Model
 computeDataView model =
@@ -979,6 +991,16 @@ computeDataView model =
 
         dataView =
             model.dataView
+
+        groupRepoLabels repos =
+            Dict.foldl
+                (\_ repo cbn ->
+                    List.foldl
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
+                        cbn
+                        repo.labels
+                )
+                Dict.empty
     in
         case model.page of
             MilestonesPage ->
@@ -1030,19 +1052,13 @@ computeDataView model =
                     }
 
             LabelsPage ->
-                let
-                    reposByLabel =
-                        Dict.foldl
-                            (\_ repo cbn ->
-                                List.foldl
-                                    (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
-                                    cbn
-                                    repo.labels
-                            )
-                            Dict.empty
-                            model.data.repos
-                in
-                    { model | dataView = { dataView | reposByLabel = reposByLabel } }
+                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+
+            GlobalGraphPage ->
+                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+
+            ProjectPage _ ->
+                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
 
             _ ->
                 model
@@ -1143,48 +1159,103 @@ viewSpatialGraph model cardGraphs =
 
 viewGraphControls : Model -> Html Msg
 viewGraphControls model =
-    Html.div [ HA.class "graph-controls" ]
-        [ Html.div [ HA.class "control-group" ]
-            [ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
-            , case model.me of
-                Just { user } ->
-                    let
-                        filter =
-                            InvolvesUserFilter user.login
-                    in
-                        Html.div
-                            [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
-                            , HE.onClick <|
-                                if hasFilter model filter then
-                                    RemoveFilter filter
-                                else
-                                    AddFilter filter
-                            ]
-                            [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
-                            , Html.text "involving me"
-                            ]
+    let
+        labelFilters =
+            List.filterMap
+                (\filter ->
+                    case filter of
+                        HasLabelFilter name color ->
+                            Just <|
+                                Html.div
+                                    [ HA.class "control-setting"
+                                    , labelColorStyle color
+                                    , HE.onClick (RemoveFilter filter)
+                                    ]
+                                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                                    , Html.text name
+                                    ]
 
-                Nothing ->
-                    Html.text ""
+                        _ ->
+                            Nothing
+                )
+                model.graphFilters
+
+        allLabelFilters =
+            flip List.filterMap (Dict.toList model.dataView.reposByLabel) <|
+                \( ( name, color ), _ ) ->
+                    if String.contains model.labelSearch name then
+                        Just <|
+                            Html.div [ HA.class "label-filter" ]
+                                [ Html.div
+                                    [ HA.class "label"
+                                    , labelColorStyle color
+                                    , HE.onClick (AddFilter (HasLabelFilter name color))
+                                    ]
+                                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                                    , Html.text name
+                                    ]
+                                ]
+                    else
+                        Nothing
+    in
+        Html.div [ HA.class "graph-controls" ]
+            [ Html.div [ HA.class "control-group" ]
+                ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
+                 , case model.me of
+                    Just { user } ->
+                        let
+                            filter =
+                                InvolvesUserFilter user.login
+                        in
+                            Html.div
+                                [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                                , HE.onClick <|
+                                    if hasFilter model filter then
+                                        RemoveFilter filter
+                                    else
+                                        AddFilter filter
+                                ]
+                                [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
+                                , Html.text "involving me"
+                                ]
+
+                    Nothing ->
+                        Html.text ""
+                 , Html.div [ HA.class "label-selection" ]
+                    [ Html.div [ HA.classList [ ( "label-filters", True ), ( "visible", model.showLabelFilters ) ] ]
+                        [ Html.div [ HA.class "label-options" ]
+                            allLabelFilters
+                        , Html.input [ HA.type_ "text", HE.onInput SetLabelSearch ] []
+                        ]
+                    , Html.div
+                        [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelFilters ) ]
+                        , HE.onClick ToggleLabelFilters
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-tag" ] []
+                        , Html.text "label"
+                        ]
+                    ]
+                 ]
+                    ++ labelFilters
+                )
+            , Html.div [ HA.class "control-group" ]
+                [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
+                , Html.div
+                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
+                    , HE.onClick (SetGraphSort ImpactSort)
+                    ]
+                    [ Html.span [ HA.class "octicon octicon-flame" ] []
+                    , Html.text "impact"
+                    ]
+                , Html.div
+                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
+                    , HE.onClick (SetGraphSort MyActivitySort)
+                    ]
+                    [ Html.span [ HA.class "octicon octicon-clock" ] []
+                    , Html.text "my activity"
+                    ]
+                ]
             ]
-        , Html.div [ HA.class "control-group" ]
-            [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
-            , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
-                , HE.onClick (SetGraphSort ImpactSort)
-                ]
-                [ Html.span [ HA.class "octicon octicon-flame" ] []
-                , Html.text "impact"
-                ]
-            , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
-                , HE.onClick (SetGraphSort MyActivitySort)
-                ]
-                [ Html.span [ HA.class "octicon octicon-clock" ] []
-                , Html.text "my activity"
-                ]
-            ]
-        ]
 
 
 hasFilter : Model -> GraphFilter -> Bool
@@ -1873,8 +1944,8 @@ satisfiesFilter model filter card =
         InProjectFilter name ->
             isInProject name card
 
-        HasLabelFilter label ->
-            hasLabel model label card
+        HasLabelFilter label color ->
+            hasLabelAndColor model label color card
 
         InvolvesUserFilter login ->
             involvesUser model login card
@@ -2451,6 +2522,16 @@ isPR card =
 isMerged : Card -> Bool
 isMerged card =
     card.state == PullRequestState (GitHubGraph.PullRequestStateMerged)
+
+
+hasLabelAndColor : Model -> String -> String -> Card -> Bool
+hasLabelAndColor model name color card =
+    let
+        matchingLabels =
+            model.allLabels
+                |> Dict.filter (\_ l -> l.name == name && l.color == color)
+    in
+        List.any (flip Dict.member matchingLabels) card.labels
 
 
 hasLabel : Model -> String -> Card -> Bool
