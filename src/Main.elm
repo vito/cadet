@@ -992,7 +992,7 @@ computeDataView model =
         dataView =
             model.dataView
 
-        groupRepoLabels repos =
+        groupRepoLabels =
             Dict.foldl
                 (\_ repo cbn ->
                     List.foldl
