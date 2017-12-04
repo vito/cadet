@@ -74,11 +74,13 @@ a {
   }
 }
 
+@bottom-bar-height: 40px;
+
 .bottom-bar {
   flex-shrink: 0;
 
   background: @gray-dark;
-  height: 40px;
+  height: @bottom-bar-height;
 
   display: flex;
   flex-direction: row;
@@ -95,16 +97,6 @@ a {
     font-size: 16px;
     padding: 0 12px;
 
-    .user-avatar {
-      width: 20px;
-      height: 20px;
-      border-radius: 3px;
-      vertical-align: middle;
-      display: inline-block;
-      margin-right: 10px;
-      margin-top: -2px;
-    }
-
     .log-in-icon {
       font-size: 20px;
       width: 20px;
@@ -116,6 +108,16 @@ a {
       margin-top: -2px;
     }
   }
+}
+
+.user-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  vertical-align: middle;
+  display: inline-block;
+  margin-right: 10px;
+  margin-top: -2px;
 }
 
 .card-search {
@@ -672,6 +674,7 @@ a {
 .spatial-graph {
   background: @gray-300;
   text-align: center;
+  position: relative;
 }
 
 .dragging {
@@ -1018,6 +1021,50 @@ svg {
 
     &.inbox .milestone-title {
       background: @gray;
+    }
+  }
+}
+
+.graph-controls {
+  position: fixed;
+  bottom: @bottom-bar-height;
+  margin: 8px;
+
+  .control-group {
+    display: inline-block;
+    margin-right: 8px;
+  }
+
+  .controls-label {
+    display: inline-block;
+    line-height: 26px;
+    padding: 0 8px;
+    background: @gray;
+    color: @white;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+  }
+
+  .control-setting {
+    display: inline-block;
+    padding: 0 8px;
+    line-height: 26px;
+    background: @white;
+    color: @gray;
+    cursor: pointer;
+
+    .octicon {
+      margin-right: 5px;
+    }
+
+    &.active {
+      background: @gray-light;
+      color: @white;
+    }
+
+    &:last-child {
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
     }
   }
 }

@@ -54,8 +54,10 @@ type alias Model =
     , anticipatedCards : List GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
+    , baseGraphFilter : Maybe GraphFilter
+    , graphFilters : List GraphFilter
+    , graphSort : GraphSort
     , cardGraphs : List (ForceGraph (Node CardNodeState))
-    , computeGraph : Data -> Dict GitHubGraph.ID Card -> List (ForceGraph (Node CardNodeState))
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
@@ -70,6 +72,18 @@ type alias DataView =
     , nextMilestoneCards : List Card
     , reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     }
+
+
+type GraphFilter
+    = ExcludeAllFilter
+    | InProjectFilter String
+    | HasLabelFilter String
+    | InvolvesUserFilter String
+
+
+type GraphSort
+    = ImpactSort
+    | MyActivitySort
 
 
 type alias SharedLabel =
@@ -173,6 +187,9 @@ type Msg
     | PRMilestoneChanged GitHubGraph.PullRequest (Result Http.Error ())
     | IssueRefreshed (Result Http.Error GitHubGraph.Issue)
     | PRRefreshed (Result Http.Error GitHubGraph.PullRequest)
+    | AddFilter GraphFilter
+    | RemoveFilter GraphFilter
+    | SetGraphSort GraphSort
 
 
 type Page
@@ -231,7 +248,7 @@ delta2url a b =
                     RouteUrl.Builder.replacePath [ "milestones" ]
 
         withSelection =
-            RouteUrl.Builder.replaceHash (String.join "," b.selectedCards)
+            RouteUrl.Builder.replaceHash (String.join "!" b.selectedCards)
 
         builder =
             List.foldl (\f b -> f b) RouteUrl.Builder.builder [ withPageEntry, withPagePath, withSelection ]
@@ -299,7 +316,8 @@ type alias Position =
 
 
 type alias Node a =
-    { viewLower : Position -> a -> Svg Msg
+    { card : Card
+    , viewLower : Position -> a -> Svg Msg
     , viewUpper : Position -> a -> Svg Msg
     , bounds : Position -> NodeBounds
     , score : Int
@@ -326,7 +344,9 @@ init config =
       , highlightedNode = Nothing
       , currentDate = Date.fromTime config.initialDate
       , cardGraphs = []
-      , computeGraph = computeReferenceGraph
+      , baseGraphFilter = Nothing
+      , graphFilters = []
+      , graphSort = ImpactSort
       , projectDrag = Drag.init
       , milestoneDrag = Drag.init
       , deletingLabels = Set.empty
@@ -361,29 +381,29 @@ update msg model =
 
         SetPage page ->
             let
-                compute data cards =
+                baseGraphFilter =
                     case page of
                         GlobalGraphPage ->
-                            computeReferenceGraph data cards
+                            Nothing
 
                         AllProjectsPage ->
-                            []
+                            Just ExcludeAllFilter
 
                         ProjectPage name ->
-                            computeReferenceGraph data (Dict.filter (\_ -> isInProject name) cards)
+                            Just (InProjectFilter name)
 
                         LabelsPage ->
-                            []
+                            Just ExcludeAllFilter
 
                         MilestonesPage ->
-                            []
+                            Just ExcludeAllFilter
             in
-                ( computeDataView
-                    { model
-                        | page = page
-                        , cardGraphs = compute model.data model.allCards
-                        , computeGraph = compute
-                    }
+                ( computeGraph <|
+                    computeDataView
+                        { model
+                            | page = page
+                            , baseGraphFilter = baseGraphFilter
+                        }
                 , Cmd.none
                 )
 
@@ -448,10 +468,10 @@ update msg model =
                 Drag.Dropped drag ->
                     let
                         finishDrag model =
-                            ( { model
-                                | projectDrag = Drag.complete model.projectDrag
-                                , cardGraphs = model.computeGraph model.data model.allCards
-                              }
+                            ( computeGraph
+                                { model
+                                    | projectDrag = Drag.complete model.projectDrag
+                                }
                             , Cmd.none
                             )
 
@@ -586,13 +606,13 @@ update msg model =
                 allLabels =
                     Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
             in
-                ( computeDataView
-                    { model
-                        | data = data
-                        , allCards = allCards
-                        , allLabels = allLabels
-                        , cardGraphs = model.computeGraph data allCards
-                    }
+                ( computeGraph <|
+                    computeDataView
+                        { model
+                            | data = data
+                            , allCards = allCards
+                            , allLabels = allLabels
+                        }
                 , Backend.pollData DataFetched
                 )
 
@@ -930,6 +950,21 @@ update msg model =
             flip always (Debug.log "failed to refresh pr" msg) <|
                 ( model, Cmd.none )
 
+        AddFilter filter ->
+            ( computeGraph <|
+                { model | graphFilters = filter :: model.graphFilters }
+            , Cmd.none
+            )
+
+        RemoveFilter filter ->
+            ( computeGraph <|
+                { model | graphFilters = List.filter ((/=) filter) model.graphFilters }
+            , Cmd.none
+            )
+
+        SetGraphSort sort ->
+            ( computeGraph { model | graphSort = sort }, Cmd.none )
+
 
 computeDataView : Model -> Model
 computeDataView model =
@@ -1068,7 +1103,7 @@ view model =
                 [ Html.div [ HA.class "page-content" ]
                     [ case model.page of
                         GlobalGraphPage ->
-                            viewSpatialGraph model
+                            viewSpatialGraph model model.cardGraphs
 
                         AllProjectsPage ->
                             viewAllProjectsPage model
@@ -1094,10 +1129,62 @@ view model =
             ]
 
 
-viewSpatialGraph : Model -> Html Msg
-viewSpatialGraph model =
+viewSpatialGraph : Model -> List (ForceGraph (Node CardNodeState)) -> Html Msg
+viewSpatialGraph model cardGraphs =
     Html.div [ HA.class "spatial-graph" ] <|
-        List.map (Html.Lazy.lazy (viewGraph model)) model.cardGraphs
+        viewGraphControls model
+            :: List.map (Html.Lazy.lazy (viewGraph model)) cardGraphs
+
+
+viewGraphControls : Model -> Html Msg
+viewGraphControls model =
+    Html.div [ HA.class "graph-controls" ]
+        [ Html.div [ HA.class "control-group" ]
+            [ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
+            , case model.me of
+                Just { user } ->
+                    let
+                        filter =
+                            InvolvesUserFilter user.login
+                    in
+                        Html.div
+                            [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                            , HE.onClick <|
+                                if hasFilter model filter then
+                                    RemoveFilter filter
+                                else
+                                    AddFilter filter
+                            ]
+                            [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
+                            , Html.text "involving me"
+                            ]
+
+                Nothing ->
+                    Html.text ""
+            ]
+        , Html.div [ HA.class "control-group" ]
+            [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
+                , HE.onClick (SetGraphSort ImpactSort)
+                ]
+                [ Html.span [ HA.class "octicon octicon-flame" ] []
+                , Html.text "impact"
+                ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
+                , HE.onClick (SetGraphSort MyActivitySort)
+                ]
+                [ Html.span [ HA.class "octicon octicon-clock" ] []
+                , Html.text "my activity"
+                ]
+            ]
+        ]
+
+
+hasFilter : Model -> GraphFilter -> Bool
+hasFilter model filter =
+    List.member filter model.graphFilters
 
 
 viewNavBar : Model -> Html Msg
@@ -1666,7 +1753,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
                     )
             )
         , Html.div [ HA.class "icebox-graph" ]
-            [ viewSpatialGraph model
+            [ viewSpatialGraph model model.cardGraphs
             , let
                 dropCandidate =
                     { msgFunc = MoveCardAfter
@@ -1695,8 +1782,8 @@ viewSearch =
         ]
 
 
-computeReferenceGraph : Data -> Dict GitHubGraph.ID Card -> List (ForceGraph (Node CardNodeState))
-computeReferenceGraph data allCards =
+computeGraph : Model -> Model
+computeGraph model =
     let
         cardEdges =
             Dict.foldl
@@ -1716,21 +1803,26 @@ computeReferenceGraph data allCards =
                             ++ refs
                 )
                 []
-                data.references
+                model.data.references
 
-        allLabels =
-            Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
+        allFilters =
+            case model.baseGraphFilter of
+                Just f ->
+                    f :: model.graphFilters
+
+                Nothing ->
+                    model.graphFilters
 
         cardNodeThunks =
             Dict.foldl
                 (\_ card thunks ->
-                    if isOpen card then
-                        Graph.Node (Hash.hash card.id) (cardNode allLabels card) :: thunks
+                    if satisfiesFilters model allFilters card && isOpen card then
+                        Graph.Node (Hash.hash card.id) (cardNode model.allLabels card) :: thunks
                     else
                         thunks
                 )
                 []
-                allCards
+                model.allCards
 
         applyWithContext ({ node, incoming, outgoing } as nc) =
             let
@@ -1744,15 +1836,47 @@ computeReferenceGraph data allCards =
                 Graph.fromNodesAndEdges
                     cardNodeThunks
                     cardEdges
+
+        sortFunc =
+            case model.graphSort of
+                ImpactSort ->
+                    graphSizeCompare
+
+                MyActivitySort ->
+                    graphActivityCompare model
     in
-        subGraphs graph
-            |> List.map FG.fromGraph
-            |> List.sortWith graphCompare
-            |> List.reverse
+        { model
+            | cardGraphs =
+                subGraphs graph
+                    |> List.map FG.fromGraph
+                    |> List.sortWith sortFunc
+                    |> List.reverse
+        }
 
 
-graphCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
-graphCompare a b =
+satisfiesFilters : Model -> List GraphFilter -> Card -> Bool
+satisfiesFilters model filters card =
+    List.all (flip (satisfiesFilter model) card) filters
+
+
+satisfiesFilter : Model -> GraphFilter -> Card -> Bool
+satisfiesFilter model filter card =
+    case filter of
+        ExcludeAllFilter ->
+            False
+
+        InProjectFilter name ->
+            isInProject name card
+
+        HasLabelFilter label ->
+            hasLabel model label card
+
+        InvolvesUserFilter login ->
+            involvesUser model login card
+
+
+graphSizeCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphSizeCompare a b =
     case compare (Graph.size a.graph) (Graph.size b.graph) of
         EQ ->
             let
@@ -1763,6 +1887,44 @@ graphCompare a b =
 
         x ->
             x
+
+
+graphActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphActivityCompare model a b =
+    let
+        latestMeActivity g =
+            Graph.nodes g
+                |> List.map
+                    (\n ->
+                        let
+                            card =
+                                n.label.value.card
+
+                            activity =
+                                Maybe.withDefault [] (Dict.get card.id model.data.actors)
+                        in
+                            case model.me of
+                                Just { user } ->
+                                    activity
+                                        |> List.reverse
+                                        |> List.filter (.actor >> .databaseId >> (==) user.id)
+                                        |> List.map .createdAt
+                                        |> List.head
+                                        |> Maybe.map Date.toTime
+                                        |> Maybe.withDefault 0
+
+                                Nothing ->
+                                    activity
+                                        |> List.reverse
+                                        |> List.map .createdAt
+                                        |> List.head
+                                        |> Maybe.map Date.toTime
+                                        |> Maybe.withDefault 0
+                    )
+                |> List.maximum
+                |> Maybe.withDefault 0
+    in
+        compare (latestMeActivity a.graph) (latestMeActivity b.graph)
 
 
 viewGraph : Model -> ForceGraph (Node CardNodeState) -> Html Msg
@@ -1908,7 +2070,8 @@ cardNode allLabels card context =
             , withFlair = issueRadiusWithFlair card context
             }
     in
-        { viewLower = viewCardNodeFlair card radii flair
+        { card = card
+        , viewLower = viewCardNodeFlair card radii flair
         , viewUpper = viewCardNode card radii labels
         , bounds =
             \{ x, y } ->
@@ -2222,6 +2385,20 @@ viewCardEntry model card =
 isInProject : String -> Card -> Bool
 isInProject name card =
     List.member name (List.map (.project >> .name) card.cards)
+
+
+involvesUser : Model -> String -> Card -> Bool
+involvesUser model login card =
+    let
+        actors =
+            Maybe.withDefault [] (Dict.get card.id model.data.actors)
+    in
+        case model.me of
+            Just { user } ->
+                List.any (.actor >> .login >> (==) login) actors
+
+            Nothing ->
+                True
 
 
 inColumn : (String -> Bool) -> Card -> Bool

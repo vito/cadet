@@ -201,6 +201,7 @@ type ReactionType
 
 type alias User =
     { id : ID
+    , databaseId : Int
     , url : String
     , login : String
     , avatar : String
@@ -890,6 +891,7 @@ authorObject =
         (GB.inlineFragment (Just <| GB.onType "User")
             (GB.object User
                 |> GB.with (GB.field "id" [] GB.string)
+                |> GB.with (GB.field "databaseId" [] GB.int)
                 |> GB.with (GB.field "url" [] GB.string)
                 |> GB.with (GB.field "login" [] GB.string)
                 |> GB.with (GB.field "avatarUrl" [] GB.string)
@@ -1291,6 +1293,7 @@ decodeUser : JD.Decoder User
 decodeUser =
     JD.succeed User
         |: (JD.field "id" JD.string)
+        |: (JD.field "database_id" JD.int)
         |: (JD.field "url" JD.string)
         |: (JD.field "login" JD.string)
         |: (JD.field "avatar" JD.string)
@@ -1512,6 +1515,7 @@ encodeUser : User -> JE.Value
 encodeUser record =
     JE.object
         [ ( "id", JE.string record.id )
+        , ( "database_id", JE.int record.databaseId )
         , ( "url", JE.string record.url )
         , ( "login", JE.string record.login )
         , ( "avatar", JE.string record.avatar )
