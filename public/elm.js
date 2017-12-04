@@ -26407,13 +26407,131 @@ var _vito$cadet$Main$hasFilter = F2(
 	function (model, filter) {
 		return A2(_elm_lang$core$List$member, filter, model.graphFilters);
 	});
+var _vito$cadet$Main$computeDataView = function (model) {
+	var dataView = model.dataView;
+	var add = function (x) {
+		return function (_p79) {
+			return _elm_lang$core$Maybe$Just(
+				A2(
+					_elm_lang$core$Maybe$withDefault,
+					{
+						ctor: '::',
+						_0: x,
+						_1: {ctor: '[]'}
+					},
+					A2(
+						_elm_lang$core$Maybe$map,
+						F2(
+							function (x, y) {
+								return {ctor: '::', _0: x, _1: y};
+							})(x),
+						_p79)));
+		};
+	};
+	var _p80 = model.page;
+	switch (_p80.ctor) {
+		case 'MilestonesPage':
+			var nextMilestoneCards = A3(
+				_elm_lang$core$Dict$foldl,
+				F3(
+					function (_p81, card, acc) {
+						return (A2(_vito$cadet$Main$isAccepted, model, card) && _elm_lang$core$Native_Utils.eq(card.milestone, _elm_lang$core$Maybe$Nothing)) ? {ctor: '::', _0: card, _1: acc} : acc;
+					}),
+				{ctor: '[]'},
+				model.allCards);
+			var cardsByMilestone = A3(
+				_elm_lang$core$Dict$foldl,
+				F3(
+					function (_p82, card, acc) {
+						var _p83 = card.milestone;
+						if (_p83.ctor === 'Just') {
+							return A3(
+								_elm_lang$core$Dict$update,
+								_p83._0.title,
+								add(card),
+								acc);
+						} else {
+							return acc;
+						}
+					}),
+				_elm_lang$core$Dict$empty,
+				model.allCards);
+			var allMilestones = _elm_lang$core$Set$toList(
+				A3(
+					_elm_lang$core$Dict$foldl,
+					F2(
+						function (_p84, repo) {
+							return _elm_lang$core$Set$union(
+								_elm_lang$core$Set$fromList(
+									A2(
+										_elm_lang$core$List$map,
+										function (_) {
+											return _.title;
+										},
+										A2(
+											_elm_lang$core$List$filter,
+											function (_p85) {
+												return A2(
+													F2(
+														function (x, y) {
+															return _elm_lang$core$Native_Utils.eq(x, y);
+														}),
+													_vito$cadet$GitHubGraph$MilestoneStateOpen,
+													function (_) {
+														return _.state;
+													}(_p85));
+											},
+											repo.milestones))));
+						}),
+					_elm_lang$core$Set$empty,
+					model.data.repos));
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{
+					dataView: _elm_lang$core$Native_Utils.update(
+						dataView,
+						{cardsByMilestone: cardsByMilestone, allMilestones: allMilestones, nextMilestoneCards: nextMilestoneCards})
+				});
+		case 'LabelsPage':
+			var reposByLabel = A3(
+				_elm_lang$core$Dict$foldl,
+				F3(
+					function (_p86, repo, cbn) {
+						return A3(
+							_elm_lang$core$List$foldl,
+							function (label) {
+								return A2(
+									_elm_lang$core$Dict$update,
+									{
+										ctor: '_Tuple2',
+										_0: label.name,
+										_1: _elm_lang$core$String$toLower(label.color)
+									},
+									add(repo));
+							},
+							cbn,
+							repo.labels);
+					}),
+				_elm_lang$core$Dict$empty,
+				model.data.repos);
+			return _elm_lang$core$Native_Utils.update(
+				model,
+				{
+					dataView: _elm_lang$core$Native_Utils.update(
+						dataView,
+						{reposByLabel: reposByLabel})
+				});
+		default:
+			return model;
+	}
+};
 var _vito$cadet$Main$delta2url = F2(
 	function (a, b) {
 		var withSelection = _rgrempel$elm_route_url$RouteUrl_Builder$replaceHash(
 			A2(_elm_lang$core$String$join, '!', b.selectedCards));
 		var withPagePath = function () {
-			var _p79 = b.page;
-			switch (_p79.ctor) {
+			var _p87 = b.page;
+			switch (_p87.ctor) {
 				case 'GlobalGraphPage':
 					return _rgrempel$elm_route_url$RouteUrl_Builder$replacePath(
 						{ctor: '[]'});
@@ -26431,7 +26549,7 @@ var _vito$cadet$Main$delta2url = F2(
 							_0: 'projects',
 							_1: {
 								ctor: '::',
-								_0: _p79._0,
+								_0: _p87._0,
 								_1: {ctor: '[]'}
 							}
 						});
@@ -26494,11 +26612,11 @@ var _vito$cadet$Main$selectStatefulProject = function (project) {
 	var findColumns = function (match) {
 		return A2(
 			_elm_lang$core$List$filter,
-			function (_p80) {
+			function (_p88) {
 				return match(
 					function (_) {
 						return _.name;
-					}(_p80));
+					}(_p88));
 			},
 			project.columns);
 	};
@@ -26506,10 +26624,10 @@ var _vito$cadet$Main$selectStatefulProject = function (project) {
 	var backlogs = findColumns(_vito$cadet$Main$detectColumn.backlog);
 	var inFlights = findColumns(_vito$cadet$Main$detectColumn.inFlight);
 	var dones = findColumns(_vito$cadet$Main$detectColumn.done);
-	var _p81 = {ctor: '_Tuple4', _0: icebox, _1: backlogs, _2: inFlights, _3: dones};
-	if ((((((((_p81.ctor === '_Tuple4') && (_p81._0.ctor === '::')) && (_p81._0._1.ctor === '[]')) && (_p81._1.ctor === '::')) && (_p81._2.ctor === '::')) && (_p81._2._1.ctor === '[]')) && (_p81._3.ctor === '::')) && (_p81._3._1.ctor === '[]')) {
+	var _p89 = {ctor: '_Tuple4', _0: icebox, _1: backlogs, _2: inFlights, _3: dones};
+	if ((((((((_p89.ctor === '_Tuple4') && (_p89._0.ctor === '::')) && (_p89._0._1.ctor === '[]')) && (_p89._1.ctor === '::')) && (_p89._2.ctor === '::')) && (_p89._2._1.ctor === '[]')) && (_p89._3.ctor === '::')) && (_p89._3._1.ctor === '[]')) {
 		return _elm_lang$core$Maybe$Just(
-			{project: project, icebox: _p81._0._0, backlogs: _p81._1, inFlight: _p81._2._0, done: _p81._3._0});
+			{project: project, icebox: _p89._0._0, backlogs: _p89._1, inFlight: _p89._2._0, done: _p89._3._0});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
@@ -26734,154 +26852,36 @@ var _vito$cadet$Main$ImpactSort = {ctor: 'ImpactSort'};
 var _vito$cadet$Main$PullRequestState = function (a) {
 	return {ctor: 'PullRequestState', _0: a};
 };
-var _vito$cadet$Main$prCard = function (_p82) {
-	var _p83 = _p82;
-	var _p84 = _p83;
+var _vito$cadet$Main$prCard = function (_p90) {
+	var _p91 = _p90;
+	var _p92 = _p91;
 	return {
-		id: _p83.id,
-		content: _vito$cadet$GitHubGraph$PullRequestCardContent(_p84),
-		url: _p83.url,
-		repo: _p83.repo,
-		number: _p83.number,
-		title: _p83.title,
-		updatedAt: _p83.updatedAt,
-		author: _p83.author,
+		id: _p91.id,
+		content: _vito$cadet$GitHubGraph$PullRequestCardContent(_p92),
+		url: _p91.url,
+		repo: _p91.repo,
+		number: _p91.number,
+		title: _p91.title,
+		updatedAt: _p91.updatedAt,
+		author: _p91.author,
 		labels: A2(
 			_elm_lang$core$List$map,
 			function (_) {
 				return _.id;
 			},
-			_p83.labels),
-		cards: _p83.cards,
-		commentCount: _p83.commentCount,
-		reactions: _p83.reactions,
-		score: _vito$cadet$GitHubGraph$pullRequestScore(_p84),
-		state: _vito$cadet$Main$PullRequestState(_p83.state),
-		milestone: _p83.milestone
+			_p91.labels),
+		cards: _p91.cards,
+		commentCount: _p91.commentCount,
+		reactions: _p91.reactions,
+		score: _vito$cadet$GitHubGraph$pullRequestScore(_p92),
+		state: _vito$cadet$Main$PullRequestState(_p91.state),
+		milestone: _p91.milestone
 	};
 };
 var _vito$cadet$Main$isMerged = function (card) {
 	return _elm_lang$core$Native_Utils.eq(
 		card.state,
 		_vito$cadet$Main$PullRequestState(_vito$cadet$GitHubGraph$PullRequestStateMerged));
-};
-var _vito$cadet$Main$computeDataView = function (model) {
-	var dataView = model.dataView;
-	var add = function (x) {
-		return function (_p85) {
-			return _elm_lang$core$Maybe$Just(
-				A2(
-					_elm_lang$core$Maybe$withDefault,
-					{
-						ctor: '::',
-						_0: x,
-						_1: {ctor: '[]'}
-					},
-					A2(
-						_elm_lang$core$Maybe$map,
-						F2(
-							function (x, y) {
-								return {ctor: '::', _0: x, _1: y};
-							})(x),
-						_p85)));
-		};
-	};
-	var _p86 = model.page;
-	switch (_p86.ctor) {
-		case 'MilestonesPage':
-			var nextMilestoneCards = A3(
-				_elm_lang$core$Dict$foldl,
-				F3(
-					function (_p87, card, acc) {
-						return ((_vito$cadet$Main$isMerged(card) || A2(_vito$cadet$Main$isAccepted, model, card)) && _elm_lang$core$Native_Utils.eq(card.milestone, _elm_lang$core$Maybe$Nothing)) ? {ctor: '::', _0: card, _1: acc} : acc;
-					}),
-				{ctor: '[]'},
-				model.allCards);
-			var cardsByMilestone = A3(
-				_elm_lang$core$Dict$foldl,
-				F3(
-					function (_p88, card, acc) {
-						var _p89 = card.milestone;
-						if (_p89.ctor === 'Just') {
-							return A3(
-								_elm_lang$core$Dict$update,
-								_p89._0.title,
-								add(card),
-								acc);
-						} else {
-							return acc;
-						}
-					}),
-				_elm_lang$core$Dict$empty,
-				model.allCards);
-			var allMilestones = _elm_lang$core$Set$toList(
-				A3(
-					_elm_lang$core$Dict$foldl,
-					F2(
-						function (_p90, repo) {
-							return _elm_lang$core$Set$union(
-								_elm_lang$core$Set$fromList(
-									A2(
-										_elm_lang$core$List$map,
-										function (_) {
-											return _.title;
-										},
-										A2(
-											_elm_lang$core$List$filter,
-											function (_p91) {
-												return A2(
-													F2(
-														function (x, y) {
-															return _elm_lang$core$Native_Utils.eq(x, y);
-														}),
-													_vito$cadet$GitHubGraph$MilestoneStateOpen,
-													function (_) {
-														return _.state;
-													}(_p91));
-											},
-											repo.milestones))));
-						}),
-					_elm_lang$core$Set$empty,
-					model.data.repos));
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					dataView: _elm_lang$core$Native_Utils.update(
-						dataView,
-						{cardsByMilestone: cardsByMilestone, allMilestones: allMilestones, nextMilestoneCards: nextMilestoneCards})
-				});
-		case 'LabelsPage':
-			var reposByLabel = A3(
-				_elm_lang$core$Dict$foldl,
-				F3(
-					function (_p92, repo, cbn) {
-						return A3(
-							_elm_lang$core$List$foldl,
-							function (label) {
-								return A2(
-									_elm_lang$core$Dict$update,
-									{
-										ctor: '_Tuple2',
-										_0: label.name,
-										_1: _elm_lang$core$String$toLower(label.color)
-									},
-									add(repo));
-							},
-							cbn,
-							repo.labels);
-					}),
-				_elm_lang$core$Dict$empty,
-				model.data.repos);
-			return _elm_lang$core$Native_Utils.update(
-				model,
-				{
-					dataView: _elm_lang$core$Native_Utils.update(
-						dataView,
-						{reposByLabel: reposByLabel})
-				});
-		default:
-			return model;
-	}
 };
 var _vito$cadet$Main$IssueState = function (a) {
 	return {ctor: 'IssueState', _0: a};

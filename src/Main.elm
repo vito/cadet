@@ -1012,7 +1012,7 @@ computeDataView model =
                     nextMilestoneCards =
                         Dict.foldl
                             (\_ card acc ->
-                                if (isMerged card || isAccepted model card) && card.milestone == Nothing then
+                                if isAccepted model card && card.milestone == Nothing then
                                     card :: acc
                                 else
                                     acc
