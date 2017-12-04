@@ -1012,7 +1012,7 @@ computeDataView model =
                     nextMilestoneCards =
                         Dict.foldl
                             (\_ card acc ->
-                                if isAccepted model card && card.milestone == Nothing then
+                                if card.milestone == Nothing && (isAcceptedPR model card || isAccepted model card) then
                                     card :: acc
                                 else
                                     acc
@@ -2486,6 +2486,11 @@ needsAcceptance model card =
 isAccepted : Model -> Card -> Bool
 isAccepted model =
     hasLabel model "accepted"
+
+
+isAcceptedPR : Model -> Card -> Bool
+isAcceptedPR model card =
+    (isEnhancement model card || isBug model card) && isMerged card
 
 
 isRejected : Model -> Card -> Bool
