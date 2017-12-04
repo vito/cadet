@@ -646,8 +646,8 @@ a {
 
   .project-columns {
     flex-direction: column;
-    flex-grow: 1;
     background: @gray;
+    flex-grow: 0;
 
     .column {
       margin-right: 0;
@@ -668,6 +668,11 @@ a {
     .column-name {
       border-radius: 0;
     }
+  }
+
+  .spatial-graph {
+    flex-shrink: 0;
+    flex-grow: 1;
   }
 }
 
