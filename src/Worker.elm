@@ -58,6 +58,7 @@ type alias Flags =
     { githubToken : String
     , githubOrg : String
     , skipTimeline : Bool
+    , noRefresh : Bool
     }
 
 
@@ -65,6 +66,7 @@ type alias Model =
     { githubToken : String
     , githubOrg : String
     , skipTimeline : Bool
+    , noRefresh : Bool
     , projects : List GitHubGraph.Project
     , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
@@ -91,11 +93,12 @@ type Msg
 
 
 init : Flags -> ( Model, Cmd Msg )
-init { githubToken, githubOrg, skipTimeline } =
+init { githubToken, githubOrg, skipTimeline, noRefresh } =
     update (Refresh 0)
         { githubToken = githubToken
         , githubOrg = githubOrg
         , skipTimeline = skipTimeline
+        , noRefresh = noRefresh
         , projects = []
         , loadQueue = []
         , failedQueue = []
@@ -107,7 +110,10 @@ subscriptions model =
     Sub.batch
         [ Time.every (100 * Time.millisecond) PopQueue
         , Time.every Time.minute RetryQueue
-        , Time.every Time.hour Refresh
+        , if model.noRefresh then
+            Sub.none
+          else
+            Time.every Time.hour Refresh
         , refresh (uncurry RefreshRequested)
         , hook (uncurry HookReceived)
         ]

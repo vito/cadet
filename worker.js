@@ -13624,13 +13624,13 @@ var _vito$cadet$Main$hook = _elm_lang$core$Native_Platform.incomingPort(
 				A2(_elm_lang$core$Json_Decode$index, 1, _elm_lang$core$Json_Decode$value));
 		},
 		A2(_elm_lang$core$Json_Decode$index, 0, _elm_lang$core$Json_Decode$string)));
-var _vito$cadet$Main$Flags = F3(
-	function (a, b, c) {
-		return {githubToken: a, githubOrg: b, skipTimeline: c};
+var _vito$cadet$Main$Flags = F4(
+	function (a, b, c, d) {
+		return {githubToken: a, githubOrg: b, skipTimeline: c, noRefresh: d};
 	});
-var _vito$cadet$Main$Model = F6(
-	function (a, b, c, d, e, f) {
-		return {githubToken: a, githubOrg: b, skipTimeline: c, projects: d, loadQueue: e, failedQueue: f};
+var _vito$cadet$Main$Model = F7(
+	function (a, b, c, d, e, f, g) {
+		return {githubToken: a, githubOrg: b, skipTimeline: c, noRefresh: d, projects: e, loadQueue: f, failedQueue: g};
 	});
 var _vito$cadet$Main$TimelineFetched = F2(
 	function (a, b) {
@@ -13822,7 +13822,7 @@ var _vito$cadet$Main$subscriptions = function (model) {
 				_0: A2(_elm_lang$core$Time$every, _elm_lang$core$Time$minute, _vito$cadet$Main$RetryQueue),
 				_1: {
 					ctor: '::',
-					_0: A2(_elm_lang$core$Time$every, _elm_lang$core$Time$hour, _vito$cadet$Main$Refresh),
+					_0: model.noRefresh ? _elm_lang$core$Platform_Sub$none : A2(_elm_lang$core$Time$every, _elm_lang$core$Time$hour, _vito$cadet$Main$Refresh),
 					_1: {
 						ctor: '::',
 						_0: _vito$cadet$Main$refresh(
@@ -14515,6 +14515,7 @@ var _vito$cadet$Main$init = function (_p32) {
 			githubToken: _p33.githubToken,
 			githubOrg: _p33.githubOrg,
 			skipTimeline: _p33.skipTimeline,
+			noRefresh: _p33.noRefresh,
 			projects: {ctor: '[]'},
 			loadQueue: {ctor: '[]'},
 			failedQueue: {ctor: '[]'}
@@ -14530,11 +14531,16 @@ var _vito$cadet$Main$main = _elm_lang$core$Platform$programWithFlags(
 				function (githubToken) {
 					return A2(
 						_elm_lang$core$Json_Decode$andThen,
-						function (skipTimeline) {
-							return _elm_lang$core$Json_Decode$succeed(
-								{githubOrg: githubOrg, githubToken: githubToken, skipTimeline: skipTimeline});
+						function (noRefresh) {
+							return A2(
+								_elm_lang$core$Json_Decode$andThen,
+								function (skipTimeline) {
+									return _elm_lang$core$Json_Decode$succeed(
+										{githubOrg: githubOrg, githubToken: githubToken, noRefresh: noRefresh, skipTimeline: skipTimeline});
+								},
+								A2(_elm_lang$core$Json_Decode$field, 'skipTimeline', _elm_lang$core$Json_Decode$bool));
 						},
-						A2(_elm_lang$core$Json_Decode$field, 'skipTimeline', _elm_lang$core$Json_Decode$bool));
+						A2(_elm_lang$core$Json_Decode$field, 'noRefresh', _elm_lang$core$Json_Decode$bool));
 				},
 				A2(_elm_lang$core$Json_Decode$field, 'githubToken', _elm_lang$core$Json_Decode$string));
 		},

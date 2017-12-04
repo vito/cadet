@@ -13,7 +13,8 @@ const Elm = require('./worker');
 const worker = Elm.Main.worker({
   githubOrg: process.env.GITHUB_ORG,
   githubToken: process.env.GITHUB_TOKEN,
-  skipTimeline: process.env.SKIP_TIMELINE == "true"
+  skipTimeline: process.env.SKIP_TIMELINE == "true",
+  noRefresh: process.env.NO_REFRESH == "true"
 });
 
 const app = express()
