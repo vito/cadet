@@ -289,7 +289,10 @@ location2messages loc =
                     SetPage GlobalGraphPage
 
         selection =
-            List.map SelectCard (String.split "," hash)
+            if String.isEmpty hash then
+                []
+            else
+                List.map SelectCard (String.split "!" hash)
     in
         page :: selection
 
