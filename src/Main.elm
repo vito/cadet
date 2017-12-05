@@ -227,6 +227,68 @@ main =
         }
 
 
+renderHash : Model -> String
+renderHash model =
+    let
+        selects =
+            List.map (\id -> "s-" ++ id) model.selectedCards
+
+        filters =
+            List.map
+                (\f ->
+                    case f of
+                        ExcludeAllFilter ->
+                            "filter-exclude-all"
+
+                        InProjectFilter project ->
+                            "filter-in-project-" ++ project
+
+                        InvolvesUserFilter login ->
+                            "filter-involves-" ++ login
+
+                        HasLabelFilter label color ->
+                            "filter-label-" ++ label ++ "-" ++ color
+                )
+                model.graphFilters
+
+        sort =
+            case model.graphSort of
+                ImpactSort ->
+                    []
+
+                -- default
+                MyActivitySort ->
+                    [ "sort-my-activity" ]
+    in
+        String.join "." (selects ++ filters ++ sort)
+
+
+parseHash : String -> List Msg
+parseHash hash =
+    if hash == "" then
+        []
+    else
+        let
+            parseSegment segment =
+                case String.split "-" segment of
+                    [ "s", id ] ->
+                        Just (SelectCard id)
+
+                    [ "filter", "label", name, color ] ->
+                        Just (AddFilter (HasLabelFilter name color))
+
+                    [ "filter", "involves", login ] ->
+                        Just (AddFilter (InvolvesUserFilter login))
+
+                    [ "sort", "my", "activity" ] ->
+                        Just (SetGraphSort MyActivitySort)
+
+                    _ ->
+                        Nothing
+        in
+            List.filterMap parseSegment (String.split "." hash)
+
+
 delta2url : Model -> Model -> Maybe RouteUrl.UrlChange
 delta2url a b =
     let
@@ -254,7 +316,7 @@ delta2url a b =
                     RouteUrl.Builder.replacePath [ "milestones" ]
 
         withSelection =
-            RouteUrl.Builder.replaceHash (String.join "!" b.selectedCards)
+            RouteUrl.Builder.replaceHash (renderHash b)
 
         builder =
             List.foldl (\f b -> f b) RouteUrl.Builder.builder [ withPageEntry, withPagePath, withSelection ]
@@ -293,14 +355,8 @@ location2messages loc =
 
                 _ ->
                     SetPage GlobalGraphPage
-
-        selection =
-            if String.isEmpty hash then
-                []
-            else
-                List.map SelectCard (String.split "!" hash)
     in
-        page :: selection
+        page :: parseHash hash
 
 
 type alias CardNodeRadii =
