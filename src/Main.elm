@@ -120,6 +120,20 @@ type alias Card =
     , score : Int
     , state : CardState
     , milestone : Maybe GitHubGraph.Milestone
+    , processState : CardProcessState
+    }
+
+
+type alias CardProcessState =
+    { inIceboxColumn : Bool
+    , inInFlightColumn : Bool
+    , inBacklogColumn : Bool
+    , inDoneColumn : Bool
+    , hasEnhancementLabel : Bool
+    , hasBugLabel : Bool
+    , hasAcceptedLabel : Bool
+    , hasRejectedLabel : Bool
+    , hasWontfixLabel : Bool
     }
 
 
@@ -1090,7 +1104,7 @@ computeDataView model =
                     nextMilestoneCards =
                         Dict.foldl
                             (\_ card acc ->
-                                if card.milestone == Nothing && (isAcceptedPR model card || isAccepted model card) then
+                                if card.milestone == Nothing && (isAcceptedPR card || isAccepted card) then
                                     card :: acc
                                 else
                                     acc
@@ -1120,6 +1134,20 @@ computeDataView model =
                 model
 
 
+cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
+cardProcessState { cards, labels } =
+    { inIceboxColumn = inColumn detectColumn.icebox cards
+    , inInFlightColumn = inColumn detectColumn.inFlight cards
+    , inBacklogColumn = inColumn detectColumn.backlog cards
+    , inDoneColumn = inColumn detectColumn.done cards
+    , hasEnhancementLabel = List.any ((==) "enhancement" << .name) labels
+    , hasBugLabel = List.any ((==) "bug" << .name) labels
+    , hasAcceptedLabel = List.any ((==) "accepted" << .name) labels
+    , hasRejectedLabel = List.any ((==) "rejected" << .name) labels
+    , hasWontfixLabel = List.any ((==) "wontfix" << .name) labels
+    }
+
+
 issueCard : GitHubGraph.Issue -> Card
 issueCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
@@ -1137,6 +1165,7 @@ issueCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, com
     , score = GitHubGraph.issueScore issue
     , state = IssueState state
     , milestone = milestone
+    , processState = cardProcessState { cards = cards, labels = labels }
     }
 
 
@@ -1157,6 +1186,7 @@ prCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commen
     , score = GitHubGraph.pullRequestScore pr
     , state = PullRequestState state
     , milestone = milestone
+    , processState = cardProcessState { cards = cards, labels = labels }
     }
 
 
@@ -1752,7 +1782,7 @@ onlyAcceptableCards model =
                 Just id ->
                     case Dict.get id model.allCards of
                         Just card ->
-                            isOpen card || needsAcceptance model card
+                            isOpen card || needsAcceptance card
 
                         Nothing ->
                             False
@@ -2218,11 +2248,6 @@ cardNode allLabels card context =
         }
 
 
-renderCardNode : Card -> CardNodeState -> List (Svg Msg)
-renderCardNode card state =
-    []
-
-
 nodeFlairArcs : Card -> GraphContext -> List (Svg Msg)
 nodeFlairArcs card context =
     let
@@ -2555,9 +2580,9 @@ lastActivityIsByUser cardEvents login card =
                 False
 
 
-inColumn : (String -> Bool) -> Card -> Bool
-inColumn match card =
-    List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column) card.cards
+inColumn : (String -> Bool) -> List GitHubGraph.CardLocation -> Bool
+inColumn match =
+    List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column)
 
 
 isAnticipated : Model -> Card -> Bool
@@ -2590,49 +2615,39 @@ hasLabelAndColor model name color card =
         List.any (flip Dict.member matchingLabels) card.labels
 
 
-hasLabel : Model -> String -> Card -> Bool
-hasLabel model name card =
-    let
-        matchingLabels =
-            model.allLabels
-                |> Dict.filter (\_ l -> l.name == name)
-    in
-        List.any (flip Dict.member matchingLabels) card.labels
+isEnhancement : Card -> Bool
+isEnhancement card =
+    card.processState.hasEnhancementLabel
 
 
-isEnhancement : Model -> Card -> Bool
-isEnhancement model =
-    hasLabel model "enhancement"
+isBug : Card -> Bool
+isBug card =
+    card.processState.hasBugLabel
 
 
-isBug : Model -> Card -> Bool
-isBug model =
-    hasLabel model "bug"
+isWontfix : Card -> Bool
+isWontfix card =
+    card.processState.hasWontfixLabel
 
 
-isWontfix : Model -> Card -> Bool
-isWontfix model =
-    hasLabel model "wontfix"
+needsAcceptance : Card -> Bool
+needsAcceptance card =
+    (isEnhancement card || isBug card) && not (isWontfix card) && not (isAccepted card)
 
 
-needsAcceptance : Model -> Card -> Bool
-needsAcceptance model card =
-    (isEnhancement model card || isBug model card) && not (isWontfix model card) && not (isAccepted model card)
+isAccepted : Card -> Bool
+isAccepted card =
+    card.processState.hasAcceptedLabel
 
 
-isAccepted : Model -> Card -> Bool
-isAccepted model =
-    hasLabel model "accepted"
+isRejected : Card -> Bool
+isRejected card =
+    card.processState.hasRejectedLabel
 
 
-isAcceptedPR : Model -> Card -> Bool
-isAcceptedPR model card =
-    (isEnhancement model card || isBug model card) && isMerged card
-
-
-isRejected : Model -> Card -> Bool
-isRejected model =
-    hasLabel model "rejected"
+isAcceptedPR : Card -> Bool
+isAcceptedPR card =
+    (isEnhancement card || isBug card) && isMerged card
 
 
 isOpen : Card -> Bool
@@ -2649,23 +2664,23 @@ isOpen card =
 
 
 isInFlight : Card -> Bool
-isInFlight =
-    inColumn detectColumn.inFlight
+isInFlight card =
+    card.processState.inInFlightColumn
 
 
 isDone : Card -> Bool
-isDone =
-    inColumn detectColumn.done
+isDone card =
+    card.processState.inDoneColumn
 
 
 isBacklog : Card -> Bool
-isBacklog =
-    inColumn detectColumn.backlog
+isBacklog card =
+    card.processState.inBacklogColumn
 
 
 isIcebox : Card -> Bool
-isIcebox =
-    inColumn detectColumn.icebox
+isIcebox card =
+    card.processState.inIceboxColumn
 
 
 viewCard : Model -> Card -> Html Msg
@@ -2687,7 +2702,7 @@ viewCard model card =
         [ Html.div [ HA.class "card-icons" ]
             [ case card.state of
                 IssueState GitHubGraph.IssueStateOpen ->
-                    if isRejected model card then
+                    if isRejected card then
                         Html.span [ HA.class "octicon open rejected octicon-issue-reopened" ] []
                     else
                         Html.span [ HA.class "octicon open octicon-issue-opened" ] []
@@ -2703,20 +2718,20 @@ viewCard model card =
 
                 PullRequestState GitHubGraph.PullRequestStateMerged ->
                     Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
-            , if needsAcceptance model card && isDone card then
+            , if needsAcceptance card && isDone card then
                 Html.span
                     [ HA.class "octicon accept octicon-thumbsup"
                     , HE.onClick (AcceptCard card)
                     ]
                     []
-              else if isAccepted model card then
+              else if isAccepted card then
                 Html.span
                     [ HA.class "octicon accepted octicon-thumbsup"
                     ]
                     []
               else
                 Html.text ""
-            , if needsAcceptance model card && isDone card then
+            , if needsAcceptance card && isDone card then
                 Html.span
                     [ HA.class "octicon reject octicon-thumbsdown"
                     , HE.onClick (RejectCard card)
