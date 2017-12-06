@@ -25366,8 +25366,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2953, column: 25},
-							end: {line: 2967, column: 57}
+							start: {line: 2978, column: 25},
+							end: {line: 2992, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25477,8 +25477,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2871, column: 17},
-					end: {line: 2879, column: 50}
+					start: {line: 2896, column: 17},
+					end: {line: 2904, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25486,8 +25486,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2869, column: 9},
-				end: {line: 2882, column: 42}
+				start: {line: 2894, column: 9},
+				end: {line: 2907, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25861,8 +25861,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2339, column: 17},
-							end: {line: 2344, column: 49}
+							start: {line: 2364, column: 17},
+							end: {line: 2369, column: 49}
 						},
 						_p40)('impossible');
 				}
@@ -26358,8 +26358,10 @@ var _vito$cadet$Main$satisfiesFilter = F3(
 				return A2(_vito$cadet$Main$isInProject, _p72._0, card);
 			case 'HasLabelFilter':
 				return A4(_vito$cadet$Main$hasLabelAndColor, model, _p72._0, _p72._1, card);
-			default:
+			case 'InvolvesUserFilter':
 				return A3(_vito$cadet$Main$involvesUser, model, _p72._0, card);
+			default:
+				return _vito$cadet$Main$isPR(card);
 		}
 	});
 var _vito$cadet$Main$satisfiesFilters = F3(
@@ -26465,7 +26467,7 @@ var _vito$cadet$Main$renderHash = function (model) {
 					return A2(_elm_lang$core$Basics_ops['++'], 'filter-in-project-', _p80._0);
 				case 'InvolvesUserFilter':
 					return A2(_elm_lang$core$Basics_ops['++'], 'filter-involves-', _p80._0);
-				default:
+				case 'HasLabelFilter':
 					return A2(
 						_elm_lang$core$Basics_ops['++'],
 						'filter-label-',
@@ -26473,6 +26475,8 @@ var _vito$cadet$Main$renderHash = function (model) {
 							_elm_lang$core$Basics_ops['++'],
 							_p80._0,
 							A2(_elm_lang$core$Basics_ops['++'], '-', _p80._1)));
+				default:
+					return 'filter-pull-requests';
 			}
 		},
 		model.graphFilters);
@@ -26889,6 +26893,7 @@ var _vito$cadet$Main$GraphContext = F2(
 	function (a, b) {
 		return {incoming: a, outgoing: b};
 	});
+var _vito$cadet$Main$PullRequestsFilter = {ctor: 'PullRequestsFilter'};
 var _vito$cadet$Main$InvolvesUserFilter = function (a) {
 	return {ctor: 'InvolvesUserFilter', _0: a};
 };
@@ -27268,109 +27273,110 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 						_1: {
 							ctor: '::',
 							_0: function () {
-								var _p116 = model.me;
-								if (_p116.ctor === 'Just') {
-									var filter = _vito$cadet$Main$InvolvesUserFilter(_p116._0.user.login);
-									return A2(
-										_elm_lang$html$Html$div,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$classList(
-												{
-													ctor: '::',
-													_0: {ctor: '_Tuple2', _0: 'control-setting', _1: true},
-													_1: {
-														ctor: '::',
-														_0: {
-															ctor: '_Tuple2',
-															_0: 'active',
-															_1: A2(_vito$cadet$Main$hasFilter, model, filter)
-														},
-														_1: {ctor: '[]'}
-													}
-												}),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html_Events$onClick(
-													A2(_vito$cadet$Main$hasFilter, model, filter) ? _vito$cadet$Main$RemoveFilter(filter) : _vito$cadet$Main$AddFilter(filter)),
-												_1: {ctor: '[]'}
-											}
-										},
-										{
-											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$span,
-												{
-													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$class('octicon octicon-comment-discussion'),
-													_1: {ctor: '[]'}
-												},
-												{ctor: '[]'}),
-											_1: {
-												ctor: '::',
-												_0: _elm_lang$html$Html$text('involving me'),
-												_1: {ctor: '[]'}
-											}
-										});
-								} else {
-									return _elm_lang$html$Html$text('');
-								}
-							}(),
-							_1: {
-								ctor: '::',
-								_0: A2(
+								var filter = _vito$cadet$Main$PullRequestsFilter;
+								return A2(
 									_elm_lang$html$Html$div,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('label-selection'),
-										_1: {ctor: '[]'}
+										_0: _elm_lang$html$Html_Attributes$classList(
+											{
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 'control-setting', _1: true},
+												_1: {
+													ctor: '::',
+													_0: {
+														ctor: '_Tuple2',
+														_0: 'active',
+														_1: A2(_vito$cadet$Main$hasFilter, model, filter)
+													},
+													_1: {ctor: '[]'}
+												}
+											}),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Events$onClick(
+												A2(_vito$cadet$Main$hasFilter, model, filter) ? _vito$cadet$Main$RemoveFilter(filter) : _vito$cadet$Main$AddFilter(filter)),
+											_1: {ctor: '[]'}
+										}
 									},
 									{
 										ctor: '::',
 										_0: A2(
+											_elm_lang$html$Html$span,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class('octicon octicon-git-pull-request'),
+												_1: {ctor: '[]'}
+											},
+											{ctor: '[]'}),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('pull requests'),
+											_1: {ctor: '[]'}
+										}
+									});
+							}(),
+							_1: {
+								ctor: '::',
+								_0: function () {
+									var _p116 = model.me;
+									if (_p116.ctor === 'Just') {
+										var filter = _vito$cadet$Main$InvolvesUserFilter(_p116._0.user.login);
+										return A2(
 											_elm_lang$html$Html$div,
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html_Attributes$classList(
 													{
 														ctor: '::',
-														_0: {ctor: '_Tuple2', _0: 'label-filters', _1: true},
+														_0: {ctor: '_Tuple2', _0: 'control-setting', _1: true},
 														_1: {
 															ctor: '::',
-															_0: {ctor: '_Tuple2', _0: 'visible', _1: model.showLabelFilters},
+															_0: {
+																ctor: '_Tuple2',
+																_0: 'active',
+																_1: A2(_vito$cadet$Main$hasFilter, model, filter)
+															},
 															_1: {ctor: '[]'}
 														}
 													}),
-												_1: {ctor: '[]'}
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onClick(
+														A2(_vito$cadet$Main$hasFilter, model, filter) ? _vito$cadet$Main$RemoveFilter(filter) : _vito$cadet$Main$AddFilter(filter)),
+													_1: {ctor: '[]'}
+												}
 											},
 											{
 												ctor: '::',
 												_0: A2(
-													_elm_lang$html$Html$div,
+													_elm_lang$html$Html$span,
 													{
 														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$class('label-options'),
+														_0: _elm_lang$html$Html_Attributes$class('octicon octicon-comment-discussion'),
 														_1: {ctor: '[]'}
 													},
-													allLabelFilters),
+													{ctor: '[]'}),
 												_1: {
 													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$input,
-														{
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$type_('text'),
-															_1: {
-																ctor: '::',
-																_0: _elm_lang$html$Html_Events$onInput(_vito$cadet$Main$SetLabelSearch),
-																_1: {ctor: '[]'}
-															}
-														},
-														{ctor: '[]'}),
+													_0: _elm_lang$html$Html$text('involving me'),
 													_1: {ctor: '[]'}
 												}
-											}),
-										_1: {
+											});
+									} else {
+										return _elm_lang$html$Html$text('');
+									}
+								}(),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$div,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('label-selection'),
+											_1: {ctor: '[]'}
+										},
+										{
 											ctor: '::',
 											_0: A2(
 												_elm_lang$html$Html$div,
@@ -27379,39 +27385,85 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 													_0: _elm_lang$html$Html_Attributes$classList(
 														{
 															ctor: '::',
-															_0: {ctor: '_Tuple2', _0: 'control-setting', _1: true},
+															_0: {ctor: '_Tuple2', _0: 'label-filters', _1: true},
 															_1: {
 																ctor: '::',
-																_0: {ctor: '_Tuple2', _0: 'active', _1: model.showLabelFilters},
+																_0: {ctor: '_Tuple2', _0: 'visible', _1: model.showLabelFilters},
 																_1: {ctor: '[]'}
 															}
 														}),
-													_1: {
-														ctor: '::',
-														_0: _elm_lang$html$Html_Events$onClick(_vito$cadet$Main$ToggleLabelFilters),
-														_1: {ctor: '[]'}
-													}
+													_1: {ctor: '[]'}
 												},
 												{
 													ctor: '::',
 													_0: A2(
-														_elm_lang$html$Html$span,
+														_elm_lang$html$Html$div,
 														{
 															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$class('octicon octicon-tag'),
+															_0: _elm_lang$html$Html_Attributes$class('label-options'),
 															_1: {ctor: '[]'}
 														},
-														{ctor: '[]'}),
+														allLabelFilters),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$html$Html$text('label'),
+														_0: A2(
+															_elm_lang$html$Html$input,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$type_('text'),
+																_1: {
+																	ctor: '::',
+																	_0: _elm_lang$html$Html_Events$onInput(_vito$cadet$Main$SetLabelSearch),
+																	_1: {ctor: '[]'}
+																}
+															},
+															{ctor: '[]'}),
 														_1: {ctor: '[]'}
 													}
 												}),
-											_1: {ctor: '[]'}
-										}
-									}),
-								_1: {ctor: '[]'}
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$div,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$classList(
+															{
+																ctor: '::',
+																_0: {ctor: '_Tuple2', _0: 'control-setting', _1: true},
+																_1: {
+																	ctor: '::',
+																	_0: {ctor: '_Tuple2', _0: 'active', _1: model.showLabelFilters},
+																	_1: {ctor: '[]'}
+																}
+															}),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Events$onClick(_vito$cadet$Main$ToggleLabelFilters),
+															_1: {ctor: '[]'}
+														}
+													},
+													{
+														ctor: '::',
+														_0: A2(
+															_elm_lang$html$Html$span,
+															{
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$class('octicon octicon-tag'),
+																_1: {ctor: '[]'}
+															},
+															{ctor: '[]'}),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html$text('label'),
+															_1: {ctor: '[]'}
+														}
+													}),
+												_1: {ctor: '[]'}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					},
@@ -28907,7 +28959,7 @@ var _vito$cadet$Main$parseHash = function (hash) {
 	} else {
 		var parseSegment = function (segment) {
 			var _p149 = A2(_elm_lang$core$String$split, '-', segment);
-			_v71_5:
+			_v71_6:
 			do {
 				if ((_p149.ctor === '::') && (_p149._1.ctor === '::')) {
 					if (_p149._1._1.ctor === '[]') {
@@ -28915,7 +28967,7 @@ var _vito$cadet$Main$parseHash = function (hash) {
 							return _elm_lang$core$Maybe$Just(
 								_vito$cadet$Main$SelectCard(_p149._1._0));
 						} else {
-							break _v71_5;
+							break _v71_6;
 						}
 					} else {
 						if (_p149._1._1._1.ctor === '::') {
@@ -28924,17 +28976,25 @@ var _vito$cadet$Main$parseHash = function (hash) {
 									_vito$cadet$Main$AddFilter(
 										A2(_vito$cadet$Main$HasLabelFilter, _p149._1._1._0, _p149._1._1._1._0)));
 							} else {
-								break _v71_5;
+								break _v71_6;
 							}
 						} else {
 							switch (_p149._0) {
 								case 'filter':
-									if (_p149._1._0 === 'involves') {
-										return _elm_lang$core$Maybe$Just(
-											_vito$cadet$Main$AddFilter(
-												_vito$cadet$Main$InvolvesUserFilter(_p149._1._1._0)));
-									} else {
-										break _v71_5;
+									switch (_p149._1._0) {
+										case 'involves':
+											return _elm_lang$core$Maybe$Just(
+												_vito$cadet$Main$AddFilter(
+													_vito$cadet$Main$InvolvesUserFilter(_p149._1._1._0)));
+										case 'pull':
+											if (_p149._1._1._0 === 'requests') {
+												return _elm_lang$core$Maybe$Just(
+													_vito$cadet$Main$AddFilter(_vito$cadet$Main$PullRequestsFilter));
+											} else {
+												break _v71_6;
+											}
+										default:
+											break _v71_6;
 									}
 								case 'sort':
 									if (_p149._1._1._0 === 'activity') {
@@ -28946,18 +29006,18 @@ var _vito$cadet$Main$parseHash = function (hash) {
 												return _elm_lang$core$Maybe$Just(
 													_vito$cadet$Main$SetGraphSort(_vito$cadet$Main$AllActivitySort));
 											default:
-												break _v71_5;
+												break _v71_6;
 										}
 									} else {
-										break _v71_5;
+										break _v71_6;
 									}
 								default:
-									break _v71_5;
+									break _v71_6;
 							}
 						}
 					}
 				} else {
-					break _v71_5;
+					break _v71_6;
 				}
 			} while(false);
 			return _elm_lang$core$Maybe$Nothing;
@@ -29927,8 +29987,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 1887, column: 17},
-									end: {line: 1894, column: 70}
+									start: {line: 1909, column: 17},
+									end: {line: 1916, column: 70}
 								},
 								_p178)('impossible: content has no card');
 						}
@@ -29943,8 +30003,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1880, column: 9},
-				end: {line: 1897, column: 41}
+				start: {line: 1902, column: 9},
+				end: {line: 1919, column: 41}
 			},
 			_p177)('impossible');
 	});

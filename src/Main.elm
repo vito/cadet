@@ -81,6 +81,7 @@ type GraphFilter
     | InProjectFilter String
     | HasLabelFilter String String
     | InvolvesUserFilter String
+    | PullRequestsFilter
 
 
 type GraphSort
@@ -263,6 +264,9 @@ renderHash model =
 
                         HasLabelFilter label color ->
                             "filter-label-" ++ label ++ "-" ++ color
+
+                        PullRequestsFilter ->
+                            "filter-pull-requests"
                 )
                 model.graphFilters
 
@@ -297,6 +301,9 @@ parseHash hash =
 
                     [ "filter", "involves", login ] ->
                         Just (AddFilter (InvolvesUserFilter login))
+
+                    [ "filter", "pull", "requests" ] ->
+                        Just (AddFilter PullRequestsFilter)
 
                     [ "sort", "my", "activity" ] ->
                         Just (SetGraphSort MyActivitySort)
@@ -1294,6 +1301,21 @@ viewGraphControls model =
         Html.div [ HA.class "graph-controls" ]
             [ Html.div [ HA.class "control-group" ]
                 ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
+                 , let
+                    filter =
+                        PullRequestsFilter
+                   in
+                    Html.div
+                        [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                        , HE.onClick <|
+                            if hasFilter model filter then
+                                RemoveFilter filter
+                            else
+                                AddFilter filter
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                        , Html.text "pull requests"
+                        ]
                  , case model.me of
                     Just { user } ->
                         let
@@ -2057,6 +2079,9 @@ satisfiesFilter model filter card =
 
         InvolvesUserFilter login ->
             involvesUser model login card
+
+        PullRequestsFilter ->
+            isPR card
 
 
 graphSizeCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
