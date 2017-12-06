@@ -86,6 +86,7 @@ type GraphFilter
 type GraphSort
     = ImpactSort
     | MyActivitySort
+    | AllActivitySort
 
 
 type alias SharedLabel =
@@ -268,11 +269,14 @@ renderHash model =
         sort =
             case model.graphSort of
                 ImpactSort ->
+                    -- default
                     []
 
-                -- default
                 MyActivitySort ->
                     [ "sort-my-activity" ]
+
+                AllActivitySort ->
+                    [ "sort-all-activity" ]
     in
         String.join "." (selects ++ filters ++ sort)
 
@@ -296,6 +300,9 @@ parseHash hash =
 
                     [ "sort", "my", "activity" ] ->
                         Just (SetGraphSort MyActivitySort)
+
+                    [ "sort", "all", "activity" ] ->
+                        Just (SetGraphSort AllActivitySort)
 
                     _ ->
                         Nothing
@@ -1334,12 +1341,24 @@ viewGraphControls model =
                     , Html.text "impact"
                     ]
                 , Html.div
-                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
-                    , HE.onClick (SetGraphSort MyActivitySort)
+                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
+                    , HE.onClick (SetGraphSort AllActivitySort)
                     ]
                     [ Html.span [ HA.class "octicon octicon-clock" ] []
-                    , Html.text "my activity"
+                    , Html.text "all activity"
                     ]
+                , case model.me of
+                    Just _ ->
+                        Html.div
+                            [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
+                            , HE.onClick (SetGraphSort MyActivitySort)
+                            ]
+                            [ Html.span [ HA.class "octicon octicon-clock" ] []
+                            , Html.text "my activity"
+                            ]
+
+                    Nothing ->
+                        Html.text ""
                 ]
             ]
 
@@ -2005,7 +2024,10 @@ computeGraph model =
                     graphSizeCompare
 
                 MyActivitySort ->
-                    graphActivityCompare model
+                    graphMyActivityCompare model
+
+                AllActivitySort ->
+                    graphAllActivityCompare model
     in
         { model
             | cardGraphs =
@@ -2051,22 +2073,25 @@ graphSizeCompare a b =
             x
 
 
-graphActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
-graphActivityCompare model a b =
-    let
-        latestMeActivity g =
-            Graph.nodes g
-                |> List.map
-                    (\n ->
-                        let
-                            card =
-                                n.label.value.card
+graphMyActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphMyActivityCompare model a b =
+    case model.me of
+        Nothing ->
+            graphAllActivityCompare model a b
 
-                            activity =
-                                Maybe.withDefault [] (Dict.get card.id model.data.actors)
-                        in
-                            case model.me of
-                                Just { user } ->
+        Just { user } ->
+            let
+                latestMeActivity g =
+                    Graph.nodes g
+                        |> List.map
+                            (\n ->
+                                let
+                                    card =
+                                        n.label.value.card
+
+                                    activity =
+                                        Maybe.withDefault [] (Dict.get card.id model.data.actors)
+                                in
                                     activity
                                         |> List.reverse
                                         |> List.filter (.actor >> .databaseId >> (==) user.id)
@@ -2074,14 +2099,26 @@ graphActivityCompare model a b =
                                         |> List.head
                                         |> Maybe.map Date.toTime
                                         |> Maybe.withDefault 0
+                            )
+                        |> List.maximum
+                        |> Maybe.withDefault 0
+            in
+                compare (latestMeActivity a.graph) (latestMeActivity b.graph)
 
-                                Nothing ->
-                                    activity
-                                        |> List.reverse
-                                        |> List.map .createdAt
-                                        |> List.head
-                                        |> Maybe.map Date.toTime
-                                        |> Maybe.withDefault 0
+
+graphAllActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphAllActivityCompare model a b =
+    let
+        latestMeActivity g =
+            Graph.nodes g
+                |> List.map
+                    (\n ->
+                        Maybe.withDefault [] (Dict.get n.label.value.card.id model.data.actors)
+                            |> List.reverse
+                            |> List.map .createdAt
+                            |> List.head
+                            |> Maybe.map Date.toTime
+                            |> Maybe.withDefault 0
                     )
                 |> List.maximum
                 |> Maybe.withDefault 0
