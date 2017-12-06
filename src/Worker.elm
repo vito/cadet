@@ -195,8 +195,8 @@ update msg model =
                 ( decodeAndFetchIssueOrPR "pull_request" payload fetchRepoPullRequest model, Cmd.none )
 
         HookReceived "milestone" payload ->
-            log "milestone hook received; ignoring" () <|
-                ( model, Cmd.none )
+            log "milestone hook received; refreshing repo" () <|
+                ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "project" payload ->
             log "project hook received; refreshing projects" () <|
@@ -224,8 +224,8 @@ update msg model =
                             )
 
         HookReceived "repository" payload ->
-            log "repository hook received; ignoring" () <|
-                ( model, Cmd.none )
+            log "repository hook received; refreshing repo" () <|
+                ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "status" payload ->
             log "status hook received; ignoring" () <|

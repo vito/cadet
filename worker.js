@@ -14001,9 +14001,13 @@ var _vito$cadet$Main$update = F2(
 					case 'milestone':
 						return A3(
 							_vito$cadet$Main$log,
-							'milestone hook received; ignoring',
+							'milestone hook received; refreshing repo',
 							{ctor: '_Tuple0'},
-							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+							{
+								ctor: '_Tuple2',
+								_0: A2(_vito$cadet$Main$decodeAndFetchRepo, _p3._1, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'project':
 						return A3(
 							_vito$cadet$Main$log,
@@ -14104,9 +14108,13 @@ var _vito$cadet$Main$update = F2(
 					case 'repository':
 						return A3(
 							_vito$cadet$Main$log,
-							'repository hook received; ignoring',
+							'repository hook received; refreshing repo',
 							{ctor: '_Tuple0'},
-							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
+							{
+								ctor: '_Tuple2',
+								_0: A2(_vito$cadet$Main$decodeAndFetchRepo, _p3._1, model),
+								_1: _elm_lang$core$Platform_Cmd$none
+							});
 					case 'status':
 						return A3(
 							_vito$cadet$Main$log,
