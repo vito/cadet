@@ -86,7 +86,7 @@ type GraphFilter
 
 type GraphSort
     = ImpactSort
-    | MyActivitySort
+    | UserActivitySort String
     | AllActivitySort
 
 
@@ -276,8 +276,8 @@ renderHash model =
                     -- default
                     []
 
-                MyActivitySort ->
-                    [ "sort-my-activity" ]
+                UserActivitySort login ->
+                    [ "sort-user-activity-" ++ login ]
 
                 AllActivitySort ->
                     [ "sort-all-activity" ]
@@ -305,8 +305,8 @@ parseHash hash =
                     [ "filter", "pull", "requests" ] ->
                         Just (AddFilter PullRequestsFilter)
 
-                    [ "sort", "my", "activity" ] ->
-                        Just (SetGraphSort MyActivitySort)
+                    "sort" :: "user" :: "activity" :: loginSplit ->
+                        Just (SetGraphSort (UserActivitySort (String.join "-" loginSplit)))
 
                     [ "sort", "all", "activity" ] ->
                         Just (SetGraphSort AllActivitySort)
@@ -1370,10 +1370,10 @@ viewGraphControls model =
                     , Html.text "all activity"
                     ]
                 , case model.me of
-                    Just _ ->
+                    Just { user } ->
                         Html.div
-                            [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == MyActivitySort ) ]
-                            , HE.onClick (SetGraphSort MyActivitySort)
+                            [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
+                            , HE.onClick (SetGraphSort (UserActivitySort user.login))
                             ]
                             [ Html.span [ HA.class "octicon octicon-clock" ] []
                             , Html.text "my activity"
@@ -2045,8 +2045,8 @@ computeGraph model =
                 ImpactSort ->
                     graphSizeCompare
 
-                MyActivitySort ->
-                    graphMyActivityCompare model
+                UserActivitySort login ->
+                    graphUserActivityCompare model login
 
                 AllActivitySort ->
                     graphAllActivityCompare model
@@ -2098,37 +2098,32 @@ graphSizeCompare a b =
             x
 
 
-graphMyActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
-graphMyActivityCompare model a b =
-    case model.me of
-        Nothing ->
-            graphAllActivityCompare model a b
+graphUserActivityCompare : Model -> String -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphUserActivityCompare model login a b =
+    let
+        latestUserActivity g =
+            Graph.nodes g
+                |> List.map
+                    (\n ->
+                        let
+                            card =
+                                n.label.value.card
 
-        Just { user } ->
-            let
-                latestMeActivity g =
-                    Graph.nodes g
-                        |> List.map
-                            (\n ->
-                                let
-                                    card =
-                                        n.label.value.card
-
-                                    activity =
-                                        Maybe.withDefault [] (Dict.get card.id model.data.actors)
-                                in
-                                    activity
-                                        |> List.reverse
-                                        |> List.filter (.actor >> .databaseId >> (==) user.id)
-                                        |> List.map .createdAt
-                                        |> List.head
-                                        |> Maybe.map Date.toTime
-                                        |> Maybe.withDefault 0
-                            )
-                        |> List.maximum
-                        |> Maybe.withDefault 0
-            in
-                compare (latestMeActivity a.graph) (latestMeActivity b.graph)
+                            activity =
+                                Maybe.withDefault [] (Dict.get card.id model.data.actors)
+                        in
+                            activity
+                                |> List.reverse
+                                |> List.filter (.actor >> .login >> (==) login)
+                                |> List.map .createdAt
+                                |> List.head
+                                |> Maybe.map Date.toTime
+                                |> Maybe.withDefault 0
+                    )
+                |> List.maximum
+                |> Maybe.withDefault 0
+    in
+        compare (latestUserActivity a.graph) (latestUserActivity b.graph)
 
 
 graphAllActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
