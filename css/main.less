@@ -47,8 +47,6 @@ a {
     overflow-y: auto;
     flex-grow: 1;
     position: relative;
-
-    // so that inner content can flex-grow
     display: flex;
   }
 
@@ -673,13 +671,16 @@ a {
       border-radius: 0;
     }
   }
+
+  .spatial-graph {
+    flex-shrink: 0;
+  }
 }
 
 .spatial-graph {
   background: @gray-300;
   text-align: center;
   position: relative;
-  flex-shrink: 0;
   flex-grow: 1;
 }
 
