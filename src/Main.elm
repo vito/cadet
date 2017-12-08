@@ -2241,8 +2241,7 @@ linkPath graph edge =
                     { x = 0, y = 0 }
     in
         Svg.line
-            [ SA.strokeWidth "4"
-            , SA.stroke "rgba(0,0,0,.2)"
+            [ SA.class "graph-edge"
             , SA.x1 (toString source.x)
             , SA.y1 (toString source.y)
             , SA.x2 (toString target.x)
@@ -2465,23 +2464,6 @@ viewCardNodeFlair card radii flair { x, y } state =
             else
                 Svg.text ""
 
-        projectHalo =
-            Svg.circle
-                [ SA.strokeWidth "2px"
-                , SA.r (toString (radii.base + 4))
-                , if isInFlight card then
-                    SA.class "project-status in-flight"
-                  else if isDone card then
-                    SA.class "project-status done"
-                  else if isIcebox card then
-                    SA.class "project-status icebox"
-                  else if isBacklog card then
-                    SA.class "project-status backlog"
-                  else
-                    SA.class "project-status untriaged"
-                ]
-                []
-
         classes =
             [ "flair", activityClass state.currentDate card.updatedAt ]
                 ++ (case state.me of
@@ -2501,7 +2483,7 @@ viewCardNodeFlair card radii flair { x, y } state =
             , SE.onMouseOut (UnanticipateCardFromNode card.id)
             , SA.class (String.join " " classes)
             ]
-            (flair ++ [ projectHalo, anticipatedHalo ])
+            (flair ++ [ anticipatedHalo ])
 
 
 activityClass : Date -> Date -> String
@@ -2562,6 +2544,23 @@ viewCardNode card radii labels { x, y } state =
                         ]
                     ]
 
+        projectHalo =
+            Svg.circle
+                [ SA.strokeWidth "2px"
+                , SA.r (toString (radii.base + 4))
+                , if isInFlight card then
+                    SA.class "project-status in-flight"
+                  else if isDone card then
+                    SA.class "project-status done"
+                  else if isIcebox card then
+                    SA.class "project-status icebox"
+                  else if isBacklog card then
+                    SA.class "project-status backlog"
+                  else
+                    SA.class "project-status untriaged"
+                ]
+                []
+
         scale =
             if isHighlighted then
                 "1.1"
@@ -2589,7 +2588,7 @@ viewCardNode card radii labels { x, y } state =
                     SelectCard card.id
                 )
             ]
-            (circleWithNumber ++ labels)
+            (circleWithNumber ++ labels ++ [ projectHalo ])
 
 
 viewCardEntry : Model -> Card -> Html Msg

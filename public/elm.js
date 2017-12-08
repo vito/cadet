@@ -25366,8 +25366,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2981, column: 25},
-							end: {line: 2995, column: 57}
+							start: {line: 2980, column: 25},
+							end: {line: 2994, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25477,8 +25477,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2899, column: 17},
-					end: {line: 2907, column: 50}
+					start: {line: 2898, column: 17},
+					end: {line: 2906, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25486,8 +25486,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2897, column: 9},
-				end: {line: 2910, column: 42}
+				start: {line: 2896, column: 9},
+				end: {line: 2909, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25861,8 +25861,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2367, column: 17},
-							end: {line: 2372, column: 49}
+							start: {line: 2366, column: 17},
+							end: {line: 2371, column: 49}
 						},
 						_p40)('impossible');
 				}
@@ -26023,28 +26023,24 @@ var _vito$cadet$Main$linkPath = F2(
 			_elm_lang$svg$Svg$line,
 			{
 				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$strokeWidth('4'),
+				_0: _elm_lang$svg$Svg_Attributes$class('graph-edge'),
 				_1: {
 					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$stroke('rgba(0,0,0,.2)'),
+					_0: _elm_lang$svg$Svg_Attributes$x1(
+						_elm_lang$core$Basics$toString(source.x)),
 					_1: {
 						ctor: '::',
-						_0: _elm_lang$svg$Svg_Attributes$x1(
-							_elm_lang$core$Basics$toString(source.x)),
+						_0: _elm_lang$svg$Svg_Attributes$y1(
+							_elm_lang$core$Basics$toString(source.y)),
 						_1: {
 							ctor: '::',
-							_0: _elm_lang$svg$Svg_Attributes$y1(
-								_elm_lang$core$Basics$toString(source.y)),
+							_0: _elm_lang$svg$Svg_Attributes$x2(
+								_elm_lang$core$Basics$toString(target.x)),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$svg$Svg_Attributes$x2(
-									_elm_lang$core$Basics$toString(target.x)),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$svg$Svg_Attributes$y2(
-										_elm_lang$core$Basics$toString(target.y)),
-									_1: {ctor: '[]'}
-								}
+								_0: _elm_lang$svg$Svg_Attributes$y2(
+									_elm_lang$core$Basics$toString(target.y)),
+								_1: {ctor: '[]'}
 							}
 						}
 					}
@@ -28855,23 +28851,6 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 					} : {ctor: '[]'};
 				}
 			}());
-		var projectHalo = A2(
-			_elm_lang$svg$Svg$circle,
-			{
-				ctor: '::',
-				_0: _elm_lang$svg$Svg_Attributes$strokeWidth('2px'),
-				_1: {
-					ctor: '::',
-					_0: _elm_lang$svg$Svg_Attributes$r(
-						_elm_lang$core$Basics$toString(radii.base + 4)),
-					_1: {
-						ctor: '::',
-						_0: _vito$cadet$Main$isInFlight(card) ? _elm_lang$svg$Svg_Attributes$class('project-status in-flight') : (_vito$cadet$Main$isDone(card) ? _elm_lang$svg$Svg_Attributes$class('project-status done') : (_vito$cadet$Main$isIcebox(card) ? _elm_lang$svg$Svg_Attributes$class('project-status icebox') : (_vito$cadet$Main$isBacklog(card) ? _elm_lang$svg$Svg_Attributes$class('project-status backlog') : _elm_lang$svg$Svg_Attributes$class('project-status untriaged')))),
-						_1: {ctor: '[]'}
-					}
-				}
-			},
-			{ctor: '[]'});
 		var anticipateRadius = _elm_lang$core$List$isEmpty(card.labels) ? (radii.base + 5) : (radii.withLabels + 5);
 		var isHighlighted = A2(_elm_lang$core$List$member, card.id, state.anticipatedCards) || _elm_lang$core$Native_Utils.eq(
 			state.highlightedNode,
@@ -28933,12 +28912,8 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 				flair,
 				{
 					ctor: '::',
-					_0: projectHalo,
-					_1: {
-						ctor: '::',
-						_0: anticipatedHalo,
-						_1: {ctor: '[]'}
-					}
+					_0: anticipatedHalo,
+					_1: {ctor: '[]'}
 				}));
 	});
 var _vito$cadet$Main$UnhighlightNode = function (a) {
@@ -29037,6 +29012,23 @@ var _vito$cadet$Main$parseHash = function (hash) {
 var _vito$cadet$Main$viewCardNode = F5(
 	function (card, radii, labels, _p150, state) {
 		var _p151 = _p150;
+		var projectHalo = A2(
+			_elm_lang$svg$Svg$circle,
+			{
+				ctor: '::',
+				_0: _elm_lang$svg$Svg_Attributes$strokeWidth('2px'),
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$svg$Svg_Attributes$r(
+						_elm_lang$core$Basics$toString(radii.base + 4)),
+					_1: {
+						ctor: '::',
+						_0: _vito$cadet$Main$isInFlight(card) ? _elm_lang$svg$Svg_Attributes$class('project-status in-flight') : (_vito$cadet$Main$isDone(card) ? _elm_lang$svg$Svg_Attributes$class('project-status done') : (_vito$cadet$Main$isIcebox(card) ? _elm_lang$svg$Svg_Attributes$class('project-status icebox') : (_vito$cadet$Main$isBacklog(card) ? _elm_lang$svg$Svg_Attributes$class('project-status backlog') : _elm_lang$svg$Svg_Attributes$class('project-status untriaged')))),
+						_1: {ctor: '[]'}
+					}
+				}
+			},
+			{ctor: '[]'});
 		var circleWithNumber = function () {
 			var _p152 = card.state;
 			if (_p152.ctor === 'IssueState') {
@@ -29172,7 +29164,17 @@ var _vito$cadet$Main$viewCardNode = F5(
 					}
 				}
 			},
-			A2(_elm_lang$core$Basics_ops['++'], circleWithNumber, labels));
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				circleWithNumber,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					labels,
+					{
+						ctor: '::',
+						_0: projectHalo,
+						_1: {ctor: '[]'}
+					})));
 	});
 var _vito$cadet$Main$cardNode = F3(
 	function (allLabels, card, context) {
