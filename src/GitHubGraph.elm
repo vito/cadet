@@ -46,6 +46,8 @@ module GitHubGraph
         , addIssueLabels
         , removeIssueLabel
         , setIssueMilestone
+        , addPullRequestLabels
+        , removePullRequestLabel
         , setPullRequestMilestone
         , createRepoMilestone
         , deleteRepoMilestone
@@ -472,6 +474,21 @@ setIssueMilestone token issue mmilestone =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
+        |> HttpBuilder.toTask
+
+
+addPullRequestLabels : Token -> PullRequest -> List String -> Task Http.Error ()
+addPullRequestLabels token issue names =
+    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
+        |> HttpBuilder.toTask
+
+
+removePullRequestLabel : Token -> PullRequest -> String -> Task Http.Error ()
+removePullRequestLabel token issue name =
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
+        |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
 
 

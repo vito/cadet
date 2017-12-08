@@ -10074,6 +10074,64 @@ var _vito$cadet$GitHubGraph$setPullRequestMilestone = F3(
 											'/issues/',
 											_elm_lang$core$Basics$toString(pr.number))))))))));
 	});
+var _vito$cadet$GitHubGraph$removePullRequestLabel = F3(
+	function (token, issue, name) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+				_vito$cadet$GitHubGraph$auth(token),
+				_lukewestby$elm_http_builder$HttpBuilder$delete(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'https://api.github.com/repos/',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							issue.repo.owner,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									issue.repo.name,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/issues/',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											_elm_lang$core$Basics$toString(issue.number),
+											A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))))));
+	});
+var _vito$cadet$GitHubGraph$addPullRequestLabels = F3(
+	function (token, issue, names) {
+		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+				_elm_lang$core$Json_Encode$list(
+					A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$post(
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'https://api.github.com/repos/',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								issue.repo.owner,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'/',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										issue.repo.name,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											'/issues/',
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(issue.number),
+												'/labels'))))))))));
+	});
 var _vito$cadet$GitHubGraph$setIssueMilestone = F3(
 	function (token, issue, mmilestone) {
 		return _lukewestby$elm_http_builder$HttpBuilder$toTask(

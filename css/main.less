@@ -1075,66 +1075,124 @@ svg {
     margin-right: 8px;
   }
 
-  .controls-label {
-    display: inline-block;
-    line-height: 26px;
-    padding: 0 8px;
-    background: @gray;
-    color: @white;
-    border-top-left-radius: 3px;
-    border-bottom-left-radius: 3px;
-  }
-
-  .control-setting {
-    display: inline-block;
-    padding: 0 8px;
-    line-height: 26px;
-    background: @white;
-    color: @gray;
-    cursor: pointer;
-
-    .octicon {
-      margin-right: 5px;
-    }
-
-    &.active {
-      background: @gray-light;
-      color: @white;
-    }
-
-    &:last-child {
-      border-top-right-radius: 3px;
-      border-bottom-right-radius: 3px;
-    }
-  }
-
   .label-selection {
     position: relative;
     display: inline-block;
   }
+}
 
-  .label-filters {
-    position: absolute;
-    top: -408px;
-    width: 200px;
-    height: 400px;
-    background: @white;
-    border-radius: 5px;
-    padding: 8px;
+.label-filters {
+  position: absolute;
+  top: -408px;
+  width: 200px;
+  height: 400px;
+  background: @white;
+  border-radius: 5px;
+  padding: 8px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  visibility: hidden;
+
+  &.visible {
+    visibility: visible;
+  }
+
+  .label-options {
+    overflow: auto;
+    max-height: 350px;
+    margin-bottom: 8px;
+
+    .label {
+      margin: 0;
+      margin-bottom: 5px;
+      vertical-align: initial;
+      cursor: pointer;
+    }
+  }
+
+  input {
+    border: 1px solid @gray-light;
+    padding: 5px;
+    width: 200px - (2 * 8px);
+  }
+}
+
+.controls-label {
+  display: inline-block;
+  line-height: 26px;
+  padding: 0 8px;
+  background: @gray;
+  color: @white;
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+}
+
+.control-setting {
+  display: inline-block;
+  padding: 0 8px;
+  line-height: 26px;
+  background: @white;
+  color: @gray;
+  cursor: pointer;
+
+  .octicon {
+    margin-right: 5px;
+  }
+
+  &.active {
+    background: @gray-light;
+    color: @white;
+  }
+
+  &:last-child {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+}
+
+.sidebar-controls {
+  position: relative;
+
+  .controls-label {
+    background: transparent;
+    color: @gray;
+    padding-right: 0;
+  }
+
+  .control-setting {
+    background: transparent;
+    color: @gray;
+
+    &:hover {
+      color: @white;
+    }
+
+    &.active {
+      color: @white;
+    }
+  }
+
+  .label-operations {
+    transition: max-height 1s ease-in-out;
+    background: @gray-200;
 
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
-    visibility: hidden;
+
+    max-height: 0;
+    overflow: hidden;
 
     &.visible {
-      visibility: visible;
+      max-height: 999px;
     }
 
     .label-options {
       overflow: auto;
       max-height: 350px;
-      margin-bottom: 8px;
+      margin: 8px;
 
       .label {
         margin: 0;
@@ -1144,10 +1202,67 @@ svg {
       }
     }
 
-    input {
-      border: 1px solid @gray-light;
-      padding: 5px;
-      width: 200px - (2 * 8px);
+    input, .buttons {
+      border: 0;
+      background: @white;
+      width: 100%;
+      padding: 8px;
+    }
+
+    .checkbox {
+      margin-right: 8px;
+      border-radius: 3px;
+      background: @white;
+      color: @white;
+      width: 16px;
+      height: 16px;
+      font-size: 13px;
+      display: inline-block;
+
+      &.checked, &.mixed {
+        background: @gray;
+      }
+
+      &.mixed {
+        padding-left: 5px;
+        padding-top: 2px;
+      }
+
+      &.checked {
+        padding-left: 3px;
+        padding-top: 2px;
+      }
+    }
+  }
+
+  .buttons {
+    text-align: right;
+  }
+
+  .button {
+    display: inline-block;
+    color: @white;
+    padding: 0 8px;
+    line-height: 26px;
+    border-radius: 3px;
+    margin-left: 8px;
+    cursor: pointer;
+
+    &.apply {
+      background: @green;
+
+      &:hover {
+        background: @green-600;
+      }
+    }
+
+    &.cancel {
+      background: @white;
+      color: @gray;
+
+      &:hover {
+        background: @gray-200;
+      }
     }
   }
 }

@@ -65,7 +65,14 @@ type alias Model =
     , newMilestoneName : String
     , showLabelFilters : Bool
     , labelSearch : String
+    , showLabelOperations : Bool
+    , cardLabelOperations : Dict String CardLabelOperation
     }
+
+
+type CardLabelOperation
+    = AddLabelOperation
+    | RemoveLabelOperation
 
 
 type alias DataView =
@@ -212,6 +219,12 @@ type Msg
     | SetGraphSort GraphSort
     | ToggleLabelFilters
     | SetLabelSearch String
+    | ToggleLabelOperations
+    | SetLabelOperation String CardLabelOperation
+    | UnsetLabelOperation String
+    | ApplyLabelOperations
+    | IssueLabelsChanged GitHubGraph.Issue (Result Http.Error ())
+    | PRLabelsChanged GitHubGraph.PullRequest (Result Http.Error ())
 
 
 type Page
@@ -449,6 +462,8 @@ init config =
       , newMilestoneName = ""
       , showLabelFilters = False
       , labelSearch = ""
+      , showLabelOperations = False
+      , cardLabelOperations = Dict.empty
       }
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -1007,11 +1022,20 @@ update msg model =
                             Nothing ->
                                 ( model, Cmd.none )
 
-        IssueMilestoneChanged card (Ok ()) ->
-            ( { model | milestoneDrag = Drag.land model.milestoneDrag }, Backend.refreshIssue card.id IssueRefreshed )
+        IssueMilestoneChanged issue (Ok ()) ->
+            ( { model | milestoneDrag = Drag.land model.milestoneDrag }
+            , Backend.refreshIssue issue.id IssueRefreshed
+            )
 
-        IssueMilestoneChanged card (Err msg) ->
+        IssueMilestoneChanged issue (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
+                ( model, Cmd.none )
+
+        IssueLabelsChanged card (Ok ()) ->
+            ( model, Backend.refreshIssue card.id IssueRefreshed )
+
+        IssueLabelsChanged card (Err msg) ->
+            flip always (Debug.log "failed to change labels" msg) <|
                 ( model, Cmd.none )
 
         IssueRefreshed (Ok issue) ->
@@ -1026,11 +1050,22 @@ update msg model =
             flip always (Debug.log "failed to refresh issue" msg) <|
                 ( model, Cmd.none )
 
-        PRMilestoneChanged card (Ok ()) ->
-            ( { model | milestoneDrag = Drag.land model.milestoneDrag }, Backend.refreshPR card.id PRRefreshed )
+        PRMilestoneChanged pr (Ok ()) ->
+            ( { model | milestoneDrag = Drag.land model.milestoneDrag }
+            , Backend.refreshPR pr.id PRRefreshed
+            )
 
-        PRMilestoneChanged card (Err msg) ->
+        PRMilestoneChanged pr (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
+                ( model, Cmd.none )
+
+        PRLabelsChanged pr (Ok ()) ->
+            ( model
+            , Backend.refreshPR pr.id PRRefreshed
+            )
+
+        PRLabelsChanged pr (Err msg) ->
+            flip always (Debug.log "failed to change labels" msg) <|
                 ( model, Cmd.none )
 
         PRRefreshed (Ok pr) ->
@@ -1066,15 +1101,69 @@ update msg model =
         SetLabelSearch string ->
             ( { model | labelSearch = string }, Cmd.none )
 
+        ToggleLabelOperations ->
+            ( computeDataView { model | showLabelOperations = not model.showLabelOperations }, Cmd.none )
+
+        SetLabelOperation name op ->
+            ( { model | cardLabelOperations = Dict.insert name op model.cardLabelOperations }, Cmd.none )
+
+        UnsetLabelOperation name ->
+            ( { model | cardLabelOperations = Dict.remove name model.cardLabelOperations }, Cmd.none )
+
+        ApplyLabelOperations ->
+            let
+                cards =
+                    List.filterMap (flip Dict.get model.allCards) model.selectedCards
+
+                ( addPairs, removePairs ) =
+                    Dict.toList model.cardLabelOperations
+                        |> List.partition ((==) AddLabelOperation << Tuple.second)
+
+                labelsToAdd =
+                    List.map Tuple.first addPairs
+
+                labelsToRemove =
+                    List.map Tuple.first removePairs
+
+                adds =
+                    List.map
+                        (\card ->
+                            case card.content of
+                                GitHubGraph.IssueCardContent issue ->
+                                    addIssueLabels model issue labelsToAdd
+
+                                GitHubGraph.PullRequestCardContent pr ->
+                                    addPullRequestLabels model pr labelsToAdd
+                        )
+                        cards
+
+                removals =
+                    List.concatMap
+                        (\name ->
+                            List.filterMap
+                                (\card ->
+                                    if hasLabel model name card then
+                                        case card.content of
+                                            GitHubGraph.IssueCardContent issue ->
+                                                Just (removeIssueLabel model issue name)
+
+                                            GitHubGraph.PullRequestCardContent pr ->
+                                                Just (removePullRequestLabel model pr name)
+                                    else
+                                        Nothing
+                                )
+                                cards
+                        )
+                        labelsToRemove
+            in
+                ( model, Cmd.batch (adds ++ removals) )
+
 
 computeDataView : Model -> Model
-computeDataView model =
+computeDataView origModel =
     let
         add x =
             Just << Maybe.withDefault [ x ] << Maybe.map ((::) x)
-
-        dataView =
-            model.dataView
 
         groupRepoLabels =
             Dict.foldl
@@ -1085,6 +1174,15 @@ computeDataView model =
                         repo.labels
                 )
                 Dict.empty
+
+        dataView =
+            origModel.dataView
+
+        model =
+            if origModel.showLabelOperations then
+                { origModel | dataView = { dataView | reposByLabel = groupRepoLabels origModel.data.repos } }
+            else
+                origModel
     in
         case model.page of
             MilestonesPage ->
@@ -1254,7 +1352,8 @@ view model =
                             viewMilestonesPage model
                     ]
                 , Html.div [ HA.class "page-sidebar" ]
-                    [ if List.isEmpty sidebarCards then
+                    [ viewSidebarControls model
+                    , if List.isEmpty sidebarCards then
                         Html.div [ HA.class "no-cards" ]
                             [ Html.text "no cards selected" ]
                       else
@@ -1262,6 +1361,74 @@ view model =
                     ]
                 ]
             , viewNavBar model
+            ]
+
+
+viewSidebarControls : Model -> Html Msg
+viewSidebarControls model =
+    let
+        viewLabelOperation name color =
+            let
+                ( checkClass, clickOperation ) =
+                    case Dict.get name model.cardLabelOperations of
+                        Just AddLabelOperation ->
+                            ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
+
+                        Just RemoveLabelOperation ->
+                            ( "unhecked octicon", UnsetLabelOperation name )
+
+                        Nothing ->
+                            let
+                                cards =
+                                    List.filterMap (flip Dict.get model.allCards) model.selectedCards
+                            in
+                                if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
+                                    ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
+                                else if List.any (hasLabel model name) cards then
+                                    ( "mixed octicon octicon-dash", SetLabelOperation name AddLabelOperation )
+                                else
+                                    ( "unchecked octicon", SetLabelOperation name AddLabelOperation )
+            in
+                Html.div [ HA.class "label-operation" ]
+                    [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ] []
+                    , Html.span
+                        [ HA.class "label"
+                        , labelColorStyle color
+                        , HE.onClick (AddFilter (HasLabelFilter name color))
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-tag" ] []
+                        , Html.text name
+                        ]
+                    ]
+
+        allLabelOperations =
+            Dict.keys model.dataView.reposByLabel
+                |> List.filter (String.contains model.labelSearch << Tuple.first)
+                |> List.map (uncurry viewLabelOperation)
+    in
+        Html.div [ HA.class "sidebar-controls" ]
+            [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
+                , HE.onClick ToggleLabelOperations
+                ]
+                [ Html.span [ HA.class "octicon octicon-tag" ] []
+                , Html.text "labels"
+                ]
+            , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
+                [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
+                , Html.div [ HA.class "label-options" ] allLabelOperations
+                , Html.div [ HA.class "buttons" ]
+                    [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
+                        [ Html.span [ HA.class "octicon octicon-x" ] []
+                        , Html.text "cancel"
+                        ]
+                    , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
+                        [ Html.span [ HA.class "octicon octicon-check" ] []
+                        , Html.text "apply"
+                        ]
+                    ]
+                ]
             ]
 
 
@@ -2669,6 +2836,16 @@ isMerged card =
     card.state == PullRequestState (GitHubGraph.PullRequestStateMerged)
 
 
+hasLabel : Model -> String -> Card -> Bool
+hasLabel model name card =
+    let
+        matchingLabels =
+            model.allLabels
+                |> Dict.filter (\_ l -> l.name == name)
+    in
+        List.any (flip Dict.member matchingLabels) card.labels
+
+
 hasLabelAndColor : Model -> String -> String -> Card -> Bool
 hasLabelAndColor model name color card =
     let
@@ -3232,6 +3409,50 @@ setPRMilestone model pr mmilestone =
         Just { token } ->
             GitHubGraph.setPullRequestMilestone token pr mmilestone
                 |> Task.attempt (PRMilestoneChanged pr)
+
+        Nothing ->
+            Cmd.none
+
+
+addIssueLabels : Model -> GitHubGraph.Issue -> List String -> Cmd Msg
+addIssueLabels model issue labels =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.addIssueLabels token issue labels
+                |> Task.attempt (IssueLabelsChanged issue)
+
+        Nothing ->
+            Cmd.none
+
+
+removeIssueLabel : Model -> GitHubGraph.Issue -> String -> Cmd Msg
+removeIssueLabel model issue label =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.removeIssueLabel token issue label
+                |> Task.attempt (IssueLabelsChanged issue)
+
+        Nothing ->
+            Cmd.none
+
+
+addPullRequestLabels : Model -> GitHubGraph.PullRequest -> List String -> Cmd Msg
+addPullRequestLabels model issue labels =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.addPullRequestLabels token issue labels
+                |> Task.attempt (PRLabelsChanged issue)
+
+        Nothing ->
+            Cmd.none
+
+
+removePullRequestLabel : Model -> GitHubGraph.PullRequest -> String -> Cmd Msg
+removePullRequestLabel model issue label =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.removePullRequestLabel token issue label
+                |> Task.attempt (PRLabelsChanged issue)
 
         Nothing ->
             Cmd.none
