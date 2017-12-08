@@ -13197,30 +13197,31 @@ var _vito$cadet$Backend$encodeActorEvent = function (_p0) {
 			}
 		});
 };
-var _vito$cadet$Backend$refreshPR = F2(
-	function (id, f) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			f,
-			_lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$GitHubGraph$decodePullRequest),
-					_lukewestby$elm_http_builder$HttpBuilder$get(
-						A2(_elm_lang$core$Basics_ops['++'], '/refresh?pr=', id)))));
-	});
-var _vito$cadet$Backend$refreshIssue = F2(
-	function (id, f) {
-		return A2(
-			_elm_lang$core$Task$attempt,
-			f,
-			_lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$GitHubGraph$decodeIssue),
-					_lukewestby$elm_http_builder$HttpBuilder$get(
-						A2(_elm_lang$core$Basics_ops['++'], '/refresh?issue=', id)))));
-	});
+var _vito$cadet$Backend$expectJsonWithIndex = function (decoder) {
+	return _elm_lang$http$Http$expectStringResponse(
+		function (_p2) {
+			var _p3 = _p2;
+			var _p4 = {
+				ctor: '_Tuple2',
+				_0: A2(_elm_lang$core$Json_Decode$decodeString, decoder, _p3.body),
+				_1: A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$String$toInt,
+					A2(_elm_lang$core$Dict$get, 'x-data-index', _p3.headers))
+			};
+			if (_p4._0.ctor === 'Ok') {
+				if ((_p4._1.ctor === 'Just') && (_p4._1._0.ctor === 'Ok')) {
+					return _elm_lang$core$Result$Ok(
+						{index: _p4._1._0._0, value: _p4._0._0});
+				} else {
+					return _elm_lang$core$Result$Ok(
+						{index: 1, value: _p4._0._0});
+				}
+			} else {
+				return _elm_lang$core$Result$Err(_p4._0._0);
+			}
+		});
+};
 var _vito$cadet$Backend$refreshRepo = F2(
 	function (repo, f) {
 		return A2(
@@ -13229,7 +13230,7 @@ var _vito$cadet$Backend$refreshRepo = F2(
 			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$GitHubGraph$decodeRepo),
+					_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$GitHubGraph$decodeRepo),
 					_lukewestby$elm_http_builder$HttpBuilder$get(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
@@ -13239,7 +13240,35 @@ var _vito$cadet$Backend$refreshRepo = F2(
 								repo.owner,
 								A2(_elm_lang$core$Basics_ops['++'], '/', repo.name)))))));
 	});
+var _vito$cadet$Backend$refreshIssue = F2(
+	function (id, f) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			f,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$GitHubGraph$decodeIssue),
+					_lukewestby$elm_http_builder$HttpBuilder$get(
+						A2(_elm_lang$core$Basics_ops['++'], '/refresh?issue=', id)))));
+	});
+var _vito$cadet$Backend$refreshPR = F2(
+	function (id, f) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			f,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$GitHubGraph$decodePullRequest),
+					_lukewestby$elm_http_builder$HttpBuilder$get(
+						A2(_elm_lang$core$Basics_ops['++'], '/refresh?pr=', id)))));
+	});
 var _vito$cadet$Backend$emptyData = {repos: _elm_lang$core$Dict$empty, issues: _elm_lang$core$Dict$empty, prs: _elm_lang$core$Dict$empty, projects: _elm_lang$core$Dict$empty, columnCards: _elm_lang$core$Dict$empty, references: _elm_lang$core$Dict$empty, actors: _elm_lang$core$Dict$empty};
+var _vito$cadet$Backend$Indexed = F2(
+	function (a, b) {
+		return {index: a, value: b};
+	});
 var _vito$cadet$Backend$Data = F7(
 	function (a, b, c, d, e, f, g) {
 		return {repos: a, issues: b, prs: c, projects: d, columnCards: e, references: f, actors: g};
@@ -13319,7 +13348,7 @@ var _vito$cadet$Backend$refreshCards = F2(
 			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeCards),
+					_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$Backend$decodeCards),
 					_lukewestby$elm_http_builder$HttpBuilder$get(
 						A2(_elm_lang$core$Basics_ops['++'], '/refresh?columnCards=', col)))));
 	});
@@ -13375,7 +13404,7 @@ var _vito$cadet$Backend$fetchData = function (f) {
 		_lukewestby$elm_http_builder$HttpBuilder$toTask(
 			A2(
 				_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-				_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
+				_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$Backend$decodeData),
 				_lukewestby$elm_http_builder$HttpBuilder$get('/data'))));
 };
 var _vito$cadet$Backend$pollData = function (f) {
@@ -13388,7 +13417,7 @@ var _vito$cadet$Backend$pollData = function (f) {
 				60 * _elm_lang$core$Time$second,
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					_elm_lang$http$Http$expectJson(_vito$cadet$Backend$decodeData),
+					_vito$cadet$Backend$expectJsonWithIndex(_vito$cadet$Backend$decodeData),
 					_lukewestby$elm_http_builder$HttpBuilder$get('/poll')))));
 };
 

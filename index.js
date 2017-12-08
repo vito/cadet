@@ -20,6 +20,9 @@ const worker = Elm.Main.worker({
 const app = express()
 const port = process.env.PORT || 8000;
 
+// mononically increasing number for every update made to the data
+var dataIndex = 1;
+
 const data = {
   // repos by id
   repos: {},
@@ -78,6 +81,7 @@ function popRefresh(field, id, data) {
   var res;
   while (res = waiting.pop()) {
     console.log("sending refreshed data for", field, id);
+    res.set('X-Data-Index', dataIndex.toString());
     res.send(JSON.stringify(data));
   }
 }
@@ -91,6 +95,7 @@ function queuePoll(res) {
 function popPoll() {
   var res;
   while (res = polling.pop()) {
+    res.set('X-Data-Index', dataIndex.toString());
     res.send(JSON.stringify(data));
   }
 }
@@ -101,6 +106,7 @@ worker.ports.setRepos.subscribe(function(repos) {
   for (var i = 0; i < repos.length; i++) {
     var repo = repos[i];
     data.repos[repo.id] = repo;
+    dataIndex++;
     popRefresh("repo", repo.owner+"/"+repo.name, repo);
     popRefresh("repo", repo.id, repo);
   }
@@ -110,6 +116,7 @@ worker.ports.setRepos.subscribe(function(repos) {
 
 worker.ports.setRepo.subscribe(function(repo) {
   data.repos[repo.id] = repo;
+  dataIndex++;
   popRefresh("repo", repo.owner+"/"+repo.name, repo);
   popRefresh("repo", repo.id, repo);
   popPoll();
@@ -119,6 +126,7 @@ worker.ports.setProjects.subscribe(function(projects) {
   for (var i = 0; i < projects.length; i++) {
     var project = projects[i];
     data.projects[project.id] = project;
+    dataIndex++;
     popRefresh("project", project.name, project);
     popRefresh("project", project.id, project);
   }
@@ -130,6 +138,7 @@ worker.ports.setIssues.subscribe(function(issues) {
   for (var i = 0; i < issues.length; i++) {
     var issue = issues[i];
     data.issues[issue.id] = issue;
+    dataIndex++;
     popRefresh("issue", issue.id, issue);
   }
 
@@ -138,6 +147,7 @@ worker.ports.setIssues.subscribe(function(issues) {
 
 worker.ports.setIssue.subscribe(function(issue) {
   data.issues[issue.id] = issue;
+  dataIndex++;
   popRefresh("issue", issue.id, issue);
   popPoll();
 });
@@ -146,6 +156,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
   for (var i = 0; i < prs.length; i++) {
     var pr = prs[i];
     data.prs[pr.id] = pr;
+    dataIndex++;
     popRefresh("pr", pr.id, pr);
   }
 
@@ -154,6 +165,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
 
 worker.ports.setPullRequest.subscribe(function(pr) {
   data.prs[pr.id] = pr;
+  dataIndex++;
   popRefresh("pr", pr.id, pr);
   popPoll();
 });
@@ -162,6 +174,7 @@ worker.ports.setReferences.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   data.references[id] = val;
+  dataIndex++;
   popPoll();
 });
 
@@ -169,6 +182,7 @@ worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   data.actors[id] = val;
+  dataIndex++;
   popPoll();
 });
 
@@ -183,6 +197,7 @@ worker.ports.setCards.subscribe(function(args) {
       var issue = card.content.issue;
       if (issue) {
         data.issues[issue.id] = issue;
+        dataIndex++;
         popRefresh("issue", issue.id, issue);
 
         newColumnCards.push({
@@ -194,6 +209,7 @@ worker.ports.setCards.subscribe(function(args) {
       var pr = card.content.pull_request;
       if (pr) {
         data.prs[pr.id] = pr;
+        dataIndex++;
         popRefresh("pr", pr.id, pr);
 
         newColumnCards.push({
@@ -210,6 +226,7 @@ worker.ports.setCards.subscribe(function(args) {
   }
 
   data.columnCards[id] = newColumnCards;
+  dataIndex++;
   popRefresh("columnCards", id, newColumnCards);
   popPoll();
 });
@@ -268,6 +285,7 @@ app.get('/me', (req, res) => {
 })
 
 app.get('/data', (req, res) => {
+  res.set('X-Data-Index', dataIndex.toString());
   res.send(JSON.stringify(data))
 })
 

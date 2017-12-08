@@ -47,6 +47,7 @@ type alias Model =
     , projectDrag : Drag.Model CardSource CardDestination Msg
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
+    , dataIndex : Int
     , dataView : DataView
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
@@ -172,9 +173,9 @@ type Msg
     | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ID)
-    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (List Backend.ColumnCard))
+    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
-    | DataFetched (Result Http.Error Data)
+    | DataFetched (Result Http.Error (Backend.Indexed Data))
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
     | HighlightNode GitHubGraph.ID
@@ -198,7 +199,7 @@ type Msg
     | RandomizeNewLabelColor
     | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result Http.Error ())
-    | RepoRefreshed (Result Http.Error GitHubGraph.Repo)
+    | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | AcceptCard Card
     | RejectCard Card
     | CardAccepted (List GitHubGraph.ID) (Result String ())
@@ -212,8 +213,8 @@ type Msg
     | SetCardMilestone Card (Maybe String)
     | IssueMilestoneChanged GitHubGraph.Issue (Result Http.Error ())
     | PRMilestoneChanged GitHubGraph.PullRequest (Result Http.Error ())
-    | IssueRefreshed (Result Http.Error GitHubGraph.Issue)
-    | PRRefreshed (Result Http.Error GitHubGraph.PullRequest)
+    | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
+    | PRRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.PullRequest))
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
@@ -436,6 +437,7 @@ init config =
       , page = GlobalGraphPage
       , me = Nothing
       , data = Backend.emptyData
+      , dataIndex = 0
       , dataView =
             { cardsByMilestone = Dict.empty
             , allMilestones = []
@@ -613,16 +615,16 @@ update msg model =
             flip always (Debug.log "failed to move card" msg) <|
                 ( model, Cmd.none )
 
-        CardsFetched cb col (Ok cards) ->
+        CardsFetched cb col (Ok { index, value }) ->
             let
                 data =
                     model.data
 
                 newData =
-                    { data | columnCards = Dict.insert col cards data.columnCards }
+                    { data | columnCards = Dict.insert col value data.columnCards }
             in
                 cb <|
-                    computeDataView { model | data = newData }
+                    computeDataView { model | data = newData, dataIndex = max index model.dataIndex }
 
         CardsFetched _ col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
@@ -702,29 +704,34 @@ update msg model =
             flip always (Debug.log "error fetching self" msg) <|
                 ( model, Cmd.none )
 
-        DataFetched (Ok data) ->
-            let
-                issueCards =
-                    Dict.map (\_ -> issueCard) data.issues
+        DataFetched (Ok { index, value }) ->
+            ( if index > model.dataIndex then
+                let
+                    issueCards =
+                        Dict.map (\_ -> issueCard) value.issues
 
-                prCards =
-                    Dict.map (\_ -> prCard) data.prs
+                    prCards =
+                        Dict.map (\_ -> prCard) value.prs
 
-                allCards =
-                    Dict.union issueCards prCards
+                    allCards =
+                        Dict.union issueCards prCards
 
-                allLabels =
-                    Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty data.repos
-            in
-                ( computeGraph <|
-                    computeDataView
-                        { model
-                            | data = data
-                            , allCards = allCards
-                            , allLabels = allLabels
-                        }
-                , Backend.pollData DataFetched
-                )
+                    allLabels =
+                        Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty value.repos
+                in
+                    computeGraph <|
+                        computeDataView
+                            { model
+                                | data = value
+                                , dataIndex = index
+                                , allCards = allCards
+                                , allLabels = allLabels
+                            }
+              else
+                flip always (Debug.log "ignoring stale index" ( index, model.dataIndex )) <|
+                    model
+            , Backend.pollData DataFetched
+            )
 
         DataFetched (Err msg) ->
             flip always (Debug.log "error fetching data" msg) <|
@@ -877,15 +884,16 @@ update msg model =
             flip always (Debug.log "failed to modify labels" msg) <|
                 ( model, Cmd.none )
 
-        RepoRefreshed (Ok repo) ->
+        RepoRefreshed (Ok { index, value }) ->
             let
                 data =
                     model.data
             in
                 ( computeDataView
                     { model
-                        | data = { data | repos = Dict.insert repo.id repo data.repos }
-                        , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels repo.labels
+                        | data = { data | repos = Dict.insert value.id value data.repos }
+                        , dataIndex = max index model.dataIndex
+                        , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels value.labels
                     }
                 , Cmd.none
                 )
@@ -1038,10 +1046,11 @@ update msg model =
             flip always (Debug.log "failed to change labels" msg) <|
                 ( model, Cmd.none )
 
-        IssueRefreshed (Ok issue) ->
+        IssueRefreshed (Ok { index, value }) ->
             ( { model
                 | milestoneDrag = Drag.complete model.milestoneDrag
-                , allCards = Dict.insert issue.id (issueCard issue) model.allCards
+                , allCards = Dict.insert value.id (issueCard value) model.allCards
+                , dataIndex = max index model.dataIndex
               }
             , Cmd.none
             )
@@ -1068,10 +1077,11 @@ update msg model =
             flip always (Debug.log "failed to change labels" msg) <|
                 ( model, Cmd.none )
 
-        PRRefreshed (Ok pr) ->
+        PRRefreshed (Ok { index, value }) ->
             ( { model
                 | milestoneDrag = Drag.complete model.milestoneDrag
-                , allCards = Dict.insert pr.id (prCard pr) model.allCards
+                , allCards = Dict.insert value.id (prCard value) model.allCards
+                , dataIndex = max index model.dataIndex
               }
             , Cmd.none
             )

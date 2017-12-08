@@ -1,6 +1,7 @@
 module Backend
     exposing
-        ( Data
+        ( Indexed
+        , Data
         , Me
         , User
         , ActorEvent
@@ -27,6 +28,12 @@ import Task
 import Http
 import Date exposing (Date)
 import Time
+
+
+type alias Indexed a =
+    { index : Int
+    , value : a
+    }
 
 
 type alias Data =
@@ -79,51 +86,66 @@ emptyData =
     }
 
 
-fetchData : (Result Http.Error Data -> msg) -> Cmd msg
+expectJsonWithIndex : JD.Decoder a -> Http.Expect (Indexed a)
+expectJsonWithIndex decoder =
+    Http.expectStringResponse <|
+        \{ body, headers } ->
+            case ( JD.decodeString decoder body, Maybe.map String.toInt (Dict.get "x-data-index" headers) ) of
+                ( Ok value, Just (Ok index) ) ->
+                    Ok { index = index, value = value }
+
+                ( Ok value, _ ) ->
+                    Ok { index = 1, value = value }
+
+                ( Err msg, _ ) ->
+                    Err msg
+
+
+fetchData : (Result Http.Error (Indexed Data) -> msg) -> Cmd msg
 fetchData f =
     HttpBuilder.get "/data"
-        |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeData)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-pollData : (Result Http.Error Data -> msg) -> Cmd msg
+pollData : (Result Http.Error (Indexed Data) -> msg) -> Cmd msg
 pollData f =
     HttpBuilder.get "/poll"
-        |> HttpBuilder.withExpect (Http.expectJson decodeData)
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeData)
         |> HttpBuilder.withTimeout (60 * Time.second)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshCards : GitHubGraph.ID -> (Result Http.Error (List ColumnCard) -> msg) -> Cmd msg
+refreshCards : GitHubGraph.ID -> (Result Http.Error (Indexed (List ColumnCard)) -> msg) -> Cmd msg
 refreshCards col f =
     HttpBuilder.get ("/refresh?columnCards=" ++ col)
-        |> HttpBuilder.withExpect (Http.expectJson decodeCards)
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeCards)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error GitHubGraph.Repo -> msg) -> Cmd msg
+refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error (Indexed GitHubGraph.Repo) -> msg) -> Cmd msg
 refreshRepo repo f =
     HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
-        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodeRepo)
+        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodeRepo)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshIssue : GitHubGraph.ID -> (Result Http.Error GitHubGraph.Issue -> msg) -> Cmd msg
+refreshIssue : GitHubGraph.ID -> (Result Http.Error (Indexed GitHubGraph.Issue) -> msg) -> Cmd msg
 refreshIssue id f =
     HttpBuilder.get ("/refresh?issue=" ++ id)
-        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodeIssue)
+        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodeIssue)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshPR : GitHubGraph.ID -> (Result Http.Error GitHubGraph.PullRequest -> msg) -> Cmd msg
+refreshPR : GitHubGraph.ID -> (Result Http.Error (Indexed GitHubGraph.PullRequest) -> msg) -> Cmd msg
 refreshPR id f =
     HttpBuilder.get ("/refresh?pr=" ++ id)
-        |> HttpBuilder.withExpect (Http.expectJson GitHubGraph.decodePullRequest)
+        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodePullRequest)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
