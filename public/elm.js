@@ -25424,8 +25424,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3157, column: 25},
-							end: {line: 3171, column: 57}
+							start: {line: 3167, column: 25},
+							end: {line: 3181, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25535,8 +25535,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3075, column: 17},
-					end: {line: 3083, column: 50}
+					start: {line: 3085, column: 17},
+					end: {line: 3093, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25544,8 +25544,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3073, column: 9},
-				end: {line: 3086, column: 42}
+				start: {line: 3083, column: 9},
+				end: {line: 3096, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25933,8 +25933,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2533, column: 17},
-							end: {line: 2538, column: 49}
+							start: {line: 2543, column: 17},
+							end: {line: 2548, column: 49}
 						},
 						_p41)('impossible');
 				}
@@ -27392,7 +27392,7 @@ var _vito$cadet$Main$viewSidebarControls = function (model) {
 					}
 				});
 		});
-	var allLabelOperations = A2(
+	var labelOptions = A2(
 		_elm_lang$core$List$map,
 		_elm_lang$core$Basics$uncurry(viewLabelOperation),
 		A2(
@@ -27508,7 +27508,7 @@ var _vito$cadet$Main$viewSidebarControls = function (model) {
 										_0: _elm_lang$html$Html_Attributes$class('label-options'),
 										_1: {ctor: '[]'}
 									},
-									allLabelOperations),
+									labelOptions),
 								_1: {
 									ctor: '::',
 									_0: A2(
@@ -30451,8 +30451,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2091, column: 17},
-									end: {line: 2098, column: 70}
+									start: {line: 2101, column: 17},
+									end: {line: 2108, column: 70}
 								},
 								_p186)('impossible: content has no card');
 						}
@@ -30467,8 +30467,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2084, column: 9},
-				end: {line: 2101, column: 41}
+				start: {line: 2094, column: 9},
+				end: {line: 2111, column: 41}
 			},
 			_p185)('impossible');
 	});
@@ -31911,10 +31911,12 @@ var _vito$cadet$Main$update = F2(
 				case 'ToggleLabelOperations':
 					return {
 						ctor: '_Tuple2',
-						_0: _vito$cadet$Main$computeDataView(
+						_0: model.showLabelOperations ? _elm_lang$core$Native_Utils.update(
+							model,
+							{showLabelOperations: false, labelSearch: '', cardLabelOperations: _elm_lang$core$Dict$empty}) : _vito$cadet$Main$computeDataView(
 							_elm_lang$core$Native_Utils.update(
 								model,
-								{showLabelOperations: !model.showLabelOperations})),
+								{showLabelOperations: true})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'SetLabelOperation':

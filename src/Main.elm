@@ -1102,7 +1102,16 @@ update msg model =
             ( { model | labelSearch = string }, Cmd.none )
 
         ToggleLabelOperations ->
-            ( computeDataView { model | showLabelOperations = not model.showLabelOperations }, Cmd.none )
+            ( if model.showLabelOperations then
+                { model
+                    | showLabelOperations = False
+                    , labelSearch = ""
+                    , cardLabelOperations = Dict.empty
+                }
+              else
+                computeDataView { model | showLabelOperations = True }
+            , Cmd.none
+            )
 
         SetLabelOperation name op ->
             ( { model | cardLabelOperations = Dict.insert name op model.cardLabelOperations }, Cmd.none )
@@ -1401,7 +1410,7 @@ viewSidebarControls model =
                         ]
                     ]
 
-        allLabelOperations =
+        labelOptions =
             Dict.keys model.dataView.reposByLabel
                 |> List.filter (String.contains model.labelSearch << Tuple.first)
                 |> List.map (uncurry viewLabelOperation)
@@ -1417,7 +1426,7 @@ viewSidebarControls model =
                 ]
             , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
                 [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
-                , Html.div [ HA.class "label-options" ] allLabelOperations
+                , Html.div [ HA.class "label-options" ] labelOptions
                 , Html.div [ HA.class "buttons" ]
                     [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
                         [ Html.span [ HA.class "octicon octicon-x" ] []
