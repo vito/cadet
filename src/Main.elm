@@ -1221,7 +1221,22 @@ view model =
     in
         Html.div [ HA.class "cadet" ]
             [ Html.div [ HA.class "main-page" ]
-                [ Html.div [ HA.class "page-content" ]
+                [ Html.div
+                    [ HA.classList
+                        [ ( "page-content", True )
+                        , ( "contains-graph"
+                          , case model.page of
+                                GlobalGraphPage ->
+                                    True
+
+                                ProjectPage id ->
+                                    True
+
+                                _ ->
+                                    False
+                          )
+                        ]
+                    ]
                     [ case model.page of
                         GlobalGraphPage ->
                             viewSpatialGraph model model.cardGraphs
@@ -2105,20 +2120,13 @@ graphUserActivityCompare model login a b =
             Graph.nodes g
                 |> List.map
                     (\n ->
-                        let
-                            card =
-                                n.label.value.card
-
-                            activity =
-                                Maybe.withDefault [] (Dict.get card.id model.data.actors)
-                        in
-                            activity
-                                |> List.reverse
-                                |> List.filter (.actor >> .login >> (==) login)
-                                |> List.map .createdAt
-                                |> List.head
-                                |> Maybe.map Date.toTime
-                                |> Maybe.withDefault 0
+                        Maybe.withDefault [] (Dict.get n.label.value.card.id model.data.actors)
+                            |> List.reverse
+                            |> List.filter (.actor >> .login >> (==) login)
+                            |> List.map .createdAt
+                            |> List.head
+                            |> Maybe.map Date.toTime
+                            |> Maybe.withDefault 0
                     )
                 |> List.maximum
                 |> Maybe.withDefault 0
@@ -2129,7 +2137,7 @@ graphUserActivityCompare model login a b =
 graphAllActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
 graphAllActivityCompare model a b =
     let
-        latestMeActivity g =
+        latestActivity g =
             Graph.nodes g
                 |> List.map
                     (\n ->
@@ -2143,7 +2151,7 @@ graphAllActivityCompare model a b =
                 |> List.maximum
                 |> Maybe.withDefault 0
     in
-        compare (latestMeActivity a.graph) (latestMeActivity b.graph)
+        compare (latestActivity a.graph) (latestActivity b.graph)
 
 
 viewGraph : Model -> ForceGraph (Node CardNodeState) -> Html Msg

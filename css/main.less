@@ -48,6 +48,10 @@ a {
     flex-grow: 1;
     position: relative;
     display: flex;
+
+    &.contains-graph {
+      background: @gray-300;
+    }
   }
 
   .page-sidebar {
@@ -119,6 +123,9 @@ a {
   display: inline-block;
   margin-right: 10px;
   margin-top: -2px;
+
+  // prevent broken image from going out of bounds
+  overflow: hidden;
 }
 
 .card-search {
@@ -523,6 +530,7 @@ a {
   position: relative;
   background: @gray-300;
   flex-grow: 1;
+  overflow-y: auto;
 
   .drop-area {
     height: auto !important;
@@ -545,6 +553,10 @@ a {
 }
 
 .projects {
+  .project {
+    margin-bottom: @card-margin * 4;
+  }
+
   ::-webkit-scrollbar {
     width: 15px;
   }
@@ -564,8 +576,6 @@ a {
 }
 
 .project {
-  margin-bottom: @card-margin * 4;
-
   h4 {
     color: white;
     font-weight: bold;
@@ -650,6 +660,8 @@ a {
     flex-direction: column;
     background: @gray;
     flex-grow: 0;
+    flex-shrink: 0;
+    overflow-y: auto;
 
     .column {
       margin-right: 0;
@@ -678,10 +690,9 @@ a {
 }
 
 .spatial-graph {
-  background: @gray-300;
   text-align: center;
   position: relative;
-  flex-grow: 1;
+  overflow-y: auto;
 }
 
 .dragging {

@@ -25366,8 +25366,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2973, column: 25},
-							end: {line: 2987, column: 57}
+							start: {line: 2981, column: 25},
+							end: {line: 2995, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -25477,8 +25477,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 2891, column: 17},
-					end: {line: 2899, column: 50}
+					start: {line: 2899, column: 17},
+					end: {line: 2907, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -25486,8 +25486,8 @@ var _vito$cadet$Main$colorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2889, column: 9},
-				end: {line: 2902, column: 42}
+				start: {line: 2897, column: 9},
+				end: {line: 2910, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -25861,8 +25861,8 @@ var _vito$cadet$Main$nodeFlairArcs = F2(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2359, column: 17},
-							end: {line: 2364, column: 49}
+							start: {line: 2367, column: 17},
+							end: {line: 2372, column: 49}
 						},
 						_p40)('impossible');
 				}
@@ -26220,7 +26220,7 @@ var _vito$cadet$Main$viewGraph = F2(
 	});
 var _vito$cadet$Main$graphAllActivityCompare = F3(
 	function (model, a, b) {
-		var latestMeActivity = function (g) {
+		var latestActivity = function (g) {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				0,
@@ -26250,8 +26250,8 @@ var _vito$cadet$Main$graphAllActivityCompare = F3(
 		};
 		return A2(
 			_elm_lang$core$Basics$compare,
-			latestMeActivity(a.graph),
-			latestMeActivity(b.graph));
+			latestActivity(a.graph),
+			latestActivity(b.graph));
 	});
 var _vito$cadet$Main$graphUserActivityCompare = F4(
 	function (model, login, a, b) {
@@ -26263,11 +26263,6 @@ var _vito$cadet$Main$graphUserActivityCompare = F4(
 					A2(
 						_elm_lang$core$List$map,
 						function (n) {
-							var card = n.label.value.card;
-							var activity = A2(
-								_elm_lang$core$Maybe$withDefault,
-								{ctor: '[]'},
-								A2(_elm_lang$core$Dict$get, card.id, model.data.actors));
 							return A2(
 								_elm_lang$core$Maybe$withDefault,
 								0,
@@ -26296,7 +26291,11 @@ var _vito$cadet$Main$graphUserActivityCompare = F4(
 																return _.actor;
 															}(_p67)));
 												},
-												_elm_lang$core$List$reverse(activity))))));
+												_elm_lang$core$List$reverse(
+													A2(
+														_elm_lang$core$Maybe$withDefault,
+														{ctor: '[]'},
+														A2(_elm_lang$core$Dict$get, n.label.value.card.id, model.data.actors))))))));
 						},
 						_elm_community$graph$Graph$nodes(g))));
 		};
@@ -29994,8 +29993,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 1909, column: 17},
-									end: {line: 1916, column: 70}
+									start: {line: 1924, column: 17},
+									end: {line: 1931, column: 70}
 								},
 								_p178)('impossible: content has no card');
 						}
@@ -30010,8 +30009,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 1902, column: 9},
-				end: {line: 1919, column: 41}
+				start: {line: 1917, column: 9},
+				end: {line: 1934, column: 41}
 			},
 			_p177)('impossible');
 	});
@@ -31928,20 +31927,43 @@ var _vito$cadet$Main$view = function (model) {
 						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('page-content'),
+							_0: _elm_lang$html$Html_Attributes$classList(
+								{
+									ctor: '::',
+									_0: {ctor: '_Tuple2', _0: 'page-content', _1: true},
+									_1: {
+										ctor: '::',
+										_0: {
+											ctor: '_Tuple2',
+											_0: 'contains-graph',
+											_1: function () {
+												var _p254 = model.page;
+												switch (_p254.ctor) {
+													case 'GlobalGraphPage':
+														return true;
+													case 'ProjectPage':
+														return true;
+													default:
+														return false;
+												}
+											}()
+										},
+										_1: {ctor: '[]'}
+									}
+								}),
 							_1: {ctor: '[]'}
 						},
 						{
 							ctor: '::',
 							_0: function () {
-								var _p254 = model.page;
-								switch (_p254.ctor) {
+								var _p255 = model.page;
+								switch (_p255.ctor) {
 									case 'GlobalGraphPage':
 										return A2(_vito$cadet$Main$viewSpatialGraph, model, model.cardGraphs);
 									case 'AllProjectsPage':
 										return _vito$cadet$Main$viewAllProjectsPage(model);
 									case 'ProjectPage':
-										return A2(_vito$cadet$Main$viewProjectPage, model, _p254._0);
+										return A2(_vito$cadet$Main$viewProjectPage, model, _p255._0);
 									case 'LabelsPage':
 										return _vito$cadet$Main$viewLabelsPage(model);
 									default:
