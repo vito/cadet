@@ -633,16 +633,44 @@ update msg model =
         SearchCards "" ->
             ( { model | anticipatedCards = [] }, Cmd.none )
 
-        SearchCards query ->
+        SearchCards str ->
             let
-                cardMatch { title } =
-                    if String.contains (String.toLower query) (String.toLower title) then
-                        True
+                tokens =
+                    String.split " " str
+
+                ( filterTokens, rest ) =
+                    List.partition (String.contains ":") tokens
+
+                filters =
+                    List.map (String.split ":") filterTokens
+
+                query =
+                    String.toLower (String.join " " rest)
+
+                cardsByTitle =
+                    Dict.foldl
+                        (\_ card ->
+                            Dict.insert (String.toLower card.title) card
+                        )
+                        Dict.empty
+                        model.allCards
+
+                cardMatch title card =
+                    if String.contains query title then
+                        flip List.all filters <|
+                            \filter ->
+                                case filter of
+                                    [ "label", name ] ->
+                                        hasLabel model name card
+
+                                    _ ->
+                                        False
                     else
                         False
 
                 foundCards =
-                    Dict.keys (Dict.filter (always cardMatch) model.allCards)
+                    Dict.filter cardMatch cardsByTitle
+                        |> Dict.foldl (\_ card ids -> card.id :: ids) []
             in
                 ( { model | anticipatedCards = foundCards }, Cmd.none )
 
