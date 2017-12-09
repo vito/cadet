@@ -51,6 +51,7 @@ type alias Model =
     , dataView : DataView
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
+    , colorLightnessCache : Dict String Bool
     , selectedCards : List GitHubGraph.ID
     , anticipatedCards : List GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
@@ -446,6 +447,7 @@ init config =
             }
       , allCards = Dict.empty
       , allLabels = Dict.empty
+      , colorLightnessCache = Dict.empty
       , selectedCards = []
       , anticipatedCards = []
       , highlightedCard = Nothing
@@ -746,6 +748,14 @@ update msg model =
 
                     allLabels =
                         Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty value.repos
+
+                    colorLightnessCache =
+                        Dict.foldl
+                            (\_ { color } cache ->
+                                Dict.insert color (computeColorIsLight color) cache
+                            )
+                            Dict.empty
+                            allLabels
                 in
                     computeGraph <|
                         computeDataView
@@ -754,6 +764,7 @@ update msg model =
                                 , dataIndex = index
                                 , allCards = allCards
                                 , allLabels = allLabels
+                                , colorLightnessCache = colorLightnessCache
                             }
               else
                 flip always (Debug.log "ignoring stale index" ( index, model.dataIndex )) <|
@@ -916,12 +927,24 @@ update msg model =
             let
                 data =
                     model.data
+
+                allLabels =
+                    List.foldl (\l -> Dict.insert l.id l) model.allLabels value.labels
+
+                colorLightnessCache =
+                    Dict.foldl
+                        (\_ { color } cache ->
+                            Dict.insert color (computeColorIsLight color) cache
+                        )
+                        Dict.empty
+                        allLabels
             in
                 ( computeDataView
                     { model
                         | data = { data | repos = Dict.insert value.id value data.repos }
                         , dataIndex = max index model.dataIndex
-                        , allLabels = List.foldl (\l -> Dict.insert l.id l) model.allLabels value.labels
+                        , allLabels = allLabels
+                        , colorLightnessCache = colorLightnessCache
                     }
                 , Cmd.none
                 )
@@ -1440,7 +1463,7 @@ viewSidebarControls model =
                     [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ] []
                     , Html.span
                         [ HA.class "label"
-                        , labelColorStyle color
+                        , labelColorStyle model color
                         , HE.onClick (AddFilter (HasLabelFilter name color))
                         ]
                         [ Html.span [ HA.class "octicon octicon-tag" ] []
@@ -1497,7 +1520,7 @@ viewGraphControls model =
                             Just <|
                                 Html.div
                                     [ HA.class "control-setting"
-                                    , labelColorStyle color
+                                    , labelColorStyle model color
                                     , HE.onClick (RemoveFilter filter)
                                     ]
                                     [ Html.span [ HA.class "octicon octicon-tag" ] []
@@ -1517,7 +1540,7 @@ viewGraphControls model =
                             Html.div [ HA.class "label-filter" ]
                                 [ Html.div
                                     [ HA.class "label"
-                                    , labelColorStyle color
+                                    , labelColorStyle model color
                                     , HE.onClick (AddFilter (HasLabelFilter name color))
                                     ]
                                     [ Html.span [ HA.class "octicon octicon-tag" ] []
@@ -1716,13 +1739,13 @@ viewLabelsPage model =
                             [ Html.span
                                 [ HA.class "label-icon label-color-control octicon octicon-sync"
                                 , HE.onClick RandomizeNewLabelColor
-                                , labelColorStyle model.newLabel.color
+                                , labelColorStyle model model.newLabel.color
                                 ]
                                 []
                             , Html.input
                                 [ HE.onInput SetNewLabelName
                                 , HA.value model.newLabel.name
-                                , labelColorStyle model.newLabel.color
+                                , labelColorStyle model model.newLabel.color
                                 ]
                                 []
                             ]
@@ -1900,19 +1923,19 @@ viewLabelRow model label repos =
                                 [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                     Html.span
                                         [ HA.class "label-icon octicon octicon-tag"
-                                        , labelColorStyle label.color
+                                        , labelColorStyle model label.color
                                         ]
                                         []
                                   else
                                     Html.span
                                         [ HA.class "label-icon label-color-control octicon octicon-paintcan"
                                         , HE.onClick (SetLabelColor label.color)
-                                        , labelColorStyle label.color
+                                        , labelColorStyle model label.color
                                         ]
                                         []
                                 , Html.span
                                     [ HA.class "label big"
-                                    , labelColorStyle label.color
+                                    , labelColorStyle model label.color
                                     ]
                                     [ Html.span [ HA.class "label-text" ]
                                         [ Html.text label.name ]
@@ -1924,13 +1947,13 @@ viewLabelRow model label repos =
                                 [ Html.span
                                     [ HA.class "label-icon label-color-control octicon octicon-sync"
                                     , HE.onClick (RandomizeLabelColor label)
-                                    , labelColorStyle newLabel.color
+                                    , labelColorStyle model newLabel.color
                                     ]
                                     []
                                 , Html.input
                                     [ HE.onInput (SetLabelName label)
                                     , HA.value newLabel.name
-                                    , labelColorStyle newLabel.color
+                                    , labelColorStyle model newLabel.color
                                     ]
                                     []
                                 ]
@@ -2028,12 +2051,12 @@ viewLabelRow model label repos =
             ]
 
 
-labelColorStyle : String -> Html.Attribute Msg
-labelColorStyle color =
+labelColorStyle : Model -> String -> Html.Attribute Msg
+labelColorStyle model color =
     HA.style
         [ ( "background-color", "#" ++ color )
         , ( "color"
-          , if colorIsLight color then
+          , if colorIsLight model color then
                 -- GitHub appears to pre-compute a hex code, but this seems to be
                 -- pretty much all it's doing
                 "rgba(0, 0, 0, .8)"
@@ -3111,8 +3134,18 @@ hexBrightness h =
             1
 
 
-colorIsLight : String -> Bool
-colorIsLight hex =
+colorIsLight : Model -> String -> Bool
+colorIsLight model hex =
+    case Dict.get hex model.colorLightnessCache of
+        Just res ->
+            res
+
+        Nothing ->
+            computeColorIsLight (Debug.log "color lightness cache miss" hex)
+
+
+computeColorIsLight : String -> Bool
+computeColorIsLight hex =
     let
         matches =
             List.head <| Regex.find (Regex.AtMost 1) hexRegex hex
@@ -3149,7 +3182,7 @@ viewLabel model id =
             , HA.style
                 [ ( "background-color", "#" ++ color )
                 , ( "color"
-                  , if colorIsLight color then
+                  , if colorIsLight model color then
                         -- GitHub appears to pre-compute a hex code, but this seems to be
                         -- pretty much all it's doing
                         "rgba(0, 0, 0, .8)"
