@@ -199,23 +199,21 @@ type Msg
     | CreateLabel
     | RandomizeNewLabelColor
     | SetNewLabelName String
-    | LabelChanged GitHubGraph.Repo (Result Http.Error ())
+    | LabelChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | AcceptCard Card
     | RejectCard Card
-    | CardAccepted (List GitHubGraph.ID) (Result String ())
-    | CardRejected (List GitHubGraph.ID) (Result String ())
     | MirrorMilestone String
     | CloseMilestone String
     | DeleteMilestone String
-    | MilestoneChanged GitHubGraph.Repo (Result Http.Error ())
+    | MilestoneChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
     | SetNewMilestoneName String
     | CreateMilestone
     | SetCardMilestone Card (Maybe String)
-    | IssueMilestoneChanged GitHubGraph.Issue (Result Http.Error ())
-    | PRMilestoneChanged GitHubGraph.PullRequest (Result Http.Error ())
+    | IssueMilestoned GitHubGraph.Issue (Result GitHubGraph.Error ())
+    | PullRequestMilestoned GitHubGraph.PullRequest (Result GitHubGraph.Error ())
     | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
-    | PRRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.PullRequest))
+    | PullRequestRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.PullRequest))
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
@@ -225,8 +223,7 @@ type Msg
     | SetLabelOperation String CardLabelOperation
     | UnsetLabelOperation String
     | ApplyLabelOperations
-    | IssueLabelsChanged GitHubGraph.Issue (Result Http.Error ())
-    | PRLabelsChanged GitHubGraph.PullRequest (Result Http.Error ())
+    | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
 
 
 type Page
@@ -952,13 +949,6 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        CardAccepted colIds (Ok ()) ->
-            ( model, Cmd.batch (List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id)) colIds) )
-
-        CardAccepted colIds (Err msg) ->
-            flip always (Debug.log "failed to accept card" msg) <|
-                ( model, Cmd.none )
-
         RejectCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
@@ -966,13 +956,6 @@ update msg model =
 
                 _ ->
                     ( model, Cmd.none )
-
-        CardRejected colIds (Ok ()) ->
-            ( model, Cmd.batch (List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id)) colIds) )
-
-        CardRejected colIds (Err msg) ->
-            flip always (Debug.log "failed to reject card" msg) <|
-                ( model, Cmd.none )
 
         MirrorMilestone title ->
             let
@@ -1072,20 +1055,20 @@ update msg model =
                             Nothing ->
                                 ( model, Cmd.none )
 
-        IssueMilestoneChanged issue (Ok ()) ->
+        IssueMilestoned issue (Ok ()) ->
             ( { model | milestoneDrag = Drag.land model.milestoneDrag }
             , Backend.refreshIssue issue.id IssueRefreshed
             )
 
-        IssueMilestoneChanged issue (Err msg) ->
+        IssueMilestoned issue (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
                 ( model, Cmd.none )
 
-        IssueLabelsChanged card (Ok ()) ->
-            ( model, Backend.refreshIssue card.id IssueRefreshed )
+        DataChanged cb (Ok ()) ->
+            ( model, cb )
 
-        IssueLabelsChanged card (Err msg) ->
-            flip always (Debug.log "failed to change labels" msg) <|
+        DataChanged cb (Err msg) ->
+            flip always (Debug.log "failed to change data" msg) <|
                 ( model, Cmd.none )
 
         IssueRefreshed (Ok { index, value }) ->
@@ -1101,25 +1084,16 @@ update msg model =
             flip always (Debug.log "failed to refresh issue" msg) <|
                 ( model, Cmd.none )
 
-        PRMilestoneChanged pr (Ok ()) ->
+        PullRequestMilestoned pr (Ok ()) ->
             ( { model | milestoneDrag = Drag.land model.milestoneDrag }
-            , Backend.refreshPR pr.id PRRefreshed
+            , Backend.refreshPR pr.id PullRequestRefreshed
             )
 
-        PRMilestoneChanged pr (Err msg) ->
+        PullRequestMilestoned pr (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
                 ( model, Cmd.none )
 
-        PRLabelsChanged pr (Ok ()) ->
-            ( model
-            , Backend.refreshPR pr.id PRRefreshed
-            )
-
-        PRLabelsChanged pr (Err msg) ->
-            flip always (Debug.log "failed to change labels" msg) <|
-                ( model, Cmd.none )
-
-        PRRefreshed (Ok { index, value }) ->
+        PullRequestRefreshed (Ok { index, value }) ->
             ( { model
                 | milestoneDrag = Drag.complete model.milestoneDrag
                 , allCards = Dict.insert value.id (prCard value) model.allCards
@@ -1128,7 +1102,7 @@ update msg model =
             , Cmd.none
             )
 
-        PRRefreshed (Err msg) ->
+        PullRequestRefreshed (Err msg) ->
             flip always (Debug.log "failed to refresh pr" msg) <|
                 ( model, Cmd.none )
 
@@ -3387,8 +3361,7 @@ acceptIssue model issue =
                 |> Task.onError (always (Task.succeed ()))
                 |> Task.andThen (\_ -> GitHubGraph.addIssueLabels token issue [ "accepted" ])
                 |> Task.andThen (\_ -> GitHubGraph.closeIssue token issue)
-                |> Task.mapError toString
-                |> Task.attempt (CardAccepted (List.filterMap (Maybe.map .id << .column) issue.cards))
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
 
         Nothing ->
             Cmd.none
@@ -3408,23 +3381,26 @@ rejectIssue model issue =
 
                 addLabel =
                     Task.map (always ()) <|
-                        Task.mapError toString <|
-                            GitHubGraph.addIssueLabels token issue [ "rejected" ]
+                        GitHubGraph.addIssueLabels token issue [ "rejected" ]
 
                 reopen =
                     Task.map (always ()) <|
-                        Task.mapError toString <|
-                            GitHubGraph.reopenIssue token issue
+                        GitHubGraph.reopenIssue token issue
 
                 columnsToRefresh =
                     Set.toList <|
                         Set.union
                             (Set.fromList <| List.filterMap (Maybe.map .id << .column) issue.cards)
                             (Set.fromList <| List.concatMap backlogs issue.cards)
+
+                refreshes =
+                    Backend.refreshIssue issue.id IssueRefreshed
+                        :: List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id))
+                            columnsToRefresh
             in
                 addLabel
                     |> Task.andThen (\_ -> reopen)
-                    |> Task.attempt (CardRejected columnsToRefresh)
+                    |> Task.attempt (DataChanged (Cmd.batch refreshes))
 
         Nothing ->
             Cmd.none
@@ -3468,7 +3444,7 @@ setIssueMilestone model issue mmilestone =
     case model.me of
         Just { token } ->
             GitHubGraph.setIssueMilestone token issue mmilestone
-                |> Task.attempt (IssueMilestoneChanged issue)
+                |> Task.attempt (IssueMilestoned issue)
 
         Nothing ->
             Cmd.none
@@ -3479,7 +3455,7 @@ setPRMilestone model pr mmilestone =
     case model.me of
         Just { token } ->
             GitHubGraph.setPullRequestMilestone token pr mmilestone
-                |> Task.attempt (PRMilestoneChanged pr)
+                |> Task.attempt (PullRequestMilestoned pr)
 
         Nothing ->
             Cmd.none
@@ -3490,7 +3466,7 @@ addIssueLabels model issue labels =
     case model.me of
         Just { token } ->
             GitHubGraph.addIssueLabels token issue labels
-                |> Task.attempt (IssueLabelsChanged issue)
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
 
         Nothing ->
             Cmd.none
@@ -3501,29 +3477,29 @@ removeIssueLabel model issue label =
     case model.me of
         Just { token } ->
             GitHubGraph.removeIssueLabel token issue label
-                |> Task.attempt (IssueLabelsChanged issue)
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
 
         Nothing ->
             Cmd.none
 
 
 addPullRequestLabels : Model -> GitHubGraph.PullRequest -> List String -> Cmd Msg
-addPullRequestLabels model issue labels =
+addPullRequestLabels model pr labels =
     case model.me of
         Just { token } ->
-            GitHubGraph.addPullRequestLabels token issue labels
-                |> Task.attempt (PRLabelsChanged issue)
+            GitHubGraph.addPullRequestLabels token pr labels
+                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
 
         Nothing ->
             Cmd.none
 
 
 removePullRequestLabel : Model -> GitHubGraph.PullRequest -> String -> Cmd Msg
-removePullRequestLabel model issue label =
+removePullRequestLabel model pr label =
     case model.me of
         Just { token } ->
-            GitHubGraph.removePullRequestLabel token issue label
-                |> Task.attempt (PRLabelsChanged issue)
+            GitHubGraph.removePullRequestLabel token pr label
+                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
 
         Nothing ->
             Cmd.none

@@ -392,112 +392,126 @@ addContentCardAfter token columnID contentID mafterID =
         |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
 
 
-createRepoLabel : Token -> Repo -> String -> String -> Task Http.Error ()
+createRepoLabel : Token -> Repo -> String -> String -> Task Error ()
 createRepoLabel token repo name color =
     HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-deleteRepoLabel : Token -> Repo -> String -> Task Http.Error ()
+deleteRepoLabel : Token -> Repo -> String -> Task Error ()
 deleteRepoLabel token repo name =
     HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-updateRepoLabel : Token -> Repo -> Label -> String -> String -> Task Http.Error ()
+updateRepoLabel : Token -> Repo -> Label -> String -> String -> Task Error ()
 updateRepoLabel token repo label name color =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels/" ++ label.name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (encodeLabelPatch name color)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-createRepoMilestone : Token -> Repo -> String -> Task Http.Error ()
+createRepoMilestone : Token -> Repo -> String -> Task Error ()
 createRepoMilestone token repo title =
     HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones")
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "title", JE.string title ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-closeRepoMilestone : Token -> Repo -> Milestone -> Task Http.Error ()
+closeRepoMilestone : Token -> Repo -> Milestone -> Task Error ()
 closeRepoMilestone token repo milestone =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-deleteRepoMilestone : Token -> Repo -> Milestone -> Task Http.Error ()
+deleteRepoMilestone : Token -> Repo -> Milestone -> Task Error ()
 deleteRepoMilestone token repo milestone =
     HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-closeIssue : Token -> Issue -> Task Http.Error ()
+closeIssue : Token -> Issue -> Task Error ()
 closeIssue token issue =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-reopenIssue : Token -> Issue -> Task Http.Error ()
+reopenIssue : Token -> Issue -> Task Error ()
 reopenIssue token issue =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "open" ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-addIssueLabels : Token -> Issue -> List String -> Task Http.Error ()
+addIssueLabels : Token -> Issue -> List String -> Task Error ()
 addIssueLabels token issue names =
     HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-removeIssueLabel : Token -> Issue -> String -> Task Http.Error ()
+removeIssueLabel : Token -> Issue -> String -> Task Error ()
 removeIssueLabel token issue name =
     HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-setIssueMilestone : Token -> Issue -> Maybe Milestone -> Task Http.Error ()
+setIssueMilestone : Token -> Issue -> Maybe Milestone -> Task Error ()
 setIssueMilestone token issue mmilestone =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-addPullRequestLabels : Token -> PullRequest -> List String -> Task Http.Error ()
+addPullRequestLabels : Token -> PullRequest -> List String -> Task Error ()
 addPullRequestLabels token issue names =
     HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-removePullRequestLabel : Token -> PullRequest -> String -> Task Http.Error ()
+removePullRequestLabel : Token -> PullRequest -> String -> Task Error ()
 removePullRequestLabel token issue name =
     HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
-setPullRequestMilestone : Token -> PullRequest -> Maybe Milestone -> Task Http.Error ()
+setPullRequestMilestone : Token -> PullRequest -> Maybe Milestone -> Task Error ()
 setPullRequestMilestone token pr mmilestone =
     HttpBuilder.patch ("https://api.github.com/repos/" ++ pr.repo.owner ++ "/" ++ pr.repo.name ++ "/issues/" ++ toString pr.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
 encodeLabelPatch : String -> String -> JE.Value

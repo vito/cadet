@@ -10032,188 +10032,172 @@ var _vito$cadet$GitHubGraph$encodeLabelPatch = F2(
 	});
 var _vito$cadet$GitHubGraph$setPullRequestMilestone = F3(
 	function (token, pr, mmilestone) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'milestone',
-							_1: A2(
-								_elm_community$json_extra$Json_Encode_Extra$maybe,
-								_elm_lang$core$Json_Encode$int,
-								A2(
-									_elm_lang$core$Maybe$map,
-									function (_) {
-										return _.number;
-									},
-									mmilestone))
-						},
-						_1: {ctor: '[]'}
-					}),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'milestone',
+								_1: A2(
+									_elm_community$json_extra$Json_Encode_Extra$maybe,
+									_elm_lang$core$Json_Encode$int,
+									A2(
+										_elm_lang$core$Maybe$map,
+										function (_) {
+											return _.number;
+										},
+										mmilestone))
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								pr.repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
+									pr.repo.owner,
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										pr.repo.name,
+										'/',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											'/issues/',
-											_elm_lang$core$Basics$toString(pr.number))))))))));
+											pr.repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/issues/',
+												_elm_lang$core$Basics$toString(pr.number)))))))))));
 	});
 var _vito$cadet$GitHubGraph$removePullRequestLabel = F3(
 	function (token, issue, name) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-				_vito$cadet$GitHubGraph$auth(token),
-				_lukewestby$elm_http_builder$HttpBuilder$delete(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'https://api.github.com/repos/',
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					_vito$cadet$GitHubGraph$auth(token),
+					_lukewestby$elm_http_builder$HttpBuilder$delete(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							issue.repo.owner,
+							'https://api.github.com/repos/',
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								'/',
+								issue.repo.owner,
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									issue.repo.name,
+									'/',
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										'/issues/',
+										issue.repo.name,
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(issue.number),
-											A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))))));
+											'/issues/',
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												_elm_lang$core$Basics$toString(issue.number),
+												A2(_elm_lang$core$Basics_ops['++'], '/labels/', name)))))))))));
 	});
 var _vito$cadet$GitHubGraph$addPullRequestLabels = F3(
 	function (token, issue, names) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$list(
-					A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$post(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$list(
+						A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$post(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								issue.repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
+									issue.repo.owner,
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										issue.repo.name,
+										'/',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											'/issues/',
+											issue.repo.name,
 											A2(
 												_elm_lang$core$Basics_ops['++'],
-												_elm_lang$core$Basics$toString(issue.number),
-												'/labels'))))))))));
+												'/issues/',
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													_elm_lang$core$Basics$toString(issue.number),
+													'/labels')))))))))));
 	});
 var _vito$cadet$GitHubGraph$setIssueMilestone = F3(
 	function (token, issue, mmilestone) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'milestone',
-							_1: A2(
-								_elm_community$json_extra$Json_Encode_Extra$maybe,
-								_elm_lang$core$Json_Encode$int,
-								A2(
-									_elm_lang$core$Maybe$map,
-									function (_) {
-										return _.number;
-									},
-									mmilestone))
-						},
-						_1: {ctor: '[]'}
-					}),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'milestone',
+								_1: A2(
+									_elm_community$json_extra$Json_Encode_Extra$maybe,
+									_elm_lang$core$Json_Encode$int,
+									A2(
+										_elm_lang$core$Maybe$map,
+										function (_) {
+											return _.number;
+										},
+										mmilestone))
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								issue.repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
+									issue.repo.owner,
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										issue.repo.name,
+										'/',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											'/issues/',
-											_elm_lang$core$Basics$toString(issue.number))))))))));
+											issue.repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/issues/',
+												_elm_lang$core$Basics$toString(issue.number)))))))))));
 	});
 var _vito$cadet$GitHubGraph$removeIssueLabel = F3(
 	function (token, issue, name) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-				_vito$cadet$GitHubGraph$auth(token),
-				_lukewestby$elm_http_builder$HttpBuilder$delete(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'https://api.github.com/repos/',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							issue.repo.owner,
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'/',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									issue.repo.name,
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										'/issues/',
-										A2(
-											_elm_lang$core$Basics_ops['++'],
-											_elm_lang$core$Basics$toString(issue.number),
-											A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))))));
-	});
-var _vito$cadet$GitHubGraph$addIssueLabels = F3(
-	function (token, issue, names) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$list(
-					A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$post(
+					_lukewestby$elm_http_builder$HttpBuilder$delete(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
 							'https://api.github.com/repos/',
@@ -10232,123 +10216,130 @@ var _vito$cadet$GitHubGraph$addIssueLabels = F3(
 											A2(
 												_elm_lang$core$Basics_ops['++'],
 												_elm_lang$core$Basics$toString(issue.number),
-												'/labels'))))))))));
+												A2(_elm_lang$core$Basics_ops['++'], '/labels/', name)))))))))));
+	});
+var _vito$cadet$GitHubGraph$addIssueLabels = F3(
+	function (token, issue, names) {
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$list(
+						A2(_elm_lang$core$List$map, _elm_lang$core$Json_Encode$string, names)),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$post(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'https://api.github.com/repos/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									issue.repo.owner,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											issue.repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/issues/',
+												A2(
+													_elm_lang$core$Basics_ops['++'],
+													_elm_lang$core$Basics$toString(issue.number),
+													'/labels')))))))))));
 	});
 var _vito$cadet$GitHubGraph$reopenIssue = F2(
 	function (token, issue) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'state',
-							_1: _elm_lang$core$Json_Encode$string('open')
-						},
-						_1: {ctor: '[]'}
-					}),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'state',
+								_1: _elm_lang$core$Json_Encode$string('open')
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								issue.repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
+									issue.repo.owner,
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										issue.repo.name,
+										'/',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											'/issues/',
-											_elm_lang$core$Basics$toString(issue.number))))))))));
+											issue.repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/issues/',
+												_elm_lang$core$Basics$toString(issue.number)))))))))));
 	});
 var _vito$cadet$GitHubGraph$closeIssue = F2(
 	function (token, issue) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'state',
-							_1: _elm_lang$core$Json_Encode$string('closed')
-						},
-						_1: {ctor: '[]'}
-					}),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'state',
+								_1: _elm_lang$core$Json_Encode$string('closed')
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								issue.repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
+									issue.repo.owner,
 									A2(
 										_elm_lang$core$Basics_ops['++'],
-										issue.repo.name,
+										'/',
 										A2(
 											_elm_lang$core$Basics_ops['++'],
-											'/issues/',
-											_elm_lang$core$Basics$toString(issue.number))))))))));
+											issue.repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/issues/',
+												_elm_lang$core$Basics$toString(issue.number)))))))))));
 	});
 var _vito$cadet$GitHubGraph$deleteRepoMilestone = F3(
 	function (token, repo, milestone) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-				_vito$cadet$GitHubGraph$auth(token),
-				_lukewestby$elm_http_builder$HttpBuilder$delete(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'https://api.github.com/repos/',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							repo.owner,
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'/',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									repo.name,
-									A2(
-										_elm_lang$core$Basics_ops['++'],
-										'/milestones/',
-										_elm_lang$core$Basics$toString(milestone.number)))))))));
-	});
-var _vito$cadet$GitHubGraph$closeRepoMilestone = F3(
-	function (token, repo, milestone) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'state',
-							_1: _elm_lang$core$Json_Encode$string('closed')
-						},
-						_1: {ctor: '[]'}
-					}),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
+					_lukewestby$elm_http_builder$HttpBuilder$delete(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
 							'https://api.github.com/repos/',
@@ -10366,46 +10357,115 @@ var _vito$cadet$GitHubGraph$closeRepoMilestone = F3(
 											'/milestones/',
 											_elm_lang$core$Basics$toString(milestone.number))))))))));
 	});
-var _vito$cadet$GitHubGraph$createRepoMilestone = F3(
-	function (token, repo, title) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				_elm_lang$core$Json_Encode$object(
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'title',
-							_1: _elm_lang$core$Json_Encode$string(title)
-						},
-						_1: {ctor: '[]'}
-					}),
+var _vito$cadet$GitHubGraph$closeRepoMilestone = F3(
+	function (token, repo, milestone) {
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$post(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'state',
+								_1: _elm_lang$core$Json_Encode$string('closed')
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
-									A2(_elm_lang$core$Basics_ops['++'], repo.name, '/milestones'))))))));
+									repo.owner,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											repo.name,
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'/milestones/',
+												_elm_lang$core$Basics$toString(milestone.number)))))))))));
+	});
+var _vito$cadet$GitHubGraph$createRepoMilestone = F3(
+	function (token, repo, title) {
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					_elm_lang$core$Json_Encode$object(
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'title',
+								_1: _elm_lang$core$Json_Encode$string(title)
+							},
+							_1: {ctor: '[]'}
+						}),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$post(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'https://api.github.com/repos/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									repo.owner,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/',
+										A2(_elm_lang$core$Basics_ops['++'], repo.name, '/milestones')))))))));
 	});
 var _vito$cadet$GitHubGraph$updateRepoLabel = F5(
 	function (token, repo, label, name, color) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$patch(
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'https://api.github.com/repos/',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									repo.owner,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/',
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											repo.name,
+											A2(_elm_lang$core$Basics_ops['++'], '/labels/', label.name))))))))));
+	});
+var _vito$cadet$GitHubGraph$deleteRepoLabel = F3(
+	function (token, repo, name) {
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$patch(
+					_lukewestby$elm_http_builder$HttpBuilder$delete(
 						A2(
 							_elm_lang$core$Basics_ops['++'],
 							'https://api.github.com/repos/',
@@ -10418,49 +10478,31 @@ var _vito$cadet$GitHubGraph$updateRepoLabel = F5(
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										repo.name,
-										A2(_elm_lang$core$Basics_ops['++'], '/labels/', label.name)))))))));
-	});
-var _vito$cadet$GitHubGraph$deleteRepoLabel = F3(
-	function (token, repo, name) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-				_vito$cadet$GitHubGraph$auth(token),
-				_lukewestby$elm_http_builder$HttpBuilder$delete(
-					A2(
-						_elm_lang$core$Basics_ops['++'],
-						'https://api.github.com/repos/',
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							repo.owner,
-							A2(
-								_elm_lang$core$Basics_ops['++'],
-								'/',
-								A2(
-									_elm_lang$core$Basics_ops['++'],
-									repo.name,
-									A2(_elm_lang$core$Basics_ops['++'], '/labels/', name))))))));
+										A2(_elm_lang$core$Basics_ops['++'], '/labels/', name)))))))));
 	});
 var _vito$cadet$GitHubGraph$createRepoLabel = F4(
 	function (token, repo, name, color) {
-		return _lukewestby$elm_http_builder$HttpBuilder$toTask(
-			A2(
-				_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-				A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
+		return A2(
+			_elm_lang$core$Task$mapError,
+			_jamesmacaulay$elm_graphql$GraphQL_Client_Http$HttpError,
+			_lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
-					_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					_vito$cadet$GitHubGraph$auth(token),
-					_lukewestby$elm_http_builder$HttpBuilder$post(
-						A2(
-							_elm_lang$core$Basics_ops['++'],
-							'https://api.github.com/repos/',
+					_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					A2(_vito$cadet$GitHubGraph$encodeLabelPatch, name, color),
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						_vito$cadet$GitHubGraph$auth(token),
+						_lukewestby$elm_http_builder$HttpBuilder$post(
 							A2(
 								_elm_lang$core$Basics_ops['++'],
-								repo.owner,
+								'https://api.github.com/repos/',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									'/',
-									A2(_elm_lang$core$Basics_ops['++'], repo.name, '/labels'))))))));
+									repo.owner,
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										'/',
+										A2(_elm_lang$core$Basics_ops['++'], repo.name, '/labels')))))))));
 	});
 var _vito$cadet$GitHubGraph$addContentCard = F3(
 	function (token, columnID, contentID) {
