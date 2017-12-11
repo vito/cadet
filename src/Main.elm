@@ -52,8 +52,8 @@ type alias Model =
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
-    , selectedCards : List GitHubGraph.ID
-    , anticipatedCards : List GitHubGraph.ID
+    , selectedCards : Set GitHubGraph.ID
+    , anticipatedCards : Set GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , baseGraphFilter : Maybe GraphFilter
@@ -107,8 +107,8 @@ type alias SharedLabel =
 
 type alias CardNodeState =
     { currentDate : Date
-    , selectedCards : List GitHubGraph.ID
-    , anticipatedCards : List GitHubGraph.ID
+    , selectedCards : Set GitHubGraph.ID
+    , anticipatedCards : Set GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , me : Maybe Me
     , cardEvents : Dict GitHubGraph.ID (List Backend.ActorEvent)
@@ -262,7 +262,7 @@ renderHash : Model -> String
 renderHash model =
     let
         selects =
-            List.map (\id -> "s-" ++ id) model.selectedCards
+            List.map (\id -> "s-" ++ id) (Set.toList model.selectedCards)
 
         filters =
             List.map
@@ -448,8 +448,8 @@ init config =
       , allCards = Dict.empty
       , allLabels = Dict.empty
       , colorLightnessCache = Dict.empty
-      , selectedCards = []
-      , anticipatedCards = []
+      , selectedCards = Set.empty
+      , anticipatedCards = Set.empty
       , highlightedCard = Nothing
       , highlightedNode = Nothing
       , currentDate = Date.fromTime config.initialDate
@@ -632,9 +632,6 @@ update msg model =
             flip always (Debug.log "failed to refresh cards" msg) <|
                 ( model, Cmd.none )
 
-        SearchCards "" ->
-            ( { model | anticipatedCards = [] }, Cmd.none )
-
         SearchCards str ->
             let
                 tokens =
@@ -658,7 +655,9 @@ update msg model =
                         model.allCards
 
                 cardMatch title card =
-                    if String.contains query title then
+                    if String.length query < 2 && List.isEmpty filters then
+                        False
+                    else if String.contains query title then
                         flip List.all filters <|
                             \filter ->
                                 case filter of
@@ -672,36 +671,28 @@ update msg model =
 
                 foundCards =
                     Dict.filter cardMatch cardsByTitle
-                        |> Dict.foldl (\_ card ids -> card.id :: ids) []
+                        |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
             in
                 ( { model | anticipatedCards = foundCards }, Cmd.none )
 
         SelectAnticipatedCards ->
             ( { model
-                | anticipatedCards = []
-                , selectedCards = model.selectedCards ++ model.anticipatedCards
+                | anticipatedCards = Set.empty
+                , selectedCards = Set.union model.selectedCards model.anticipatedCards
               }
             , Cmd.none
             )
 
         SelectCard id ->
-            ( { model
-                | selectedCards =
-                    if List.member id model.selectedCards then
-                        model.selectedCards
-                    else
-                        model.selectedCards ++ [ id ]
-              }
+            ( { model | selectedCards = Set.insert id model.selectedCards }
             , Cmd.none
             )
 
         ClearSelectedCards ->
-            ( { model | selectedCards = [] }, Cmd.none )
+            ( { model | selectedCards = Set.empty }, Cmd.none )
 
         DeselectCard id ->
-            ( { model
-                | selectedCards = List.filter ((/=) id) model.selectedCards
-              }
+            ( { model | selectedCards = Set.remove id model.selectedCards }
             , Cmd.none
             )
 
@@ -713,7 +704,7 @@ update msg model =
 
         AnticipateCardFromNode id ->
             ( { model
-                | anticipatedCards = id :: model.anticipatedCards
+                | anticipatedCards = Set.insert id model.anticipatedCards
                 , highlightedCard = Just id
               }
             , Cmd.none
@@ -721,7 +712,7 @@ update msg model =
 
         UnanticipateCardFromNode id ->
             ( { model
-                | anticipatedCards = List.filter ((/=) id) model.anticipatedCards
+                | anticipatedCards = Set.remove id model.anticipatedCards
                 , highlightedCard = Nothing
               }
             , Cmd.none
@@ -1183,7 +1174,7 @@ update msg model =
         ApplyLabelOperations ->
             let
                 cards =
-                    List.filterMap (flip Dict.get model.allCards) model.selectedCards
+                    List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
 
                 ( addPairs, removePairs ) =
                     Dict.toList model.cardLabelOperations
@@ -1378,11 +1369,11 @@ view model =
         anticipatedCards =
             List.map (viewCardEntry model) <|
                 List.filterMap (flip Dict.get model.allCards) <|
-                    List.filter (not << flip List.member model.selectedCards) model.anticipatedCards
+                    List.filter (not << flip Set.member model.selectedCards) (Set.toList model.anticipatedCards)
 
         selectedCards =
             List.map (viewCardEntry model) <|
-                List.filterMap (flip Dict.get model.allCards) model.selectedCards
+                List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
 
         sidebarCards =
             selectedCards ++ anticipatedCards
@@ -1450,7 +1441,7 @@ viewSidebarControls model =
                         Nothing ->
                             let
                                 cards =
-                                    List.filterMap (flip Dict.get model.allCards) model.selectedCards
+                                    List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
                             in
                                 if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
                                     ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
@@ -2676,7 +2667,7 @@ viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardN
 viewCardNodeFlair card radii flair { x, y } state =
     let
         isHighlighted =
-            List.member card.id state.anticipatedCards
+            Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
         scale =
@@ -2743,10 +2734,10 @@ viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeSt
 viewCardNode card radii labels { x, y } state =
     let
         isSelected =
-            List.member card.id state.selectedCards
+            Set.member card.id state.selectedCards
 
         isHighlighted =
-            List.member card.id state.anticipatedCards
+            Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
         circleWithNumber =
@@ -2888,7 +2879,7 @@ inColumn match =
 
 isAnticipated : Model -> Card -> Bool
 isAnticipated model card =
-    List.member card.id model.anticipatedCards && not (List.member card.id model.selectedCards)
+    Set.member card.id model.anticipatedCards && not (Set.member card.id model.selectedCards)
 
 
 isPR : Card -> Bool
