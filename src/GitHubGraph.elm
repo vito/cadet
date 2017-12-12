@@ -372,24 +372,24 @@ fetchTimeline token issue =
     fetchPaged timelineQuery token { selector = issue, after = Nothing }
 
 
-moveCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ID
+moveCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ProjectColumnCard
 moveCardAfter token columnID cardID mafterID =
     moveCardMutation
         |> GB.request { columnId = columnID, cardId = cardID, afterId = mafterID }
         |> GH.customSendMutation (authedOptions token)
 
 
-addContentCard : Token -> ID -> ID -> Task Error ID
+addContentCard : Token -> ID -> ID -> Task Error ProjectColumnCard
 addContentCard token columnID contentID =
     addCardMutation
         |> GB.request { columnId = columnID, contentId = contentID }
         |> GH.customSendMutation (authedOptions token)
 
 
-addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ID
+addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ProjectColumnCard
 addContentCardAfter token columnID contentID mafterID =
     addContentCard token columnID contentID
-        |> Task.andThen (\cardID -> moveCardAfter token columnID cardID mafterID)
+        |> Task.andThen (\{ id } -> moveCardAfter token columnID id mafterID)
 
 
 createRepoLabel : Token -> Repo -> String -> String -> Task Error ()
@@ -522,7 +522,7 @@ encodeLabelPatch name color =
         ]
 
 
-moveCardMutation : GB.Document GB.Mutation ID { columnId : ID, cardId : ID, afterId : Maybe ID }
+moveCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, cardId : ID, afterId : Maybe ID }
 moveCardMutation =
     let
         columnIDVar =
@@ -549,12 +549,12 @@ moveCardMutation =
                         GB.field "cardEdge"
                             []
                             (GB.extract <|
-                                GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)
+                                GB.field "node" [] projectColumnCardObject
                             )
                     )
 
 
-addCardMutation : GB.Document GB.Mutation ID { columnId : ID, contentId : ID }
+addCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, contentId : ID }
 addCardMutation =
     let
         columnIDVar =
@@ -577,7 +577,7 @@ addCardMutation =
                         GB.field "cardEdge"
                             []
                             (GB.extract <|
-                                GB.field "node" [] (GB.extract <| GB.field "id" [] GB.id)
+                                GB.field "node" [] projectColumnCardObject
                             )
                     )
 
@@ -841,17 +841,6 @@ cardsQuery =
         afterVar =
             GV.required "after" .after (GV.nullable GV.string)
 
-        content =
-            GB.object pickEnum2
-                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map IssueCardContent issueObject))
-                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map PullRequestCardContent prObject))
-
-        card =
-            GB.object ProjectColumnCard
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "content" [] content)
-                |> GB.with (GB.field "note" [] (GB.nullable GB.string))
-
         pageArgs =
             [ ( "first", GA.int 100 )
             , ( "after", GA.variable afterVar )
@@ -864,7 +853,7 @@ cardsQuery =
 
         paged =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.list card))
+                |> GB.with (GB.field "nodes" [] (GB.list projectColumnCardObject))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         cards =
@@ -936,6 +925,20 @@ projectCardObject =
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "project" [] projectLocationObject)
         |> GB.with (GB.field "column" [] (GB.nullable columnObject))
+
+
+projectColumnCardObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumnCard vars
+projectColumnCardObject =
+    let
+        content =
+            GB.object pickEnum2
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map IssueCardContent issueObject))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map PullRequestCardContent prObject))
+    in
+        GB.object ProjectColumnCard
+            |> GB.with (GB.field "id" [] GB.string)
+            |> GB.with (GB.field "content" [] content)
+            |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
 
 reactionGroupObject : GB.ValueSpec GB.NonNull GB.ObjectType ReactionGroup vars

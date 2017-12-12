@@ -45,6 +45,7 @@ type alias Model =
     , page : Page
     , currentDate : Date
     , projectDrag : Drag.Model CardSource CardDestination Msg
+    , projectDragRefresh : Maybe ProjectDragRefresh
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
     , dataIndex : Int
@@ -69,6 +70,15 @@ type alias Model =
     , labelSearch : String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
+    }
+
+
+type alias ProjectDragRefresh =
+    { content : Maybe GitHubGraph.CardContent
+    , sourceId : Maybe GitHubGraph.ID
+    , sourceCards : Maybe (List Backend.ColumnCard)
+    , targetId : Maybe GitHubGraph.ID
+    , targetCards : Maybe (List Backend.ColumnCard)
     }
 
 
@@ -173,8 +183,11 @@ type Msg
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
     | MoveCardAfter CardSource CardDestination
-    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ID)
-    | CardsFetched (Model -> ( Model, Cmd Msg )) GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
+    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ProjectColumnCard)
+    | CardDropContentRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.CardContent))
+    | CardDropSourceRefreshed (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
+    | CardDropTargetRefreshed (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
+    | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
     | SelectCard GitHubGraph.ID
@@ -455,6 +468,7 @@ init config =
       , graphFilters = []
       , graphSort = ImpactSort
       , projectDrag = Drag.init
+      , projectDragRefresh = Nothing
       , milestoneDrag = Drag.init
       , deletingLabels = Set.empty
       , editingLabels = Dict.empty
@@ -574,38 +588,66 @@ update msg model =
                 NewContentCardSource { contentId } ->
                     ( model, addCard model dest contentId )
 
-        CardMoved col (Ok cardId) ->
+        CardMoved col (Ok { content }) ->
             case model.projectDrag of
                 Drag.Dropped drag ->
                     let
-                        finishDrag model =
-                            ( computeGraph
-                                { model
-                                    | projectDrag = Drag.complete model.projectDrag
-                                }
-                            , Cmd.none
-                            )
+                        wrapValue f indexed =
+                            { indexed | value = f indexed.value }
 
-                        refresh landed id model =
-                            ( { model
-                                | projectDrag =
-                                    if landed then
-                                        Drag.land model.projectDrag
+                        refreshContent =
+                            case content of
+                                Just (GitHubGraph.IssueCardContent issue) ->
+                                    Backend.refreshIssue issue.id (CardDropContentRefreshed << Result.map (wrapValue GitHubGraph.IssueCardContent))
+
+                                Just (GitHubGraph.PullRequestCardContent pr) ->
+                                    Backend.refreshPR pr.id (CardDropContentRefreshed << Result.map (wrapValue GitHubGraph.PullRequestCardContent))
+
+                                Nothing ->
+                                    Cmd.none
+
+                        msourceId =
+                            case drag.source of
+                                FromColumnCardSource cs ->
+                                    if cs.columnId == col then
+                                        Nothing
                                     else
-                                        model.projectDrag
-                              }
-                            , Backend.refreshCards id (CardsFetched finishDrag id)
-                            )
-                    in
-                        case drag.source of
-                            FromColumnCardSource cs ->
-                                if cs.columnId == col then
-                                    refresh False col model
-                                else
-                                    ( model, Backend.refreshCards col (CardsFetched (refresh True cs.columnId) col) )
+                                        Just cs.columnId
 
-                            NewContentCardSource _ ->
-                                refresh False col model
+                                NewContentCardSource _ ->
+                                    Nothing
+                    in
+                        case msourceId of
+                            Just sourceId ->
+                                { model
+                                    | projectDragRefresh =
+                                        Just
+                                            { content = Nothing
+                                            , sourceId = Just sourceId
+                                            , sourceCards = Nothing
+                                            , targetId = Just col
+                                            , targetCards = Nothing
+                                            }
+                                }
+                                    ! [ refreshContent
+                                      , Backend.refreshCards sourceId CardDropSourceRefreshed
+                                      , Backend.refreshCards col CardDropTargetRefreshed
+                                      ]
+
+                            Nothing ->
+                                { model
+                                    | projectDragRefresh =
+                                        Just
+                                            { content = Nothing
+                                            , sourceId = Nothing
+                                            , sourceCards = Nothing
+                                            , targetId = Just col
+                                            , targetCards = Nothing
+                                            }
+                                }
+                                    ! [ refreshContent
+                                      , Backend.refreshCards col CardDropTargetRefreshed
+                                      ]
 
                 _ ->
                     ( model, Cmd.none )
@@ -614,7 +656,61 @@ update msg model =
             flip always (Debug.log "failed to move card" msg) <|
                 ( model, Cmd.none )
 
-        CardsFetched cb col (Ok { index, value }) ->
+        CardDropContentRefreshed (Ok { index, value }) ->
+            case model.projectDragRefresh of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just pdr ->
+                    ( finishProjectDragRefresh
+                        { model
+                            | projectDragRefresh = Just { pdr | content = Just value }
+                            , dataIndex = max index model.dataIndex
+                        }
+                    , Cmd.none
+                    )
+
+        CardDropContentRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh card" msg) <|
+                ( model, Cmd.none )
+
+        CardDropSourceRefreshed (Ok { index, value }) ->
+            case model.projectDragRefresh of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just pdr ->
+                    ( finishProjectDragRefresh
+                        { model
+                            | projectDragRefresh = Just { pdr | sourceCards = Just value }
+                            , dataIndex = max index model.dataIndex
+                        }
+                    , Cmd.none
+                    )
+
+        CardDropSourceRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh card" msg) <|
+                ( model, Cmd.none )
+
+        CardDropTargetRefreshed (Ok { index, value }) ->
+            case model.projectDragRefresh of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just pdr ->
+                    ( finishProjectDragRefresh
+                        { model
+                            | projectDragRefresh = Just { pdr | targetCards = Just value }
+                            , dataIndex = max index model.dataIndex
+                        }
+                    , Cmd.none
+                    )
+
+        CardDropTargetRefreshed (Err msg) ->
+            flip always (Debug.log "failed to refresh card" msg) <|
+                ( model, Cmd.none )
+
+        CardsRefreshed col (Ok { index, value }) ->
             let
                 data =
                     model.data
@@ -622,10 +718,9 @@ update msg model =
                 newData =
                     { data | columnCards = Dict.insert col value data.columnCards }
             in
-                cb <|
-                    computeDataView { model | data = newData, dataIndex = max index model.dataIndex }
+                ( computeDataView { model | data = newData, dataIndex = max index model.dataIndex }, Cmd.none )
 
-        CardsFetched _ col (Err msg) ->
+        CardsRefreshed col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
                 ( model, Cmd.none )
 
@@ -3395,7 +3490,7 @@ rejectIssue model issue =
 
                 refreshes =
                     Backend.refreshIssue issue.id IssueRefreshed
-                        :: List.map (\id -> Backend.refreshCards id (CardsFetched (update Noop) id))
+                        :: List.map (\id -> Backend.refreshCards id (CardsRefreshed id))
                             columnsToRefresh
             in
                 addLabel
@@ -3524,3 +3619,57 @@ generateColor seed =
             Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed seed)
     in
         String.padLeft 6 '0' (ParseInt.toHex randomColor)
+
+
+finishProjectDragRefresh : Model -> Model
+finishProjectDragRefresh model =
+    let
+        updateColumn id cards model =
+            let
+                data =
+                    model.data
+            in
+                { model | data = { data | columnCards = Dict.insert id cards data.columnCards } }
+
+        updateContent content model =
+            let
+                data =
+                    model.data
+            in
+                case content of
+                    GitHubGraph.IssueCardContent issue ->
+                        { model
+                            | allCards = Dict.insert issue.id (issueCard issue) model.allCards
+                            , data = { data | issues = Dict.insert issue.id issue data.issues }
+                        }
+
+                    GitHubGraph.PullRequestCardContent pr ->
+                        { model
+                            | allCards = Dict.insert pr.id (prCard pr) model.allCards
+                            , data = { data | prs = Dict.insert pr.id pr data.prs }
+                        }
+    in
+        case model.projectDragRefresh of
+            Nothing ->
+                model
+
+            Just pdr ->
+                case ( pdr.content, pdr.sourceId, pdr.sourceCards, pdr.targetId, pdr.targetCards ) of
+                    ( Just c, Just sid, Just scs, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.complete model.projectDrag }
+                            |> updateContent c
+                            |> updateColumn sid scs
+                            |> updateColumn tid tcs
+
+                    ( Just c, Nothing, Nothing, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.complete model.projectDrag }
+                            |> updateContent c
+                            |> updateColumn tid tcs
+
+                    ( Just c, Just _, _, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.land model.projectDrag }
+                            |> updateContent c
+                            |> updateColumn tid tcs
+
+                    _ ->
+                        model
