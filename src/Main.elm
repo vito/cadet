@@ -74,7 +74,8 @@ type alias Model =
 
 
 type alias ProjectDragRefresh =
-    { content : Maybe GitHubGraph.CardContent
+    { contentId : Maybe GitHubGraph.ID
+    , content : Maybe GitHubGraph.CardContent
     , sourceId : Maybe GitHubGraph.ID
     , sourceCards : Maybe (List Backend.ColumnCard)
     , targetId : Maybe GitHubGraph.ID
@@ -595,16 +596,26 @@ update msg model =
                         wrapValue f indexed =
                             { indexed | value = f indexed.value }
 
-                        refreshContent =
+                        ( mcontentId, refreshContent ) =
                             case content of
                                 Just (GitHubGraph.IssueCardContent issue) ->
-                                    Backend.refreshIssue issue.id (CardDropContentRefreshed << Result.map (wrapValue GitHubGraph.IssueCardContent))
+                                    ( Just issue.id
+                                    , Backend.refreshIssue issue.id
+                                        (CardDropContentRefreshed
+                                            << Result.map (wrapValue GitHubGraph.IssueCardContent)
+                                        )
+                                    )
 
                                 Just (GitHubGraph.PullRequestCardContent pr) ->
-                                    Backend.refreshPR pr.id (CardDropContentRefreshed << Result.map (wrapValue GitHubGraph.PullRequestCardContent))
+                                    ( Just pr.id
+                                    , Backend.refreshPR pr.id
+                                        (CardDropContentRefreshed
+                                            << Result.map (wrapValue GitHubGraph.PullRequestCardContent)
+                                        )
+                                    )
 
                                 Nothing ->
-                                    Cmd.none
+                                    ( Nothing, Cmd.none )
 
                         msourceId =
                             case drag.source of
@@ -622,7 +633,8 @@ update msg model =
                                 { model
                                     | projectDragRefresh =
                                         Just
-                                            { content = Nothing
+                                            { contentId = mcontentId
+                                            , content = Nothing
                                             , sourceId = Just sourceId
                                             , sourceCards = Nothing
                                             , targetId = Just col
@@ -638,7 +650,8 @@ update msg model =
                                 { model
                                     | projectDragRefresh =
                                         Just
-                                            { content = Nothing
+                                            { contentId = mcontentId
+                                            , content = Nothing
                                             , sourceId = Nothing
                                             , sourceCards = Nothing
                                             , targetId = Just col
@@ -3654,21 +3667,34 @@ finishProjectDragRefresh model =
                 model
 
             Just pdr ->
-                case ( pdr.content, pdr.sourceId, pdr.sourceCards, pdr.targetId, pdr.targetCards ) of
-                    ( Just c, Just sid, Just scs, Just tid, Just tcs ) ->
+                case ( pdr.contentId, pdr.content, pdr.sourceId, pdr.sourceCards, pdr.targetId, pdr.targetCards ) of
+                    ( Just _, Just c, Just sid, Just scs, Just tid, Just tcs ) ->
                         { model | projectDrag = Drag.complete model.projectDrag }
                             |> updateContent c
                             |> updateColumn sid scs
                             |> updateColumn tid tcs
 
-                    ( Just c, Nothing, Nothing, Just tid, Just tcs ) ->
+                    ( Just _, Just c, Nothing, Nothing, Just tid, Just tcs ) ->
                         { model | projectDrag = Drag.complete model.projectDrag }
                             |> updateContent c
                             |> updateColumn tid tcs
 
-                    ( Just c, Just _, _, Just tid, Just tcs ) ->
+                    ( Just _, Just c, Just _, _, Just tid, Just tcs ) ->
                         { model | projectDrag = Drag.land model.projectDrag }
                             |> updateContent c
+                            |> updateColumn tid tcs
+
+                    ( Nothing, Nothing, Just sid, Just scs, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.complete model.projectDrag }
+                            |> updateColumn sid scs
+                            |> updateColumn tid tcs
+
+                    ( Nothing, Nothing, Nothing, Nothing, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.complete model.projectDrag }
+                            |> updateColumn tid tcs
+
+                    ( Nothing, Nothing, Just _, _, Just tid, Just tcs ) ->
+                        { model | projectDrag = Drag.land model.projectDrag }
                             |> updateColumn tid tcs
 
                     _ ->
