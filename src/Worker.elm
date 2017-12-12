@@ -1,5 +1,6 @@
 port module Main exposing (..)
 
+import Date
 import Platform
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
@@ -89,7 +90,8 @@ type Msg
     | IssueFetched (Result GitHubGraph.Error GitHubGraph.Issue)
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
     | PullRequestFetched (Result GitHubGraph.Error GitHubGraph.PullRequest)
-    | TimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
+    | IssueTimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
+    | PullRequestTimelineAndReviewsFetched GitHubGraph.ID (Result GitHubGraph.Error ( List GitHubGraph.TimelineEvent, List GitHubGraph.PullRequestReview ))
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -293,7 +295,7 @@ update msg model =
                 fetchTimelines =
                     issues
                         |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
-                        |> List.map (fetchTimeline model << .id)
+                        |> List.map (fetchIssueTimeline model << .id)
             in
                 log "issues fetched for" repo.url <|
                     ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
@@ -306,7 +308,7 @@ update msg model =
 
         IssueFetched (Ok issue) ->
             log "issue fetched" issue.url <|
-                ( { model | loadQueue = fetchTimeline model issue.id :: model.loadQueue }
+                ( { model | loadQueue = fetchIssueTimeline model issue.id :: model.loadQueue }
                 , setIssue (GitHubGraph.encodeIssue issue)
                 )
 
@@ -319,7 +321,7 @@ update msg model =
                 fetchTimelines =
                     prs
                         |> List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen)
-                        |> List.map (fetchTimeline model << .id)
+                        |> List.map (fetchPRTimelineAndReviews model << .id)
             in
                 log "prs fetched for" repo.url <|
                     ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
@@ -332,7 +334,7 @@ update msg model =
 
         PullRequestFetched (Ok pr) ->
             log "pr fetched" pr.url <|
-                ( { model | loadQueue = fetchTimeline model pr.id :: model.loadQueue }
+                ( { model | loadQueue = fetchPRTimelineAndReviews model pr.id :: model.loadQueue }
                 , setPullRequest (GitHubGraph.encodePullRequest pr)
                 )
 
@@ -340,7 +342,7 @@ update msg model =
             log "failed to fetch pr" (err) <|
                 ( model, Cmd.none )
 
-        TimelineFetched id (Ok timeline) ->
+        IssueTimelineFetched id (Ok timeline) ->
             let
                 findSource event =
                     case event of
@@ -372,9 +374,52 @@ update msg model =
                         ]
                     )
 
-        TimelineFetched id (Err err) ->
+        IssueTimelineFetched id (Err err) ->
             log "failed to fetch timeline" ( id, err ) <|
-                backOff model (fetchTimeline model id)
+                backOff model (fetchIssueTimeline model id)
+
+        PullRequestTimelineAndReviewsFetched id (Ok ( timeline, reviews )) ->
+            let
+                findSource event =
+                    case event of
+                        GitHubGraph.CrossReferencedEvent id ->
+                            Just id
+
+                        _ ->
+                            Nothing
+
+                edges =
+                    List.filterMap findSource timeline
+
+                commentActor event =
+                    case event of
+                        GitHubGraph.IssueCommentEvent (Just user) date ->
+                            Just { actor = user, createdAt = date }
+
+                        _ ->
+                            Nothing
+
+                reviewActor review =
+                    { actor = review.author, createdAt = review.createdAt }
+
+                actors =
+                    (List.filterMap commentActor timeline
+                        ++ List.map reviewActor reviews
+                    )
+                        |> List.sortBy (.createdAt >> Date.toTime)
+                        |> List.map Backend.encodeActorEvent
+            in
+                log "timeline and reviews fetched for" id <|
+                    ( model
+                    , Cmd.batch
+                        [ setReferences ( id, edges )
+                        , setActors ( id, actors )
+                        ]
+                    )
+
+        PullRequestTimelineAndReviewsFetched id (Err err) ->
+            log "failed to fetch timeline" ( id, err ) <|
+                backOff model (fetchIssueTimeline model id)
 
 
 backOff : Model -> Cmd Msg -> ( Model, Cmd Msg )
@@ -477,13 +522,31 @@ decodeAndFetchIssueOrPR field payload fetch model =
                 model
 
 
-fetchTimeline : Model -> GitHubGraph.ID -> Cmd Msg
-fetchTimeline model id =
+fetchIssueTimeline : Model -> GitHubGraph.ID -> Cmd Msg
+fetchIssueTimeline model id =
     if model.skipTimeline then
         Cmd.none
     else
         GitHubGraph.fetchTimeline model.githubToken { id = id }
-            |> Task.attempt (TimelineFetched id)
+            |> Task.attempt (IssueTimelineFetched id)
+
+
+fetchPRTimelineAndReviews : Model -> GitHubGraph.ID -> Cmd Msg
+fetchPRTimelineAndReviews model id =
+    let
+        fetchTimeline =
+            if model.skipTimeline then
+                Task.succeed []
+            else
+                GitHubGraph.fetchTimeline model.githubToken { id = id }
+    in
+        fetchTimeline
+            |> Task.andThen
+                (\timeline ->
+                    GitHubGraph.fetchPullRequestReviews model.githubToken { id = id }
+                        |> Task.map ((,) timeline)
+                )
+            |> Task.attempt (PullRequestTimelineAndReviewsFetched id)
 
 
 log : String -> a -> b -> b

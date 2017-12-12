@@ -15,6 +15,8 @@ module GitHubGraph
         , CardContent(..)
         , PullRequest
         , PullRequestState(..)
+        , PullRequestReview
+        , PullRequestReviewState(..)
         , Reactions
         , ReactionGroup
         , ReactionType(..)
@@ -23,6 +25,7 @@ module GitHubGraph
         , MilestoneState(..)
         , IssueOrPRSelector
         , RepoSelector
+        , StatusState(..)
         , fetchOrgRepos
         , fetchOrgProjects
         , fetchOrgProject
@@ -34,6 +37,7 @@ module GitHubGraph
         , fetchRepoPullRequest
         , fetchIssue
         , fetchPullRequest
+        , fetchPullRequestReviews
         , fetchTimeline
         , moveCardAfter
         , addContentCard
@@ -148,7 +152,23 @@ type alias PullRequest =
     , additions : Int
     , deletions : Int
     , milestone : Maybe Milestone
+    , mergeable : MergeableState
+    , lastCommitStatusState : Maybe StatusState
     }
+
+
+type StatusState
+    = StatusStateExpected
+    | StatusStateError
+    | StatusStateFailure
+    | StatusStatePending
+    | StatusStateSuccess
+
+
+type MergeableState
+    = MergeableStateMergeable
+    | MergeableStateConflicting
+    | MergeableStateUnknown
 
 
 type PullRequestState
@@ -264,6 +284,21 @@ type TimelineEvent
     | CrossReferencedEvent ID
 
 
+type alias PullRequestReview =
+    { author : User
+    , state : PullRequestReviewState
+    , createdAt : Date
+    }
+
+
+type PullRequestReviewState
+    = PullRequestReviewStatePending
+    | PullRequestReviewStateCommented
+    | PullRequestReviewStateApproved
+    | PullRequestReviewStateChangesRequested
+    | PullRequestReviewStateDismissed
+
+
 type alias OrgSelector =
     { name : String }
 
@@ -365,6 +400,11 @@ fetchPullRequest token id =
     objectQuery "PullRequest" prObject
         |> GB.request { id = id }
         |> GH.customSendQuery (authedOptions token)
+
+
+fetchPullRequestReviews : Token -> IDSelector -> Task Error (List PullRequestReview)
+fetchPullRequestReviews token pr =
+    fetchPaged prReviewQuery token { selector = pr, after = Nothing }
 
 
 fetchTimeline : Token -> IDSelector -> Task Error (List TimelineEvent)
@@ -683,6 +723,34 @@ pullRequestStates =
     ]
 
 
+statusStates : List ( String, StatusState )
+statusStates =
+    [ ( "EXPECTED", StatusStateExpected )
+    , ( "ERROR", StatusStateError )
+    , ( "FAILURE", StatusStateFailure )
+    , ( "PENDING", StatusStatePending )
+    , ( "SUCCESS", StatusStateSuccess )
+    ]
+
+
+mergeableStates : List ( String, MergeableState )
+mergeableStates =
+    [ ( "MERGEABLE", MergeableStateMergeable )
+    , ( "CONFLICTING", MergeableStateConflicting )
+    , ( "UNKNOWN", MergeableStateUnknown )
+    ]
+
+
+pullRequestReviewStates : List ( String, PullRequestReviewState )
+pullRequestReviewStates =
+    [ ( "PENDING", PullRequestReviewStatePending )
+    , ( "COMMENTED", PullRequestReviewStateCommented )
+    , ( "APPROVED", PullRequestReviewStateApproved )
+    , ( "CHANGES_REQUESTED", PullRequestReviewStateChangesRequested )
+    , ( "DISMISSED", PullRequestReviewStateDismissed )
+    ]
+
+
 milestoneStates : List ( String, MilestoneState )
 milestoneStates =
     [ ( "OPEN", MilestoneStateOpen )
@@ -986,6 +1054,16 @@ prObject =
         |> GB.with (GB.field "additions" [] GB.int)
         |> GB.with (GB.field "deletions" [] GB.int)
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
+        |> GB.with (GB.field "mergeable" [] (GB.enum mergeableStates))
+        |> GB.with (GB.field "commits" [ ( "last", GA.int 1 ) ] (GB.map (List.head << List.filterMap identity) <| GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] (GB.extract (GB.field "status" [] (GB.nullable <| GB.extract (GB.field "state" [] (GB.enum statusStates)))))))))))
+
+
+prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
+prReviewObject =
+    GB.object PullRequestReview
+        |> GB.with (GB.field "author" [] (GB.extract authorObject))
+        |> GB.with (GB.field "state" [] (GB.enum pullRequestReviewStates))
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
 
 
 repoLocationObject : GB.ValueSpec GB.NonNull GB.ObjectType RepoLocation vars
@@ -1200,6 +1278,49 @@ timelineQuery =
         GB.queryDocument queryRoot
 
 
+prReviewQuery : GB.Document GB.Query (PagedResult PullRequestReview) (PagedSelector IDSelector)
+prReviewQuery =
+    let
+        idVar =
+            GV.required "id" (.id << .selector) GV.id
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        issueCommentEvent =
+            GB.object IssueCommentEvent
+                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list prReviewObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        reviews =
+            (GB.extract (GB.field "reviews" pageArgs paged))
+
+        queryRoot =
+            GB.extract <|
+                GB.assume <|
+                    GB.field "node"
+                        [ ( "id", GA.variable idVar )
+                        ]
+                        (GB.extract <| GB.inlineFragment (Just <| GB.onType "PullRequest") reviews)
+    in
+        GB.queryDocument queryRoot
+
+
 pickEnum2 : Maybe a -> Maybe a -> Maybe a
 pickEnum2 ma mb =
     case ma of
@@ -1259,6 +1380,16 @@ decodePullRequest =
         |: (JD.field "additions" JD.int)
         |: (JD.field "deletions" JD.int)
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
+        |: (JD.field "mergeable" decodeMergeableState)
+        |: (JD.field "last_commit_status_state" <| JD.maybe decodeStatusState)
+
+
+decodePullRequestReview : JD.Decoder PullRequestReview
+decodePullRequestReview =
+    JD.succeed PullRequestReview
+        |: (JD.field "author" decodeUser)
+        |: (JD.field "state" decodePullRequestReviewState)
+        |: (JD.field "created_at" JDE.date)
 
 
 decodeRepoLocation : JD.Decoder RepoLocation
@@ -1425,6 +1556,48 @@ decodeIssueState =
         customDecoder JD.string decodeToType
 
 
+decodeMergeableState : JD.Decoder MergeableState
+decodeMergeableState =
+    let
+        decodeToType string =
+            case Dict.get string (Dict.fromList mergeableStates) of
+                Just type_ ->
+                    Result.Ok type_
+
+                Nothing ->
+                    Result.Err ("Not valid pattern for decoder to MergeableState. Pattern: " ++ (toString string))
+    in
+        customDecoder JD.string decodeToType
+
+
+decodePullRequestReviewState : JD.Decoder PullRequestReviewState
+decodePullRequestReviewState =
+    let
+        decodeToType string =
+            case Dict.get string (Dict.fromList pullRequestReviewStates) of
+                Just type_ ->
+                    Result.Ok type_
+
+                Nothing ->
+                    Result.Err ("Not valid pattern for decoder to PullRequestReviewState. Pattern: " ++ (toString string))
+    in
+        customDecoder JD.string decodeToType
+
+
+decodeStatusState : JD.Decoder StatusState
+decodeStatusState =
+    let
+        decodeToType string =
+            case Dict.get string (Dict.fromList statusStates) of
+                Just type_ ->
+                    Result.Ok type_
+
+                Nothing ->
+                    Result.Err ("Not valid pattern for decoder to StatusState. Pattern: " ++ (toString string))
+    in
+        customDecoder JD.string decodeToType
+
+
 encodeRepo : Repo -> JE.Value
 encodeRepo record =
     JE.object
@@ -1476,6 +1649,17 @@ encodePullRequest record =
         , ( "additions", JE.int record.additions )
         , ( "deletions", JE.int record.deletions )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
+        , ( "mergeable", encodeMergeableState record.mergeable )
+        , ( "last_commit_status_state", JEE.maybe encodeStatusState record.lastCommitStatusState )
+        ]
+
+
+encodePullRequestReview : PullRequestReview -> JE.Value
+encodePullRequestReview record =
+    JE.object
+        [ ( "author", encodeUser record.author )
+        , ( "state", encodePullRequestReviewState record.state )
+        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
         ]
 
 
@@ -1655,6 +1839,48 @@ encodePullRequestState item =
             )
             "UNKNOWN"
             pullRequestStates
+
+
+encodeStatusState : StatusState -> JE.Value
+encodeStatusState item =
+    JE.string <|
+        List.foldl
+            (\( a, b ) default ->
+                if b == item then
+                    a
+                else
+                    default
+            )
+            "UNKNOWN"
+            statusStates
+
+
+encodeMergeableState : MergeableState -> JE.Value
+encodeMergeableState item =
+    JE.string <|
+        List.foldl
+            (\( a, b ) default ->
+                if b == item then
+                    a
+                else
+                    default
+            )
+            "UNKNOWN"
+            mergeableStates
+
+
+encodePullRequestReviewState : PullRequestReviewState -> JE.Value
+encodePullRequestReviewState item =
+    JE.string <|
+        List.foldl
+            (\( a, b ) default ->
+                if b == item then
+                    a
+                else
+                    default
+            )
+            "UNKNOWN"
+            pullRequestReviewStates
 
 
 customDecoder : JD.Decoder b -> (b -> Result String a) -> JD.Decoder a

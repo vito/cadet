@@ -21487,7 +21487,11 @@ var _vito$cadet$GitHubGraph$PullRequest = function (a) {
 													return function (n) {
 														return function (o) {
 															return function (p) {
-																return {id: a, url: b, createdAt: c, updatedAt: d, state: e, repo: f, number: g, title: h, commentCount: i, reactions: j, author: k, labels: l, cards: m, additions: n, deletions: o, milestone: p};
+																return function (q) {
+																	return function (r) {
+																		return {id: a, url: b, createdAt: c, updatedAt: d, state: e, repo: f, number: g, title: h, commentCount: i, reactions: j, author: k, labels: l, cards: m, additions: n, deletions: o, milestone: p, mergeable: q, lastCommitStatusState: r};
+																	};
+																};
 															};
 														};
 													};
@@ -21908,6 +21912,10 @@ var _vito$cadet$GitHubGraph$decodeCardLocation = A2(
 		_elm_lang$core$Json_Decode$field,
 		'column',
 		_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeProjectColumn)));
+var _vito$cadet$GitHubGraph$PullRequestReview = F3(
+	function (a, b, c) {
+		return {author: a, state: b, createdAt: c};
+	});
 var _vito$cadet$GitHubGraph$OrgSelector = function (a) {
 	return {name: a};
 };
@@ -22082,6 +22090,108 @@ var _vito$cadet$GitHubGraph$encodeIssueState = function (item) {
 			'UNKNOWN',
 			_vito$cadet$GitHubGraph$issueStates));
 };
+var _vito$cadet$GitHubGraph$StatusStateSuccess = {ctor: 'StatusStateSuccess'};
+var _vito$cadet$GitHubGraph$StatusStatePending = {ctor: 'StatusStatePending'};
+var _vito$cadet$GitHubGraph$StatusStateFailure = {ctor: 'StatusStateFailure'};
+var _vito$cadet$GitHubGraph$StatusStateError = {ctor: 'StatusStateError'};
+var _vito$cadet$GitHubGraph$StatusStateExpected = {ctor: 'StatusStateExpected'};
+var _vito$cadet$GitHubGraph$statusStates = {
+	ctor: '::',
+	_0: {ctor: '_Tuple2', _0: 'EXPECTED', _1: _vito$cadet$GitHubGraph$StatusStateExpected},
+	_1: {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'ERROR', _1: _vito$cadet$GitHubGraph$StatusStateError},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'FAILURE', _1: _vito$cadet$GitHubGraph$StatusStateFailure},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'PENDING', _1: _vito$cadet$GitHubGraph$StatusStatePending},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 'SUCCESS', _1: _vito$cadet$GitHubGraph$StatusStateSuccess},
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	}
+};
+var _vito$cadet$GitHubGraph$decodeStatusState = function () {
+	var decodeToType = function (string) {
+		var _p19 = A2(
+			_elm_lang$core$Dict$get,
+			string,
+			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$statusStates));
+		if (_p19.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p19._0);
+		} else {
+			return _elm_lang$core$Result$Err(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'Not valid pattern for decoder to StatusState. Pattern: ',
+					_elm_lang$core$Basics$toString(string)));
+		}
+	};
+	return A2(_vito$cadet$GitHubGraph$customDecoder, _elm_lang$core$Json_Decode$string, decodeToType);
+}();
+var _vito$cadet$GitHubGraph$encodeStatusState = function (item) {
+	return _elm_lang$core$Json_Encode$string(
+		A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (_p20, $default) {
+					var _p21 = _p20;
+					return _elm_lang$core$Native_Utils.eq(_p21._1, item) ? _p21._0 : $default;
+				}),
+			'UNKNOWN',
+			_vito$cadet$GitHubGraph$statusStates));
+};
+var _vito$cadet$GitHubGraph$MergeableStateUnknown = {ctor: 'MergeableStateUnknown'};
+var _vito$cadet$GitHubGraph$MergeableStateConflicting = {ctor: 'MergeableStateConflicting'};
+var _vito$cadet$GitHubGraph$MergeableStateMergeable = {ctor: 'MergeableStateMergeable'};
+var _vito$cadet$GitHubGraph$mergeableStates = {
+	ctor: '::',
+	_0: {ctor: '_Tuple2', _0: 'MERGEABLE', _1: _vito$cadet$GitHubGraph$MergeableStateMergeable},
+	_1: {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'CONFLICTING', _1: _vito$cadet$GitHubGraph$MergeableStateConflicting},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'UNKNOWN', _1: _vito$cadet$GitHubGraph$MergeableStateUnknown},
+			_1: {ctor: '[]'}
+		}
+	}
+};
+var _vito$cadet$GitHubGraph$decodeMergeableState = function () {
+	var decodeToType = function (string) {
+		var _p22 = A2(
+			_elm_lang$core$Dict$get,
+			string,
+			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$mergeableStates));
+		if (_p22.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p22._0);
+		} else {
+			return _elm_lang$core$Result$Err(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'Not valid pattern for decoder to MergeableState. Pattern: ',
+					_elm_lang$core$Basics$toString(string)));
+		}
+	};
+	return A2(_vito$cadet$GitHubGraph$customDecoder, _elm_lang$core$Json_Decode$string, decodeToType);
+}();
+var _vito$cadet$GitHubGraph$encodeMergeableState = function (item) {
+	return _elm_lang$core$Json_Encode$string(
+		A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (_p23, $default) {
+					var _p24 = _p23;
+					return _elm_lang$core$Native_Utils.eq(_p24._1, item) ? _p24._0 : $default;
+				}),
+			'UNKNOWN',
+			_vito$cadet$GitHubGraph$mergeableStates));
+};
 var _vito$cadet$GitHubGraph$PullRequestStateMerged = {ctor: 'PullRequestStateMerged'};
 var _vito$cadet$GitHubGraph$PullRequestStateClosed = {ctor: 'PullRequestStateClosed'};
 var _vito$cadet$GitHubGraph$PullRequestStateOpen = {ctor: 'PullRequestStateOpen'};
@@ -22100,12 +22210,12 @@ var _vito$cadet$GitHubGraph$pullRequestStates = {
 };
 var _vito$cadet$GitHubGraph$decodePullRequestState = function () {
 	var decodeToType = function (string) {
-		var _p19 = A2(
+		var _p25 = A2(
 			_elm_lang$core$Dict$get,
 			string,
 			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$pullRequestStates));
-		if (_p19.ctor === 'Just') {
-			return _elm_lang$core$Result$Ok(_p19._0);
+		if (_p25.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p25._0);
 		} else {
 			return _elm_lang$core$Result$Err(
 				A2(
@@ -22121,9 +22231,9 @@ var _vito$cadet$GitHubGraph$encodePullRequestState = function (item) {
 		A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p20, $default) {
-					var _p21 = _p20;
-					return _elm_lang$core$Native_Utils.eq(_p21._1, item) ? _p21._0 : $default;
+				function (_p26, $default) {
+					var _p27 = _p26;
+					return _elm_lang$core$Native_Utils.eq(_p27._1, item) ? _p27._0 : $default;
 				}),
 			'UNKNOWN',
 			_vito$cadet$GitHubGraph$pullRequestStates));
@@ -22353,13 +22463,13 @@ var _vito$cadet$GitHubGraph$reposQuery = function () {
 	var orgNameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'orgName',
-		function (_p22) {
+		function (_p28) {
 			return function (_) {
 				return _.name;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p22));
+				}(_p28));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
 	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
@@ -22389,12 +22499,12 @@ var _vito$cadet$GitHubGraph$fetchOrgRepos = F2(
 	});
 var _vito$cadet$GitHubGraph$decodeMilestoneState = function () {
 	var decodeToType = function (string) {
-		var _p23 = A2(
+		var _p29 = A2(
 			_elm_lang$core$Dict$get,
 			string,
 			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$milestoneStates));
-		if (_p23.ctor === 'Just') {
-			return _elm_lang$core$Result$Ok(_p23._0);
+		if (_p29.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p29._0);
 		} else {
 			return _elm_lang$core$Result$Err(
 				A2(
@@ -22454,9 +22564,9 @@ var _vito$cadet$GitHubGraph$encodeMilestoneState = function (item) {
 		A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p24, $default) {
-					var _p25 = _p24;
-					return _elm_lang$core$Native_Utils.eq(_p25._1, item) ? _p25._0 : $default;
+				function (_p30, $default) {
+					var _p31 = _p30;
+					return _elm_lang$core$Native_Utils.eq(_p31._1, item) ? _p31._0 : $default;
 				}),
 			'UNKNOWN',
 			_vito$cadet$GitHubGraph$milestoneStates));
@@ -22612,12 +22722,12 @@ var _vito$cadet$GitHubGraph$reactionGroupObject = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ReactionGroup)));
 var _vito$cadet$GitHubGraph$decodeReactionType = function () {
 	var decodeToType = function (string) {
-		var _p26 = A2(
+		var _p32 = A2(
 			_elm_lang$core$Dict$get,
 			string,
 			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$reactionTypes));
-		if (_p26.ctor === 'Just') {
-			return _elm_lang$core$Result$Ok(_p26._0);
+		if (_p32.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p32._0);
 		} else {
 			return _elm_lang$core$Result$Err(
 				A2(
@@ -22725,46 +22835,55 @@ var _vito$cadet$GitHubGraph$decodePullRequest = A2(
 															_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 															A2(
 																_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-																_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$PullRequest),
-																A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-															A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
-														A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
-													A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
-												A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodePullRequestState)),
-											A2(_elm_lang$core$Json_Decode$field, 'repo', _vito$cadet$GitHubGraph$decodeRepoLocation)),
-										A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int)),
-									A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string)),
-								A2(_elm_lang$core$Json_Decode$field, 'comment_count', _elm_lang$core$Json_Decode$int)),
+																A2(
+																	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+																	A2(
+																		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+																		_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$PullRequest),
+																		A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+																	A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+																A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date)),
+															A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date)),
+														A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodePullRequestState)),
+													A2(_elm_lang$core$Json_Decode$field, 'repo', _vito$cadet$GitHubGraph$decodeRepoLocation)),
+												A2(_elm_lang$core$Json_Decode$field, 'number', _elm_lang$core$Json_Decode$int)),
+											A2(_elm_lang$core$Json_Decode$field, 'title', _elm_lang$core$Json_Decode$string)),
+										A2(_elm_lang$core$Json_Decode$field, 'comment_count', _elm_lang$core$Json_Decode$int)),
+									A2(
+										_elm_lang$core$Json_Decode$field,
+										'reactions',
+										_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeReactionGroup))),
+								A2(
+									_elm_lang$core$Json_Decode$field,
+									'author',
+									_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeUser))),
 							A2(
 								_elm_lang$core$Json_Decode$field,
-								'reactions',
-								_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeReactionGroup))),
+								'labels',
+								_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeLabel))),
 						A2(
 							_elm_lang$core$Json_Decode$field,
-							'author',
-							_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeUser))),
-					A2(
-						_elm_lang$core$Json_Decode$field,
-						'labels',
-						_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeLabel))),
-				A2(
-					_elm_lang$core$Json_Decode$field,
-					'cards',
-					_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeCardLocation))),
-			A2(_elm_lang$core$Json_Decode$field, 'additions', _elm_lang$core$Json_Decode$int)),
-		A2(_elm_lang$core$Json_Decode$field, 'deletions', _elm_lang$core$Json_Decode$int)),
+							'cards',
+							_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeCardLocation))),
+					A2(_elm_lang$core$Json_Decode$field, 'additions', _elm_lang$core$Json_Decode$int)),
+				A2(_elm_lang$core$Json_Decode$field, 'deletions', _elm_lang$core$Json_Decode$int)),
+			A2(
+				_elm_lang$core$Json_Decode$field,
+				'milestone',
+				_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeMilestone))),
+		A2(_elm_lang$core$Json_Decode$field, 'mergeable', _vito$cadet$GitHubGraph$decodeMergeableState)),
 	A2(
 		_elm_lang$core$Json_Decode$field,
-		'milestone',
-		_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeMilestone)));
+		'last_commit_status_state',
+		_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeStatusState)));
 var _vito$cadet$GitHubGraph$encodeReactionType = function (item) {
 	return _elm_lang$core$Json_Encode$string(
 		A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p27, $default) {
-					var _p28 = _p27;
-					return _elm_lang$core$Native_Utils.eq(_p28._1, item) ? _p28._0 : $default;
+				function (_p33, $default) {
+					var _p34 = _p33;
+					return _elm_lang$core$Native_Utils.eq(_p34._1, item) ? _p34._0 : $default;
 				}),
 			'UNKNOWN',
 			_vito$cadet$GitHubGraph$reactionTypes));
@@ -23029,7 +23148,23 @@ var _vito$cadet$GitHubGraph$encodePullRequest = function (record) {
 																			_0: 'milestone',
 																			_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeMilestone, record.milestone)
 																		},
-																		_1: {ctor: '[]'}
+																		_1: {
+																			ctor: '::',
+																			_0: {
+																				ctor: '_Tuple2',
+																				_0: 'mergeable',
+																				_1: _vito$cadet$GitHubGraph$encodeMergeableState(record.mergeable)
+																			},
+																			_1: {
+																				ctor: '::',
+																				_0: {
+																					ctor: '_Tuple2',
+																					_0: 'last_commit_status_state',
+																					_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _vito$cadet$GitHubGraph$encodeStatusState, record.lastCommitStatusState)
+																				},
+																				_1: {ctor: '[]'}
+																			}
+																		}
 																	}
 																}
 															}
@@ -23062,16 +23197,16 @@ var _vito$cadet$GitHubGraph$encodeProjectColumnCard = function (record) {
 					ctor: '_Tuple2',
 					_0: 'content',
 					_1: function () {
-						var _p29 = record.content;
-						if (_p29.ctor === 'Just') {
-							if (_p29._0.ctor === 'IssueCardContent') {
+						var _p35 = record.content;
+						if (_p35.ctor === 'Just') {
+							if (_p35._0.ctor === 'IssueCardContent') {
 								return _elm_lang$core$Json_Encode$object(
 									{
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
 											_0: 'issue',
-											_1: _vito$cadet$GitHubGraph$encodeIssue(_p29._0._0)
+											_1: _vito$cadet$GitHubGraph$encodeIssue(_p35._0._0)
 										},
 										_1: {ctor: '[]'}
 									});
@@ -23082,7 +23217,7 @@ var _vito$cadet$GitHubGraph$encodeProjectColumnCard = function (record) {
 										_0: {
 											ctor: '_Tuple2',
 											_0: 'pull_request',
-											_1: _vito$cadet$GitHubGraph$encodePullRequest(_p29._0._0)
+											_1: _vito$cadet$GitHubGraph$encodePullRequest(_p35._0._0)
 										},
 										_1: {ctor: '[]'}
 									});
@@ -23149,6 +23284,101 @@ var _vito$cadet$GitHubGraph$IssueCommentEvent = F2(
 	function (a, b) {
 		return {ctor: 'IssueCommentEvent', _0: a, _1: b};
 	});
+var _vito$cadet$GitHubGraph$PullRequestReviewStateDismissed = {ctor: 'PullRequestReviewStateDismissed'};
+var _vito$cadet$GitHubGraph$PullRequestReviewStateChangesRequested = {ctor: 'PullRequestReviewStateChangesRequested'};
+var _vito$cadet$GitHubGraph$PullRequestReviewStateApproved = {ctor: 'PullRequestReviewStateApproved'};
+var _vito$cadet$GitHubGraph$PullRequestReviewStateCommented = {ctor: 'PullRequestReviewStateCommented'};
+var _vito$cadet$GitHubGraph$PullRequestReviewStatePending = {ctor: 'PullRequestReviewStatePending'};
+var _vito$cadet$GitHubGraph$pullRequestReviewStates = {
+	ctor: '::',
+	_0: {ctor: '_Tuple2', _0: 'PENDING', _1: _vito$cadet$GitHubGraph$PullRequestReviewStatePending},
+	_1: {
+		ctor: '::',
+		_0: {ctor: '_Tuple2', _0: 'COMMENTED', _1: _vito$cadet$GitHubGraph$PullRequestReviewStateCommented},
+		_1: {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: 'APPROVED', _1: _vito$cadet$GitHubGraph$PullRequestReviewStateApproved},
+			_1: {
+				ctor: '::',
+				_0: {ctor: '_Tuple2', _0: 'CHANGES_REQUESTED', _1: _vito$cadet$GitHubGraph$PullRequestReviewStateChangesRequested},
+				_1: {
+					ctor: '::',
+					_0: {ctor: '_Tuple2', _0: 'DISMISSED', _1: _vito$cadet$GitHubGraph$PullRequestReviewStateDismissed},
+					_1: {ctor: '[]'}
+				}
+			}
+		}
+	}
+};
+var _vito$cadet$GitHubGraph$decodePullRequestReviewState = function () {
+	var decodeToType = function (string) {
+		var _p36 = A2(
+			_elm_lang$core$Dict$get,
+			string,
+			_elm_lang$core$Dict$fromList(_vito$cadet$GitHubGraph$pullRequestReviewStates));
+		if (_p36.ctor === 'Just') {
+			return _elm_lang$core$Result$Ok(_p36._0);
+		} else {
+			return _elm_lang$core$Result$Err(
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'Not valid pattern for decoder to PullRequestReviewState. Pattern: ',
+					_elm_lang$core$Basics$toString(string)));
+		}
+	};
+	return A2(_vito$cadet$GitHubGraph$customDecoder, _elm_lang$core$Json_Decode$string, decodeToType);
+}();
+var _vito$cadet$GitHubGraph$decodePullRequestReview = A2(
+	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+	A2(
+		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+		A2(
+			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$PullRequestReview),
+			A2(_elm_lang$core$Json_Decode$field, 'author', _vito$cadet$GitHubGraph$decodeUser)),
+		A2(_elm_lang$core$Json_Decode$field, 'state', _vito$cadet$GitHubGraph$decodePullRequestReviewState)),
+	A2(_elm_lang$core$Json_Decode$field, 'created_at', _elm_community$json_extra$Json_Decode_Extra$date));
+var _vito$cadet$GitHubGraph$encodePullRequestReviewState = function (item) {
+	return _elm_lang$core$Json_Encode$string(
+		A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (_p37, $default) {
+					var _p38 = _p37;
+					return _elm_lang$core$Native_Utils.eq(_p38._1, item) ? _p38._0 : $default;
+				}),
+			'UNKNOWN',
+			_vito$cadet$GitHubGraph$pullRequestReviewStates));
+};
+var _vito$cadet$GitHubGraph$encodePullRequestReview = function (record) {
+	return _elm_lang$core$Json_Encode$object(
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'author',
+				_1: _vito$cadet$GitHubGraph$encodeUser(record.author)
+			},
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'state',
+					_1: _vito$cadet$GitHubGraph$encodePullRequestReviewState(record.state)
+				},
+				_1: {
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'created_at',
+						_1: _elm_lang$core$Json_Encode$string(
+							_mgold$elm_date_format$Date_Format$formatISO8601(record.createdAt))
+					},
+					_1: {ctor: '[]'}
+				}
+			}
+		});
+};
 var _vito$cadet$GitHubGraph$DateType = {ctor: 'DateType'};
 var _vito$cadet$GitHubGraph$issueObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
@@ -23352,25 +23582,25 @@ var _vito$cadet$GitHubGraph$issuesQuery = function () {
 	var repoNameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'repoName',
-		function (_p30) {
+		function (_p39) {
 			return function (_) {
 				return _.name;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p30));
+				}(_p39));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
 	var orgNameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'orgName',
-		function (_p31) {
+		function (_p40) {
 			return function (_) {
 				return _.owner;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p31));
+				}(_p40));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
 	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
@@ -23476,150 +23706,200 @@ var _vito$cadet$GitHubGraph$prObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-		'milestone',
-		{ctor: '[]'},
-		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_vito$cadet$GitHubGraph$milestoneObject)),
+		'commits',
+		{
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'last',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(1)
+			},
+			_1: {ctor: '[]'}
+		},
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$map,
+			function (_p41) {
+				return _elm_lang$core$List$head(
+					A2(_elm_lang$core$List$filterMap, _elm_lang$core$Basics$identity, _p41));
+			},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'nodes',
+					{ctor: '[]'},
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'commit',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+									A3(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+										'status',
+										{ctor: '[]'},
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
+											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+												A3(
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+													'state',
+													{ctor: '[]'},
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$statusStates))))))))))))),
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'deletions',
+			'mergeable',
 			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$mergeableStates)),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'additions',
+				'milestone',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_vito$cadet$GitHubGraph$milestoneObject)),
 			A2(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 				A3(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'projectCards',
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple2',
-							_0: 'first',
-							_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(10)
-						},
-						_1: {ctor: '[]'}
-					},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-						A3(
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'nodes',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectCardObject)))),
+					'deletions',
+					{ctor: '[]'},
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 				A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 					A3(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'labels',
-						{
-							ctor: '::',
-							_0: {
-								ctor: '_Tuple2',
-								_0: 'first',
-								_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(10)
-							},
-							_1: {ctor: '[]'}
-						},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-							A3(
-								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-								'nodes',
-								{ctor: '[]'},
-								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$labelObject)))),
+						'additions',
+						{ctor: '[]'},
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 					A2(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 						A3(
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'author',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+							'projectCards',
+							{
+								ctor: '::',
+								_0: {
+									ctor: '_Tuple2',
+									_0: 'first',
+									_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(10)
+								},
+								_1: {ctor: '[]'}
+							},
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+								A3(
+									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+									'nodes',
+									{ctor: '[]'},
+									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectCardObject)))),
 						A2(
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 							A3(
 								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-								'reactionGroups',
-								{ctor: '[]'},
-								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$reactionGroupObject)),
+								'labels',
+								{
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'first',
+										_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(10)
+									},
+									_1: {ctor: '[]'}
+								},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+									A3(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+										'nodes',
+										{ctor: '[]'},
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$labelObject)))),
 							A2(
 								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 								A3(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-									'comments',
+									'author',
 									{ctor: '[]'},
-									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-										A3(
-											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-											'totalCount',
-											{ctor: '[]'},
-											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int))),
+									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
 								A2(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 									A3(
 										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-										'title',
+										'reactionGroups',
 										{ctor: '[]'},
-										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$reactionGroupObject)),
 									A2(
 										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 										A3(
 											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-											'number',
+											'comments',
 											{ctor: '[]'},
-											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
+											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+												A3(
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+													'totalCount',
+													{ctor: '[]'},
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int))),
 										A2(
 											_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 											A3(
 												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-												'repository',
+												'title',
 												{ctor: '[]'},
-												_vito$cadet$GitHubGraph$repoLocationObject),
+												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 											A2(
 												_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-												A2(
-													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$aliasAs,
-													'prState',
-													A3(
-														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-														'state',
-														{ctor: '[]'},
-														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestStates))),
+												A3(
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+													'number',
+													{ctor: '[]'},
+													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 												A2(
 													_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 													A3(
 														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-														'updatedAt',
+														'repository',
 														{ctor: '[]'},
-														A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
+														_vito$cadet$GitHubGraph$repoLocationObject),
 													A2(
 														_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-														A3(
-															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-															'createdAt',
-															{ctor: '[]'},
-															A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
+														A2(
+															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$aliasAs,
+															'prState',
+															A3(
+																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+																'state',
+																{ctor: '[]'},
+																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestStates))),
 														A2(
 															_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 															A3(
 																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																'url',
+																'updatedAt',
 																{ctor: '[]'},
-																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+																A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
 															A2(
 																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 																A3(
 																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-																	'id',
+																	'createdAt',
 																	{ctor: '[]'},
-																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-																_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequest)))))))))))))))));
+																	A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
+																A2(
+																	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+																	A3(
+																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+																		'url',
+																		{ctor: '[]'},
+																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+																	A2(
+																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+																		A3(
+																			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+																			'id',
+																			{ctor: '[]'},
+																			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+																		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequest)))))))))))))))))));
 var _vito$cadet$GitHubGraph$fetchPullRequest = F2(
 	function (token, id) {
 		return A2(
@@ -23824,9 +24104,9 @@ var _vito$cadet$GitHubGraph$addContentCardAfter = F4(
 	function (token, columnID, contentID, mafterID) {
 		return A2(
 			_elm_lang$core$Task$andThen,
-			function (_p32) {
-				var _p33 = _p32;
-				return A4(_vito$cadet$GitHubGraph$moveCardAfter, token, columnID, _p33.id, mafterID);
+			function (_p42) {
+				var _p43 = _p42;
+				return A4(_vito$cadet$GitHubGraph$moveCardAfter, token, columnID, _p43.id, mafterID);
 			},
 			A3(_vito$cadet$GitHubGraph$addContentCard, token, columnID, contentID));
 	});
@@ -23890,13 +24170,13 @@ var _vito$cadet$GitHubGraph$cardsQuery = function () {
 	var idVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'id',
-		function (_p34) {
+		function (_p44) {
 			return function (_) {
 				return _.id;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p34));
+				}(_p44));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$id);
 	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
@@ -23987,25 +24267,25 @@ var _vito$cadet$GitHubGraph$pullRequestsQuery = function () {
 	var repoNameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'repoName',
-		function (_p35) {
+		function (_p45) {
 			return function (_) {
 				return _.name;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p35));
+				}(_p45));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
 	var orgNameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'orgName',
-		function (_p36) {
+		function (_p46) {
 			return function (_) {
 				return _.owner;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p36));
+				}(_p46));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string);
 	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
@@ -24107,6 +24387,28 @@ var _vito$cadet$GitHubGraph$fetchRepoPullRequest = F2(
 			_vito$cadet$GitHubGraph$authedOptions(token),
 			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$request, sel, _vito$cadet$GitHubGraph$pullRequestQuery));
 	});
+var _vito$cadet$GitHubGraph$prReviewObject = A2(
+	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+	A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+		'createdAt',
+		{ctor: '[]'},
+		A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
+	A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'state',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestReviewStates)),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'author',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject)),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequestReview))));
 var _vito$cadet$GitHubGraph$timelineQuery = function () {
 	var pageInfo = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
@@ -24250,13 +24552,13 @@ var _vito$cadet$GitHubGraph$timelineQuery = function () {
 	var issueIdVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
 		'issueId',
-		function (_p37) {
+		function (_p47) {
 			return function (_) {
 				return _.id;
 			}(
 				function (_) {
 					return _.selector;
-				}(_p37));
+				}(_p47));
 		},
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$id);
 	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
@@ -24283,6 +24585,121 @@ var _vito$cadet$GitHubGraph$fetchTimeline = F2(
 			_vito$cadet$GitHubGraph$timelineQuery,
 			token,
 			{selector: issue, after: _elm_lang$core$Maybe$Nothing});
+	});
+var _vito$cadet$GitHubGraph$prReviewQuery = function () {
+	var pageInfo = A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'hasNextPage',
+			{ctor: '[]'},
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$bool),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'endCursor',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PageInfo)));
+	var paged = A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'pageInfo',
+			{ctor: '[]'},
+			pageInfo),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'nodes',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$prReviewObject)),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PagedResult)));
+	var issueCommentEvent = A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A3(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+			'createdAt',
+			{ctor: '[]'},
+			A2(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$customScalar, _vito$cadet$GitHubGraph$DateType, _elm_community$json_extra$Json_Decode_Extra$date)),
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'author',
+				{ctor: '[]'},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$IssueCommentEvent)));
+	var afterVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'after',
+		function (_) {
+			return _.after;
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$string));
+	var pageArgs = {
+		ctor: '::',
+		_0: {
+			ctor: '_Tuple2',
+			_0: 'first',
+			_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$int(100)
+		},
+		_1: {
+			ctor: '::',
+			_0: {
+				ctor: '_Tuple2',
+				_0: 'after',
+				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
+			},
+			_1: {ctor: '[]'}
+		}
+	};
+	var reviews = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+		A3(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field, 'reviews', pageArgs, paged));
+	var idVar = A3(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
+		'id',
+		function (_p48) {
+			return function (_) {
+				return _.id;
+			}(
+				function (_) {
+					return _.selector;
+				}(_p48));
+		},
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$id);
+	var queryRoot = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$assume(
+			A3(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+				'node',
+				{
+					ctor: '::',
+					_0: {
+						ctor: '_Tuple2',
+						_0: 'id',
+						_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(idVar)
+					},
+					_1: {ctor: '[]'}
+				},
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+					A2(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$inlineFragment,
+						_elm_lang$core$Maybe$Just(
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$onType('PullRequest')),
+						reviews)))));
+	return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument(queryRoot);
+}();
+var _vito$cadet$GitHubGraph$fetchPullRequestReviews = F2(
+	function (token, pr) {
+		return A3(
+			_vito$cadet$GitHubGraph$fetchPaged,
+			_vito$cadet$GitHubGraph$prReviewQuery,
+			token,
+			{selector: pr, after: _elm_lang$core$Maybe$Nothing});
 	});
 
 var _vito$cadet$Backend$encodeActorEvent = function (_p0) {
