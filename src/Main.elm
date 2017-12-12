@@ -3673,11 +3673,13 @@ finishProjectDragRefresh model =
                             |> updateContent c
                             |> updateColumn sid scs
                             |> updateColumn tid tcs
+                            |> computeGraph
 
                     ( Just _, Just c, Nothing, Nothing, Just tid, Just tcs ) ->
                         { model | projectDrag = Drag.complete model.projectDrag }
                             |> updateContent c
                             |> updateColumn tid tcs
+                            |> computeGraph
 
                     ( Just _, Just c, Just _, _, Just tid, Just tcs ) ->
                         { model | projectDrag = Drag.land model.projectDrag }
