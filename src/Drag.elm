@@ -44,6 +44,7 @@ type Msg source target msg
 type Model source target msg
     = NotDragging
     | Dragging (DragState source target msg)
+    | Dropping (DropState source target msg)
     | Dropped (DropState source target msg)
 
 
@@ -100,13 +101,16 @@ update msg model =
                             NotDragging
 
                         Just { target, msgFunc } ->
-                            Dropped
+                            Dropping
                                 { source = drag.source
                                 , target = target
                                 , msg = msgFunc drag.source target
                                 , start = drag.start
                                 , landed = False
                                 }
+
+        Dropping _ ->
+            model
 
         Dropped _ ->
             model
@@ -134,9 +138,6 @@ viewDropArea model wrap candidate ownSource =
                 NotDragging ->
                     False
 
-                Dropped { target, landed } ->
-                    target == candidate.target && not landed
-
                 Dragging state ->
                     case state.dropCandidate of
                         Just { target } ->
@@ -144,6 +145,12 @@ viewDropArea model wrap candidate ownSource =
 
                         _ ->
                             state.neverLeft && Just state.source == ownSource
+
+                Dropping { target, landed } ->
+                    target == candidate.target && not landed
+
+                Dropped { target, landed } ->
+                    target == candidate.target && not landed
 
         droppedElement =
             case model of
@@ -175,6 +182,13 @@ viewDropArea model wrap candidate ownSource =
                         else
                             []
 
+                    Dropping { start } ->
+                        if isOver then
+                            -- drop-area height + 2 * card-margin
+                            [ ( "min-height", toString (start.elementBounds.height) ++ "px" ) ]
+                        else
+                            []
+
                     Dropped { start } ->
                         if isOver then
                             -- drop-area height + 2 * card-margin
@@ -199,6 +213,16 @@ draggable model wrap source view =
         , HE.on "dragend" (JD.succeed (wrap End))
         ]
         [ view ]
+
+
+drop : Model source target msg -> Model source target msg
+drop model =
+    case model of
+        Dropping state ->
+            Dropped state
+
+        _ ->
+            model
 
 
 land : Model source target msg -> Model source target msg

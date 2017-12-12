@@ -545,8 +545,8 @@ update msg model =
                     { model | projectDrag = dragModel }
             in
                 case dragModel of
-                    Drag.Dropped { msg } ->
-                        update msg newModel
+                    Drag.Dropping { msg } ->
+                        update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
 
                     _ ->
                         ( newModel, Cmd.none )
@@ -560,8 +560,8 @@ update msg model =
                     { model | milestoneDrag = dragModel }
             in
                 case dragModel of
-                    Drag.Dropped { msg } ->
-                        update msg newModel
+                    Drag.Dropping { msg } ->
+                        update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
 
                     _ ->
                         ( newModel, Cmd.none )
