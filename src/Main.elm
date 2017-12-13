@@ -2566,14 +2566,14 @@ type alias GraphContext =
     }
 
 
-issueRadius : Card -> GraphContext -> Float
-issueRadius card { incoming, outgoing } =
+cardRadius : Card -> GraphContext -> Float
+cardRadius card { incoming, outgoing } =
     15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
-issueRadiusWithLabels : Card -> GraphContext -> Float
-issueRadiusWithLabels card context =
-    issueRadius card context + 3
+cardRadiusWithLabels : Card -> GraphContext -> Float
+cardRadiusWithLabels card context =
+    cardRadius card context + 3
 
 
 flairRadiusBase : Float
@@ -2581,8 +2581,8 @@ flairRadiusBase =
     16
 
 
-issueRadiusWithFlair : Card -> GraphContext -> Float
-issueRadiusWithFlair card context =
+cardRadiusWithFlair : Card -> GraphContext -> Float
+cardRadiusWithFlair card context =
     let
         reactionCounts =
             List.map .count card.reactions
@@ -2590,27 +2590,57 @@ issueRadiusWithFlair card context =
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
-        issueRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
+        cardRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
 
 
 cardNode : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> Node CardNodeState
 cardNode allLabels card context =
     let
         flair =
-            nodeFlairArcs card context
+            reactionFlairArcs card context
 
         labels =
             nodeLabelArcs allLabels card context
 
+        circle =
+            case card.content of
+                GitHubGraph.IssueCardContent _ ->
+                    Svg.g []
+                        [ Svg.circle
+                            [ SA.r (toString radii.base)
+                            , SA.fill "#fff"
+                            ]
+                            []
+                        , Svg.text_
+                            [ SA.textAnchor "middle"
+                            , SA.alignmentBaseline "middle"
+                            , SA.class "issue-number"
+                            ]
+                            [ Svg.text (toString card.number)
+                            ]
+                        ]
+
+                GitHubGraph.PullRequestCardContent pr ->
+                    Svg.g []
+                        [ prCircle pr card context
+                        , Svg.text_
+                            [ SA.textAnchor "middle"
+                            , SA.alignmentBaseline "middle"
+                            , SA.fill "#fff"
+                            ]
+                            [ Svg.text (toString card.number)
+                            ]
+                        ]
+
         radii =
-            { base = issueRadius card context
-            , withLabels = issueRadiusWithLabels card context
-            , withFlair = issueRadiusWithFlair card context
+            { base = cardRadius card context
+            , withLabels = cardRadiusWithLabels card context
+            , withFlair = cardRadiusWithFlair card context
             }
     in
         { card = card
         , viewLower = viewCardNodeFlair card radii flair
-        , viewUpper = viewCardNode card radii labels
+        , viewUpper = viewCardNode card radii circle labels
         , bounds =
             \{ x, y } ->
                 { x1 = x - radii.withFlair
@@ -2622,11 +2652,58 @@ cardNode allLabels card context =
         }
 
 
-nodeFlairArcs : Card -> GraphContext -> List (Svg Msg)
-nodeFlairArcs card context =
+prCircle : GitHubGraph.PullRequest -> Card -> GraphContext -> Svg Msg
+prCircle pr card context =
     let
         radius =
-            issueRadiusWithLabels card context
+            cardRadius card context
+
+        flairs =
+            [ ( "deletions", pr.deletions )
+            , ( "additions", pr.additions )
+            ]
+
+        segments =
+            VS.pie
+                { startAngle = 0
+                , endAngle = 2 * pi
+                , padAngle = 0
+                , sortingFn = \_ _ -> EQ
+                , valueFn = toFloat
+                , innerRadius = 0
+                , outerRadius = radius
+                , cornerRadius = 0
+                , padRadius = 0
+                }
+                (List.map Tuple.second flairs)
+
+        segment i =
+            case List.take 1 (List.drop i segments) of
+                [ s ] ->
+                    s
+
+                _ ->
+                    Debug.crash "impossible"
+    in
+        Svg.g [] <|
+            flip List.indexedMap flairs <|
+                \i ( classes, count ) ->
+                    let
+                        arc =
+                            segment i
+                    in
+                        Svg.path
+                            [ SA.d (VS.arc arc)
+                            , SA.class ("pr-arc " ++ classes)
+                            ]
+                            []
+
+
+reactionFlairArcs : Card -> GraphContext -> List (Svg Msg)
+reactionFlairArcs card context =
+    let
+        radius =
+            cardRadiusWithLabels card context
 
         reactionTypeEmoji type_ =
             case type_ of
@@ -2657,28 +2734,27 @@ nodeFlairArcs card context =
             List.filter (Tuple.second >> flip (>) 0) <|
                 (( "💬", card.commentCount ) :: emojiReactions)
 
-        reactionSegment i ( _, count ) =
-            let
-                segments =
-                    VS.pie
-                        { startAngle = 0
-                        , endAngle = 2 * pi
-                        , padAngle = 0.03
-                        , sortingFn = \_ _ -> EQ
-                        , valueFn = always 1.0
-                        , innerRadius = radius
-                        , outerRadius = radius + flairRadiusBase + toFloat count
-                        , cornerRadius = 3
-                        , padRadius = 0
-                        }
-                        (List.repeat (List.length flairs) 1)
-            in
-                case List.take 1 (List.drop i segments) of
-                    [ s ] ->
-                        s
+        segments =
+            VS.pie
+                { startAngle = 0
+                , endAngle = 2 * pi
+                , padAngle = 0.03
+                , sortingFn = \_ _ -> EQ
+                , valueFn = always 1.0
+                , innerRadius = radius
+                , outerRadius = radius + flairRadiusBase
+                , cornerRadius = 3
+                , padRadius = 0
+                }
+                (List.repeat (List.length flairs) 1)
 
-                    _ ->
-                        Debug.crash "impossible"
+        reactionSegment i ( _, count ) =
+            case List.take 1 (List.drop i segments) of
+                [ s ] ->
+                    s
+
+                _ ->
+                    Debug.crash "impossible"
 
         innerCentroid arc =
             let
@@ -2693,8 +2769,11 @@ nodeFlairArcs card context =
         flip List.indexedMap flairs <|
             \i (( emoji, count ) as reaction) ->
                 let
-                    arc =
+                    segmentArc =
                         reactionSegment i reaction
+
+                    arc =
+                        { segmentArc | outerRadius = segmentArc.outerRadius + toFloat count }
                 in
                     Svg.g [ SA.class "reveal" ]
                         [ Svg.path
@@ -2717,7 +2796,7 @@ nodeLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext ->
 nodeLabelArcs allLabels card context =
     let
         radius =
-            issueRadius card context
+            cardRadius card context
 
         labelSegments =
             VS.pie
@@ -2812,8 +2891,8 @@ activityClass now date =
             "active-long-ago"
 
 
-viewCardNode : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
-viewCardNode card radii labels { x, y } state =
+viewCardNode : Card -> CardNodeRadii -> Svg Msg -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
+viewCardNode card radii circle labels { x, y } state =
     let
         isSelected =
             Set.member card.id state.selectedCards
@@ -2821,38 +2900,6 @@ viewCardNode card radii labels { x, y } state =
         isHighlighted =
             Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
-
-        circleWithNumber =
-            case card.state of
-                IssueState _ ->
-                    [ Svg.circle
-                        [ SA.r (toString radii.base)
-                        , SA.fill "#fff"
-                        ]
-                        []
-                    , Svg.text_
-                        [ SA.textAnchor "middle"
-                        , SA.alignmentBaseline "middle"
-                        , SA.class "issue-number"
-                        ]
-                        [ Svg.text (toString card.number)
-                        ]
-                    ]
-
-                PullRequestState _ ->
-                    [ Svg.circle
-                        [ SA.r (toString radii.base)
-                        , SA.class "pr-circle"
-                        ]
-                        []
-                    , Svg.text_
-                        [ SA.textAnchor "middle"
-                        , SA.alignmentBaseline "middle"
-                        , SA.fill "#fff"
-                        ]
-                        [ Svg.text (toString card.number)
-                        ]
-                    ]
 
         projectHalo =
             Svg.circle
@@ -2898,7 +2945,7 @@ viewCardNode card radii labels { x, y } state =
                     SelectCard card.id
                 )
             ]
-            (circleWithNumber ++ labels ++ [ projectHalo ])
+            (circle :: labels ++ [ projectHalo ])
 
 
 viewCardEntry : Model -> Card -> Html Msg
