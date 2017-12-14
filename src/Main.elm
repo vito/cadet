@@ -2345,7 +2345,7 @@ computeGraph model =
             Dict.foldl
                 (\_ card thunks ->
                     if satisfiesFilters model allFilters card && isOpen card then
-                        Graph.Node (Hash.hash card.id) (cardNode model.allLabels card) :: thunks
+                        Graph.Node (Hash.hash card.id) (\context -> { value = cardNode model.allLabels card context, size = cardRadius card context }) :: thunks
                     else
                         thunks
                 )
@@ -2568,7 +2568,15 @@ type alias GraphContext =
 
 cardRadius : Card -> GraphContext -> Float
 cardRadius card { incoming, outgoing } =
-    15 + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+    15
+        + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+        + (case card.content of
+            GitHubGraph.PullRequestCardContent pr ->
+                toFloat (pr.additions + pr.deletions) / 50
+
+            _ ->
+                0
+          )
 
 
 cardRadiusWithLabels : Card -> GraphContext -> Float

@@ -2,7 +2,6 @@ module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, member, update, ti
 
 import Graph exposing (Graph)
 import Random
-import IntDict
 import Visualization.Force as VF
 
 
@@ -13,10 +12,10 @@ type alias ForceGraph n =
 
 
 type alias ForceNode n =
-    VF.Entity Graph.NodeId { value : n }
+    VF.Entity Graph.NodeId { value : n, size : Float }
 
 
-fromGraph : Graph n () -> ForceGraph n
+fromGraph : Graph { value : n, size : Float } () -> ForceGraph n
 fromGraph g =
     let
         graph =
@@ -27,7 +26,7 @@ fromGraph g =
                 distance =
                     case ( Graph.get from graph, Graph.get to graph ) of
                         ( Just fnc, Just tnc ) ->
-                            40 + (max (IntDict.size tnc.incoming) (IntDict.size fnc.outgoing) * 5)
+                            20 + ceiling (tnc.node.label.size + fnc.node.label.size)
 
                         _ ->
                             Debug.crash "impossible: unknown target"
@@ -90,7 +89,7 @@ update id f fg =
     }
 
 
-node : Graph.NodeContext n () -> Graph.NodeContext (ForceNode n) ()
+node : Graph.NodeContext { value : n, size : Float } () -> Graph.NodeContext (ForceNode n) ()
 node nc =
     let
         node =
@@ -114,7 +113,8 @@ node nc =
                         , vx = 0.0
                         , vy = 0.0
                         , id = node.id
-                        , value = node.label
+                        , value = node.label.value
+                        , size = node.label.size
                         }
                 }
         }
