@@ -57,7 +57,11 @@ a {
   .page-sidebar {
     overflow-y: auto;
     flex-shrink: 0;
-    min-width: 300px + (2 * @card-margin) + (31px - @card-margin);
+    width: 0;
+
+    @media(min-width: 900px) {
+      width: 300px + (2 * @card-margin) + (31px - @card-margin);
+    }
 
     background: @gray-dark;
 
