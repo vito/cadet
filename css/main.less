@@ -723,36 +723,39 @@ svg {
     stroke: @gray-light;
   }
 
-  .flair.active-today .flair-arcs {
-    fill: @white-fade-70;
-  }
+  .flair {
+    &.last-activity-is-me .flair-arc {
+      fill: @gray-light;
+    }
 
-  .flair.active-yesterday .flair-arcs {
-    fill: @white-fade-50;
-  }
+    .flair-arc {
+      fill: @white;
 
-  .flair.active-this-week .flair-arcs {
-    fill: @white-fade-30;
-  }
+      &.pending { fill: @yellow; }
+      &.success { fill: @green; }
+      &.failure { fill: @red; }
+      &.expected { fill: @purple; }
+      &.error { fill: @orange; }
+    }
 
-  .flair.active-long-ago .flair-arcs {
-    fill: @white-fade-15;
-  }
+    .octicon {
+      font-size: 12px !important;
+    }
 
-  .flair.last-activity-is-me.active-today .flair-arcs {
-    fill: fade(@gray-light, 70%);
-  }
+    .status-actor {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
 
-  .flair.last-activity-is-me.active-yesterday .flair-arcs {
-    fill: fade(@gray-light, 50%);
-  }
+    .status-icon {
+      color: @white;
+    }
 
-  .flair.last-activity-is-me.active-this-week .flair-arcs {
-    fill: fade(@gray-light, 30%);
-  }
-
-  .flair.last-activity-is-me.active-long-ago .flair-arcs {
-    fill: fade(@gray-light, 15%);
+    &.active-today .flair-arc { opacity: 0.7; }
+    &.active-yesterday .flair-arc { opacity: 0.5; }
+    &.active-this-week .flair-arc { opacity: 0.3; }
+    &.active-long-ago .flair-arc { opacity: 0.15; }
   }
 
   .reveal:hover .hidden {

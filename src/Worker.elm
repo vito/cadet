@@ -1,6 +1,7 @@
 port module Main exposing (..)
 
 import Date
+import Dict
 import Platform
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
@@ -35,6 +36,9 @@ port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
 
 
 port setActors : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+
+
+port setReviewers : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
 port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
@@ -408,12 +412,37 @@ update msg model =
                     )
                         |> List.sortBy (.createdAt >> Date.toTime)
                         |> List.map Backend.encodeActorEvent
+
+                reviewers =
+                    List.foldl
+                        (\r ->
+                            case r.state of
+                                GitHubGraph.PullRequestReviewStatePending ->
+                                    Dict.insert r.author.id r
+
+                                GitHubGraph.PullRequestReviewStateCommented ->
+                                    identity
+
+                                GitHubGraph.PullRequestReviewStateApproved ->
+                                    Dict.insert r.author.id r
+
+                                GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                    Dict.insert r.author.id r
+
+                                GitHubGraph.PullRequestReviewStateDismissed ->
+                                    Dict.remove r.author.id
+                        )
+                        Dict.empty
+                        reviews
+                        |> Dict.values
+                        |> List.map GitHubGraph.encodePullRequestReview
             in
                 log "timeline and reviews fetched for" id <|
                     ( model
                     , Cmd.batch
                         [ setReferences ( id, edges )
                         , setActors ( id, actors )
+                        , setReviewers ( id, reviewers )
                         ]
                     )
 

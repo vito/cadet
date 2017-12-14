@@ -26,6 +26,7 @@ module GitHubGraph
         , IssueOrPRSelector
         , RepoSelector
         , StatusState(..)
+        , MergeableState(..)
         , fetchOrgRepos
         , fetchOrgProjects
         , fetchOrgProject
@@ -66,6 +67,8 @@ module GitHubGraph
         , decodeIssue
         , encodePullRequest
         , decodePullRequest
+        , encodePullRequestReview
+        , decodePullRequestReview
         , encodeUser
         , decodeUser
         , encodeProject
@@ -153,7 +156,28 @@ type alias PullRequest =
     , deletions : Int
     , milestone : Maybe Milestone
     , mergeable : MergeableState
-    , lastCommitStatusState : Maybe StatusState
+    , lastCommitStatus : Maybe Status
+    }
+
+
+type alias Status =
+    { state : StatusState
+    , contexts : List StatusContext
+    }
+
+
+type alias StatusContext =
+    { state : StatusState
+    , context : String
+    , targetUrl : String
+    , creator : Actor
+    }
+
+
+type alias Actor =
+    { url : String
+    , login : String
+    , avatar : String
     }
 
 
@@ -1035,6 +1059,30 @@ issueObject =
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
 
 
+actorObject : GB.ValueSpec GB.NonNull GB.ObjectType Actor vars
+actorObject =
+    GB.object Actor
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "login" [] GB.string)
+        |> GB.with (GB.field "avatarUrl" [] GB.string)
+
+
+statusContextObject : GB.ValueSpec GB.NonNull GB.ObjectType StatusContext vars
+statusContextObject =
+    GB.object StatusContext
+        |> GB.with (GB.field "state" [] (GB.enum statusStates))
+        |> GB.with (GB.field "context" [] GB.string)
+        |> GB.with (GB.field "targetUrl" [] GB.string)
+        |> GB.with (GB.field "creator" [] actorObject)
+
+
+statusObject : GB.ValueSpec GB.NonNull GB.ObjectType Status vars
+statusObject =
+    GB.object Status
+        |> GB.with (GB.field "state" [] (GB.enum statusStates))
+        |> GB.with (GB.field "contexts" [] (GB.list statusContextObject))
+
+
 prObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequest vars
 prObject =
     GB.object PullRequest
@@ -1055,7 +1103,7 @@ prObject =
         |> GB.with (GB.field "deletions" [] GB.int)
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
         |> GB.with (GB.field "mergeable" [] (GB.enum mergeableStates))
-        |> GB.with (GB.field "commits" [ ( "last", GA.int 1 ) ] (GB.map (List.head << List.filterMap identity) <| GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] (GB.extract (GB.field "status" [] (GB.nullable <| GB.extract (GB.field "state" [] (GB.enum statusStates)))))))))))
+        |> GB.with (GB.field "commits" [ ( "last", GA.int 1 ) ] (GB.map (List.head << List.filterMap identity) <| GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] (GB.extract (GB.field "status" [] (GB.nullable statusObject)))))))))
 
 
 prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
@@ -1381,7 +1429,7 @@ decodePullRequest =
         |: (JD.field "deletions" JD.int)
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
         |: (JD.field "mergeable" decodeMergeableState)
-        |: (JD.field "last_commit_status_state" <| JD.maybe decodeStatusState)
+        |: (JD.field "last_commit_status" <| JD.maybe decodeStatus)
 
 
 decodePullRequestReview : JD.Decoder PullRequestReview
@@ -1459,6 +1507,30 @@ decodeUser =
     JD.succeed User
         |: (JD.field "id" JD.string)
         |: (JD.field "database_id" JD.int)
+        |: (JD.field "url" JD.string)
+        |: (JD.field "login" JD.string)
+        |: (JD.field "avatar" JD.string)
+
+
+decodeStatus : JD.Decoder Status
+decodeStatus =
+    JD.succeed Status
+        |: (JD.field "state" decodeStatusState)
+        |: (JD.field "contexts" (JD.list decodeStatusContext))
+
+
+decodeStatusContext : JD.Decoder StatusContext
+decodeStatusContext =
+    JD.succeed StatusContext
+        |: (JD.field "state" decodeStatusState)
+        |: (JD.field "context" JD.string)
+        |: (JD.field "target_url" JD.string)
+        |: (JD.field "creator" decodeActor)
+
+
+decodeActor : JD.Decoder Actor
+decodeActor =
+    JD.succeed Actor
         |: (JD.field "url" JD.string)
         |: (JD.field "login" JD.string)
         |: (JD.field "avatar" JD.string)
@@ -1650,7 +1722,7 @@ encodePullRequest record =
         , ( "deletions", JE.int record.deletions )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         , ( "mergeable", encodeMergeableState record.mergeable )
-        , ( "last_commit_status_state", JEE.maybe encodeStatusState record.lastCommitStatusState )
+        , ( "last_commit_status", JEE.maybe encodeStatus record.lastCommitStatus )
         ]
 
 
@@ -1735,6 +1807,33 @@ encodeUser record =
         [ ( "id", JE.string record.id )
         , ( "database_id", JE.int record.databaseId )
         , ( "url", JE.string record.url )
+        , ( "login", JE.string record.login )
+        , ( "avatar", JE.string record.avatar )
+        ]
+
+
+encodeStatus : Status -> JE.Value
+encodeStatus record =
+    JE.object
+        [ ( "state", encodeStatusState record.state )
+        , ( "contexts", JE.list (List.map encodeStatusContext record.contexts) )
+        ]
+
+
+encodeStatusContext : StatusContext -> JE.Value
+encodeStatusContext record =
+    JE.object
+        [ ( "state", encodeStatusState record.state )
+        , ( "context", JE.string record.context )
+        , ( "target_url", JE.string record.targetUrl )
+        , ( "creator", encodeActor record.creator )
+        ]
+
+
+encodeActor : Actor -> JE.Value
+encodeActor record =
+    JE.object
+        [ ( "url", JE.string record.url )
         , ( "login", JE.string record.login )
         , ( "avatar", JE.string record.avatar )
         ]

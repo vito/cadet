@@ -415,7 +415,7 @@ location2messages loc =
 
 type alias CardNodeRadii =
     { base : Float
-    , withLabels : Float
+    , withoutFlair : Float
     , withFlair : Float
     }
 
@@ -2341,11 +2341,16 @@ computeGraph model =
                 Nothing ->
                     model.graphFilters
 
+        node card context =
+            { value = cardNode model card context
+            , size = cardRadiusBase card context
+            }
+
         cardNodeThunks =
             Dict.foldl
                 (\_ card thunks ->
                     if satisfiesFilters model allFilters card && isOpen card then
-                        Graph.Node (Hash.hash card.id) (\context -> { value = cardNode model.allLabels card context, size = cardRadius card context }) :: thunks
+                        Graph.Node (Hash.hash card.id) (node card) :: thunks
                     else
                         thunks
                 )
@@ -2566,8 +2571,8 @@ type alias GraphContext =
     }
 
 
-cardRadius : Card -> GraphContext -> Float
-cardRadius card { incoming, outgoing } =
+cardRadiusBase : Card -> GraphContext -> Float
+cardRadiusBase card { incoming, outgoing } =
     15
         + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
         + (case card.content of
@@ -2581,12 +2586,17 @@ cardRadius card { incoming, outgoing } =
 
 cardRadiusWithLabels : Card -> GraphContext -> Float
 cardRadiusWithLabels card context =
-    cardRadius card context + 3
+    cardRadiusBase card context + 3
+
+
+cardRadiusWithoutFlair : Card -> GraphContext -> Float
+cardRadiusWithoutFlair card context =
+    cardRadiusWithLabels card context
 
 
 flairRadiusBase : Float
 flairRadiusBase =
-    16
+    20
 
 
 cardRadiusWithFlair : Card -> GraphContext -> Float
@@ -2598,17 +2608,17 @@ cardRadiusWithFlair card context =
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
-        cardRadiusWithLabels card context + flairRadiusBase + toFloat highestFlair
+        cardRadiusWithoutFlair card context + flairRadiusBase + toFloat highestFlair
 
 
-cardNode : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> Node CardNodeState
-cardNode allLabels card context =
+cardNode : Model -> Card -> GraphContext -> Node CardNodeState
+cardNode model card context =
     let
-        flair =
-            reactionFlairArcs card context
+        flairArcs =
+            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id model.data.reviewers) card context
 
-        labels =
-            nodeLabelArcs allLabels card context
+        labelArcs =
+            cardLabelArcs model.allLabels card context
 
         circle =
             case card.content of
@@ -2641,14 +2651,14 @@ cardNode allLabels card context =
                         ]
 
         radii =
-            { base = cardRadius card context
-            , withLabels = cardRadiusWithLabels card context
+            { base = cardRadiusBase card context
+            , withoutFlair = cardRadiusWithoutFlair card context
             , withFlair = cardRadiusWithFlair card context
             }
     in
         { card = card
-        , viewLower = viewCardNodeFlair card radii flair
-        , viewUpper = viewCardNode card radii circle labels
+        , viewLower = viewCardNodeFlair card radii flairArcs
+        , viewUpper = viewCardNode card radii circle labelArcs
         , bounds =
             \{ x, y } ->
                 { x1 = x - radii.withFlair
@@ -2664,7 +2674,7 @@ prCircle : GitHubGraph.PullRequest -> Card -> GraphContext -> Svg Msg
 prCircle pr card context =
     let
         radius =
-            cardRadius card context
+            cardRadiusBase card context
 
         flairs =
             [ ( "deletions", pr.deletions )
@@ -2707,11 +2717,11 @@ prCircle pr card context =
                             []
 
 
-reactionFlairArcs : Card -> GraphContext -> List (Svg Msg)
-reactionFlairArcs card context =
+reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> GraphContext -> List (Svg Msg)
+reactionFlairArcs reviews card context =
     let
         radius =
-            cardRadiusWithLabels card context
+            cardRadiusWithoutFlair card context
 
         reactionTypeEmoji type_ =
             case type_ of
@@ -2736,11 +2746,107 @@ reactionFlairArcs card context =
         emojiReactions =
             flip List.map card.reactions <|
                 \{ type_, count } ->
-                    ( reactionTypeEmoji type_, count )
+                    ( Html.text (reactionTypeEmoji type_), "reaction", count )
+
+        prSegments =
+            case card.content of
+                GitHubGraph.IssueCardContent _ ->
+                    []
+
+                GitHubGraph.PullRequestCardContent pr ->
+                    let
+                        statusChecks =
+                            pr.lastCommitStatus
+                                |> Maybe.map .contexts
+                                |> Maybe.withDefault []
+                                |> List.map
+                                    (\c ->
+                                        ( Html.span
+                                            [ HA.classList
+                                                [ ( "status-icon", True )
+                                                , ( "octicon", True )
+                                                , ( case c.state of
+                                                        GitHubGraph.StatusStatePending ->
+                                                            "octicon-primitive-dot"
+
+                                                        GitHubGraph.StatusStateSuccess ->
+                                                            "octicon-check"
+
+                                                        GitHubGraph.StatusStateFailure ->
+                                                            "octicon-x"
+
+                                                        GitHubGraph.StatusStateExpected ->
+                                                            "octicon-question"
+
+                                                        GitHubGraph.StatusStateError ->
+                                                            "octicon-alert"
+                                                  , True
+                                                  )
+                                                ]
+                                            ]
+                                            []
+                                        , case c.state of
+                                            GitHubGraph.StatusStatePending ->
+                                                "pending"
+
+                                            GitHubGraph.StatusStateSuccess ->
+                                                "success"
+
+                                            GitHubGraph.StatusStateFailure ->
+                                                "failure"
+
+                                            GitHubGraph.StatusStateExpected ->
+                                                "expected"
+
+                                            GitHubGraph.StatusStateError ->
+                                                "error"
+                                        , 0
+                                        )
+                                    )
+
+                        reviewStates =
+                            List.map
+                                (\r ->
+                                    ( Html.img [ HA.class "status-actor", HA.src r.author.avatar ] []
+                                    , case r.state of
+                                        GitHubGraph.PullRequestReviewStatePending ->
+                                            "pending"
+
+                                        GitHubGraph.PullRequestReviewStateApproved ->
+                                            "success"
+
+                                        GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                            "failure"
+
+                                        GitHubGraph.PullRequestReviewStateCommented ->
+                                            "commented"
+
+                                        GitHubGraph.PullRequestReviewStateDismissed ->
+                                            "dismissed"
+                                    , 0
+                                    )
+                                )
+                                reviews
+                    in
+                        ( Html.span [ HA.class "status-icon octicon octicon-git-merge" ] []
+                        , case pr.mergeable of
+                            GitHubGraph.MergeableStateMergeable ->
+                                "success"
+
+                            GitHubGraph.MergeableStateConflicting ->
+                                "failure"
+
+                            GitHubGraph.MergeableStateUnknown ->
+                                "pending"
+                        , 0
+                        )
+                            :: (statusChecks ++ reviewStates)
 
         flairs =
-            List.filter (Tuple.second >> flip (>) 0) <|
-                (( "💬", card.commentCount ) :: emojiReactions)
+            prSegments
+                ++ (List.filter (\( _, _, count ) -> count > 0) <|
+                        (( Html.span [ HA.class "octicon octicon-comment" ] [], "comments", card.commentCount ) :: emojiReactions)
+                   )
 
         segments =
             VS.pie
@@ -2756,7 +2862,7 @@ reactionFlairArcs card context =
                 }
                 (List.repeat (List.length flairs) 1)
 
-        reactionSegment i ( _, count ) =
+        reactionSegment i ( _, _, count ) =
             case List.take 1 (List.drop i segments) of
                 [ s ] ->
                     s
@@ -2767,15 +2873,15 @@ reactionFlairArcs card context =
         innerCentroid arc =
             let
                 r =
-                    arc.innerRadius + 10
+                    arc.innerRadius + 12
 
                 a =
                     (arc.startAngle + arc.endAngle) / 2 - pi / 2
             in
-                ( cos a * r, sin a * r )
+                ( cos a * r - 8, sin a * r - 8 )
     in
         flip List.indexedMap flairs <|
-            \i (( emoji, count ) as reaction) ->
+            \i (( content, class, count ) as reaction) ->
                 let
                     segmentArc =
                         reactionSegment i reaction
@@ -2786,25 +2892,23 @@ reactionFlairArcs card context =
                     Svg.g [ SA.class "reveal" ]
                         [ Svg.path
                             [ SA.d (VS.arc arc)
-                            , SA.class "flair-arcs"
+                            , SA.class ("flair-arc " ++ class)
                             ]
                             []
-                        , Svg.text_
+                        , Svg.foreignObject
                             [ SA.transform ("translate" ++ toString (innerCentroid arc))
-                            , SA.textAnchor "middle"
-                            , SA.alignmentBaseline "middle"
                             , SA.class "hidden"
                             ]
-                            [ Svg.text emoji
+                            [ content
                             ]
                         ]
 
 
-nodeLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> List (Svg Msg)
-nodeLabelArcs allLabels card context =
+cardLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> List (Svg Msg)
+cardLabelArcs allLabels card context =
     let
         radius =
-            cardRadius card context
+            cardRadiusBase card context
 
         labelSegments =
             VS.pie
@@ -2849,7 +2953,7 @@ viewCardNodeFlair card radii flair { x, y } state =
             if List.isEmpty card.labels then
                 radii.base + 5
             else
-                radii.withLabels + 5
+                radii.withoutFlair + 5
 
         anticipatedHalo =
             if isHighlighted then
@@ -3307,18 +3411,7 @@ viewLabel model id =
     in
         Html.span
             [ HA.class "label"
-            , HA.style
-                [ ( "background-color", "#" ++ color )
-                , ( "color"
-                  , if colorIsLight model color then
-                        -- GitHub appears to pre-compute a hex code, but this seems to be
-                        -- pretty much all it's doing
-                        "rgba(0, 0, 0, .8)"
-                    else
-                        -- for darker backgrounds they just do white
-                        "#fff"
-                  )
-                ]
+            , labelColorStyle model color
             ]
             [ Html.span [ HA.class "label-text" ]
                 [ Html.text name ]

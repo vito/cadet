@@ -44,6 +44,7 @@ type alias Data =
     , columnCards : Dict GitHubGraph.ID (List ColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
     , actors : Dict GitHubGraph.ID (List ActorEvent)
+    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
     }
 
 
@@ -83,6 +84,7 @@ emptyData =
     , columnCards = Dict.empty
     , references = Dict.empty
     , actors = Dict.empty
+    , reviewers = Dict.empty
     }
 
 
@@ -168,6 +170,7 @@ decodeData =
         |: (JD.field "columnCards" <| JD.dict decodeCards)
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
         |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
+        |: (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
 
 
 decodeCards : JD.Decoder (List ColumnCard)

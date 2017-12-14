@@ -39,6 +39,9 @@ const data = {
   // map from issue/pr id to actors in timeline
   actors: {},
 
+  // map from pr to review states per user
+  reviewers: {},
+
   // projects by id
   projects: {},
 
@@ -182,6 +185,14 @@ worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   data.actors[id] = val;
+  dataIndex++;
+  popPoll();
+});
+
+worker.ports.setReviewers.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.reviewers[id] = val;
   dataIndex++;
   popPoll();
 });
