@@ -53,6 +53,7 @@ type alias Model =
     , allCards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
+    , cardSearch : String
     , selectedCards : Set GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
@@ -459,6 +460,7 @@ init config =
       , allCards = Dict.empty
       , allLabels = Dict.empty
       , colorLightnessCache = Dict.empty
+      , cardSearch = ""
       , selectedCards = Set.empty
       , anticipatedCards = Set.empty
       , highlightedCard = Nothing
@@ -778,7 +780,12 @@ update msg model =
                     Dict.filter cardMatch cardsByTitle
                         |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
             in
-                ( { model | anticipatedCards = foundCards }, Cmd.none )
+                ( { model
+                    | cardSearch = str
+                    , anticipatedCards = foundCards
+                  }
+                , Cmd.none
+                )
 
         SelectAnticipatedCards ->
             ( { model
@@ -1744,7 +1751,7 @@ viewNavBar model =
                 [ Html.span [ HA.class "octicon octicon-milestone" ] []
                 ]
             ]
-        , viewSearch
+        , viewSearch model
         ]
 
 
@@ -1996,6 +2003,7 @@ viewLabelRow model label repos =
                                 [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                     Html.span
                                         [ HA.class "label-icon octicon octicon-tag"
+                                        , HE.onClick (searchLabel model label.name)
                                         , labelColorStyle model label.color
                                         ]
                                         []
@@ -2008,6 +2016,7 @@ viewLabelRow model label repos =
                                         []
                                 , Html.span
                                     [ HA.class "label big"
+                                    , HE.onClick (searchLabel model label.name)
                                     , labelColorStyle model label.color
                                     ]
                                     [ Html.span [ HA.class "label-text" ]
@@ -2122,6 +2131,15 @@ viewLabelRow model label repos =
                         ]
                 ]
             ]
+
+
+searchLabel : Model -> String -> Msg
+searchLabel model name =
+    SearchCards <|
+        if String.isEmpty model.cardSearch then
+            "label:" ++ name
+        else
+            model.cardSearch ++ " label:" ++ name
 
 
 labelColorStyle : Model -> String -> Html.Attribute Msg
@@ -2297,8 +2315,8 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
         ]
 
 
-viewSearch : Html Msg
-viewSearch =
+viewSearch : Model -> Html Msg
+viewSearch model =
     Html.div [ HA.class "card-search" ]
         [ Html.span
             [ HE.onClick ClearSelectedCards
@@ -2306,7 +2324,7 @@ viewSearch =
             ]
             [ Html.text "" ]
         , Html.form [ HE.onSubmit SelectAnticipatedCards ]
-            [ Html.input [ HE.onInput SearchCards, HA.placeholder "filter cards" ] [] ]
+            [ Html.input [ HE.onInput SearchCards, HA.placeholder "filter cards", HA.value model.cardSearch ] [] ]
         ]
 
 
@@ -3412,6 +3430,7 @@ viewLabel model id =
         Html.span
             [ HA.class "label"
             , labelColorStyle model color
+            , HE.onClick (searchLabel model name)
             ]
             [ Html.span [ HA.class "label-text" ]
                 [ Html.text name ]
