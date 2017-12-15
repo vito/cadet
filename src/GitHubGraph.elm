@@ -156,7 +156,13 @@ type alias PullRequest =
     , deletions : Int
     , milestone : Maybe Milestone
     , mergeable : MergeableState
-    , lastCommitStatus : Maybe Status
+    , lastCommit : Maybe Commit
+    }
+
+
+type alias Commit =
+    { sha : String
+    , status : Maybe Status
     }
 
 
@@ -1103,7 +1109,20 @@ prObject =
         |> GB.with (GB.field "deletions" [] GB.int)
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
         |> GB.with (GB.field "mergeable" [] (GB.enum mergeableStates))
-        |> GB.with (GB.field "commits" [ ( "last", GA.int 1 ) ] (GB.map (List.head << List.filterMap identity) <| GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] (GB.extract (GB.field "status" [] (GB.nullable statusObject)))))))))
+        |> GB.with
+            (GB.field "commits"
+                [ ( "last", GA.int 1 ) ]
+                (GB.map List.head <|
+                    GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] commitObject))))
+                )
+            )
+
+
+commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
+commitObject =
+    GB.object Commit
+        |> GB.with (GB.field "sha" [] GB.string)
+        |> GB.with (GB.field "status" [] (GB.nullable statusObject))
 
 
 prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
@@ -1429,7 +1448,14 @@ decodePullRequest =
         |: (JD.field "deletions" JD.int)
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
         |: (JD.field "mergeable" decodeMergeableState)
-        |: (JD.field "last_commit_status" <| JD.maybe decodeStatus)
+        |: (JD.field "last_commit" <| JD.maybe decodeCommit)
+
+
+decodeCommit : JD.Decoder Commit
+decodeCommit =
+    JD.succeed Commit
+        |: JD.field "sha" JD.string
+        |: JD.field "status" (JD.maybe decodeStatus)
 
 
 decodePullRequestReview : JD.Decoder PullRequestReview
@@ -1722,7 +1748,15 @@ encodePullRequest record =
         , ( "deletions", JE.int record.deletions )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         , ( "mergeable", encodeMergeableState record.mergeable )
-        , ( "last_commit_status", JEE.maybe encodeStatus record.lastCommitStatus )
+        , ( "last_commit", JEE.maybe encodeCommit record.lastCommit )
+        ]
+
+
+encodeCommit : Commit -> JE.Value
+encodeCommit record =
+    JE.object
+        [ ( "sha", JE.string record.sha )
+        , ( "status", JEE.maybe encodeStatus record.status )
         ]
 
 

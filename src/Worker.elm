@@ -1,7 +1,7 @@
 port module Main exposing (..)
 
 import Date
-import Dict
+import Dict exposing (Dict)
 import Platform
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
@@ -72,9 +72,10 @@ type alias Model =
     , githubOrg : String
     , skipTimeline : Bool
     , noRefresh : Bool
-    , projects : List GitHubGraph.Project
     , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
+    , projects : List GitHubGraph.Project
+    , commitPRs : Dict String GitHubGraph.ID
     }
 
 
@@ -105,9 +106,10 @@ init { githubToken, githubOrg, skipTimeline, noRefresh } =
         , githubOrg = githubOrg
         , skipTimeline = skipTimeline
         , noRefresh = noRefresh
-        , projects = []
         , loadQueue = []
         , failedQueue = []
+        , projects = []
+        , commitPRs = Dict.empty
         }
 
 
@@ -234,8 +236,8 @@ update msg model =
                 ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "status" payload ->
-            log "status hook received; ignoring" () <|
-                ( model, Cmd.none )
+            log "status hook received; refreshing associated pr" () <|
+                ( decodeAndFetchPRForCommit payload model, Cmd.none )
 
         HookReceived event payload ->
             log "hook received" ( event, payload ) <|
@@ -322,13 +324,27 @@ update msg model =
 
         PullRequestsFetched repo (Ok prs) ->
             let
+                openPRs =
+                    List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen) prs
+
                 fetchTimelines =
-                    prs
-                        |> List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen)
-                        |> List.map (fetchPRTimelineAndReviews model << .id)
+                    List.map (fetchPRTimelineAndReviews model << .id) openPRs
+
+                commitPRs =
+                    List.foldl
+                        (\pr ->
+                            case pr.lastCommit of
+                                Just { sha } ->
+                                    Dict.insert sha pr.id
+
+                                Nothing ->
+                                    identity
+                        )
+                        Dict.empty
+                        openPRs
             in
                 log "prs fetched for" repo.url <|
-                    ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
+                    ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
                     , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
                     )
 
@@ -338,7 +354,16 @@ update msg model =
 
         PullRequestFetched (Ok pr) ->
             log "pr fetched" pr.url <|
-                ( { model | loadQueue = fetchPRTimelineAndReviews model pr.id :: model.loadQueue }
+                ( { model
+                    | commitPRs =
+                        case pr.lastCommit of
+                            Just { sha } ->
+                                Dict.insert sha pr.id model.commitPRs
+
+                            Nothing ->
+                                model.commitPRs
+                    , loadQueue = fetchPRTimelineAndReviews model pr.id :: model.loadQueue
+                  }
                 , setPullRequest (GitHubGraph.encodePullRequest pr)
                 )
 
@@ -534,6 +559,22 @@ decodeAndFetchRepo payload model =
     case JD.decodeValue decodeRepoSelector payload of
         Ok sel ->
             { model | loadQueue = fetchRepo model sel :: model.loadQueue }
+
+        Err err ->
+            log "failed to decode repo" ( err, payload ) <|
+                model
+
+
+decodeAndFetchPRForCommit : JD.Value -> Model -> Model
+decodeAndFetchPRForCommit payload model =
+    case JD.decodeValue (JD.field "sha" JD.string) payload of
+        Ok sha ->
+            case Dict.get sha model.commitPRs of
+                Just id ->
+                    { model | loadQueue = fetchPullRequest model id :: model.loadQueue }
+
+                Nothing ->
+                    model
 
         Err err ->
             log "failed to decode repo" ( err, payload ) <|

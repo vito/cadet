@@ -2774,53 +2774,54 @@ reactionFlairArcs reviews card context =
                 GitHubGraph.PullRequestCardContent pr ->
                     let
                         statusChecks =
-                            pr.lastCommitStatus
-                                |> Maybe.map .contexts
-                                |> Maybe.withDefault []
-                                |> List.map
-                                    (\c ->
-                                        ( Html.span
-                                            [ HA.classList
-                                                [ ( "status-icon", True )
-                                                , ( "octicon", True )
-                                                , ( case c.state of
-                                                        GitHubGraph.StatusStatePending ->
-                                                            "octicon-primitive-dot"
+                            case Maybe.map .status pr.lastCommit of
+                                Just (Just { contexts }) ->
+                                    flip List.map contexts <|
+                                        \c ->
+                                            ( Html.span
+                                                [ HA.classList
+                                                    [ ( "status-icon", True )
+                                                    , ( "octicon", True )
+                                                    , ( case c.state of
+                                                            GitHubGraph.StatusStatePending ->
+                                                                "octicon-primitive-dot"
 
-                                                        GitHubGraph.StatusStateSuccess ->
-                                                            "octicon-check"
+                                                            GitHubGraph.StatusStateSuccess ->
+                                                                "octicon-check"
 
-                                                        GitHubGraph.StatusStateFailure ->
-                                                            "octicon-x"
+                                                            GitHubGraph.StatusStateFailure ->
+                                                                "octicon-x"
 
-                                                        GitHubGraph.StatusStateExpected ->
-                                                            "octicon-question"
+                                                            GitHubGraph.StatusStateExpected ->
+                                                                "octicon-question"
 
-                                                        GitHubGraph.StatusStateError ->
-                                                            "octicon-alert"
-                                                  , True
-                                                  )
+                                                            GitHubGraph.StatusStateError ->
+                                                                "octicon-alert"
+                                                      , True
+                                                      )
+                                                    ]
                                                 ]
-                                            ]
-                                            []
-                                        , case c.state of
-                                            GitHubGraph.StatusStatePending ->
-                                                "pending"
+                                                []
+                                            , case c.state of
+                                                GitHubGraph.StatusStatePending ->
+                                                    "pending"
 
-                                            GitHubGraph.StatusStateSuccess ->
-                                                "success"
+                                                GitHubGraph.StatusStateSuccess ->
+                                                    "success"
 
-                                            GitHubGraph.StatusStateFailure ->
-                                                "failure"
+                                                GitHubGraph.StatusStateFailure ->
+                                                    "failure"
 
-                                            GitHubGraph.StatusStateExpected ->
-                                                "expected"
+                                                GitHubGraph.StatusStateExpected ->
+                                                    "expected"
 
-                                            GitHubGraph.StatusStateError ->
-                                                "error"
-                                        , 0
-                                        )
-                                    )
+                                                GitHubGraph.StatusStateError ->
+                                                    "error"
+                                            , 0
+                                            )
+
+                                _ ->
+                                    []
 
                         reviewStates =
                             List.map
