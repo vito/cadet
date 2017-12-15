@@ -340,7 +340,7 @@ update msg model =
                                 Nothing ->
                                     identity
                         )
-                        Dict.empty
+                        model.commitPRs
                         openPRs
             in
                 log "prs fetched for" repo.url <|
@@ -571,13 +571,15 @@ decodeAndFetchPRForCommit payload model =
         Ok sha ->
             case Dict.get sha model.commitPRs of
                 Just id ->
-                    { model | loadQueue = fetchPullRequest model id :: model.loadQueue }
+                    log "refreshing pr for commit" ( sha, id ) <|
+                        { model | loadQueue = fetchPullRequest model id :: model.loadQueue }
 
                 Nothing ->
-                    model
+                    log "no associated pr to refresh" sha <|
+                        model
 
         Err err ->
-            log "failed to decode repo" ( err, payload ) <|
+            log "failed to decode sha" ( err, payload ) <|
                 model
 
 
