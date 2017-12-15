@@ -1121,7 +1121,7 @@ prObject =
 commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
 commitObject =
     GB.object Commit
-        |> GB.with (GB.field "sha" [] GB.string)
+        |> GB.with (GB.field "oid" [] GB.string)
         |> GB.with (GB.field "status" [] (GB.nullable statusObject))
 
 

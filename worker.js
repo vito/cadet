@@ -11172,7 +11172,7 @@ var _vito$cadet$GitHubGraph$commitObject = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'sha',
+			'oid',
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Commit)));
