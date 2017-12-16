@@ -61,7 +61,7 @@ type alias Model =
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
-    , cardGraphs : List (ForceGraph (Node CardNodeState))
+    , cardGraphs : List ( CardNodeState, ForceGraph (Node CardNodeState) )
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
@@ -123,6 +123,7 @@ type alias CardNodeState =
     , anticipatedCards : Set GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , me : Maybe Me
+    , dataIndex : Int
     , cardEvents : Dict GitHubGraph.ID (List Backend.ActorEvent)
     }
 
@@ -494,7 +495,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every Time.hour (SetCurrentDate << Date.fromTime)
-        , if List.all FG.isCompleted model.cardGraphs then
+        , if List.all (Tuple.second >> FG.isCompleted) model.cardGraphs then
             Sub.none
           else
             AnimationFrame.times Tick
@@ -539,11 +540,11 @@ update msg model =
             ( { model
                 | cardGraphs =
                     List.map
-                        (\g ->
+                        (\( s, g ) ->
                             if FG.isCompleted g then
-                                g
+                                ( s, g )
                             else
-                                FG.tick g
+                                ( s, FG.tick g )
                         )
                         model.cardGraphs
               }
@@ -551,7 +552,7 @@ update msg model =
             )
 
         SetCurrentDate date ->
-            ( { model | currentDate = date }, Cmd.none )
+            ( computeGraphState { model | currentDate = date }, Cmd.none )
 
         ProjectDrag msg ->
             let
@@ -780,58 +781,62 @@ update msg model =
                     Dict.filter cardMatch cardsByTitle
                         |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
             in
-                ( { model
-                    | cardSearch = str
-                    , anticipatedCards = foundCards
-                  }
+                ( computeGraphState
+                    { model
+                        | cardSearch = str
+                        , anticipatedCards = foundCards
+                    }
                 , Cmd.none
                 )
 
         SelectAnticipatedCards ->
-            ( { model
-                | anticipatedCards = Set.empty
-                , selectedCards = Set.union model.selectedCards model.anticipatedCards
-              }
+            ( computeGraphState
+                { model
+                    | anticipatedCards = Set.empty
+                    , selectedCards = Set.union model.selectedCards model.anticipatedCards
+                }
             , Cmd.none
             )
 
         SelectCard id ->
-            ( { model | selectedCards = Set.insert id model.selectedCards }
+            ( computeGraphState { model | selectedCards = Set.insert id model.selectedCards }
             , Cmd.none
             )
 
         ClearSelectedCards ->
-            ( { model | selectedCards = Set.empty }, Cmd.none )
+            ( computeGraphState { model | selectedCards = Set.empty }, Cmd.none )
 
         DeselectCard id ->
-            ( { model | selectedCards = Set.remove id model.selectedCards }
+            ( computeGraphState { model | selectedCards = Set.remove id model.selectedCards }
             , Cmd.none
             )
 
         HighlightNode id ->
-            ( { model | highlightedNode = Just id }, Cmd.none )
+            ( computeGraphState { model | highlightedNode = Just id }, Cmd.none )
 
         UnhighlightNode id ->
-            ( { model | highlightedNode = Nothing }, Cmd.none )
+            ( computeGraphState { model | highlightedNode = Nothing }, Cmd.none )
 
         AnticipateCardFromNode id ->
-            ( { model
-                | anticipatedCards = Set.insert id model.anticipatedCards
-                , highlightedCard = Just id
-              }
+            ( computeGraphState
+                { model
+                    | anticipatedCards = Set.insert id model.anticipatedCards
+                    , highlightedCard = Just id
+                }
             , Cmd.none
             )
 
         UnanticipateCardFromNode id ->
-            ( { model
-                | anticipatedCards = Set.remove id model.anticipatedCards
-                , highlightedCard = Nothing
-              }
+            ( computeGraphState
+                { model
+                    | anticipatedCards = Set.remove id model.anticipatedCards
+                    , highlightedCard = Nothing
+                }
             , Cmd.none
             )
 
         MeFetched (Ok me) ->
-            ( { model | me = me }, Cmd.none )
+            ( computeGraphState { model | me = me }, Cmd.none )
 
         MeFetched (Err msg) ->
             flip always (Debug.log "error fetching self" msg) <|
@@ -860,15 +865,16 @@ update msg model =
                             Dict.empty
                             allLabels
                 in
-                    computeGraph <|
-                        computeDataView
-                            { model
-                                | data = value
-                                , dataIndex = index
-                                , allCards = allCards
-                                , allLabels = allLabels
-                                , colorLightnessCache = colorLightnessCache
-                            }
+                    computeGraphState <|
+                        computeGraph <|
+                            computeDataView <|
+                                { model
+                                    | data = value
+                                    , dataIndex = index
+                                    , allCards = allCards
+                                    , allLabels = allLabels
+                                    , colorLightnessCache = colorLightnessCache
+                                }
               else
                 flip always (Debug.log "ignoring stale index" ( index, model.dataIndex )) <|
                     model
@@ -1309,6 +1315,49 @@ update msg model =
                 ( model, Cmd.batch (adds ++ removals) )
 
 
+computeGraphState : Model -> Model
+computeGraphState model =
+    let
+        newState =
+            { currentDate = model.currentDate
+            , selectedCards = model.selectedCards
+            , anticipatedCards = model.anticipatedCards
+            , highlightedNode = model.highlightedNode
+            , me = model.me
+            , dataIndex = model.dataIndex
+            , cardEvents = model.data.actors
+            }
+
+        affectedByState { graph } =
+            Graph.fold
+                (\{ node } affected ->
+                    if affected then
+                        True
+                    else
+                        let
+                            id =
+                                node.label.value.card.id
+                        in
+                            Set.member id newState.selectedCards || Set.member id newState.anticipatedCards
+                )
+                False
+                graph
+    in
+        { model
+            | cardGraphs =
+                List.map
+                    (\( s, g ) ->
+                        if affectedByState g then
+                            ( newState, g )
+                        else if isBaseGraphState model s then
+                            ( s, g )
+                        else
+                            ( baseGraphState model, g )
+                    )
+                    model.cardGraphs
+        }
+
+
 computeDataView : Model -> Model
 computeDataView origModel =
     let
@@ -1487,7 +1536,7 @@ view model =
                     ]
                     [ case model.page of
                         GlobalGraphPage ->
-                            viewSpatialGraph model model.cardGraphs
+                            viewSpatialGraph model
 
                         AllProjectsPage ->
                             viewAllProjectsPage model
@@ -1585,11 +1634,11 @@ viewSidebarControls model =
             ]
 
 
-viewSpatialGraph : Model -> List (ForceGraph (Node CardNodeState)) -> Html Msg
-viewSpatialGraph model cardGraphs =
+viewSpatialGraph : Model -> Html Msg
+viewSpatialGraph model =
     Html.div [ HA.class "spatial-graph" ] <|
         viewGraphControls model
-            :: List.map (Html.Lazy.lazy (viewGraph model)) cardGraphs
+            :: List.map (uncurry <| Html.Lazy.lazy2 viewGraph) model.cardGraphs
 
 
 viewGraphControls : Model -> Html Msg
@@ -2302,7 +2351,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
                     )
             )
         , Html.div [ HA.class "icebox-graph" ]
-            [ viewSpatialGraph model model.cardGraphs
+            [ viewSpatialGraph model
             , let
                 dropCandidate =
                     { msgFunc = MoveCardAfter
@@ -2401,6 +2450,9 @@ computeGraph model =
 
                 AllActivitySort ->
                     graphAllActivityCompare model
+
+        baseState =
+            baseGraphState model
     in
         { model
             | cardGraphs =
@@ -2408,7 +2460,30 @@ computeGraph model =
                     |> List.map FG.fromGraph
                     |> List.sortWith sortFunc
                     |> List.reverse
+                    |> List.map (\g -> ( baseState, g ))
         }
+
+
+baseGraphState : Model -> CardNodeState
+baseGraphState model =
+    { currentDate = model.currentDate
+    , me = model.me
+    , dataIndex = model.dataIndex
+    , cardEvents = model.data.actors
+    , selectedCards = Set.empty
+    , anticipatedCards = Set.empty
+    , highlightedNode = Nothing
+    }
+
+
+isBaseGraphState : Model -> CardNodeState -> Bool
+isBaseGraphState model state =
+    (state.currentDate == model.currentDate)
+        && (state.me == model.me)
+        && (state.dataIndex == model.dataIndex)
+        && Set.isEmpty state.anticipatedCards
+        && Set.isEmpty state.selectedCards
+        && (state.highlightedNode == Nothing)
 
 
 satisfiesFilters : Model -> List GraphFilter -> Card -> Bool
@@ -2490,8 +2565,8 @@ graphAllActivityCompare model a b =
         compare (latestActivity a.graph) (latestActivity b.graph)
 
 
-viewGraph : Model -> ForceGraph (Node CardNodeState) -> Html Msg
-viewGraph model { graph } =
+viewGraph : CardNodeState -> ForceGraph (Node CardNodeState) -> Html Msg
+viewGraph state { graph } =
     let
         nodeContexts =
             Graph.fold (::) [] graph
@@ -2521,16 +2596,7 @@ viewGraph model { graph } =
             maxY - minY
 
         links =
-            (List.map (Svg.Lazy.lazy <| linkPath graph) (Graph.edges graph))
-
-        state =
-            { currentDate = model.currentDate
-            , selectedCards = model.selectedCards
-            , anticipatedCards = model.anticipatedCards
-            , highlightedNode = model.highlightedNode
-            , me = model.me
-            , cardEvents = model.data.actors
-            }
+            (List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph))
 
         ( flairs, nodes ) =
             Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
