@@ -1552,9 +1552,12 @@ viewSidebarControls model =
                     ]
 
         labelOptions =
-            Dict.keys model.dataView.reposByLabel
-                |> List.filter (String.contains model.labelSearch << Tuple.first)
-                |> List.map (uncurry viewLabelOperation)
+            if model.showLabelOperations then
+                Dict.keys model.dataView.reposByLabel
+                    |> List.filter (String.contains model.labelSearch << Tuple.first)
+                    |> List.map (uncurry viewLabelOperation)
+            else
+                []
     in
         Html.div [ HA.class "sidebar-controls" ]
             [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
