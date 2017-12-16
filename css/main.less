@@ -133,8 +133,12 @@ a {
 }
 
 .card-search {
-  display: flex;
   flex-direction: row;
+
+  display: none;
+  @media(min-width: 900px) {
+    display: flex;
+  }
 
   .octicon {
     cursor: pointer;
@@ -821,6 +825,7 @@ svg {
   vertical-align: top;
   position: relative;
   z-index: 3;
+  white-space: nowrap;
 }
 
 .drawer-cell {
@@ -1077,12 +1082,12 @@ svg {
 .graph-controls {
   position: fixed;
   bottom: @bottom-bar-height;
-  margin: 8px;
   text-align: left;
 
   .control-group {
     display: inline-block;
-    margin-right: 8px;
+    margin-left: 8px;
+    margin-bottom: 8px;
   }
 
   .label-selection {
