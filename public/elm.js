@@ -26168,8 +26168,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3547, column: 25},
-							end: {line: 3561, column: 57}
+							start: {line: 3549, column: 25},
+							end: {line: 3563, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -26279,8 +26279,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3475, column: 17},
-					end: {line: 3483, column: 50}
+					start: {line: 3477, column: 17},
+					end: {line: 3485, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -26288,8 +26288,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3473, column: 9},
-				end: {line: 3486, column: 42}
+				start: {line: 3475, column: 9},
+				end: {line: 3488, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -26800,8 +26800,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2954, column: 13},
-							end: {line: 2959, column: 45}
+							start: {line: 2956, column: 13},
+							end: {line: 2961, column: 45}
 						},
 						_p50)('impossible');
 				}
@@ -26910,8 +26910,8 @@ var _vito$cadet$Main$prCircle = F3(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 2786, column: 13},
-						end: {line: 2791, column: 45}
+						start: {line: 2788, column: 13},
+						end: {line: 2793, column: 45}
 					},
 					_p56)('impossible');
 			}
@@ -27455,7 +27455,9 @@ var _vito$cadet$Main$computeGraphState = function (model) {
 						return true;
 					} else {
 						var id = _p97.node.label.value.card.id;
-						return A2(_elm_lang$core$Set$member, id, newState.selectedCards) || A2(_elm_lang$core$Set$member, id, newState.anticipatedCards);
+						return A2(_elm_lang$core$Set$member, id, newState.selectedCards) || (A2(_elm_lang$core$Set$member, id, newState.anticipatedCards) || _elm_lang$core$Native_Utils.eq(
+							newState.highlightedNode,
+							_elm_lang$core$Maybe$Just(id)));
 					}
 				}),
 			false,
@@ -33108,8 +33110,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2304, column: 17},
-									end: {line: 2311, column: 70}
+									start: {line: 2306, column: 17},
+									end: {line: 2313, column: 70}
 								},
 								_p306)('impossible: content has no card');
 						}
@@ -33124,8 +33126,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2297, column: 9},
-				end: {line: 2314, column: 41}
+				start: {line: 2299, column: 9},
+				end: {line: 2316, column: 41}
 			},
 			_p305)('impossible');
 	});

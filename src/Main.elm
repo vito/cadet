@@ -1338,7 +1338,9 @@ computeGraphState model =
                             id =
                                 node.label.value.card.id
                         in
-                            Set.member id newState.selectedCards || Set.member id newState.anticipatedCards
+                            Set.member id newState.selectedCards
+                                || Set.member id newState.anticipatedCards
+                                || (newState.highlightedNode == Just id)
                 )
                 False
                 graph
