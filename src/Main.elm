@@ -794,7 +794,7 @@ update msg model =
             ( computeGraphState
                 { model
                     | anticipatedCards = Set.empty
-                    , selectedCards = Set.foldl OrderedSet.insert model.selectedCards model.anticipatedCards
+                    , selectedCards = Set.foldr OrderedSet.insert model.selectedCards model.anticipatedCards
                 }
             , Cmd.none
             )
@@ -1517,7 +1517,7 @@ view model =
                 List.filterMap (flip Dict.get model.allCards) (OrderedSet.toList model.selectedCards)
 
         sidebarCards =
-            selectedCards ++ anticipatedCards
+            anticipatedCards ++ List.reverse selectedCards
     in
         Html.div [ HA.class "cadet" ]
             [ Html.div [ HA.class "main-page" ]

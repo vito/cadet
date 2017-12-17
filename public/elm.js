@@ -41137,7 +41137,7 @@ var _vito$cadet$Main$update = F2(
 								model,
 								{
 									anticipatedCards: _elm_lang$core$Set$empty,
-									selectedCards: A3(_elm_lang$core$Set$foldl, _rnons$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
+									selectedCards: A3(_elm_lang$core$Set$foldr, _rnons$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -43241,7 +43241,10 @@ var _vito$cadet$Main$view = function (model) {
 					return !A3(_elm_lang$core$Basics$flip, _rnons$ordered_containers$OrderedSet$member, model.selectedCards, _p322);
 				},
 				_elm_lang$core$Set$toList(model.anticipatedCards))));
-	var sidebarCards = A2(_elm_lang$core$Basics_ops['++'], selectedCards, anticipatedCards);
+	var sidebarCards = A2(
+		_elm_lang$core$Basics_ops['++'],
+		anticipatedCards,
+		_elm_lang$core$List$reverse(selectedCards));
 	return A2(
 		_elm_lang$html$Html$div,
 		{
