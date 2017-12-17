@@ -1170,6 +1170,10 @@ svg {
 .sidebar-controls {
   position: relative;
 
+  .control-knobs {
+    padding: 4px 8px;
+  }
+
   .controls-label {
     background: transparent;
     color: @gray;
@@ -1185,6 +1189,17 @@ svg {
     }
 
     &.active {
+      color: @white;
+    }
+  }
+
+  .clear-selected {
+    float: right;
+    color: @white-fade-50;
+    line-height: 26px;
+    cursor: pointer;
+
+    &:hover {
       color: @white;
     }
   }

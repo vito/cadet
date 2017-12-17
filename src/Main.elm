@@ -1612,13 +1612,20 @@ viewSidebarControls model =
                 []
     in
         Html.div [ HA.class "sidebar-controls" ]
-            [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
-            , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
-                , HE.onClick ToggleLabelOperations
-                ]
-                [ Html.span [ HA.class "octicon octicon-tag" ] []
-                , Html.text "labels"
+            [ Html.div [ HA.class "control-knobs" ]
+                [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
+                , Html.div
+                    [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
+                    , HE.onClick ToggleLabelOperations
+                    ]
+                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                    , Html.text "labels"
+                    ]
+                , Html.span
+                    [ HE.onClick ClearSelectedCards
+                    , HA.class "octicon octicon-x clear-selected"
+                    ]
+                    [ Html.text "" ]
                 ]
             , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
                 [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
@@ -2373,13 +2380,15 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
 viewSearch : Model -> Html Msg
 viewSearch model =
     Html.div [ HA.class "card-search" ]
-        [ Html.span
-            [ HE.onClick ClearSelectedCards
-            , HA.class "button octicon octicon-x clear-selected"
+        [ Html.form [ HE.onSubmit SelectAnticipatedCards ]
+            [ Html.input
+                [ HA.type_ "search"
+                , HA.placeholder "search cards"
+                , HA.value model.cardSearch
+                , HE.onInput SearchCards
+                ]
+                []
             ]
-            [ Html.text "" ]
-        , Html.form [ HE.onSubmit SelectAnticipatedCards ]
-            [ Html.input [ HE.onInput SearchCards, HA.placeholder "filter cards", HA.value model.cardSearch ] [] ]
         ]
 
 
