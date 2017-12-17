@@ -3070,8 +3070,6 @@ viewCardNodeFlair card radii flair { x, y } state =
     in
         Svg.g
             [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
-            , SE.onMouseOver (AnticipateCardFromNode card.id)
-            , SE.onMouseOut (UnanticipateCardFromNode card.id)
             , SA.class (String.join " " classes)
             ]
             (flair ++ [ anticipatedHalo ])
