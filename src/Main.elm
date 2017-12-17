@@ -18,6 +18,7 @@ import Regex exposing (Regex)
 import RouteUrl
 import RouteUrl.Builder
 import Set exposing (Set)
+import OrderedSet exposing (OrderedSet)
 import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
@@ -54,7 +55,7 @@ type alias Model =
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
     , cardSearch : String
-    , selectedCards : Set GitHubGraph.ID
+    , selectedCards : OrderedSet GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
     , highlightedCard : Maybe GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
@@ -119,7 +120,7 @@ type alias SharedLabel =
 
 type alias CardNodeState =
     { currentDate : Date
-    , selectedCards : Set GitHubGraph.ID
+    , selectedCards : OrderedSet GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , me : Maybe Me
@@ -275,7 +276,7 @@ renderHash : Model -> String
 renderHash model =
     let
         selects =
-            List.map (\id -> "s-" ++ id) (Set.toList model.selectedCards)
+            List.map (\id -> "s-" ++ id) (OrderedSet.toList model.selectedCards)
 
         filters =
             List.map
@@ -462,7 +463,7 @@ init config =
       , allLabels = Dict.empty
       , colorLightnessCache = Dict.empty
       , cardSearch = ""
-      , selectedCards = Set.empty
+      , selectedCards = OrderedSet.empty
       , anticipatedCards = Set.empty
       , highlightedCard = Nothing
       , highlightedNode = Nothing
@@ -793,21 +794,21 @@ update msg model =
             ( computeGraphState
                 { model
                     | anticipatedCards = Set.empty
-                    , selectedCards = Set.union model.selectedCards model.anticipatedCards
+                    , selectedCards = Set.foldl OrderedSet.insert model.selectedCards model.anticipatedCards
                 }
             , Cmd.none
             )
 
         SelectCard id ->
-            ( computeGraphState { model | selectedCards = Set.insert id model.selectedCards }
+            ( computeGraphState { model | selectedCards = OrderedSet.insert id model.selectedCards }
             , Cmd.none
             )
 
         ClearSelectedCards ->
-            ( computeGraphState { model | selectedCards = Set.empty }, Cmd.none )
+            ( computeGraphState { model | selectedCards = OrderedSet.empty }, Cmd.none )
 
         DeselectCard id ->
-            ( computeGraphState { model | selectedCards = Set.remove id model.selectedCards }
+            ( computeGraphState { model | selectedCards = OrderedSet.remove id model.selectedCards }
             , Cmd.none
             )
 
@@ -1269,7 +1270,7 @@ update msg model =
         ApplyLabelOperations ->
             let
                 cards =
-                    List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
+                    List.filterMap (flip Dict.get model.allCards) (OrderedSet.toList model.selectedCards)
 
                 ( addPairs, removePairs ) =
                     Dict.toList model.cardLabelOperations
@@ -1338,7 +1339,7 @@ computeGraphState model =
                             id =
                                 node.label.value.card.id
                         in
-                            Set.member id newState.selectedCards
+                            OrderedSet.member id newState.selectedCards
                                 || Set.member id newState.anticipatedCards
                                 || (newState.highlightedNode == Just id)
                 )
@@ -1509,11 +1510,11 @@ view model =
         anticipatedCards =
             List.map (viewCardEntry model) <|
                 List.filterMap (flip Dict.get model.allCards) <|
-                    List.filter (not << flip Set.member model.selectedCards) (Set.toList model.anticipatedCards)
+                    List.filter (not << flip OrderedSet.member model.selectedCards) (Set.toList model.anticipatedCards)
 
         selectedCards =
             List.map (viewCardEntry model) <|
-                List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
+                List.filterMap (flip Dict.get model.allCards) (OrderedSet.toList model.selectedCards)
 
         sidebarCards =
             selectedCards ++ anticipatedCards
@@ -1581,7 +1582,7 @@ viewSidebarControls model =
                         Nothing ->
                             let
                                 cards =
-                                    List.filterMap (flip Dict.get model.allCards) (Set.toList model.selectedCards)
+                                    List.filterMap (flip Dict.get model.allCards) (OrderedSet.toList model.selectedCards)
                             in
                                 if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
                                     ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
@@ -2472,7 +2473,7 @@ baseGraphState model =
     , me = model.me
     , dataIndex = model.dataIndex
     , cardEvents = model.data.actors
-    , selectedCards = Set.empty
+    , selectedCards = OrderedSet.empty
     , anticipatedCards = Set.empty
     , highlightedNode = Nothing
     }
@@ -2484,7 +2485,7 @@ isBaseGraphState model state =
         && (state.me == model.me)
         && (state.dataIndex == model.dataIndex)
         && Set.isEmpty state.anticipatedCards
-        && Set.isEmpty state.selectedCards
+        && OrderedSet.isEmpty state.selectedCards
         && (state.highlightedNode == Nothing)
 
 
@@ -3095,7 +3096,7 @@ viewCardNode : Card -> CardNodeRadii -> Svg Msg -> List (Svg Msg) -> Position ->
 viewCardNode card radii circle labels { x, y } state =
     let
         isSelected =
-            Set.member card.id state.selectedCards
+            OrderedSet.member card.id state.selectedCards
 
         isHighlighted =
             Set.member card.id state.anticipatedCards
@@ -3208,7 +3209,7 @@ inColumn match =
 
 isAnticipated : Model -> Card -> Bool
 isAnticipated model card =
-    Set.member card.id model.anticipatedCards && not (Set.member card.id model.selectedCards)
+    Set.member card.id model.anticipatedCards && not (OrderedSet.member card.id model.selectedCards)
 
 
 isPR : Card -> Bool

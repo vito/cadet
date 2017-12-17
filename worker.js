@@ -9183,6 +9183,11 @@ var _mgold$elm_date_format$Date_Format$padWith = function (padding) {
 					_elm_lang$core$String$padLeft,
 					2,
 					_elm_lang$core$Native_Utils.chr('0'));
+			case 'ZeroThreeDigits':
+				return A2(
+					_elm_lang$core$String$padLeft,
+					3,
+					_elm_lang$core$Native_Utils.chr('0'));
 			default:
 				return A2(
 					_elm_lang$core$String$padLeft,
@@ -9280,7 +9285,8 @@ var _mgold$elm_date_format$Date_Format$monthToInt = function (m) {
 			return 12;
 	}
 };
-var _mgold$elm_date_format$Date_Format$re = _elm_lang$core$Regex$regex('%(_|-|0)?(%|Y|y|m|B|b|d|e|a|A|H|k|I|l|p|P|M|S)');
+var _mgold$elm_date_format$Date_Format$re = _elm_lang$core$Regex$regex('%(_|-|0)?(%|Y|y|m|B|b|d|e|a|A|H|k|I|l|L|p|P|M|S)');
+var _mgold$elm_date_format$Date_Format$ZeroThreeDigits = {ctor: 'ZeroThreeDigits'};
 var _mgold$elm_date_format$Date_Format$Zero = {ctor: 'Zero'};
 var _mgold$elm_date_format$Date_Format$Space = {ctor: 'Space'};
 var _mgold$elm_date_format$Date_Format$NoPadding = {ctor: 'NoPadding'};
@@ -9424,6 +9430,11 @@ var _mgold$elm_date_format$Date_Format$formatToken = F3(
 					_mgold$elm_date_format$Date_Format$padWith,
 					A2(_elm_lang$core$Maybe$withDefault, _mgold$elm_date_format$Date_Format$Zero, padding),
 					_elm_lang$core$Date$second(d));
+			case 'L':
+				return A2(
+					_mgold$elm_date_format$Date_Format$padWith,
+					A2(_elm_lang$core$Maybe$withDefault, _mgold$elm_date_format$Date_Format$ZeroThreeDigits, padding),
+					_elm_lang$core$Date$millisecond(d));
 			default:
 				return '';
 		}
