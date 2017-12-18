@@ -35498,8 +35498,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3557, column: 25},
-							end: {line: 3571, column: 57}
+							start: {line: 3562, column: 25},
+							end: {line: 3576, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -35609,8 +35609,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3485, column: 17},
-					end: {line: 3493, column: 50}
+					start: {line: 3490, column: 17},
+					end: {line: 3498, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -35618,8 +35618,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3483, column: 9},
-				end: {line: 3496, column: 42}
+				start: {line: 3488, column: 9},
+				end: {line: 3501, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -36211,8 +36211,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 2966, column: 13},
-							end: {line: 2971, column: 45}
+							start: {line: 2971, column: 13},
+							end: {line: 2976, column: 45}
 						},
 						_p53)('impossible');
 				}
@@ -36321,8 +36321,8 @@ var _vito$cadet$Main$prCircle = F3(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 2798, column: 13},
-						end: {line: 2803, column: 45}
+						start: {line: 2803, column: 13},
+						end: {line: 2808, column: 45}
 					},
 					_p59)('impossible');
 			}
@@ -42445,8 +42445,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2314, column: 17},
-									end: {line: 2321, column: 70}
+									start: {line: 2319, column: 17},
+									end: {line: 2326, column: 70}
 								},
 								_p306)('impossible: content has no card');
 						}
@@ -42461,8 +42461,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2307, column: 9},
-				end: {line: 2324, column: 41}
+				start: {line: 2312, column: 9},
+				end: {line: 2329, column: 41}
 			},
 			_p305)('impossible');
 	});
@@ -43273,7 +43273,30 @@ var _vito$cadet$Main$view = function (model) {
 				_elm_lang$html$Html$div,
 				{
 					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class('main-page'),
+					_0: _elm_lang$html$Html_Attributes$classList(
+						{
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'main-page', _1: true},
+							_1: {
+								ctor: '::',
+								_0: {
+									ctor: '_Tuple2',
+									_0: 'contains-graph',
+									_1: function () {
+										var _p323 = model.page;
+										switch (_p323.ctor) {
+											case 'GlobalGraphPage':
+												return true;
+											case 'ProjectPage':
+												return true;
+											default:
+												return false;
+										}
+									}()
+								},
+								_1: {ctor: '[]'}
+							}
+						}),
 					_1: {ctor: '[]'}
 				},
 				{
@@ -43282,30 +43305,7 @@ var _vito$cadet$Main$view = function (model) {
 						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$classList(
-								{
-									ctor: '::',
-									_0: {ctor: '_Tuple2', _0: 'page-content', _1: true},
-									_1: {
-										ctor: '::',
-										_0: {
-											ctor: '_Tuple2',
-											_0: 'contains-graph',
-											_1: function () {
-												var _p323 = model.page;
-												switch (_p323.ctor) {
-													case 'GlobalGraphPage':
-														return true;
-													case 'ProjectPage':
-														return true;
-													default:
-														return false;
-												}
-											}()
-										},
-										_1: {ctor: '[]'}
-									}
-								}),
+							_0: _elm_lang$html$Html_Attributes$class('page-content'),
 							_1: {ctor: '[]'}
 						},
 						{
@@ -43333,7 +43333,20 @@ var _vito$cadet$Main$view = function (model) {
 							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('page-sidebar'),
+								_0: _elm_lang$html$Html_Attributes$classList(
+									{
+										ctor: '::',
+										_0: {ctor: '_Tuple2', _0: 'page-sidebar', _1: true},
+										_1: {
+											ctor: '::',
+											_0: {
+												ctor: '_Tuple2',
+												_0: 'empty',
+												_1: _elm_lang$core$List$isEmpty(sidebarCards)
+											},
+											_1: {ctor: '[]'}
+										}
+									}),
 								_1: {ctor: '[]'}
 							},
 							{

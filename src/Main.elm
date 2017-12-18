@@ -1520,23 +1520,23 @@ view model =
             anticipatedCards ++ List.reverse selectedCards
     in
         Html.div [ HA.class "cadet" ]
-            [ Html.div [ HA.class "main-page" ]
-                [ Html.div
-                    [ HA.classList
-                        [ ( "page-content", True )
-                        , ( "contains-graph"
-                          , case model.page of
-                                GlobalGraphPage ->
-                                    True
+            [ Html.div
+                [ HA.classList
+                    [ ( "main-page", True )
+                    , ( "contains-graph"
+                      , case model.page of
+                            GlobalGraphPage ->
+                                True
 
-                                ProjectPage id ->
-                                    True
+                            ProjectPage id ->
+                                True
 
-                                _ ->
-                                    False
-                          )
-                        ]
+                            _ ->
+                                False
+                      )
                     ]
+                ]
+                [ Html.div [ HA.class "page-content" ]
                     [ case model.page of
                         GlobalGraphPage ->
                             viewSpatialGraph model
@@ -1553,7 +1553,12 @@ view model =
                         MilestonesPage ->
                             viewMilestonesPage model
                     ]
-                , Html.div [ HA.class "page-sidebar" ]
+                , Html.div
+                    [ HA.classList
+                        [ ( "page-sidebar", True )
+                        , ( "empty", List.isEmpty sidebarCards )
+                        ]
+                    ]
                     [ viewSidebarControls model
                     , if List.isEmpty sidebarCards then
                         Html.div [ HA.class "no-cards" ]

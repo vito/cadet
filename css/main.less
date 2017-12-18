@@ -43,24 +43,30 @@ a {
   // convince firefox to make the sub-panes individually scrollable
   min-height: 0;
 
+  &.contains-graph {
+    background: @gray-300;
+  }
+
   .page-content {
     overflow-y: auto;
     flex-grow: 1;
     position: relative;
     display: flex;
-
-    &.contains-graph {
-      background: @gray-300;
-    }
   }
 
   .page-sidebar {
     overflow-y: auto;
     flex-shrink: 0;
-    width: 0;
+    width: 300px + (2 * @card-margin) + (31px - @card-margin);
+
+    display: none;
 
     @media(min-width: 900px) {
-      width: 300px + (2 * @card-margin) + (31px - @card-margin);
+      display: block;
+    }
+
+    &.empty {
+      display: none;
     }
 
     background: @gray-dark;
@@ -79,6 +85,16 @@ a {
       color: @gray-light;
       font-size: 14px;
       padding: @card-margin;
+    }
+  }
+
+  &.contains-graph {
+    background: @gray-300;
+
+    .page-sidebar.empty {
+      @media(min-width: 900px) {
+        display: block;
+      }
     }
   }
 }
