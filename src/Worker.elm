@@ -655,12 +655,28 @@ eventActor event =
                     Nothing
 
         GitHubGraph.CommitEvent commit ->
-            case commit.committer of
-                Just committer ->
+            case ( commit.author, commit.committer ) of
+                ( Just author, Just committer ) ->
+                    Just { avatar = author.avatar, user = maybeOr author.user committer.user, createdAt = commit.committedAt }
+
+                ( Nothing, Just committer ) ->
                     Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
 
-                Nothing ->
+                ( Just author, Nothing ) ->
+                    Just { avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+
+                ( Nothing, Nothing ) ->
                     Nothing
 
         GitHubGraph.CrossReferencedEvent _ ->
             Nothing
+
+
+maybeOr : Maybe a -> Maybe a -> Maybe a
+maybeOr ma mb =
+    case ma of
+        Just _ ->
+            ma
+
+        Nothing ->
+            mb
