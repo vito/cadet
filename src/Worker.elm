@@ -657,7 +657,12 @@ eventActor event =
         GitHubGraph.CommitEvent commit ->
             case ( commit.author, commit.committer ) of
                 ( Just author, Just committer ) ->
-                    Just { avatar = author.avatar, user = maybeOr author.user committer.user, createdAt = commit.committedAt }
+                    case author.user of
+                        Just _ ->
+                            Just { avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+
+                        Nothing ->
+                            Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
 
                 ( Nothing, Just committer ) ->
                     Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
