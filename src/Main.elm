@@ -229,7 +229,9 @@ type Msg
     | SetCardMilestone Card (Maybe String)
     | IssueMilestoned GitHubGraph.Issue (Result GitHubGraph.Error ())
     | PullRequestMilestoned GitHubGraph.PullRequest (Result GitHubGraph.Error ())
+    | RefreshIssue GitHubGraph.ID
     | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
+    | RefreshPullRequest GitHubGraph.ID
     | PullRequestRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.PullRequest))
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
@@ -1193,6 +1195,9 @@ update msg model =
             flip always (Debug.log "failed to change data" msg) <|
                 ( model, Cmd.none )
 
+        RefreshIssue id ->
+            ( model, Backend.refreshIssue id IssueRefreshed )
+
         IssueRefreshed (Ok { index, value }) ->
             ( { model
                 | milestoneDrag = Drag.complete model.milestoneDrag
@@ -1214,6 +1219,9 @@ update msg model =
         PullRequestMilestoned pr (Err msg) ->
             flip always (Debug.log "failed to change milestone" msg) <|
                 ( model, Cmd.none )
+
+        RefreshPullRequest id ->
+            ( model, Backend.refreshPR id PullRequestRefreshed )
 
         PullRequestRefreshed (Ok { index, value }) ->
             ( { model
@@ -3351,24 +3359,32 @@ viewCard model card =
         , HE.onMouseOut (UnhighlightNode card.id)
         ]
         [ Html.div [ HA.class "card-icons" ]
-            [ case card.state of
-                IssueState GitHubGraph.IssueStateOpen ->
-                    if isRejected card then
-                        Html.span [ HA.class "octicon open rejected octicon-issue-reopened" ] []
-                    else
-                        Html.span [ HA.class "octicon open octicon-issue-opened" ] []
-
-                IssueState GitHubGraph.IssueStateClosed ->
-                    Html.span [ HA.class "octicon closed octicon-issue-closed" ] []
-
-                PullRequestState GitHubGraph.PullRequestStateOpen ->
-                    Html.span [ HA.class "octicon open octicon-git-pull-request" ] []
-
-                PullRequestState GitHubGraph.PullRequestStateClosed ->
-                    Html.span [ HA.class "octicon closed octicon-git-pull-request" ] []
-
-                PullRequestState GitHubGraph.PullRequestStateMerged ->
-                    Html.span [ HA.class "octicon merged octicon-git-pull-request" ] []
+            [ Html.span
+                [ HA.classList
+                    [ ( "octicon", True )
+                    , ( "open", isOpen card )
+                    , ( "closed", not (isOpen card) )
+                    , ( "rejected", isRejected card )
+                    , ( "merged", isMerged card )
+                    , ( "octicon-issue-"
+                            ++ (if isRejected card then
+                                    "reopened"
+                                else
+                                    "opened"
+                               )
+                      , card.state == IssueState GitHubGraph.IssueStateOpen
+                      )
+                    , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
+                    , ( "octicon-git-pull-request", isPR card )
+                    ]
+                , HE.onClick
+                    (if isPR card then
+                        RefreshPullRequest card.id
+                     else
+                        RefreshIssue card.id
+                    )
+                ]
+                []
             , if needsAcceptance card && isDone card then
                 Html.span
                     [ HA.class "octicon accept octicon-thumbsup"

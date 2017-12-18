@@ -11333,7 +11333,7 @@ var _vito$cadet$GitHubGraph$decodeCommit = A2(
 				'committer',
 				_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeGitActor))),
 		A2(_elm_lang$core$Json_Decode$field, 'authored_at', _elm_community$json_extra$Json_Decode_Extra$date)),
-	A2(_elm_lang$core$Json_Decode$field, 'updated_at', _elm_community$json_extra$Json_Decode_Extra$date));
+	A2(_elm_lang$core$Json_Decode$field, 'committed_at', _elm_community$json_extra$Json_Decode_Extra$date));
 var _vito$cadet$GitHubGraph$encodeStatusState = function (item) {
 	return _elm_lang$core$Json_Encode$string(
 		A3(

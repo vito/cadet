@@ -1496,7 +1496,7 @@ decodeCommit =
         |: JD.field "author" (JD.maybe decodeGitActor)
         |: JD.field "committer" (JD.maybe decodeGitActor)
         |: JD.field "authored_at" JDE.date
-        |: JD.field "updated_at" JDE.date
+        |: JD.field "committed_at" JDE.date
 
 
 decodeGitActor : JD.Decoder GitActor
