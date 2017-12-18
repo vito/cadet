@@ -163,6 +163,18 @@ type alias PullRequest =
 type alias Commit =
     { sha : String
     , status : Maybe Status
+    , author : Maybe GitActor
+    , committer : Maybe GitActor
+    , authoredAt : Date
+    , committedAt : Date
+    }
+
+
+type alias GitActor =
+    { email : String
+    , name : String
+    , avatar : String
+    , user : Maybe User
     }
 
 
@@ -312,6 +324,7 @@ type alias CardLocation =
 type TimelineEvent
     = IssueCommentEvent (Maybe User) Date
     | CrossReferencedEvent ID
+    | CommitEvent Commit
 
 
 type alias PullRequestReview =
@@ -1003,18 +1016,20 @@ columnObject =
         |> GB.with (GB.field "databaseId" [] GB.int)
 
 
+userObject : GB.ValueSpec GB.NonNull GB.ObjectType User vars
+userObject =
+    GB.object User
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "databaseId" [] GB.int)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "login" [] GB.string)
+        |> GB.with (GB.field "avatarUrl" [] GB.string)
+
+
 authorObject : GB.SelectionSpec GB.InlineFragment User vars
 authorObject =
     GB.assume
-        (GB.inlineFragment (Just <| GB.onType "User")
-            (GB.object User
-                |> GB.with (GB.field "id" [] GB.string)
-                |> GB.with (GB.field "databaseId" [] GB.int)
-                |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "login" [] GB.string)
-                |> GB.with (GB.field "avatarUrl" [] GB.string)
-            )
-        )
+        (GB.inlineFragment (Just <| GB.onType "User") userObject)
 
 
 projectCardObject : GB.ValueSpec GB.NonNull GB.ObjectType CardLocation vars
@@ -1123,6 +1138,19 @@ commitObject =
     GB.object Commit
         |> GB.with (GB.field "oid" [] GB.string)
         |> GB.with (GB.field "status" [] (GB.nullable statusObject))
+        |> GB.with (GB.field "author" [] (GB.nullable gitActorObject))
+        |> GB.with (GB.field "committer" [] (GB.nullable gitActorObject))
+        |> GB.with (GB.field "authoredDate" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "committedDate" [] (GB.customScalar DateType JDE.date))
+
+
+gitActorObject : GB.ValueSpec GB.NonNull GB.ObjectType GitActor vars
+gitActorObject =
+    GB.object GitActor
+        |> GB.with (GB.field "email" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "avatarUrl" [] GB.string)
+        |> GB.with (GB.field "user" [] (GB.nullable userObject))
 
 
 prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
@@ -1306,10 +1334,14 @@ timelineQuery =
             GB.object CrossReferencedEvent
                 |> GB.with (GB.assume <| GB.field "source" [] sourceID)
 
+        commitEvent =
+            GB.map CommitEvent commitObject
+
         event =
-            GB.object pickEnum2
+            GB.object pickEnum3
                 |> GB.with (GB.inlineFragment (Just (GB.onType "IssueComment")) issueCommentEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "CrossReferencedEvent")) crossReferencedEvent)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Commit")) commitEvent)
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -1394,8 +1426,13 @@ pickEnum2 ma mb =
         Just x ->
             Just x
 
-        _ ->
+        Nothing ->
             mb
+
+
+pickEnum3 : Maybe a -> Maybe a -> Maybe a -> Maybe a
+pickEnum3 ma mb mc =
+    pickEnum2 ma (pickEnum2 mb mc)
 
 
 decodeRepo : JD.Decoder Repo
@@ -1456,6 +1493,19 @@ decodeCommit =
     JD.succeed Commit
         |: JD.field "sha" JD.string
         |: JD.field "status" (JD.maybe decodeStatus)
+        |: JD.field "author" (JD.maybe decodeGitActor)
+        |: JD.field "committer" (JD.maybe decodeGitActor)
+        |: JD.field "authored_at" JDE.date
+        |: JD.field "updated_at" JDE.date
+
+
+decodeGitActor : JD.Decoder GitActor
+decodeGitActor =
+    JD.succeed GitActor
+        |: JD.field "email" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "avatar" JD.string
+        |: JD.field "user" (JD.maybe decodeUser)
 
 
 decodePullRequestReview : JD.Decoder PullRequestReview
@@ -1757,6 +1807,20 @@ encodeCommit record =
     JE.object
         [ ( "sha", JE.string record.sha )
         , ( "status", JEE.maybe encodeStatus record.status )
+        , ( "author", JEE.maybe encodeGitActor record.author )
+        , ( "committer", JEE.maybe encodeGitActor record.author )
+        , ( "authored_at", JE.string (Date.Format.formatISO8601 record.authoredAt) )
+        , ( "committed_at", JE.string (Date.Format.formatISO8601 record.committedAt) )
+        ]
+
+
+encodeGitActor : GitActor -> JE.Value
+encodeGitActor record =
+    JE.object
+        [ ( "email", JE.string record.email )
+        , ( "name", JE.string record.name )
+        , ( "avatar", JE.string record.avatar )
+        , ( "user", JEE.maybe encodeUser record.user )
         ]
 
 

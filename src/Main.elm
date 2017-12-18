@@ -125,7 +125,7 @@ type alias CardNodeState =
     , highlightedNode : Maybe GitHubGraph.ID
     , me : Maybe Me
     , dataIndex : Int
-    , cardEvents : Dict GitHubGraph.ID (List Backend.ActorEvent)
+    , cardEvents : Dict GitHubGraph.ID (List Backend.EventActor)
     }
 
 
@@ -2550,7 +2550,7 @@ graphUserActivityCompare model login a b =
                     (\n ->
                         Maybe.withDefault [] (Dict.get n.label.value.card.id model.data.actors)
                             |> List.reverse
-                            |> List.filter (.actor >> .login >> (==) login)
+                            |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
                             |> List.map .createdAt
                             |> List.head
                             |> Maybe.map Date.toTime
@@ -3199,18 +3199,23 @@ isInProject name card =
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
     Maybe.withDefault [] (Dict.get card.id model.data.actors)
-        |> List.any (.actor >> .login >> (==) login)
+        |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
-lastActivityIsByUser : Dict GitHubGraph.ID (List Backend.ActorEvent) -> String -> Card -> Bool
+lastActivityIsByUser : Dict GitHubGraph.ID (List Backend.EventActor) -> String -> Card -> Bool
 lastActivityIsByUser cardEvents login card =
     let
         events =
             Maybe.withDefault [] (Dict.get card.id cardEvents)
     in
         case List.head (List.reverse events) of
-            Just event ->
-                event.actor.login == login
+            Just { user } ->
+                case user of
+                    Just u ->
+                        u.login == login
+
+                    Nothing ->
+                        False
 
             Nothing ->
                 False
@@ -3442,7 +3447,7 @@ viewNoteCard model col text =
         ]
 
 
-recentActors : Model -> Card -> List Backend.ActorEvent
+recentActors : Model -> Card -> List Backend.EventActor
 recentActors model card =
     Dict.get card.id model.data.actors
         |> Maybe.withDefault []
@@ -3522,11 +3527,11 @@ viewLabel model id =
             ]
 
 
-viewCardActor : Model -> Backend.ActorEvent -> Html Msg
-viewCardActor model { createdAt, actor } =
+viewCardActor : Model -> Backend.EventActor -> Html Msg
+viewCardActor model { createdAt, avatar } =
     Html.img
         [ HA.class ("card-actor " ++ activityClass model.currentDate createdAt)
-        , HA.src (actor.avatar ++ "&s=88")
+        , HA.src (avatar ++ "&s=88")
         , HA.draggable "false"
         ]
         []

@@ -384,16 +384,8 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
-                commentActor event =
-                    case event of
-                        GitHubGraph.IssueCommentEvent (Just user) date ->
-                            Just (Backend.encodeActorEvent { actor = user, createdAt = date })
-
-                        _ ->
-                            Nothing
-
                 actors =
-                    List.filterMap commentActor timeline
+                    List.map Backend.encodeEventActor (List.filterMap eventActor timeline)
             in
                 log "timeline fetched for" id <|
                     ( model
@@ -420,23 +412,18 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
-                commentActor event =
-                    case event of
-                        GitHubGraph.IssueCommentEvent (Just user) date ->
-                            Just { actor = user, createdAt = date }
-
-                        _ ->
-                            Nothing
-
                 reviewActor review =
-                    { actor = review.author, createdAt = review.createdAt }
+                    { user = Just review.author
+                    , avatar = review.author.avatar
+                    , createdAt = review.createdAt
+                    }
 
                 actors =
-                    (List.filterMap commentActor timeline
+                    (List.filterMap eventActor timeline
                         ++ List.map reviewActor reviews
                     )
                         |> List.sortBy (.createdAt >> Date.toTime)
-                        |> List.map Backend.encodeActorEvent
+                        |> List.map Backend.encodeEventActor
 
                 reviewers =
                     List.foldl
@@ -472,8 +459,8 @@ update msg model =
                     )
 
         PullRequestTimelineAndReviewsFetched id (Err err) ->
-            log "failed to fetch timeline" ( id, err ) <|
-                backOff model (fetchIssueTimeline model id)
+            log "failed to fetch timeline and reviews" ( id, err ) <|
+                backOff model (fetchPRTimelineAndReviews model id)
 
 
 backOff : Model -> Cmd Msg -> ( Model, Cmd Msg )
@@ -654,3 +641,26 @@ decodeAffectedColumnIds =
         )
         (JD.at [ "project_card", "column_id" ] JD.int)
         (JD.maybe <| JD.at [ "changes", "column_id", "from" ] JD.int)
+
+
+eventActor : GitHubGraph.TimelineEvent -> Maybe Backend.EventActor
+eventActor event =
+    case event of
+        GitHubGraph.IssueCommentEvent muser date ->
+            case muser of
+                Just user ->
+                    Just { user = Just user, avatar = user.avatar, createdAt = date }
+
+                Nothing ->
+                    Nothing
+
+        GitHubGraph.CommitEvent commit ->
+            case commit.committer of
+                Just committer ->
+                    Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
+
+                Nothing ->
+                    Nothing
+
+        GitHubGraph.CrossReferencedEvent _ ->
+            Nothing

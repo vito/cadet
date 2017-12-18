@@ -4,7 +4,7 @@ module Backend
         , Data
         , Me
         , User
-        , ActorEvent
+        , EventActor
         , ColumnCard
         , emptyData
         , fetchData
@@ -14,13 +14,14 @@ module Backend
         , refreshIssue
         , refreshPR
         , fetchMe
-        , encodeActorEvent
+        , encodeEventActor
         )
 
 import HttpBuilder
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
 import Json.Encode as JE
+import Json.Encode.Extra as JEE
 import Date.Format
 import Dict exposing (Dict)
 import GitHubGraph
@@ -43,7 +44,7 @@ type alias Data =
     , projects : Dict GitHubGraph.ID GitHubGraph.Project
     , columnCards : Dict GitHubGraph.ID (List ColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
-    , actors : Dict GitHubGraph.ID (List ActorEvent)
+    , actors : Dict GitHubGraph.ID (List EventActor)
     , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
     }
 
@@ -62,8 +63,9 @@ type alias User =
     }
 
 
-type alias ActorEvent =
-    { actor : GitHubGraph.User
+type alias EventActor =
+    { user : Maybe GitHubGraph.User
+    , avatar : String
     , createdAt : Date
     }
 
@@ -169,7 +171,7 @@ decodeData =
         |: (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
         |: (JD.field "columnCards" <| JD.dict decodeCards)
         |: (JD.field "references" <| JD.dict (JD.list JD.string))
-        |: (JD.field "actors" <| JD.dict (JD.list decodeActorEvent))
+        |: (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
         |: (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
 
 
@@ -202,16 +204,18 @@ decodeUser =
         |: (JD.field "avatar_url" JD.string)
 
 
-decodeActorEvent : JD.Decoder ActorEvent
-decodeActorEvent =
-    JD.succeed ActorEvent
-        |: (JD.field "actor" GitHubGraph.decodeUser)
+decodeEventActor : JD.Decoder EventActor
+decodeEventActor =
+    JD.succeed EventActor
+        |: (JD.field "user" (JD.maybe GitHubGraph.decodeUser))
+        |: (JD.field "avatar" JD.string)
         |: (JD.field "createdAt" JDE.date)
 
 
-encodeActorEvent : ActorEvent -> JE.Value
-encodeActorEvent { actor, createdAt } =
+encodeEventActor : EventActor -> JE.Value
+encodeEventActor { user, avatar, createdAt } =
     JE.object
-        [ ( "actor", GitHubGraph.encodeUser actor )
+        [ ( "user", JEE.maybe GitHubGraph.encodeUser user )
+        , ( "avatar", JE.string avatar )
         , ( "createdAt", JE.string (Date.Format.formatISO8601 createdAt) )
         ]
