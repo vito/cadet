@@ -2581,8 +2581,8 @@ graphAllActivityCompare model a b =
                             |> List.reverse
                             |> List.map .createdAt
                             |> List.head
-                            |> Maybe.map Date.toTime
-                            |> Maybe.withDefault 0
+                            |> Maybe.withDefault n.label.value.card.updatedAt
+                            |> Date.toTime
                     )
                 |> List.maximum
                 |> Maybe.withDefault 0

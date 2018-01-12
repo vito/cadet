@@ -36848,12 +36848,10 @@ var _vito$cadet$Main$graphAllActivityCompare = F3(
 					A2(
 						_elm_lang$core$List$map,
 						function (n) {
-							return A2(
-								_elm_lang$core$Maybe$withDefault,
-								0,
+							return _elm_lang$core$Date$toTime(
 								A2(
-									_elm_lang$core$Maybe$map,
-									_elm_lang$core$Date$toTime,
+									_elm_lang$core$Maybe$withDefault,
+									n.label.value.card.updatedAt,
 									_elm_lang$core$List$head(
 										A2(
 											_elm_lang$core$List$map,
