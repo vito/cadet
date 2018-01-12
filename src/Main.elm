@@ -104,6 +104,7 @@ type GraphFilter
     | HasLabelFilter String String
     | InvolvesUserFilter String
     | PullRequestsFilter
+    | UntriagedFilter
 
 
 type GraphSort
@@ -298,6 +299,9 @@ renderHash model =
 
                         PullRequestsFilter ->
                             "filter-pull-requests"
+
+                        UntriagedFilter ->
+                            "filter-untriaged"
                 )
                 model.graphFilters
 
@@ -335,6 +339,9 @@ parseHash hash =
 
                     [ "filter", "pull", "requests" ] ->
                         Just (AddFilter PullRequestsFilter)
+
+                    [ "filter", "untriaged" ] ->
+                        Just (AddFilter UntriagedFilter)
 
                     "sort" :: "user" :: "activity" :: loginSplit ->
                         Just (SetGraphSort (UserActivitySort (String.join "-" loginSplit)))
@@ -1710,6 +1717,21 @@ viewGraphControls model =
                 ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
                  , let
                     filter =
+                        UntriagedFilter
+                   in
+                    Html.div
+                        [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                        , HE.onClick <|
+                            if hasFilter model filter then
+                                RemoveFilter filter
+                            else
+                                AddFilter filter
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-inbox" ] []
+                        , Html.text "untriaged"
+                        ]
+                 , let
+                    filter =
                         PullRequestsFilter
                    in
                     Html.div
@@ -2534,6 +2556,9 @@ satisfiesFilter model filter card =
         PullRequestsFilter ->
             isPR card
 
+        UntriagedFilter ->
+            isUntriaged card
+
 
 graphSizeCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
 graphSizeCompare a b =
@@ -3247,6 +3272,11 @@ isPR card =
 
         IssueState _ ->
             False
+
+
+isUntriaged : Card -> Bool
+isUntriaged card =
+    List.isEmpty card.cards
 
 
 isMerged : Card -> Bool
