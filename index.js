@@ -4,6 +4,8 @@ const compression = require('compression')
 const passport = require('passport')
 const session = require('express-session')
 const bodyParser = require('body-parser')
+const enforceSsl = require('express-enforces-ssl')
+const helmet = require('helmet')
 
 const GitHubStrategy = require('passport-github').Strategy
 
@@ -245,6 +247,13 @@ worker.ports.setCards.subscribe(function(args) {
 app.use(compression())
 app.use(bodyParser.json())
 
+if (app.get('env') === 'production') {
+  app.set('trust proxy', true);
+  app.use(enforceSsl());
+  app.use(helmet());
+}
+
+
 if (process.env.GITHUB_CLIENT_ID) {
   passport.use(new GitHubStrategy({
       clientID: process.env.GITHUB_CLIENT_ID,
@@ -268,7 +277,16 @@ if (process.env.GITHUB_CLIENT_ID) {
     cb(null, obj);
   });
 
-  app.use(session({ secret: 'keyboard cat', resave: false, saveUninitialized: true }));
+  app.use(session({
+    name: 'sessionId',
+    secret: process.env.SESSION_SECRET || 'keyboard cat',
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      secure: app.get('env') === 'production',
+      httpOnly: true
+    }
+  }));
 
   app.use(passport.initialize());
   app.use(passport.session());
