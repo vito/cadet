@@ -247,8 +247,8 @@ type Msg
 
 
 type Page
-    = GlobalGraphPage
-    | AllProjectsPage
+    = AllProjectsPage
+    | GlobalGraphPage
     | ProjectPage String
     | LabelsPage
     | MilestonesPage
@@ -366,11 +366,11 @@ delta2url a b =
 
         withPagePath =
             case b.page of
-                GlobalGraphPage ->
+                AllProjectsPage ->
                     RouteUrl.Builder.replacePath []
 
-                AllProjectsPage ->
-                    RouteUrl.Builder.replacePath [ "projects" ]
+                GlobalGraphPage ->
+                    RouteUrl.Builder.replacePath [ "graph" ]
 
                 ProjectPage name ->
                     RouteUrl.Builder.replacePath [ "projects", name ]
@@ -405,10 +405,13 @@ location2messages loc =
         page =
             case path of
                 [] ->
-                    SetPage GlobalGraphPage
+                    SetPage AllProjectsPage
 
                 [ "projects" ] ->
                     SetPage AllProjectsPage
+
+                [ "graph" ] ->
+                    SetPage GlobalGraphPage
 
                 [ "projects", name ] ->
                     SetPage (ProjectPage name)
@@ -522,11 +525,11 @@ update msg model =
             let
                 baseGraphFilter =
                     case page of
-                        GlobalGraphPage ->
-                            Nothing
-
                         AllProjectsPage ->
                             Just ExcludeAllFilter
+
+                        GlobalGraphPage ->
+                            Nothing
 
                         ProjectPage name ->
                             Just (InProjectFilter name)
@@ -1553,11 +1556,11 @@ view model =
                 ]
                 [ Html.div [ HA.class "page-content" ]
                     [ case model.page of
-                        GlobalGraphPage ->
-                            viewSpatialGraph model
-
                         AllProjectsPage ->
                             viewAllProjectsPage model
+
+                        GlobalGraphPage ->
+                            viewSpatialGraph model
 
                         ProjectPage id ->
                             viewProjectPage model id
@@ -1835,11 +1838,11 @@ viewNavBar model =
                         [ Html.img [ HA.class "user-avatar", HA.src user.avatar ] []
                         , Html.text user.login
                         ]
-            , Html.a [ HA.class "button", HA.href "/", StrictEvents.onLeftClick (SetPage GlobalGraphPage) ]
-                [ Html.span [ HA.class "octicon octicon-globe" ] []
-                ]
-            , Html.a [ HA.class "button", HA.href "/projects", StrictEvents.onLeftClick (SetPage AllProjectsPage) ]
+            , Html.a [ HA.class "button", HA.href "/", StrictEvents.onLeftClick (SetPage AllProjectsPage) ]
                 [ Html.span [ HA.class "octicon octicon-list-unordered" ] []
+                ]
+            , Html.a [ HA.class "button", HA.href "/graph", StrictEvents.onLeftClick (SetPage GlobalGraphPage) ]
+                [ Html.span [ HA.class "octicon octicon-globe" ] []
                 ]
             , Html.a [ HA.class "button", HA.href "/labels", StrictEvents.onLeftClick (SetPage LabelsPage) ]
                 [ Html.span [ HA.class "octicon octicon-tag" ] []

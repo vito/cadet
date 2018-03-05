@@ -10202,16 +10202,45 @@ var _elm_community$list_extra$List_Extra$zip = _elm_lang$core$List$map2(
 		function (v0, v1) {
 			return {ctor: '_Tuple2', _0: v0, _1: v1};
 		}));
+var _elm_community$list_extra$List_Extra$isSubsequenceOf = F2(
+	function (subseq, list) {
+		isSubsequenceOf:
+		while (true) {
+			var _p0 = {ctor: '_Tuple2', _0: subseq, _1: list};
+			if (_p0._0.ctor === '[]') {
+				return true;
+			} else {
+				if (_p0._1.ctor === '[]') {
+					return false;
+				} else {
+					var _p1 = _p0._1._1;
+					if (_elm_lang$core$Native_Utils.eq(_p0._0._0, _p0._1._0)) {
+						var _v1 = _p0._0._1,
+							_v2 = _p1;
+						subseq = _v1;
+						list = _v2;
+						continue isSubsequenceOf;
+					} else {
+						var _v3 = subseq,
+							_v4 = _p1;
+						subseq = _v3;
+						list = _v4;
+						continue isSubsequenceOf;
+					}
+				}
+			}
+		}
+	});
 var _elm_community$list_extra$List_Extra$isPrefixOf = F2(
 	function (prefix, xs) {
-		var _p0 = {ctor: '_Tuple2', _0: prefix, _1: xs};
-		if (_p0._0.ctor === '[]') {
+		var _p2 = {ctor: '_Tuple2', _0: prefix, _1: xs};
+		if (_p2._0.ctor === '[]') {
 			return true;
 		} else {
-			if (_p0._1.ctor === '[]') {
+			if (_p2._1.ctor === '[]') {
 				return false;
 			} else {
-				return _elm_lang$core$Native_Utils.eq(_p0._0._0, _p0._1._0) && A2(_elm_community$list_extra$List_Extra$isPrefixOf, _p0._0._1, _p0._1._1);
+				return _elm_lang$core$Native_Utils.eq(_p2._0._0, _p2._1._0) && A2(_elm_community$list_extra$List_Extra$isPrefixOf, _p2._0._1, _p2._1._1);
 			}
 		}
 	});
@@ -10222,37 +10251,39 @@ var _elm_community$list_extra$List_Extra$isSuffixOf = F2(
 			_elm_lang$core$List$reverse(suffix),
 			_elm_lang$core$List$reverse(xs));
 	});
+var _elm_community$list_extra$List_Extra$isInfixOfHelp = F3(
+	function (infixHead, infixTail, list) {
+		isInfixOfHelp:
+		while (true) {
+			var _p3 = list;
+			if (_p3.ctor === '[]') {
+				return false;
+			} else {
+				var _p4 = _p3._1;
+				if (_elm_lang$core$Native_Utils.eq(_p3._0, infixHead)) {
+					return A2(_elm_community$list_extra$List_Extra$isPrefixOf, infixTail, _p4);
+				} else {
+					var _v7 = infixHead,
+						_v8 = infixTail,
+						_v9 = _p4;
+					infixHead = _v7;
+					infixTail = _v8;
+					list = _v9;
+					continue isInfixOfHelp;
+				}
+			}
+		}
+	});
+var _elm_community$list_extra$List_Extra$isInfixOf = F2(
+	function (infixList, list) {
+		var _p5 = infixList;
+		if (_p5.ctor === '[]') {
+			return true;
+		} else {
+			return A3(_elm_community$list_extra$List_Extra$isInfixOfHelp, _p5._0, _p5._1, list);
+		}
+	});
 var _elm_community$list_extra$List_Extra$selectSplit = function (xs) {
-	var _p1 = xs;
-	if (_p1.ctor === '[]') {
-		return {ctor: '[]'};
-	} else {
-		var _p5 = _p1._1;
-		var _p4 = _p1._0;
-		return {
-			ctor: '::',
-			_0: {
-				ctor: '_Tuple3',
-				_0: {ctor: '[]'},
-				_1: _p4,
-				_2: _p5
-			},
-			_1: A2(
-				_elm_lang$core$List$map,
-				function (_p2) {
-					var _p3 = _p2;
-					return {
-						ctor: '_Tuple3',
-						_0: {ctor: '::', _0: _p4, _1: _p3._0},
-						_1: _p3._1,
-						_2: _p3._2
-					};
-				},
-				_elm_community$list_extra$List_Extra$selectSplit(_p5))
-		};
-	}
-};
-var _elm_community$list_extra$List_Extra$select = function (xs) {
 	var _p6 = xs;
 	if (_p6.ctor === '[]') {
 		return {ctor: '[]'};
@@ -10261,30 +10292,60 @@ var _elm_community$list_extra$List_Extra$select = function (xs) {
 		var _p9 = _p6._0;
 		return {
 			ctor: '::',
-			_0: {ctor: '_Tuple2', _0: _p9, _1: _p10},
+			_0: {
+				ctor: '_Tuple3',
+				_0: {ctor: '[]'},
+				_1: _p9,
+				_2: _p10
+			},
 			_1: A2(
 				_elm_lang$core$List$map,
 				function (_p7) {
 					var _p8 = _p7;
 					return {
-						ctor: '_Tuple2',
-						_0: _p8._0,
-						_1: {ctor: '::', _0: _p9, _1: _p8._1}
+						ctor: '_Tuple3',
+						_0: {ctor: '::', _0: _p9, _1: _p8._0},
+						_1: _p8._1,
+						_2: _p8._2
 					};
 				},
-				_elm_community$list_extra$List_Extra$select(_p10))
+				_elm_community$list_extra$List_Extra$selectSplit(_p10))
+		};
+	}
+};
+var _elm_community$list_extra$List_Extra$select = function (xs) {
+	var _p11 = xs;
+	if (_p11.ctor === '[]') {
+		return {ctor: '[]'};
+	} else {
+		var _p15 = _p11._1;
+		var _p14 = _p11._0;
+		return {
+			ctor: '::',
+			_0: {ctor: '_Tuple2', _0: _p14, _1: _p15},
+			_1: A2(
+				_elm_lang$core$List$map,
+				function (_p12) {
+					var _p13 = _p12;
+					return {
+						ctor: '_Tuple2',
+						_0: _p13._0,
+						_1: {ctor: '::', _0: _p14, _1: _p13._1}
+					};
+				},
+				_elm_community$list_extra$List_Extra$select(_p15))
 		};
 	}
 };
 var _elm_community$list_extra$List_Extra$tailsHelp = F2(
 	function (e, list) {
-		var _p11 = list;
-		if (_p11.ctor === '::') {
-			var _p12 = _p11._0;
+		var _p16 = list;
+		if (_p16.ctor === '::') {
+			var _p17 = _p16._0;
 			return {
 				ctor: '::',
-				_0: {ctor: '::', _0: e, _1: _p12},
-				_1: {ctor: '::', _0: _p12, _1: _p11._1}
+				_0: {ctor: '::', _0: e, _1: _p17},
+				_1: {ctor: '::', _0: _p17, _1: _p16._1}
 			};
 		} else {
 			return {ctor: '[]'};
@@ -10297,13 +10358,6 @@ var _elm_community$list_extra$List_Extra$tails = A2(
 		ctor: '::',
 		_0: {ctor: '[]'},
 		_1: {ctor: '[]'}
-	});
-var _elm_community$list_extra$List_Extra$isInfixOf = F2(
-	function (infix, xs) {
-		return A2(
-			_elm_lang$core$List$any,
-			_elm_community$list_extra$List_Extra$isPrefixOf(infix),
-			_elm_community$list_extra$List_Extra$tails(xs));
 	});
 var _elm_community$list_extra$List_Extra$inits = A2(
 	_elm_lang$core$List$foldr,
@@ -10326,57 +10380,78 @@ var _elm_community$list_extra$List_Extra$inits = A2(
 		_0: {ctor: '[]'},
 		_1: {ctor: '[]'}
 	});
-var _elm_community$list_extra$List_Extra$groupWhileTransitively = F2(
-	function (cmp, xs_) {
-		var _p13 = xs_;
-		if (_p13.ctor === '[]') {
-			return {ctor: '[]'};
-		} else {
-			if (_p13._1.ctor === '[]') {
-				return {
-					ctor: '::',
-					_0: {
-						ctor: '::',
-						_0: _p13._0,
-						_1: {ctor: '[]'}
-					},
-					_1: {ctor: '[]'}
-				};
+var _elm_community$list_extra$List_Extra$groupWhileTransitivelyHelp = F4(
+	function (result, currentGroup, compare, list) {
+		groupWhileTransitivelyHelp:
+		while (true) {
+			var _p18 = list;
+			if (_p18.ctor === '[]') {
+				return _elm_lang$core$List$reverse(
+					_elm_lang$core$List$isEmpty(currentGroup) ? result : _elm_lang$core$List$reverse(
+						{ctor: '::', _0: currentGroup, _1: result}));
 			} else {
-				var _p15 = _p13._0;
-				var _p14 = A2(_elm_community$list_extra$List_Extra$groupWhileTransitively, cmp, _p13._1);
-				if (_p14.ctor === '::') {
-					return A2(cmp, _p15, _p13._1._0) ? {
-						ctor: '::',
-						_0: {ctor: '::', _0: _p15, _1: _p14._0},
-						_1: _p14._1
-					} : {
-						ctor: '::',
-						_0: {
+				if (_p18._1.ctor === '[]') {
+					return _elm_lang$core$List$reverse(
+						{
 							ctor: '::',
-							_0: _p15,
-							_1: {ctor: '[]'}
-						},
-						_1: _p14
-					};
+							_0: _elm_lang$core$List$reverse(
+								{ctor: '::', _0: _p18._0, _1: currentGroup}),
+							_1: result
+						});
 				} else {
-					return {ctor: '[]'};
+					var _p20 = _p18._1;
+					var _p19 = _p18._0;
+					if (A2(compare, _p19, _p18._1._0)) {
+						var _v17 = result,
+							_v18 = {ctor: '::', _0: _p19, _1: currentGroup},
+							_v19 = compare,
+							_v20 = _p20;
+						result = _v17;
+						currentGroup = _v18;
+						compare = _v19;
+						list = _v20;
+						continue groupWhileTransitivelyHelp;
+					} else {
+						var _v21 = {
+							ctor: '::',
+							_0: _elm_lang$core$List$reverse(
+								{ctor: '::', _0: _p19, _1: currentGroup}),
+							_1: result
+						},
+							_v22 = {ctor: '[]'},
+							_v23 = compare,
+							_v24 = _p20;
+						result = _v21;
+						currentGroup = _v22;
+						compare = _v23;
+						list = _v24;
+						continue groupWhileTransitivelyHelp;
+					}
 				}
 			}
 		}
+	});
+var _elm_community$list_extra$List_Extra$groupWhileTransitively = F2(
+	function (compare, list) {
+		return A4(
+			_elm_community$list_extra$List_Extra$groupWhileTransitivelyHelp,
+			{ctor: '[]'},
+			{ctor: '[]'},
+			compare,
+			list);
 	});
 var _elm_community$list_extra$List_Extra$stripPrefix = F2(
 	function (prefix, xs) {
 		var step = F2(
 			function (e, m) {
-				var _p16 = m;
-				if (_p16.ctor === 'Nothing') {
+				var _p21 = m;
+				if (_p21.ctor === 'Nothing') {
 					return _elm_lang$core$Maybe$Nothing;
 				} else {
-					if (_p16._0.ctor === '[]') {
+					if (_p21._0.ctor === '[]') {
 						return _elm_lang$core$Maybe$Nothing;
 					} else {
-						return _elm_lang$core$Native_Utils.eq(e, _p16._0._0) ? _elm_lang$core$Maybe$Just(_p16._0._1) : _elm_lang$core$Maybe$Nothing;
+						return _elm_lang$core$Native_Utils.eq(e, _p21._0._0) ? _elm_lang$core$Maybe$Just(_p21._0._1) : _elm_lang$core$Maybe$Nothing;
 					}
 				}
 			});
@@ -10397,16 +10472,16 @@ var _elm_community$list_extra$List_Extra$dropWhileRight = function (p) {
 };
 var _elm_community$list_extra$List_Extra$takeWhileRight = function (p) {
 	var step = F2(
-		function (x, _p17) {
-			var _p18 = _p17;
-			var _p19 = _p18._0;
-			return (p(x) && _p18._1) ? {
+		function (x, _p22) {
+			var _p23 = _p22;
+			var _p24 = _p23._0;
+			return (p(x) && _p23._1) ? {
 				ctor: '_Tuple2',
-				_0: {ctor: '::', _0: x, _1: _p19},
+				_0: {ctor: '::', _0: x, _1: _p24},
 				_1: true
-			} : {ctor: '_Tuple2', _0: _p19, _1: false};
+			} : {ctor: '_Tuple2', _0: _p24, _1: false};
 		});
-	return function (_p20) {
+	return function (_p25) {
 		return _elm_lang$core$Tuple$first(
 			A3(
 				_elm_lang$core$List$foldr,
@@ -10416,7 +10491,7 @@ var _elm_community$list_extra$List_Extra$takeWhileRight = function (p) {
 					_0: {ctor: '[]'},
 					_1: true
 				},
-				_p20));
+				_p25));
 	};
 };
 var _elm_community$list_extra$List_Extra$splitAt = F2(
@@ -10431,17 +10506,17 @@ var _elm_community$list_extra$List_Extra$groupsOfVarying_ = F3(
 	function (listOflengths, list, accu) {
 		groupsOfVarying_:
 		while (true) {
-			var _p21 = {ctor: '_Tuple2', _0: listOflengths, _1: list};
-			if (((_p21.ctor === '_Tuple2') && (_p21._0.ctor === '::')) && (_p21._1.ctor === '::')) {
-				var _p22 = A2(_elm_community$list_extra$List_Extra$splitAt, _p21._0._0, list);
-				var head = _p22._0;
-				var tail = _p22._1;
-				var _v11 = _p21._0._1,
-					_v12 = tail,
-					_v13 = {ctor: '::', _0: head, _1: accu};
-				listOflengths = _v11;
-				list = _v12;
-				accu = _v13;
+			var _p26 = {ctor: '_Tuple2', _0: listOflengths, _1: list};
+			if (((_p26.ctor === '_Tuple2') && (_p26._0.ctor === '::')) && (_p26._1.ctor === '::')) {
+				var _p27 = A2(_elm_community$list_extra$List_Extra$splitAt, _p26._0._0, list);
+				var head = _p27._0;
+				var tail = _p27._1;
+				var _v28 = _p26._0._1,
+					_v29 = tail,
+					_v30 = {ctor: '::', _0: head, _1: accu};
+				listOflengths = _v28;
+				list = _v29;
+				accu = _v30;
 				continue groupsOfVarying_;
 			} else {
 				return _elm_lang$core$List$reverse(accu);
@@ -10458,36 +10533,89 @@ var _elm_community$list_extra$List_Extra$groupsOfVarying = F2(
 	});
 var _elm_community$list_extra$List_Extra$unfoldr = F2(
 	function (f, seed) {
-		var _p23 = f(seed);
-		if (_p23.ctor === 'Nothing') {
+		var _p28 = f(seed);
+		if (_p28.ctor === 'Nothing') {
 			return {ctor: '[]'};
 		} else {
 			return {
 				ctor: '::',
-				_0: _p23._0._0,
-				_1: A2(_elm_community$list_extra$List_Extra$unfoldr, f, _p23._0._1)
+				_0: _p28._0._0,
+				_1: A2(_elm_community$list_extra$List_Extra$unfoldr, f, _p28._0._1)
 			};
 		}
 	});
+var _elm_community$list_extra$List_Extra$mapAccumr = F3(
+	function (f, acc0, list) {
+		return A3(
+			_elm_lang$core$List$foldr,
+			F2(
+				function (x, _p29) {
+					var _p30 = _p29;
+					var _p31 = A2(f, _p30._0, x);
+					var acc2 = _p31._0;
+					var y = _p31._1;
+					return {
+						ctor: '_Tuple2',
+						_0: acc2,
+						_1: {ctor: '::', _0: y, _1: _p30._1}
+					};
+				}),
+			{
+				ctor: '_Tuple2',
+				_0: acc0,
+				_1: {ctor: '[]'}
+			},
+			list);
+	});
+var _elm_community$list_extra$List_Extra$mapAccuml = F3(
+	function (f, acc0, list) {
+		var _p32 = A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (x, _p33) {
+					var _p34 = _p33;
+					var _p35 = A2(f, _p34._0, x);
+					var acc2 = _p35._0;
+					var y = _p35._1;
+					return {
+						ctor: '_Tuple2',
+						_0: acc2,
+						_1: {ctor: '::', _0: y, _1: _p34._1}
+					};
+				}),
+			{
+				ctor: '_Tuple2',
+				_0: acc0,
+				_1: {ctor: '[]'}
+			},
+			list);
+		var accFinal = _p32._0;
+		var generatedList = _p32._1;
+		return {
+			ctor: '_Tuple2',
+			_0: accFinal,
+			_1: _elm_lang$core$List$reverse(generatedList)
+		};
+	});
 var _elm_community$list_extra$List_Extra$scanr1 = F2(
 	function (f, xs_) {
-		var _p24 = xs_;
-		if (_p24.ctor === '[]') {
+		var _p36 = xs_;
+		if (_p36.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			if (_p24._1.ctor === '[]') {
+			if (_p36._1.ctor === '[]') {
 				return {
 					ctor: '::',
-					_0: _p24._0,
+					_0: _p36._0,
 					_1: {ctor: '[]'}
 				};
 			} else {
-				var _p25 = A2(_elm_community$list_extra$List_Extra$scanr1, f, _p24._1);
-				if (_p25.ctor === '::') {
+				var _p37 = A2(_elm_community$list_extra$List_Extra$scanr1, f, _p36._1);
+				if (_p37.ctor === '::') {
 					return {
 						ctor: '::',
-						_0: A2(f, _p24._0, _p25._0),
-						_1: _p25
+						_0: A2(f, _p36._0, _p37._0),
+						_1: _p37
 					};
 				} else {
 					return {ctor: '[]'};
@@ -10497,20 +10625,20 @@ var _elm_community$list_extra$List_Extra$scanr1 = F2(
 	});
 var _elm_community$list_extra$List_Extra$scanr = F3(
 	function (f, acc, xs_) {
-		var _p26 = xs_;
-		if (_p26.ctor === '[]') {
+		var _p38 = xs_;
+		if (_p38.ctor === '[]') {
 			return {
 				ctor: '::',
 				_0: acc,
 				_1: {ctor: '[]'}
 			};
 		} else {
-			var _p27 = A3(_elm_community$list_extra$List_Extra$scanr, f, acc, _p26._1);
-			if (_p27.ctor === '::') {
+			var _p39 = A3(_elm_community$list_extra$List_Extra$scanr, f, acc, _p38._1);
+			if (_p39.ctor === '::') {
 				return {
 					ctor: '::',
-					_0: A2(f, _p26._0, _p27._0),
-					_1: _p27
+					_0: A2(f, _p38._0, _p39._0),
+					_1: _p39
 				};
 			} else {
 				return {ctor: '[]'};
@@ -10519,23 +10647,23 @@ var _elm_community$list_extra$List_Extra$scanr = F3(
 	});
 var _elm_community$list_extra$List_Extra$scanl1 = F2(
 	function (f, xs_) {
-		var _p28 = xs_;
-		if (_p28.ctor === '[]') {
+		var _p40 = xs_;
+		if (_p40.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			return A3(_elm_lang$core$List$scanl, f, _p28._0, _p28._1);
+			return A3(_elm_lang$core$List$scanl, f, _p40._0, _p40._1);
 		}
 	});
 var _elm_community$list_extra$List_Extra$indexedFoldr = F3(
 	function (func, acc, list) {
 		var step = F2(
-			function (x, _p29) {
-				var _p30 = _p29;
-				var _p31 = _p30._0;
+			function (x, _p41) {
+				var _p42 = _p41;
+				var _p43 = _p42._0;
 				return {
 					ctor: '_Tuple2',
-					_0: _p31 - 1,
-					_1: A3(func, _p31, x, _p30._1)
+					_0: _p43 - 1,
+					_1: A3(func, _p43, x, _p42._1)
 				};
 			});
 		return _elm_lang$core$Tuple$second(
@@ -10552,13 +10680,13 @@ var _elm_community$list_extra$List_Extra$indexedFoldr = F3(
 var _elm_community$list_extra$List_Extra$indexedFoldl = F3(
 	function (func, acc, list) {
 		var step = F2(
-			function (x, _p32) {
-				var _p33 = _p32;
-				var _p34 = _p33._0;
+			function (x, _p44) {
+				var _p45 = _p44;
+				var _p46 = _p45._0;
 				return {
 					ctor: '_Tuple2',
-					_0: _p34 + 1,
-					_1: A3(func, _p34, x, _p33._1)
+					_0: _p46 + 1,
+					_1: A3(func, _p46, x, _p45._1)
 				};
 			});
 		return _elm_lang$core$Tuple$second(
@@ -10574,11 +10702,11 @@ var _elm_community$list_extra$List_Extra$foldr1 = F2(
 			function (x, m) {
 				return _elm_lang$core$Maybe$Just(
 					function () {
-						var _p35 = m;
-						if (_p35.ctor === 'Nothing') {
+						var _p47 = m;
+						if (_p47.ctor === 'Nothing') {
 							return x;
 						} else {
-							return A2(f, x, _p35._0);
+							return A2(f, x, _p47._0);
 						}
 					}());
 			});
@@ -10590,88 +10718,78 @@ var _elm_community$list_extra$List_Extra$foldl1 = F2(
 			function (x, m) {
 				return _elm_lang$core$Maybe$Just(
 					function () {
-						var _p36 = m;
-						if (_p36.ctor === 'Nothing') {
+						var _p48 = m;
+						if (_p48.ctor === 'Nothing') {
 							return x;
 						} else {
-							return A2(f, _p36._0, x);
+							return A2(f, _p48._0, x);
 						}
 					}());
 			});
 		return A3(_elm_lang$core$List$foldl, mf, _elm_lang$core$Maybe$Nothing, xs);
 	});
+var _elm_community$list_extra$List_Extra$reverseAppend = F2(
+	function (list1, list2) {
+		return A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			list2,
+			list1);
+	});
 var _elm_community$list_extra$List_Extra$interweaveHelp = F3(
-	function (l1, l2, acc) {
+	function (acc, list1, list2) {
 		interweaveHelp:
 		while (true) {
-			var _p37 = {ctor: '_Tuple2', _0: l1, _1: l2};
-			_v24_1:
-			do {
-				if (_p37._0.ctor === '::') {
-					if (_p37._1.ctor === '::') {
-						var _v25 = _p37._0._1,
-							_v26 = _p37._1._1,
-							_v27 = A2(
-							_elm_lang$core$Basics_ops['++'],
-							acc,
-							{
-								ctor: '::',
-								_0: _p37._0._0,
-								_1: {
-									ctor: '::',
-									_0: _p37._1._0,
-									_1: {ctor: '[]'}
-								}
-							});
-						l1 = _v25;
-						l2 = _v26;
-						acc = _v27;
-						continue interweaveHelp;
-					} else {
-						break _v24_1;
-					}
+			var _p49 = {ctor: '_Tuple2', _0: list1, _1: list2};
+			if (_p49._0.ctor === '::') {
+				if (_p49._1.ctor === '::') {
+					var _v44 = {
+						ctor: '::',
+						_0: _p49._1._0,
+						_1: {ctor: '::', _0: _p49._0._0, _1: acc}
+					},
+						_v45 = _p49._0._1,
+						_v46 = _p49._1._1;
+					acc = _v44;
+					list1 = _v45;
+					list2 = _v46;
+					continue interweaveHelp;
 				} else {
-					if (_p37._1.ctor === '[]') {
-						break _v24_1;
-					} else {
-						return A2(_elm_lang$core$Basics_ops['++'], acc, _p37._1);
-					}
+					return A2(_elm_community$list_extra$List_Extra$reverseAppend, acc, list1);
 				}
-			} while(false);
-			return A2(_elm_lang$core$Basics_ops['++'], acc, _p37._0);
+			} else {
+				return A2(_elm_community$list_extra$List_Extra$reverseAppend, acc, list2);
+			}
 		}
 	});
-var _elm_community$list_extra$List_Extra$interweave = F2(
-	function (l1, l2) {
-		return A3(
-			_elm_community$list_extra$List_Extra$interweaveHelp,
-			l1,
-			l2,
-			{ctor: '[]'});
-	});
+var _elm_community$list_extra$List_Extra$interweave = _elm_community$list_extra$List_Extra$interweaveHelp(
+	{ctor: '[]'});
 var _elm_community$list_extra$List_Extra$permutations = function (xs_) {
-	var _p38 = xs_;
-	if (_p38.ctor === '[]') {
+	var _p50 = xs_;
+	if (_p50.ctor === '[]') {
 		return {
 			ctor: '::',
 			_0: {ctor: '[]'},
 			_1: {ctor: '[]'}
 		};
 	} else {
-		var f = function (_p39) {
-			var _p40 = _p39;
+		var f = function (_p51) {
+			var _p52 = _p51;
 			return A2(
 				_elm_lang$core$List$map,
 				F2(
 					function (x, y) {
 						return {ctor: '::', _0: x, _1: y};
-					})(_p40._0),
-				_elm_community$list_extra$List_Extra$permutations(_p40._1));
+					})(_p52._0),
+				_elm_community$list_extra$List_Extra$permutations(_p52._1));
 		};
 		return A2(
 			_elm_lang$core$List$concatMap,
 			f,
-			_elm_community$list_extra$List_Extra$select(_p38));
+			_elm_community$list_extra$List_Extra$select(_p50));
 	}
 };
 var _elm_community$list_extra$List_Extra$isPermutationOf = F2(
@@ -10682,11 +10800,11 @@ var _elm_community$list_extra$List_Extra$isPermutationOf = F2(
 			_elm_community$list_extra$List_Extra$permutations(xs));
 	});
 var _elm_community$list_extra$List_Extra$subsequencesNonEmpty = function (xs) {
-	var _p41 = xs;
-	if (_p41.ctor === '[]') {
+	var _p53 = xs;
+	if (_p53.ctor === '[]') {
 		return {ctor: '[]'};
 	} else {
-		var _p42 = _p41._0;
+		var _p54 = _p53._0;
 		var f = F2(
 			function (ys, r) {
 				return {
@@ -10694,7 +10812,7 @@ var _elm_community$list_extra$List_Extra$subsequencesNonEmpty = function (xs) {
 					_0: ys,
 					_1: {
 						ctor: '::',
-						_0: {ctor: '::', _0: _p42, _1: ys},
+						_0: {ctor: '::', _0: _p54, _1: ys},
 						_1: r
 					}
 				};
@@ -10703,14 +10821,14 @@ var _elm_community$list_extra$List_Extra$subsequencesNonEmpty = function (xs) {
 			ctor: '::',
 			_0: {
 				ctor: '::',
-				_0: _p42,
+				_0: _p54,
 				_1: {ctor: '[]'}
 			},
 			_1: A3(
 				_elm_lang$core$List$foldr,
 				f,
 				{ctor: '[]'},
-				_elm_community$list_extra$List_Extra$subsequencesNonEmpty(_p41._1))
+				_elm_community$list_extra$List_Extra$subsequencesNonEmpty(_p53._1))
 		};
 	}
 };
@@ -10721,53 +10839,52 @@ var _elm_community$list_extra$List_Extra$subsequences = function (xs) {
 		_1: _elm_community$list_extra$List_Extra$subsequencesNonEmpty(xs)
 	};
 };
-var _elm_community$list_extra$List_Extra$isSubsequenceOf = F2(
-	function (subseq, xs) {
-		return A2(
-			_elm_lang$core$List$member,
-			subseq,
-			_elm_community$list_extra$List_Extra$subsequences(xs));
-	});
-var _elm_community$list_extra$List_Extra$transpose = function (ll) {
-	transpose:
-	while (true) {
-		var _p43 = ll;
-		if (_p43.ctor === '[]') {
-			return {ctor: '[]'};
-		} else {
-			if (_p43._0.ctor === '[]') {
-				var _v32 = _p43._1;
-				ll = _v32;
-				continue transpose;
-			} else {
-				var _p44 = _p43._1;
-				var tails = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$tail, _p44);
-				var heads = A2(_elm_lang$core$List$filterMap, _elm_lang$core$List$head, _p44);
-				return {
-					ctor: '::',
-					_0: {ctor: '::', _0: _p43._0._0, _1: heads},
-					_1: _elm_community$list_extra$List_Extra$transpose(
-						{ctor: '::', _0: _p43._0._1, _1: tails})
-				};
-			}
-		}
+var _elm_community$list_extra$List_Extra$rowsLength = function (listOfLists) {
+	var _p55 = listOfLists;
+	if (_p55.ctor === '[]') {
+		return 0;
+	} else {
+		return _elm_lang$core$List$length(_p55._0);
 	}
 };
+var _elm_community$list_extra$List_Extra$transpose = function (listOfLists) {
+	return A3(
+		_elm_lang$core$List$foldr,
+		_elm_lang$core$List$map2(
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				})),
+		A2(
+			_elm_lang$core$List$repeat,
+			_elm_community$list_extra$List_Extra$rowsLength(listOfLists),
+			{ctor: '[]'}),
+		listOfLists);
+};
 var _elm_community$list_extra$List_Extra$intercalate = function (xs) {
-	return function (_p45) {
+	return function (_p56) {
 		return _elm_lang$core$List$concat(
-			A2(_elm_lang$core$List$intersperse, xs, _p45));
+			A2(_elm_lang$core$List$intersperse, xs, _p56));
 	};
 };
 var _elm_community$list_extra$List_Extra$filterNot = F2(
 	function (pred, list) {
 		return A2(
 			_elm_lang$core$List$filter,
-			function (_p46) {
-				return !pred(_p46);
+			function (_p57) {
+				return !pred(_p57);
 			},
 			list);
 	});
+var _elm_community$list_extra$List_Extra$removeIfIndex = function (predicate) {
+	return A2(
+		_elm_community$list_extra$List_Extra$indexedFoldr,
+		F3(
+			function (index, item, acc) {
+				return predicate(index) ? acc : {ctor: '::', _0: item, _1: acc};
+			}),
+		{ctor: '[]'});
+};
 var _elm_community$list_extra$List_Extra$removeAt = F2(
 	function (index, l) {
 		if (_elm_lang$core$Native_Utils.cmp(index, 0) < 0) {
@@ -10776,24 +10893,24 @@ var _elm_community$list_extra$List_Extra$removeAt = F2(
 			var tail = _elm_lang$core$List$tail(
 				A2(_elm_lang$core$List$drop, index, l));
 			var head = A2(_elm_lang$core$List$take, index, l);
-			var _p47 = tail;
-			if (_p47.ctor === 'Nothing') {
+			var _p58 = tail;
+			if (_p58.ctor === 'Nothing') {
 				return l;
 			} else {
-				return A2(_elm_lang$core$List$append, head, _p47._0);
+				return A2(_elm_lang$core$List$append, head, _p58._0);
 			}
 		}
 	});
 var _elm_community$list_extra$List_Extra$stableSortWith = F2(
 	function (pred, list) {
 		var predWithIndex = F2(
-			function (_p49, _p48) {
-				var _p50 = _p49;
-				var _p51 = _p48;
-				var result = A2(pred, _p50._0, _p51._0);
-				var _p52 = result;
-				if (_p52.ctor === 'EQ') {
-					return A2(_elm_lang$core$Basics$compare, _p50._1, _p51._1);
+			function (_p60, _p59) {
+				var _p61 = _p60;
+				var _p62 = _p59;
+				var result = A2(pred, _p61._0, _p62._0);
+				var _p63 = result;
+				if (_p63.ctor === 'EQ') {
+					return A2(_elm_lang$core$Basics$compare, _p61._1, _p62._1);
 				} else {
 					return result;
 				}
@@ -10810,38 +10927,18 @@ var _elm_community$list_extra$List_Extra$stableSortWith = F2(
 			_elm_lang$core$Tuple$first,
 			A2(_elm_lang$core$List$sortWith, predWithIndex, listWithIndex));
 	});
-var _elm_community$list_extra$List_Extra$setAt = F3(
-	function (index, value, l) {
-		if (_elm_lang$core$Native_Utils.cmp(index, 0) < 0) {
-			return _elm_lang$core$Maybe$Nothing;
-		} else {
-			var tail = _elm_lang$core$List$tail(
-				A2(_elm_lang$core$List$drop, index, l));
-			var head = A2(_elm_lang$core$List$take, index, l);
-			var _p53 = tail;
-			if (_p53.ctor === 'Nothing') {
-				return _elm_lang$core$Maybe$Nothing;
-			} else {
-				return _elm_lang$core$Maybe$Just(
-					A2(
-						_elm_lang$core$List$append,
-						head,
-						{ctor: '::', _0: value, _1: _p53._0}));
-			}
-		}
-	});
 var _elm_community$list_extra$List_Extra$remove = F2(
 	function (x, xs) {
-		var _p54 = xs;
-		if (_p54.ctor === '[]') {
+		var _p64 = xs;
+		if (_p64.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			var _p56 = _p54._1;
-			var _p55 = _p54._0;
-			return _elm_lang$core$Native_Utils.eq(x, _p55) ? _p56 : {
+			var _p66 = _p64._1;
+			var _p65 = _p64._0;
+			return _elm_lang$core$Native_Utils.eq(x, _p65) ? _p66 : {
 				ctor: '::',
-				_0: _p55,
-				_1: A2(_elm_community$list_extra$List_Extra$remove, x, _p56)
+				_0: _p65,
+				_1: A2(_elm_community$list_extra$List_Extra$remove, x, _p66)
 			};
 		}
 	});
@@ -10856,18 +10953,33 @@ var _elm_community$list_extra$List_Extra$updateIfIndex = F3(
 			list);
 	});
 var _elm_community$list_extra$List_Extra$updateAt = F3(
-	function (index, update, list) {
-		return ((_elm_lang$core$Native_Utils.cmp(index, 0) < 0) || (_elm_lang$core$Native_Utils.cmp(
+	function (index, fn, list) {
+		if (_elm_lang$core$Native_Utils.cmp(index, 0) < 0) {
+			return list;
+		} else {
+			var tail = A2(_elm_lang$core$List$drop, index, list);
+			var head = A2(_elm_lang$core$List$take, index, list);
+			var _p67 = tail;
+			if (_p67.ctor === '::') {
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					head,
+					{
+						ctor: '::',
+						_0: fn(_p67._0),
+						_1: _p67._1
+					});
+			} else {
+				return list;
+			}
+		}
+	});
+var _elm_community$list_extra$List_Extra$setAt = F2(
+	function (index, value) {
+		return A2(
+			_elm_community$list_extra$List_Extra$updateAt,
 			index,
-			_elm_lang$core$List$length(list)) > -1)) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
-			A3(
-				_elm_community$list_extra$List_Extra$updateIfIndex,
-				F2(
-					function (x, y) {
-						return _elm_lang$core$Native_Utils.eq(x, y);
-					})(index),
-				update,
-				list));
+			_elm_lang$core$Basics$always(value));
 	});
 var _elm_community$list_extra$List_Extra$updateIf = F3(
 	function (predicate, update, list) {
@@ -10886,32 +10998,48 @@ var _elm_community$list_extra$List_Extra$replaceIf = F3(
 			_elm_lang$core$Basics$always(replacement),
 			list);
 	});
-var _elm_community$list_extra$List_Extra$findIndices = function (p) {
-	return function (_p57) {
-		return A2(
-			_elm_lang$core$List$map,
-			_elm_lang$core$Tuple$first,
-			A2(
-				_elm_lang$core$List$filter,
-				function (_p58) {
-					var _p59 = _p58;
-					return p(_p59._1);
-				},
-				A2(
-					_elm_lang$core$List$indexedMap,
-					F2(
-						function (v0, v1) {
-							return {ctor: '_Tuple2', _0: v0, _1: v1};
-						}),
-					_p57)));
-	};
+var _elm_community$list_extra$List_Extra$count = function (predicate) {
+	return A2(
+		_elm_lang$core$List$foldl,
+		F2(
+			function (x, acc) {
+				return predicate(x) ? (acc + 1) : acc;
+			}),
+		0);
 };
-var _elm_community$list_extra$List_Extra$findIndex = function (p) {
-	return function (_p60) {
-		return _elm_lang$core$List$head(
-			A2(_elm_community$list_extra$List_Extra$findIndices, p, _p60));
-	};
+var _elm_community$list_extra$List_Extra$findIndices = function (predicate) {
+	var consIndexIf = F3(
+		function (index, x, acc) {
+			return predicate(x) ? {ctor: '::', _0: index, _1: acc} : acc;
+		});
+	return A2(
+		_elm_community$list_extra$List_Extra$indexedFoldr,
+		consIndexIf,
+		{ctor: '[]'});
 };
+var _elm_community$list_extra$List_Extra$findIndexHelp = F3(
+	function (index, predicate, list) {
+		findIndexHelp:
+		while (true) {
+			var _p68 = list;
+			if (_p68.ctor === '[]') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				if (predicate(_p68._0)) {
+					return _elm_lang$core$Maybe$Just(index);
+				} else {
+					var _v58 = index + 1,
+						_v59 = predicate,
+						_v60 = _p68._1;
+					index = _v58;
+					predicate = _v59;
+					list = _v60;
+					continue findIndexHelp;
+				}
+			}
+		}
+	});
+var _elm_community$list_extra$List_Extra$findIndex = _elm_community$list_extra$List_Extra$findIndexHelp(0);
 var _elm_community$list_extra$List_Extra$splitWhen = F2(
 	function (predicate, list) {
 		return A2(
@@ -10939,28 +11067,43 @@ var _elm_community$list_extra$List_Extra$find = F2(
 	function (predicate, list) {
 		find:
 		while (true) {
-			var _p61 = list;
-			if (_p61.ctor === '[]') {
+			var _p69 = list;
+			if (_p69.ctor === '[]') {
 				return _elm_lang$core$Maybe$Nothing;
 			} else {
-				var _p62 = _p61._0;
-				if (predicate(_p62)) {
-					return _elm_lang$core$Maybe$Just(_p62);
+				var _p70 = _p69._0;
+				if (predicate(_p70)) {
+					return _elm_lang$core$Maybe$Just(_p70);
 				} else {
-					var _v41 = predicate,
-						_v42 = _p61._1;
-					predicate = _v41;
-					list = _v42;
+					var _v62 = predicate,
+						_v63 = _p69._1;
+					predicate = _v62;
+					list = _v63;
 					continue find;
 				}
 			}
 		}
 	});
 var _elm_community$list_extra$List_Extra$notMember = function (x) {
-	return function (_p63) {
-		return !A2(_elm_lang$core$List$member, x, _p63);
+	return function (_p71) {
+		return !A2(_elm_lang$core$List$member, x, _p71);
 	};
 };
+var _elm_community$list_extra$List_Extra$reverseMap = F2(
+	function (f, xs) {
+		return A3(
+			_elm_lang$core$List$foldl,
+			F2(
+				function (x, acc) {
+					return {
+						ctor: '::',
+						_0: f(x),
+						_1: acc
+					};
+				}),
+			{ctor: '[]'},
+			xs);
+	});
 var _elm_community$list_extra$List_Extra$andThen = _elm_lang$core$List$concatMap;
 var _elm_community$list_extra$List_Extra$lift2 = F3(
 	function (f, la, lb) {
@@ -10980,6 +11123,25 @@ var _elm_community$list_extra$List_Extra$lift2 = F3(
 			},
 			la);
 	});
+var _elm_community$list_extra$List_Extra$cartesianProduct = function (ll) {
+	var _p72 = ll;
+	if (_p72.ctor === '[]') {
+		return {
+			ctor: '::',
+			_0: {ctor: '[]'},
+			_1: {ctor: '[]'}
+		};
+	} else {
+		return A3(
+			_elm_community$list_extra$List_Extra$lift2,
+			F2(
+				function (x, y) {
+					return {ctor: '::', _0: x, _1: y};
+				}),
+			_p72._0,
+			_elm_community$list_extra$List_Extra$cartesianProduct(_p72._1));
+	}
+};
 var _elm_community$list_extra$List_Extra$lift3 = F4(
 	function (f, la, lb, lc) {
 		return A2(
@@ -11042,42 +11204,49 @@ var _elm_community$list_extra$List_Extra$andMap = F2(
 			fl,
 			l);
 	});
-var _elm_community$list_extra$List_Extra$uniqueHelp = F3(
-	function (f, existing, remaining) {
+var _elm_community$list_extra$List_Extra$uniqueHelp = F4(
+	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
 		while (true) {
-			var _p64 = remaining;
-			if (_p64.ctor === '[]') {
-				return {ctor: '[]'};
+			var _p73 = remaining;
+			if (_p73.ctor === '[]') {
+				return _elm_lang$core$List$reverse(accumulator);
 			} else {
-				var _p66 = _p64._1;
-				var _p65 = _p64._0;
-				var computedFirst = f(_p65);
+				var _p75 = _p73._1;
+				var _p74 = _p73._0;
+				var computedFirst = f(_p74);
 				if (A2(_elm_lang$core$Set$member, computedFirst, existing)) {
-					var _v44 = f,
-						_v45 = existing,
-						_v46 = _p66;
-					f = _v44;
-					existing = _v45;
-					remaining = _v46;
+					var _v66 = f,
+						_v67 = existing,
+						_v68 = _p75,
+						_v69 = accumulator;
+					f = _v66;
+					existing = _v67;
+					remaining = _v68;
+					accumulator = _v69;
 					continue uniqueHelp;
 				} else {
-					return {
-						ctor: '::',
-						_0: _p65,
-						_1: A3(
-							_elm_community$list_extra$List_Extra$uniqueHelp,
-							f,
-							A2(_elm_lang$core$Set$insert, computedFirst, existing),
-							_p66)
-					};
+					var _v70 = f,
+						_v71 = A2(_elm_lang$core$Set$insert, computedFirst, existing),
+						_v72 = _p75,
+						_v73 = {ctor: '::', _0: _p74, _1: accumulator};
+					f = _v70;
+					existing = _v71;
+					remaining = _v72;
+					accumulator = _v73;
+					continue uniqueHelp;
 				}
 			}
 		}
 	});
 var _elm_community$list_extra$List_Extra$uniqueBy = F2(
 	function (f, list) {
-		return A3(_elm_community$list_extra$List_Extra$uniqueHelp, f, _elm_lang$core$Set$empty, list);
+		return A4(
+			_elm_community$list_extra$List_Extra$uniqueHelp,
+			f,
+			_elm_lang$core$Set$empty,
+			list,
+			{ctor: '[]'});
 	});
 var _elm_community$list_extra$List_Extra$allDifferentBy = F2(
 	function (f, list) {
@@ -11090,21 +11259,26 @@ var _elm_community$list_extra$List_Extra$allDifferent = function (list) {
 	return A2(_elm_community$list_extra$List_Extra$allDifferentBy, _elm_lang$core$Basics$identity, list);
 };
 var _elm_community$list_extra$List_Extra$unique = function (list) {
-	return A3(_elm_community$list_extra$List_Extra$uniqueHelp, _elm_lang$core$Basics$identity, _elm_lang$core$Set$empty, list);
+	return A4(
+		_elm_community$list_extra$List_Extra$uniqueHelp,
+		_elm_lang$core$Basics$identity,
+		_elm_lang$core$Set$empty,
+		list,
+		{ctor: '[]'});
 };
 var _elm_community$list_extra$List_Extra$dropWhile = F2(
 	function (predicate, list) {
 		dropWhile:
 		while (true) {
-			var _p67 = list;
-			if (_p67.ctor === '[]') {
+			var _p76 = list;
+			if (_p76.ctor === '[]') {
 				return {ctor: '[]'};
 			} else {
-				if (predicate(_p67._0)) {
-					var _v48 = predicate,
-						_v49 = _p67._1;
-					predicate = _v48;
-					list = _v49;
+				if (predicate(_p76._0)) {
+					var _v75 = predicate,
+						_v76 = _p76._1;
+					predicate = _v75;
+					list = _v76;
 					continue dropWhile;
 				} else {
 					return list;
@@ -11117,16 +11291,16 @@ var _elm_community$list_extra$List_Extra$takeWhile = function (predicate) {
 		function (memo, list) {
 			takeWhileMemo:
 			while (true) {
-				var _p68 = list;
-				if (_p68.ctor === '[]') {
+				var _p77 = list;
+				if (_p77.ctor === '[]') {
 					return _elm_lang$core$List$reverse(memo);
 				} else {
-					var _p69 = _p68._0;
-					if (predicate(_p69)) {
-						var _v51 = {ctor: '::', _0: _p69, _1: memo},
-							_v52 = _p68._1;
-						memo = _v51;
-						list = _v52;
+					var _p78 = _p77._0;
+					if (predicate(_p78)) {
+						var _v78 = {ctor: '::', _0: _p78, _1: memo},
+							_v79 = _p77._1;
+						memo = _v78;
+						list = _v79;
 						continue takeWhileMemo;
 					} else {
 						return _elm_lang$core$List$reverse(memo);
@@ -11147,26 +11321,26 @@ var _elm_community$list_extra$List_Extra$span = F2(
 	});
 var _elm_community$list_extra$List_Extra$break = function (p) {
 	return _elm_community$list_extra$List_Extra$span(
-		function (_p70) {
-			return !p(_p70);
+		function (_p79) {
+			return !p(_p79);
 		});
 };
 var _elm_community$list_extra$List_Extra$groupWhile = F2(
 	function (eq, xs_) {
-		var _p71 = xs_;
-		if (_p71.ctor === '[]') {
+		var _p80 = xs_;
+		if (_p80.ctor === '[]') {
 			return {ctor: '[]'};
 		} else {
-			var _p73 = _p71._0;
-			var _p72 = A2(
+			var _p82 = _p80._0;
+			var _p81 = A2(
 				_elm_community$list_extra$List_Extra$span,
-				eq(_p73),
-				_p71._1);
-			var ys = _p72._0;
-			var zs = _p72._1;
+				eq(_p82),
+				_p80._1);
+			var ys = _p81._0;
+			var zs = _p81._1;
 			return {
 				ctor: '::',
-				_0: {ctor: '::', _0: _p73, _1: ys},
+				_0: {ctor: '::', _0: _p82, _1: ys},
 				_1: A2(_elm_community$list_extra$List_Extra$groupWhile, eq, zs)
 			};
 		}
@@ -11179,18 +11353,18 @@ var _elm_community$list_extra$List_Extra$group = _elm_community$list_extra$List_
 var _elm_community$list_extra$List_Extra$minimumBy = F2(
 	function (f, ls) {
 		var minBy = F2(
-			function (x, _p74) {
-				var _p75 = _p74;
-				var _p76 = _p75._1;
+			function (x, _p83) {
+				var _p84 = _p83;
+				var _p85 = _p84._1;
 				var fx = f(x);
-				return (_elm_lang$core$Native_Utils.cmp(fx, _p76) < 0) ? {ctor: '_Tuple2', _0: x, _1: fx} : {ctor: '_Tuple2', _0: _p75._0, _1: _p76};
+				return (_elm_lang$core$Native_Utils.cmp(fx, _p85) < 0) ? {ctor: '_Tuple2', _0: x, _1: fx} : {ctor: '_Tuple2', _0: _p84._0, _1: _p85};
 			});
-		var _p77 = ls;
-		if (_p77.ctor === '::') {
-			if (_p77._1.ctor === '[]') {
-				return _elm_lang$core$Maybe$Just(_p77._0);
+		var _p86 = ls;
+		if (_p86.ctor === '::') {
+			if (_p86._1.ctor === '[]') {
+				return _elm_lang$core$Maybe$Just(_p86._0);
 			} else {
-				var _p78 = _p77._0;
+				var _p87 = _p86._0;
 				return _elm_lang$core$Maybe$Just(
 					_elm_lang$core$Tuple$first(
 						A3(
@@ -11198,10 +11372,10 @@ var _elm_community$list_extra$List_Extra$minimumBy = F2(
 							minBy,
 							{
 								ctor: '_Tuple2',
-								_0: _p78,
-								_1: f(_p78)
+								_0: _p87,
+								_1: f(_p87)
 							},
-							_p77._1)));
+							_p86._1)));
 			}
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
@@ -11210,18 +11384,18 @@ var _elm_community$list_extra$List_Extra$minimumBy = F2(
 var _elm_community$list_extra$List_Extra$maximumBy = F2(
 	function (f, ls) {
 		var maxBy = F2(
-			function (x, _p79) {
-				var _p80 = _p79;
-				var _p81 = _p80._1;
+			function (x, _p88) {
+				var _p89 = _p88;
+				var _p90 = _p89._1;
 				var fx = f(x);
-				return (_elm_lang$core$Native_Utils.cmp(fx, _p81) > 0) ? {ctor: '_Tuple2', _0: x, _1: fx} : {ctor: '_Tuple2', _0: _p80._0, _1: _p81};
+				return (_elm_lang$core$Native_Utils.cmp(fx, _p90) > 0) ? {ctor: '_Tuple2', _0: x, _1: fx} : {ctor: '_Tuple2', _0: _p89._0, _1: _p90};
 			});
-		var _p82 = ls;
-		if (_p82.ctor === '::') {
-			if (_p82._1.ctor === '[]') {
-				return _elm_lang$core$Maybe$Just(_p82._0);
+		var _p91 = ls;
+		if (_p91.ctor === '::') {
+			if (_p91._1.ctor === '[]') {
+				return _elm_lang$core$Maybe$Just(_p91._0);
 			} else {
-				var _p83 = _p82._0;
+				var _p92 = _p91._0;
 				return _elm_lang$core$Maybe$Just(
 					_elm_lang$core$Tuple$first(
 						A3(
@@ -11229,85 +11403,140 @@ var _elm_community$list_extra$List_Extra$maximumBy = F2(
 							maxBy,
 							{
 								ctor: '_Tuple2',
-								_0: _p83,
-								_1: f(_p83)
+								_0: _p92,
+								_1: f(_p92)
 							},
-							_p82._1)));
+							_p91._1)));
 			}
 		} else {
 			return _elm_lang$core$Maybe$Nothing;
 		}
 	});
 var _elm_community$list_extra$List_Extra$uncons = function (xs) {
-	var _p84 = xs;
-	if (_p84.ctor === '[]') {
+	var _p93 = xs;
+	if (_p93.ctor === '[]') {
 		return _elm_lang$core$Maybe$Nothing;
 	} else {
 		return _elm_lang$core$Maybe$Just(
-			{ctor: '_Tuple2', _0: _p84._0, _1: _p84._1});
+			{ctor: '_Tuple2', _0: _p93._0, _1: _p93._1});
 	}
 };
 var _elm_community$list_extra$List_Extra$swapAt = F3(
 	function (index1, index2, l) {
 		swapAt:
 		while (true) {
-			if (_elm_lang$core$Native_Utils.eq(index1, index2)) {
-				return _elm_lang$core$Maybe$Just(l);
+			if (_elm_lang$core$Native_Utils.eq(index1, index2) || (_elm_lang$core$Native_Utils.cmp(index1, 0) < 0)) {
+				return l;
 			} else {
 				if (_elm_lang$core$Native_Utils.cmp(index1, index2) > 0) {
-					var _v59 = index2,
-						_v60 = index1,
-						_v61 = l;
-					index1 = _v59;
-					index2 = _v60;
-					l = _v61;
+					var _v86 = index2,
+						_v87 = index1,
+						_v88 = l;
+					index1 = _v86;
+					index2 = _v87;
+					l = _v88;
 					continue swapAt;
 				} else {
-					if (_elm_lang$core$Native_Utils.cmp(index1, 0) < 0) {
-						return _elm_lang$core$Maybe$Nothing;
+					var _p94 = A2(_elm_community$list_extra$List_Extra$splitAt, index1, l);
+					var part1 = _p94._0;
+					var tail1 = _p94._1;
+					var _p95 = A2(_elm_community$list_extra$List_Extra$splitAt, index2 - index1, tail1);
+					var head2 = _p95._0;
+					var tail2 = _p95._1;
+					var _p96 = {
+						ctor: '_Tuple2',
+						_0: _elm_community$list_extra$List_Extra$uncons(head2),
+						_1: _elm_community$list_extra$List_Extra$uncons(tail2)
+					};
+					if (((((_p96.ctor === '_Tuple2') && (_p96._0.ctor === 'Just')) && (_p96._0._0.ctor === '_Tuple2')) && (_p96._1.ctor === 'Just')) && (_p96._1._0.ctor === '_Tuple2')) {
+						return _elm_lang$core$List$concat(
+							{
+								ctor: '::',
+								_0: part1,
+								_1: {
+									ctor: '::',
+									_0: {ctor: '::', _0: _p96._1._0._0, _1: _p96._0._0._1},
+									_1: {
+										ctor: '::',
+										_0: {ctor: '::', _0: _p96._0._0._0, _1: _p96._1._0._1},
+										_1: {ctor: '[]'}
+									}
+								}
+							});
 					} else {
-						var _p85 = A2(_elm_community$list_extra$List_Extra$splitAt, index1, l);
-						var part1 = _p85._0;
-						var tail1 = _p85._1;
-						var _p86 = A2(_elm_community$list_extra$List_Extra$splitAt, index2 - index1, tail1);
-						var head2 = _p86._0;
-						var tail2 = _p86._1;
-						return A3(
-							_elm_lang$core$Maybe$map2,
-							F2(
-								function (_p88, _p87) {
-									var _p89 = _p88;
-									var _p90 = _p87;
-									return _elm_lang$core$List$concat(
-										{
-											ctor: '::',
-											_0: part1,
-											_1: {
-												ctor: '::',
-												_0: {ctor: '::', _0: _p90._0, _1: _p89._1},
-												_1: {
-													ctor: '::',
-													_0: {ctor: '::', _0: _p89._0, _1: _p90._1},
-													_1: {ctor: '[]'}
-												}
-											}
-										});
-								}),
-							_elm_community$list_extra$List_Extra$uncons(head2),
-							_elm_community$list_extra$List_Extra$uncons(tail2));
+						return l;
 					}
 				}
 			}
 		}
 	});
+var _elm_community$list_extra$List_Extra$cycleHelp = F3(
+	function (acc, n, list) {
+		cycleHelp:
+		while (true) {
+			if (_elm_lang$core$Native_Utils.cmp(n, 0) > 0) {
+				var _v90 = A2(_elm_community$list_extra$List_Extra$reverseAppend, list, acc),
+					_v91 = n - 1,
+					_v92 = list;
+				acc = _v90;
+				n = _v91;
+				list = _v92;
+				continue cycleHelp;
+			} else {
+				return acc;
+			}
+		}
+	});
+var _elm_community$list_extra$List_Extra$cycle = F2(
+	function (len, list) {
+		var cycleLength = _elm_lang$core$List$length(list);
+		return (_elm_lang$core$Native_Utils.eq(cycleLength, 0) || _elm_lang$core$Native_Utils.eq(cycleLength, len)) ? list : ((_elm_lang$core$Native_Utils.cmp(cycleLength, len) < 0) ? _elm_lang$core$List$reverse(
+			A2(
+				_elm_community$list_extra$List_Extra$reverseAppend,
+				A2(
+					_elm_lang$core$List$take,
+					A2(_elm_lang$core$Basics$rem, len, cycleLength),
+					list),
+				A3(
+					_elm_community$list_extra$List_Extra$cycleHelp,
+					{ctor: '[]'},
+					(len / cycleLength) | 0,
+					list))) : A2(_elm_lang$core$List$take, len, list));
+	});
+var _elm_community$list_extra$List_Extra$initialize = F2(
+	function (n, f) {
+		var step = F2(
+			function (i, acc) {
+				step:
+				while (true) {
+					if (_elm_lang$core$Native_Utils.cmp(i, 0) < 0) {
+						return acc;
+					} else {
+						var _v93 = i - 1,
+							_v94 = {
+							ctor: '::',
+							_0: f(i),
+							_1: acc
+						};
+						i = _v93;
+						acc = _v94;
+						continue step;
+					}
+				}
+			});
+		return A2(
+			step,
+			n - 1,
+			{ctor: '[]'});
+	});
 var _elm_community$list_extra$List_Extra$iterate = F2(
 	function (f, x) {
-		var _p91 = f(x);
-		if (_p91.ctor === 'Just') {
+		var _p97 = f(x);
+		if (_p97.ctor === 'Just') {
 			return {
 				ctor: '::',
 				_0: x,
-				_1: A2(_elm_community$list_extra$List_Extra$iterate, f, _p91._0)
+				_1: A2(_elm_community$list_extra$List_Extra$iterate, f, _p97._0)
 			};
 		} else {
 			return {
@@ -11324,35 +11553,35 @@ var _elm_community$list_extra$List_Extra$getAt = F2(
 	});
 var _elm_community$list_extra$List_Extra_ops = _elm_community$list_extra$List_Extra_ops || {};
 _elm_community$list_extra$List_Extra_ops['!!'] = _elm_lang$core$Basics$flip(_elm_community$list_extra$List_Extra$getAt);
-var _elm_community$list_extra$List_Extra$init = function () {
-	var maybe = F2(
-		function (d, f) {
-			return function (_p92) {
-				return A2(
-					_elm_lang$core$Maybe$withDefault,
-					d,
-					A2(_elm_lang$core$Maybe$map, f, _p92));
-			};
-		});
-	return A2(
-		_elm_lang$core$List$foldr,
-		function (x) {
-			return function (_p93) {
-				return _elm_lang$core$Maybe$Just(
-					A3(
-						maybe,
-						{ctor: '[]'},
-						F2(
-							function (x, y) {
-								return {ctor: '::', _0: x, _1: y};
-							})(x),
-						_p93));
-			};
-		},
-		_elm_lang$core$Maybe$Nothing);
-}();
-var _elm_community$list_extra$List_Extra$last = _elm_community$list_extra$List_Extra$foldl1(
-	_elm_lang$core$Basics$flip(_elm_lang$core$Basics$always));
+var _elm_community$list_extra$List_Extra$init = function (items) {
+	var _p98 = items;
+	if (_p98.ctor === '[]') {
+		return _elm_lang$core$Maybe$Nothing;
+	} else {
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_elm_lang$core$List$reverse,
+			_elm_lang$core$List$tail(
+				_elm_lang$core$List$reverse(_p98)));
+	}
+};
+var _elm_community$list_extra$List_Extra$last = function (items) {
+	last:
+	while (true) {
+		var _p99 = items;
+		if (_p99.ctor === '[]') {
+			return _elm_lang$core$Maybe$Nothing;
+		} else {
+			if (_p99._1.ctor === '[]') {
+				return _elm_lang$core$Maybe$Just(_p99._0);
+			} else {
+				var _v98 = _p99._1;
+				items = _v98;
+				continue last;
+			}
+		}
+	}
+};
 
 var _elm_lang$animation_frame$Native_AnimationFrame = function()
 {
@@ -18375,6 +18604,9 @@ var _folkertdev$one_true_path_experiment$LowLevel_Command$merge = F2(
 			{ctor: '_Tuple2', _0: instruction1, _1: instruction2});
 	});
 
+var _opensolid$geometry$OpenSolid_Geometry_Internal$Interval = function (a) {
+	return {ctor: 'Interval', _0: a};
+};
 var _opensolid$geometry$OpenSolid_Geometry_Internal$Vector2d = function (a) {
 	return {ctor: 'Vector2d', _0: a};
 };
@@ -18453,6 +18685,12 @@ var _opensolid$geometry$OpenSolid_Geometry_Internal$Circle2d = function (a) {
 var _opensolid$geometry$OpenSolid_Geometry_Internal$Circle3d = function (a) {
 	return {ctor: 'Circle3d', _0: a};
 };
+var _opensolid$geometry$OpenSolid_Geometry_Internal$Ellipse2d = function (a) {
+	return {ctor: 'Ellipse2d', _0: a};
+};
+var _opensolid$geometry$OpenSolid_Geometry_Internal$Sphere3d = function (a) {
+	return {ctor: 'Sphere3d', _0: a};
+};
 var _opensolid$geometry$OpenSolid_Geometry_Internal$Arc2d = function (a) {
 	return {ctor: 'Arc2d', _0: a};
 };
@@ -18470,6 +18708,315 @@ var _opensolid$geometry$OpenSolid_Geometry_Internal$CubicSpline2d = function (a)
 };
 var _opensolid$geometry$OpenSolid_Geometry_Internal$CubicSpline3d = function (a) {
 	return {ctor: 'CubicSpline3d', _0: a};
+};
+var _opensolid$geometry$OpenSolid_Geometry_Internal$EllipticalArc2d = function (a) {
+	return {ctor: 'EllipticalArc2d', _0: a};
+};
+
+var _opensolid$geometry$OpenSolid_Scalar$hullOf = function (values) {
+	var _p0 = values;
+	if (_p0.ctor === '[]') {
+		return _elm_lang$core$Maybe$Nothing;
+	} else {
+		var _p2 = _p0._1;
+		var _p1 = _p0._0;
+		var maxValue = A3(_elm_lang$core$List$foldl, _elm_lang$core$Basics$max, _p1, _p2);
+		var minValue = A3(_elm_lang$core$List$foldl, _elm_lang$core$Basics$min, _p1, _p2);
+		var result = _opensolid$geometry$OpenSolid_Geometry_Internal$Interval(
+			{minValue: minValue, maxValue: maxValue});
+		return _elm_lang$core$Maybe$Just(result);
+	}
+};
+var _opensolid$geometry$OpenSolid_Scalar$hull = F2(
+	function (firstValue, secondValue) {
+		return _opensolid$geometry$OpenSolid_Geometry_Internal$Interval(
+			{
+				minValue: A2(_elm_lang$core$Basics$min, firstValue, secondValue),
+				maxValue: A2(_elm_lang$core$Basics$max, firstValue, secondValue)
+			});
+	});
+var _opensolid$geometry$OpenSolid_Scalar$interpolateFrom = F3(
+	function (start, end, parameter) {
+		return (_elm_lang$core$Native_Utils.cmp(parameter, 0.5) < 1) ? (start + (parameter * (end - start))) : (end + ((1 - parameter) * (start - end)));
+	});
+var _opensolid$geometry$OpenSolid_Scalar$equalWithin = F3(
+	function (tolerance, firstValue, secondValue) {
+		return _elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$Basics$abs(secondValue - firstValue),
+			tolerance) < 1;
+	});
+
+var _opensolid$geometry$OpenSolid_ArcLength$paramAtStart = function (tree) {
+	var _p0 = tree;
+	if (_p0.ctor === 'Node') {
+		return _p0._0.paramAtStart;
+	} else {
+		return _p0._0.param0;
+	}
+};
+var _opensolid$geometry$OpenSolid_ArcLength$unsafeFromParameterValue = F2(
+	function (tree, t) {
+		unsafeFromParameterValue:
+		while (true) {
+			var _p1 = tree;
+			if (_p1.ctor === 'Leaf') {
+				var _p16 = _p1._0.param7;
+				var _p15 = _p1._0.param6;
+				var _p14 = _p1._0.param5;
+				var _p13 = _p1._0.param4;
+				var _p12 = _p1._0.param3;
+				var _p11 = _p1._0.param2;
+				var _p10 = _p1._0.param1;
+				var _p9 = _p1._0.param0;
+				var _p8 = _p1._0.length7;
+				var _p7 = _p1._0.length6;
+				var _p6 = _p1._0.length5;
+				var _p5 = _p1._0.length4;
+				var _p4 = _p1._0.length3;
+				var _p3 = _p1._0.length2;
+				var _p2 = _p1._0.length1;
+				if (_elm_lang$core$Native_Utils.cmp(t, _p13) < 1) {
+					if (_elm_lang$core$Native_Utils.cmp(t, _p11) < 1) {
+						if (_elm_lang$core$Native_Utils.cmp(t, _p10) < 1) {
+							var paramFraction = (t - _p9) / (_p10 - _p9);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p1._0.length0, _p2, paramFraction);
+						} else {
+							var paramFraction = (t - _p10) / (_p11 - _p10);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p2, _p3, paramFraction);
+						}
+					} else {
+						if (_elm_lang$core$Native_Utils.cmp(t, _p12) < 1) {
+							var paramFraction = (t - _p11) / (_p12 - _p11);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p3, _p4, paramFraction);
+						} else {
+							var paramFraction = (t - _p12) / (_p13 - _p12);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p4, _p5, paramFraction);
+						}
+					}
+				} else {
+					if (_elm_lang$core$Native_Utils.cmp(t, _p15) < 1) {
+						if (_elm_lang$core$Native_Utils.cmp(t, _p14) < 1) {
+							var paramFraction = (t - _p13) / (_p14 - _p13);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p5, _p6, paramFraction);
+						} else {
+							var paramFraction = (t - _p14) / (_p15 - _p14);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p6, _p7, paramFraction);
+						}
+					} else {
+						if (_elm_lang$core$Native_Utils.cmp(t, _p16) < 1) {
+							var paramFraction = (t - _p15) / (_p16 - _p15);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p7, _p8, paramFraction);
+						} else {
+							var paramFraction = (t - _p16) / (_p1._0.param8 - _p16);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p8, _p1._0.length8, paramFraction);
+						}
+					}
+				}
+			} else {
+				var _p17 = _p1._0.rightBranch;
+				if (_elm_lang$core$Native_Utils.cmp(
+					t,
+					_opensolid$geometry$OpenSolid_ArcLength$paramAtStart(_p17)) < 0) {
+					var _v2 = _p1._0.leftBranch,
+						_v3 = t;
+					tree = _v2;
+					t = _v3;
+					continue unsafeFromParameterValue;
+				} else {
+					var _v4 = _p17,
+						_v5 = t;
+					tree = _v4;
+					t = _v5;
+					continue unsafeFromParameterValue;
+				}
+			}
+		}
+	});
+var _opensolid$geometry$OpenSolid_ArcLength$fromParameterValue = F2(
+	function (_p18, t) {
+		var _p19 = _p18;
+		return ((_elm_lang$core$Native_Utils.cmp(t, 0) > -1) && (_elm_lang$core$Native_Utils.cmp(t, 1) < 1)) ? _elm_lang$core$Maybe$Just(
+			A2(_opensolid$geometry$OpenSolid_ArcLength$unsafeFromParameterValue, _p19._0, t)) : _elm_lang$core$Maybe$Nothing;
+	});
+var _opensolid$geometry$OpenSolid_ArcLength$lengthAtEnd = function (tree) {
+	var _p20 = tree;
+	if (_p20.ctor === 'Node') {
+		return _p20._0.lengthAtEnd;
+	} else {
+		return _p20._0.length8;
+	}
+};
+var _opensolid$geometry$OpenSolid_ArcLength$fromParameterization = function (_p21) {
+	var _p22 = _p21;
+	return _opensolid$geometry$OpenSolid_ArcLength$lengthAtEnd(_p22._0);
+};
+var _opensolid$geometry$OpenSolid_ArcLength$lengthAtStart = function (tree) {
+	var _p23 = tree;
+	if (_p23.ctor === 'Node') {
+		return _p23._0.lengthAtStart;
+	} else {
+		return _p23._0.length0;
+	}
+};
+var _opensolid$geometry$OpenSolid_ArcLength$unsafeToParameterValue = F2(
+	function (tree, s) {
+		unsafeToParameterValue:
+		while (true) {
+			var _p24 = tree;
+			if (_p24.ctor === 'Leaf') {
+				var _p39 = _p24._0.param7;
+				var _p38 = _p24._0.param6;
+				var _p37 = _p24._0.param5;
+				var _p36 = _p24._0.param4;
+				var _p35 = _p24._0.param3;
+				var _p34 = _p24._0.param2;
+				var _p33 = _p24._0.param1;
+				var _p32 = _p24._0.length7;
+				var _p31 = _p24._0.length6;
+				var _p30 = _p24._0.length5;
+				var _p29 = _p24._0.length4;
+				var _p28 = _p24._0.length3;
+				var _p27 = _p24._0.length2;
+				var _p26 = _p24._0.length1;
+				var _p25 = _p24._0.length0;
+				if (_elm_lang$core$Native_Utils.cmp(s, _p29) < 1) {
+					if (_elm_lang$core$Native_Utils.cmp(s, _p27) < 1) {
+						if (_elm_lang$core$Native_Utils.cmp(s, _p26) < 1) {
+							var lengthFraction = (s - _p25) / (_p26 - _p25);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p24._0.param0, _p33, lengthFraction);
+						} else {
+							var lengthFraction = (s - _p26) / (_p27 - _p26);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p33, _p34, lengthFraction);
+						}
+					} else {
+						if (_elm_lang$core$Native_Utils.cmp(s, _p28) < 1) {
+							var lengthFraction = (s - _p27) / (_p28 - _p27);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p34, _p35, lengthFraction);
+						} else {
+							var lengthFraction = (s - _p28) / (_p29 - _p28);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p35, _p36, lengthFraction);
+						}
+					}
+				} else {
+					if (_elm_lang$core$Native_Utils.cmp(s, _p31) < 1) {
+						if (_elm_lang$core$Native_Utils.cmp(s, _p30) < 1) {
+							var lengthFraction = (s - _p29) / (_p30 - _p29);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p36, _p37, lengthFraction);
+						} else {
+							var lengthFraction = (s - _p30) / (_p31 - _p30);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p37, _p38, lengthFraction);
+						}
+					} else {
+						if (_elm_lang$core$Native_Utils.cmp(s, _p32) < 1) {
+							var lengthFraction = (s - _p31) / (_p32 - _p31);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p38, _p39, lengthFraction);
+						} else {
+							var lengthFraction = (s - _p32) / (_p24._0.length8 - _p32);
+							return A3(_opensolid$geometry$OpenSolid_Scalar$interpolateFrom, _p39, _p24._0.param8, lengthFraction);
+						}
+					}
+				}
+			} else {
+				var _p40 = _p24._0.rightBranch;
+				if (_elm_lang$core$Native_Utils.cmp(
+					s,
+					_opensolid$geometry$OpenSolid_ArcLength$lengthAtStart(_p40)) < 0) {
+					var _v11 = _p24._0.leftBranch,
+						_v12 = s;
+					tree = _v11;
+					s = _v12;
+					continue unsafeToParameterValue;
+				} else {
+					var _v13 = _p40,
+						_v14 = s;
+					tree = _v13;
+					s = _v14;
+					continue unsafeToParameterValue;
+				}
+			}
+		}
+	});
+var _opensolid$geometry$OpenSolid_ArcLength$toParameterValue = F2(
+	function (_p41, s) {
+		var _p42 = _p41;
+		var _p43 = _p42._0;
+		return ((_elm_lang$core$Native_Utils.cmp(s, 0) > -1) && (_elm_lang$core$Native_Utils.cmp(
+			s,
+			_opensolid$geometry$OpenSolid_ArcLength$lengthAtEnd(_p43)) < 1)) ? _elm_lang$core$Maybe$Just(
+			A2(_opensolid$geometry$OpenSolid_ArcLength$unsafeToParameterValue, _p43, s)) : _elm_lang$core$Maybe$Nothing;
+	});
+var _opensolid$geometry$OpenSolid_ArcLength$segmentsPerLeaf = 8;
+var _opensolid$geometry$OpenSolid_ArcLength$Parameterization = function (a) {
+	return {ctor: 'Parameterization', _0: a};
+};
+var _opensolid$geometry$OpenSolid_ArcLength$Leaf = function (a) {
+	return {ctor: 'Leaf', _0: a};
+};
+var _opensolid$geometry$OpenSolid_ArcLength$Node = function (a) {
+	return {ctor: 'Node', _0: a};
+};
+var _opensolid$geometry$OpenSolid_ArcLength$buildTree = F5(
+	function (derivativeMagnitude, lengthAtStart, paramAtStart, paramAtEnd, height) {
+		var paramDelta = paramAtEnd - paramAtStart;
+		if (_elm_lang$core$Native_Utils.eq(height, 0)) {
+			var length0 = lengthAtStart;
+			var paramStep = 0.125 * paramDelta;
+			var offset = 6.25e-2 * paramDelta;
+			var param8 = paramAtEnd;
+			var param7 = paramAtEnd - (0.125 * paramDelta);
+			var param6 = paramAtEnd - (0.25 * paramDelta);
+			var param5 = paramAtEnd - (0.375 * paramDelta);
+			var param4 = paramAtStart + (0.5 * paramDelta);
+			var param3 = paramAtStart + (0.375 * paramDelta);
+			var param2 = paramAtStart + (0.25 * paramDelta);
+			var param1 = paramAtStart + (0.125 * paramDelta);
+			var param0 = paramAtStart;
+			var length1 = length0 + (derivativeMagnitude(param0 + offset) * paramStep);
+			var length2 = length1 + (derivativeMagnitude(param1 + offset) * paramStep);
+			var length3 = length2 + (derivativeMagnitude(param2 + offset) * paramStep);
+			var length4 = length3 + (derivativeMagnitude(param3 + offset) * paramStep);
+			var length5 = length4 + (derivativeMagnitude(param4 + offset) * paramStep);
+			var length6 = length5 + (derivativeMagnitude(param5 + offset) * paramStep);
+			var length7 = length6 + (derivativeMagnitude(param6 + offset) * paramStep);
+			var length8 = length7 + (derivativeMagnitude(param7 + offset) * paramStep);
+			return _opensolid$geometry$OpenSolid_ArcLength$Leaf(
+				{param0: param0, param1: param1, param2: param2, param3: param3, param4: param4, param5: param5, param6: param6, param7: param7, param8: param8, length0: length0, length1: length1, length2: length2, length3: length3, length4: length4, length5: length5, length6: length6, length7: length7, length8: length8});
+		} else {
+			var paramAtMid = paramAtStart + (0.5 * paramDelta);
+			var branchHeight = height - 1;
+			var leftBranch = A5(_opensolid$geometry$OpenSolid_ArcLength$buildTree, derivativeMagnitude, lengthAtStart, paramAtStart, paramAtMid, branchHeight);
+			var lengthAtLeftEnd = _opensolid$geometry$OpenSolid_ArcLength$lengthAtEnd(leftBranch);
+			var rightBranch = A5(_opensolid$geometry$OpenSolid_ArcLength$buildTree, derivativeMagnitude, lengthAtLeftEnd, paramAtMid, paramAtEnd, branchHeight);
+			return _opensolid$geometry$OpenSolid_ArcLength$Node(
+				{
+					lengthAtStart: lengthAtStart,
+					lengthAtEnd: _opensolid$geometry$OpenSolid_ArcLength$lengthAtEnd(rightBranch),
+					paramAtStart: paramAtStart,
+					leftBranch: leftBranch,
+					rightBranch: rightBranch
+				});
+		}
+	});
+var _opensolid$geometry$OpenSolid_ArcLength$parameterization = function (config) {
+	var _p44 = config;
+	var tolerance = _p44.tolerance;
+	var derivativeMagnitude = _p44.derivativeMagnitude;
+	var maxSecondDerivativeMagnitude = _p44.maxSecondDerivativeMagnitude;
+	var height = function () {
+		if (_elm_lang$core$Native_Utils.cmp(tolerance, 0) < 1) {
+			return 0;
+		} else {
+			var numSegments = maxSecondDerivativeMagnitude / (8 * tolerance);
+			var numLeaves = numSegments / _elm_lang$core$Basics$toFloat(_opensolid$geometry$OpenSolid_ArcLength$segmentsPerLeaf);
+			return A2(
+				_elm_lang$core$Basics$max,
+				0,
+				_elm_lang$core$Basics$ceiling(
+					A2(_elm_lang$core$Basics$logBase, 2, numLeaves)));
+		}
+	}();
+	return _opensolid$geometry$OpenSolid_ArcLength$Parameterization(
+		A5(_opensolid$geometry$OpenSolid_ArcLength$buildTree, derivativeMagnitude, 0, 0, 1, height));
 };
 
 var _opensolid$geometry$OpenSolid_Bootstrap_Direction2d$components = function (_p0) {
@@ -18519,17 +19066,6 @@ var _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates = function (_p0)
 	return _p1._0;
 };
 var _opensolid$geometry$OpenSolid_Bootstrap_Point2d$fromCoordinates = _opensolid$geometry$OpenSolid_Geometry_Internal$Point2d;
-
-var _opensolid$geometry$OpenSolid_Scalar$interpolateFrom = F3(
-	function (start, end, parameter) {
-		return (_elm_lang$core$Native_Utils.cmp(parameter, 0.5) < 1) ? (start + (parameter * (end - start))) : (end + ((1 - parameter) * (start - end)));
-	});
-var _opensolid$geometry$OpenSolid_Scalar$equalWithin = F3(
-	function (tolerance, firstValue, secondValue) {
-		return _elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$Basics$abs(secondValue - firstValue),
-			tolerance) < 1;
-	});
 
 var _opensolid$geometry$OpenSolid_Vector2d$yComponent = function (_p0) {
 	var _p1 = _p0;
@@ -18870,6 +19406,20 @@ var _opensolid$geometry$OpenSolid_Direction2d$fromAngle = function (angle) {
 			_1: _elm_lang$core$Basics$sin(angle)
 		});
 };
+var _opensolid$geometry$OpenSolid_Direction2d$rotateClockwise = function (direction) {
+	var _p9 = _opensolid$geometry$OpenSolid_Direction2d$components(direction);
+	var x = _p9._0;
+	var y = _p9._1;
+	return _opensolid$geometry$OpenSolid_Direction2d$unsafe(
+		{ctor: '_Tuple2', _0: y, _1: 0 - x});
+};
+var _opensolid$geometry$OpenSolid_Direction2d$rotateCounterclockwise = function (direction) {
+	var _p10 = _opensolid$geometry$OpenSolid_Direction2d$components(direction);
+	var x = _p10._0;
+	var y = _p10._1;
+	return _opensolid$geometry$OpenSolid_Direction2d$unsafe(
+		{ctor: '_Tuple2', _0: 0 - y, _1: x});
+};
 var _opensolid$geometry$OpenSolid_Direction2d$negativeY = _opensolid$geometry$OpenSolid_Direction2d$unsafe(
 	{ctor: '_Tuple2', _0: 0, _1: -1});
 var _opensolid$geometry$OpenSolid_Direction2d$positiveY = _opensolid$geometry$OpenSolid_Direction2d$unsafe(
@@ -18934,6 +19484,10 @@ var _opensolid$geometry$OpenSolid_Bootstrap_BoundingBox2d$with = function (_p0) 
 		});
 };
 
+var _opensolid$geometry$OpenSolid_BoundingBox2d$alwaysFalse = F2(
+	function (firstBox, secondBox) {
+		return false;
+	});
 var _opensolid$geometry$OpenSolid_BoundingBox2d$extrema = function (_p0) {
 	var _p1 = _p0;
 	return _p1._0;
@@ -18950,7 +19504,7 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$minY = function (boundingBox) {
 var _opensolid$geometry$OpenSolid_BoundingBox2d$maxY = function (boundingBox) {
 	return _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox).maxY;
 };
-var _opensolid$geometry$OpenSolid_BoundingBox2d$overlaps = F2(
+var _opensolid$geometry$OpenSolid_BoundingBox2d$intersects = F2(
 	function (other, boundingBox) {
 		return (_elm_lang$core$Native_Utils.cmp(
 			_opensolid$geometry$OpenSolid_BoundingBox2d$minX(boundingBox),
@@ -18961,6 +19515,140 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$overlaps = F2(
 			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(other)) < 1) && (_elm_lang$core$Native_Utils.cmp(
 			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(boundingBox),
 			_opensolid$geometry$OpenSolid_BoundingBox2d$minY(other)) > -1)));
+	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$overlaps = _opensolid$geometry$OpenSolid_BoundingBox2d$intersects;
+var _opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount = F2(
+	function (firstBox, secondBox) {
+		var yOverlap = A2(
+			_elm_lang$core$Basics$min,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(secondBox)) - A2(
+			_elm_lang$core$Basics$max,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minY(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minY(secondBox));
+		var xOverlap = A2(
+			_elm_lang$core$Basics$min,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxX(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxX(secondBox)) - A2(
+			_elm_lang$core$Basics$max,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minX(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minX(secondBox));
+		return ((_elm_lang$core$Native_Utils.cmp(xOverlap, 0) > -1) && (_elm_lang$core$Native_Utils.cmp(yOverlap, 0) > -1)) ? _elm_lang$core$Maybe$Just(
+			A2(_elm_lang$core$Basics$min, xOverlap, yOverlap)) : _elm_lang$core$Maybe$Nothing;
+	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$overlappingBy = F2(
+	function (order, tolerance) {
+		var _p2 = order;
+		switch (_p2.ctor) {
+			case 'LT':
+				return (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > 0) ? F2(
+					function (firstBox, secondBox) {
+						var _p3 = A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount, firstBox, secondBox);
+						if (_p3.ctor === 'Just') {
+							return _elm_lang$core$Native_Utils.cmp(_p3._0, tolerance) < 0;
+						} else {
+							return true;
+						}
+					}) : (_elm_lang$core$Native_Utils.eq(tolerance, 0) ? F2(
+					function (firstBox, secondBox) {
+						return _elm_lang$core$Native_Utils.eq(
+							A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount, firstBox, secondBox),
+							_elm_lang$core$Maybe$Nothing);
+					}) : _opensolid$geometry$OpenSolid_BoundingBox2d$alwaysFalse);
+			case 'GT':
+				return (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > -1) ? F2(
+					function (firstBox, secondBox) {
+						var _p4 = A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount, firstBox, secondBox);
+						if (_p4.ctor === 'Just') {
+							return _elm_lang$core$Native_Utils.cmp(_p4._0, tolerance) > 0;
+						} else {
+							return false;
+						}
+					}) : F2(
+					function (firstBox, secondBox) {
+						return !_elm_lang$core$Native_Utils.eq(
+							A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount, firstBox, secondBox),
+							_elm_lang$core$Maybe$Nothing);
+					});
+			default:
+				if (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > -1) {
+					var expected = _elm_lang$core$Maybe$Just(tolerance);
+					return F2(
+						function (firstBox, secondBox) {
+							return _elm_lang$core$Native_Utils.eq(
+								A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlapAmount, firstBox, secondBox),
+								expected);
+						});
+				} else {
+					return _opensolid$geometry$OpenSolid_BoundingBox2d$alwaysFalse;
+				}
+		}
+	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount = F2(
+	function (firstBox, secondBox) {
+		var ySeparation = A2(
+			_elm_lang$core$Basics$max,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minY(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minY(secondBox)) - A2(
+			_elm_lang$core$Basics$min,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(secondBox));
+		var xSeparation = A2(
+			_elm_lang$core$Basics$max,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minX(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$minX(secondBox)) - A2(
+			_elm_lang$core$Basics$min,
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxX(firstBox),
+			_opensolid$geometry$OpenSolid_BoundingBox2d$maxX(secondBox));
+		return ((_elm_lang$core$Native_Utils.cmp(xSeparation, 0) > 0) && (_elm_lang$core$Native_Utils.cmp(ySeparation, 0) > 0)) ? _elm_lang$core$Maybe$Just((xSeparation * xSeparation) + (ySeparation * ySeparation)) : ((_elm_lang$core$Native_Utils.cmp(xSeparation, 0) > 0) ? _elm_lang$core$Maybe$Just(xSeparation * xSeparation) : ((_elm_lang$core$Native_Utils.cmp(ySeparation, 0) > 0) ? _elm_lang$core$Maybe$Just(ySeparation * ySeparation) : ((_elm_lang$core$Native_Utils.eq(xSeparation, 0) || _elm_lang$core$Native_Utils.eq(ySeparation, 0)) ? _elm_lang$core$Maybe$Just(0) : _elm_lang$core$Maybe$Nothing)));
+	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$separatedBy = F2(
+	function (order, tolerance) {
+		var _p5 = order;
+		switch (_p5.ctor) {
+			case 'LT':
+				return (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > 0) ? F2(
+					function (firstBox, secondBox) {
+						var _p6 = A2(_opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount, firstBox, secondBox);
+						if (_p6.ctor === 'Just') {
+							return _elm_lang$core$Native_Utils.cmp(_p6._0, tolerance * tolerance) < 0;
+						} else {
+							return true;
+						}
+					}) : (_elm_lang$core$Native_Utils.eq(tolerance, 0) ? F2(
+					function (firstBox, secondBox) {
+						return _elm_lang$core$Native_Utils.eq(
+							A2(_opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount, firstBox, secondBox),
+							_elm_lang$core$Maybe$Nothing);
+					}) : _opensolid$geometry$OpenSolid_BoundingBox2d$alwaysFalse);
+			case 'GT':
+				return (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > -1) ? F2(
+					function (firstBox, secondBox) {
+						var _p7 = A2(_opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount, firstBox, secondBox);
+						if (_p7.ctor === 'Just') {
+							return _elm_lang$core$Native_Utils.cmp(_p7._0, tolerance * tolerance) > 0;
+						} else {
+							return false;
+						}
+					}) : F2(
+					function (firstBox, secondBox) {
+						return !_elm_lang$core$Native_Utils.eq(
+							A2(_opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount, firstBox, secondBox),
+							_elm_lang$core$Maybe$Nothing);
+					});
+			default:
+				if (_elm_lang$core$Native_Utils.cmp(tolerance, 0) > -1) {
+					var expected = _elm_lang$core$Maybe$Just(tolerance * tolerance);
+					return F2(
+						function (firstBox, secondBox) {
+							return _elm_lang$core$Native_Utils.eq(
+								A2(_opensolid$geometry$OpenSolid_BoundingBox2d$squaredSeparationAmount, firstBox, secondBox),
+								expected);
+						});
+				} else {
+					return _opensolid$geometry$OpenSolid_BoundingBox2d$alwaysFalse;
+				}
+		}
 	});
 var _opensolid$geometry$OpenSolid_BoundingBox2d$isContainedIn = F2(
 	function (other, boundingBox) {
@@ -18975,23 +19663,23 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$isContainedIn = F2(
 			_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(other)) < 1));
 	});
 var _opensolid$geometry$OpenSolid_BoundingBox2d$dimensions = function (boundingBox) {
-	var _p2 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
-	var minX = _p2.minX;
-	var maxX = _p2.maxX;
-	var minY = _p2.minY;
-	var maxY = _p2.maxY;
+	var _p8 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+	var minX = _p8.minX;
+	var maxX = _p8.maxX;
+	var minY = _p8.minY;
+	var maxY = _p8.maxY;
 	return {ctor: '_Tuple2', _0: maxX - minX, _1: maxY - minY};
 };
 var _opensolid$geometry$OpenSolid_BoundingBox2d$midX = function (boundingBox) {
-	var _p3 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
-	var minX = _p3.minX;
-	var maxX = _p3.maxX;
+	var _p9 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+	var minX = _p9.minX;
+	var maxX = _p9.maxX;
 	return minX + (0.5 * (maxX - minX));
 };
 var _opensolid$geometry$OpenSolid_BoundingBox2d$midY = function (boundingBox) {
-	var _p4 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
-	var minY = _p4.minY;
-	var maxY = _p4.maxY;
+	var _p10 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+	var minY = _p10.minY;
+	var maxY = _p10.maxY;
 	return minY + (0.5 * (maxY - minY));
 };
 var _opensolid$geometry$OpenSolid_BoundingBox2d$centroid = function (boundingBox) {
@@ -19004,21 +19692,21 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$centroid = function (boundingBox
 };
 var _opensolid$geometry$OpenSolid_BoundingBox2d$contains = F2(
 	function (point, boundingBox) {
-		var _p5 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
-		var minX = _p5.minX;
-		var maxX = _p5.maxX;
-		var minY = _p5.minY;
-		var maxY = _p5.maxY;
-		var _p6 = _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates(point);
-		var x = _p6._0;
-		var y = _p6._1;
+		var _p11 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+		var minX = _p11.minX;
+		var maxX = _p11.maxX;
+		var minY = _p11.minY;
+		var maxY = _p11.maxY;
+		var _p12 = _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates(point);
+		var x = _p12._0;
+		var y = _p12._1;
 		return ((_elm_lang$core$Native_Utils.cmp(minX, x) < 1) && (_elm_lang$core$Native_Utils.cmp(x, maxX) < 1)) && ((_elm_lang$core$Native_Utils.cmp(minY, y) < 1) && (_elm_lang$core$Native_Utils.cmp(y, maxY) < 1));
 	});
 var _opensolid$geometry$OpenSolid_BoundingBox2d$with = _opensolid$geometry$OpenSolid_Bootstrap_BoundingBox2d$with;
 var _opensolid$geometry$OpenSolid_BoundingBox2d$singleton = function (point) {
-	var _p7 = _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates(point);
-	var x = _p7._0;
-	var y = _p7._1;
+	var _p13 = _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates(point);
+	var x = _p13._0;
+	var y = _p13._1;
 	return _opensolid$geometry$OpenSolid_BoundingBox2d$with(
 		{minX: x, maxX: x, minY: y, maxY: y});
 };
@@ -19045,17 +19733,17 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$hull = F2(
 			});
 	});
 var _opensolid$geometry$OpenSolid_BoundingBox2d$hullOf = function (boundingBoxes) {
-	var _p8 = boundingBoxes;
-	if (_p8.ctor === '::') {
+	var _p14 = boundingBoxes;
+	if (_p14.ctor === '::') {
 		return _elm_lang$core$Maybe$Just(
-			A3(_elm_lang$core$List$foldl, _opensolid$geometry$OpenSolid_BoundingBox2d$hull, _p8._0, _p8._1));
+			A3(_elm_lang$core$List$foldl, _opensolid$geometry$OpenSolid_BoundingBox2d$hull, _p14._0, _p14._1));
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
 var _opensolid$geometry$OpenSolid_BoundingBox2d$intersection = F2(
 	function (firstBox, secondBox) {
-		return A2(_opensolid$geometry$OpenSolid_BoundingBox2d$overlaps, firstBox, secondBox) ? _elm_lang$core$Maybe$Just(
+		return A2(_opensolid$geometry$OpenSolid_BoundingBox2d$intersects, firstBox, secondBox) ? _elm_lang$core$Maybe$Just(
 			_opensolid$geometry$OpenSolid_BoundingBox2d$with(
 				{
 					minX: A2(
@@ -19076,6 +19764,33 @@ var _opensolid$geometry$OpenSolid_BoundingBox2d$intersection = F2(
 						_opensolid$geometry$OpenSolid_BoundingBox2d$maxY(secondBox))
 				})) : _elm_lang$core$Maybe$Nothing;
 	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$scaleAbout = F3(
+	function (point, scale, boundingBox) {
+		var _p15 = _opensolid$geometry$OpenSolid_Bootstrap_Point2d$coordinates(point);
+		var x0 = _p15._0;
+		var y0 = _p15._1;
+		var _p16 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+		var minX = _p16.minX;
+		var minY = _p16.minY;
+		var maxX = _p16.maxX;
+		var maxY = _p16.maxY;
+		return (_elm_lang$core$Native_Utils.cmp(scale, 0) > -1) ? _opensolid$geometry$OpenSolid_BoundingBox2d$with(
+			{minX: x0 + (scale * (minX - x0)), maxX: x0 + (scale * (maxX - x0)), minY: y0 + (scale * (minY - y0)), maxY: y0 + (scale * (maxY - y0))}) : _opensolid$geometry$OpenSolid_BoundingBox2d$with(
+			{minX: x0 + (scale * (maxX - x0)), maxX: x0 + (scale * (minX - x0)), minY: y0 + (scale * (maxY - y0)), maxY: y0 + (scale * (minY - y0))});
+	});
+var _opensolid$geometry$OpenSolid_BoundingBox2d$translateBy = F2(
+	function (displacement, boundingBox) {
+		var _p17 = _opensolid$geometry$OpenSolid_Vector2d$components(displacement);
+		var dx = _p17._0;
+		var dy = _p17._1;
+		var _p18 = _opensolid$geometry$OpenSolid_BoundingBox2d$extrema(boundingBox);
+		var minX = _p18.minX;
+		var minY = _p18.minY;
+		var maxX = _p18.maxX;
+		var maxY = _p18.maxY;
+		return _opensolid$geometry$OpenSolid_BoundingBox2d$with(
+			{minX: minX + dx, maxX: maxX + dx, minY: minY + dy, maxY: maxY + dy});
+	});
 
 var _opensolid$geometry$OpenSolid_Point2d$hullOf = function (points) {
 	return _opensolid$geometry$OpenSolid_BoundingBox2d$hullOf(
@@ -19091,7 +19806,7 @@ var _opensolid$geometry$OpenSolid_Point2d$signedDistanceFrom = F2(
 			_opensolid$geometry$OpenSolid_Bootstrap_Axis2d$direction(axis));
 		return A2(_opensolid$geometry$OpenSolid_Vector2d$crossProduct, directionVector, displacementVector);
 	});
-var _opensolid$geometry$OpenSolid_Point2d$distanceAlong = F2(
+var _opensolid$geometry$OpenSolid_Point2d$signedDistanceAlong = F2(
 	function (axis, point) {
 		return A2(
 			_opensolid$geometry$OpenSolid_Vector2d$componentIn,
@@ -19101,6 +19816,7 @@ var _opensolid$geometry$OpenSolid_Point2d$distanceAlong = F2(
 				_opensolid$geometry$OpenSolid_Bootstrap_Axis2d$originPoint(axis),
 				point));
 	});
+var _opensolid$geometry$OpenSolid_Point2d$distanceAlong = _opensolid$geometry$OpenSolid_Point2d$signedDistanceAlong;
 var _opensolid$geometry$OpenSolid_Point2d$squaredDistanceFrom = F2(
 	function (firstPoint, secondPoint) {
 		return _opensolid$geometry$OpenSolid_Vector2d$squaredLength(
@@ -19582,31 +20298,271 @@ var _opensolid$geometry$OpenSolid_Frame2d$with = function (_p6) {
 };
 var _opensolid$geometry$OpenSolid_Frame2d$xy = _opensolid$geometry$OpenSolid_Frame2d$atPoint(_opensolid$geometry$OpenSolid_Point2d$origin);
 
-var _opensolid$geometry$OpenSolid_CubicSpline2d$endPoint = function (_p0) {
-	var _p1 = _p0;
-	return _p1._0._3;
-};
-var _opensolid$geometry$OpenSolid_CubicSpline2d$startPoint = function (_p2) {
-	var _p3 = _p2;
-	return _p3._0._0;
-};
-var _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints = function (_p4) {
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$parameterValueToArcLength = F2(
+	function (_p0, t) {
+		var _p1 = _p0;
+		return A2(_opensolid$geometry$OpenSolid_ArcLength$fromParameterValue, _p1._1, t);
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$arcLengthToParameterValue = F2(
+	function (_p2, s) {
+		var _p3 = _p2;
+		return A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p3._1, s);
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$arcLength = function (_p4) {
 	var _p5 = _p4;
-	return _p5._0;
+	return _opensolid$geometry$OpenSolid_ArcLength$fromParameterization(_p5._1);
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$endPoint = function (_p6) {
+	var _p7 = _p6;
+	return _p7._0._2;
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$startPoint = function (_p8) {
+	var _p9 = _p8;
+	return _p9._0._0;
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints = function (_p10) {
+	var _p11 = _p10;
+	return _p11._0;
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$startDerivative = function (spline) {
+	var _p12 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p1 = _p12._0;
+	var p2 = _p12._1;
+	return A2(
+		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
+		2,
+		A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$endDerivative = function (spline) {
+	var _p13 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p2 = _p13._1;
+	var p3 = _p13._2;
+	return A2(
+		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
+		2,
+		A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$pointOn = F2(
+	function (spline, t) {
+		var _p14 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+		var p1 = _p14._0;
+		var p2 = _p14._1;
+		var p3 = _p14._2;
+		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
+		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
+		return A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$pointAlong = F2(
+	function (_p15, s) {
+		var _p16 = _p15;
+		return A2(
+			_elm_lang$core$Maybe$map,
+			_opensolid$geometry$OpenSolid_QuadraticSpline2d$pointOn(_p16._0),
+			A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p16._1, s));
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$derivative = function (spline) {
+	var _p17 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p1 = _p17._0;
+	var p2 = _p17._1;
+	var p3 = _p17._2;
+	var v1 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2);
+	var v2 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3);
+	return function (t) {
+		return A2(
+			_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
+			2,
+			A3(_opensolid$geometry$OpenSolid_Vector2d$interpolateFrom, v1, v2, t));
+	};
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$tangentAlong = F2(
+	function (_p18, s) {
+		var _p19 = _p18;
+		return A2(
+			_elm_lang$core$Maybe$andThen,
+			_opensolid$geometry$OpenSolid_Vector2d$direction,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_opensolid$geometry$OpenSolid_QuadraticSpline2d$derivative(_p19._0),
+				A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p19._1, s)));
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$derivativeMagnitude = function (spline) {
+	var _p20 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p1 = _p20._0;
+	var p2 = _p20._1;
+	var p3 = _p20._2;
+	var _p21 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p1);
+	var x1 = _p21._0;
+	var y1 = _p21._1;
+	var _p22 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p2);
+	var x2 = _p22._0;
+	var y2 = _p22._1;
+	var x12 = x2 - x1;
+	var y12 = y2 - y1;
+	var _p23 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p3);
+	var x3 = _p23._0;
+	var y3 = _p23._1;
+	var x23 = x3 - x2;
+	var x123 = x23 - x12;
+	var y23 = y3 - y2;
+	var y123 = y23 - y12;
+	return function (t) {
+		var y13 = y12 + (t * y123);
+		var x13 = x12 + (t * x123);
+		return 2 * _elm_lang$core$Basics$sqrt((x13 * x13) + (y13 * y13));
+	};
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$evaluate = F2(
+	function (spline, t) {
+		var _p24 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+		var p1 = _p24._0;
+		var p2 = _p24._1;
+		var p3 = _p24._2;
+		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
+		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
+		return {
+			ctor: '_Tuple2',
+			_0: A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t),
+			_1: A2(
+				_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
+				2,
+				A2(_opensolid$geometry$OpenSolid_Vector2d$from, q1, q2))
+		};
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$secondDerivative = function (spline) {
+	var _p25 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p1 = _p25._0;
+	var p2 = _p25._1;
+	var p3 = _p25._2;
+	var v1 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2);
+	var v2 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3);
+	return A2(
+		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
+		2,
+		A2(_opensolid$geometry$OpenSolid_Vector2d$difference, v2, v1));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints = _opensolid$geometry$OpenSolid_Geometry_Internal$QuadraticSpline2d;
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$reverse = function (spline) {
+	var _p26 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+	var p1 = _p26._0;
+	var p2 = _p26._1;
+	var p3 = _p26._2;
+	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
+		{ctor: '_Tuple3', _0: p3, _1: p2, _2: p1});
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints = F2(
+	function ($function, spline) {
+		var _p27 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+		var p1 = _p27._0;
+		var p2 = _p27._1;
+		var p3 = _p27._2;
+		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
+			{
+				ctor: '_Tuple3',
+				_0: $function(p1),
+				_1: $function(p2),
+				_2: $function(p3)
+			});
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$scaleAbout = F2(
+	function (point, scale) {
+		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+			A2(_opensolid$geometry$OpenSolid_Point2d$scaleAbout, point, scale));
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$rotateAround = F2(
+	function (point, angle) {
+		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+			A2(_opensolid$geometry$OpenSolid_Point2d$rotateAround, point, angle));
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$translateBy = function (displacement) {
+	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+		_opensolid$geometry$OpenSolid_Point2d$translateBy(displacement));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$mirrorAcross = function (axis) {
+	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+		_opensolid$geometry$OpenSolid_Point2d$mirrorAcross(axis));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$relativeTo = function (frame) {
+	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+		_opensolid$geometry$OpenSolid_Point2d$relativeTo(frame));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$placeIn = function (frame) {
+	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
+		_opensolid$geometry$OpenSolid_Point2d$placeIn(frame));
+};
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$splitAt = F2(
+	function (t, spline) {
+		var _p28 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
+		var p1 = _p28._0;
+		var p2 = _p28._1;
+		var p3 = _p28._2;
+		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
+		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
+		var r = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
+		return {
+			ctor: '_Tuple2',
+			_0: _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
+				{ctor: '_Tuple3', _0: p1, _1: q1, _2: r}),
+			_1: _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
+				{ctor: '_Tuple3', _0: r, _1: q2, _2: p3})
+		};
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$bisect = _opensolid$geometry$OpenSolid_QuadraticSpline2d$splitAt(0.5);
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$ArcLengthParameterized = F2(
+	function (a, b) {
+		return {ctor: 'ArcLengthParameterized', _0: a, _1: b};
+	});
+var _opensolid$geometry$OpenSolid_QuadraticSpline2d$arcLengthParameterized = F2(
+	function (tolerance, spline) {
+		var maxSecondDerivativeMagnitude = _opensolid$geometry$OpenSolid_Vector2d$length(
+			_opensolid$geometry$OpenSolid_QuadraticSpline2d$secondDerivative(spline));
+		var parameterization = _opensolid$geometry$OpenSolid_ArcLength$parameterization(
+			{
+				tolerance: tolerance,
+				derivativeMagnitude: _opensolid$geometry$OpenSolid_QuadraticSpline2d$derivativeMagnitude(spline),
+				maxSecondDerivativeMagnitude: maxSecondDerivativeMagnitude
+			});
+		return A2(_opensolid$geometry$OpenSolid_QuadraticSpline2d$ArcLengthParameterized, spline, parameterization);
+	});
+
+var _opensolid$geometry$OpenSolid_CubicSpline2d$parameterValueToArcLength = F2(
+	function (_p0, t) {
+		var _p1 = _p0;
+		return A2(_opensolid$geometry$OpenSolid_ArcLength$fromParameterValue, _p1._1, t);
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$arcLengthToParameterValue = F2(
+	function (_p2, s) {
+		var _p3 = _p2;
+		return A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p3._1, s);
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$arcLength = function (_p4) {
+	var _p5 = _p4;
+	return _opensolid$geometry$OpenSolid_ArcLength$fromParameterization(_p5._1);
+};
+var _opensolid$geometry$OpenSolid_CubicSpline2d$endPoint = function (_p6) {
+	var _p7 = _p6;
+	return _p7._0._3;
+};
+var _opensolid$geometry$OpenSolid_CubicSpline2d$startPoint = function (_p8) {
+	var _p9 = _p8;
+	return _p9._0._0;
+};
+var _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints = function (_p10) {
+	var _p11 = _p10;
+	return _p11._0;
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$startDerivative = function (spline) {
-	var _p6 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-	var p1 = _p6._0;
-	var p2 = _p6._1;
+	var _p12 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+	var p1 = _p12._0;
+	var p2 = _p12._1;
 	return A2(
 		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
 		3,
 		A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2));
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$endDerivative = function (spline) {
-	var _p7 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-	var p3 = _p7._2;
-	var p4 = _p7._3;
+	var _p13 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+	var p3 = _p13._2;
+	var p4 = _p13._3;
 	return A2(
 		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
 		3,
@@ -19614,11 +20570,11 @@ var _opensolid$geometry$OpenSolid_CubicSpline2d$endDerivative = function (spline
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$pointOn = F2(
 	function (spline, t) {
-		var _p8 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-		var p1 = _p8._0;
-		var p2 = _p8._1;
-		var p3 = _p8._2;
-		var p4 = _p8._3;
+		var _p14 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+		var p1 = _p14._0;
+		var p2 = _p14._1;
+		var p3 = _p14._2;
+		var p4 = _p14._3;
 		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
 		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
 		var r1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
@@ -19626,31 +20582,112 @@ var _opensolid$geometry$OpenSolid_CubicSpline2d$pointOn = F2(
 		var r2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q2, q3, t);
 		return A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, r1, r2, t);
 	});
-var _opensolid$geometry$OpenSolid_CubicSpline2d$derivative = function (spline) {
-	var _p9 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-	var p1 = _p9._0;
-	var p2 = _p9._1;
-	var p3 = _p9._2;
-	var p4 = _p9._3;
-	var v1 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2);
-	var v2 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3);
-	var v3 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p3, p4);
-	return function (t) {
-		var w2 = A3(_opensolid$geometry$OpenSolid_Vector2d$interpolateFrom, v2, v3, t);
-		var w1 = A3(_opensolid$geometry$OpenSolid_Vector2d$interpolateFrom, v1, v2, t);
+var _opensolid$geometry$OpenSolid_CubicSpline2d$pointAlong = F2(
+	function (_p15, s) {
+		var _p16 = _p15;
 		return A2(
-			_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
-			3,
-			A3(_opensolid$geometry$OpenSolid_Vector2d$interpolateFrom, w1, w2, t));
+			_elm_lang$core$Maybe$map,
+			_opensolid$geometry$OpenSolid_CubicSpline2d$pointOn(_p16._0),
+			A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p16._1, s));
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$derivative = F2(
+	function (spline, t) {
+		var _p17 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+		var p1 = _p17._0;
+		var p2 = _p17._1;
+		var p3 = _p17._2;
+		var p4 = _p17._3;
+		var _p18 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p1);
+		var x1 = _p18._0;
+		var y1 = _p18._1;
+		var _p19 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p2);
+		var x2 = _p19._0;
+		var y2 = _p19._1;
+		var vx1 = x2 - x1;
+		var vy1 = y2 - y1;
+		var _p20 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p3);
+		var x3 = _p20._0;
+		var y3 = _p20._1;
+		var vx2 = x3 - x2;
+		var vy2 = y3 - y2;
+		var _p21 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p4);
+		var x4 = _p21._0;
+		var y4 = _p21._1;
+		var vx3 = x4 - x3;
+		var vy3 = y4 - y3;
+		if (_elm_lang$core$Native_Utils.cmp(t, 0.5) < 1) {
+			var wy2 = vy2 + (t * (vy3 - vy2));
+			var wx2 = vx2 + (t * (vx3 - vx2));
+			var wy1 = vy1 + (t * (vy2 - vy1));
+			var wx1 = vx1 + (t * (vx2 - vx1));
+			return _opensolid$geometry$OpenSolid_Vector2d$fromComponents(
+				{ctor: '_Tuple2', _0: 3 * (wx1 + (t * (wx2 - wx1))), _1: 3 * (wy1 + (t * (wy2 - wy1)))});
+		} else {
+			var u = 1 - t;
+			var wx1 = vx2 + (u * (vx1 - vx2));
+			var wy1 = vy2 + (u * (vy1 - vy2));
+			var wx2 = vx3 + (u * (vx2 - vx3));
+			var wy2 = vy3 + (u * (vy2 - vy3));
+			return _opensolid$geometry$OpenSolid_Vector2d$fromComponents(
+				{ctor: '_Tuple2', _0: 3 * (wx2 + (u * (wx1 - wx2))), _1: 3 * (wy2 + (u * (wy1 - wy2)))});
+		}
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$tangentAlong = F2(
+	function (_p22, s) {
+		var _p23 = _p22;
+		return A2(
+			_elm_lang$core$Maybe$andThen,
+			_opensolid$geometry$OpenSolid_Vector2d$direction,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_opensolid$geometry$OpenSolid_CubicSpline2d$derivative(_p23._0),
+				A2(_opensolid$geometry$OpenSolid_ArcLength$toParameterValue, _p23._1, s)));
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$derivativeMagnitude = function (spline) {
+	var _p24 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+	var p1 = _p24._0;
+	var p2 = _p24._1;
+	var p3 = _p24._2;
+	var p4 = _p24._3;
+	var _p25 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p1);
+	var x1 = _p25._0;
+	var y1 = _p25._1;
+	var _p26 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p2);
+	var x2 = _p26._0;
+	var y2 = _p26._1;
+	var x12 = x2 - x1;
+	var y12 = y2 - y1;
+	var _p27 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p3);
+	var x3 = _p27._0;
+	var y3 = _p27._1;
+	var x23 = x3 - x2;
+	var x123 = x23 - x12;
+	var y23 = y3 - y2;
+	var y123 = y23 - y12;
+	var _p28 = _opensolid$geometry$OpenSolid_Point2d$coordinates(p4);
+	var x4 = _p28._0;
+	var y4 = _p28._1;
+	var x34 = x4 - x3;
+	var x234 = x34 - x23;
+	var y34 = y4 - y3;
+	var y234 = y34 - y23;
+	return function (t) {
+		var y24 = y23 + (t * y234);
+		var x24 = x23 + (t * x234);
+		var y13 = y12 + (t * y123);
+		var y14 = y13 + (t * (y24 - y13));
+		var x13 = x12 + (t * x123);
+		var x14 = x13 + (t * (x24 - x13));
+		return 3 * _elm_lang$core$Basics$sqrt((x14 * x14) + (y14 * y14));
 	};
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$evaluate = F2(
 	function (spline, t) {
-		var _p10 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-		var p1 = _p10._0;
-		var p2 = _p10._1;
-		var p3 = _p10._2;
-		var p4 = _p10._3;
+		var _p29 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+		var p1 = _p29._0;
+		var p2 = _p29._1;
+		var p3 = _p29._2;
+		var p4 = _p29._3;
 		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
 		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
 		var r1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
@@ -19665,31 +20702,61 @@ var _opensolid$geometry$OpenSolid_CubicSpline2d$evaluate = F2(
 				A2(_opensolid$geometry$OpenSolid_Vector2d$from, r1, r2))
 		};
 	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$maxSecondDerivativeMagnitude = function (spline) {
+	var _p30 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+	var p1 = _p30._0;
+	var p2 = _p30._1;
+	var p3 = _p30._2;
+	var p4 = _p30._3;
+	var u1 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2);
+	var u2 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3);
+	var v1 = A2(_opensolid$geometry$OpenSolid_Vector2d$difference, u2, u1);
+	var u3 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p3, p4);
+	var v2 = A2(_opensolid$geometry$OpenSolid_Vector2d$difference, u3, u2);
+	return 6 * A2(
+		_elm_lang$core$Basics$max,
+		_opensolid$geometry$OpenSolid_Vector2d$length(v1),
+		_opensolid$geometry$OpenSolid_Vector2d$length(v2));
+};
 var _opensolid$geometry$OpenSolid_CubicSpline2d$fromControlPoints = _opensolid$geometry$OpenSolid_Geometry_Internal$CubicSpline2d;
 var _opensolid$geometry$OpenSolid_CubicSpline2d$hermite = F2(
-	function (_p12, _p11) {
-		var _p13 = _p12;
-		var _p16 = _p13._0;
-		var _p14 = _p11;
-		var _p15 = _p14._0;
+	function (_p32, _p31) {
+		var _p33 = _p32;
+		var _p36 = _p33._0;
+		var _p34 = _p31;
+		var _p35 = _p34._0;
 		var endControlPoint = A2(
 			_opensolid$geometry$OpenSolid_Point2d$translateBy,
-			A2(_opensolid$geometry$OpenSolid_Vector2d$scaleBy, -1 / 3, _p14._1),
-			_p15);
+			A2(_opensolid$geometry$OpenSolid_Vector2d$scaleBy, -1 / 3, _p34._1),
+			_p35);
 		var startControlPoint = A2(
 			_opensolid$geometry$OpenSolid_Point2d$translateBy,
-			A2(_opensolid$geometry$OpenSolid_Vector2d$scaleBy, 1 / 3, _p13._1),
-			_p16);
+			A2(_opensolid$geometry$OpenSolid_Vector2d$scaleBy, 1 / 3, _p33._1),
+			_p36);
 		return _opensolid$geometry$OpenSolid_CubicSpline2d$fromControlPoints(
-			{ctor: '_Tuple4', _0: _p16, _1: startControlPoint, _2: endControlPoint, _3: _p15});
+			{ctor: '_Tuple4', _0: _p36, _1: startControlPoint, _2: endControlPoint, _3: _p35});
 	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$fromQuadraticSpline = function (quadraticSpline) {
+	var _p37 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(quadraticSpline);
+	var p1 = _p37._0;
+	var p2 = _p37._1;
+	var p3 = _p37._2;
+	return _opensolid$geometry$OpenSolid_CubicSpline2d$fromControlPoints(
+		{
+			ctor: '_Tuple4',
+			_0: p1,
+			_1: A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, 2 / 3),
+			_2: A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p3, p2, 2 / 3),
+			_3: p3
+		});
+};
 var _opensolid$geometry$OpenSolid_CubicSpline2d$mapControlPoints = F2(
 	function ($function, spline) {
-		var _p17 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-		var p1 = _p17._0;
-		var p2 = _p17._1;
-		var p3 = _p17._2;
-		var p4 = _p17._3;
+		var _p38 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+		var p1 = _p38._0;
+		var p2 = _p38._1;
+		var p3 = _p38._2;
+		var p4 = _p38._3;
 		return _opensolid$geometry$OpenSolid_CubicSpline2d$fromControlPoints(
 			{
 				ctor: '_Tuple4',
@@ -19726,21 +20793,21 @@ var _opensolid$geometry$OpenSolid_CubicSpline2d$placeIn = function (frame) {
 		_opensolid$geometry$OpenSolid_Point2d$placeIn(frame));
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$reverse = function (spline) {
-	var _p18 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-	var p1 = _p18._0;
-	var p2 = _p18._1;
-	var p3 = _p18._2;
-	var p4 = _p18._3;
+	var _p39 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+	var p1 = _p39._0;
+	var p2 = _p39._1;
+	var p3 = _p39._2;
+	var p4 = _p39._3;
 	return _opensolid$geometry$OpenSolid_CubicSpline2d$fromControlPoints(
 		{ctor: '_Tuple4', _0: p4, _1: p3, _2: p2, _3: p1});
 };
 var _opensolid$geometry$OpenSolid_CubicSpline2d$splitAt = F2(
 	function (t, spline) {
-		var _p19 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
-		var p1 = _p19._0;
-		var p2 = _p19._1;
-		var p3 = _p19._2;
-		var p4 = _p19._3;
+		var _p40 = _opensolid$geometry$OpenSolid_CubicSpline2d$controlPoints(spline);
+		var p1 = _p40._0;
+		var p2 = _p40._1;
+		var p3 = _p40._2;
+		var p4 = _p40._3;
 		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
 		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
 		var r1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
@@ -19756,6 +20823,20 @@ var _opensolid$geometry$OpenSolid_CubicSpline2d$splitAt = F2(
 		};
 	});
 var _opensolid$geometry$OpenSolid_CubicSpline2d$bisect = _opensolid$geometry$OpenSolid_CubicSpline2d$splitAt(0.5);
+var _opensolid$geometry$OpenSolid_CubicSpline2d$ArcLengthParameterized = F2(
+	function (a, b) {
+		return {ctor: 'ArcLengthParameterized', _0: a, _1: b};
+	});
+var _opensolid$geometry$OpenSolid_CubicSpline2d$arcLengthParameterized = F2(
+	function (tolerance, spline) {
+		var parameterization = _opensolid$geometry$OpenSolid_ArcLength$parameterization(
+			{
+				tolerance: tolerance,
+				derivativeMagnitude: _opensolid$geometry$OpenSolid_CubicSpline2d$derivativeMagnitude(spline),
+				maxSecondDerivativeMagnitude: _opensolid$geometry$OpenSolid_CubicSpline2d$maxSecondDerivativeMagnitude(spline)
+			});
+		return A2(_opensolid$geometry$OpenSolid_CubicSpline2d$ArcLengthParameterized, spline, parameterization);
+	});
 
 var _opensolid$geometry$OpenSolid_LineSegment2d$endpoints = function (_p0) {
 	var _p1 = _p0;
@@ -19924,145 +21005,6 @@ var _opensolid$geometry$OpenSolid_LineSegment2d$placeIn = function (frame) {
 	return _opensolid$geometry$OpenSolid_LineSegment2d$mapEndpoints(
 		_opensolid$geometry$OpenSolid_Point2d$placeIn(frame));
 };
-
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$endPoint = function (_p0) {
-	var _p1 = _p0;
-	return _p1._0._2;
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$startPoint = function (_p2) {
-	var _p3 = _p2;
-	return _p3._0._0;
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints = function (_p4) {
-	var _p5 = _p4;
-	return _p5._0;
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$startDerivative = function (spline) {
-	var _p6 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-	var p1 = _p6._0;
-	var p2 = _p6._1;
-	return A2(
-		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
-		2,
-		A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$endDerivative = function (spline) {
-	var _p7 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-	var p2 = _p7._1;
-	var p3 = _p7._2;
-	return A2(
-		_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
-		2,
-		A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$pointOn = F2(
-	function (spline, t) {
-		var _p8 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-		var p1 = _p8._0;
-		var p2 = _p8._1;
-		var p3 = _p8._2;
-		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
-		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
-		return A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$derivative = function (spline) {
-	var _p9 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-	var p1 = _p9._0;
-	var p2 = _p9._1;
-	var p3 = _p9._2;
-	var v1 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p1, p2);
-	var v2 = A2(_opensolid$geometry$OpenSolid_Vector2d$from, p2, p3);
-	return function (t) {
-		return A2(
-			_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
-			2,
-			A3(_opensolid$geometry$OpenSolid_Vector2d$interpolateFrom, v1, v2, t));
-	};
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$evaluate = F2(
-	function (spline, t) {
-		var _p10 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-		var p1 = _p10._0;
-		var p2 = _p10._1;
-		var p3 = _p10._2;
-		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
-		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
-		return {
-			ctor: '_Tuple2',
-			_0: A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t),
-			_1: A2(
-				_opensolid$geometry$OpenSolid_Vector2d$scaleBy,
-				2,
-				A2(_opensolid$geometry$OpenSolid_Vector2d$from, q1, q2))
-		};
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints = _opensolid$geometry$OpenSolid_Geometry_Internal$QuadraticSpline2d;
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$reverse = function (spline) {
-	var _p11 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-	var p1 = _p11._0;
-	var p2 = _p11._1;
-	var p3 = _p11._2;
-	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
-		{ctor: '_Tuple3', _0: p3, _1: p2, _2: p1});
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints = F2(
-	function ($function, spline) {
-		var _p12 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-		var p1 = _p12._0;
-		var p2 = _p12._1;
-		var p3 = _p12._2;
-		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
-			{
-				ctor: '_Tuple3',
-				_0: $function(p1),
-				_1: $function(p2),
-				_2: $function(p3)
-			});
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$scaleAbout = F2(
-	function (point, scale) {
-		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-			A2(_opensolid$geometry$OpenSolid_Point2d$scaleAbout, point, scale));
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$rotateAround = F2(
-	function (point, angle) {
-		return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-			A2(_opensolid$geometry$OpenSolid_Point2d$rotateAround, point, angle));
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$translateBy = function (displacement) {
-	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-		_opensolid$geometry$OpenSolid_Point2d$translateBy(displacement));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$mirrorAcross = function (axis) {
-	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-		_opensolid$geometry$OpenSolid_Point2d$mirrorAcross(axis));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$relativeTo = function (frame) {
-	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-		_opensolid$geometry$OpenSolid_Point2d$relativeTo(frame));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$placeIn = function (frame) {
-	return _opensolid$geometry$OpenSolid_QuadraticSpline2d$mapControlPoints(
-		_opensolid$geometry$OpenSolid_Point2d$placeIn(frame));
-};
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$splitAt = F2(
-	function (t, spline) {
-		var _p13 = _opensolid$geometry$OpenSolid_QuadraticSpline2d$controlPoints(spline);
-		var p1 = _p13._0;
-		var p2 = _p13._1;
-		var p3 = _p13._2;
-		var q1 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p1, p2, t);
-		var q2 = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, p2, p3, t);
-		var r = A3(_opensolid$geometry$OpenSolid_Point2d$interpolateFrom, q1, q2, t);
-		return {
-			ctor: '_Tuple2',
-			_0: _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
-				{ctor: '_Tuple3', _0: p1, _1: q1, _2: r}),
-			_1: _opensolid$geometry$OpenSolid_QuadraticSpline2d$fromControlPoints(
-				{ctor: '_Tuple3', _0: r, _1: q2, _2: p3})
-		};
-	});
-var _opensolid$geometry$OpenSolid_QuadraticSpline2d$bisect = _opensolid$geometry$OpenSolid_QuadraticSpline2d$splitAt(0.5);
 
 var _folkertdev$one_true_path_experiment$Geometry_Approximate$approximate = F3(
 	function (config, data, s) {
@@ -21757,34 +22699,56 @@ var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$step2 = f
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
+var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$updateAt = F3(
+	function (index, fn, list) {
+		if (_elm_lang$core$Native_Utils.cmp(index, 0) < 0) {
+			return list;
+		} else {
+			var tail = A2(_elm_lang$core$List$drop, index, list);
+			var head = A2(_elm_lang$core$List$take, index, list);
+			var _p21 = tail;
+			if (_p21.ctor === '::') {
+				return A2(
+					_elm_lang$core$Basics_ops['++'],
+					head,
+					{
+						ctor: '::',
+						_0: fn(_p21._0),
+						_1: _p21._1
+					});
+			} else {
+				return list;
+			}
+		}
+	});
 var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$step1 = function (coordinates) {
-	var _p21 = coordinates;
-	if ((_p21.ctor === '::') && (_p21._1.ctor === '::')) {
-		var _p28 = _p21._1._0;
-		var _p27 = _p21._0;
-		var _p26 = _p21._1._1;
-		var _p22 = A3(
+	var _p22 = coordinates;
+	if ((_p22.ctor === '::') && (_p22._1.ctor === '::')) {
+		var _p29 = _p22._1._0;
+		var _p28 = _p22._0;
+		var _p27 = _p22._1._1;
+		var _p23 = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (elem, _p23) {
-					var _p24 = _p23;
-					return {ctor: '_Tuple2', _0: _p24._1, _1: elem};
+				function (elem, _p24) {
+					var _p25 = _p24;
+					return {ctor: '_Tuple2', _0: _p25._1, _1: elem};
 				}),
-			{ctor: '_Tuple2', _0: _p27, _1: _p28},
-			_p26);
-		var butFinal = _p22._0;
-		var $final = _p22._1;
+			{ctor: '_Tuple2', _0: _p28, _1: _p29},
+			_p27);
+		var butFinal = _p23._0;
+		var $final = _p23._1;
 		var r = {
 			ctor: '::',
-			_0: _p27 + (2 * _p28),
+			_0: _p28 + (2 * _p29),
 			_1: A3(
 				_elm_lang$core$List$map2,
 				F2(
 					function (current, next) {
 						return (4 * current) + (2 * next);
 					}),
-				{ctor: '::', _0: _p28, _1: _p26},
-				_p26)
+				{ctor: '::', _0: _p29, _1: _p27},
+				_p27)
 		};
 		var n = _elm_lang$core$List$length(coordinates) - 1;
 		var a = {
@@ -21811,16 +22775,13 @@ var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$step1 = f
 					_1: {ctor: '[]'}
 				})
 		};
-		var r_ = A2(
-			_elm_lang$core$Maybe$withDefault,
-			r,
-			A3(
-				_elm_community$list_extra$List_Extra$updateAt,
-				n - 1,
-				function (_p25) {
-					return (8 * butFinal) + $final;
-				},
-				r));
+		var r_ = A3(
+			_folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$updateAt,
+			n - 1,
+			function (_p26) {
+				return (8 * butFinal) + $final;
+			},
+			r);
 		return _elm_lang$core$Maybe$Just(
 			{ctor: '_Tuple3', _0: a, _1: b, _2: r_});
 	} else {
@@ -21837,10 +22798,10 @@ var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$controlPo
 			_folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$step1(points)));
 };
 var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$naturalControlPoints = function (points) {
-	var _p29 = _elm_lang$core$List$unzip(points);
-	var xs = _p29._0;
-	var ys = _p29._1;
-	var _p30 = A3(
+	var _p30 = _elm_lang$core$List$unzip(points);
+	var xs = _p30._0;
+	var ys = _p30._1;
+	var _p31 = A3(
 		_elm_lang$core$Maybe$map2,
 		F2(
 			function (v0, v1) {
@@ -21848,23 +22809,23 @@ var _folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$naturalCo
 			}),
 		_folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$controlPoints(xs),
 		_folkertdev$one_true_path_experiment$Internal_NaturalInterpolation$controlPoints(ys));
-	if (_p30.ctor === 'Just') {
+	if (_p31.ctor === 'Just') {
 		var pb = A3(
 			_elm_lang$core$List$map2,
 			F2(
 				function (v0, v1) {
 					return {ctor: '_Tuple2', _0: v0, _1: v1};
 				}),
-			_p30._0._0._1,
-			_p30._0._1._1);
+			_p31._0._0._1,
+			_p31._0._1._1);
 		var pa = A3(
 			_elm_lang$core$List$map2,
 			F2(
 				function (v0, v1) {
 					return {ctor: '_Tuple2', _0: v0, _1: v1};
 				}),
-			_p30._0._0._0,
-			_p30._0._1._0);
+			_p31._0._0._0,
+			_p31._0._1._0);
 		return A4(
 			_elm_lang$core$List$map3,
 			F3(
@@ -27533,6 +28494,17 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$mutationDocument = functi
 				spec: spec
 			}));
 };
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$namedMutationDocument = F2(
+	function (mutationName, spec) {
+		return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$document(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Operation(
+				{
+					operationType: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$mutationOperationType,
+					name: _elm_lang$core$Maybe$Just(mutationName),
+					directives: {ctor: '[]'},
+					spec: spec
+				}));
+	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$QueryOperationType = {ctor: 'QueryOperationType'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryOperationType = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$QueryOperationType;
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument = function (spec) {
@@ -27545,6 +28517,17 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument = function 
 				spec: spec
 			}));
 };
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$namedQueryDocument = F2(
+	function (queryName, spec) {
+		return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$document(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Operation(
+				{
+					operationType: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryOperationType,
+					name: _elm_lang$core$Maybe$Just(queryName),
+					directives: {ctor: '[]'},
+					spec: spec
+				}));
+	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Query = {ctor: 'Query'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Mutation = {ctor: 'Mutation'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Fragment = function (a) {
@@ -28257,6 +29240,22 @@ var _lukewestby$elm_http_builder$HttpBuilder$RequestBuilder = F9(
 		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g, queryParams: h, cacheBuster: i};
 	});
 
+var _mgold$elm_date_format$Date_Local$brazilian = {
+	date: {
+		months: {jan: 'Janeiro', feb: 'Fevereiro', mar: 'Março', apr: 'Abril', may: 'Maio', jun: 'Junho', jul: 'Julho', aug: 'Agosto', sep: 'Setembro', oct: 'Outubro', nov: 'Novembro', dec: 'Dezembro'},
+		monthsAbbrev: {jan: 'Jan', feb: 'Fev', mar: 'Mar', apr: 'Abr', may: 'Mai', jun: 'Jun', jul: 'Jul', aug: 'Ago', sep: 'Set', oct: 'Out', nov: 'Nov', dec: 'Dez'},
+		wdays: {mon: 'Segunda-feira', tue: 'Terça-feira', wed: 'Quarta-feira', thu: 'Quinta-feira', fri: 'Sexta-feira', sat: 'Sábado', sun: 'Domingo'},
+		wdaysAbbrev: {mon: 'Seg', tue: 'Ter', wed: 'Qua', thu: 'Qui', fri: 'Sex', sat: 'Sáb', sun: 'Dom'},
+		defaultFormat: _elm_lang$core$Maybe$Just('%e de %B de %Y')
+	},
+	time: {
+		am: 'am',
+		pm: 'pm',
+		defaultFormat: _elm_lang$core$Maybe$Just('%k:%M')
+	},
+	timeZones: _elm_lang$core$Maybe$Nothing,
+	defaultFormat: _elm_lang$core$Maybe$Nothing
+};
 var _mgold$elm_date_format$Date_Local$french = {
 	date: {
 		months: {jan: 'Janvier', feb: 'Février', mar: 'Mars', apr: 'Avril', may: 'Mai', jun: 'Juin', jul: 'Juillet', aug: 'Août', sep: 'Septembre', oct: 'Octobre', nov: 'Novembre', dec: 'Décembre'},
@@ -28764,6 +29763,8 @@ var _sporto$erl$Erl$portComponent = function (url) {
 			return '';
 		case 80:
 			return '';
+		case 443:
+			return _elm_lang$core$Native_Utils.eq(url.protocol, 'https') ? '' : ':443';
 		default:
 			return A2(
 				_elm_lang$core$Basics_ops['++'],
@@ -35714,8 +36715,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3613, column: 25},
-							end: {line: 3627, column: 57}
+							start: {line: 3616, column: 25},
+							end: {line: 3630, column: 57}
 						},
 						_p8)('impossible');
 				}
@@ -35825,8 +36826,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3541, column: 17},
-					end: {line: 3549, column: 50}
+					start: {line: 3544, column: 17},
+					end: {line: 3552, column: 50}
 				},
 				_p15)('invalid hex');
 		}
@@ -35834,8 +36835,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3539, column: 9},
-				end: {line: 3552, column: 42}
+				start: {line: 3542, column: 9},
+				end: {line: 3555, column: 42}
 			},
 			_p14)('invalid hex');
 	}
@@ -36437,8 +37438,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3004, column: 13},
-							end: {line: 3009, column: 45}
+							start: {line: 3007, column: 13},
+							end: {line: 3012, column: 45}
 						},
 						_p54)('impossible');
 				}
@@ -36547,8 +37548,8 @@ var _vito$cadet$Main$prCircle = F3(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 2836, column: 13},
-						end: {line: 2841, column: 45}
+						start: {line: 2839, column: 13},
+						end: {line: 2844, column: 45}
 					},
 					_p60)('impossible');
 			}
@@ -37187,14 +38188,14 @@ var _vito$cadet$Main$delta2url = F2(
 		var withPagePath = function () {
 			var _p108 = b.page;
 			switch (_p108.ctor) {
-				case 'GlobalGraphPage':
+				case 'AllProjectsPage':
 					return _rgrempel$elm_route_url$RouteUrl_Builder$replacePath(
 						{ctor: '[]'});
-				case 'AllProjectsPage':
+				case 'GlobalGraphPage':
 					return _rgrempel$elm_route_url$RouteUrl_Builder$replacePath(
 						{
 							ctor: '::',
-							_0: 'projects',
+							_0: 'graph',
 							_1: {ctor: '[]'}
 						});
 				case 'ProjectPage':
@@ -41043,10 +42044,10 @@ var _vito$cadet$Main$update = F2(
 					var baseGraphFilter = function () {
 						var _p216 = _p217;
 						switch (_p216.ctor) {
-							case 'GlobalGraphPage':
-								return _elm_lang$core$Maybe$Nothing;
 							case 'AllProjectsPage':
 								return _elm_lang$core$Maybe$Just(_vito$cadet$Main$ExcludeAllFilter);
+							case 'GlobalGraphPage':
+								return _elm_lang$core$Maybe$Nothing;
 							case 'ProjectPage':
 								return _elm_lang$core$Maybe$Just(
 									_vito$cadet$Main$InProjectFilter(_p216._0));
@@ -42769,8 +43770,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2349, column: 17},
-									end: {line: 2356, column: 70}
+									start: {line: 2352, column: 17},
+									end: {line: 2359, column: 70}
 								},
 								_p306)('impossible: content has no card');
 						}
@@ -42785,8 +43786,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2342, column: 9},
-				end: {line: 2359, column: 41}
+				start: {line: 2345, column: 9},
+				end: {line: 2362, column: 41}
 			},
 			_p305)('impossible');
 	});
@@ -43248,48 +44249,7 @@ var _vito$cadet$Main$viewAllProjectsPage = function (model) {
 			_1: {ctor: '[]'}
 		});
 };
-var _vito$cadet$Main$AllProjectsPage = {ctor: 'AllProjectsPage'};
 var _vito$cadet$Main$GlobalGraphPage = {ctor: 'GlobalGraphPage'};
-var _vito$cadet$Main$location2messages = function (loc) {
-	var builder = _rgrempel$elm_route_url$RouteUrl_Builder$fromUrl(loc.href);
-	var path = _rgrempel$elm_route_url$RouteUrl_Builder$path(builder);
-	var page = function () {
-		var _p319 = path;
-		_v151_5:
-		do {
-			if (_p319.ctor === '[]') {
-				return _vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage);
-			} else {
-				if (_p319._1.ctor === '::') {
-					if ((_p319._0 === 'projects') && (_p319._1._1.ctor === '[]')) {
-						return _vito$cadet$Main$SetPage(
-							_vito$cadet$Main$ProjectPage(_p319._1._0));
-					} else {
-						break _v151_5;
-					}
-				} else {
-					switch (_p319._0) {
-						case 'projects':
-							return _vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage);
-						case 'labels':
-							return _vito$cadet$Main$SetPage(_vito$cadet$Main$LabelsPage);
-						case 'milestones':
-							return _vito$cadet$Main$SetPage(_vito$cadet$Main$MilestonesPage);
-						default:
-							break _v151_5;
-					}
-				}
-			}
-		} while(false);
-		return _vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage);
-	}();
-	var hash = _rgrempel$elm_route_url$RouteUrl_Builder$hash(builder);
-	return {
-		ctor: '::',
-		_0: page,
-		_1: _vito$cadet$Main$parseHash(hash)
-	};
-};
 var _vito$cadet$Main$init = function (config) {
 	return {
 		ctor: '_Tuple2',
@@ -43341,6 +44301,49 @@ var _vito$cadet$Main$init = function (config) {
 					_1: {ctor: '[]'}
 				}
 			})
+	};
+};
+var _vito$cadet$Main$AllProjectsPage = {ctor: 'AllProjectsPage'};
+var _vito$cadet$Main$location2messages = function (loc) {
+	var builder = _rgrempel$elm_route_url$RouteUrl_Builder$fromUrl(loc.href);
+	var path = _rgrempel$elm_route_url$RouteUrl_Builder$path(builder);
+	var page = function () {
+		var _p319 = path;
+		_v151_6:
+		do {
+			if (_p319.ctor === '[]') {
+				return _vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage);
+			} else {
+				if (_p319._1.ctor === '::') {
+					if ((_p319._0 === 'projects') && (_p319._1._1.ctor === '[]')) {
+						return _vito$cadet$Main$SetPage(
+							_vito$cadet$Main$ProjectPage(_p319._1._0));
+					} else {
+						break _v151_6;
+					}
+				} else {
+					switch (_p319._0) {
+						case 'projects':
+							return _vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage);
+						case 'graph':
+							return _vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage);
+						case 'labels':
+							return _vito$cadet$Main$SetPage(_vito$cadet$Main$LabelsPage);
+						case 'milestones':
+							return _vito$cadet$Main$SetPage(_vito$cadet$Main$MilestonesPage);
+						default:
+							break _v151_6;
+					}
+				}
+			}
+		} while(false);
+		return _vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage);
+	}();
+	var hash = _rgrempel$elm_route_url$RouteUrl_Builder$hash(builder);
+	return {
+		ctor: '::',
+		_0: page,
+		_1: _vito$cadet$Main$parseHash(hash)
 	};
 };
 var _vito$cadet$Main$viewNavBar = function (model) {
@@ -43440,7 +44443,7 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 									_1: {
 										ctor: '::',
 										_0: _vito$cadet$StrictEvents$onLeftClick(
-											_vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage)),
+											_vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage)),
 										_1: {ctor: '[]'}
 									}
 								}
@@ -43451,7 +44454,7 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-globe'),
+										_0: _elm_lang$html$Html_Attributes$class('octicon octicon-list-unordered'),
 										_1: {ctor: '[]'}
 									},
 									{ctor: '[]'}),
@@ -43466,11 +44469,11 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 									_0: _elm_lang$html$Html_Attributes$class('button'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$href('/projects'),
+										_0: _elm_lang$html$Html_Attributes$href('/graph'),
 										_1: {
 											ctor: '::',
 											_0: _vito$cadet$StrictEvents$onLeftClick(
-												_vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage)),
+												_vito$cadet$Main$SetPage(_vito$cadet$Main$GlobalGraphPage)),
 											_1: {ctor: '[]'}
 										}
 									}
@@ -43481,7 +44484,7 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 										_elm_lang$html$Html$span,
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('octicon octicon-list-unordered'),
+											_0: _elm_lang$html$Html_Attributes$class('octicon octicon-globe'),
 											_1: {ctor: '[]'}
 										},
 										{ctor: '[]'}),
@@ -43637,10 +44640,10 @@ var _vito$cadet$Main$view = function (model) {
 							_0: function () {
 								var _p324 = model.page;
 								switch (_p324.ctor) {
-									case 'GlobalGraphPage':
-										return _vito$cadet$Main$viewSpatialGraph(model);
 									case 'AllProjectsPage':
 										return _vito$cadet$Main$viewAllProjectsPage(model);
+									case 'GlobalGraphPage':
+										return _vito$cadet$Main$viewSpatialGraph(model);
 									case 'ProjectPage':
 										return A2(_vito$cadet$Main$viewProjectPage, model, _p324._0);
 									case 'LabelsPage':
