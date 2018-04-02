@@ -110,6 +110,7 @@ type alias Repo =
     , url : String
     , owner : String
     , name : String
+    , isArchived : Bool
     , labels : List Label
     , milestones : List Milestone
     }
@@ -819,6 +820,7 @@ repoObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
         |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "isArchived" [] GB.bool)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "milestones" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list milestoneObject)))
 
@@ -1442,6 +1444,7 @@ decodeRepo =
         |: (JD.field "url" JD.string)
         |: (JD.field "owner" JD.string)
         |: (JD.field "name" JD.string)
+        |: (JD.field "is_archived" JD.bool)
         |: (JD.field "labels" (JD.list decodeLabel))
         |: (JD.field "milestones" (JD.list decodeMilestone))
 
@@ -1753,6 +1756,7 @@ encodeRepo record =
         , ( "url", JE.string record.url )
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
+        , ( "is_archived", JE.bool record.isArchived )
         , ( "labels", JE.list (List.map encodeLabel record.labels) )
         , ( "milestones", JE.list (List.map encodeMilestone record.milestones) )
         ]

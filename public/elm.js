@@ -30839,9 +30839,9 @@ var _vito$cadet$GitHubGraph$createRepoLabel = F4(
 										'/',
 										A2(_elm_lang$core$Basics_ops['++'], repo.name, '/labels')))))))));
 	});
-var _vito$cadet$GitHubGraph$Repo = F6(
-	function (a, b, c, d, e, f) {
-		return {id: a, url: b, owner: c, name: d, labels: e, milestones: f};
+var _vito$cadet$GitHubGraph$Repo = F7(
+	function (a, b, c, d, e, f, g) {
+		return {id: a, url: b, owner: c, name: d, isArchived: e, labels: f, milestones: g};
 	});
 var _vito$cadet$GitHubGraph$Issue = function (a) {
 	return function (b) {
@@ -32034,36 +32034,43 @@ var _vito$cadet$GitHubGraph$repoObject = A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'name',
+				'isArchived',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$bool),
 			A2(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 				A3(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'owner',
+					'name',
 					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
-						A3(
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'login',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string))),
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 				A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 					A3(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'url',
+						'owner',
 						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'login',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string))),
 					A2(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 						A3(
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'id',
+							'url',
 							{ctor: '[]'},
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Repo)))))));
+						A2(
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+							A3(
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+								'id',
+								{ctor: '[]'},
+								_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$Repo))))))));
 var _vito$cadet$GitHubGraph$repoQuery = function () {
 	var nameVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,
@@ -32251,11 +32258,14 @@ var _vito$cadet$GitHubGraph$decodeRepo = A2(
 					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 					A2(
 						_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-						_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Repo),
-						A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-					A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
-				A2(_elm_lang$core$Json_Decode$field, 'owner', _elm_lang$core$Json_Decode$string)),
-			A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+						A2(
+							_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+							_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$Repo),
+							A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+						A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+					A2(_elm_lang$core$Json_Decode$field, 'owner', _elm_lang$core$Json_Decode$string)),
+				A2(_elm_lang$core$Json_Decode$field, 'name', _elm_lang$core$Json_Decode$string)),
+			A2(_elm_lang$core$Json_Decode$field, 'is_archived', _elm_lang$core$Json_Decode$bool)),
 		A2(
 			_elm_lang$core$Json_Decode$field,
 			'labels',
@@ -32354,19 +32364,27 @@ var _vito$cadet$GitHubGraph$encodeRepo = function (record) {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'labels',
-								_1: _elm_lang$core$Json_Encode$list(
-									A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
+								_0: 'is_archived',
+								_1: _elm_lang$core$Json_Encode$bool(record.isArchived)
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'milestones',
+									_0: 'labels',
 									_1: _elm_lang$core$Json_Encode$list(
-										A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeMilestone, record.milestones))
+										A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeLabel, record.labels))
 								},
-								_1: {ctor: '[]'}
+								_1: {
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'milestones',
+										_1: _elm_lang$core$Json_Encode$list(
+											A2(_elm_lang$core$List$map, _vito$cadet$GitHubGraph$encodeMilestone, record.milestones))
+									},
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					}

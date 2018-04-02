@@ -246,13 +246,16 @@ update msg model =
         RepositoriesFetched (Ok repos) ->
             log "repositories fetched" (List.map .name repos) <|
                 let
+                    activeRepos =
+                        List.filter (not << .isArchived) repos
+
                     fetch repo =
                         [ fetchIssues model repo
                         , fetchPullRequests model repo
                         ]
                 in
-                    ( { model | loadQueue = List.concatMap fetch repos ++ model.loadQueue }
-                    , setRepos (List.map GitHubGraph.encodeRepo repos)
+                    ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
+                    , setRepos (List.map GitHubGraph.encodeRepo activeRepos)
                     )
 
         RepositoriesFetched (Err err) ->
