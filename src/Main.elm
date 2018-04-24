@@ -2717,7 +2717,7 @@ cardRadiusBase card { incoming, outgoing } =
         + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
         + (case card.content of
             GitHubGraph.PullRequestCardContent pr ->
-                max 50 (toFloat (pr.additions + pr.deletions) / 50)
+                min 50 (toFloat (pr.additions + pr.deletions) / 50)
 
             _ ->
                 0
