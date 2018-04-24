@@ -37202,7 +37202,7 @@ var _vito$cadet$Main$cardRadiusBase = F2(
 			if (_p36.ctor === 'PullRequestCardContent') {
 				var _p37 = _p36._0;
 				return A2(
-					_elm_lang$core$Basics$max,
+					_elm_lang$core$Basics$min,
 					50,
 					_elm_lang$core$Basics$toFloat(_p37.additions + _p37.deletions) / 50);
 			} else {
