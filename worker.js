@@ -6366,6 +6366,22 @@ var _elm_lang$core$Set$partition = F2(
 		};
 	});
 
+var _elm_community$json_extra$Json_Decode_Extra$when = F3(
+	function (checkDecoder, check, passDecoder) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (checkVal) {
+				return check(checkVal) ? passDecoder : _elm_lang$core$Json_Decode$fail(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'Check failed with input `',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(checkVal),
+							'`')));
+			},
+			checkDecoder);
+	});
 var _elm_community$json_extra$Json_Decode_Extra$combine = A2(
 	_elm_lang$core$List$foldr,
 	_elm_lang$core$Json_Decode$map2(
@@ -8390,6 +8406,17 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$mutationDocument = functi
 				spec: spec
 			}));
 };
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$namedMutationDocument = F2(
+	function (mutationName, spec) {
+		return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$document(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Operation(
+				{
+					operationType: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$mutationOperationType,
+					name: _elm_lang$core$Maybe$Just(mutationName),
+					directives: {ctor: '[]'},
+					spec: spec
+				}));
+	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$QueryOperationType = {ctor: 'QueryOperationType'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryOperationType = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$QueryOperationType;
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument = function (spec) {
@@ -8402,6 +8429,17 @@ var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument = function 
 				spec: spec
 			}));
 };
+var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$namedQueryDocument = F2(
+	function (queryName, spec) {
+		return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$document(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Operation(
+				{
+					operationType: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryOperationType,
+					name: _elm_lang$core$Maybe$Just(queryName),
+					directives: {ctor: '[]'},
+					spec: spec
+				}));
+	});
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Query = {ctor: 'Query'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Mutation = {ctor: 'Mutation'};
 var _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$Fragment = function (a) {
@@ -9009,6 +9047,19 @@ var _lukewestby$elm_http_builder$HttpBuilder$send = F2(
 			tagger,
 			_lukewestby$elm_http_builder$HttpBuilder$toTask(builder));
 	});
+var _lukewestby$elm_http_builder$HttpBuilder$withExpectString = function (builder) {
+	return _elm_lang$core$Native_Utils.update(
+		builder,
+		{expect: _elm_lang$http$Http$expectString});
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withExpectJson = F2(
+	function (decoder, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				expect: _elm_lang$http$Http$expectJson(decoder)
+			});
+	});
 var _lukewestby$elm_http_builder$HttpBuilder$withExpect = F2(
 	function (expect, builder) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9057,6 +9108,21 @@ var _lukewestby$elm_http_builder$HttpBuilder$withMultipartStringBody = function 
 				_elm_lang$core$Basics$uncurry(_elm_lang$http$Http$stringPart),
 				partPairs)));
 };
+var _lukewestby$elm_http_builder$HttpBuilder$withBearerToken = F2(
+	function (value, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				headers: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$http$Http$header,
+						'Authorization',
+						A2(_elm_lang$core$Basics_ops['++'], 'Bearer ', value)),
+					_1: builder.headers
+				}
+			});
+	});
 var _lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 	function (headerPairs, builder) {
 		return _elm_lang$core$Native_Utils.update(
@@ -9114,6 +9180,22 @@ var _lukewestby$elm_http_builder$HttpBuilder$RequestBuilder = F9(
 		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g, queryParams: h, cacheBuster: i};
 	});
 
+var _mgold$elm_date_format$Date_Local$brazilian = {
+	date: {
+		months: {jan: 'Janeiro', feb: 'Fevereiro', mar: 'Março', apr: 'Abril', may: 'Maio', jun: 'Junho', jul: 'Julho', aug: 'Agosto', sep: 'Setembro', oct: 'Outubro', nov: 'Novembro', dec: 'Dezembro'},
+		monthsAbbrev: {jan: 'Jan', feb: 'Fev', mar: 'Mar', apr: 'Abr', may: 'Mai', jun: 'Jun', jul: 'Jul', aug: 'Ago', sep: 'Set', oct: 'Out', nov: 'Nov', dec: 'Dez'},
+		wdays: {mon: 'Segunda-feira', tue: 'Terça-feira', wed: 'Quarta-feira', thu: 'Quinta-feira', fri: 'Sexta-feira', sat: 'Sábado', sun: 'Domingo'},
+		wdaysAbbrev: {mon: 'Seg', tue: 'Ter', wed: 'Qua', thu: 'Qui', fri: 'Sex', sat: 'Sáb', sun: 'Dom'},
+		defaultFormat: _elm_lang$core$Maybe$Just('%e de %B de %Y')
+	},
+	time: {
+		am: 'am',
+		pm: 'pm',
+		defaultFormat: _elm_lang$core$Maybe$Just('%k:%M')
+	},
+	timeZones: _elm_lang$core$Maybe$Nothing,
+	defaultFormat: _elm_lang$core$Maybe$Nothing
+};
 var _mgold$elm_date_format$Date_Local$french = {
 	date: {
 		months: {jan: 'Janvier', feb: 'Février', mar: 'Mars', apr: 'Avril', may: 'Mai', jun: 'Juin', jul: 'Juillet', aug: 'Août', sep: 'Septembre', oct: 'Octobre', nov: 'Novembre', dec: 'Décembre'},

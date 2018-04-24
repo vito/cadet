@@ -9942,6 +9942,22 @@ var _elm_lang$core$Set$partition = F2(
 		};
 	});
 
+var _elm_community$json_extra$Json_Decode_Extra$when = F3(
+	function (checkDecoder, check, passDecoder) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (checkVal) {
+				return check(checkVal) ? passDecoder : _elm_lang$core$Json_Decode$fail(
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						'Check failed with input `',
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							_elm_lang$core$Basics$toString(checkVal),
+							'`')));
+			},
+			checkDecoder);
+	});
 var _elm_community$json_extra$Json_Decode_Extra$combine = A2(
 	_elm_lang$core$List$foldr,
 	_elm_lang$core$Json_Decode$map2(
@@ -29135,6 +29151,19 @@ var _lukewestby$elm_http_builder$HttpBuilder$send = F2(
 			tagger,
 			_lukewestby$elm_http_builder$HttpBuilder$toTask(builder));
 	});
+var _lukewestby$elm_http_builder$HttpBuilder$withExpectString = function (builder) {
+	return _elm_lang$core$Native_Utils.update(
+		builder,
+		{expect: _elm_lang$http$Http$expectString});
+};
+var _lukewestby$elm_http_builder$HttpBuilder$withExpectJson = F2(
+	function (decoder, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				expect: _elm_lang$http$Http$expectJson(decoder)
+			});
+	});
 var _lukewestby$elm_http_builder$HttpBuilder$withExpect = F2(
 	function (expect, builder) {
 		return _elm_lang$core$Native_Utils.update(
@@ -29183,6 +29212,21 @@ var _lukewestby$elm_http_builder$HttpBuilder$withMultipartStringBody = function 
 				_elm_lang$core$Basics$uncurry(_elm_lang$http$Http$stringPart),
 				partPairs)));
 };
+var _lukewestby$elm_http_builder$HttpBuilder$withBearerToken = F2(
+	function (value, builder) {
+		return _elm_lang$core$Native_Utils.update(
+			builder,
+			{
+				headers: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$http$Http$header,
+						'Authorization',
+						A2(_elm_lang$core$Basics_ops['++'], 'Bearer ', value)),
+					_1: builder.headers
+				}
+			});
+	});
 var _lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 	function (headerPairs, builder) {
 		return _elm_lang$core$Native_Utils.update(
@@ -37157,7 +37201,10 @@ var _vito$cadet$Main$cardRadiusBase = F2(
 			var _p36 = card.content;
 			if (_p36.ctor === 'PullRequestCardContent') {
 				var _p37 = _p36._0;
-				return _elm_lang$core$Basics$toFloat(_p37.additions + _p37.deletions) / 50;
+				return A2(
+					_elm_lang$core$Basics$max,
+					50,
+					_elm_lang$core$Basics$toFloat(_p37.additions + _p37.deletions) / 50);
 			} else {
 				return 0;
 			}
