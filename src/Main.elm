@@ -95,6 +95,7 @@ type alias DataView =
     , allMilestones : List String
     , nextMilestoneCards : List Card
     , reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
+    , prsByRepo : Dict GitHubGraph.ID (List Card)
     }
 
 
@@ -252,6 +253,7 @@ type Page
     | ProjectPage String
     | LabelsPage
     | MilestonesPage
+    | PullRequestsPage
 
 
 detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
@@ -381,6 +383,9 @@ delta2url a b =
                 MilestonesPage ->
                     RouteUrl.Builder.replacePath [ "milestones" ]
 
+                PullRequestsPage ->
+                    RouteUrl.Builder.replacePath [ "pull-requests" ]
+
         withSelection =
             RouteUrl.Builder.replaceHash (renderHash b)
 
@@ -421,6 +426,9 @@ location2messages loc =
 
                 [ "milestones" ] ->
                     SetPage MilestonesPage
+
+                [ "pull-requests" ] ->
+                    SetPage PullRequestsPage
 
                 _ ->
                     SetPage GlobalGraphPage
@@ -470,6 +478,7 @@ init config =
             , allMilestones = []
             , nextMilestoneCards = []
             , reposByLabel = Dict.empty
+            , prsByRepo = Dict.empty
             }
       , allCards = Dict.empty
       , allLabels = Dict.empty
@@ -538,6 +547,9 @@ update msg model =
                             Just ExcludeAllFilter
 
                         MilestonesPage ->
+                            Just ExcludeAllFilter
+
+                        PullRequestsPage ->
                             Just ExcludeAllFilter
             in
                 ( computeGraph <|
@@ -1209,11 +1221,12 @@ update msg model =
             ( model, Backend.refreshIssue id IssueRefreshed )
 
         IssueRefreshed (Ok { index, value }) ->
-            ( { model
-                | milestoneDrag = Drag.complete model.milestoneDrag
-                , allCards = Dict.insert value.id (issueCard value) model.allCards
-                , dataIndex = max index model.dataIndex
-              }
+            ( computeDataView
+                { model
+                    | milestoneDrag = Drag.complete model.milestoneDrag
+                    , allCards = Dict.insert value.id (issueCard value) model.allCards
+                    , dataIndex = max index model.dataIndex
+                }
             , Cmd.none
             )
 
@@ -1234,11 +1247,12 @@ update msg model =
             ( model, Backend.refreshPR id PullRequestRefreshed )
 
         PullRequestRefreshed (Ok { index, value }) ->
-            ( { model
-                | milestoneDrag = Drag.complete model.milestoneDrag
-                , allCards = Dict.insert value.id (prCard value) model.allCards
-                , dataIndex = max index model.dataIndex
-              }
+            ( computeDataView
+                { model
+                    | milestoneDrag = Drag.complete model.milestoneDrag
+                    , allCards = Dict.insert value.id (prCard value) model.allCards
+                    , dataIndex = max index model.dataIndex
+                }
             , Cmd.none
             )
 
@@ -1453,6 +1467,21 @@ computeDataView origModel =
                             }
                     }
 
+            PullRequestsPage ->
+                let
+                    prsByRepo =
+                        Dict.foldl
+                            (\_ card acc ->
+                                if isOpen card && isPR card then
+                                    Dict.update card.repo.id (add card) acc
+                                else
+                                    acc
+                            )
+                            Dict.empty
+                            model.allCards
+                in
+                    { model | dataView = { dataView | prsByRepo = prsByRepo } }
+
             LabelsPage ->
                 { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
 
@@ -1570,6 +1599,9 @@ view model =
 
                         MilestonesPage ->
                             viewMilestonesPage model
+
+                        PullRequestsPage ->
+                            viewPullRequestsPage model
                     ]
                 , Html.div
                     [ HA.classList
@@ -1850,6 +1882,9 @@ viewNavBar model =
             , Html.a [ HA.class "button", HA.href "/milestones", StrictEvents.onLeftClick (SetPage MilestonesPage) ]
                 [ Html.span [ HA.class "octicon octicon-milestone" ] []
                 ]
+            , Html.a [ HA.class "button", HA.href "/pull-requests", StrictEvents.onLeftClick (SetPage PullRequestsPage) ]
+                [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                ]
             ]
         , viewSearch model
         ]
@@ -1982,6 +2017,37 @@ viewMilestonesPage model =
     in
         Html.div [ HA.class "all-milestones" ]
             (newMilestone model :: nextMilestone :: milestones)
+
+
+viewPullRequestsPage : Model -> Html Msg
+viewPullRequestsPage model =
+    let
+        getRepo repoId prs acc =
+            case Dict.get repoId model.data.repos of
+                Just repo ->
+                    ( repo, prs ) :: acc
+
+                Nothing ->
+                    acc
+
+        viewRepoPRs repo prs =
+            Html.div [ HA.class "repo-pull-requests" ]
+                [ Html.div [ HA.class "repo-name" ]
+                    [ Html.div [ HA.class "repo-name-label" ]
+                        [ Html.span [ HA.class "octicon octicon-repo" ] []
+                        , Html.text repo.name
+                        ]
+                    ]
+                , Html.div [ HA.class "cards" ]
+                    (List.map (viewCard model) prs)
+                ]
+    in
+        Html.div [ HA.class "all-pull-requests" ]
+            (Dict.foldl getRepo [] model.dataView.prsByRepo
+                |> List.sortBy (Tuple.second >> List.length)
+                |> List.reverse
+                |> List.map (uncurry viewRepoPRs)
+            )
 
 
 newMilestone : Model -> Html Msg
