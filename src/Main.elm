@@ -3452,6 +3452,14 @@ viewCard model card =
             , ( "backlog", isBacklog card )
             , ( "anticipated", isAnticipated model card )
             , ( "highlighted", model.highlightedCard == Just card.id )
+            , ( "last-activity-is-me"
+              , case model.me of
+                    Just { user } ->
+                        lastActivityIsByUser model.data.actors user.login card
+
+                    Nothing ->
+                        False
+              )
             ]
         , HE.onClick (SelectCard card.id)
         , HE.onMouseOver (HighlightNode card.id)
