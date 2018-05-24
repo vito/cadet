@@ -36759,8 +36759,8 @@ var _vito$cadet$Main$subEdges = function (edges) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3690, column: 25},
-							end: {line: 3704, column: 57}
+							start: {line: 3798, column: 21},
+							end: {line: 3812, column: 53}
 						},
 						_p8)('impossible');
 				}
@@ -36870,8 +36870,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3618, column: 17},
-					end: {line: 3626, column: 50}
+					start: {line: 3726, column: 13},
+					end: {line: 3734, column: 46}
 				},
 				_p15)('invalid hex');
 		}
@@ -36879,8 +36879,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3616, column: 9},
-				end: {line: 3629, column: 42}
+				start: {line: 3724, column: 5},
+				end: {line: 3737, column: 38}
 			},
 			_p14)('invalid hex');
 	}
@@ -36907,6 +36907,155 @@ var _vito$cadet$Main$recentActors = F2(
 						{ctor: '[]'},
 						A2(_elm_lang$core$Dict$get, card.id, model.data.actors)))));
 	});
+var _vito$cadet$Main$prIcons = F2(
+	function (model, card) {
+		var _p19 = card.content;
+		if (_p19.ctor === 'IssueCardContent') {
+			return {ctor: '[]'};
+		} else {
+			var _p25 = _p19._0;
+			var mergeClass = function () {
+				var _p20 = _p25.mergeable;
+				switch (_p20.ctor) {
+					case 'MergeableStateMergeable':
+						return 'success';
+					case 'MergeableStateConflicting':
+						return 'failure';
+					default:
+						return 'pending';
+				}
+			}();
+			var reviews = A2(
+				_elm_lang$core$Maybe$withDefault,
+				{ctor: '[]'},
+				A2(_elm_lang$core$Dict$get, card.id, model.data.reviewers));
+			var reviewStates = A2(
+				_elm_lang$core$List$map,
+				function (r) {
+					var reviewClass = function () {
+						var _p21 = r.state;
+						switch (_p21.ctor) {
+							case 'PullRequestReviewStatePending':
+								return 'pending';
+							case 'PullRequestReviewStateApproved':
+								return 'success';
+							case 'PullRequestReviewStateChangesRequested':
+								return 'failure';
+							case 'PullRequestReviewStateCommented':
+								return 'commented';
+							default:
+								return 'dismissed';
+						}
+					}();
+					return A2(
+						_elm_lang$html$Html$img,
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html_Attributes$class(
+								A2(_elm_lang$core$Basics_ops['++'], 'status-actor ', reviewClass)),
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$src(r.author.avatar),
+								_1: {ctor: '[]'}
+							}
+						},
+						{ctor: '[]'});
+				},
+				reviews);
+			var statusChecks = function () {
+				var _p22 = A2(
+					_elm_lang$core$Maybe$map,
+					function (_) {
+						return _.status;
+					},
+					_p25.lastCommit);
+				if ((_p22.ctor === 'Just') && (_p22._0.ctor === 'Just')) {
+					return A3(
+						_elm_lang$core$Basics$flip,
+						_elm_lang$core$List$map,
+						_p22._0._0.contexts,
+						function (c) {
+							return A2(
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$classList(
+										{
+											ctor: '::',
+											_0: {ctor: '_Tuple2', _0: 'status-icon', _1: true},
+											_1: {
+												ctor: '::',
+												_0: {ctor: '_Tuple2', _0: 'octicon', _1: true},
+												_1: {
+													ctor: '::',
+													_0: {
+														ctor: '_Tuple2',
+														_0: function () {
+															var _p23 = c.state;
+															switch (_p23.ctor) {
+																case 'StatusStatePending':
+																	return 'octicon-primitive-dot';
+																case 'StatusStateSuccess':
+																	return 'octicon-check';
+																case 'StatusStateFailure':
+																	return 'octicon-x';
+																case 'StatusStateExpected':
+																	return 'octicon-question';
+																default:
+																	return 'octicon-alert';
+															}
+														}(),
+														_1: true
+													},
+													_1: {
+														ctor: '::',
+														_0: {
+															ctor: '_Tuple2',
+															_0: function () {
+																var _p24 = c.state;
+																switch (_p24.ctor) {
+																	case 'StatusStatePending':
+																		return 'pending';
+																	case 'StatusStateSuccess':
+																		return 'success';
+																	case 'StatusStateFailure':
+																		return 'failure';
+																	case 'StatusStateExpected':
+																		return 'expected';
+																	default:
+																		return 'error';
+																}
+															}(),
+															_1: true
+														},
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}),
+									_1: {ctor: '[]'}
+								},
+								{ctor: '[]'});
+						});
+				} else {
+					return {ctor: '[]'};
+				}
+			}();
+			return {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$span,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class(
+							A2(_elm_lang$core$Basics_ops['++'], 'status-icon octicon octicon-git-merge ', mergeClass)),
+						_1: {ctor: '[]'}
+					},
+					{ctor: '[]'}),
+				_1: A2(_elm_lang$core$Basics_ops['++'], statusChecks, reviewStates)
+			};
+		}
+	});
 var _vito$cadet$Main$isIcebox = function (card) {
 	return card.processState.inIceboxColumn;
 };
@@ -36920,20 +37069,20 @@ var _vito$cadet$Main$isInFlight = function (card) {
 	return card.processState.inInFlightColumn;
 };
 var _vito$cadet$Main$isOpen = function (card) {
-	var _p19 = card.state;
-	_v17_2:
+	var _p26 = card.state;
+	_v23_2:
 	do {
-		if (_p19.ctor === 'IssueState') {
-			if (_p19._0.ctor === 'IssueStateOpen') {
+		if (_p26.ctor === 'IssueState') {
+			if (_p26._0.ctor === 'IssueStateOpen') {
 				return true;
 			} else {
-				break _v17_2;
+				break _v23_2;
 			}
 		} else {
-			if (_p19._0.ctor === 'PullRequestStateOpen') {
+			if (_p26._0.ctor === 'PullRequestStateOpen') {
 				return true;
 			} else {
-				break _v17_2;
+				break _v23_2;
 			}
 		}
 	} while(false);
@@ -36962,7 +37111,7 @@ var _vito$cadet$Main$hasLabelAndColor = F4(
 		var matchingLabels = A2(
 			_elm_lang$core$Dict$filter,
 			F2(
-				function (_p20, l) {
+				function (_p27, l) {
 					return _elm_lang$core$Native_Utils.eq(l.name, name) && _elm_lang$core$Native_Utils.eq(l.color, color);
 				}),
 			model.allLabels);
@@ -36976,7 +37125,7 @@ var _vito$cadet$Main$hasLabel = F3(
 		var matchingLabels = A2(
 			_elm_lang$core$Dict$filter,
 			F2(
-				function (_p21, l) {
+				function (_p28, l) {
 					return _elm_lang$core$Native_Utils.eq(l.name, name);
 				}),
 			model.allLabels);
@@ -36989,8 +37138,8 @@ var _vito$cadet$Main$isUntriaged = function (card) {
 	return _elm_lang$core$List$isEmpty(card.cards);
 };
 var _vito$cadet$Main$isPR = function (card) {
-	var _p22 = card.state;
-	if (_p22.ctor === 'PullRequestState') {
+	var _p29 = card.state;
+	if (_p29.ctor === 'PullRequestState') {
 		return true;
 	} else {
 		return false;
@@ -37002,21 +37151,21 @@ var _vito$cadet$Main$isAnticipated = F2(
 	});
 var _vito$cadet$Main$inColumn = function (match) {
 	return _elm_lang$core$List$any(
-		function (_p23) {
+		function (_p30) {
 			return A2(
 				_elm_lang$core$Maybe$withDefault,
 				false,
 				A2(
 					_elm_lang$core$Maybe$map,
-					function (_p24) {
+					function (_p31) {
 						return match(
 							function (_) {
 								return _.name;
-							}(_p24));
+							}(_p31));
 					},
 					function (_) {
 						return _.column;
-					}(_p23)));
+					}(_p30)));
 		});
 };
 var _vito$cadet$Main$lastActivityIsByUser = F3(
@@ -37025,12 +37174,12 @@ var _vito$cadet$Main$lastActivityIsByUser = F3(
 			_elm_lang$core$Maybe$withDefault,
 			{ctor: '[]'},
 			A2(_elm_lang$core$Dict$get, card.id, cardEvents));
-		var _p25 = _elm_lang$core$List$head(
+		var _p32 = _elm_lang$core$List$head(
 			_elm_lang$core$List$reverse(events));
-		if (_p25.ctor === 'Just') {
-			var _p26 = _p25._0.user;
-			if (_p26.ctor === 'Just') {
-				return _elm_lang$core$Native_Utils.eq(_p26._0.login, login);
+		if (_p32.ctor === 'Just') {
+			var _p33 = _p32._0.user;
+			if (_p33.ctor === 'Just') {
+				return _elm_lang$core$Native_Utils.eq(_p33._0.login, login);
 			} else {
 				return false;
 			}
@@ -37042,7 +37191,7 @@ var _vito$cadet$Main$involvesUser = F3(
 	function (model, login, card) {
 		return A2(
 			_elm_lang$core$List$any,
-			function (_p27) {
+			function (_p34) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -37056,7 +37205,7 @@ var _vito$cadet$Main$involvesUser = F3(
 						},
 						function (_) {
 							return _.user;
-						}(_p27)));
+						}(_p34)));
 			},
 			A2(
 				_elm_lang$core$Maybe$withDefault,
@@ -37070,24 +37219,24 @@ var _vito$cadet$Main$isInProject = F2(
 			name,
 			A2(
 				_elm_lang$core$List$map,
-				function (_p28) {
+				function (_p35) {
 					return function (_) {
 						return _.name;
 					}(
 						function (_) {
 							return _.project;
-						}(_p28));
+						}(_p35));
 				},
 				card.cards));
 	});
 var _vito$cadet$Main$activityClass = F2(
 	function (now, date) {
 		var daysSinceLastUpdate = (_elm_lang$core$Date$toTime(now) / (24 * _elm_lang$core$Time$hour)) - (_elm_lang$core$Date$toTime(date) / (24 * _elm_lang$core$Time$hour));
-		return (_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 1) < 1) ? 'active-today' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 2) < 1) ? 'active-yesterday' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 7) < 1) ? 'active-this-week' : 'active-long-ago'));
+		return (_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 1) < 1) ? 'active-today' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 2) < 1) ? 'active-yesterday' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 7) < 1) ? 'active-this-week' : ((_elm_lang$core$Native_Utils.cmp(daysSinceLastUpdate, 30) < 1) ? 'active-this-month' : 'active-long-ago')));
 	});
 var _vito$cadet$Main$viewCardActor = F2(
-	function (model, _p29) {
-		var _p30 = _p29;
+	function (model, _p36) {
+		var _p37 = _p36;
 		return A2(
 			_elm_lang$html$Html$img,
 			{
@@ -37096,11 +37245,11 @@ var _vito$cadet$Main$viewCardActor = F2(
 					A2(
 						_elm_lang$core$Basics_ops['++'],
 						'card-actor ',
-						A2(_vito$cadet$Main$activityClass, model.currentDate, _p30.createdAt))),
+						A2(_vito$cadet$Main$activityClass, model.currentDate, _p37.createdAt))),
 				_1: {
 					ctor: '::',
 					_0: _elm_lang$html$Html_Attributes$src(
-						A2(_elm_lang$core$Basics_ops['++'], _p30.avatar, '&s=88')),
+						A2(_elm_lang$core$Basics_ops['++'], _p37.avatar, '&s=88')),
 					_1: {
 						ctor: '::',
 						_0: _elm_lang$html$Html_Attributes$draggable('false'),
@@ -37111,8 +37260,8 @@ var _vito$cadet$Main$viewCardActor = F2(
 			{ctor: '[]'});
 	});
 var _vito$cadet$Main$viewCardNodeFlair = F5(
-	function (card, radii, flair, _p31, state) {
-		var _p32 = _p31;
+	function (card, radii, flair, _p38, state) {
+		var _p39 = _p38;
 		var classes = A2(
 			_elm_lang$core$Basics_ops['++'],
 			{
@@ -37125,11 +37274,11 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 				}
 			},
 			function () {
-				var _p33 = state.me;
-				if (_p33.ctor === 'Nothing') {
+				var _p40 = state.me;
+				if (_p40.ctor === 'Nothing') {
 					return {ctor: '[]'};
 				} else {
-					return A3(_vito$cadet$Main$lastActivityIsByUser, state.cardEvents, _p33._0.user.login, card) ? {
+					return A3(_vito$cadet$Main$lastActivityIsByUser, state.cardEvents, _p40._0.user.login, card) ? {
 						ctor: '::',
 						_0: 'last-activity-is-me',
 						_1: {ctor: '[]'}
@@ -37164,13 +37313,13 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 						'translate(',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(_p32.x),
+							_elm_lang$core$Basics$toString(_p39.x),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(_p32.y),
+									_elm_lang$core$Basics$toString(_p39.y),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										') scale(',
@@ -37193,18 +37342,18 @@ var _vito$cadet$Main$viewCardNodeFlair = F5(
 	});
 var _vito$cadet$Main$flairRadiusBase = 20;
 var _vito$cadet$Main$cardRadiusBase = F2(
-	function (card, _p34) {
-		var _p35 = _p34;
+	function (card, _p41) {
+		var _p42 = _p41;
 		return (15 + ((_elm_lang$core$Basics$toFloat(
-			_elm_community$intdict$IntDict$size(_p35.incoming)) / 2) + _elm_lang$core$Basics$toFloat(
-			_elm_community$intdict$IntDict$size(_p35.outgoing) * 2))) + function () {
-			var _p36 = card.content;
-			if (_p36.ctor === 'PullRequestCardContent') {
-				var _p37 = _p36._0;
+			_elm_community$intdict$IntDict$size(_p42.incoming)) / 2) + _elm_lang$core$Basics$toFloat(
+			_elm_community$intdict$IntDict$size(_p42.outgoing) * 2))) + function () {
+			var _p43 = card.content;
+			if (_p43.ctor === 'PullRequestCardContent') {
+				var _p44 = _p43._0;
 				return A2(
 					_elm_lang$core$Basics$min,
 					50,
-					_elm_lang$core$Basics$toFloat(_p37.additions + _p37.deletions) / 50);
+					_elm_lang$core$Basics$toFloat(_p44.additions + _p44.deletions) / 50);
 			} else {
 				return 0;
 			}
@@ -37248,11 +37397,11 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 			};
 		};
 		var prSegments = function () {
-			var _p38 = card.content;
-			if (_p38.ctor === 'IssueCardContent') {
+			var _p45 = card.content;
+			if (_p45.ctor === 'IssueCardContent') {
 				return {ctor: '[]'};
 			} else {
-				var _p44 = _p38._0;
+				var _p51 = _p45._0;
 				var reviewStates = A2(
 					_elm_lang$core$List$map,
 					function (r) {
@@ -37271,8 +37420,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 								},
 								{ctor: '[]'}),
 							_1: function () {
-								var _p39 = r.state;
-								switch (_p39.ctor) {
+								var _p46 = r.state;
+								switch (_p46.ctor) {
 									case 'PullRequestReviewStatePending':
 										return 'pending';
 									case 'PullRequestReviewStateApproved':
@@ -37290,17 +37439,17 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					},
 					reviews);
 				var statusChecks = function () {
-					var _p40 = A2(
+					var _p47 = A2(
 						_elm_lang$core$Maybe$map,
 						function (_) {
 							return _.status;
 						},
-						_p44.lastCommit);
-					if ((_p40.ctor === 'Just') && (_p40._0.ctor === 'Just')) {
+						_p51.lastCommit);
+					if ((_p47.ctor === 'Just') && (_p47._0.ctor === 'Just')) {
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$List$map,
-							_p40._0._0.contexts,
+							_p47._0._0.contexts,
 							function (c) {
 								return {
 									ctor: '_Tuple3',
@@ -37320,8 +37469,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 															_0: {
 																ctor: '_Tuple2',
 																_0: function () {
-																	var _p41 = c.state;
-																	switch (_p41.ctor) {
+																	var _p48 = c.state;
+																	switch (_p48.ctor) {
 																		case 'StatusStatePending':
 																			return 'octicon-primitive-dot';
 																		case 'StatusStateSuccess':
@@ -37344,8 +37493,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 										},
 										{ctor: '[]'}),
 									_1: function () {
-										var _p42 = c.state;
-										switch (_p42.ctor) {
+										var _p49 = c.state;
+										switch (_p49.ctor) {
 											case 'StatusStatePending':
 												return 'pending';
 											case 'StatusStateSuccess':
@@ -37378,8 +37527,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 							},
 							{ctor: '[]'}),
 						_1: function () {
-							var _p43 = _p44.mergeable;
-							switch (_p43.ctor) {
+							var _p50 = _p51.mergeable;
+							switch (_p50.ctor) {
 								case 'MergeableStateMergeable':
 									return 'success';
 								case 'MergeableStateConflicting':
@@ -37395,8 +37544,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 			}
 		}();
 		var reactionTypeEmoji = function (type_) {
-			var _p45 = type_;
-			switch (_p45.ctor) {
+			var _p52 = type_;
+			switch (_p52.ctor) {
 				case 'ReactionTypeThumbsUp':
 					return '👍';
 				case 'ReactionTypeThumbsDown':
@@ -37415,14 +37564,14 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 			_elm_lang$core$Basics$flip,
 			_elm_lang$core$List$map,
 			card.reactions,
-			function (_p46) {
-				var _p47 = _p46;
+			function (_p53) {
+				var _p54 = _p53;
 				return {
 					ctor: '_Tuple3',
 					_0: _elm_lang$html$Html$text(
-						reactionTypeEmoji(_p47.type_)),
+						reactionTypeEmoji(_p54.type_)),
 					_1: 'reaction',
-					_2: _p47.count
+					_2: _p54.count
 				};
 			});
 		var flairs = A2(
@@ -37430,9 +37579,9 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 			prSegments,
 			A2(
 				_elm_lang$core$List$filter,
-				function (_p48) {
-					var _p49 = _p48;
-					return _elm_lang$core$Native_Utils.cmp(_p49._2, 0) > 0;
+				function (_p55) {
+					var _p56 = _p55;
+					return _elm_lang$core$Native_Utils.cmp(_p56._2, 0) > 0;
 				},
 				{
 					ctor: '::',
@@ -37459,7 +37608,7 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 				endAngle: 2 * _elm_lang$core$Basics$pi,
 				padAngle: 3.0e-2,
 				sortingFn: F2(
-					function (_p51, _p50) {
+					function (_p58, _p57) {
 						return _elm_lang$core$Basics$EQ;
 					}),
 				valueFn: _elm_lang$core$Basics$always(1.0),
@@ -37473,14 +37622,14 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 				_elm_lang$core$List$length(flairs),
 				1));
 		var reactionSegment = F2(
-			function (i, _p52) {
-				var _p53 = _p52;
-				var _p54 = A2(
+			function (i, _p59) {
+				var _p60 = _p59;
+				var _p61 = A2(
 					_elm_lang$core$List$take,
 					1,
 					A2(_elm_lang$core$List$drop, i, segments));
-				if ((_p54.ctor === '::') && (_p54._1.ctor === '[]')) {
-					return _p54._0;
+				if ((_p61.ctor === '::') && (_p61._1.ctor === '[]')) {
+					return _p61._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
@@ -37488,7 +37637,7 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 							start: {line: 3073, column: 13},
 							end: {line: 3078, column: 45}
 						},
-						_p54)('impossible');
+						_p61)('impossible');
 				}
 			});
 		return A3(
@@ -37496,13 +37645,13 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 			_elm_lang$core$List$indexedMap,
 			flairs,
 			F2(
-				function (i, _p56) {
-					var _p57 = _p56;
-					var segmentArc = A2(reactionSegment, i, _p57);
+				function (i, _p63) {
+					var _p64 = _p63;
+					var segmentArc = A2(reactionSegment, i, _p64);
 					var arc = _elm_lang$core$Native_Utils.update(
 						segmentArc,
 						{
-							outerRadius: segmentArc.outerRadius + _elm_lang$core$Basics$toFloat(_p57._2)
+							outerRadius: segmentArc.outerRadius + _elm_lang$core$Basics$toFloat(_p64._2)
 						});
 					return A2(
 						_elm_lang$svg$Svg$g,
@@ -37522,7 +37671,7 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$svg$Svg_Attributes$class(
-											A2(_elm_lang$core$Basics_ops['++'], 'flair-arc ', _p57._1)),
+											A2(_elm_lang$core$Basics_ops['++'], 'flair-arc ', _p64._1)),
 										_1: {ctor: '[]'}
 									}
 								},
@@ -37547,7 +37696,7 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 									},
 									{
 										ctor: '::',
-										_0: _p57._0,
+										_0: _p64._0,
 										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
@@ -37574,7 +37723,7 @@ var _vito$cadet$Main$prCircle = F3(
 				endAngle: 2 * _elm_lang$core$Basics$pi,
 				padAngle: 0,
 				sortingFn: F2(
-					function (_p59, _p58) {
+					function (_p66, _p65) {
 						return _elm_lang$core$Basics$EQ;
 					}),
 				valueFn: _elm_lang$core$Basics$toFloat,
@@ -37585,12 +37734,12 @@ var _vito$cadet$Main$prCircle = F3(
 			},
 			A2(_elm_lang$core$List$map, _elm_lang$core$Tuple$second, flairs));
 		var segment = function (i) {
-			var _p60 = A2(
+			var _p67 = A2(
 				_elm_lang$core$List$take,
 				1,
 				A2(_elm_lang$core$List$drop, i, segments));
-			if ((_p60.ctor === '::') && (_p60._1.ctor === '[]')) {
-				return _p60._0;
+			if ((_p67.ctor === '::') && (_p67._1.ctor === '[]')) {
+				return _p67._0;
 			} else {
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
@@ -37598,7 +37747,7 @@ var _vito$cadet$Main$prCircle = F3(
 						start: {line: 2905, column: 13},
 						end: {line: 2910, column: 45}
 					},
-					_p60)('impossible');
+					_p67)('impossible');
 			}
 		};
 		return A2(
@@ -37609,8 +37758,8 @@ var _vito$cadet$Main$prCircle = F3(
 				_elm_lang$core$List$indexedMap,
 				flairs,
 				F2(
-					function (i, _p62) {
-						var _p63 = _p62;
+					function (i, _p69) {
+						var _p70 = _p69;
 						var arc = segment(i);
 						return A2(
 							_elm_lang$svg$Svg$path,
@@ -37621,7 +37770,7 @@ var _vito$cadet$Main$prCircle = F3(
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$svg$Svg_Attributes$class(
-										A2(_elm_lang$core$Basics_ops['++'], 'pr-arc ', _p63._0)),
+										A2(_elm_lang$core$Basics_ops['++'], 'pr-arc ', _p70._0)),
 									_1: {ctor: '[]'}
 								}
 							},
@@ -37638,7 +37787,7 @@ var _vito$cadet$Main$cardLabelArcs = F3(
 				endAngle: 2 * _elm_lang$core$Basics$pi,
 				padAngle: 0,
 				sortingFn: F2(
-					function (_p65, _p64) {
+					function (_p72, _p71) {
 						return _elm_lang$core$Basics$EQ;
 					}),
 				valueFn: _elm_lang$core$Basics$always(1.0),
@@ -37679,37 +37828,37 @@ var _vito$cadet$Main$cardLabelArcs = F3(
 var _vito$cadet$Main$linkPath = F2(
 	function (graph, edge) {
 		var target = function () {
-			var _p67 = A2(
+			var _p74 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p66) {
+				function (_p73) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p66));
+						}(_p73));
 				},
 				A2(_elm_community$graph$Graph$get, edge.to, graph));
-			if (_p67.ctor === 'Just') {
-				return {x: _p67._0.x, y: _p67._0.y};
+			if (_p74.ctor === 'Just') {
+				return {x: _p74._0.x, y: _p74._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
 		}();
 		var source = function () {
-			var _p69 = A2(
+			var _p76 = A2(
 				_elm_lang$core$Maybe$map,
-				function (_p68) {
+				function (_p75) {
 					return function (_) {
 						return _.label;
 					}(
 						function (_) {
 							return _.node;
-						}(_p68));
+						}(_p75));
 				},
 				A2(_elm_community$graph$Graph$get, edge.from, graph));
-			if (_p69.ctor === 'Just') {
-				return {x: _p69._0.x, y: _p69._0.y};
+			if (_p76.ctor === 'Just') {
+				return {x: _p76._0.x, y: _p76._0.y};
 			} else {
 				return {x: 0, y: 0};
 			}
@@ -37744,30 +37893,30 @@ var _vito$cadet$Main$linkPath = F2(
 			{ctor: '[]'});
 	});
 var _vito$cadet$Main$viewNodeLowerUpper = F3(
-	function (state, _p71, _p70) {
-		var _p72 = _p71;
-		var _p74 = _p72.node;
-		var _p73 = _p70;
-		var pos = {x: _p74.label.x, y: _p74.label.y};
+	function (state, _p78, _p77) {
+		var _p79 = _p78;
+		var _p81 = _p79.node;
+		var _p80 = _p77;
+		var pos = {x: _p81.label.x, y: _p81.label.y};
 		return {
 			ctor: '_Tuple2',
 			_0: {
 				ctor: '::',
-				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p74.label.value.viewLower, pos, state),
-				_1: _p73._0
+				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p81.label.value.viewLower, pos, state),
+				_1: _p80._0
 			},
 			_1: {
 				ctor: '::',
-				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p74.label.value.viewUpper, pos, state),
-				_1: _p73._1
+				_0: A3(_elm_lang$svg$Svg_Lazy$lazy2, _p81.label.value.viewUpper, pos, state),
+				_1: _p80._1
 			}
 		};
 	});
 var _vito$cadet$Main$viewGraph = F2(
-	function (state, _p75) {
-		var _p76 = _p75;
-		var _p86 = _p76.graph;
-		var _p77 = A3(
+	function (state, _p82) {
+		var _p83 = _p82;
+		var _p93 = _p83.graph;
+		var _p84 = A3(
 			_elm_community$graph$Graph$fold,
 			_vito$cadet$Main$viewNodeLowerUpper(state),
 			{
@@ -37775,13 +37924,13 @@ var _vito$cadet$Main$viewGraph = F2(
 				_0: {ctor: '[]'},
 				_1: {ctor: '[]'}
 			},
-			_p86);
-		var flairs = _p77._0;
-		var nodes = _p77._1;
+			_p93);
+		var flairs = _p84._0;
+		var nodes = _p84._1;
 		var links = A2(
 			_elm_lang$core$List$map,
-			A2(_elm_lang$svg$Svg_Lazy$lazy2, _vito$cadet$Main$linkPath, _p86),
-			_elm_community$graph$Graph$edges(_p86));
+			A2(_elm_lang$svg$Svg_Lazy$lazy2, _vito$cadet$Main$linkPath, _p93),
+			_elm_community$graph$Graph$edges(_p93));
 		var padding = 10;
 		var nodeContexts = A3(
 			_elm_community$graph$Graph$fold,
@@ -37790,32 +37939,32 @@ var _vito$cadet$Main$viewGraph = F2(
 					return {ctor: '::', _0: x, _1: y};
 				}),
 			{ctor: '[]'},
-			_p86);
+			_p93);
 		var bounds = A2(_elm_lang$core$List$map, _vito$cadet$Main$nodeBounds, nodeContexts);
 		var minX = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p78, acc) {
-					var _p79 = _p78;
-					return A2(_elm_lang$core$Basics$min, _p79.x1, acc);
+				function (_p85, acc) {
+					var _p86 = _p85;
+					return A2(_elm_lang$core$Basics$min, _p86.x1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var minY = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p80, acc) {
-					var _p81 = _p80;
-					return A2(_elm_lang$core$Basics$min, _p81.y1, acc);
+				function (_p87, acc) {
+					var _p88 = _p87;
+					return A2(_elm_lang$core$Basics$min, _p88.y1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var maxX = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p82, acc) {
-					var _p83 = _p82;
-					return A2(_elm_lang$core$Basics$max, _p83.x2, acc);
+				function (_p89, acc) {
+					var _p90 = _p89;
+					return A2(_elm_lang$core$Basics$max, _p90.x2, acc);
 				}),
 			0,
 			bounds) + padding;
@@ -37823,9 +37972,9 @@ var _vito$cadet$Main$viewGraph = F2(
 		var maxY = A3(
 			_elm_lang$core$List$foldl,
 			F2(
-				function (_p84, acc) {
-					var _p85 = _p84;
-					return A2(_elm_lang$core$Basics$max, _p85.y2, acc);
+				function (_p91, acc) {
+					var _p92 = _p91;
+					return A2(_elm_lang$core$Basics$max, _p92.y2, acc);
 				}),
 			0,
 			bounds) + padding;
@@ -37964,7 +38113,7 @@ var _vito$cadet$Main$graphUserActivityCompare = F4(
 											},
 											A2(
 												_elm_lang$core$List$filter,
-												function (_p87) {
+												function (_p94) {
 													return A2(
 														F2(
 															function (x, y) {
@@ -37978,7 +38127,7 @@ var _vito$cadet$Main$graphUserActivityCompare = F4(
 															},
 															function (_) {
 																return _.user;
-															}(_p87)));
+															}(_p94)));
 												},
 												_elm_lang$core$List$reverse(
 													A2(
@@ -37995,12 +38144,12 @@ var _vito$cadet$Main$graphUserActivityCompare = F4(
 	});
 var _vito$cadet$Main$graphSizeCompare = F2(
 	function (a, b) {
-		var _p88 = A2(
+		var _p95 = A2(
 			_elm_lang$core$Basics$compare,
 			_elm_community$graph$Graph$size(a.graph),
 			_elm_community$graph$Graph$size(b.graph));
-		if (_p88.ctor === 'EQ') {
-			var graphScore = function (_p89) {
+		if (_p95.ctor === 'EQ') {
+			var graphScore = function (_p96) {
 				return A3(
 					_elm_lang$core$List$foldl,
 					F2(
@@ -38010,7 +38159,7 @@ var _vito$cadet$Main$graphSizeCompare = F2(
 					0,
 					A2(
 						_elm_lang$core$List$map,
-						function (_p90) {
+						function (_p97) {
 							return function (_) {
 								return _.score;
 							}(
@@ -38019,30 +38168,30 @@ var _vito$cadet$Main$graphSizeCompare = F2(
 								}(
 									function (_) {
 										return _.label;
-									}(_p90)));
+									}(_p97)));
 						},
-						_elm_community$graph$Graph$nodes(_p89)));
+						_elm_community$graph$Graph$nodes(_p96)));
 			};
 			return A2(
 				_elm_lang$core$Basics$compare,
 				graphScore(a.graph),
 				graphScore(b.graph));
 		} else {
-			return _p88;
+			return _p95;
 		}
 	});
 var _vito$cadet$Main$satisfiesFilter = F3(
 	function (model, filter, card) {
-		var _p91 = filter;
-		switch (_p91.ctor) {
+		var _p98 = filter;
+		switch (_p98.ctor) {
 			case 'ExcludeAllFilter':
 				return false;
 			case 'InProjectFilter':
-				return A2(_vito$cadet$Main$isInProject, _p91._0, card);
+				return A2(_vito$cadet$Main$isInProject, _p98._0, card);
 			case 'HasLabelFilter':
-				return A4(_vito$cadet$Main$hasLabelAndColor, model, _p91._0, _p91._1, card);
+				return A4(_vito$cadet$Main$hasLabelAndColor, model, _p98._0, _p98._1, card);
 			case 'InvolvesUserFilter':
-				return A3(_vito$cadet$Main$involvesUser, model, _p91._0, card);
+				return A3(_vito$cadet$Main$involvesUser, model, _p98._0, card);
 			case 'PullRequestsFilter':
 				return _vito$cadet$Main$isPR(card);
 			default:
@@ -38068,14 +38217,14 @@ var _vito$cadet$Main$baseGraphState = function (model) {
 };
 var _vito$cadet$Main$onlyAcceptableCards = function (model) {
 	return _elm_lang$core$List$filter(
-		function (_p92) {
-			var _p93 = _p92;
-			var _p94 = _p93.contentId;
-			if (_p94.ctor === 'Just') {
-				var _p95 = A2(_elm_lang$core$Dict$get, _p94._0, model.allCards);
-				if (_p95.ctor === 'Just') {
-					var _p96 = _p95._0;
-					return _vito$cadet$Main$isOpen(_p96) || _vito$cadet$Main$needsAcceptance(_p96);
+		function (_p99) {
+			var _p100 = _p99;
+			var _p101 = _p100.contentId;
+			if (_p101.ctor === 'Just') {
+				var _p102 = A2(_elm_lang$core$Dict$get, _p101._0, model.allCards);
+				if (_p102.ctor === 'Just') {
+					var _p103 = _p102._0;
+					return _vito$cadet$Main$isOpen(_p103) || _vito$cadet$Main$needsAcceptance(_p103);
 				} else {
 					return false;
 				}
@@ -38116,9 +38265,9 @@ var _vito$cadet$Main$includesLabel = F3(
 		return A2(
 			_elm_lang$core$List$any,
 			function (id) {
-				var _p97 = A2(_elm_lang$core$Dict$get, id, model.allLabels);
-				if (_p97.ctor === 'Just') {
-					return A2(_vito$cadet$Main$matchesLabel, label, _p97._0);
+				var _p104 = A2(_elm_lang$core$Dict$get, id, model.allLabels);
+				if (_p104.ctor === 'Just') {
+					return A2(_vito$cadet$Main$matchesLabel, label, _p104._0);
 				} else {
 					return false;
 				}
@@ -38131,38 +38280,38 @@ var _vito$cadet$Main$hasFilter = F2(
 	});
 var _vito$cadet$Main$computeGraphState = function (model) {
 	var newState = {currentDate: model.currentDate, selectedCards: model.selectedCards, anticipatedCards: model.anticipatedCards, highlightedNode: model.highlightedNode, me: model.me, dataIndex: model.dataIndex, cardEvents: model.data.actors};
-	var affectedByState = function (_p98) {
-		var _p99 = _p98;
+	var affectedByState = function (_p105) {
+		var _p106 = _p105;
 		return A3(
 			_elm_community$graph$Graph$fold,
 			F2(
-				function (_p100, affected) {
-					var _p101 = _p100;
+				function (_p107, affected) {
+					var _p108 = _p107;
 					if (affected) {
 						return true;
 					} else {
-						var id = _p101.node.label.value.card.id;
+						var id = _p108.node.label.value.card.id;
 						return A2(_rnons$ordered_containers$OrderedSet$member, id, newState.selectedCards) || (A2(_elm_lang$core$Set$member, id, newState.anticipatedCards) || _elm_lang$core$Native_Utils.eq(
 							newState.highlightedNode,
 							_elm_lang$core$Maybe$Just(id)));
 					}
 				}),
 			false,
-			_p99.graph);
+			_p106.graph);
 	};
 	return _elm_lang$core$Native_Utils.update(
 		model,
 		{
 			cardGraphs: A2(
 				_elm_lang$core$List$map,
-				function (_p102) {
-					var _p103 = _p102;
-					var _p105 = _p103._0;
-					var _p104 = _p103._1;
-					return affectedByState(_p104) ? {ctor: '_Tuple2', _0: newState, _1: _p104} : (A2(_vito$cadet$Main$isBaseGraphState, model, _p105) ? {ctor: '_Tuple2', _0: _p105, _1: _p104} : {
+				function (_p109) {
+					var _p110 = _p109;
+					var _p112 = _p110._0;
+					var _p111 = _p110._1;
+					return affectedByState(_p111) ? {ctor: '_Tuple2', _0: newState, _1: _p111} : (A2(_vito$cadet$Main$isBaseGraphState, model, _p112) ? {ctor: '_Tuple2', _0: _p112, _1: _p111} : {
 						ctor: '_Tuple2',
 						_0: _vito$cadet$Main$baseGraphState(model),
-						_1: _p104
+						_1: _p111
 					});
 				},
 				model.cardGraphs)
@@ -38170,14 +38319,14 @@ var _vito$cadet$Main$computeGraphState = function (model) {
 };
 var _vito$cadet$Main$renderHash = function (model) {
 	var sort = function () {
-		var _p106 = model.graphSort;
-		switch (_p106.ctor) {
+		var _p113 = model.graphSort;
+		switch (_p113.ctor) {
 			case 'ImpactSort':
 				return {ctor: '[]'};
 			case 'UserActivitySort':
 				return {
 					ctor: '::',
-					_0: A2(_elm_lang$core$Basics_ops['++'], 'sort-user-activity-', _p106._0),
+					_0: A2(_elm_lang$core$Basics_ops['++'], 'sort-user-activity-', _p113._0),
 					_1: {ctor: '[]'}
 				};
 			default:
@@ -38191,22 +38340,22 @@ var _vito$cadet$Main$renderHash = function (model) {
 	var filters = A2(
 		_elm_lang$core$List$map,
 		function (f) {
-			var _p107 = f;
-			switch (_p107.ctor) {
+			var _p114 = f;
+			switch (_p114.ctor) {
 				case 'ExcludeAllFilter':
 					return 'filter-exclude-all';
 				case 'InProjectFilter':
-					return A2(_elm_lang$core$Basics_ops['++'], 'filter-in-project-', _p107._0);
+					return A2(_elm_lang$core$Basics_ops['++'], 'filter-in-project-', _p114._0);
 				case 'InvolvesUserFilter':
-					return A2(_elm_lang$core$Basics_ops['++'], 'filter-involves-', _p107._0);
+					return A2(_elm_lang$core$Basics_ops['++'], 'filter-involves-', _p114._0);
 				case 'HasLabelFilter':
 					return A2(
 						_elm_lang$core$Basics_ops['++'],
 						'filter-label-',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_p107._0,
-							A2(_elm_lang$core$Basics_ops['++'], '-', _p107._1)));
+							_p114._0,
+							A2(_elm_lang$core$Basics_ops['++'], '-', _p114._1)));
 				case 'PullRequestsFilter':
 					return 'filter-pull-requests';
 				default:
@@ -38233,8 +38382,8 @@ var _vito$cadet$Main$delta2url = F2(
 		var withSelection = _rgrempel$elm_route_url$RouteUrl_Builder$replaceHash(
 			_vito$cadet$Main$renderHash(b));
 		var withPagePath = function () {
-			var _p108 = b.page;
-			switch (_p108.ctor) {
+			var _p115 = b.page;
+			switch (_p115.ctor) {
 				case 'AllProjectsPage':
 					return _rgrempel$elm_route_url$RouteUrl_Builder$replacePath(
 						{ctor: '[]'});
@@ -38252,7 +38401,7 @@ var _vito$cadet$Main$delta2url = F2(
 							_0: 'projects',
 							_1: {
 								ctor: '::',
-								_0: _p108._0,
+								_0: _p115._0,
 								_1: {ctor: '[]'}
 							}
 						});
@@ -38318,18 +38467,18 @@ var _vito$cadet$Main$detectColumn = {
 			return _elm_lang$core$Native_Utils.eq(x, y);
 		})('Done')
 };
-var _vito$cadet$Main$cardProcessState = function (_p109) {
-	var _p110 = _p109;
-	var _p117 = _p110.labels;
-	var _p116 = _p110.cards;
+var _vito$cadet$Main$cardProcessState = function (_p116) {
+	var _p117 = _p116;
+	var _p124 = _p117.labels;
+	var _p123 = _p117.cards;
 	return {
-		inIceboxColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.icebox, _p116),
-		inInFlightColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.inFlight, _p116),
-		inBacklogColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.backlog, _p116),
-		inDoneColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.done, _p116),
+		inIceboxColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.icebox, _p123),
+		inInFlightColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.inFlight, _p123),
+		inBacklogColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.backlog, _p123),
+		inDoneColumn: A2(_vito$cadet$Main$inColumn, _vito$cadet$Main$detectColumn.done, _p123),
 		hasEnhancementLabel: A2(
 			_elm_lang$core$List$any,
-			function (_p111) {
+			function (_p118) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -38338,12 +38487,12 @@ var _vito$cadet$Main$cardProcessState = function (_p109) {
 					'enhancement',
 					function (_) {
 						return _.name;
-					}(_p111));
+					}(_p118));
 			},
-			_p117),
+			_p124),
 		hasBugLabel: A2(
 			_elm_lang$core$List$any,
-			function (_p112) {
+			function (_p119) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -38352,12 +38501,12 @@ var _vito$cadet$Main$cardProcessState = function (_p109) {
 					'bug',
 					function (_) {
 						return _.name;
-					}(_p112));
+					}(_p119));
 			},
-			_p117),
+			_p124),
 		hasAcceptedLabel: A2(
 			_elm_lang$core$List$any,
-			function (_p113) {
+			function (_p120) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -38366,12 +38515,12 @@ var _vito$cadet$Main$cardProcessState = function (_p109) {
 					'accepted',
 					function (_) {
 						return _.name;
-					}(_p113));
+					}(_p120));
 			},
-			_p117),
+			_p124),
 		hasRejectedLabel: A2(
 			_elm_lang$core$List$any,
-			function (_p114) {
+			function (_p121) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -38380,12 +38529,12 @@ var _vito$cadet$Main$cardProcessState = function (_p109) {
 					'rejected',
 					function (_) {
 						return _.name;
-					}(_p114));
+					}(_p121));
 			},
-			_p117),
+			_p124),
 		hasWontfixLabel: A2(
 			_elm_lang$core$List$any,
-			function (_p115) {
+			function (_p122) {
 				return A2(
 					F2(
 						function (x, y) {
@@ -38394,20 +38543,20 @@ var _vito$cadet$Main$cardProcessState = function (_p109) {
 					'wontfix',
 					function (_) {
 						return _.name;
-					}(_p115));
+					}(_p122));
 			},
-			_p117)
+			_p124)
 	};
 };
 var _vito$cadet$Main$selectStatefulProject = function (project) {
 	var findColumns = function (match) {
 		return A2(
 			_elm_lang$core$List$filter,
-			function (_p118) {
+			function (_p125) {
 				return match(
 					function (_) {
 						return _.name;
-					}(_p118));
+					}(_p125));
 			},
 			project.columns);
 	};
@@ -38415,10 +38564,10 @@ var _vito$cadet$Main$selectStatefulProject = function (project) {
 	var backlogs = findColumns(_vito$cadet$Main$detectColumn.backlog);
 	var inFlights = findColumns(_vito$cadet$Main$detectColumn.inFlight);
 	var dones = findColumns(_vito$cadet$Main$detectColumn.done);
-	var _p119 = {ctor: '_Tuple4', _0: icebox, _1: backlogs, _2: inFlights, _3: dones};
-	if ((((((((_p119.ctor === '_Tuple4') && (_p119._0.ctor === '::')) && (_p119._0._1.ctor === '[]')) && (_p119._1.ctor === '::')) && (_p119._2.ctor === '::')) && (_p119._2._1.ctor === '[]')) && (_p119._3.ctor === '::')) && (_p119._3._1.ctor === '[]')) {
+	var _p126 = {ctor: '_Tuple4', _0: icebox, _1: backlogs, _2: inFlights, _3: dones};
+	if ((((((((_p126.ctor === '_Tuple4') && (_p126._0.ctor === '::')) && (_p126._0._1.ctor === '[]')) && (_p126._1.ctor === '::')) && (_p126._2.ctor === '::')) && (_p126._2._1.ctor === '[]')) && (_p126._3.ctor === '::')) && (_p126._3._1.ctor === '[]')) {
 		return _elm_lang$core$Maybe$Just(
-			{project: project, icebox: _p119._0._0, backlogs: _p119._1, inFlight: _p119._2._0, done: _p119._3._0});
+			{project: project, icebox: _p126._0._0, backlogs: _p126._1, inFlight: _p126._2._0, done: _p126._3._0});
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
@@ -38673,34 +38822,34 @@ var _vito$cadet$Main$ImpactSort = {ctor: 'ImpactSort'};
 var _vito$cadet$Main$PullRequestState = function (a) {
 	return {ctor: 'PullRequestState', _0: a};
 };
-var _vito$cadet$Main$prCard = function (_p120) {
-	var _p121 = _p120;
-	var _p124 = _p121;
-	var _p123 = _p121.labels;
-	var _p122 = _p121.cards;
+var _vito$cadet$Main$prCard = function (_p127) {
+	var _p128 = _p127;
+	var _p131 = _p128;
+	var _p130 = _p128.labels;
+	var _p129 = _p128.cards;
 	return {
-		id: _p121.id,
-		content: _vito$cadet$GitHubGraph$PullRequestCardContent(_p124),
-		url: _p121.url,
-		repo: _p121.repo,
-		number: _p121.number,
-		title: _p121.title,
-		updatedAt: _p121.updatedAt,
-		author: _p121.author,
+		id: _p128.id,
+		content: _vito$cadet$GitHubGraph$PullRequestCardContent(_p131),
+		url: _p128.url,
+		repo: _p128.repo,
+		number: _p128.number,
+		title: _p128.title,
+		updatedAt: _p128.updatedAt,
+		author: _p128.author,
 		labels: A2(
 			_elm_lang$core$List$map,
 			function (_) {
 				return _.id;
 			},
-			_p123),
-		cards: _p122,
-		commentCount: _p121.commentCount,
-		reactions: _p121.reactions,
-		score: _vito$cadet$GitHubGraph$pullRequestScore(_p124),
-		state: _vito$cadet$Main$PullRequestState(_p121.state),
-		milestone: _p121.milestone,
+			_p130),
+		cards: _p129,
+		commentCount: _p128.commentCount,
+		reactions: _p128.reactions,
+		score: _vito$cadet$GitHubGraph$pullRequestScore(_p131),
+		state: _vito$cadet$Main$PullRequestState(_p128.state),
+		milestone: _p128.milestone,
 		processState: _vito$cadet$Main$cardProcessState(
-			{cards: _p122, labels: _p123})
+			{cards: _p129, labels: _p130})
 	};
 };
 var _vito$cadet$Main$isMerged = function (card) {
@@ -38714,7 +38863,7 @@ var _vito$cadet$Main$isAcceptedPR = function (card) {
 var _vito$cadet$Main$computeDataView = function (origModel) {
 	var dataView = origModel.dataView;
 	var add = function (x) {
-		return function (_p125) {
+		return function (_p132) {
 			return _elm_lang$core$Maybe$Just(
 				A2(
 					_elm_lang$core$Maybe$withDefault,
@@ -38729,13 +38878,13 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 							function (x, y) {
 								return {ctor: '::', _0: x, _1: y};
 							})(x),
-						_p125)));
+						_p132)));
 		};
 	};
 	var groupRepoLabels = A2(
 		_elm_lang$core$Dict$foldl,
 		F3(
-			function (_p126, repo, cbn) {
+			function (_p133, repo, cbn) {
 				return A3(
 					_elm_lang$core$List$foldl,
 					function (label) {
@@ -38761,13 +38910,13 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 					reposByLabel: groupRepoLabels(origModel.data.repos)
 				})
 		}) : origModel;
-	var _p127 = model.page;
-	switch (_p127.ctor) {
+	var _p134 = model.page;
+	switch (_p134.ctor) {
 		case 'MilestonesPage':
 			var nextMilestoneCards = A3(
 				_elm_lang$core$Dict$foldl,
 				F3(
-					function (_p128, card, acc) {
+					function (_p135, card, acc) {
 						return (_elm_lang$core$Native_Utils.eq(card.milestone, _elm_lang$core$Maybe$Nothing) && (_vito$cadet$Main$isAcceptedPR(card) || _vito$cadet$Main$isAccepted(card))) ? {ctor: '::', _0: card, _1: acc} : acc;
 					}),
 				{ctor: '[]'},
@@ -38775,12 +38924,12 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 			var cardsByMilestone = A3(
 				_elm_lang$core$Dict$foldl,
 				F3(
-					function (_p129, card, acc) {
-						var _p130 = card.milestone;
-						if (_p130.ctor === 'Just') {
+					function (_p136, card, acc) {
+						var _p137 = card.milestone;
+						if (_p137.ctor === 'Just') {
 							return A3(
 								_elm_lang$core$Dict$update,
-								_p130._0.title,
+								_p137._0.title,
 								add(card),
 								acc);
 						} else {
@@ -38793,7 +38942,7 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 				A3(
 					_elm_lang$core$Dict$foldl,
 					F2(
-						function (_p131, repo) {
+						function (_p138, repo) {
 							return _elm_lang$core$Set$union(
 								_elm_lang$core$Set$fromList(
 									A2(
@@ -38803,7 +38952,7 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 										},
 										A2(
 											_elm_lang$core$List$filter,
-											function (_p132) {
+											function (_p139) {
 												return A2(
 													F2(
 														function (x, y) {
@@ -38812,7 +38961,7 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 													_vito$cadet$GitHubGraph$MilestoneStateOpen,
 													function (_) {
 														return _.state;
-													}(_p132));
+													}(_p139));
 											},
 											repo.milestones))));
 						}),
@@ -38829,7 +38978,7 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 			var prsByRepo = A3(
 				_elm_lang$core$Dict$foldl,
 				F3(
-					function (_p133, card, acc) {
+					function (_p140, card, acc) {
 						return (_vito$cadet$Main$isOpen(card) && _vito$cadet$Main$isPR(card)) ? A3(
 							_elm_lang$core$Dict$update,
 							card.repo.id,
@@ -38882,34 +39031,34 @@ var _vito$cadet$Main$computeDataView = function (origModel) {
 var _vito$cadet$Main$IssueState = function (a) {
 	return {ctor: 'IssueState', _0: a};
 };
-var _vito$cadet$Main$issueCard = function (_p134) {
-	var _p135 = _p134;
-	var _p138 = _p135.labels;
-	var _p137 = _p135;
-	var _p136 = _p135.cards;
+var _vito$cadet$Main$issueCard = function (_p141) {
+	var _p142 = _p141;
+	var _p145 = _p142.labels;
+	var _p144 = _p142;
+	var _p143 = _p142.cards;
 	return {
-		id: _p135.id,
-		content: _vito$cadet$GitHubGraph$IssueCardContent(_p137),
-		url: _p135.url,
-		repo: _p135.repo,
-		number: _p135.number,
-		title: _p135.title,
-		updatedAt: _p135.updatedAt,
-		author: _p135.author,
+		id: _p142.id,
+		content: _vito$cadet$GitHubGraph$IssueCardContent(_p144),
+		url: _p142.url,
+		repo: _p142.repo,
+		number: _p142.number,
+		title: _p142.title,
+		updatedAt: _p142.updatedAt,
+		author: _p142.author,
 		labels: A2(
 			_elm_lang$core$List$map,
 			function (_) {
 				return _.id;
 			},
-			_p138),
-		cards: _p136,
-		commentCount: _p135.commentCount,
-		reactions: _p135.reactions,
-		score: _vito$cadet$GitHubGraph$issueScore(_p137),
-		state: _vito$cadet$Main$IssueState(_p135.state),
-		milestone: _p135.milestone,
+			_p145),
+		cards: _p143,
+		commentCount: _p142.commentCount,
+		reactions: _p142.reactions,
+		score: _vito$cadet$GitHubGraph$issueScore(_p144),
+		state: _vito$cadet$Main$IssueState(_p142.state),
+		milestone: _p142.milestone,
 		processState: _vito$cadet$Main$cardProcessState(
-			{cards: _p136, labels: _p138})
+			{cards: _p143, labels: _p145})
 	};
 };
 var _vito$cadet$Main$NewContentCardSource = function (a) {
@@ -38949,11 +39098,11 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 		_elm_lang$core$Basics$flip,
 		_elm_lang$core$List$filterMap,
 		_elm_lang$core$Dict$toList(model.dataView.reposByLabel),
-		function (_p139) {
-			var _p140 = _p139;
-			var _p142 = _p140._0._0;
-			var _p141 = _p140._0._1;
-			return A2(_elm_lang$core$String$contains, model.labelSearch, _p142) ? _elm_lang$core$Maybe$Just(
+		function (_p146) {
+			var _p147 = _p146;
+			var _p149 = _p147._0._0;
+			var _p148 = _p147._0._1;
+			return A2(_elm_lang$core$String$contains, model.labelSearch, _p149) ? _elm_lang$core$Maybe$Just(
 				A2(
 					_elm_lang$html$Html$div,
 					{
@@ -38970,12 +39119,12 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 								_0: _elm_lang$html$Html_Attributes$class('label'),
 								_1: {
 									ctor: '::',
-									_0: A2(_vito$cadet$Main$labelColorStyle, model, _p141),
+									_0: A2(_vito$cadet$Main$labelColorStyle, model, _p148),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Events$onClick(
 											_vito$cadet$Main$AddFilter(
-												A2(_vito$cadet$Main$HasLabelFilter, _p142, _p141))),
+												A2(_vito$cadet$Main$HasLabelFilter, _p149, _p148))),
 										_1: {ctor: '[]'}
 									}
 								}
@@ -38992,7 +39141,7 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 									{ctor: '[]'}),
 								_1: {
 									ctor: '::',
-									_0: _elm_lang$html$Html$text(_p142),
+									_0: _elm_lang$html$Html$text(_p149),
 									_1: {ctor: '[]'}
 								}
 							}),
@@ -39002,8 +39151,8 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 	var labelFilters = A2(
 		_elm_lang$core$List$filterMap,
 		function (filter) {
-			var _p143 = filter;
-			if (_p143.ctor === 'HasLabelFilter') {
+			var _p150 = filter;
+			if (_p150.ctor === 'HasLabelFilter') {
 				return _elm_lang$core$Maybe$Just(
 					A2(
 						_elm_lang$html$Html$div,
@@ -39012,7 +39161,7 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 							_0: _elm_lang$html$Html_Attributes$class('control-setting'),
 							_1: {
 								ctor: '::',
-								_0: A2(_vito$cadet$Main$labelColorStyle, model, _p143._1),
+								_0: A2(_vito$cadet$Main$labelColorStyle, model, _p150._1),
 								_1: {
 									ctor: '::',
 									_0: _elm_lang$html$Html_Events$onClick(
@@ -39033,7 +39182,7 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 								{ctor: '[]'}),
 							_1: {
 								ctor: '::',
-								_0: _elm_lang$html$Html$text(_p143._0),
+								_0: _elm_lang$html$Html$text(_p150._0),
 								_1: {ctor: '[]'}
 							}
 						}));
@@ -39169,9 +39318,9 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 								_1: {
 									ctor: '::',
 									_0: function () {
-										var _p144 = model.me;
-										if (_p144.ctor === 'Just') {
-											var filter = _vito$cadet$Main$InvolvesUserFilter(_p144._0.user.login);
+										var _p151 = model.me;
+										if (_p151.ctor === 'Just') {
+											var filter = _vito$cadet$Main$InvolvesUserFilter(_p151._0.user.login);
 											return A2(
 												_elm_lang$html$Html$div,
 												{
@@ -39431,9 +39580,9 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 								_1: {
 									ctor: '::',
 									_0: function () {
-										var _p145 = model.me;
-										if (_p145.ctor === 'Just') {
-											var _p146 = _p145._0.user;
+										var _p152 = model.me;
+										if (_p152.ctor === 'Just') {
+											var _p153 = _p152._0.user;
 											return A2(
 												_elm_lang$html$Html$div,
 												{
@@ -39449,7 +39598,7 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 																	_0: 'active',
 																	_1: _elm_lang$core$Native_Utils.eq(
 																		model.graphSort,
-																		_vito$cadet$Main$UserActivitySort(_p146.login))
+																		_vito$cadet$Main$UserActivitySort(_p153.login))
 																},
 																_1: {ctor: '[]'}
 															}
@@ -39458,7 +39607,7 @@ var _vito$cadet$Main$viewGraphControls = function (model) {
 														ctor: '::',
 														_0: _elm_lang$html$Html_Events$onClick(
 															_vito$cadet$Main$SetGraphSort(
-																_vito$cadet$Main$UserActivitySort(_p146.login))),
+																_vito$cadet$Main$UserActivitySort(_p153.login))),
 														_1: {ctor: '[]'}
 													}
 												},
@@ -39514,26 +39663,26 @@ var _vito$cadet$Main$PullRequestRefreshed = function (a) {
 };
 var _vito$cadet$Main$addPullRequestLabels = F3(
 	function (model, pr, labels) {
-		var _p147 = model.me;
-		if (_p147.ctor === 'Just') {
+		var _p154 = model.me;
+		if (_p154.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$DataChanged(
 					A2(_vito$cadet$Backend$refreshPR, pr.id, _vito$cadet$Main$PullRequestRefreshed)),
-				A3(_vito$cadet$GitHubGraph$addPullRequestLabels, _p147._0.token, pr, labels));
+				A3(_vito$cadet$GitHubGraph$addPullRequestLabels, _p154._0.token, pr, labels));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$removePullRequestLabel = F3(
 	function (model, pr, label) {
-		var _p148 = model.me;
-		if (_p148.ctor === 'Just') {
+		var _p155 = model.me;
+		if (_p155.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$DataChanged(
 					A2(_vito$cadet$Backend$refreshPR, pr.id, _vito$cadet$Main$PullRequestRefreshed)),
-				A3(_vito$cadet$GitHubGraph$removePullRequestLabel, _p148._0.token, pr, label));
+				A3(_vito$cadet$GitHubGraph$removePullRequestLabel, _p155._0.token, pr, label));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39546,24 +39695,24 @@ var _vito$cadet$Main$IssueRefreshed = function (a) {
 };
 var _vito$cadet$Main$acceptIssue = F2(
 	function (model, issue) {
-		var _p149 = model.me;
-		if (_p149.ctor === 'Just') {
-			var _p152 = _p149._0.token;
+		var _p156 = model.me;
+		if (_p156.ctor === 'Just') {
+			var _p159 = _p156._0.token;
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$DataChanged(
 					A2(_vito$cadet$Backend$refreshIssue, issue.id, _vito$cadet$Main$IssueRefreshed)),
 				A2(
 					_elm_lang$core$Task$andThen,
-					function (_p150) {
-						return A2(_vito$cadet$GitHubGraph$closeIssue, _p152, issue);
+					function (_p157) {
+						return A2(_vito$cadet$GitHubGraph$closeIssue, _p159, issue);
 					},
 					A2(
 						_elm_lang$core$Task$andThen,
-						function (_p151) {
+						function (_p158) {
 							return A3(
 								_vito$cadet$GitHubGraph$addIssueLabels,
-								_p152,
+								_p159,
 								issue,
 								{
 									ctor: '::',
@@ -39576,33 +39725,33 @@ var _vito$cadet$Main$acceptIssue = F2(
 							_elm_lang$core$Basics$always(
 								_elm_lang$core$Task$succeed(
 									{ctor: '_Tuple0'})),
-							A3(_vito$cadet$GitHubGraph$removeIssueLabel, _p152, issue, 'rejected')))));
+							A3(_vito$cadet$GitHubGraph$removeIssueLabel, _p159, issue, 'rejected')))));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$addIssueLabels = F3(
 	function (model, issue, labels) {
-		var _p153 = model.me;
-		if (_p153.ctor === 'Just') {
+		var _p160 = model.me;
+		if (_p160.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$DataChanged(
 					A2(_vito$cadet$Backend$refreshIssue, issue.id, _vito$cadet$Main$IssueRefreshed)),
-				A3(_vito$cadet$GitHubGraph$addIssueLabels, _p153._0.token, issue, labels));
+				A3(_vito$cadet$GitHubGraph$addIssueLabels, _p160._0.token, issue, labels));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$removeIssueLabel = F3(
 	function (model, issue, label) {
-		var _p154 = model.me;
-		if (_p154.ctor === 'Just') {
+		var _p161 = model.me;
+		if (_p161.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$DataChanged(
 					A2(_vito$cadet$Backend$refreshIssue, issue.id, _vito$cadet$Main$IssueRefreshed)),
-				A3(_vito$cadet$GitHubGraph$removeIssueLabel, _p154._0.token, issue, label));
+				A3(_vito$cadet$GitHubGraph$removeIssueLabel, _p161._0.token, issue, label));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39616,12 +39765,12 @@ var _vito$cadet$Main$PullRequestMilestoned = F2(
 	});
 var _vito$cadet$Main$setPRMilestone = F3(
 	function (model, pr, mmilestone) {
-		var _p155 = model.me;
-		if (_p155.ctor === 'Just') {
+		var _p162 = model.me;
+		if (_p162.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$PullRequestMilestoned(pr),
-				A3(_vito$cadet$GitHubGraph$setPullRequestMilestone, _p155._0.token, pr, mmilestone));
+				A3(_vito$cadet$GitHubGraph$setPullRequestMilestone, _p162._0.token, pr, mmilestone));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39632,12 +39781,12 @@ var _vito$cadet$Main$IssueMilestoned = F2(
 	});
 var _vito$cadet$Main$setIssueMilestone = F3(
 	function (model, issue, mmilestone) {
-		var _p156 = model.me;
-		if (_p156.ctor === 'Just') {
+		var _p163 = model.me;
+		if (_p163.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$IssueMilestoned(issue),
-				A3(_vito$cadet$GitHubGraph$setIssueMilestone, _p156._0.token, issue, mmilestone));
+				A3(_vito$cadet$GitHubGraph$setIssueMilestone, _p163._0.token, issue, mmilestone));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39700,36 +39849,36 @@ var _vito$cadet$Main$MilestoneChanged = F2(
 	});
 var _vito$cadet$Main$createMilestone = F3(
 	function (model, repo, title) {
-		var _p157 = model.me;
-		if (_p157.ctor === 'Just') {
+		var _p164 = model.me;
+		if (_p164.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$MilestoneChanged(repo),
-				A3(_vito$cadet$GitHubGraph$createRepoMilestone, _p157._0.token, repo, title));
+				A3(_vito$cadet$GitHubGraph$createRepoMilestone, _p164._0.token, repo, title));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$closeMilestone = F3(
 	function (model, repo, milestone) {
-		var _p158 = model.me;
-		if (_p158.ctor === 'Just') {
+		var _p165 = model.me;
+		if (_p165.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$MilestoneChanged(repo),
-				A3(_vito$cadet$GitHubGraph$closeRepoMilestone, _p158._0.token, repo, milestone));
+				A3(_vito$cadet$GitHubGraph$closeRepoMilestone, _p165._0.token, repo, milestone));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$deleteMilestone = F3(
 	function (model, repo, milestone) {
-		var _p159 = model.me;
-		if (_p159.ctor === 'Just') {
+		var _p166 = model.me;
+		if (_p166.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$MilestoneChanged(repo),
-				A3(_vito$cadet$GitHubGraph$deleteRepoMilestone, _p159._0.token, repo, milestone));
+				A3(_vito$cadet$GitHubGraph$deleteRepoMilestone, _p166._0.token, repo, milestone));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39758,36 +39907,36 @@ var _vito$cadet$Main$LabelChanged = F2(
 	});
 var _vito$cadet$Main$createLabel = F3(
 	function (model, repo, label) {
-		var _p160 = model.me;
-		if (_p160.ctor === 'Just') {
+		var _p167 = model.me;
+		if (_p167.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$LabelChanged(repo),
-				A4(_vito$cadet$GitHubGraph$createRepoLabel, _p160._0.token, repo, label.name, label.color));
+				A4(_vito$cadet$GitHubGraph$createRepoLabel, _p167._0.token, repo, label.name, label.color));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$updateLabel = F4(
 	function (model, repo, label1, label2) {
-		var _p161 = model.me;
-		if (_p161.ctor === 'Just') {
+		var _p168 = model.me;
+		if (_p168.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$LabelChanged(repo),
-				A5(_vito$cadet$GitHubGraph$updateRepoLabel, _p161._0.token, repo, label1, label2.name, label2.color));
+				A5(_vito$cadet$GitHubGraph$updateRepoLabel, _p168._0.token, repo, label1, label2.name, label2.color));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$deleteLabel = F3(
 	function (model, repo, label) {
-		var _p162 = model.me;
-		if (_p162.ctor === 'Just') {
+		var _p169 = model.me;
+		if (_p169.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
 				_vito$cadet$Main$LabelChanged(repo),
-				A3(_vito$cadet$GitHubGraph$deleteRepoLabel, _p162._0.token, repo, label.name));
+				A3(_vito$cadet$GitHubGraph$deleteRepoLabel, _p169._0.token, repo, label.name));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
@@ -39832,10 +39981,10 @@ var _vito$cadet$Main$ClearSelectedCards = {ctor: 'ClearSelectedCards'};
 var _vito$cadet$Main$viewSidebarControls = function (model) {
 	var viewLabelOperation = F2(
 		function (name, color) {
-			var _p163 = function () {
-				var _p164 = A2(_elm_lang$core$Dict$get, name, model.cardLabelOperations);
-				if (_p164.ctor === 'Just') {
-					if (_p164._0.ctor === 'AddLabelOperation') {
+			var _p170 = function () {
+				var _p171 = A2(_elm_lang$core$Dict$get, name, model.cardLabelOperations);
+				if (_p171.ctor === 'Just') {
+					if (_p171._0.ctor === 'AddLabelOperation') {
 						return {
 							ctor: '_Tuple2',
 							_0: 'checked octicon octicon-check',
@@ -39874,8 +40023,8 @@ var _vito$cadet$Main$viewSidebarControls = function (model) {
 					});
 				}
 			}();
-			var checkClass = _p163._0;
-			var clickOperation = _p163._1;
+			var checkClass = _p170._0;
+			var clickOperation = _p170._1;
 			return A2(
 				_elm_lang$html$Html$div,
 				{
@@ -39942,11 +40091,11 @@ var _vito$cadet$Main$viewSidebarControls = function (model) {
 		_elm_lang$core$Basics$uncurry(viewLabelOperation),
 		A2(
 			_elm_lang$core$List$filter,
-			function (_p165) {
+			function (_p172) {
 				return A2(
 					_elm_lang$core$String$contains,
 					model.labelSearch,
-					_elm_lang$core$Tuple$first(_p165));
+					_elm_lang$core$Tuple$first(_p172));
 			},
 			_elm_lang$core$Dict$keys(model.dataView.reposByLabel))) : {ctor: '[]'};
 	return A2(
@@ -40177,22 +40326,22 @@ var _vito$cadet$Main$searchLabel = F2(
 	});
 var _vito$cadet$Main$viewLabelRow = F3(
 	function (model, label, repos) {
-		var _p166 = A3(
+		var _p173 = A3(
 			_elm_lang$core$Dict$foldl,
 			F3(
-				function (_p168, c, _p167) {
-					var _p169 = _p167;
-					var _p171 = _p169._0;
-					var _p170 = _p169._1;
+				function (_p175, c, _p174) {
+					var _p176 = _p174;
+					var _p178 = _p176._0;
+					var _p177 = _p176._1;
 					return (_vito$cadet$Main$isOpen(c) && A3(_vito$cadet$Main$includesLabel, model, label, c.labels)) ? (_vito$cadet$Main$isPR(c) ? {
 						ctor: '_Tuple2',
-						_0: {ctor: '::', _0: c, _1: _p171},
-						_1: _p170
+						_0: {ctor: '::', _0: c, _1: _p178},
+						_1: _p177
 					} : {
 						ctor: '_Tuple2',
-						_0: _p171,
-						_1: {ctor: '::', _0: c, _1: _p170}
-					}) : {ctor: '_Tuple2', _0: _p171, _1: _p170};
+						_0: _p178,
+						_1: {ctor: '::', _0: c, _1: _p177}
+					}) : {ctor: '_Tuple2', _0: _p178, _1: _p177};
 				}),
 			{
 				ctor: '_Tuple2',
@@ -40200,8 +40349,8 @@ var _vito$cadet$Main$viewLabelRow = F3(
 				_1: {ctor: '[]'}
 			},
 			model.allCards);
-		var prs = _p166._0;
-		var issues = _p166._1;
+		var prs = _p173._0;
+		var issues = _p173._1;
 		var stateKey = _vito$cadet$Main$labelKey(label);
 		return A2(
 			_elm_lang$html$Html$div,
@@ -40231,8 +40380,8 @@ var _vito$cadet$Main$viewLabelRow = F3(
 							{
 								ctor: '::',
 								_0: function () {
-									var _p172 = A2(_elm_lang$core$Dict$get, stateKey, model.editingLabels);
-									if (_p172.ctor === 'Nothing') {
+									var _p179 = A2(_elm_lang$core$Dict$get, stateKey, model.editingLabels);
+									if (_p179.ctor === 'Nothing') {
 										return A2(
 											_elm_lang$html$Html$div,
 											{
@@ -40313,7 +40462,7 @@ var _vito$cadet$Main$viewLabelRow = F3(
 												}
 											});
 									} else {
-										var _p173 = _p172._0;
+										var _p180 = _p179._0;
 										return A2(
 											_elm_lang$html$Html$form,
 											{
@@ -40339,7 +40488,7 @@ var _vito$cadet$Main$viewLabelRow = F3(
 																_vito$cadet$Main$RandomizeLabelColor(label)),
 															_1: {
 																ctor: '::',
-																_0: A2(_vito$cadet$Main$labelColorStyle, model, _p173.color),
+																_0: A2(_vito$cadet$Main$labelColorStyle, model, _p180.color),
 																_1: {ctor: '[]'}
 															}
 														}
@@ -40355,10 +40504,10 @@ var _vito$cadet$Main$viewLabelRow = F3(
 																_vito$cadet$Main$SetLabelName(label)),
 															_1: {
 																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$value(_p173.name),
+																_0: _elm_lang$html$Html_Attributes$value(_p180.name),
 																_1: {
 																	ctor: '::',
-																	_0: A2(_vito$cadet$Main$labelColorStyle, model, _p173.color),
+																	_0: A2(_vito$cadet$Main$labelColorStyle, model, _p180.color),
 																	_1: {ctor: '[]'}
 																}
 															}
@@ -40723,13 +40872,13 @@ var _vito$cadet$Main$viewLabelsPage = function (model) {
 		_elm_lang$core$Basics$flip,
 		_elm_lang$core$List$map,
 		_elm_lang$core$Dict$toList(model.dataView.reposByLabel),
-		function (_p174) {
-			var _p175 = _p174;
+		function (_p181) {
+			var _p182 = _p181;
 			return A3(
 				_vito$cadet$Main$viewLabelRow,
 				model,
-				{name: _p175._0._0, color: _p175._0._1},
-				_p175._1);
+				{name: _p182._0._0, color: _p182._0._1},
+				_p182._1);
 		});
 	var newLabel = A2(
 		_elm_lang$html$Html$div,
@@ -40928,16 +41077,16 @@ var _vito$cadet$Main$viewLabelsPage = function (model) {
 };
 var _vito$cadet$Main$viewLabel = F2(
 	function (model, id) {
-		var _p176 = function () {
-			var _p177 = A2(_elm_lang$core$Dict$get, id, model.allLabels);
-			if (_p177.ctor === 'Just') {
-				return {ctor: '_Tuple2', _0: _p177._0.name, _1: _p177._0.color};
+		var _p183 = function () {
+			var _p184 = A2(_elm_lang$core$Dict$get, id, model.allLabels);
+			if (_p184.ctor === 'Just') {
+				return {ctor: '_Tuple2', _0: _p184._0.name, _1: _p184._0.color};
 			} else {
 				return {ctor: '_Tuple2', _0: 'unknown', _1: 'ff00ff'};
 			}
 		}();
-		var name = _p176._0;
-		var color = _p176._1;
+		var name = _p183._0;
+		var color = _p183._1;
 		return A2(
 			_elm_lang$html$Html$span,
 			{
@@ -41038,80 +41187,80 @@ var _vito$cadet$Main$parseHash = function (hash) {
 		return {ctor: '[]'};
 	} else {
 		var parseSegment = function (segment) {
-			var _p178 = A2(_elm_lang$core$String$split, '-', segment);
-			_v89_7:
+			var _p185 = A2(_elm_lang$core$String$split, '-', segment);
+			_v95_7:
 			do {
-				if ((_p178.ctor === '::') && (_p178._1.ctor === '::')) {
-					if (_p178._1._1.ctor === '[]') {
-						switch (_p178._0) {
+				if ((_p185.ctor === '::') && (_p185._1.ctor === '::')) {
+					if (_p185._1._1.ctor === '[]') {
+						switch (_p185._0) {
 							case 's':
 								return _elm_lang$core$Maybe$Just(
-									_vito$cadet$Main$SelectCard(_p178._1._0));
+									_vito$cadet$Main$SelectCard(_p185._1._0));
 							case 'filter':
-								if (_p178._1._0 === 'untriaged') {
+								if (_p185._1._0 === 'untriaged') {
 									return _elm_lang$core$Maybe$Just(
 										_vito$cadet$Main$AddFilter(_vito$cadet$Main$UntriagedFilter));
 								} else {
-									break _v89_7;
+									break _v95_7;
 								}
 							default:
-								break _v89_7;
+								break _v95_7;
 						}
 					} else {
-						switch (_p178._0) {
+						switch (_p185._0) {
 							case 'filter':
-								if (_p178._1._1._1.ctor === '::') {
-									if ((_p178._1._0 === 'label') && (_p178._1._1._1._1.ctor === '[]')) {
+								if (_p185._1._1._1.ctor === '::') {
+									if ((_p185._1._0 === 'label') && (_p185._1._1._1._1.ctor === '[]')) {
 										return _elm_lang$core$Maybe$Just(
 											_vito$cadet$Main$AddFilter(
-												A2(_vito$cadet$Main$HasLabelFilter, _p178._1._1._0, _p178._1._1._1._0)));
+												A2(_vito$cadet$Main$HasLabelFilter, _p185._1._1._0, _p185._1._1._1._0)));
 									} else {
-										break _v89_7;
+										break _v95_7;
 									}
 								} else {
-									switch (_p178._1._0) {
+									switch (_p185._1._0) {
 										case 'involves':
 											return _elm_lang$core$Maybe$Just(
 												_vito$cadet$Main$AddFilter(
-													_vito$cadet$Main$InvolvesUserFilter(_p178._1._1._0)));
+													_vito$cadet$Main$InvolvesUserFilter(_p185._1._1._0)));
 										case 'pull':
-											if (_p178._1._1._0 === 'requests') {
+											if (_p185._1._1._0 === 'requests') {
 												return _elm_lang$core$Maybe$Just(
 													_vito$cadet$Main$AddFilter(_vito$cadet$Main$PullRequestsFilter));
 											} else {
-												break _v89_7;
+												break _v95_7;
 											}
 										default:
-											break _v89_7;
+											break _v95_7;
 									}
 								}
 							case 'sort':
-								if (_p178._1._1._0 === 'activity') {
-									switch (_p178._1._0) {
+								if (_p185._1._1._0 === 'activity') {
+									switch (_p185._1._0) {
 										case 'user':
 											return _elm_lang$core$Maybe$Just(
 												_vito$cadet$Main$SetGraphSort(
 													_vito$cadet$Main$UserActivitySort(
-														A2(_elm_lang$core$String$join, '-', _p178._1._1._1))));
+														A2(_elm_lang$core$String$join, '-', _p185._1._1._1))));
 										case 'all':
-											if (_p178._1._1._1.ctor === '[]') {
+											if (_p185._1._1._1.ctor === '[]') {
 												return _elm_lang$core$Maybe$Just(
 													_vito$cadet$Main$SetGraphSort(_vito$cadet$Main$AllActivitySort));
 											} else {
-												break _v89_7;
+												break _v95_7;
 											}
 										default:
-											break _v89_7;
+											break _v95_7;
 									}
 								} else {
-									break _v89_7;
+									break _v95_7;
 								}
 							default:
-								break _v89_7;
+								break _v95_7;
 						}
 					}
 				} else {
-					break _v89_7;
+					break _v95_7;
 				}
 			} while(false);
 			return _elm_lang$core$Maybe$Nothing;
@@ -41123,8 +41272,8 @@ var _vito$cadet$Main$parseHash = function (hash) {
 	}
 };
 var _vito$cadet$Main$viewCardNode = F6(
-	function (card, radii, circle, labels, _p179, state) {
-		var _p180 = _p179;
+	function (card, radii, circle, labels, _p186, state) {
+		var _p187 = _p186;
 		var projectHalo = A2(
 			_elm_lang$svg$Svg$circle,
 			{
@@ -41157,13 +41306,13 @@ var _vito$cadet$Main$viewCardNode = F6(
 						'translate(',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_elm_lang$core$Basics$toString(_p180.x),
+							_elm_lang$core$Basics$toString(_p187.x),
 							A2(
 								_elm_lang$core$Basics_ops['++'],
 								', ',
 								A2(
 									_elm_lang$core$Basics_ops['++'],
-									_elm_lang$core$Basics$toString(_p180.y),
+									_elm_lang$core$Basics$toString(_p187.y),
 									A2(
 										_elm_lang$core$Basics_ops['++'],
 										') scale(',
@@ -41210,8 +41359,8 @@ var _vito$cadet$Main$cardNode = F3(
 			withFlair: A2(_vito$cadet$Main$cardRadiusWithFlair, card, context)
 		};
 		var circle = function () {
-			var _p181 = card.content;
-			if (_p181.ctor === 'IssueCardContent') {
+			var _p188 = card.content;
+			if (_p188.ctor === 'IssueCardContent') {
 				return A2(
 					_elm_lang$svg$Svg$g,
 					{ctor: '[]'},
@@ -41262,7 +41411,7 @@ var _vito$cadet$Main$cardNode = F3(
 					{ctor: '[]'},
 					{
 						ctor: '::',
-						_0: A3(_vito$cadet$Main$prCircle, _p181._0, card, context),
+						_0: A3(_vito$cadet$Main$prCircle, _p188._0, card, context),
 						_1: {
 							ctor: '::',
 							_0: A2(
@@ -41304,11 +41453,11 @@ var _vito$cadet$Main$cardNode = F3(
 			card: card,
 			viewLower: A3(_vito$cadet$Main$viewCardNodeFlair, card, radii, flairArcs),
 			viewUpper: A4(_vito$cadet$Main$viewCardNode, card, radii, circle, labelArcs),
-			bounds: function (_p182) {
-				var _p183 = _p182;
-				var _p185 = _p183.y;
-				var _p184 = _p183.x;
-				return {x1: _p184 - radii.withFlair, y1: _p185 - radii.withFlair, x2: _p184 + radii.withFlair, y2: _p185 + radii.withFlair};
+			bounds: function (_p189) {
+				var _p190 = _p189;
+				var _p192 = _p190.y;
+				var _p191 = _p190.x;
+				return {x1: _p191 - radii.withFlair, y1: _p192 - radii.withFlair, x2: _p191 + radii.withFlair, y2: _p192 + radii.withFlair};
 			},
 			score: card.score
 		};
@@ -41316,27 +41465,27 @@ var _vito$cadet$Main$cardNode = F3(
 var _vito$cadet$Main$computeGraph = function (model) {
 	var baseState = _vito$cadet$Main$baseGraphState(model);
 	var sortFunc = function () {
-		var _p186 = model.graphSort;
-		switch (_p186.ctor) {
+		var _p193 = model.graphSort;
+		switch (_p193.ctor) {
 			case 'ImpactSort':
 				return _vito$cadet$Main$graphSizeCompare;
 			case 'UserActivitySort':
-				return A2(_vito$cadet$Main$graphUserActivityCompare, model, _p186._0);
+				return A2(_vito$cadet$Main$graphUserActivityCompare, model, _p193._0);
 			default:
 				return _vito$cadet$Main$graphAllActivityCompare(model);
 		}
 	}();
-	var applyWithContext = function (_p187) {
-		var _p188 = _p187;
-		var _p189 = _p188.node;
-		var context = {incoming: _p188.incoming, outgoing: _p188.outgoing};
+	var applyWithContext = function (_p194) {
+		var _p195 = _p194;
+		var _p196 = _p195.node;
+		var context = {incoming: _p195.incoming, outgoing: _p195.outgoing};
 		return _elm_lang$core$Native_Utils.update(
-			_p188,
+			_p195,
 			{
 				node: _elm_lang$core$Native_Utils.update(
-					_p189,
+					_p196,
 					{
-						label: _p189.label(context)
+						label: _p196.label(context)
 					})
 			});
 	};
@@ -41348,9 +41497,9 @@ var _vito$cadet$Main$computeGraph = function (model) {
 			};
 		});
 	var allFilters = function () {
-		var _p190 = model.baseGraphFilter;
-		if (_p190.ctor === 'Just') {
-			return {ctor: '::', _0: _p190._0, _1: model.graphFilters};
+		var _p197 = model.baseGraphFilter;
+		if (_p197.ctor === 'Just') {
+			return {ctor: '::', _0: _p197._0, _1: model.graphFilters};
 		} else {
 			return model.graphFilters;
 		}
@@ -41358,7 +41507,7 @@ var _vito$cadet$Main$computeGraph = function (model) {
 	var cardNodeThunks = A3(
 		_elm_lang$core$Dict$foldl,
 		F3(
-			function (_p191, card, thunks) {
+			function (_p198, card, thunks) {
 				return (A3(_vito$cadet$Main$satisfiesFilters, model, allFilters, card) && _vito$cadet$Main$isOpen(card)) ? {
 					ctor: '::',
 					_0: A2(
@@ -41417,37 +41566,37 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 	var updateContent = F2(
 		function (content, model) {
 			var data = model.data;
-			var _p192 = content;
-			if (_p192.ctor === 'IssueCardContent') {
-				var _p193 = _p192._0;
+			var _p199 = content;
+			if (_p199.ctor === 'IssueCardContent') {
+				var _p200 = _p199._0;
 				return _elm_lang$core$Native_Utils.update(
 					model,
 					{
 						allCards: A3(
 							_elm_lang$core$Dict$insert,
-							_p193.id,
-							_vito$cadet$Main$issueCard(_p193),
+							_p200.id,
+							_vito$cadet$Main$issueCard(_p200),
 							model.allCards),
 						data: _elm_lang$core$Native_Utils.update(
 							data,
 							{
-								issues: A3(_elm_lang$core$Dict$insert, _p193.id, _p193, data.issues)
+								issues: A3(_elm_lang$core$Dict$insert, _p200.id, _p200, data.issues)
 							})
 					});
 			} else {
-				var _p194 = _p192._0;
+				var _p201 = _p199._0;
 				return _elm_lang$core$Native_Utils.update(
 					model,
 					{
 						allCards: A3(
 							_elm_lang$core$Dict$insert,
-							_p194.id,
-							_vito$cadet$Main$prCard(_p194),
+							_p201.id,
+							_vito$cadet$Main$prCard(_p201),
 							model.allCards),
 						data: _elm_lang$core$Native_Utils.update(
 							data,
 							{
-								prs: A3(_elm_lang$core$Dict$insert, _p194.id, _p194, data.prs)
+								prs: A3(_elm_lang$core$Dict$insert, _p201.id, _p201, data.prs)
 							})
 					});
 			}
@@ -41465,50 +41614,50 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 						})
 				});
 		});
-	var _p195 = model.projectDragRefresh;
-	if (_p195.ctor === 'Nothing') {
+	var _p202 = model.projectDragRefresh;
+	if (_p202.ctor === 'Nothing') {
 		return model;
 	} else {
-		var _p197 = _p195._0;
-		var _p196 = {ctor: '_Tuple6', _0: _p197.contentId, _1: _p197.content, _2: _p197.sourceId, _3: _p197.sourceCards, _4: _p197.targetId, _5: _p197.targetCards};
-		_v98_6:
+		var _p204 = _p202._0;
+		var _p203 = {ctor: '_Tuple6', _0: _p204.contentId, _1: _p204.content, _2: _p204.sourceId, _3: _p204.sourceCards, _4: _p204.targetId, _5: _p204.targetCards};
+		_v104_6:
 		do {
-			if (_p196.ctor === '_Tuple6') {
-				if (_p196._0.ctor === 'Just') {
-					if (_p196._1.ctor === 'Just') {
-						if (_p196._2.ctor === 'Nothing') {
-							if (((_p196._3.ctor === 'Nothing') && (_p196._4.ctor === 'Just')) && (_p196._5.ctor === 'Just')) {
+			if (_p203.ctor === '_Tuple6') {
+				if (_p203._0.ctor === 'Just') {
+					if (_p203._1.ctor === 'Just') {
+						if (_p203._2.ctor === 'Nothing') {
+							if (((_p203._3.ctor === 'Nothing') && (_p203._4.ctor === 'Just')) && (_p203._5.ctor === 'Just')) {
 								return _vito$cadet$Main$computeGraph(
 									A3(
 										updateColumn,
-										_p196._4._0,
-										_p196._5._0,
+										_p203._4._0,
+										_p203._5._0,
 										A2(
 											updateContent,
-											_p196._1._0,
+											_p203._1._0,
 											_elm_lang$core$Native_Utils.update(
 												model,
 												{
 													projectDrag: _vito$cadet$Drag$complete(model.projectDrag)
 												}))));
 							} else {
-								break _v98_6;
+								break _v104_6;
 							}
 						} else {
-							if ((_p196._4.ctor === 'Just') && (_p196._5.ctor === 'Just')) {
-								if (_p196._3.ctor === 'Just') {
+							if ((_p203._4.ctor === 'Just') && (_p203._5.ctor === 'Just')) {
+								if (_p203._3.ctor === 'Just') {
 									return _vito$cadet$Main$computeGraph(
 										A3(
 											updateColumn,
-											_p196._4._0,
-											_p196._5._0,
+											_p203._4._0,
+											_p203._5._0,
 											A3(
 												updateColumn,
-												_p196._2._0,
-												_p196._3._0,
+												_p203._2._0,
+												_p203._3._0,
 												A2(
 													updateContent,
-													_p196._1._0,
+													_p203._1._0,
 													_elm_lang$core$Native_Utils.update(
 														model,
 														{
@@ -41517,11 +41666,11 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 								} else {
 									return A3(
 										updateColumn,
-										_p196._4._0,
-										_p196._5._0,
+										_p203._4._0,
+										_p203._5._0,
 										A2(
 											updateContent,
-											_p196._1._0,
+											_p203._1._0,
 											_elm_lang$core$Native_Utils.update(
 												model,
 												{
@@ -41529,39 +41678,39 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 												})));
 								}
 							} else {
-								break _v98_6;
+								break _v104_6;
 							}
 						}
 					} else {
-						break _v98_6;
+						break _v104_6;
 					}
 				} else {
-					if (_p196._1.ctor === 'Nothing') {
-						if (_p196._2.ctor === 'Nothing') {
-							if (((_p196._3.ctor === 'Nothing') && (_p196._4.ctor === 'Just')) && (_p196._5.ctor === 'Just')) {
+					if (_p203._1.ctor === 'Nothing') {
+						if (_p203._2.ctor === 'Nothing') {
+							if (((_p203._3.ctor === 'Nothing') && (_p203._4.ctor === 'Just')) && (_p203._5.ctor === 'Just')) {
 								return A3(
 									updateColumn,
-									_p196._4._0,
-									_p196._5._0,
+									_p203._4._0,
+									_p203._5._0,
 									_elm_lang$core$Native_Utils.update(
 										model,
 										{
 											projectDrag: _vito$cadet$Drag$complete(model.projectDrag)
 										}));
 							} else {
-								break _v98_6;
+								break _v104_6;
 							}
 						} else {
-							if ((_p196._4.ctor === 'Just') && (_p196._5.ctor === 'Just')) {
-								if (_p196._3.ctor === 'Just') {
+							if ((_p203._4.ctor === 'Just') && (_p203._5.ctor === 'Just')) {
+								if (_p203._3.ctor === 'Just') {
 									return A3(
 										updateColumn,
-										_p196._4._0,
-										_p196._5._0,
+										_p203._4._0,
+										_p203._5._0,
 										A3(
 											updateColumn,
-											_p196._2._0,
-											_p196._3._0,
+											_p203._2._0,
+											_p203._3._0,
 											_elm_lang$core$Native_Utils.update(
 												model,
 												{
@@ -41570,8 +41719,8 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 								} else {
 									return A3(
 										updateColumn,
-										_p196._4._0,
-										_p196._5._0,
+										_p203._4._0,
+										_p203._5._0,
 										_elm_lang$core$Native_Utils.update(
 											model,
 											{
@@ -41579,15 +41728,15 @@ var _vito$cadet$Main$finishProjectDragRefresh = function (model) {
 											}));
 								}
 							} else {
-								break _v98_6;
+								break _v104_6;
 							}
 						}
 					} else {
-						break _v98_6;
+						break _v104_6;
 					}
 				}
 			} else {
-				break _v98_6;
+				break _v104_6;
 			}
 		} while(false);
 		return model;
@@ -41651,17 +41800,25 @@ var _vito$cadet$Main$viewCard = F2(
 													ctor: '::',
 													_0: {
 														ctor: '_Tuple2',
-														_0: 'last-activity-is-me',
-														_1: function () {
-															var _p198 = model.me;
-															if (_p198.ctor === 'Just') {
-																return A3(_vito$cadet$Main$lastActivityIsByUser, model.data.actors, _p198._0.user.login, card);
-															} else {
-																return false;
-															}
-														}()
+														_0: A2(_vito$cadet$Main$activityClass, model.currentDate, card.updatedAt),
+														_1: _vito$cadet$Main$isPR(card)
 													},
-													_1: {ctor: '[]'}
+													_1: {
+														ctor: '::',
+														_0: {
+															ctor: '_Tuple2',
+															_0: 'last-activity-is-me',
+															_1: function () {
+																var _p205 = model.me;
+																if (_p205.ctor === 'Just') {
+																	return A3(_vito$cadet$Main$lastActivityIsByUser, model.data.actors, _p205._0.user.login, card);
+																} else {
+																	return false;
+																}
+															}()
+														},
+														_1: {ctor: '[]'}
+													}
 												}
 											}
 										}
@@ -41693,130 +41850,139 @@ var _vito$cadet$Main$viewCard = F2(
 					_elm_lang$html$Html$div,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('card-icons'),
+						_0: _elm_lang$html$Html_Attributes$class('card-info'),
 						_1: {ctor: '[]'}
 					},
 					{
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$span,
+							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$classList(
-									{
-										ctor: '::',
-										_0: {ctor: '_Tuple2', _0: 'octicon', _1: true},
-										_1: {
-											ctor: '::',
-											_0: {
-												ctor: '_Tuple2',
-												_0: 'open',
-												_1: _vito$cadet$Main$isOpen(card)
-											},
-											_1: {
-												ctor: '::',
-												_0: {
-													ctor: '_Tuple2',
-													_0: 'closed',
-													_1: !_vito$cadet$Main$isOpen(card)
-												},
-												_1: {
-													ctor: '::',
-													_0: {
-														ctor: '_Tuple2',
-														_0: 'rejected',
-														_1: _vito$cadet$Main$isRejected(card)
-													},
-													_1: {
-														ctor: '::',
-														_0: {
-															ctor: '_Tuple2',
-															_0: 'merged',
-															_1: _vito$cadet$Main$isMerged(card)
-														},
-														_1: {
-															ctor: '::',
-															_0: {
-																ctor: '_Tuple2',
-																_0: A2(
-																	_elm_lang$core$Basics_ops['++'],
-																	'octicon-issue-',
-																	_vito$cadet$Main$isRejected(card) ? 'reopened' : 'opened'),
-																_1: _elm_lang$core$Native_Utils.eq(
-																	card.state,
-																	_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateOpen))
-															},
-															_1: {
-																ctor: '::',
-																_0: {
-																	ctor: '_Tuple2',
-																	_0: 'octicon-issue-closed',
-																	_1: _elm_lang$core$Native_Utils.eq(
-																		card.state,
-																		_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateClosed))
-																},
-																_1: {
-																	ctor: '::',
-																	_0: {
-																		ctor: '_Tuple2',
-																		_0: 'octicon-git-pull-request',
-																		_1: _vito$cadet$Main$isPR(card)
-																	},
-																	_1: {ctor: '[]'}
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}),
-								_1: {
-									ctor: '::',
-									_0: _elm_lang$html$Html_Events$onClick(
-										_vito$cadet$Main$isPR(card) ? _vito$cadet$Main$RefreshPullRequest(card.id) : _vito$cadet$Main$RefreshIssue(card.id)),
-									_1: {ctor: '[]'}
-								}
+								_0: _elm_lang$html$Html_Attributes$class('card-actors'),
+								_1: {ctor: '[]'}
 							},
-							{ctor: '[]'}),
+							A2(
+								_elm_lang$core$List$map,
+								_vito$cadet$Main$viewCardActor(model),
+								A2(_vito$cadet$Main$recentActors, model, card))),
 						_1: {
 							ctor: '::',
-							_0: (_vito$cadet$Main$needsAcceptance(card) && _vito$cadet$Main$isDone(card)) ? A2(
-								_elm_lang$html$Html$span,
+							_0: A2(
+								_elm_lang$html$Html$a,
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('octicon accept octicon-thumbsup'),
+									_0: _elm_lang$html$Html_Attributes$href(card.url),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(
-											_vito$cadet$Main$AcceptCard(card)),
-										_1: {ctor: '[]'}
+										_0: _elm_lang$html$Html_Attributes$target('_blank'),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('card-title'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$draggable('false'),
+												_1: {ctor: '[]'}
+											}
+										}
 									}
 								},
-								{ctor: '[]'}) : (_vito$cadet$Main$isAccepted(card) ? A2(
-								_elm_lang$html$Html$span,
 								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('octicon accepted octicon-thumbsup'),
+									_0: _elm_lang$html$Html$text(card.title),
 									_1: {ctor: '[]'}
-								},
-								{ctor: '[]'}) : _elm_lang$html$Html$text('')),
+								}),
 							_1: {
 								ctor: '::',
-								_0: (_vito$cadet$Main$needsAcceptance(card) && _vito$cadet$Main$isDone(card)) ? A2(
+								_0: A2(
 									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$class('octicon reject octicon-thumbsdown'),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Events$onClick(
-												_vito$cadet$Main$RejectCard(card)),
-											_1: {ctor: '[]'}
-										}
+										_0: _elm_lang$html$Html_Attributes$class('card-labels'),
+										_1: {ctor: '[]'}
 									},
-									{ctor: '[]'}) : _elm_lang$html$Html$text(''),
-								_1: {ctor: '[]'}
+									A2(
+										_elm_lang$core$List$map,
+										_vito$cadet$Main$viewLabel(model),
+										card.labels)),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$div,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('card-meta'),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$a,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Attributes$href(card.url),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$target('_blank'),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$draggable('false'),
+															_1: {ctor: '[]'}
+														}
+													}
+												},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text(
+														A2(
+															_elm_lang$core$Basics_ops['++'],
+															'#',
+															_elm_lang$core$Basics$toString(card.number))),
+													_1: {ctor: '[]'}
+												}),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html$text(' '),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('opened by '),
+													_1: {
+														ctor: '::',
+														_0: function () {
+															var _p206 = card.author;
+															if (_p206.ctor === 'Just') {
+																var _p207 = _p206._0;
+																return A2(
+																	_elm_lang$html$Html$a,
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html_Attributes$href(_p207.url),
+																		_1: {
+																			ctor: '::',
+																			_0: _elm_lang$html$Html_Attributes$target('_blank'),
+																			_1: {
+																				ctor: '::',
+																				_0: _elm_lang$html$Html_Attributes$draggable('false'),
+																				_1: {ctor: '[]'}
+																			}
+																		}
+																	},
+																	{
+																		ctor: '::',
+																		_0: _elm_lang$html$Html$text(_p207.login),
+																		_1: {ctor: '[]'}
+																	});
+															} else {
+																return _elm_lang$html$Html$text('(deleted user)');
+															}
+														}(),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}),
+									_1: {ctor: '[]'}
+								}
 							}
 						}
 					}),
@@ -41826,142 +41992,136 @@ var _vito$cadet$Main$viewCard = F2(
 						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('card-info'),
+							_0: _elm_lang$html$Html_Attributes$class('card-icons'),
 							_1: {ctor: '[]'}
 						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$div,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class('card-actors'),
-									_1: {ctor: '[]'}
-								},
-								A2(
-									_elm_lang$core$List$map,
-									_vito$cadet$Main$viewCardActor(model),
-									A2(_vito$cadet$Main$recentActors, model, card))),
-							_1: {
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							{
 								ctor: '::',
 								_0: A2(
-									_elm_lang$html$Html$a,
+									_elm_lang$html$Html$span,
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$href(card.url),
-										_1: {
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$target('_blank'),
-											_1: {
+										_0: _elm_lang$html$Html_Attributes$classList(
+											{
 												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('card-title'),
+												_0: {ctor: '_Tuple2', _0: 'octicon', _1: true},
 												_1: {
 													ctor: '::',
-													_0: _elm_lang$html$Html_Attributes$draggable('false'),
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text(card.title),
-										_1: {ctor: '[]'}
-									}),
-								_1: {
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$span,
-										{
-											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class('card-labels'),
-											_1: {ctor: '[]'}
-										},
-										A2(
-											_elm_lang$core$List$map,
-											_vito$cadet$Main$viewLabel(model),
-											card.labels)),
-									_1: {
-										ctor: '::',
-										_0: A2(
-											_elm_lang$html$Html$div,
-											{
-												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$class('card-meta'),
-												_1: {ctor: '[]'}
-											},
-											{
-												ctor: '::',
-												_0: A2(
-													_elm_lang$html$Html$a,
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html_Attributes$href(card.url),
-														_1: {
-															ctor: '::',
-															_0: _elm_lang$html$Html_Attributes$target('_blank'),
-															_1: {
-																ctor: '::',
-																_0: _elm_lang$html$Html_Attributes$draggable('false'),
-																_1: {ctor: '[]'}
-															}
-														}
+													_0: {
+														ctor: '_Tuple2',
+														_0: 'open',
+														_1: _vito$cadet$Main$isOpen(card)
 													},
-													{
-														ctor: '::',
-														_0: _elm_lang$html$Html$text(
-															A2(
-																_elm_lang$core$Basics_ops['++'],
-																'#',
-																_elm_lang$core$Basics$toString(card.number))),
-														_1: {ctor: '[]'}
-													}),
-												_1: {
-													ctor: '::',
-													_0: _elm_lang$html$Html$text(' '),
 													_1: {
 														ctor: '::',
-														_0: _elm_lang$html$Html$text('opened by '),
+														_0: {
+															ctor: '_Tuple2',
+															_0: 'closed',
+															_1: !_vito$cadet$Main$isOpen(card)
+														},
 														_1: {
 															ctor: '::',
-															_0: function () {
-																var _p199 = card.author;
-																if (_p199.ctor === 'Just') {
-																	var _p200 = _p199._0;
-																	return A2(
-																		_elm_lang$html$Html$a,
-																		{
-																			ctor: '::',
-																			_0: _elm_lang$html$Html_Attributes$href(_p200.url),
-																			_1: {
-																				ctor: '::',
-																				_0: _elm_lang$html$Html_Attributes$target('_blank'),
-																				_1: {
-																					ctor: '::',
-																					_0: _elm_lang$html$Html_Attributes$draggable('false'),
-																					_1: {ctor: '[]'}
-																				}
-																			}
+															_0: {
+																ctor: '_Tuple2',
+																_0: 'rejected',
+																_1: _vito$cadet$Main$isRejected(card)
+															},
+															_1: {
+																ctor: '::',
+																_0: {
+																	ctor: '_Tuple2',
+																	_0: 'merged',
+																	_1: _vito$cadet$Main$isMerged(card)
+																},
+																_1: {
+																	ctor: '::',
+																	_0: {
+																		ctor: '_Tuple2',
+																		_0: A2(
+																			_elm_lang$core$Basics_ops['++'],
+																			'octicon-issue-',
+																			_vito$cadet$Main$isRejected(card) ? 'reopened' : 'opened'),
+																		_1: _elm_lang$core$Native_Utils.eq(
+																			card.state,
+																			_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateOpen))
+																	},
+																	_1: {
+																		ctor: '::',
+																		_0: {
+																			ctor: '_Tuple2',
+																			_0: 'octicon-issue-closed',
+																			_1: _elm_lang$core$Native_Utils.eq(
+																				card.state,
+																				_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateClosed))
 																		},
-																		{
+																		_1: {
 																			ctor: '::',
-																			_0: _elm_lang$html$Html$text(_p200.login),
+																			_0: {
+																				ctor: '_Tuple2',
+																				_0: 'octicon-git-pull-request',
+																				_1: _vito$cadet$Main$isPR(card)
+																			},
 																			_1: {ctor: '[]'}
-																		});
-																} else {
-																	return _elm_lang$html$Html$text('(deleted user)');
+																		}
+																	}
 																}
-															}(),
-															_1: {ctor: '[]'}
+															}
 														}
 													}
 												}
 											}),
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Events$onClick(
+												_vito$cadet$Main$isPR(card) ? _vito$cadet$Main$RefreshPullRequest(card.id) : _vito$cadet$Main$RefreshIssue(card.id)),
+											_1: {ctor: '[]'}
+										}
+									},
+									{ctor: '[]'}),
+								_1: {
+									ctor: '::',
+									_0: (_vito$cadet$Main$needsAcceptance(card) && _vito$cadet$Main$isDone(card)) ? A2(
+										_elm_lang$html$Html$span,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('octicon accept octicon-thumbsup'),
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Events$onClick(
+													_vito$cadet$Main$AcceptCard(card)),
+												_1: {ctor: '[]'}
+											}
+										},
+										{ctor: '[]'}) : (_vito$cadet$Main$isAccepted(card) ? A2(
+										_elm_lang$html$Html$span,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$class('octicon accepted octicon-thumbsup'),
+											_1: {ctor: '[]'}
+										},
+										{ctor: '[]'}) : _elm_lang$html$Html$text('')),
+									_1: {
+										ctor: '::',
+										_0: (_vito$cadet$Main$needsAcceptance(card) && _vito$cadet$Main$isDone(card)) ? A2(
+											_elm_lang$html$Html$span,
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class('octicon reject octicon-thumbsdown'),
+												_1: {
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onClick(
+														_vito$cadet$Main$RejectCard(card)),
+													_1: {ctor: '[]'}
+												}
+											},
+											{ctor: '[]'}) : _elm_lang$html$Html$text(''),
 										_1: {ctor: '[]'}
 									}
 								}
-							}
-						}),
+							},
+							A2(_vito$cadet$Main$prIcons, model, card))),
 					_1: {ctor: '[]'}
 				}
 			});
@@ -42031,11 +42191,11 @@ var _vito$cadet$Main$viewPullRequestsPage = function (model) {
 		});
 	var getRepo = F3(
 		function (repoId, prs, acc) {
-			var _p201 = A2(_elm_lang$core$Dict$get, repoId, model.data.repos);
-			if (_p201.ctor === 'Just') {
+			var _p208 = A2(_elm_lang$core$Dict$get, repoId, model.data.repos);
+			if (_p208.ctor === 'Just') {
 				return {
 					ctor: '::',
-					_0: {ctor: '_Tuple2', _0: _p201._0, _1: prs},
+					_0: {ctor: '_Tuple2', _0: _p208._0, _1: prs},
 					_1: acc
 				};
 			} else {
@@ -42055,9 +42215,9 @@ var _vito$cadet$Main$viewPullRequestsPage = function (model) {
 			_elm_lang$core$List$reverse(
 				A2(
 					_elm_lang$core$List$sortBy,
-					function (_p202) {
+					function (_p209) {
 						return _elm_lang$core$List$length(
-							_elm_lang$core$Tuple$second(_p202));
+							_elm_lang$core$Tuple$second(_p209));
 					},
 					A3(
 						_elm_lang$core$Dict$foldl,
@@ -42077,21 +42237,21 @@ var _vito$cadet$Main$CardsRefreshed = F2(
 	});
 var _vito$cadet$Main$rejectIssue = F2(
 	function (model, issue) {
-		var _p203 = model.me;
-		if (_p203.ctor === 'Just') {
-			var _p207 = _p203._0.token;
+		var _p210 = model.me;
+		if (_p210.ctor === 'Just') {
+			var _p214 = _p210._0.token;
 			var reopen = A2(
 				_elm_lang$core$Task$map,
 				_elm_lang$core$Basics$always(
 					{ctor: '_Tuple0'}),
-				A2(_vito$cadet$GitHubGraph$reopenIssue, _p207, issue));
+				A2(_vito$cadet$GitHubGraph$reopenIssue, _p214, issue));
 			var addLabel = A2(
 				_elm_lang$core$Task$map,
 				_elm_lang$core$Basics$always(
 					{ctor: '_Tuple0'}),
 				A3(
 					_vito$cadet$GitHubGraph$addIssueLabels,
-					_p207,
+					_p214,
 					issue,
 					{
 						ctor: '::',
@@ -42106,11 +42266,11 @@ var _vito$cadet$Main$rejectIssue = F2(
 					},
 					A2(
 						_elm_lang$core$List$filter,
-						function (_p204) {
+						function (_p211) {
 							return _vito$cadet$Main$detectColumn.backlog(
 								function (_) {
 									return _.name;
-								}(_p204));
+								}(_p211));
 						},
 						A2(
 							_elm_lang$core$Maybe$withDefault,
@@ -42128,7 +42288,7 @@ var _vito$cadet$Main$rejectIssue = F2(
 					_elm_lang$core$Set$fromList(
 						A2(
 							_elm_lang$core$List$filterMap,
-							function (_p205) {
+							function (_p212) {
 								return A2(
 									_elm_lang$core$Maybe$map,
 									function (_) {
@@ -42136,7 +42296,7 @@ var _vito$cadet$Main$rejectIssue = F2(
 									},
 									function (_) {
 										return _.column;
-									}(_p205));
+									}(_p212));
 							},
 							issue.cards)),
 					_elm_lang$core$Set$fromList(
@@ -42160,7 +42320,7 @@ var _vito$cadet$Main$rejectIssue = F2(
 					_elm_lang$core$Platform_Cmd$batch(refreshes)),
 				A2(
 					_elm_lang$core$Task$andThen,
-					function (_p206) {
+					function (_p213) {
 						return reopen;
 					},
 					addLabel));
@@ -42182,38 +42342,38 @@ var _vito$cadet$Main$CardMoved = F2(
 		return {ctor: 'CardMoved', _0: a, _1: b};
 	});
 var _vito$cadet$Main$moveCard = F3(
-	function (model, _p208, cardId) {
-		var _p209 = _p208;
-		var _p211 = _p209.columnId;
-		var _p210 = model.me;
-		if (_p210.ctor === 'Just') {
+	function (model, _p215, cardId) {
+		var _p216 = _p215;
+		var _p218 = _p216.columnId;
+		var _p217 = model.me;
+		if (_p217.ctor === 'Just') {
 			return A2(
 				_elm_lang$core$Task$attempt,
-				_vito$cadet$Main$CardMoved(_p211),
-				A4(_vito$cadet$GitHubGraph$moveCardAfter, _p210._0.token, _p211, cardId, _p209.afterId));
+				_vito$cadet$Main$CardMoved(_p218),
+				A4(_vito$cadet$GitHubGraph$moveCardAfter, _p217._0.token, _p218, cardId, _p216.afterId));
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
 		}
 	});
 var _vito$cadet$Main$addCard = F3(
-	function (model, _p212, contentId) {
-		var _p213 = _p212;
-		var _p218 = _p213.columnId;
-		var _p217 = _p213.afterId;
-		var _p214 = model.me;
-		if (_p214.ctor === 'Just') {
-			var _p216 = _p214._0.token;
-			var _p215 = A3(_vito$cadet$Main$contentCardId, model, _p213.projectId, contentId);
-			if (_p215.ctor === 'Just') {
+	function (model, _p219, contentId) {
+		var _p220 = _p219;
+		var _p225 = _p220.columnId;
+		var _p224 = _p220.afterId;
+		var _p221 = model.me;
+		if (_p221.ctor === 'Just') {
+			var _p223 = _p221._0.token;
+			var _p222 = A3(_vito$cadet$Main$contentCardId, model, _p220.projectId, contentId);
+			if (_p222.ctor === 'Just') {
 				return A2(
 					_elm_lang$core$Task$attempt,
-					_vito$cadet$Main$CardMoved(_p218),
-					A4(_vito$cadet$GitHubGraph$moveCardAfter, _p216, _p218, _p215._0, _p217));
+					_vito$cadet$Main$CardMoved(_p225),
+					A4(_vito$cadet$GitHubGraph$moveCardAfter, _p223, _p225, _p222._0, _p224));
 			} else {
 				return A2(
 					_elm_lang$core$Task$attempt,
-					_vito$cadet$Main$CardMoved(_p218),
-					A4(_vito$cadet$GitHubGraph$addContentCardAfter, _p216, _p218, contentId, _p217));
+					_vito$cadet$Main$CardMoved(_p225),
+					A4(_vito$cadet$GitHubGraph$addContentCardAfter, _p223, _p225, contentId, _p224));
 			}
 		} else {
 			return _elm_lang$core$Platform_Cmd$none;
@@ -42223,22 +42383,22 @@ var _vito$cadet$Main$update = F2(
 	function (msg, model) {
 		update:
 		while (true) {
-			var _p219 = msg;
-			switch (_p219.ctor) {
+			var _p226 = msg;
+			switch (_p226.ctor) {
 				case 'Noop':
 					return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 				case 'SetPage':
-					var _p221 = _p219._0;
+					var _p228 = _p226._0;
 					var baseGraphFilter = function () {
-						var _p220 = _p221;
-						switch (_p220.ctor) {
+						var _p227 = _p228;
+						switch (_p227.ctor) {
 							case 'AllProjectsPage':
 								return _elm_lang$core$Maybe$Just(_vito$cadet$Main$ExcludeAllFilter);
 							case 'GlobalGraphPage':
 								return _elm_lang$core$Maybe$Nothing;
 							case 'ProjectPage':
 								return _elm_lang$core$Maybe$Just(
-									_vito$cadet$Main$InProjectFilter(_p220._0));
+									_vito$cadet$Main$InProjectFilter(_p227._0));
 							case 'LabelsPage':
 								return _elm_lang$core$Maybe$Just(_vito$cadet$Main$ExcludeAllFilter);
 							case 'MilestonesPage':
@@ -42253,7 +42413,7 @@ var _vito$cadet$Main$update = F2(
 							_vito$cadet$Main$computeDataView(
 								_elm_lang$core$Native_Utils.update(
 									model,
-									{page: _p221, baseGraphFilter: baseGraphFilter}))),
+									{page: _p228, baseGraphFilter: baseGraphFilter}))),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'Tick':
@@ -42264,14 +42424,14 @@ var _vito$cadet$Main$update = F2(
 							{
 								cardGraphs: A2(
 									_elm_lang$core$List$map,
-									function (_p222) {
-										var _p223 = _p222;
-										var _p225 = _p223._0;
-										var _p224 = _p223._1;
-										return _vito$cadet$ForceGraph$isCompleted(_p224) ? {ctor: '_Tuple2', _0: _p225, _1: _p224} : {
+									function (_p229) {
+										var _p230 = _p229;
+										var _p232 = _p230._0;
+										var _p231 = _p230._1;
+										return _vito$cadet$ForceGraph$isCompleted(_p231) ? {ctor: '_Tuple2', _0: _p232, _1: _p231} : {
 											ctor: '_Tuple2',
-											_0: _p225,
-											_1: _vito$cadet$ForceGraph$tick(_p224)
+											_0: _p232,
+											_1: _vito$cadet$ForceGraph$tick(_p231)
 										};
 									},
 									model.cardGraphs)
@@ -42284,73 +42444,73 @@ var _vito$cadet$Main$update = F2(
 						_0: _vito$cadet$Main$computeGraphState(
 							_elm_lang$core$Native_Utils.update(
 								model,
-								{currentDate: _p219._0})),
+								{currentDate: _p226._0})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'ProjectDrag':
-					var dragModel = A2(_vito$cadet$Drag$update, _p219._0, model.projectDrag);
+					var dragModel = A2(_vito$cadet$Drag$update, _p226._0, model.projectDrag);
 					var newModel = _elm_lang$core$Native_Utils.update(
 						model,
 						{projectDrag: dragModel});
-					var _p226 = dragModel;
-					if (_p226.ctor === 'Dropping') {
-						var _v112 = _p226._0.msg,
-							_v113 = _elm_lang$core$Native_Utils.update(
+					var _p233 = dragModel;
+					if (_p233.ctor === 'Dropping') {
+						var _v118 = _p233._0.msg,
+							_v119 = _elm_lang$core$Native_Utils.update(
 							newModel,
 							{
 								projectDrag: _vito$cadet$Drag$drop(newModel.projectDrag)
 							});
-						msg = _v112;
-						model = _v113;
+						msg = _v118;
+						model = _v119;
 						continue update;
 					} else {
 						return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
 					}
 				case 'MilestoneDrag':
-					var dragModel = A2(_vito$cadet$Drag$update, _p219._0, model.milestoneDrag);
+					var dragModel = A2(_vito$cadet$Drag$update, _p226._0, model.milestoneDrag);
 					var newModel = _elm_lang$core$Native_Utils.update(
 						model,
 						{milestoneDrag: dragModel});
-					var _p227 = dragModel;
-					if (_p227.ctor === 'Dropping') {
-						var _v115 = _p227._0.msg,
-							_v116 = _elm_lang$core$Native_Utils.update(
+					var _p234 = dragModel;
+					if (_p234.ctor === 'Dropping') {
+						var _v121 = _p234._0.msg,
+							_v122 = _elm_lang$core$Native_Utils.update(
 							newModel,
 							{
 								projectDrag: _vito$cadet$Drag$drop(newModel.projectDrag)
 							});
-						msg = _v115;
-						model = _v116;
+						msg = _v121;
+						model = _v122;
 						continue update;
 					} else {
 						return {ctor: '_Tuple2', _0: newModel, _1: _elm_lang$core$Platform_Cmd$none};
 					}
 				case 'MoveCardAfter':
-					var _p229 = _p219._1;
-					var _p228 = _p219._0;
-					if (_p228.ctor === 'FromColumnCardSource') {
+					var _p236 = _p226._1;
+					var _p235 = _p226._0;
+					if (_p235.ctor === 'FromColumnCardSource') {
 						return {
 							ctor: '_Tuple2',
 							_0: model,
-							_1: A3(_vito$cadet$Main$moveCard, model, _p229, _p228._0.cardId)
+							_1: A3(_vito$cadet$Main$moveCard, model, _p236, _p235._0.cardId)
 						};
 					} else {
 						return {
 							ctor: '_Tuple2',
 							_0: model,
-							_1: A3(_vito$cadet$Main$addCard, model, _p229, _p228._0.contentId)
+							_1: A3(_vito$cadet$Main$addCard, model, _p236, _p235._0.contentId)
 						};
 					}
 				case 'CardMoved':
-					if (_p219._1.ctor === 'Ok') {
-						var _p241 = _p219._0;
-						var _p230 = model.projectDrag;
-						if (_p230.ctor === 'Dropped') {
+					if (_p226._1.ctor === 'Ok') {
+						var _p248 = _p226._0;
+						var _p237 = model.projectDrag;
+						if (_p237.ctor === 'Dropped') {
 							var msourceId = function () {
-								var _p231 = _p230._0.source;
-								if (_p231.ctor === 'FromColumnCardSource') {
-									var _p232 = _p231._0;
-									return _elm_lang$core$Native_Utils.eq(_p232.columnId, _p241) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(_p232.columnId);
+								var _p238 = _p237._0.source;
+								if (_p238.ctor === 'FromColumnCardSource') {
+									var _p239 = _p238._0;
+									return _elm_lang$core$Native_Utils.eq(_p239.columnId, _p248) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(_p239.columnId);
 								} else {
 									return _elm_lang$core$Maybe$Nothing;
 								}
@@ -42363,39 +42523,39 @@ var _vito$cadet$Main$update = F2(
 											value: f(indexed.value)
 										});
 								});
-							var _p233 = function () {
-								var _p234 = _p219._1._0.content;
-								if (_p234.ctor === 'Just') {
-									if (_p234._0.ctor === 'IssueCardContent') {
-										var _p236 = _p234._0._0;
+							var _p240 = function () {
+								var _p241 = _p226._1._0.content;
+								if (_p241.ctor === 'Just') {
+									if (_p241._0.ctor === 'IssueCardContent') {
+										var _p243 = _p241._0._0;
 										return {
 											ctor: '_Tuple2',
-											_0: _elm_lang$core$Maybe$Just(_p236.id),
+											_0: _elm_lang$core$Maybe$Just(_p243.id),
 											_1: A2(
 												_vito$cadet$Backend$refreshIssue,
-												_p236.id,
-												function (_p235) {
+												_p243.id,
+												function (_p242) {
 													return _vito$cadet$Main$CardDropContentRefreshed(
 														A2(
 															_elm_lang$core$Result$map,
 															wrapValue(_vito$cadet$GitHubGraph$IssueCardContent),
-															_p235));
+															_p242));
 												})
 										};
 									} else {
-										var _p238 = _p234._0._0;
+										var _p245 = _p241._0._0;
 										return {
 											ctor: '_Tuple2',
-											_0: _elm_lang$core$Maybe$Just(_p238.id),
+											_0: _elm_lang$core$Maybe$Just(_p245.id),
 											_1: A2(
 												_vito$cadet$Backend$refreshPR,
-												_p238.id,
-												function (_p237) {
+												_p245.id,
+												function (_p244) {
 													return _vito$cadet$Main$CardDropContentRefreshed(
 														A2(
 															_elm_lang$core$Result$map,
 															wrapValue(_vito$cadet$GitHubGraph$PullRequestCardContent),
-															_p237));
+															_p244));
 												})
 										};
 									}
@@ -42403,11 +42563,11 @@ var _vito$cadet$Main$update = F2(
 									return {ctor: '_Tuple2', _0: _elm_lang$core$Maybe$Nothing, _1: _elm_lang$core$Platform_Cmd$none};
 								}
 							}();
-							var mcontentId = _p233._0;
-							var refreshContent = _p233._1;
-							var _p239 = msourceId;
-							if (_p239.ctor === 'Just') {
-								var _p240 = _p239._0;
+							var mcontentId = _p240._0;
+							var refreshContent = _p240._1;
+							var _p246 = msourceId;
+							if (_p246.ctor === 'Just') {
+								var _p247 = _p246._0;
 								return A2(
 									_elm_lang$core$Platform_Cmd_ops['!'],
 									_elm_lang$core$Native_Utils.update(
@@ -42417,9 +42577,9 @@ var _vito$cadet$Main$update = F2(
 												{
 													contentId: mcontentId,
 													content: _elm_lang$core$Maybe$Nothing,
-													sourceId: _elm_lang$core$Maybe$Just(_p240),
+													sourceId: _elm_lang$core$Maybe$Just(_p247),
 													sourceCards: _elm_lang$core$Maybe$Nothing,
-													targetId: _elm_lang$core$Maybe$Just(_p241),
+													targetId: _elm_lang$core$Maybe$Just(_p248),
 													targetCards: _elm_lang$core$Maybe$Nothing
 												})
 										}),
@@ -42428,10 +42588,10 @@ var _vito$cadet$Main$update = F2(
 										_0: refreshContent,
 										_1: {
 											ctor: '::',
-											_0: A2(_vito$cadet$Backend$refreshCards, _p240, _vito$cadet$Main$CardDropSourceRefreshed),
+											_0: A2(_vito$cadet$Backend$refreshCards, _p247, _vito$cadet$Main$CardDropSourceRefreshed),
 											_1: {
 												ctor: '::',
-												_0: A2(_vito$cadet$Backend$refreshCards, _p241, _vito$cadet$Main$CardDropTargetRefreshed),
+												_0: A2(_vito$cadet$Backend$refreshCards, _p248, _vito$cadet$Main$CardDropTargetRefreshed),
 												_1: {ctor: '[]'}
 											}
 										}
@@ -42448,7 +42608,7 @@ var _vito$cadet$Main$update = F2(
 													content: _elm_lang$core$Maybe$Nothing,
 													sourceId: _elm_lang$core$Maybe$Nothing,
 													sourceCards: _elm_lang$core$Maybe$Nothing,
-													targetId: _elm_lang$core$Maybe$Just(_p241),
+													targetId: _elm_lang$core$Maybe$Just(_p248),
 													targetCards: _elm_lang$core$Maybe$Nothing
 												})
 										}),
@@ -42457,7 +42617,7 @@ var _vito$cadet$Main$update = F2(
 										_0: refreshContent,
 										_1: {
 											ctor: '::',
-											_0: A2(_vito$cadet$Backend$refreshCards, _p241, _vito$cadet$Main$CardDropTargetRefreshed),
+											_0: A2(_vito$cadet$Backend$refreshCards, _p248, _vito$cadet$Main$CardDropTargetRefreshed),
 											_1: {ctor: '[]'}
 										}
 									});
@@ -42469,13 +42629,13 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to move card', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to move card', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'CardDropContentRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p242 = model.projectDragRefresh;
-						if (_p242.ctor === 'Nothing') {
+					if (_p226._0.ctor === 'Ok') {
+						var _p249 = model.projectDragRefresh;
+						if (_p249.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							return {
@@ -42486,11 +42646,11 @@ var _vito$cadet$Main$update = F2(
 										{
 											projectDragRefresh: _elm_lang$core$Maybe$Just(
 												_elm_lang$core$Native_Utils.update(
-													_p242._0,
+													_p249._0,
 													{
-														content: _elm_lang$core$Maybe$Just(_p219._0._0.value)
+														content: _elm_lang$core$Maybe$Just(_p226._0._0.value)
 													})),
-											dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex)
+											dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex)
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
@@ -42499,13 +42659,13 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'CardDropSourceRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p243 = model.projectDragRefresh;
-						if (_p243.ctor === 'Nothing') {
+					if (_p226._0.ctor === 'Ok') {
+						var _p250 = model.projectDragRefresh;
+						if (_p250.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							return {
@@ -42516,11 +42676,11 @@ var _vito$cadet$Main$update = F2(
 										{
 											projectDragRefresh: _elm_lang$core$Maybe$Just(
 												_elm_lang$core$Native_Utils.update(
-													_p243._0,
+													_p250._0,
 													{
-														sourceCards: _elm_lang$core$Maybe$Just(_p219._0._0.value)
+														sourceCards: _elm_lang$core$Maybe$Just(_p226._0._0.value)
 													})),
-											dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex)
+											dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex)
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
@@ -42529,13 +42689,13 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'CardDropTargetRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p244 = model.projectDragRefresh;
-						if (_p244.ctor === 'Nothing') {
+					if (_p226._0.ctor === 'Ok') {
+						var _p251 = model.projectDragRefresh;
+						if (_p251.ctor === 'Nothing') {
 							return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 						} else {
 							return {
@@ -42546,11 +42706,11 @@ var _vito$cadet$Main$update = F2(
 										{
 											projectDragRefresh: _elm_lang$core$Maybe$Just(
 												_elm_lang$core$Native_Utils.update(
-													_p244._0,
+													_p251._0,
 													{
-														targetCards: _elm_lang$core$Maybe$Just(_p219._0._0.value)
+														targetCards: _elm_lang$core$Maybe$Just(_p226._0._0.value)
 													})),
-											dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex)
+											dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex)
 										})),
 								_1: _elm_lang$core$Platform_Cmd$none
 							};
@@ -42559,16 +42719,16 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh card', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'CardsRefreshed':
-					if (_p219._1.ctor === 'Ok') {
+					if (_p226._1.ctor === 'Ok') {
 						var data = model.data;
 						var newData = _elm_lang$core$Native_Utils.update(
 							data,
 							{
-								columnCards: A3(_elm_lang$core$Dict$insert, _p219._0, _p219._1._0.value, data.columnCards)
+								columnCards: A3(_elm_lang$core$Dict$insert, _p226._0, _p226._1._0.value, data.columnCards)
 							});
 						return {
 							ctor: '_Tuple2',
@@ -42577,7 +42737,7 @@ var _vito$cadet$Main$update = F2(
 									model,
 									{
 										data: newData,
-										dataIndex: A2(_elm_lang$core$Basics$max, _p219._1._0.index, model.dataIndex)
+										dataIndex: A2(_elm_lang$core$Basics$max, _p226._1._0.index, model.dataIndex)
 									})),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -42585,15 +42745,15 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh cards', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh cards', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'SearchCards':
-					var _p249 = _p219._0;
+					var _p256 = _p226._0;
 					var cardsByTitle = A3(
 						_elm_lang$core$Dict$foldl,
 						F2(
-							function (_p245, card) {
+							function (_p252, card) {
 								return A2(
 									_elm_lang$core$Dict$insert,
 									_elm_lang$core$String$toLower(card.title),
@@ -42601,13 +42761,13 @@ var _vito$cadet$Main$update = F2(
 							}),
 						_elm_lang$core$Dict$empty,
 						model.allCards);
-					var tokens = A2(_elm_lang$core$String$split, ' ', _p249);
-					var _p246 = A2(
+					var tokens = A2(_elm_lang$core$String$split, ' ', _p256);
+					var _p253 = A2(
 						_elm_lang$core$List$partition,
 						_elm_lang$core$String$contains(':'),
 						tokens);
-					var filterTokens = _p246._0;
-					var rest = _p246._1;
+					var filterTokens = _p253._0;
+					var rest = _p253._1;
 					var filters = A2(
 						_elm_lang$core$List$map,
 						_elm_lang$core$String$split(':'),
@@ -42623,9 +42783,9 @@ var _vito$cadet$Main$update = F2(
 								_elm_lang$core$List$all,
 								filters,
 								function (filter) {
-									var _p247 = filter;
-									if ((((_p247.ctor === '::') && (_p247._0 === 'label')) && (_p247._1.ctor === '::')) && (_p247._1._1.ctor === '[]')) {
-										return A3(_vito$cadet$Main$hasLabel, model, _p247._1._0, card);
+									var _p254 = filter;
+									if ((((_p254.ctor === '::') && (_p254._0 === 'label')) && (_p254._1.ctor === '::')) && (_p254._1._1.ctor === '[]')) {
+										return A3(_vito$cadet$Main$hasLabel, model, _p254._1._0, card);
 									} else {
 										return false;
 									}
@@ -42634,7 +42794,7 @@ var _vito$cadet$Main$update = F2(
 					var foundCards = A3(
 						_elm_lang$core$Dict$foldl,
 						F2(
-							function (_p248, card) {
+							function (_p255, card) {
 								return _elm_lang$core$Set$insert(card.id);
 							}),
 						_elm_lang$core$Set$empty,
@@ -42644,7 +42804,7 @@ var _vito$cadet$Main$update = F2(
 						_0: _vito$cadet$Main$computeGraphState(
 							_elm_lang$core$Native_Utils.update(
 								model,
-								{cardSearch: _p249, anticipatedCards: foundCards})),
+								{cardSearch: _p256, anticipatedCards: foundCards})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'SelectAnticipatedCards':
@@ -42666,7 +42826,7 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									selectedCards: A2(_rnons$ordered_containers$OrderedSet$insert, _p219._0, model.selectedCards)
+									selectedCards: A2(_rnons$ordered_containers$OrderedSet$insert, _p226._0, model.selectedCards)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -42686,7 +42846,7 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									selectedCards: A2(_rnons$ordered_containers$OrderedSet$remove, _p219._0, model.selectedCards)
+									selectedCards: A2(_rnons$ordered_containers$OrderedSet$remove, _p226._0, model.selectedCards)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -42697,7 +42857,7 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									highlightedNode: _elm_lang$core$Maybe$Just(_p219._0)
+									highlightedNode: _elm_lang$core$Maybe$Just(_p226._0)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -42711,15 +42871,15 @@ var _vito$cadet$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'AnticipateCardFromNode':
-					var _p250 = _p219._0;
+					var _p257 = _p226._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _vito$cadet$Main$computeGraphState(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									anticipatedCards: A2(_elm_lang$core$Set$insert, _p250, model.anticipatedCards),
-									highlightedCard: _elm_lang$core$Maybe$Just(_p250)
+									anticipatedCards: A2(_elm_lang$core$Set$insert, _p257, model.anticipatedCards),
+									highlightedCard: _elm_lang$core$Maybe$Just(_p257)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -42730,40 +42890,40 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									anticipatedCards: A2(_elm_lang$core$Set$remove, _p219._0, model.anticipatedCards),
+									anticipatedCards: A2(_elm_lang$core$Set$remove, _p226._0, model.anticipatedCards),
 									highlightedCard: _elm_lang$core$Maybe$Nothing
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'MeFetched':
-					if (_p219._0.ctor === 'Ok') {
+					if (_p226._0.ctor === 'Ok') {
 						return {
 							ctor: '_Tuple2',
 							_0: _vito$cadet$Main$computeGraphState(
 								_elm_lang$core$Native_Utils.update(
 									model,
-									{me: _p219._0._0})),
+									{me: _p226._0._0})),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					} else {
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'error fetching self', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'error fetching self', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'DataFetched':
-					if (_p219._0.ctor === 'Ok') {
-						var _p259 = _p219._0._0.value;
-						var _p258 = _p219._0._0.index;
+					if (_p226._0.ctor === 'Ok') {
+						var _p266 = _p226._0._0.value;
+						var _p265 = _p226._0._0.index;
 						return {
 							ctor: '_Tuple2',
 							_0: function () {
-								if (_elm_lang$core$Native_Utils.cmp(_p258, model.dataIndex) > 0) {
+								if (_elm_lang$core$Native_Utils.cmp(_p265, model.dataIndex) > 0) {
 									var allLabels = A3(
 										_elm_lang$core$Dict$foldl,
 										F3(
-											function (_p251, r, ls) {
+											function (_p258, r, ls) {
 												return A3(
 													_elm_lang$core$List$foldl,
 													function (l) {
@@ -42773,40 +42933,40 @@ var _vito$cadet$Main$update = F2(
 													r.labels);
 											}),
 										_elm_lang$core$Dict$empty,
-										_p259.repos);
+										_p266.repos);
 									var colorLightnessCache = A3(
 										_elm_lang$core$Dict$foldl,
 										F3(
-											function (_p253, _p252, cache) {
-												var _p254 = _p252;
-												var _p255 = _p254.color;
+											function (_p260, _p259, cache) {
+												var _p261 = _p259;
+												var _p262 = _p261.color;
 												return A3(
 													_elm_lang$core$Dict$insert,
-													_p255,
-													_vito$cadet$Main$computeColorIsLight(_p255),
+													_p262,
+													_vito$cadet$Main$computeColorIsLight(_p262),
 													cache);
 											}),
 										_elm_lang$core$Dict$empty,
 										allLabels);
 									var prCards = A2(
 										_elm_lang$core$Dict$map,
-										function (_p256) {
+										function (_p263) {
 											return _vito$cadet$Main$prCard;
 										},
-										_p259.prs);
+										_p266.prs);
 									var issueCards = A2(
 										_elm_lang$core$Dict$map,
-										function (_p257) {
+										function (_p264) {
 											return _vito$cadet$Main$issueCard;
 										},
-										_p259.issues);
+										_p266.issues);
 									var allCards = A2(_elm_lang$core$Dict$union, issueCards, prCards);
 									return _vito$cadet$Main$computeGraphState(
 										_vito$cadet$Main$computeGraph(
 											_vito$cadet$Main$computeDataView(
 												_elm_lang$core$Native_Utils.update(
 													model,
-													{data: _p259, dataIndex: _p258, allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache}))));
+													{data: _p266, dataIndex: _p265, allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache}))));
 								} else {
 									return A3(
 										_elm_lang$core$Basics$flip,
@@ -42814,7 +42974,7 @@ var _vito$cadet$Main$update = F2(
 										A2(
 											_elm_lang$core$Debug$log,
 											'ignoring stale index',
-											{ctor: '_Tuple2', _0: _p258, _1: model.dataIndex}),
+											{ctor: '_Tuple2', _0: _p265, _1: model.dataIndex}),
 										model);
 								}
 							}(),
@@ -42824,7 +42984,7 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'error fetching data', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'error fetching data', _p226._0._0),
 							{
 								ctor: '_Tuple2',
 								_0: model,
@@ -42832,36 +42992,36 @@ var _vito$cadet$Main$update = F2(
 							});
 					}
 				case 'MirrorLabel':
-					var _p264 = _p219._0;
+					var _p271 = _p226._0;
 					var cmds = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
-							function (_p260, r, acc) {
-								var _p262 = A2(
+							function (_p267, r, acc) {
+								var _p269 = A2(
 									_elm_lang$core$List$filter,
-									function (_p261) {
+									function (_p268) {
 										return A2(
 											F2(
 												function (x, y) {
 													return _elm_lang$core$Native_Utils.eq(x, y);
 												}),
-											_p264.name,
+											_p271.name,
 											function (_) {
 												return _.name;
-											}(_p261));
+											}(_p268));
 									},
 									r.labels);
-								if (_p262.ctor === '[]') {
+								if (_p269.ctor === '[]') {
 									return {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$createLabel, model, r, _p264),
+										_0: A3(_vito$cadet$Main$createLabel, model, r, _p271),
 										_1: acc
 									};
 								} else {
-									var _p263 = _p262._0;
-									return _elm_lang$core$Native_Utils.eq(_p263.color, _p264.color) ? acc : {
+									var _p270 = _p269._0;
+									return _elm_lang$core$Native_Utils.eq(_p270.color, _p271.color) ? acc : {
 										ctor: '::',
-										_0: A4(_vito$cadet$Main$updateLabel, model, r, _p263, _p264),
+										_0: A4(_vito$cadet$Main$updateLabel, model, r, _p270, _p271),
 										_1: acc
 									};
 								}
@@ -42881,7 +43041,7 @@ var _vito$cadet$Main$update = F2(
 							{
 								deletingLabels: A2(
 									_elm_lang$core$Set$insert,
-									_vito$cadet$Main$labelKey(_p219._0),
+									_vito$cadet$Main$labelKey(_p226._0),
 									model.deletingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -42894,27 +43054,27 @@ var _vito$cadet$Main$update = F2(
 							{
 								deletingLabels: A2(
 									_elm_lang$core$Set$remove,
-									_vito$cadet$Main$labelKey(_p219._0),
+									_vito$cadet$Main$labelKey(_p226._0),
 									model.deletingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'DeleteLabel':
-					var _p267 = _p219._0;
+					var _p274 = _p226._0;
 					var cmds = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
-							function (_p265, r, acc) {
-								var _p266 = A2(
+							function (_p272, r, acc) {
+								var _p273 = A2(
 									_elm_lang$core$List$filter,
-									_vito$cadet$Main$matchesLabel(_p267),
+									_vito$cadet$Main$matchesLabel(_p274),
 									r.labels);
-								if (_p266.ctor === '[]') {
+								if (_p273.ctor === '[]') {
 									return acc;
 								} else {
 									return {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$deleteLabel, model, r, _p266._0),
+										_0: A3(_vito$cadet$Main$deleteLabel, model, r, _p273._0),
 										_1: acc
 									};
 								}
@@ -42928,13 +43088,13 @@ var _vito$cadet$Main$update = F2(
 							{
 								deletingLabels: A2(
 									_elm_lang$core$Set$remove,
-									_vito$cadet$Main$labelKey(_p267),
+									_vito$cadet$Main$labelKey(_p274),
 									model.deletingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$batch(cmds)
 					};
 				case 'StartEditingLabel':
-					var _p268 = _p219._0;
+					var _p275 = _p226._0;
 					return {
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
@@ -42942,8 +43102,8 @@ var _vito$cadet$Main$update = F2(
 							{
 								editingLabels: A3(
 									_elm_lang$core$Dict$insert,
-									_vito$cadet$Main$labelKey(_p268),
-									_p268,
+									_vito$cadet$Main$labelKey(_p275),
+									_p275,
 									model.editingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -42956,7 +43116,7 @@ var _vito$cadet$Main$update = F2(
 							{
 								editingLabels: A2(
 									_elm_lang$core$Dict$remove,
-									_vito$cadet$Main$labelKey(_p219._0),
+									_vito$cadet$Main$labelKey(_p226._0),
 									model.editingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -42969,19 +43129,19 @@ var _vito$cadet$Main$update = F2(
 							{
 								editingLabels: A3(
 									_elm_lang$core$Dict$update,
-									_vito$cadet$Main$labelKey(_p219._0),
+									_vito$cadet$Main$labelKey(_p226._0),
 									_elm_lang$core$Maybe$map(
 										function (newLabel) {
 											return _elm_lang$core$Native_Utils.update(
 												newLabel,
-												{name: _p219._1});
+												{name: _p226._1});
 										}),
 									model.editingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'SetLabelColor':
-					var _p270 = _p219._0;
+					var _p277 = _p226._0;
 					var newLabel = model.newLabel;
 					return {
 						ctor: '_Tuple2',
@@ -42990,27 +43150,27 @@ var _vito$cadet$Main$update = F2(
 							{
 								newLabel: _elm_lang$core$String$isEmpty(newLabel.name) ? newLabel : _elm_lang$core$Native_Utils.update(
 									newLabel,
-									{color: _p270}),
+									{color: _p277}),
 								newLabelColored: !_elm_lang$core$String$isEmpty(newLabel.name),
 								editingLabels: A2(
 									_elm_lang$core$Dict$map,
 									F2(
-										function (_p269, label) {
+										function (_p276, label) {
 											return _elm_lang$core$Native_Utils.update(
 												label,
-												{color: _p270});
+												{color: _p277});
 										}),
 									model.editingLabels)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'RandomizeLabelColor':
-					var _p272 = _p219._0;
-					var _p271 = A2(
+					var _p279 = _p226._0;
+					var _p278 = A2(
 						_elm_lang$core$Dict$get,
-						_vito$cadet$Main$labelKey(_p272),
+						_vito$cadet$Main$labelKey(_p279),
 						model.editingLabels);
-					if (_p271.ctor === 'Nothing') {
+					if (_p278.ctor === 'Nothing') {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					} else {
 						return {
@@ -43020,34 +43180,34 @@ var _vito$cadet$Main$update = F2(
 								{
 									editingLabels: A3(
 										_elm_lang$core$Dict$insert,
-										_vito$cadet$Main$labelKey(_p272),
-										_vito$cadet$Main$randomizeColor(_p271._0),
+										_vito$cadet$Main$labelKey(_p279),
+										_vito$cadet$Main$randomizeColor(_p278._0),
 										model.editingLabels)
 								}),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
 					}
 				case 'EditLabel':
-					var _p276 = _p219._0;
-					var _p273 = A2(
+					var _p283 = _p226._0;
+					var _p280 = A2(
 						_elm_lang$core$Dict$get,
-						_vito$cadet$Main$labelKey(_p276),
+						_vito$cadet$Main$labelKey(_p283),
 						model.editingLabels);
-					if (_p273.ctor === 'Nothing') {
+					if (_p280.ctor === 'Nothing') {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					} else {
 						var cmds = A3(
 							_elm_lang$core$Dict$foldl,
 							F3(
-								function (_p274, r, acc) {
-									var _p275 = A2(
+								function (_p281, r, acc) {
+									var _p282 = A2(
 										_elm_lang$core$List$filter,
-										_vito$cadet$Main$matchesLabel(_p276),
+										_vito$cadet$Main$matchesLabel(_p283),
 										r.labels);
-									if (_p275.ctor === '::') {
+									if (_p282.ctor === '::') {
 										return {
 											ctor: '::',
-											_0: A4(_vito$cadet$Main$updateLabel, model, r, _p275._0, _p273._0),
+											_0: A4(_vito$cadet$Main$updateLabel, model, r, _p282._0, _p280._0),
 											_1: acc
 										};
 									} else {
@@ -43063,7 +43223,7 @@ var _vito$cadet$Main$update = F2(
 								{
 									editingLabels: A2(
 										_elm_lang$core$Dict$remove,
-										_vito$cadet$Main$labelKey(_p276),
+										_vito$cadet$Main$labelKey(_p283),
 										model.editingLabels)
 								}),
 							_1: _elm_lang$core$Platform_Cmd$batch(cmds)
@@ -43073,15 +43233,15 @@ var _vito$cadet$Main$update = F2(
 					if (_elm_lang$core$Native_Utils.eq(model.newLabel.name, '')) {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					} else {
-						var _v132 = _vito$cadet$Main$MirrorLabel(model.newLabel),
-							_v133 = _elm_lang$core$Native_Utils.update(
+						var _v138 = _vito$cadet$Main$MirrorLabel(model.newLabel),
+							_v139 = _elm_lang$core$Native_Utils.update(
 							model,
 							{
 								newLabel: {name: '', color: 'ffffff'},
 								newLabelColored: false
 							});
-						msg = _v132;
-						model = _v133;
+						msg = _v138;
+						model = _v139;
 						continue update;
 					}
 				case 'RandomizeNewLabelColor':
@@ -43096,9 +43256,9 @@ var _vito$cadet$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'SetNewLabelName':
-					var _p277 = _p219._0;
+					var _p284 = _p226._0;
 					var newColor = model.newLabelColored ? model.newLabel.color : _vito$cadet$Main$generateColor(
-						_vito$cadet$Hash$hash(_p277));
+						_vito$cadet$Hash$hash(_p284));
 					var newLabel = model.newLabel;
 					return {
 						ctor: '_Tuple2',
@@ -43107,14 +43267,14 @@ var _vito$cadet$Main$update = F2(
 							{
 								newLabel: _elm_lang$core$Native_Utils.update(
 									newLabel,
-									{name: _p277, color: newColor})
+									{name: _p284, color: newColor})
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'LabelChanged':
-					if (_p219._1.ctor === 'Ok') {
-						var _p278 = _p219._0;
-						var repoSel = {owner: _p278.owner, name: _p278.name};
+					if (_p226._1.ctor === 'Ok') {
+						var _p285 = _p226._0;
+						var repoSel = {owner: _p285.owner, name: _p285.name};
 						return {
 							ctor: '_Tuple2',
 							_0: model,
@@ -43124,29 +43284,29 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to modify labels', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to modify labels', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'RepoRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p283 = _p219._0._0.value;
+					if (_p226._0.ctor === 'Ok') {
+						var _p290 = _p226._0._0.value;
 						var allLabels = A3(
 							_elm_lang$core$List$foldl,
 							function (l) {
 								return A2(_elm_lang$core$Dict$insert, l.id, l);
 							},
 							model.allLabels,
-							_p283.labels);
+							_p290.labels);
 						var colorLightnessCache = A3(
 							_elm_lang$core$Dict$foldl,
 							F3(
-								function (_p280, _p279, cache) {
-									var _p281 = _p279;
-									var _p282 = _p281.color;
+								function (_p287, _p286, cache) {
+									var _p288 = _p286;
+									var _p289 = _p288.color;
 									return A3(
 										_elm_lang$core$Dict$insert,
-										_p282,
-										_vito$cadet$Main$computeColorIsLight(_p282),
+										_p289,
+										_vito$cadet$Main$computeColorIsLight(_p289),
 										cache);
 								}),
 							_elm_lang$core$Dict$empty,
@@ -43161,9 +43321,9 @@ var _vito$cadet$Main$update = F2(
 										data: _elm_lang$core$Native_Utils.update(
 											data,
 											{
-												repos: A3(_elm_lang$core$Dict$insert, _p283.id, _p283, data.repos)
+												repos: A3(_elm_lang$core$Dict$insert, _p290.id, _p290, data.repos)
 											}),
-										dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex),
+										dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex),
 										allLabels: allLabels,
 										colorLightnessCache: colorLightnessCache
 									})),
@@ -43173,53 +43333,53 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh repo', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh repo', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'AcceptCard':
-					var _p284 = _p219._0.content;
-					if (_p284.ctor === 'IssueCardContent') {
+					var _p291 = _p226._0.content;
+					if (_p291.ctor === 'IssueCardContent') {
 						return {
 							ctor: '_Tuple2',
 							_0: model,
-							_1: A2(_vito$cadet$Main$acceptIssue, model, _p284._0)
+							_1: A2(_vito$cadet$Main$acceptIssue, model, _p291._0)
 						};
 					} else {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					}
 				case 'RejectCard':
-					var _p285 = _p219._0.content;
-					if (_p285.ctor === 'IssueCardContent') {
+					var _p292 = _p226._0.content;
+					if (_p292.ctor === 'IssueCardContent') {
 						return {
 							ctor: '_Tuple2',
 							_0: model,
-							_1: A2(_vito$cadet$Main$rejectIssue, model, _p285._0)
+							_1: A2(_vito$cadet$Main$rejectIssue, model, _p292._0)
 						};
 					} else {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					}
 				case 'MirrorMilestone':
-					var _p288 = _p219._0;
+					var _p295 = _p226._0;
 					var cmds = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
-							function (_p286, r, acc) {
+							function (_p293, r, acc) {
 								return A2(
 									_elm_lang$core$List$any,
-									function (_p287) {
+									function (_p294) {
 										return A2(
 											F2(
 												function (x, y) {
 													return _elm_lang$core$Native_Utils.eq(x, y);
 												}),
-											_p288,
+											_p295,
 											function (_) {
 												return _.title;
-											}(_p287));
+											}(_p294));
 									},
 									r.milestones) ? acc : {
 									ctor: '::',
-									_0: A3(_vito$cadet$Main$createMilestone, model, r, _p288),
+									_0: A3(_vito$cadet$Main$createMilestone, model, r, _p295),
 									_1: acc
 								};
 							}),
@@ -43234,25 +43394,25 @@ var _vito$cadet$Main$update = F2(
 					var cmds = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
-							function (_p289, r, acc) {
-								var _p291 = A2(
+							function (_p296, r, acc) {
+								var _p298 = A2(
 									_elm_lang$core$List$filter,
-									function (_p290) {
+									function (_p297) {
 										return A2(
 											F2(
 												function (x, y) {
 													return _elm_lang$core$Native_Utils.eq(x, y);
 												}),
-											_p219._0,
+											_p226._0,
 											function (_) {
 												return _.title;
-											}(_p290));
+											}(_p297));
 									},
 									r.milestones);
-								if (_p291.ctor === '::') {
+								if (_p298.ctor === '::') {
 									return {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$closeMilestone, model, r, _p291._0),
+										_0: A3(_vito$cadet$Main$closeMilestone, model, r, _p298._0),
 										_1: acc
 									};
 								} else {
@@ -43270,25 +43430,25 @@ var _vito$cadet$Main$update = F2(
 					var cmds = A3(
 						_elm_lang$core$Dict$foldl,
 						F3(
-							function (_p292, r, acc) {
-								var _p294 = A2(
+							function (_p299, r, acc) {
+								var _p301 = A2(
 									_elm_lang$core$List$filter,
-									function (_p293) {
+									function (_p300) {
 										return A2(
 											F2(
 												function (x, y) {
 													return _elm_lang$core$Native_Utils.eq(x, y);
 												}),
-											_p219._0,
+											_p226._0,
 											function (_) {
 												return _.title;
-											}(_p293));
+											}(_p300));
 									},
 									r.milestones);
-								if (_p294.ctor === '::') {
+								if (_p301.ctor === '::') {
 									return {
 										ctor: '::',
-										_0: A3(_vito$cadet$Main$deleteMilestone, model, r, _p294._0),
+										_0: A3(_vito$cadet$Main$deleteMilestone, model, r, _p301._0),
 										_1: acc
 									};
 								} else {
@@ -43303,9 +43463,9 @@ var _vito$cadet$Main$update = F2(
 						_1: _elm_lang$core$Platform_Cmd$batch(cmds)
 					};
 				case 'MilestoneChanged':
-					if (_p219._1.ctor === 'Ok') {
-						var _p295 = _p219._0;
-						var repoSel = {owner: _p295.owner, name: _p295.name};
+					if (_p226._1.ctor === 'Ok') {
+						var _p302 = _p226._0;
+						var repoSel = {owner: _p302.owner, name: _p302.name};
 						return {
 							ctor: '_Tuple2',
 							_0: model,
@@ -43315,7 +43475,7 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to modify labels', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to modify labels', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'SetNewMilestoneName':
@@ -43323,60 +43483,60 @@ var _vito$cadet$Main$update = F2(
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{newMilestoneName: _p219._0}),
+							{newMilestoneName: _p226._0}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'CreateMilestone':
-					var _p296 = model.newMilestoneName;
-					if (_p296 === '') {
+					var _p303 = model.newMilestoneName;
+					if (_p303 === '') {
 						return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
 					} else {
-						var _v140 = _vito$cadet$Main$MirrorMilestone(_p296),
-							_v141 = model;
-						msg = _v140;
-						model = _v141;
+						var _v146 = _vito$cadet$Main$MirrorMilestone(_p303),
+							_v147 = model;
+						msg = _v146;
+						model = _v147;
 						continue update;
 					}
 				case 'SetCardMilestone':
-					var _p302 = _p219._0;
+					var _p309 = _p226._0;
 					var set = function () {
-						var _p297 = _p302.content;
-						if (_p297.ctor === 'IssueCardContent') {
-							return A2(_vito$cadet$Main$setIssueMilestone, model, _p297._0);
+						var _p304 = _p309.content;
+						if (_p304.ctor === 'IssueCardContent') {
+							return A2(_vito$cadet$Main$setIssueMilestone, model, _p304._0);
 						} else {
-							return A2(_vito$cadet$Main$setPRMilestone, model, _p297._0);
+							return A2(_vito$cadet$Main$setPRMilestone, model, _p304._0);
 						}
 					}();
-					var _p298 = _p219._1;
-					if (_p298.ctor === 'Nothing') {
+					var _p305 = _p226._1;
+					if (_p305.ctor === 'Nothing') {
 						return {
 							ctor: '_Tuple2',
 							_0: model,
 							_1: set(_elm_lang$core$Maybe$Nothing)
 						};
 					} else {
-						var _p299 = A2(_elm_lang$core$Dict$get, _p302.repo.id, model.data.repos);
-						if (_p299.ctor === 'Just') {
-							var _p301 = A2(
+						var _p306 = A2(_elm_lang$core$Dict$get, _p309.repo.id, model.data.repos);
+						if (_p306.ctor === 'Just') {
+							var _p308 = A2(
 								_elm_lang$core$List$filter,
-								function (_p300) {
+								function (_p307) {
 									return A2(
 										F2(
 											function (x, y) {
 												return _elm_lang$core$Native_Utils.eq(x, y);
 											}),
-										_p298._0,
+										_p305._0,
 										function (_) {
 											return _.title;
-										}(_p300));
+										}(_p307));
 								},
-								_p299._0.milestones);
-							if (_p301.ctor === '::') {
+								_p306._0.milestones);
+							if (_p308.ctor === '::') {
 								return {
 									ctor: '_Tuple2',
 									_0: model,
 									_1: set(
-										_elm_lang$core$Maybe$Just(_p301._0))
+										_elm_lang$core$Maybe$Just(_p308._0))
 								};
 							} else {
 								return {ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none};
@@ -43386,7 +43546,7 @@ var _vito$cadet$Main$update = F2(
 						}
 					}
 				case 'IssueMilestoned':
-					if (_p219._1.ctor === 'Ok') {
+					if (_p226._1.ctor === 'Ok') {
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
@@ -43394,34 +43554,34 @@ var _vito$cadet$Main$update = F2(
 								{
 									milestoneDrag: _vito$cadet$Drag$land(model.milestoneDrag)
 								}),
-							_1: A2(_vito$cadet$Backend$refreshIssue, _p219._0.id, _vito$cadet$Main$IssueRefreshed)
+							_1: A2(_vito$cadet$Backend$refreshIssue, _p226._0.id, _vito$cadet$Main$IssueRefreshed)
 						};
 					} else {
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to change milestone', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to change milestone', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'DataChanged':
-					if (_p219._1.ctor === 'Ok') {
-						return {ctor: '_Tuple2', _0: model, _1: _p219._0};
+					if (_p226._1.ctor === 'Ok') {
+						return {ctor: '_Tuple2', _0: model, _1: _p226._0};
 					} else {
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to change data', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to change data', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'RefreshIssue':
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: A2(_vito$cadet$Backend$refreshIssue, _p219._0, _vito$cadet$Main$IssueRefreshed)
+						_1: A2(_vito$cadet$Backend$refreshIssue, _p226._0, _vito$cadet$Main$IssueRefreshed)
 					};
 				case 'IssueRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p303 = _p219._0._0.value;
+					if (_p226._0.ctor === 'Ok') {
+						var _p310 = _p226._0._0.value;
 						return {
 							ctor: '_Tuple2',
 							_0: _vito$cadet$Main$computeDataView(
@@ -43431,10 +43591,10 @@ var _vito$cadet$Main$update = F2(
 										milestoneDrag: _vito$cadet$Drag$complete(model.milestoneDrag),
 										allCards: A3(
 											_elm_lang$core$Dict$insert,
-											_p303.id,
-											_vito$cadet$Main$issueCard(_p303),
+											_p310.id,
+											_vito$cadet$Main$issueCard(_p310),
 											model.allCards),
-										dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex)
+										dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex)
 									})),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -43442,11 +43602,11 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh issue', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh issue', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'PullRequestMilestoned':
-					if (_p219._1.ctor === 'Ok') {
+					if (_p226._1.ctor === 'Ok') {
 						return {
 							ctor: '_Tuple2',
 							_0: _elm_lang$core$Native_Utils.update(
@@ -43454,24 +43614,24 @@ var _vito$cadet$Main$update = F2(
 								{
 									milestoneDrag: _vito$cadet$Drag$land(model.milestoneDrag)
 								}),
-							_1: A2(_vito$cadet$Backend$refreshPR, _p219._0.id, _vito$cadet$Main$PullRequestRefreshed)
+							_1: A2(_vito$cadet$Backend$refreshPR, _p226._0.id, _vito$cadet$Main$PullRequestRefreshed)
 						};
 					} else {
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to change milestone', _p219._1._0),
+							A2(_elm_lang$core$Debug$log, 'failed to change milestone', _p226._1._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'RefreshPullRequest':
 					return {
 						ctor: '_Tuple2',
 						_0: model,
-						_1: A2(_vito$cadet$Backend$refreshPR, _p219._0, _vito$cadet$Main$PullRequestRefreshed)
+						_1: A2(_vito$cadet$Backend$refreshPR, _p226._0, _vito$cadet$Main$PullRequestRefreshed)
 					};
 				case 'PullRequestRefreshed':
-					if (_p219._0.ctor === 'Ok') {
-						var _p304 = _p219._0._0.value;
+					if (_p226._0.ctor === 'Ok') {
+						var _p311 = _p226._0._0.value;
 						return {
 							ctor: '_Tuple2',
 							_0: _vito$cadet$Main$computeDataView(
@@ -43481,10 +43641,10 @@ var _vito$cadet$Main$update = F2(
 										milestoneDrag: _vito$cadet$Drag$complete(model.milestoneDrag),
 										allCards: A3(
 											_elm_lang$core$Dict$insert,
-											_p304.id,
-											_vito$cadet$Main$prCard(_p304),
+											_p311.id,
+											_vito$cadet$Main$prCard(_p311),
 											model.allCards),
-										dataIndex: A2(_elm_lang$core$Basics$max, _p219._0._0.index, model.dataIndex)
+										dataIndex: A2(_elm_lang$core$Basics$max, _p226._0._0.index, model.dataIndex)
 									})),
 							_1: _elm_lang$core$Platform_Cmd$none
 						};
@@ -43492,7 +43652,7 @@ var _vito$cadet$Main$update = F2(
 						return A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$Basics$always,
-							A2(_elm_lang$core$Debug$log, 'failed to refresh pr', _p219._0._0),
+							A2(_elm_lang$core$Debug$log, 'failed to refresh pr', _p226._0._0),
 							{ctor: '_Tuple2', _0: model, _1: _elm_lang$core$Platform_Cmd$none});
 					}
 				case 'AddFilter':
@@ -43502,7 +43662,7 @@ var _vito$cadet$Main$update = F2(
 							_elm_lang$core$Native_Utils.update(
 								model,
 								{
-									graphFilters: {ctor: '::', _0: _p219._0, _1: model.graphFilters}
+									graphFilters: {ctor: '::', _0: _p226._0, _1: model.graphFilters}
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -43518,7 +43678,7 @@ var _vito$cadet$Main$update = F2(
 										F2(
 											function (x, y) {
 												return !_elm_lang$core$Native_Utils.eq(x, y);
-											})(_p219._0),
+											})(_p226._0),
 										model.graphFilters)
 								})),
 						_1: _elm_lang$core$Platform_Cmd$none
@@ -43529,7 +43689,7 @@ var _vito$cadet$Main$update = F2(
 						_0: _vito$cadet$Main$computeGraph(
 							_elm_lang$core$Native_Utils.update(
 								model,
-								{graphSort: _p219._0})),
+								{graphSort: _p226._0})),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'ToggleLabelFilters':
@@ -43545,7 +43705,7 @@ var _vito$cadet$Main$update = F2(
 						ctor: '_Tuple2',
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
-							{labelSearch: _p219._0}),
+							{labelSearch: _p226._0}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				case 'ToggleLabelOperations':
@@ -43565,7 +43725,7 @@ var _vito$cadet$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								cardLabelOperations: A3(_elm_lang$core$Dict$insert, _p219._0, _p219._1, model.cardLabelOperations)
+								cardLabelOperations: A3(_elm_lang$core$Dict$insert, _p226._0, _p226._1, model.cardLabelOperations)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
@@ -43575,25 +43735,25 @@ var _vito$cadet$Main$update = F2(
 						_0: _elm_lang$core$Native_Utils.update(
 							model,
 							{
-								cardLabelOperations: A2(_elm_lang$core$Dict$remove, _p219._0, model.cardLabelOperations)
+								cardLabelOperations: A2(_elm_lang$core$Dict$remove, _p226._0, model.cardLabelOperations)
 							}),
 						_1: _elm_lang$core$Platform_Cmd$none
 					};
 				default:
-					var _p305 = A2(
+					var _p312 = A2(
 						_elm_lang$core$List$partition,
-						function (_p306) {
+						function (_p313) {
 							return A2(
 								F2(
 									function (x, y) {
 										return _elm_lang$core$Native_Utils.eq(x, y);
 									}),
 								_vito$cadet$Main$AddLabelOperation,
-								_elm_lang$core$Tuple$second(_p306));
+								_elm_lang$core$Tuple$second(_p313));
 						},
 						_elm_lang$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _p305._0;
-					var removePairs = _p305._1;
+					var addPairs = _p312._0;
+					var removePairs = _p312._1;
 					var labelsToAdd = A2(_elm_lang$core$List$map, _elm_lang$core$Tuple$first, addPairs);
 					var labelsToRemove = A2(_elm_lang$core$List$map, _elm_lang$core$Tuple$first, removePairs);
 					var cards = A2(
@@ -43603,11 +43763,11 @@ var _vito$cadet$Main$update = F2(
 					var adds = A2(
 						_elm_lang$core$List$map,
 						function (card) {
-							var _p307 = card.content;
-							if (_p307.ctor === 'IssueCardContent') {
-								return A3(_vito$cadet$Main$addIssueLabels, model, _p307._0, labelsToAdd);
+							var _p314 = card.content;
+							if (_p314.ctor === 'IssueCardContent') {
+								return A3(_vito$cadet$Main$addIssueLabels, model, _p314._0, labelsToAdd);
 							} else {
-								return A3(_vito$cadet$Main$addPullRequestLabels, model, _p307._0, labelsToAdd);
+								return A3(_vito$cadet$Main$addPullRequestLabels, model, _p314._0, labelsToAdd);
 							}
 						},
 						cards);
@@ -43618,13 +43778,13 @@ var _vito$cadet$Main$update = F2(
 								_elm_lang$core$List$filterMap,
 								function (card) {
 									if (A3(_vito$cadet$Main$hasLabel, model, name, card)) {
-										var _p308 = card.content;
-										if (_p308.ctor === 'IssueCardContent') {
+										var _p315 = card.content;
+										if (_p315.ctor === 'IssueCardContent') {
 											return _elm_lang$core$Maybe$Just(
-												A3(_vito$cadet$Main$removeIssueLabel, model, _p308._0, name));
+												A3(_vito$cadet$Main$removeIssueLabel, model, _p315._0, name));
 										} else {
 											return _elm_lang$core$Maybe$Just(
-												A3(_vito$cadet$Main$removePullRequestLabel, model, _p308._0, name));
+												A3(_vito$cadet$Main$removePullRequestLabel, model, _p315._0, name));
 										}
 									} else {
 										return _elm_lang$core$Maybe$Nothing;
@@ -43907,12 +44067,12 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		};
 		var dragId = _vito$cadet$Main$FromColumnCardSource(
 			{columnId: col.id, cardId: ghCard.id});
-		var _p309 = {ctor: '_Tuple2', _0: ghCard.note, _1: ghCard.contentId};
-		_v148_2:
+		var _p316 = {ctor: '_Tuple2', _0: ghCard.note, _1: ghCard.contentId};
+		_v154_2:
 		do {
-			if (_p309.ctor === '_Tuple2') {
-				if (_p309._0.ctor === 'Just') {
-					if (_p309._1.ctor === 'Nothing') {
+			if (_p316.ctor === '_Tuple2') {
+				if (_p316._0.ctor === 'Just') {
+					if (_p316._1.ctor === 'Nothing') {
 						return {
 							ctor: '::',
 							_0: A4(
@@ -43920,7 +44080,7 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 								model.projectDrag,
 								_vito$cadet$Main$ProjectDrag,
 								dragId,
-								A3(_vito$cadet$Main$viewNoteCard, model, col, _p309._0._0)),
+								A3(_vito$cadet$Main$viewNoteCard, model, col, _p316._0._0)),
 							_1: {
 								ctor: '::',
 								_0: A4(
@@ -43933,12 +44093,12 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							}
 						};
 					} else {
-						break _v148_2;
+						break _v154_2;
 					}
 				} else {
-					if (_p309._1.ctor === 'Just') {
-						var _p310 = A2(_elm_lang$core$Dict$get, _p309._1._0, model.allCards);
-						if (_p310.ctor === 'Just') {
+					if (_p316._1.ctor === 'Just') {
+						var _p317 = A2(_elm_lang$core$Dict$get, _p316._1._0, model.allCards);
+						if (_p317.ctor === 'Just') {
 							return {
 								ctor: '::',
 								_0: A4(
@@ -43946,7 +44106,7 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 									model.projectDrag,
 									_vito$cadet$Main$ProjectDrag,
 									dragId,
-									A2(_vito$cadet$Main$viewCard, model, _p310._0)),
+									A2(_vito$cadet$Main$viewCard, model, _p317._0)),
 								_1: {
 									ctor: '::',
 									_0: A4(
@@ -43962,26 +44122,26 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2418, column: 17},
-									end: {line: 2425, column: 70}
+									start: {line: 2418, column: 13},
+									end: {line: 2425, column: 66}
 								},
-								_p310)('impossible: content has no card');
+								_p317)('impossible: content has no card');
 						}
 					} else {
-						break _v148_2;
+						break _v154_2;
 					}
 				}
 			} else {
-				break _v148_2;
+				break _v154_2;
 			}
 		} while(false);
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2411, column: 9},
-				end: {line: 2428, column: 41}
+				start: {line: 2411, column: 5},
+				end: {line: 2428, column: 37}
 			},
-			_p309)('impossible');
+			_p316)('impossible');
 	});
 var _vito$cadet$Main$viewProjectColumn = F4(
 	function (model, project, mod, col) {
@@ -44048,9 +44208,9 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 			});
 	});
 var _vito$cadet$Main$viewSingleProject = F2(
-	function (model, _p313) {
-		var _p314 = _p313;
-		var _p315 = _p314.project;
+	function (model, _p320) {
+		var _p321 = _p320;
+		var _p322 = _p321.project;
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -44085,7 +44245,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 										{ctor: '[]'},
 										{
 											ctor: '::',
-											_0: _elm_lang$html$Html$text(_p315.name),
+											_0: _elm_lang$html$Html$text(_p322.name),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -44104,9 +44264,9 @@ var _vito$cadet$Main$viewSingleProject = F2(
 										_0: A4(
 											_vito$cadet$Main$viewProjectColumn,
 											model,
-											_p315,
+											_p322,
 											_vito$cadet$Main$onlyAcceptableCards(model),
-											_p314.done),
+											_p321.done),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -44120,7 +44280,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 										},
 										{
 											ctor: '::',
-											_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p315, _elm_lang$core$Basics$identity, _p314.inFlight),
+											_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p322, _elm_lang$core$Basics$identity, _p321.inFlight),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -44130,7 +44290,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 						A3(
 							_elm_lang$core$Basics$flip,
 							_elm_lang$core$List$map,
-							_p314.backlogs,
+							_p321.backlogs,
 							function (backlog) {
 								return A2(
 									_elm_lang$html$Html$div,
@@ -44141,7 +44301,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 									},
 									{
 										ctor: '::',
-										_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p315, _elm_lang$core$Basics$identity, backlog),
+										_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p322, _elm_lang$core$Basics$identity, backlog),
 										_1: {ctor: '[]'}
 									});
 							}))),
@@ -44162,7 +44322,7 @@ var _vito$cadet$Main$viewSingleProject = F2(
 								_0: function () {
 									var dropCandidate = {
 										msgFunc: _vito$cadet$Main$MoveCardAfter,
-										target: {projectId: _p315.id, columnId: _p314.icebox.id, afterId: _elm_lang$core$Maybe$Nothing}
+										target: {projectId: _p322.id, columnId: _p321.icebox.id, afterId: _elm_lang$core$Maybe$Nothing}
 									};
 									return A4(_vito$cadet$Drag$viewDropArea, model.projectDrag, _vito$cadet$Main$ProjectDrag, dropCandidate, _elm_lang$core$Maybe$Nothing);
 								}(),
@@ -44182,7 +44342,7 @@ var _vito$cadet$Main$viewProjectPage = F2(
 		var mproject = _elm_lang$core$List$head(
 			A2(
 				_elm_lang$core$List$filter,
-				function (_p316) {
+				function (_p323) {
 					return A2(
 						F2(
 							function (x, y) {
@@ -44194,12 +44354,12 @@ var _vito$cadet$Main$viewProjectPage = F2(
 						}(
 							function (_) {
 								return _.project;
-							}(_p316)));
+							}(_p323)));
 				},
 				statefulProjects));
-		var _p317 = mproject;
-		if (_p317.ctor === 'Just') {
-			return A2(_vito$cadet$Main$viewSingleProject, model, _p317._0);
+		var _p324 = mproject;
+		if (_p324.ctor === 'Just') {
+			return A2(_vito$cadet$Main$viewSingleProject, model, _p324._0);
 		} else {
 			return _elm_lang$html$Html$text('project not found');
 		}
@@ -44267,17 +44427,17 @@ var _vito$cadet$Main$subscriptions = function (model) {
 			_0: A2(
 				_elm_lang$core$Time$every,
 				_elm_lang$core$Time$hour,
-				function (_p318) {
+				function (_p325) {
 					return _vito$cadet$Main$SetCurrentDate(
-						_elm_lang$core$Date$fromTime(_p318));
+						_elm_lang$core$Date$fromTime(_p325));
 				}),
 			_1: {
 				ctor: '::',
 				_0: A2(
 					_elm_lang$core$List$all,
-					function (_p319) {
+					function (_p326) {
 						return _vito$cadet$ForceGraph$isCompleted(
-							_elm_lang$core$Tuple$second(_p319));
+							_elm_lang$core$Tuple$second(_p326));
 					},
 					model.cardGraphs) ? _elm_lang$core$Platform_Sub$none : _elm_lang$animation_frame$AnimationFrame$times(_vito$cadet$Main$Tick),
 				_1: {ctor: '[]'}
@@ -44295,9 +44455,9 @@ var _vito$cadet$Main$ProjectPage = function (a) {
 	return {ctor: 'ProjectPage', _0: a};
 };
 var _vito$cadet$Main$viewProject = F2(
-	function (model, _p320) {
-		var _p321 = _p320;
-		var _p322 = _p321.project;
+	function (model, _p327) {
+		var _p328 = _p327;
+		var _p329 = _p328.project;
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -44335,18 +44495,18 @@ var _vito$cadet$Main$viewProject = F2(
 											{
 												ctor: '::',
 												_0: _elm_lang$html$Html_Attributes$href(
-													A2(_elm_lang$core$Basics_ops['++'], '/projects/', _p322.name)),
+													A2(_elm_lang$core$Basics_ops['++'], '/projects/', _p329.name)),
 												_1: {
 													ctor: '::',
 													_0: _vito$cadet$StrictEvents$onLeftClick(
 														_vito$cadet$Main$SetPage(
-															_vito$cadet$Main$ProjectPage(_p322.name))),
+															_vito$cadet$Main$ProjectPage(_p329.name))),
 													_1: {ctor: '[]'}
 												}
 											},
 											{
 												ctor: '::',
-												_0: _elm_lang$html$Html$text(_p322.name),
+												_0: _elm_lang$html$Html$text(_p329.name),
 												_1: {ctor: '[]'}
 											}),
 										_1: {ctor: '[]'}
@@ -44368,11 +44528,11 @@ var _vito$cadet$Main$viewProject = F2(
 										return A4(
 											_vito$cadet$Main$viewProjectColumn,
 											model,
-											_p322,
+											_p329,
 											_elm_lang$core$List$take(3),
 											backlog);
 									},
-									_p321.backlogs)),
+									_p328.backlogs)),
 							_1: {
 								ctor: '::',
 								_0: A2(
@@ -44384,7 +44544,7 @@ var _vito$cadet$Main$viewProject = F2(
 									},
 									{
 										ctor: '::',
-										_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p322, _elm_lang$core$Basics$identity, _p321.inFlight),
+										_0: A4(_vito$cadet$Main$viewProjectColumn, model, _p329, _elm_lang$core$Basics$identity, _p328.inFlight),
 										_1: {ctor: '[]'}
 									}),
 								_1: {
@@ -44401,9 +44561,9 @@ var _vito$cadet$Main$viewProject = F2(
 											_0: A4(
 												_vito$cadet$Main$viewProjectColumn,
 												model,
-												_p322,
+												_p329,
 												_vito$cadet$Main$onlyAcceptableCards(model),
-												_p321.done),
+												_p328.done),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -44502,21 +44662,21 @@ var _vito$cadet$Main$location2messages = function (loc) {
 	var builder = _rgrempel$elm_route_url$RouteUrl_Builder$fromUrl(loc.href);
 	var path = _rgrempel$elm_route_url$RouteUrl_Builder$path(builder);
 	var page = function () {
-		var _p323 = path;
-		_v153_7:
+		var _p330 = path;
+		_v159_7:
 		do {
-			if (_p323.ctor === '[]') {
+			if (_p330.ctor === '[]') {
 				return _vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage);
 			} else {
-				if (_p323._1.ctor === '::') {
-					if ((_p323._0 === 'projects') && (_p323._1._1.ctor === '[]')) {
+				if (_p330._1.ctor === '::') {
+					if ((_p330._0 === 'projects') && (_p330._1._1.ctor === '[]')) {
 						return _vito$cadet$Main$SetPage(
-							_vito$cadet$Main$ProjectPage(_p323._1._0));
+							_vito$cadet$Main$ProjectPage(_p330._1._0));
 					} else {
-						break _v153_7;
+						break _v159_7;
 					}
 				} else {
-					switch (_p323._0) {
+					switch (_p330._0) {
 						case 'projects':
 							return _vito$cadet$Main$SetPage(_vito$cadet$Main$AllProjectsPage);
 						case 'graph':
@@ -44528,7 +44688,7 @@ var _vito$cadet$Main$location2messages = function (loc) {
 						case 'pull-requests':
 							return _vito$cadet$Main$SetPage(_vito$cadet$Main$PullRequestsPage);
 						default:
-							break _v153_7;
+							break _v159_7;
 					}
 				}
 			}
@@ -44562,8 +44722,8 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 				{
 					ctor: '::',
 					_0: function () {
-						var _p324 = model.me;
-						if (_p324.ctor === 'Nothing') {
+						var _p331 = model.me;
+						if (_p331.ctor === 'Nothing') {
 							return A2(
 								_elm_lang$html$Html$a,
 								{
@@ -44592,7 +44752,7 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 									}
 								});
 						} else {
-							var _p325 = _p324._0.user;
+							var _p332 = _p331._0.user;
 							return A2(
 								_elm_lang$html$Html$a,
 								{
@@ -44600,7 +44760,7 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 									_0: _elm_lang$html$Html_Attributes$class('button user-info'),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$href(_p325.url),
+										_0: _elm_lang$html$Html_Attributes$href(_p332.url),
 										_1: {ctor: '[]'}
 									}
 								},
@@ -44613,14 +44773,14 @@ var _vito$cadet$Main$viewNavBar = function (model) {
 											_0: _elm_lang$html$Html_Attributes$class('user-avatar'),
 											_1: {
 												ctor: '::',
-												_0: _elm_lang$html$Html_Attributes$src(_p325.avatar),
+												_0: _elm_lang$html$Html_Attributes$src(_p332.avatar),
 												_1: {ctor: '[]'}
 											}
 										},
 										{ctor: '[]'}),
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html$text(_p325.login),
+										_0: _elm_lang$html$Html$text(_p332.login),
 										_1: {ctor: '[]'}
 									}
 								});
@@ -44806,8 +44966,8 @@ var _vito$cadet$Main$view = function (model) {
 			A2(_elm_lang$core$Basics$flip, _elm_lang$core$Dict$get, model.allCards),
 			A2(
 				_elm_lang$core$List$filter,
-				function (_p326) {
-					return !A3(_elm_lang$core$Basics$flip, _rnons$ordered_containers$OrderedSet$member, model.selectedCards, _p326);
+				function (_p333) {
+					return !A3(_elm_lang$core$Basics$flip, _rnons$ordered_containers$OrderedSet$member, model.selectedCards, _p333);
 				},
 				_elm_lang$core$Set$toList(model.anticipatedCards))));
 	var sidebarCards = A2(
@@ -44837,8 +44997,8 @@ var _vito$cadet$Main$view = function (model) {
 									ctor: '_Tuple2',
 									_0: 'contains-graph',
 									_1: function () {
-										var _p327 = model.page;
-										switch (_p327.ctor) {
+										var _p334 = model.page;
+										switch (_p334.ctor) {
 											case 'GlobalGraphPage':
 												return true;
 											case 'ProjectPage':
@@ -44865,14 +45025,14 @@ var _vito$cadet$Main$view = function (model) {
 						{
 							ctor: '::',
 							_0: function () {
-								var _p328 = model.page;
-								switch (_p328.ctor) {
+								var _p335 = model.page;
+								switch (_p335.ctor) {
 									case 'AllProjectsPage':
 										return _vito$cadet$Main$viewAllProjectsPage(model);
 									case 'GlobalGraphPage':
 										return _vito$cadet$Main$viewSpatialGraph(model);
 									case 'ProjectPage':
-										return A2(_vito$cadet$Main$viewProjectPage, model, _p328._0);
+										return A2(_vito$cadet$Main$viewProjectPage, model, _p335._0);
 									case 'LabelsPage':
 										return _vito$cadet$Main$viewLabelsPage(model);
 									case 'MilestonesPage':

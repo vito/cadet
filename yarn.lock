@@ -364,11 +364,15 @@ electron-to-chromium@^1.2.7:
   version "1.3.48"
   resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.48.tgz#d3b0d8593814044e092ece2108fc3ac9aea4b900"
 
-elm-format@^0.6.1-alpha:
-  version "0.6.1-alpha"
-  resolved "https://registry.yarnpkg.com/elm-format/-/elm-format-0.6.1-alpha.tgz#daeffe95238cb8ce0d7fc6afb5047bcdd14ad7d7"
+elm-format@^0.7.0-exp:
+  version "0.7.0-exp"
+  resolved "https://registry.yarnpkg.com/elm-format/-/elm-format-0.7.0-exp.tgz#75b9d9f3f0b67195b44e804fce5a6be0f45af408"
   dependencies:
     binwrap "^0.1.4"
+
+elm-oracle@^1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/elm-oracle/-/elm-oracle-1.1.1.tgz#61f6d783221b4ad08e7d101d678b9d5a67d3961c"
 
 elm@^0.18.0:
   version "0.18.0"

@@ -238,7 +238,7 @@ a {
   vertical-align: top;
   user-select: none;
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   position: relative;
 
   &.highlighted {
@@ -277,9 +277,10 @@ a {
 
 .card-icons {
   display: flex;
-  flex-direction: column;
-  padding: 14px;
-  padding-right: 0;
+  flex-direction: row;
+  padding: 12px;
+  padding-top: 0;
+  border-radius: 2px;
 
   .octicon {
     width: 16px;
@@ -287,11 +288,28 @@ a {
     font-size: 16px;
     text-align: center;
     vertical-align: middle;
-    margin-bottom: 10px;
+  }
+
+  .status-actor {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+
+    border: 1px solid transparent;
+
+    &.pending { border-color: @yellow; }
+    &.success { border-color: @green; }
+    &.failure { border-color: @red; }
+    &.expected { border-color: @purple; }
+    &.error { border-color: @orange; }
+  }
+
+  > * {
+    margin-right: 10px;
   }
 
   > :last-child {
-    margin-bottom: 0;
+    margin-right: 0;
   }
 
   .open { color: @green; }
@@ -310,11 +328,18 @@ a {
   .rejected, .reject:hover {
     color: @orange;
   }
+
+  .pending { color: @yellow; }
+  .success { color: @green; }
+  .failure { color: @red; }
+  .expected { color: @purple; }
+  .error { color: @orange; }
 }
 
 .card-info {
   flex-grow: 1;
   padding: 12px;
+  padding-bottom: 8px;
 
   .card-title {
     font-size: 16px;
@@ -1362,9 +1387,27 @@ svg {
     .card {
       border-color: @gray-600;
 
-      &.last-activity-is-me {
-        background: @gray-400;
+      .card-actor:last-child {
+        animation: wiggle 0.5s infinite;
       }
+
+      &.last-activity-is-me {
+        .card-actor:last-child {
+          animation: none;
+        }
+      }
+
+      &.active-today { opacity: 1; }
+      &.active-yesterday { opacity: 1; }
+      &.active-this-week { opacity: 0.75; }
+      &.active-this-month { opacity: 0.5; }
+      &.active-long-ago { opacity: 0.25; }
     }
   }
+}
+
+@keyframes wiggle {
+  0% { -webkit-transform: rotate(10deg); }
+  50% { -webkit-transform: rotate(-10deg); }
+  100% { -webkit-transform: rotate(10deg); }
 }

@@ -1,24 +1,31 @@
 module Main exposing (..)
 
 import AnimationFrame
+import Backend exposing (Data, Me)
 import Date exposing (Date)
 import Debug
 import Dict exposing (Dict)
+import Drag
+import ForceGraph as FG exposing (ForceGraph)
+import GitHubGraph
 import Graph exposing (Graph)
+import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
+import Markdown
 import Navigation
+import OrderedSet exposing (OrderedSet)
 import ParseInt
 import Random
 import Regex exposing (Regex)
 import RouteUrl
 import RouteUrl.Builder
 import Set exposing (Set)
-import OrderedSet exposing (OrderedSet)
+import StrictEvents
 import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
@@ -26,13 +33,6 @@ import Svg.Lazy
 import Task
 import Time exposing (Time)
 import Visualization.Shape as VS
-import Markdown
-import Drag
-import GitHubGraph
-import Hash
-import Backend exposing (Data, Me)
-import ForceGraph as FG exposing (ForceGraph)
-import StrictEvents
 
 
 type alias Config =
@@ -319,7 +319,7 @@ renderHash model =
                 AllActivitySort ->
                     [ "sort-all-activity" ]
     in
-        String.join "." (selects ++ filters ++ sort)
+    String.join "." (selects ++ filters ++ sort)
 
 
 parseHash : String -> List Msg
@@ -354,7 +354,7 @@ parseHash hash =
                     _ ->
                         Nothing
         in
-            List.filterMap parseSegment (String.split "." hash)
+        List.filterMap parseSegment (String.split "." hash)
 
 
 delta2url : Model -> Model -> Maybe RouteUrl.UrlChange
@@ -392,7 +392,7 @@ delta2url a b =
         builder =
             List.foldl (\f b -> f b) RouteUrl.Builder.builder [ withPageEntry, withPagePath, withSelection ]
     in
-        Just (RouteUrl.Builder.toUrlChange builder)
+    Just (RouteUrl.Builder.toUrlChange builder)
 
 
 location2messages : Navigation.Location -> List Msg
@@ -433,7 +433,7 @@ location2messages loc =
                 _ ->
                     SetPage GlobalGraphPage
     in
-        page :: parseHash hash
+    page :: parseHash hash
 
 
 type alias CardNodeRadii =
@@ -552,14 +552,14 @@ update msg model =
                         PullRequestsPage ->
                             Just ExcludeAllFilter
             in
-                ( computeGraph <|
-                    computeDataView
-                        { model
-                            | page = page
-                            , baseGraphFilter = baseGraphFilter
-                        }
-                , Cmd.none
-                )
+            ( computeGraph <|
+                computeDataView
+                    { model
+                        | page = page
+                        , baseGraphFilter = baseGraphFilter
+                    }
+            , Cmd.none
+            )
 
         Tick _ ->
             ( { model
@@ -587,12 +587,12 @@ update msg model =
                 newModel =
                     { model | projectDrag = dragModel }
             in
-                case dragModel of
-                    Drag.Dropping { msg } ->
-                        update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
+            case dragModel of
+                Drag.Dropping { msg } ->
+                    update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
 
-                    _ ->
-                        ( newModel, Cmd.none )
+                _ ->
+                    ( newModel, Cmd.none )
 
         MilestoneDrag msg ->
             let
@@ -602,12 +602,12 @@ update msg model =
                 newModel =
                     { model | milestoneDrag = dragModel }
             in
-                case dragModel of
-                    Drag.Dropping { msg } ->
-                        update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
+            case dragModel of
+                Drag.Dropping { msg } ->
+                    update msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
 
-                    _ ->
-                        ( newModel, Cmd.none )
+                _ ->
+                    ( newModel, Cmd.none )
 
         MoveCardAfter source dest ->
             case source of
@@ -656,39 +656,39 @@ update msg model =
                                 NewContentCardSource _ ->
                                     Nothing
                     in
-                        case msourceId of
-                            Just sourceId ->
-                                { model
-                                    | projectDragRefresh =
-                                        Just
-                                            { contentId = mcontentId
-                                            , content = Nothing
-                                            , sourceId = Just sourceId
-                                            , sourceCards = Nothing
-                                            , targetId = Just col
-                                            , targetCards = Nothing
-                                            }
-                                }
-                                    ! [ refreshContent
-                                      , Backend.refreshCards sourceId CardDropSourceRefreshed
-                                      , Backend.refreshCards col CardDropTargetRefreshed
-                                      ]
+                    case msourceId of
+                        Just sourceId ->
+                            { model
+                                | projectDragRefresh =
+                                    Just
+                                        { contentId = mcontentId
+                                        , content = Nothing
+                                        , sourceId = Just sourceId
+                                        , sourceCards = Nothing
+                                        , targetId = Just col
+                                        , targetCards = Nothing
+                                        }
+                            }
+                                ! [ refreshContent
+                                  , Backend.refreshCards sourceId CardDropSourceRefreshed
+                                  , Backend.refreshCards col CardDropTargetRefreshed
+                                  ]
 
-                            Nothing ->
-                                { model
-                                    | projectDragRefresh =
-                                        Just
-                                            { contentId = mcontentId
-                                            , content = Nothing
-                                            , sourceId = Nothing
-                                            , sourceCards = Nothing
-                                            , targetId = Just col
-                                            , targetCards = Nothing
-                                            }
-                                }
-                                    ! [ refreshContent
-                                      , Backend.refreshCards col CardDropTargetRefreshed
-                                      ]
+                        Nothing ->
+                            { model
+                                | projectDragRefresh =
+                                    Just
+                                        { contentId = mcontentId
+                                        , content = Nothing
+                                        , sourceId = Nothing
+                                        , sourceCards = Nothing
+                                        , targetId = Just col
+                                        , targetCards = Nothing
+                                        }
+                            }
+                                ! [ refreshContent
+                                  , Backend.refreshCards col CardDropTargetRefreshed
+                                  ]
 
                 _ ->
                     ( model, Cmd.none )
@@ -759,7 +759,7 @@ update msg model =
                 newData =
                     { data | columnCards = Dict.insert col value data.columnCards }
             in
-                ( computeDataView { model | data = newData, dataIndex = max index model.dataIndex }, Cmd.none )
+            ( computeDataView { model | data = newData, dataIndex = max index model.dataIndex }, Cmd.none )
 
         CardsRefreshed col (Err msg) ->
             flip always (Debug.log "failed to refresh cards" msg) <|
@@ -806,13 +806,13 @@ update msg model =
                     Dict.filter cardMatch cardsByTitle
                         |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
             in
-                ( computeGraphState
-                    { model
-                        | cardSearch = str
-                        , anticipatedCards = foundCards
-                    }
-                , Cmd.none
-                )
+            ( computeGraphState
+                { model
+                    | cardSearch = str
+                    , anticipatedCards = foundCards
+                }
+            , Cmd.none
+            )
 
         SelectAnticipatedCards ->
             ( computeGraphState
@@ -890,16 +890,16 @@ update msg model =
                             Dict.empty
                             allLabels
                 in
-                    computeGraphState <|
-                        computeGraph <|
-                            computeDataView <|
-                                { model
-                                    | data = value
-                                    , dataIndex = index
-                                    , allCards = allCards
-                                    , allLabels = allLabels
-                                    , colorLightnessCache = colorLightnessCache
-                                }
+                computeGraphState <|
+                    computeGraph <|
+                        computeDataView <|
+                            { model
+                                | data = value
+                                , dataIndex = index
+                                , allCards = allCards
+                                , allLabels = allLabels
+                                , colorLightnessCache = colorLightnessCache
+                            }
               else
                 flip always (Debug.log "ignoring stale index" ( index, model.dataIndex )) <|
                     model
@@ -928,7 +928,7 @@ update msg model =
                         []
                         model.data.repos
             in
-                ( model, Cmd.batch cmds )
+            ( model, Cmd.batch cmds )
 
         StartDeletingLabel label ->
             ( { model | deletingLabels = Set.insert (labelKey label) model.deletingLabels }, Cmd.none )
@@ -951,7 +951,7 @@ update msg model =
                         []
                         model.data.repos
             in
-                ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
+            ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
 
         StartEditingLabel label ->
             ( { model | editingLabels = Dict.insert (labelKey label) label model.editingLabels }, Cmd.none )
@@ -972,18 +972,18 @@ update msg model =
                 newLabel =
                     model.newLabel
             in
-                ( { model
-                    | newLabel =
-                        if String.isEmpty newLabel.name then
-                            newLabel
-                        else
-                            { newLabel | color = newColor }
-                    , newLabelColored = not (String.isEmpty newLabel.name)
-                    , editingLabels =
-                        Dict.map (\_ label -> { label | color = newColor }) model.editingLabels
-                  }
-                , Cmd.none
-                )
+            ( { model
+                | newLabel =
+                    if String.isEmpty newLabel.name then
+                        newLabel
+                    else
+                        { newLabel | color = newColor }
+                , newLabelColored = not (String.isEmpty newLabel.name)
+                , editingLabels =
+                    Dict.map (\_ label -> { label | color = newColor }) model.editingLabels
+              }
+            , Cmd.none
+            )
 
         RandomizeLabelColor label ->
             case Dict.get (labelKey label) model.editingLabels of
@@ -1018,7 +1018,7 @@ update msg model =
                                 []
                                 model.data.repos
                     in
-                        ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
+                    ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
 
         CreateLabel ->
             if model.newLabel.name == "" then
@@ -1044,14 +1044,14 @@ update msg model =
                     else
                         generateColor (Hash.hash name)
             in
-                ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
+            ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
 
         LabelChanged repo (Ok ()) ->
             let
                 repoSel =
                     { owner = repo.owner, name = repo.name }
             in
-                ( model, Backend.refreshRepo repoSel RepoRefreshed )
+            ( model, Backend.refreshRepo repoSel RepoRefreshed )
 
         LabelChanged repo (Err msg) ->
             flip always (Debug.log "failed to modify labels" msg) <|
@@ -1073,15 +1073,15 @@ update msg model =
                         Dict.empty
                         allLabels
             in
-                ( computeDataView
-                    { model
-                        | data = { data | repos = Dict.insert value.id value data.repos }
-                        , dataIndex = max index model.dataIndex
-                        , allLabels = allLabels
-                        , colorLightnessCache = colorLightnessCache
-                    }
-                , Cmd.none
-                )
+            ( computeDataView
+                { model
+                    | data = { data | repos = Dict.insert value.id value data.repos }
+                    , dataIndex = max index model.dataIndex
+                    , allLabels = allLabels
+                    , colorLightnessCache = colorLightnessCache
+                }
+            , Cmd.none
+            )
 
         RepoRefreshed (Err msg) ->
             flip always (Debug.log "failed to refresh repo" msg) <|
@@ -1116,7 +1116,7 @@ update msg model =
                         []
                         model.data.repos
             in
-                ( model, Cmd.batch cmds )
+            ( model, Cmd.batch cmds )
 
         CloseMilestone title ->
             let
@@ -1133,7 +1133,7 @@ update msg model =
                         []
                         model.data.repos
             in
-                ( model, Cmd.batch cmds )
+            ( model, Cmd.batch cmds )
 
         DeleteMilestone title ->
             let
@@ -1150,14 +1150,14 @@ update msg model =
                         []
                         model.data.repos
             in
-                ( model, Cmd.batch cmds )
+            ( model, Cmd.batch cmds )
 
         MilestoneChanged repo (Ok ()) ->
             let
                 repoSel =
                     { owner = repo.owner, name = repo.name }
             in
-                ( model, Backend.refreshRepo repoSel RepoRefreshed )
+            ( model, Backend.refreshRepo repoSel RepoRefreshed )
 
         MilestoneChanged repo (Err msg) ->
             flip always (Debug.log "failed to modify labels" msg) <|
@@ -1184,22 +1184,22 @@ update msg model =
                         GitHubGraph.PullRequestCardContent pr ->
                             setPRMilestone model pr
             in
-                case mtitle of
-                    Nothing ->
-                        ( model, set Nothing )
+            case mtitle of
+                Nothing ->
+                    ( model, set Nothing )
 
-                    Just title ->
-                        case Dict.get card.repo.id model.data.repos of
-                            Just repo ->
-                                case List.filter ((==) title << .title) repo.milestones of
-                                    milestone :: _ ->
-                                        ( model, set (Just milestone) )
+                Just title ->
+                    case Dict.get card.repo.id model.data.repos of
+                        Just repo ->
+                            case List.filter ((==) title << .title) repo.milestones of
+                                milestone :: _ ->
+                                    ( model, set (Just milestone) )
 
-                                    [] ->
-                                        ( model, Cmd.none )
+                                [] ->
+                                    ( model, Cmd.none )
 
-                            Nothing ->
-                                ( model, Cmd.none )
+                        Nothing ->
+                            ( model, Cmd.none )
 
         IssueMilestoned issue (Ok ()) ->
             ( { model | milestoneDrag = Drag.land model.milestoneDrag }
@@ -1345,7 +1345,7 @@ update msg model =
                         )
                         labelsToRemove
             in
-                ( model, Cmd.batch (adds ++ removals) )
+            ( model, Cmd.batch (adds ++ removals) )
 
 
 computeGraphState : Model -> Model
@@ -1371,26 +1371,26 @@ computeGraphState model =
                             id =
                                 node.label.value.card.id
                         in
-                            OrderedSet.member id newState.selectedCards
-                                || Set.member id newState.anticipatedCards
-                                || (newState.highlightedNode == Just id)
+                        OrderedSet.member id newState.selectedCards
+                            || Set.member id newState.anticipatedCards
+                            || (newState.highlightedNode == Just id)
                 )
                 False
                 graph
     in
-        { model
-            | cardGraphs =
-                List.map
-                    (\( s, g ) ->
-                        if affectedByState g then
-                            ( newState, g )
-                        else if isBaseGraphState model s then
-                            ( s, g )
-                        else
-                            ( baseGraphState model, g )
-                    )
-                    model.cardGraphs
-        }
+    { model
+        | cardGraphs =
+            List.map
+                (\( s, g ) ->
+                    if affectedByState g then
+                        ( newState, g )
+                    else if isBaseGraphState model s then
+                        ( s, g )
+                    else
+                        ( baseGraphState model, g )
+                )
+                model.cardGraphs
+    }
 
 
 computeDataView : Model -> Model
@@ -1418,81 +1418,81 @@ computeDataView origModel =
             else
                 origModel
     in
-        case model.page of
-            MilestonesPage ->
-                let
-                    allMilestones =
-                        Set.toList <|
-                            Dict.foldl
-                                (\_ repo ->
-                                    repo.milestones
-                                        |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                                        |> List.map .title
-                                        |> Set.fromList
-                                        |> Set.union
-                                )
-                                Set.empty
-                                model.data.repos
-
-                    cardsByMilestone =
+    case model.page of
+        MilestonesPage ->
+            let
+                allMilestones =
+                    Set.toList <|
                         Dict.foldl
-                            (\_ card acc ->
-                                case card.milestone of
-                                    Just milestone ->
-                                        Dict.update milestone.title (add card) acc
-
-                                    Nothing ->
-                                        acc
+                            (\_ repo ->
+                                repo.milestones
+                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                    |> List.map .title
+                                    |> Set.fromList
+                                    |> Set.union
                             )
-                            Dict.empty
-                            model.allCards
+                            Set.empty
+                            model.data.repos
 
-                    nextMilestoneCards =
-                        Dict.foldl
-                            (\_ card acc ->
-                                if card.milestone == Nothing && (isAcceptedPR card || isAccepted card) then
-                                    card :: acc
-                                else
+                cardsByMilestone =
+                    Dict.foldl
+                        (\_ card acc ->
+                            case card.milestone of
+                                Just milestone ->
+                                    Dict.update milestone.title (add card) acc
+
+                                Nothing ->
                                     acc
-                            )
-                            []
-                            model.allCards
-                in
-                    { model
-                        | dataView =
-                            { dataView
-                                | cardsByMilestone = cardsByMilestone
-                                , allMilestones = allMilestones
-                                , nextMilestoneCards = nextMilestoneCards
-                            }
+                        )
+                        Dict.empty
+                        model.allCards
+
+                nextMilestoneCards =
+                    Dict.foldl
+                        (\_ card acc ->
+                            if card.milestone == Nothing && (isAcceptedPR card || isAccepted card) then
+                                card :: acc
+                            else
+                                acc
+                        )
+                        []
+                        model.allCards
+            in
+            { model
+                | dataView =
+                    { dataView
+                        | cardsByMilestone = cardsByMilestone
+                        , allMilestones = allMilestones
+                        , nextMilestoneCards = nextMilestoneCards
                     }
+            }
 
-            PullRequestsPage ->
-                let
-                    prsByRepo =
-                        Dict.foldl
-                            (\_ card acc ->
-                                if isOpen card && isPR card then
-                                    Dict.update card.repo.id (add card) acc
-                                else
-                                    acc
-                            )
-                            Dict.empty
-                            model.allCards
-                in
-                    { model | dataView = { dataView | prsByRepo = prsByRepo } }
+        PullRequestsPage ->
+            let
+                prsByRepo =
+                    Dict.foldl
+                        (\_ card acc ->
+                            if isOpen card && isPR card then
+                                Dict.update card.repo.id (add card) acc
+                            else
+                                acc
+                        )
+                        Dict.empty
+                        model.allCards
+            in
+            { model | dataView = { dataView | prsByRepo = prsByRepo } }
 
-            LabelsPage ->
-                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+        LabelsPage ->
+            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
 
-            GlobalGraphPage ->
-                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+        GlobalGraphPage ->
+            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
 
-            ProjectPage _ ->
-                { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+        ProjectPage _ ->
+            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
 
-            _ ->
-                model
+        _ ->
+            model
 
 
 cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
@@ -1566,59 +1566,59 @@ view model =
         sidebarCards =
             anticipatedCards ++ List.reverse selectedCards
     in
-        Html.div [ HA.class "cadet" ]
-            [ Html.div
-                [ HA.classList
-                    [ ( "main-page", True )
-                    , ( "contains-graph"
-                      , case model.page of
-                            GlobalGraphPage ->
-                                True
-
-                            ProjectPage id ->
-                                True
-
-                            _ ->
-                                False
-                      )
-                    ]
-                ]
-                [ Html.div [ HA.class "page-content" ]
-                    [ case model.page of
-                        AllProjectsPage ->
-                            viewAllProjectsPage model
-
+    Html.div [ HA.class "cadet" ]
+        [ Html.div
+            [ HA.classList
+                [ ( "main-page", True )
+                , ( "contains-graph"
+                  , case model.page of
                         GlobalGraphPage ->
-                            viewSpatialGraph model
+                            True
 
                         ProjectPage id ->
-                            viewProjectPage model id
+                            True
 
-                        LabelsPage ->
-                            viewLabelsPage model
+                        _ ->
+                            False
+                  )
+                ]
+            ]
+            [ Html.div [ HA.class "page-content" ]
+                [ case model.page of
+                    AllProjectsPage ->
+                        viewAllProjectsPage model
 
-                        MilestonesPage ->
-                            viewMilestonesPage model
+                    GlobalGraphPage ->
+                        viewSpatialGraph model
 
-                        PullRequestsPage ->
-                            viewPullRequestsPage model
-                    ]
-                , Html.div
-                    [ HA.classList
-                        [ ( "page-sidebar", True )
-                        , ( "empty", List.isEmpty sidebarCards )
-                        ]
-                    ]
-                    [ viewSidebarControls model
-                    , if List.isEmpty sidebarCards then
-                        Html.div [ HA.class "no-cards" ]
-                            [ Html.text "no cards selected" ]
-                      else
-                        Html.div [ HA.class "cards" ] sidebarCards
+                    ProjectPage id ->
+                        viewProjectPage model id
+
+                    LabelsPage ->
+                        viewLabelsPage model
+
+                    MilestonesPage ->
+                        viewMilestonesPage model
+
+                    PullRequestsPage ->
+                        viewPullRequestsPage model
+                ]
+            , Html.div
+                [ HA.classList
+                    [ ( "page-sidebar", True )
+                    , ( "empty", List.isEmpty sidebarCards )
                     ]
                 ]
-            , viewNavBar model
+                [ viewSidebarControls model
+                , if List.isEmpty sidebarCards then
+                    Html.div [ HA.class "no-cards" ]
+                        [ Html.text "no cards selected" ]
+                  else
+                    Html.div [ HA.class "cards" ] sidebarCards
+                ]
             ]
+        , viewNavBar model
+        ]
 
 
 viewSidebarControls : Model -> Html Msg
@@ -1639,24 +1639,24 @@ viewSidebarControls model =
                                 cards =
                                     List.filterMap (flip Dict.get model.allCards) (OrderedSet.toList model.selectedCards)
                             in
-                                if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
-                                    ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
-                                else if List.any (hasLabel model name) cards then
-                                    ( "mixed octicon octicon-dash", SetLabelOperation name AddLabelOperation )
-                                else
-                                    ( "unchecked octicon", SetLabelOperation name AddLabelOperation )
+                            if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
+                                ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
+                            else if List.any (hasLabel model name) cards then
+                                ( "mixed octicon octicon-dash", SetLabelOperation name AddLabelOperation )
+                            else
+                                ( "unchecked octicon", SetLabelOperation name AddLabelOperation )
             in
-                Html.div [ HA.class "label-operation" ]
-                    [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ] []
-                    , Html.span
-                        [ HA.class "label"
-                        , labelColorStyle model color
-                        , HE.onClick (AddFilter (HasLabelFilter name color))
-                        ]
-                        [ Html.span [ HA.class "octicon octicon-tag" ] []
-                        , Html.text name
-                        ]
+            Html.div [ HA.class "label-operation" ]
+                [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ] []
+                , Html.span
+                    [ HA.class "label"
+                    , labelColorStyle model color
+                    , HE.onClick (AddFilter (HasLabelFilter name color))
                     ]
+                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                    , Html.text name
+                    ]
+                ]
 
         labelOptions =
             if model.showLabelOperations then
@@ -1666,37 +1666,37 @@ viewSidebarControls model =
             else
                 []
     in
-        Html.div [ HA.class "sidebar-controls" ]
-            [ Html.div [ HA.class "control-knobs" ]
-                [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
-                , Html.div
-                    [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
-                    , HE.onClick ToggleLabelOperations
-                    ]
-                    [ Html.span [ HA.class "octicon octicon-tag" ] []
-                    , Html.text "labels"
-                    ]
-                , Html.span
-                    [ HE.onClick ClearSelectedCards
-                    , HA.class "octicon octicon-x clear-selected"
-                    ]
-                    [ Html.text "" ]
+    Html.div [ HA.class "sidebar-controls" ]
+        [ Html.div [ HA.class "control-knobs" ]
+            [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
+                , HE.onClick ToggleLabelOperations
                 ]
-            , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
-                [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
-                , Html.div [ HA.class "label-options" ] labelOptions
-                , Html.div [ HA.class "buttons" ]
-                    [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
-                        [ Html.span [ HA.class "octicon octicon-x" ] []
-                        , Html.text "cancel"
-                        ]
-                    , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
-                        [ Html.span [ HA.class "octicon octicon-check" ] []
-                        , Html.text "apply"
-                        ]
+                [ Html.span [ HA.class "octicon octicon-tag" ] []
+                , Html.text "labels"
+                ]
+            , Html.span
+                [ HE.onClick ClearSelectedCards
+                , HA.class "octicon octicon-x clear-selected"
+                ]
+                [ Html.text "" ]
+            ]
+        , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
+            [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
+            , Html.div [ HA.class "label-options" ] labelOptions
+            , Html.div [ HA.class "buttons" ]
+                [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
+                    [ Html.span [ HA.class "octicon octicon-x" ] []
+                    , Html.text "cancel"
+                    ]
+                , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
+                    [ Html.span [ HA.class "octicon octicon-check" ] []
+                    , Html.text "apply"
                     ]
                 ]
             ]
+        ]
 
 
 viewSpatialGraph : Model -> Html Msg
@@ -1747,106 +1747,106 @@ viewGraphControls model =
                     else
                         Nothing
     in
-        Html.div [ HA.class "graph-controls" ]
-            [ Html.div [ HA.class "control-group" ]
-                ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
-                 , let
-                    filter =
-                        UntriagedFilter
-                   in
-                    Html.div
-                        [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
-                        , HE.onClick <|
-                            if hasFilter model filter then
-                                RemoveFilter filter
-                            else
-                                AddFilter filter
-                        ]
-                        [ Html.span [ HA.class "octicon octicon-inbox" ] []
-                        , Html.text "untriaged"
-                        ]
-                 , let
-                    filter =
-                        PullRequestsFilter
-                   in
-                    Html.div
-                        [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
-                        , HE.onClick <|
-                            if hasFilter model filter then
-                                RemoveFilter filter
-                            else
-                                AddFilter filter
-                        ]
-                        [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
-                        , Html.text "pull requests"
-                        ]
-                 , case model.me of
-                    Just { user } ->
-                        let
-                            filter =
-                                InvolvesUserFilter user.login
-                        in
-                            Html.div
-                                [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
-                                , HE.onClick <|
-                                    if hasFilter model filter then
-                                        RemoveFilter filter
-                                    else
-                                        AddFilter filter
-                                ]
-                                [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
-                                , Html.text "involving me"
-                                ]
-
-                    Nothing ->
-                        Html.text ""
-                 , Html.div [ HA.class "label-selection" ]
-                    [ Html.div [ HA.classList [ ( "label-filters", True ), ( "visible", model.showLabelFilters ) ] ]
-                        [ Html.div [ HA.class "label-options" ]
-                            allLabelFilters
-                        , Html.input [ HA.type_ "text", HE.onInput SetLabelSearch ] []
-                        ]
-                    , Html.div
-                        [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelFilters ) ]
-                        , HE.onClick ToggleLabelFilters
-                        ]
-                        [ Html.span [ HA.class "octicon octicon-tag" ] []
-                        , Html.text "label"
-                        ]
-                    ]
-                 ]
-                    ++ labelFilters
-                )
-            , Html.div [ HA.class "control-group" ]
-                [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
-                , Html.div
-                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
-                    , HE.onClick (SetGraphSort ImpactSort)
-                    ]
-                    [ Html.span [ HA.class "octicon octicon-flame" ] []
-                    , Html.text "impact"
-                    ]
-                , Html.div
-                    [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
-                    , HE.onClick (SetGraphSort AllActivitySort)
-                    ]
-                    [ Html.span [ HA.class "octicon octicon-clock" ] []
-                    , Html.text "all activity"
-                    ]
-                , case model.me of
-                    Just { user } ->
-                        Html.div
-                            [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
-                            , HE.onClick (SetGraphSort (UserActivitySort user.login))
-                            ]
-                            [ Html.span [ HA.class "octicon octicon-clock" ] []
-                            , Html.text "my activity"
-                            ]
-
-                    Nothing ->
-                        Html.text ""
+    Html.div [ HA.class "graph-controls" ]
+        [ Html.div [ HA.class "control-group" ]
+            ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
+             , let
+                filter =
+                    UntriagedFilter
+               in
+               Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                , HE.onClick <|
+                    if hasFilter model filter then
+                        RemoveFilter filter
+                    else
+                        AddFilter filter
                 ]
+                [ Html.span [ HA.class "octicon octicon-inbox" ] []
+                , Html.text "untriaged"
+                ]
+             , let
+                filter =
+                    PullRequestsFilter
+               in
+               Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                , HE.onClick <|
+                    if hasFilter model filter then
+                        RemoveFilter filter
+                    else
+                        AddFilter filter
+                ]
+                [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                , Html.text "pull requests"
+                ]
+             , case model.me of
+                Just { user } ->
+                    let
+                        filter =
+                            InvolvesUserFilter user.login
+                    in
+                    Html.div
+                        [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                        , HE.onClick <|
+                            if hasFilter model filter then
+                                RemoveFilter filter
+                            else
+                                AddFilter filter
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
+                        , Html.text "involving me"
+                        ]
+
+                Nothing ->
+                    Html.text ""
+             , Html.div [ HA.class "label-selection" ]
+                [ Html.div [ HA.classList [ ( "label-filters", True ), ( "visible", model.showLabelFilters ) ] ]
+                    [ Html.div [ HA.class "label-options" ]
+                        allLabelFilters
+                    , Html.input [ HA.type_ "text", HE.onInput SetLabelSearch ] []
+                    ]
+                , Html.div
+                    [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelFilters ) ]
+                    , HE.onClick ToggleLabelFilters
+                    ]
+                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                    , Html.text "label"
+                    ]
+                ]
+             ]
+                ++ labelFilters
+            )
+        , Html.div [ HA.class "control-group" ]
+            [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
+                , HE.onClick (SetGraphSort ImpactSort)
+                ]
+                [ Html.span [ HA.class "octicon octicon-flame" ] []
+                , Html.text "impact"
+                ]
+            , Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
+                , HE.onClick (SetGraphSort AllActivitySort)
+                ]
+                [ Html.span [ HA.class "octicon octicon-clock" ] []
+                , Html.text "all activity"
+                ]
+            , case model.me of
+                Just { user } ->
+                    Html.div
+                        [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
+                        , HE.onClick (SetGraphSort (UserActivitySort user.login))
+                        ]
+                        [ Html.span [ HA.class "octicon octicon-clock" ] []
+                        , Html.text "my activity"
+                        ]
+
+                Nothing ->
+                    Html.text ""
             ]
+        ]
 
 
 hasFilter : Model -> GraphFilter -> Bool
@@ -1906,29 +1906,29 @@ selectStatefulProject project =
             List.filter (match << .name) project.columns
 
         icebox =
-            findColumns (detectColumn.icebox)
+            findColumns detectColumn.icebox
 
         backlogs =
-            findColumns (detectColumn.backlog)
+            findColumns detectColumn.backlog
 
         inFlights =
-            findColumns (detectColumn.inFlight)
+            findColumns detectColumn.inFlight
 
         dones =
-            findColumns (detectColumn.done)
+            findColumns detectColumn.done
     in
-        case ( icebox, backlogs, inFlights, dones ) of
-            ( [ ib ], (_ :: _) as bs, [ i ], [ d ] ) ->
-                Just
-                    { project = project
-                    , icebox = ib
-                    , backlogs = bs
-                    , inFlight = i
-                    , done = d
-                    }
+    case ( icebox, backlogs, inFlights, dones ) of
+        ( [ ib ], (_ :: _) as bs, [ i ], [ d ] ) ->
+            Just
+                { project = project
+                , icebox = ib
+                , backlogs = bs
+                , inFlight = i
+                , done = d
+                }
 
-            _ ->
-                Nothing
+        _ ->
+            Nothing
 
 
 viewAllProjectsPage : Model -> Html Msg
@@ -1937,10 +1937,10 @@ viewAllProjectsPage model =
         statefulProjects =
             List.filterMap selectStatefulProject (Dict.values model.data.projects)
     in
-        Html.div [ HA.class "project-table" ]
-            [ Html.div [ HA.class "projects" ]
-                (List.map (viewProject model) statefulProjects)
-            ]
+    Html.div [ HA.class "project-table" ]
+        [ Html.div [ HA.class "projects" ]
+            (List.map (viewProject model) statefulProjects)
+        ]
 
 
 viewLabelsPage : Model -> Html Msg
@@ -1994,8 +1994,8 @@ viewLabelsPage model =
                 \( ( name, color ), repos ) ->
                     viewLabelRow model { name = name, color = color } repos
     in
-        Html.div [ HA.class "all-labels" ]
-            (newLabel :: labelRows)
+    Html.div [ HA.class "all-labels" ]
+        (newLabel :: labelRows)
 
 
 viewMilestonesPage : Model -> Html Msg
@@ -2011,12 +2011,12 @@ viewMilestonesPage model =
                         milestoneCards =
                             Maybe.withDefault [] (Dict.get title model.dataView.cardsByMilestone)
                     in
-                        viewMilestone model title milestoneCards
+                    viewMilestone model title milestoneCards
                 )
                 model.dataView.allMilestones
     in
-        Html.div [ HA.class "all-milestones" ]
-            (newMilestone model :: nextMilestone :: milestones)
+    Html.div [ HA.class "all-milestones" ]
+        (newMilestone model :: nextMilestone :: milestones)
 
 
 viewPullRequestsPage : Model -> Html Msg
@@ -2042,12 +2042,12 @@ viewPullRequestsPage model =
                     (List.map (viewCard model) prs)
                 ]
     in
-        Html.div [ HA.class "all-pull-requests" ]
-            (Dict.foldl getRepo [] model.dataView.prsByRepo
-                |> List.sortBy (Tuple.second >> List.length)
-                |> List.reverse
-                |> List.map (uncurry viewRepoPRs)
-            )
+    Html.div [ HA.class "all-pull-requests" ]
+        (Dict.foldl getRepo [] model.dataView.prsByRepo
+            |> List.sortBy (Tuple.second >> List.length)
+            |> List.reverse
+            |> List.map (uncurry viewRepoPRs)
+        )
 
 
 newMilestone : Model -> Html Msg
@@ -2160,143 +2160,143 @@ viewLabelRow model label repos =
                 ( [], [] )
                 model.allCards
     in
-        Html.div [ HA.class "label-row" ]
-            [ Html.div [ HA.class "label-cell" ]
-                [ Html.div [ HA.class "label-name" ]
-                    [ case Dict.get stateKey model.editingLabels of
-                        Nothing ->
-                            Html.div [ HA.class "label-background" ]
-                                [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
-                                    Html.span
-                                        [ HA.class "label-icon octicon octicon-tag"
-                                        , HE.onClick (searchLabel model label.name)
-                                        , labelColorStyle model label.color
-                                        ]
-                                        []
-                                  else
-                                    Html.span
-                                        [ HA.class "label-icon label-color-control octicon octicon-paintcan"
-                                        , HE.onClick (SetLabelColor label.color)
-                                        , labelColorStyle model label.color
-                                        ]
-                                        []
-                                , Html.span
-                                    [ HA.class "label big"
+    Html.div [ HA.class "label-row" ]
+        [ Html.div [ HA.class "label-cell" ]
+            [ Html.div [ HA.class "label-name" ]
+                [ case Dict.get stateKey model.editingLabels of
+                    Nothing ->
+                        Html.div [ HA.class "label-background" ]
+                            [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
+                                Html.span
+                                    [ HA.class "label-icon octicon octicon-tag"
                                     , HE.onClick (searchLabel model label.name)
                                     , labelColorStyle model label.color
                                     ]
-                                    [ Html.span [ HA.class "label-text" ]
-                                        [ Html.text label.name ]
-                                    ]
-                                ]
-
-                        Just newLabel ->
-                            Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel label) ]
-                                [ Html.span
-                                    [ HA.class "label-icon label-color-control octicon octicon-sync"
-                                    , HE.onClick (RandomizeLabelColor label)
-                                    , labelColorStyle model newLabel.color
+                                    []
+                              else
+                                Html.span
+                                    [ HA.class "label-icon label-color-control octicon octicon-paintcan"
+                                    , HE.onClick (SetLabelColor label.color)
+                                    , labelColorStyle model label.color
                                     ]
                                     []
-                                , Html.input
-                                    [ HE.onInput (SetLabelName label)
-                                    , HA.value newLabel.name
-                                    , labelColorStyle model newLabel.color
-                                    ]
-                                    []
+                            , Html.span
+                                [ HA.class "label big"
+                                , HE.onClick (searchLabel model label.name)
+                                , labelColorStyle model label.color
                                 ]
-                    ]
-                ]
-            , Html.div [ HA.class "label-cell" ]
-                [ Html.div [ HA.class "label-counts first" ]
-                    [ Html.span [ HA.class "count" ]
-                        [ Html.span [ HA.class "octicon octicon-issue-opened" ] []
-                        , Html.span [ HA.class "count-number" ]
-                            [ Html.text (toString (List.length issues))
+                                [ Html.span [ HA.class "label-text" ]
+                                    [ Html.text label.name ]
+                                ]
                             ]
-                        ]
-                    ]
-                ]
-            , Html.div [ HA.class "label-cell" ]
-                [ Html.div [ HA.class "label-counts" ]
-                    [ Html.span [ HA.class "count" ]
-                        [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
-                        , Html.span [ HA.class "count-number" ]
-                            [ Html.text (toString (List.length prs))
-                            ]
-                        ]
-                    ]
-                ]
-            , Html.div [ HA.class "label-cell" ]
-                [ Html.div [ HA.class "label-counts last" ]
-                    [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
-                        [ Html.span [ HA.class "octicon octicon-repo" ] []
-                        , Html.span [ HA.class "count-number" ]
-                            [ Html.text (toString (List.length repos))
-                            ]
-                        ]
-                    ]
-                ]
-            , Html.div [ HA.class "label-cell drawer-cell" ]
-                [ Html.div [ HA.class "label-controls" ]
-                    [ Html.span
-                        [ HE.onClick (MirrorLabel label)
-                        , HA.class "button octicon octicon-mirror"
-                        ]
-                        []
-                    , if Dict.member stateKey model.editingLabels then
-                        Html.span
-                            [ HE.onClick (StopEditingLabel label)
-                            , HA.class "button octicon octicon-x"
-                            ]
-                            []
-                      else
-                        Html.span
-                            [ HE.onClick (StartEditingLabel label)
-                            , HA.class "button octicon octicon-pencil"
-                            ]
-                            []
-                    , if Set.member stateKey model.deletingLabels then
-                        Html.span
-                            [ HE.onClick (StopDeletingLabel label)
-                            , HA.class "button close octicon octicon-x"
-                            ]
-                            []
-                      else
-                        Html.span
-                            [ HE.onClick (StartDeletingLabel label)
-                            , HA.class "button octicon octicon-trashcan"
-                            ]
-                            []
-                    ]
-                , let
-                    isDeleting =
-                        Set.member stateKey model.deletingLabels
 
-                    isEditing =
-                        Dict.member stateKey model.editingLabels
-                  in
-                    Html.div
-                        [ HA.classList
-                            [ ( "label-confirm", True )
-                            , ( "active", isDeleting || isEditing )
+                    Just newLabel ->
+                        Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel label) ]
+                            [ Html.span
+                                [ HA.class "label-icon label-color-control octicon octicon-sync"
+                                , HE.onClick (RandomizeLabelColor label)
+                                , labelColorStyle model newLabel.color
+                                ]
+                                []
+                            , Html.input
+                                [ HE.onInput (SetLabelName label)
+                                , HA.value newLabel.name
+                                , labelColorStyle model newLabel.color
+                                ]
+                                []
                             ]
-                        ]
-                        [ if isDeleting then
-                            Html.span
-                                [ HE.onClick (DeleteLabel label)
-                                , HA.class "button delete octicon octicon-check"
-                                ]
-                                []
-                          else
-                            Html.span
-                                [ HE.onClick (EditLabel label)
-                                , HA.class "button edit octicon octicon-check"
-                                ]
-                                []
-                        ]
                 ]
             ]
+        , Html.div [ HA.class "label-cell" ]
+            [ Html.div [ HA.class "label-counts first" ]
+                [ Html.span [ HA.class "count" ]
+                    [ Html.span [ HA.class "octicon octicon-issue-opened" ] []
+                    , Html.span [ HA.class "count-number" ]
+                        [ Html.text (toString (List.length issues))
+                        ]
+                    ]
+                ]
+            ]
+        , Html.div [ HA.class "label-cell" ]
+            [ Html.div [ HA.class "label-counts" ]
+                [ Html.span [ HA.class "count" ]
+                    [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                    , Html.span [ HA.class "count-number" ]
+                        [ Html.text (toString (List.length prs))
+                        ]
+                    ]
+                ]
+            ]
+        , Html.div [ HA.class "label-cell" ]
+            [ Html.div [ HA.class "label-counts last" ]
+                [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
+                    [ Html.span [ HA.class "octicon octicon-repo" ] []
+                    , Html.span [ HA.class "count-number" ]
+                        [ Html.text (toString (List.length repos))
+                        ]
+                    ]
+                ]
+            ]
+        , Html.div [ HA.class "label-cell drawer-cell" ]
+            [ Html.div [ HA.class "label-controls" ]
+                [ Html.span
+                    [ HE.onClick (MirrorLabel label)
+                    , HA.class "button octicon octicon-mirror"
+                    ]
+                    []
+                , if Dict.member stateKey model.editingLabels then
+                    Html.span
+                        [ HE.onClick (StopEditingLabel label)
+                        , HA.class "button octicon octicon-x"
+                        ]
+                        []
+                  else
+                    Html.span
+                        [ HE.onClick (StartEditingLabel label)
+                        , HA.class "button octicon octicon-pencil"
+                        ]
+                        []
+                , if Set.member stateKey model.deletingLabels then
+                    Html.span
+                        [ HE.onClick (StopDeletingLabel label)
+                        , HA.class "button close octicon octicon-x"
+                        ]
+                        []
+                  else
+                    Html.span
+                        [ HE.onClick (StartDeletingLabel label)
+                        , HA.class "button octicon octicon-trashcan"
+                        ]
+                        []
+                ]
+            , let
+                isDeleting =
+                    Set.member stateKey model.deletingLabels
+
+                isEditing =
+                    Dict.member stateKey model.editingLabels
+              in
+              Html.div
+                [ HA.classList
+                    [ ( "label-confirm", True )
+                    , ( "active", isDeleting || isEditing )
+                    ]
+                ]
+                [ if isDeleting then
+                    Html.span
+                        [ HE.onClick (DeleteLabel label)
+                        , HA.class "button delete octicon octicon-check"
+                        ]
+                        []
+                  else
+                    Html.span
+                        [ HE.onClick (EditLabel label)
+                        , HA.class "button edit octicon octicon-check"
+                        ]
+                        []
+                ]
+            ]
+        ]
 
 
 searchLabel : Model -> String -> Msg
@@ -2380,17 +2380,17 @@ viewProjectColumn model project mod col =
                 }
             }
     in
-        Html.div [ HA.class "project-column" ]
-            [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
-            , if List.isEmpty cards then
-                Html.div [ HA.class "no-cards" ]
-                    [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
-                    ]
-              else
-                Html.div [ HA.class "cards" ] <|
-                    Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
-                        :: List.concatMap (viewProjectColumnCard model project col) cards
-            ]
+    Html.div [ HA.class "project-column" ]
+        [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
+        , if List.isEmpty cards then
+            Html.div [ HA.class "no-cards" ]
+                [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+                ]
+          else
+            Html.div [ HA.class "cards" ] <|
+                Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+                    :: List.concatMap (viewProjectColumnCard model project col) cards
+        ]
 
 
 viewProjectColumnCard : Model -> GitHubGraph.Project -> GitHubGraph.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
@@ -2408,24 +2408,24 @@ viewProjectColumnCard model project col ghCard =
                 }
             }
     in
-        case ( ghCard.note, ghCard.contentId ) of
-            ( Just n, Nothing ) ->
-                [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNoteCard model col n)
-                , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-                ]
+    case ( ghCard.note, ghCard.contentId ) of
+        ( Just n, Nothing ) ->
+            [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNoteCard model col n)
+            , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+            ]
 
-            ( Nothing, Just contentId ) ->
-                case Dict.get contentId model.allCards of
-                    Just card ->
-                        [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
-                        , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-                        ]
+        ( Nothing, Just contentId ) ->
+            case Dict.get contentId model.allCards of
+                Just card ->
+                    [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
+                    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+                    ]
 
-                    Nothing ->
-                        Debug.crash "impossible: content has no card"
+                Nothing ->
+                    Debug.crash "impossible: content has no card"
 
-            _ ->
-                Debug.crash "impossible"
+        _ ->
+            Debug.crash "impossible"
 
 
 viewProjectPage : Model -> String -> Html Msg
@@ -2438,12 +2438,12 @@ viewProjectPage model name =
             List.head <|
                 List.filter ((==) name << .name << .project) statefulProjects
     in
-        case mproject of
-            Just project ->
-                viewSingleProject model project
+    case mproject of
+        Just project ->
+            viewSingleProject model project
 
-            Nothing ->
-                Html.text "project not found"
+        Nothing ->
+            Html.text "project not found"
 
 
 viewSingleProject : Model -> ProjectState -> Html Msg
@@ -2476,7 +2476,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
                         }
                     }
               in
-                Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+              Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
             ]
         ]
 
@@ -2506,15 +2506,15 @@ computeGraph model =
                         id =
                             Hash.hash idStr
                     in
-                        List.map
-                            (\sourceId ->
-                                { from = Hash.hash sourceId
-                                , to = id
-                                , label = ()
-                                }
-                            )
-                            sourceIds
-                            ++ refs
+                    List.map
+                        (\sourceId ->
+                            { from = Hash.hash sourceId
+                            , to = id
+                            , label = ()
+                            }
+                        )
+                        sourceIds
+                        ++ refs
                 )
                 []
                 model.data.references
@@ -2548,7 +2548,7 @@ computeGraph model =
                 context =
                     { incoming = incoming, outgoing = outgoing }
             in
-                { nc | node = { node | label = node.label context } }
+            { nc | node = { node | label = node.label context } }
 
         graph =
             Graph.mapContexts applyWithContext <|
@@ -2570,14 +2570,14 @@ computeGraph model =
         baseState =
             baseGraphState model
     in
-        { model
-            | cardGraphs =
-                subGraphs graph
-                    |> List.map FG.fromGraph
-                    |> List.sortWith sortFunc
-                    |> List.reverse
-                    |> List.map (\g -> ( baseState, g ))
-        }
+    { model
+        | cardGraphs =
+            subGraphs graph
+                |> List.map FG.fromGraph
+                |> List.sortWith sortFunc
+                |> List.reverse
+                |> List.map (\g -> ( baseState, g ))
+    }
 
 
 baseGraphState : Model -> CardNodeState
@@ -2637,7 +2637,7 @@ graphSizeCompare a b =
                 graphScore =
                     List.foldl (+) 0 << List.map (.label >> .value >> .score) << Graph.nodes
             in
-                compare (graphScore a.graph) (graphScore b.graph)
+            compare (graphScore a.graph) (graphScore b.graph)
 
         x ->
             x
@@ -2661,7 +2661,7 @@ graphUserActivityCompare model login a b =
                 |> List.maximum
                 |> Maybe.withDefault 0
     in
-        compare (latestUserActivity a.graph) (latestUserActivity b.graph)
+    compare (latestUserActivity a.graph) (latestUserActivity b.graph)
 
 
 graphAllActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
@@ -2681,7 +2681,7 @@ graphAllActivityCompare model a b =
                 |> List.maximum
                 |> Maybe.withDefault 0
     in
-        compare (latestActivity a.graph) (latestActivity b.graph)
+    compare (latestActivity a.graph) (latestActivity b.graph)
 
 
 viewGraph : CardNodeState -> ForceGraph (Node CardNodeState) -> Html Msg
@@ -2715,20 +2715,20 @@ viewGraph state { graph } =
             maxY - minY
 
         links =
-            (List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph))
+            List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph)
 
         ( flairs, nodes ) =
             Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
     in
-        Svg.svg
-            [ SA.width (toString width ++ "px")
-            , SA.height (toString height ++ "px")
-            , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
-            ]
-            [ Svg.g [ SA.class "lower" ] flairs
-            , Svg.g [ SA.class "links" ] links
-            , Svg.g [ SA.class "upper" ] nodes
-            ]
+    Svg.svg
+        [ SA.width (toString width ++ "px")
+        , SA.height (toString height ++ "px")
+        , SA.viewBox (toString minX ++ " " ++ toString minY ++ " " ++ toString width ++ " " ++ toString height)
+        ]
+        [ Svg.g [ SA.class "lower" ] flairs
+        , Svg.g [ SA.class "links" ] links
+        , Svg.g [ SA.class "upper" ] nodes
+        ]
 
 
 viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
@@ -2737,9 +2737,9 @@ viewNodeLowerUpper state { node } ( fs, ns ) =
         pos =
             { x = node.label.x, y = node.label.y }
     in
-        ( Svg.Lazy.lazy2 node.label.value.viewLower pos state :: fs
-        , Svg.Lazy.lazy2 node.label.value.viewUpper pos state :: ns
-        )
+    ( Svg.Lazy.lazy2 node.label.value.viewLower pos state :: fs
+    , Svg.Lazy.lazy2 node.label.value.viewUpper pos state :: ns
+    )
 
 
 linkPath : Graph (FG.ForceNode n) () -> Graph.Edge () -> Svg Msg
@@ -2761,14 +2761,14 @@ linkPath graph edge =
                 Nothing ->
                     { x = 0, y = 0 }
     in
-        Svg.line
-            [ SA.class "graph-edge"
-            , SA.x1 (toString source.x)
-            , SA.y1 (toString source.y)
-            , SA.x2 (toString target.x)
-            , SA.y2 (toString target.y)
-            ]
-            []
+    Svg.line
+        [ SA.class "graph-edge"
+        , SA.x1 (toString source.x)
+        , SA.y1 (toString source.y)
+        , SA.x2 (toString target.x)
+        , SA.y2 (toString target.y)
+        ]
+        []
 
 
 type alias GraphContext =
@@ -2814,7 +2814,7 @@ cardRadiusWithFlair card context =
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
-        cardRadiusWithoutFlair card context + flairRadiusBase + toFloat highestFlair
+    cardRadiusWithoutFlair card context + flairRadiusBase + toFloat highestFlair
 
 
 cardNode : Model -> Card -> GraphContext -> Node CardNodeState
@@ -2862,18 +2862,18 @@ cardNode model card context =
             , withFlair = cardRadiusWithFlair card context
             }
     in
-        { card = card
-        , viewLower = viewCardNodeFlair card radii flairArcs
-        , viewUpper = viewCardNode card radii circle labelArcs
-        , bounds =
-            \{ x, y } ->
-                { x1 = x - radii.withFlair
-                , y1 = y - radii.withFlair
-                , x2 = x + radii.withFlair
-                , y2 = y + radii.withFlair
-                }
-        , score = card.score
-        }
+    { card = card
+    , viewLower = viewCardNodeFlair card radii flairArcs
+    , viewUpper = viewCardNode card radii circle labelArcs
+    , bounds =
+        \{ x, y } ->
+            { x1 = x - radii.withFlair
+            , y1 = y - radii.withFlair
+            , x2 = x + radii.withFlair
+            , y2 = y + radii.withFlair
+            }
+    , score = card.score
+    }
 
 
 prCircle : GitHubGraph.PullRequest -> Card -> GraphContext -> Svg Msg
@@ -2909,18 +2909,18 @@ prCircle pr card context =
                 _ ->
                     Debug.crash "impossible"
     in
-        Svg.g [] <|
-            flip List.indexedMap flairs <|
-                \i ( classes, count ) ->
-                    let
-                        arc =
-                            segment i
-                    in
-                        Svg.path
-                            [ SA.d (VS.arc arc)
-                            , SA.class ("pr-arc " ++ classes)
-                            ]
-                            []
+    Svg.g [] <|
+        flip List.indexedMap flairs <|
+            \i ( classes, count ) ->
+                let
+                    arc =
+                        segment i
+                in
+                Svg.path
+                    [ SA.d (VS.arc arc)
+                    , SA.class ("pr-arc " ++ classes)
+                    ]
+                    []
 
 
 reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> GraphContext -> List (Svg Msg)
@@ -3035,19 +3035,19 @@ reactionFlairArcs reviews card context =
                                 )
                                 reviews
                     in
-                        ( Html.span [ HA.class "status-icon octicon octicon-git-merge" ] []
-                        , case pr.mergeable of
-                            GitHubGraph.MergeableStateMergeable ->
-                                "success"
+                    ( Html.span [ HA.class "status-icon octicon octicon-git-merge" ] []
+                    , case pr.mergeable of
+                        GitHubGraph.MergeableStateMergeable ->
+                            "success"
 
-                            GitHubGraph.MergeableStateConflicting ->
-                                "failure"
+                        GitHubGraph.MergeableStateConflicting ->
+                            "failure"
 
-                            GitHubGraph.MergeableStateUnknown ->
-                                "pending"
-                        , 0
-                        )
-                            :: (statusChecks ++ reviewStates)
+                        GitHubGraph.MergeableStateUnknown ->
+                            "pending"
+                    , 0
+                    )
+                        :: (statusChecks ++ reviewStates)
 
         flairs =
             prSegments
@@ -3085,30 +3085,30 @@ reactionFlairArcs reviews card context =
                 a =
                     (arc.startAngle + arc.endAngle) / 2 - pi / 2
             in
-                ( cos a * r - 8, sin a * r - 8 )
+            ( cos a * r - 8, sin a * r - 8 )
     in
-        flip List.indexedMap flairs <|
-            \i (( content, class, count ) as reaction) ->
-                let
-                    segmentArc =
-                        reactionSegment i reaction
+    flip List.indexedMap flairs <|
+        \i (( content, class, count ) as reaction) ->
+            let
+                segmentArc =
+                    reactionSegment i reaction
 
-                    arc =
-                        { segmentArc | outerRadius = segmentArc.outerRadius + toFloat count }
-                in
-                    Svg.g [ SA.class "reveal" ]
-                        [ Svg.path
-                            [ SA.d (VS.arc arc)
-                            , SA.class ("flair-arc " ++ class)
-                            ]
-                            []
-                        , Svg.foreignObject
-                            [ SA.transform ("translate" ++ toString (innerCentroid arc))
-                            , SA.class "hidden"
-                            ]
-                            [ content
-                            ]
-                        ]
+                arc =
+                    { segmentArc | outerRadius = segmentArc.outerRadius + toFloat count }
+            in
+            Svg.g [ SA.class "reveal" ]
+                [ Svg.path
+                    [ SA.d (VS.arc arc)
+                    , SA.class ("flair-arc " ++ class)
+                    ]
+                    []
+                , Svg.foreignObject
+                    [ SA.transform ("translate" ++ toString (innerCentroid arc))
+                    , SA.class "hidden"
+                    ]
+                    [ content
+                    ]
+                ]
 
 
 cardLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> List (Svg Msg)
@@ -3131,16 +3131,16 @@ cardLabelArcs allLabels card context =
                 }
                 (List.repeat (List.length card.labels) 1)
     in
-        List.map2
-            (\arc label ->
-                Svg.path
-                    [ SA.d (VS.arc arc)
-                    , SA.fill ("#" ++ label.color)
-                    ]
-                    []
-            )
-            labelSegments
-            (List.filterMap (flip Dict.get allLabels) card.labels)
+    List.map2
+        (\arc label ->
+            Svg.path
+                [ SA.d (VS.arc arc)
+                , SA.fill ("#" ++ label.color)
+                ]
+                []
+        )
+        labelSegments
+        (List.filterMap (flip Dict.get allLabels) card.labels)
 
 
 viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
@@ -3185,11 +3185,11 @@ viewCardNodeFlair card radii flair { x, y } state =
                                 []
                    )
     in
-        Svg.g
-            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
-            , SA.class (String.join " " classes)
-            ]
-            (flair ++ [ anticipatedHalo ])
+    Svg.g
+        [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
+        , SA.class (String.join " " classes)
+        ]
+        (flair ++ [ anticipatedHalo ])
 
 
 activityClass : Date -> Date -> String
@@ -3198,14 +3198,16 @@ activityClass now date =
         daysSinceLastUpdate =
             (Date.toTime now / (24 * Time.hour)) - (Date.toTime date / (24 * Time.hour))
     in
-        if daysSinceLastUpdate <= 1 then
-            "active-today"
-        else if daysSinceLastUpdate <= 2 then
-            "active-yesterday"
-        else if daysSinceLastUpdate <= 7 then
-            "active-this-week"
-        else
-            "active-long-ago"
+    if daysSinceLastUpdate <= 1 then
+        "active-today"
+    else if daysSinceLastUpdate <= 2 then
+        "active-yesterday"
+    else if daysSinceLastUpdate <= 7 then
+        "active-this-week"
+    else if daysSinceLastUpdate <= 30 then
+        "active-this-month"
+    else
+        "active-long-ago"
 
 
 viewCardNode : Card -> CardNodeRadii -> Svg Msg -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
@@ -3241,28 +3243,28 @@ viewCardNode card radii circle labels { x, y } state =
             else
                 "1"
     in
-        Svg.g
-            [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
-            , if isInFlight card then
-                SA.class "in-flight"
-              else if isDone card then
-                SA.class "done"
-              else if isIcebox card then
-                SA.class "icebox"
-              else if isBacklog card then
-                SA.class "backlog"
-              else
-                SA.class "untriaged"
-            , SE.onMouseOver (AnticipateCardFromNode card.id)
-            , SE.onMouseOut (UnanticipateCardFromNode card.id)
-            , SE.onClick
-                (if isSelected then
-                    DeselectCard card.id
-                 else
-                    SelectCard card.id
-                )
-            ]
-            (circle :: labels ++ [ projectHalo ])
+    Svg.g
+        [ SA.transform ("translate(" ++ toString x ++ ", " ++ toString y ++ ") scale(" ++ scale ++ ")")
+        , if isInFlight card then
+            SA.class "in-flight"
+          else if isDone card then
+            SA.class "done"
+          else if isIcebox card then
+            SA.class "icebox"
+          else if isBacklog card then
+            SA.class "backlog"
+          else
+            SA.class "untriaged"
+        , SE.onMouseOver (AnticipateCardFromNode card.id)
+        , SE.onMouseOut (UnanticipateCardFromNode card.id)
+        , SE.onClick
+            (if isSelected then
+                DeselectCard card.id
+             else
+                SelectCard card.id
+            )
+        ]
+        (circle :: labels ++ [ projectHalo ])
 
 
 viewCardEntry : Model -> Card -> Html Msg
@@ -3277,20 +3279,20 @@ viewCardEntry model card =
         dragSource =
             NewContentCardSource { contentId = card.id }
     in
-        Html.div [ HA.class "card-controls" ]
-            [ Drag.draggable model.projectDrag ProjectDrag dragSource <|
-                cardView
-            , Html.div [ HA.class "card-buttons" ]
-                [ if not anticipated then
-                    Html.span
-                        [ HE.onClick (DeselectCard card.id)
-                        , HA.class "octicon octicon-x"
-                        ]
-                        [ Html.text "" ]
-                  else
-                    Html.text ""
-                ]
+    Html.div [ HA.class "card-controls" ]
+        [ Drag.draggable model.projectDrag ProjectDrag dragSource <|
+            cardView
+        , Html.div [ HA.class "card-buttons" ]
+            [ if not anticipated then
+                Html.span
+                    [ HE.onClick (DeselectCard card.id)
+                    , HA.class "octicon octicon-x"
+                    ]
+                    [ Html.text "" ]
+              else
+                Html.text ""
             ]
+        ]
 
 
 isInProject : String -> Card -> Bool
@@ -3310,17 +3312,17 @@ lastActivityIsByUser cardEvents login card =
         events =
             Maybe.withDefault [] (Dict.get card.id cardEvents)
     in
-        case List.head (List.reverse events) of
-            Just { user } ->
-                case user of
-                    Just u ->
-                        u.login == login
+    case List.head (List.reverse events) of
+        Just { user } ->
+            case user of
+                Just u ->
+                    u.login == login
 
-                    Nothing ->
-                        False
+                Nothing ->
+                    False
 
-            Nothing ->
-                False
+        Nothing ->
+            False
 
 
 inColumn : (String -> Bool) -> List GitHubGraph.CardLocation -> Bool
@@ -3350,7 +3352,7 @@ isUntriaged card =
 
 isMerged : Card -> Bool
 isMerged card =
-    card.state == PullRequestState (GitHubGraph.PullRequestStateMerged)
+    card.state == PullRequestState GitHubGraph.PullRequestStateMerged
 
 
 hasLabel : Model -> String -> Card -> Bool
@@ -3360,7 +3362,7 @@ hasLabel model name card =
             model.allLabels
                 |> Dict.filter (\_ l -> l.name == name)
     in
-        List.any (flip Dict.member matchingLabels) card.labels
+    List.any (flip Dict.member matchingLabels) card.labels
 
 
 hasLabelAndColor : Model -> String -> String -> Card -> Bool
@@ -3370,7 +3372,7 @@ hasLabelAndColor model name color card =
             model.allLabels
                 |> Dict.filter (\_ l -> l.name == name && l.color == color)
     in
-        List.any (flip Dict.member matchingLabels) card.labels
+    List.any (flip Dict.member matchingLabels) card.labels
 
 
 isEnhancement : Card -> Bool
@@ -3452,6 +3454,7 @@ viewCard model card =
             , ( "backlog", isBacklog card )
             , ( "anticipated", isAnticipated model card )
             , ( "highlighted", model.highlightedCard == Just card.id )
+            , ( activityClass model.currentDate card.updatedAt, isPR card )
             , ( "last-activity-is-me"
               , case model.me of
                     Just { user } ->
@@ -3465,56 +3468,7 @@ viewCard model card =
         , HE.onMouseOver (HighlightNode card.id)
         , HE.onMouseOut (UnhighlightNode card.id)
         ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Html.span
-                [ HA.classList
-                    [ ( "octicon", True )
-                    , ( "open", isOpen card )
-                    , ( "closed", not (isOpen card) )
-                    , ( "rejected", isRejected card )
-                    , ( "merged", isMerged card )
-                    , ( "octicon-issue-"
-                            ++ (if isRejected card then
-                                    "reopened"
-                                else
-                                    "opened"
-                               )
-                      , card.state == IssueState GitHubGraph.IssueStateOpen
-                      )
-                    , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
-                    , ( "octicon-git-pull-request", isPR card )
-                    ]
-                , HE.onClick
-                    (if isPR card then
-                        RefreshPullRequest card.id
-                     else
-                        RefreshIssue card.id
-                    )
-                ]
-                []
-            , if needsAcceptance card && isDone card then
-                Html.span
-                    [ HA.class "octicon accept octicon-thumbsup"
-                    , HE.onClick (AcceptCard card)
-                    ]
-                    []
-              else if isAccepted card then
-                Html.span
-                    [ HA.class "octicon accepted octicon-thumbsup"
-                    ]
-                    []
-              else
-                Html.text ""
-            , if needsAcceptance card && isDone card then
-                Html.span
-                    [ HA.class "octicon reject octicon-thumbsdown"
-                    , HE.onClick (RejectCard card)
-                    ]
-                    []
-              else
-                Html.text ""
-            ]
-        , Html.div [ HA.class "card-info" ]
+        [ Html.div [ HA.class "card-info" ]
             [ Html.div [ HA.class "card-actors" ] <|
                 List.map (viewCardActor model) (recentActors model card)
             , Html.a
@@ -3549,7 +3503,161 @@ viewCard model card =
                         Html.text "(deleted user)"
                 ]
             ]
+        , Html.div [ HA.class "card-icons" ]
+            ([ Html.span
+                [ HA.classList
+                    [ ( "octicon", True )
+                    , ( "open", isOpen card )
+                    , ( "closed", not (isOpen card) )
+                    , ( "rejected", isRejected card )
+                    , ( "merged", isMerged card )
+                    , ( "octicon-issue-"
+                            ++ (if isRejected card then
+                                    "reopened"
+                                else
+                                    "opened"
+                               )
+                      , card.state == IssueState GitHubGraph.IssueStateOpen
+                      )
+                    , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
+                    , ( "octicon-git-pull-request", isPR card )
+                    ]
+                , HE.onClick
+                    (if isPR card then
+                        RefreshPullRequest card.id
+                     else
+                        RefreshIssue card.id
+                    )
+                ]
+                []
+             , if needsAcceptance card && isDone card then
+                Html.span
+                    [ HA.class "octicon accept octicon-thumbsup"
+                    , HE.onClick (AcceptCard card)
+                    ]
+                    []
+               else if isAccepted card then
+                Html.span
+                    [ HA.class "octicon accepted octicon-thumbsup"
+                    ]
+                    []
+               else
+                Html.text ""
+             , if needsAcceptance card && isDone card then
+                Html.span
+                    [ HA.class "octicon reject octicon-thumbsdown"
+                    , HE.onClick (RejectCard card)
+                    ]
+                    []
+               else
+                Html.text ""
+             ]
+                ++ prIcons model card
+            )
         ]
+
+
+prIcons : Model -> Card -> List (Html Msg)
+prIcons model card =
+    case card.content of
+        GitHubGraph.IssueCardContent _ ->
+            []
+
+        GitHubGraph.PullRequestCardContent pr ->
+            let
+                statusChecks =
+                    case Maybe.map .status pr.lastCommit of
+                        Just (Just { contexts }) ->
+                            flip List.map contexts <|
+                                \c ->
+                                    Html.span
+                                        [ HA.classList
+                                            [ ( "status-icon", True )
+                                            , ( "octicon", True )
+                                            , ( case c.state of
+                                                    GitHubGraph.StatusStatePending ->
+                                                        "octicon-primitive-dot"
+
+                                                    GitHubGraph.StatusStateSuccess ->
+                                                        "octicon-check"
+
+                                                    GitHubGraph.StatusStateFailure ->
+                                                        "octicon-x"
+
+                                                    GitHubGraph.StatusStateExpected ->
+                                                        "octicon-question"
+
+                                                    GitHubGraph.StatusStateError ->
+                                                        "octicon-alert"
+                                              , True
+                                              )
+                                            , ( case c.state of
+                                                    GitHubGraph.StatusStatePending ->
+                                                        "pending"
+
+                                                    GitHubGraph.StatusStateSuccess ->
+                                                        "success"
+
+                                                    GitHubGraph.StatusStateFailure ->
+                                                        "failure"
+
+                                                    GitHubGraph.StatusStateExpected ->
+                                                        "expected"
+
+                                                    GitHubGraph.StatusStateError ->
+                                                        "error"
+                                              , True
+                                              )
+                                            ]
+                                        ]
+                                        []
+
+                        _ ->
+                            []
+
+                reviews =
+                    Maybe.withDefault [] <| Dict.get card.id model.data.reviewers
+
+                reviewStates =
+                    List.map
+                        (\r ->
+                            let
+                                reviewClass =
+                                    case r.state of
+                                        GitHubGraph.PullRequestReviewStatePending ->
+                                            "pending"
+
+                                        GitHubGraph.PullRequestReviewStateApproved ->
+                                            "success"
+
+                                        GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                            "failure"
+
+                                        GitHubGraph.PullRequestReviewStateCommented ->
+                                            "commented"
+
+                                        GitHubGraph.PullRequestReviewStateDismissed ->
+                                            "dismissed"
+                            in
+                            Html.img [ HA.class ("status-actor " ++ reviewClass), HA.src r.author.avatar ] []
+                        )
+                        reviews
+
+                mergeClass =
+                    case pr.mergeable of
+                        GitHubGraph.MergeableStateMergeable ->
+                            "success"
+
+                        GitHubGraph.MergeableStateConflicting ->
+                            "failure"
+
+                        GitHubGraph.MergeableStateUnknown ->
+                            "pending"
+            in
+            Html.span
+                [ HA.class ("status-icon octicon octicon-git-merge " ++ mergeClass) ]
+                []
+                :: (statusChecks ++ reviewStates)
 
 
 viewNoteCard : Model -> GitHubGraph.ProjectColumn -> String -> Html Msg
@@ -3613,20 +3721,20 @@ computeColorIsLight hex =
         matches =
             List.head <| Regex.find (Regex.AtMost 1) hexRegex hex
     in
-        case Maybe.map .submatches matches of
-            Just [ Just h1s, Just h2s, Just h3s ] ->
-                case List.map ParseInt.parseIntHex [ h1s, h2s, h3s ] of
-                    [ Ok h1, Ok h2, Ok h3 ] ->
-                        if (hexBrightness h1 + hexBrightness h2 + hexBrightness h3) > 0 then
-                            True
-                        else
-                            False
+    case Maybe.map .submatches matches of
+        Just [ Just h1s, Just h2s, Just h3s ] ->
+            case List.map ParseInt.parseIntHex [ h1s, h2s, h3s ] of
+                [ Ok h1, Ok h2, Ok h3 ] ->
+                    if (hexBrightness h1 + hexBrightness h2 + hexBrightness h3) > 0 then
+                        True
+                    else
+                        False
 
-                    _ ->
-                        Debug.crash "invalid hex"
+                _ ->
+                    Debug.crash "invalid hex"
 
-            _ ->
-                Debug.crash "invalid hex"
+        _ ->
+            Debug.crash "invalid hex"
 
 
 viewLabel : Model -> GitHubGraph.ID -> Html Msg
@@ -3640,14 +3748,14 @@ viewLabel model id =
                 Nothing ->
                     ( "unknown", "ff00ff" )
     in
-        Html.span
-            [ HA.class "label"
-            , labelColorStyle model color
-            , HE.onClick (searchLabel model name)
-            ]
-            [ Html.span [ HA.class "label-text" ]
-                [ Html.text name ]
-            ]
+    Html.span
+        [ HA.class "label"
+        , labelColorStyle model color
+        , HE.onClick (searchLabel model name)
+        ]
+        [ Html.span [ HA.class "label-text" ]
+            [ Html.text name ]
+        ]
 
 
 viewCardActor : Model -> Backend.EventActor -> Html Msg
@@ -3687,23 +3795,23 @@ subEdges edges =
                         hasNeither =
                             List.filter (\es -> not (edgesContains edge.from es) && not (edgesContains edge.to es)) acc
                     in
-                        case ( hasFrom, hasTo ) of
-                            ( [], [] ) ->
-                                go rest ([ edge ] :: acc)
+                    case ( hasFrom, hasTo ) of
+                        ( [], [] ) ->
+                            go rest ([ edge ] :: acc)
 
-                            ( [ sub1 ], [ sub2 ] ) ->
-                                go rest ((edge :: (sub1 ++ sub2)) :: hasNeither)
+                        ( [ sub1 ], [ sub2 ] ) ->
+                            go rest ((edge :: (sub1 ++ sub2)) :: hasNeither)
 
-                            ( [ sub1 ], [] ) ->
-                                go rest ((edge :: sub1) :: hasNeither)
+                        ( [ sub1 ], [] ) ->
+                            go rest ((edge :: sub1) :: hasNeither)
 
-                            ( [], [ sub2 ] ) ->
-                                go rest ((edge :: sub2) :: hasNeither)
+                        ( [], [ sub2 ] ) ->
+                            go rest ((edge :: sub2) :: hasNeither)
 
-                            _ ->
-                                Debug.crash "impossible"
+                        _ ->
+                            Debug.crash "impossible"
     in
-        go edges []
+    go edges []
 
 
 subGraphs : Graph n e -> List (Graph n e)
@@ -3732,7 +3840,7 @@ subGraphs graph =
                 |> subEdges
                 |> List.map (flip Graph.inducedSubgraph graph << Set.toList << subEdgeNodes)
     in
-        connectedGraphs ++ singletonGraphs
+    connectedGraphs ++ singletonGraphs
 
 
 nodeBounds : Graph.NodeContext (FG.ForceNode (Node a)) () -> NodeBounds
@@ -3744,7 +3852,7 @@ nodeBounds nc =
         y =
             nc.node.label.y
     in
-        nc.node.label.value.bounds { x = x, y = y }
+    nc.node.label.value.bounds { x = x, y = y }
 
 
 moveCard : Model -> CardDestination -> GitHubGraph.ID -> Cmd Msg
@@ -3886,9 +3994,9 @@ rejectIssue model issue =
                         :: List.map (\id -> Backend.refreshCards id (CardsRefreshed id))
                             columnsToRefresh
             in
-                addLabel
-                    |> Task.andThen (\_ -> reopen)
-                    |> Task.attempt (DataChanged (Cmd.batch refreshes))
+            addLabel
+                |> Task.andThen (\_ -> reopen)
+                |> Task.attempt (DataChanged (Cmd.batch refreshes))
 
         Nothing ->
             Cmd.none
@@ -4002,7 +4110,7 @@ randomizeColor label =
         randomHex =
             generateColor currentColor
     in
-        { label | color = randomHex }
+    { label | color = randomHex }
 
 
 generateColor : Int -> String
@@ -4011,7 +4119,7 @@ generateColor seed =
         ( randomColor, _ ) =
             Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed seed)
     in
-        String.padLeft 6 '0' (ParseInt.toHex randomColor)
+    String.padLeft 6 '0' (ParseInt.toHex randomColor)
 
 
 finishProjectDragRefresh : Model -> Model
@@ -4022,62 +4130,62 @@ finishProjectDragRefresh model =
                 data =
                     model.data
             in
-                { model | data = { data | columnCards = Dict.insert id cards data.columnCards } }
+            { model | data = { data | columnCards = Dict.insert id cards data.columnCards } }
 
         updateContent content model =
             let
                 data =
                     model.data
             in
-                case content of
-                    GitHubGraph.IssueCardContent issue ->
-                        { model
-                            | allCards = Dict.insert issue.id (issueCard issue) model.allCards
-                            , data = { data | issues = Dict.insert issue.id issue data.issues }
-                        }
+            case content of
+                GitHubGraph.IssueCardContent issue ->
+                    { model
+                        | allCards = Dict.insert issue.id (issueCard issue) model.allCards
+                        , data = { data | issues = Dict.insert issue.id issue data.issues }
+                    }
 
-                    GitHubGraph.PullRequestCardContent pr ->
-                        { model
-                            | allCards = Dict.insert pr.id (prCard pr) model.allCards
-                            , data = { data | prs = Dict.insert pr.id pr data.prs }
-                        }
+                GitHubGraph.PullRequestCardContent pr ->
+                    { model
+                        | allCards = Dict.insert pr.id (prCard pr) model.allCards
+                        , data = { data | prs = Dict.insert pr.id pr data.prs }
+                    }
     in
-        case model.projectDragRefresh of
-            Nothing ->
-                model
+    case model.projectDragRefresh of
+        Nothing ->
+            model
 
-            Just pdr ->
-                case ( pdr.contentId, pdr.content, pdr.sourceId, pdr.sourceCards, pdr.targetId, pdr.targetCards ) of
-                    ( Just _, Just c, Just sid, Just scs, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.complete model.projectDrag }
-                            |> updateContent c
-                            |> updateColumn sid scs
-                            |> updateColumn tid tcs
-                            |> computeGraph
+        Just pdr ->
+            case ( pdr.contentId, pdr.content, pdr.sourceId, pdr.sourceCards, pdr.targetId, pdr.targetCards ) of
+                ( Just _, Just c, Just sid, Just scs, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.complete model.projectDrag }
+                        |> updateContent c
+                        |> updateColumn sid scs
+                        |> updateColumn tid tcs
+                        |> computeGraph
 
-                    ( Just _, Just c, Nothing, Nothing, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.complete model.projectDrag }
-                            |> updateContent c
-                            |> updateColumn tid tcs
-                            |> computeGraph
+                ( Just _, Just c, Nothing, Nothing, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.complete model.projectDrag }
+                        |> updateContent c
+                        |> updateColumn tid tcs
+                        |> computeGraph
 
-                    ( Just _, Just c, Just _, _, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.land model.projectDrag }
-                            |> updateContent c
-                            |> updateColumn tid tcs
+                ( Just _, Just c, Just _, _, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.land model.projectDrag }
+                        |> updateContent c
+                        |> updateColumn tid tcs
 
-                    ( Nothing, Nothing, Just sid, Just scs, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.complete model.projectDrag }
-                            |> updateColumn sid scs
-                            |> updateColumn tid tcs
+                ( Nothing, Nothing, Just sid, Just scs, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.complete model.projectDrag }
+                        |> updateColumn sid scs
+                        |> updateColumn tid tcs
 
-                    ( Nothing, Nothing, Nothing, Nothing, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.complete model.projectDrag }
-                            |> updateColumn tid tcs
+                ( Nothing, Nothing, Nothing, Nothing, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.complete model.projectDrag }
+                        |> updateColumn tid tcs
 
-                    ( Nothing, Nothing, Just _, _, Just tid, Just tcs ) ->
-                        { model | projectDrag = Drag.land model.projectDrag }
-                            |> updateColumn tid tcs
+                ( Nothing, Nothing, Just _, _, Just tid, Just tcs ) ->
+                    { model | projectDrag = Drag.land model.projectDrag }
+                        |> updateColumn tid tcs
 
-                    _ ->
-                        model
+                _ ->
+                    model
