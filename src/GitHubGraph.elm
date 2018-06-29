@@ -1,80 +1,80 @@
 module GitHubGraph
     exposing
-        ( Error
+        ( CardContent(..)
+        , CardLocation
+        , Error
         , ID
-        , Repo
-        , RepoLocation
         , Issue
+        , IssueOrPRSelector
         , IssueState(..)
         , Label
-        , User
+        , MergeableState(..)
+        , Milestone
+        , MilestoneState(..)
         , Project
         , ProjectColumn
         , ProjectColumnCard
-        , CardLocation
-        , CardContent(..)
         , PullRequest
-        , PullRequestState(..)
         , PullRequestReview
         , PullRequestReviewState(..)
-        , Reactions
+        , PullRequestState(..)
         , ReactionGroup
         , ReactionType(..)
-        , TimelineEvent(..)
-        , Milestone
-        , MilestoneState(..)
-        , IssueOrPRSelector
+        , Reactions
+        , Repo
+        , RepoLocation
         , RepoSelector
         , StatusState(..)
-        , MergeableState(..)
-        , fetchOrgRepos
-        , fetchOrgProjects
-        , fetchOrgProject
-        , fetchProjectColumnCards
-        , fetchRepo
-        , fetchRepoIssues
-        , fetchRepoIssue
-        , fetchRepoPullRequests
-        , fetchRepoPullRequest
-        , fetchIssue
-        , fetchPullRequest
-        , fetchPullRequestReviews
-        , fetchTimeline
-        , moveCardAfter
+        , TimelineEvent(..)
+        , User
         , addContentCard
         , addContentCardAfter
-        , createRepoLabel
-        , updateRepoLabel
-        , deleteRepoLabel
-        , closeIssue
-        , reopenIssue
         , addIssueLabels
-        , removeIssueLabel
-        , setIssueMilestone
         , addPullRequestLabels
-        , removePullRequestLabel
-        , setPullRequestMilestone
-        , createRepoMilestone
-        , deleteRepoMilestone
+        , closeIssue
         , closeRepoMilestone
+        , createRepoLabel
+        , createRepoMilestone
+        , decodeIssue
+        , decodeProject
+        , decodeProjectColumnCard
+        , decodePullRequest
+        , decodePullRequestReview
+        , decodeRepo
+        , decodeUser
+        , deleteRepoLabel
+        , deleteRepoMilestone
+        , encodeIssue
+        , encodeProject
+        , encodeProjectColumnCard
+        , encodePullRequest
+        , encodePullRequestReview
+        , encodeRepo
+        , encodeUser
+        , fetchIssue
+        , fetchOrgProject
+        , fetchOrgProjects
+        , fetchOrgRepos
+        , fetchProjectColumnCards
+        , fetchPullRequest
+        , fetchPullRequestReviews
+        , fetchRepo
+        , fetchRepoIssue
+        , fetchRepoIssues
+        , fetchRepoPullRequest
+        , fetchRepoPullRequests
+        , fetchTimeline
         , issueScore
+        , labelEq
+        , moveCardAfter
         , pullRequestScore
         , reactionScore
-        , labelEq
-        , encodeRepo
-        , decodeRepo
-        , encodeIssue
-        , decodeIssue
-        , encodePullRequest
-        , decodePullRequest
-        , encodePullRequestReview
-        , decodePullRequestReview
-        , encodeUser
-        , decodeUser
-        , encodeProject
-        , decodeProject
-        , encodeProjectColumnCard
-        , decodeProjectColumnCard
+        , removeIssueLabel
+        , removePullRequestLabel
+        , reopenIssue
+        , setIssueMilestone
+        , setPullRequestMilestone
+        , updateRepoLabel
         )
 
 import Date exposing (Date)
@@ -188,7 +188,7 @@ type alias Status =
 type alias StatusContext =
     { state : StatusState
     , context : String
-    , targetUrl : String
+    , targetUrl : Maybe String
     , creator : Actor
     }
 
@@ -270,6 +270,7 @@ type alias User =
     , url : String
     , login : String
     , avatar : String
+    , company : String
     }
 
 
@@ -618,24 +619,24 @@ moveCardMutation =
         afterIDVar =
             GV.required "afterId" .afterId (GV.nullable GV.id)
     in
-        GB.mutationDocument <|
-            GB.extract <|
-                GB.field "moveProjectCard"
-                    [ ( "input"
-                      , GA.object
-                            [ ( "columnId", GA.variable columnIDVar )
-                            , ( "cardId", GA.variable cardIDVar )
-                            , ( "afterCardId", GA.variable afterIDVar )
-                            ]
-                      )
-                    ]
-                    (GB.extract <|
-                        GB.field "cardEdge"
-                            []
-                            (GB.extract <|
-                                GB.field "node" [] projectColumnCardObject
-                            )
-                    )
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "moveProjectCard"
+                [ ( "input"
+                  , GA.object
+                        [ ( "columnId", GA.variable columnIDVar )
+                        , ( "cardId", GA.variable cardIDVar )
+                        , ( "afterCardId", GA.variable afterIDVar )
+                        ]
+                  )
+                ]
+                (GB.extract <|
+                    GB.field "cardEdge"
+                        []
+                        (GB.extract <|
+                            GB.field "node" [] projectColumnCardObject
+                        )
+                )
 
 
 addCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, contentId : ID }
@@ -647,23 +648,23 @@ addCardMutation =
         contentIDVar =
             GV.required "contentId" .contentId GV.id
     in
-        GB.mutationDocument <|
-            GB.extract <|
-                GB.field "addProjectCard"
-                    [ ( "input"
-                      , GA.object
-                            [ ( "projectColumnId", GA.variable columnIDVar )
-                            , ( "contentId", GA.variable contentIDVar )
-                            ]
-                      )
-                    ]
-                    (GB.extract <|
-                        GB.field "cardEdge"
-                            []
-                            (GB.extract <|
-                                GB.field "node" [] projectColumnCardObject
-                            )
-                    )
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "addProjectCard"
+                [ ( "input"
+                  , GA.object
+                        [ ( "projectColumnId", GA.variable columnIDVar )
+                        , ( "contentId", GA.variable contentIDVar )
+                        ]
+                  )
+                ]
+                (GB.extract <|
+                    GB.field "cardEdge"
+                        []
+                        (GB.extract <|
+                            GB.field "node" [] projectColumnCardObject
+                        )
+                )
 
 
 issueScore : { a | reactions : Reactions, commentCount : Int } -> Int
@@ -742,10 +743,10 @@ fetchPaged doc token psel =
             else
                 Task.succeed content
     in
-        doc
-            |> GB.request psel
-            |> GH.customSendQuery (authedOptions token)
-            |> Task.andThen fetchNextPage
+    doc
+        |> GB.request psel
+        |> GH.customSendQuery (authedOptions token)
+        |> Task.andThen fetchNextPage
 
 
 type DateType
@@ -842,7 +843,7 @@ repoQuery =
                     ]
                     repoObject
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 reposQuery : GB.Document GB.Query (PagedResult Repo) (PagedSelector OrgSelector)
@@ -877,7 +878,7 @@ reposQuery =
                 <|
                     GB.extract (GB.field "repositories" pageArgs paged)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 projectObject : GB.ValueSpec GB.NonNull GB.ObjectType Project vars
@@ -907,7 +908,7 @@ projectQuery =
                 <|
                     GB.extract (GB.field "project" [ ( "number", GA.variable projectNumberVar ) ] projectObject)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 projectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector OrgSelector)
@@ -942,7 +943,7 @@ projectsQuery =
                 <|
                     GB.extract (GB.field "projects" pageArgs paged)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 cardsQuery : GB.Document GB.Query (PagedResult ProjectColumnCard) (PagedSelector IDSelector)
@@ -970,7 +971,7 @@ cardsQuery =
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         cards =
-            (GB.extract (GB.field "cards" pageArgs paged))
+            GB.extract (GB.field "cards" pageArgs paged)
 
         queryRoot =
             GB.extract <|
@@ -980,7 +981,7 @@ cardsQuery =
                         ]
                         (GB.extract <| GB.inlineFragment (Just <| GB.onType "ProjectColumn") cards)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 projectLocationObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectLocation vars
@@ -1026,6 +1027,7 @@ userObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "login" [] GB.string)
         |> GB.with (GB.field "avatarUrl" [] GB.string)
+        |> GB.with (GB.field "company" [] (GB.map (Maybe.withDefault "") <| GB.nullable GB.string))
 
 
 authorObject : GB.SelectionSpec GB.InlineFragment User vars
@@ -1050,10 +1052,10 @@ projectColumnCardObject =
                 |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map IssueCardContent issueObject))
                 |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map PullRequestCardContent prObject))
     in
-        GB.object ProjectColumnCard
-            |> GB.with (GB.field "id" [] GB.string)
-            |> GB.with (GB.field "content" [] content)
-            |> GB.with (GB.field "note" [] (GB.nullable GB.string))
+    GB.object ProjectColumnCard
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "content" [] content)
+        |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
 
 reactionGroupObject : GB.ValueSpec GB.NonNull GB.ObjectType ReactionGroup vars
@@ -1095,7 +1097,7 @@ statusContextObject =
     GB.object StatusContext
         |> GB.with (GB.field "state" [] (GB.enum statusStates))
         |> GB.with (GB.field "context" [] GB.string)
-        |> GB.with (GB.field "targetUrl" [] GB.string)
+        |> GB.with (GB.field "targetUrl" [] (GB.nullable GB.string))
         |> GB.with (GB.field "creator" [] actorObject)
 
 
@@ -1208,7 +1210,7 @@ issuesQuery =
                 <|
                     GB.extract (GB.field "issues" pageArgs paged)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 issueQuery : GB.Document GB.Query Issue IssueOrPRSelector
@@ -1232,7 +1234,7 @@ issueQuery =
                 <|
                     GB.extract (GB.field "issue" [ ( "number", GA.variable numberVar ) ] issueObject)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 pullRequestsQuery : GB.Document GB.Query (PagedResult PullRequest) (PagedSelector RepoSelector)
@@ -1271,7 +1273,7 @@ pullRequestsQuery =
                 <|
                     GB.extract (GB.field "pullRequests" pageArgs paged)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 pullRequestQuery : GB.Document GB.Query PullRequest IssueOrPRSelector
@@ -1295,7 +1297,7 @@ pullRequestQuery =
                 <|
                     GB.extract (GB.field "pullRequest" [ ( "number", GA.variable numberVar ) ] prObject)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 objectQuery : String -> GB.ValueSpec GB.NonNull GB.ObjectType a IDSelector -> GB.Document GB.Query a IDSelector
@@ -1310,7 +1312,7 @@ objectQuery t obj =
                     GB.field "node" [ ( "id", GA.variable idVar ) ] <|
                         GB.extract (GB.inlineFragment (Just (GB.onType t)) obj)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 timelineQuery : GB.Document GB.Query (PagedResult TimelineEvent) (PagedSelector IDSelector)
@@ -1361,7 +1363,7 @@ timelineQuery =
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         timeline =
-            (GB.extract (GB.field "timeline" pageArgs paged))
+            GB.extract (GB.field "timeline" pageArgs paged)
 
         issueOrPRTimeline =
             GB.object pickEnum2
@@ -1376,7 +1378,7 @@ timelineQuery =
                         ]
                         issueOrPRTimeline
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 prReviewQuery : GB.Document GB.Query (PagedResult PullRequestReview) (PagedSelector IDSelector)
@@ -1409,7 +1411,7 @@ prReviewQuery =
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         reviews =
-            (GB.extract (GB.field "reviews" pageArgs paged))
+            GB.extract (GB.field "reviews" pageArgs paged)
 
         queryRoot =
             GB.extract <|
@@ -1419,7 +1421,7 @@ prReviewQuery =
                         ]
                         (GB.extract <| GB.inlineFragment (Just <| GB.onType "PullRequest") reviews)
     in
-        GB.queryDocument queryRoot
+    GB.queryDocument queryRoot
 
 
 pickEnum2 : Maybe a -> Maybe a -> Maybe a
@@ -1440,29 +1442,29 @@ pickEnum3 ma mb mc =
 decodeRepo : JD.Decoder Repo
 decodeRepo =
     JD.succeed Repo
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "owner" JD.string)
-        |: (JD.field "name" JD.string)
-        |: (JD.field "is_archived" JD.bool)
-        |: (JD.field "labels" (JD.list decodeLabel))
-        |: (JD.field "milestones" (JD.list decodeMilestone))
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "owner" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "is_archived" JD.bool
+        |: JD.field "labels" (JD.list decodeLabel)
+        |: JD.field "milestones" (JD.list decodeMilestone)
 
 
 decodeIssue : JD.Decoder Issue
 decodeIssue =
     JD.succeed Issue
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "created_at" JDE.date)
-        |: (JD.field "updated_at" JDE.date)
-        |: (JD.field "state" decodeIssueState)
-        |: (JD.field "repo" decodeRepoLocation)
-        |: (JD.field "number" JD.int)
-        |: (JD.field "title" JD.string)
-        |: (JD.field "comment_count" JD.int)
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "created_at" JDE.date
+        |: JD.field "updated_at" JDE.date
+        |: JD.field "state" decodeIssueState
+        |: JD.field "repo" decodeRepoLocation
+        |: JD.field "number" JD.int
+        |: JD.field "title" JD.string
+        |: JD.field "comment_count" JD.int
         |: (JD.field "reactions" <| JD.list decodeReactionGroup)
-        |: (JD.field "author" (JD.maybe decodeUser))
+        |: JD.field "author" (JD.maybe decodeUser)
         |: (JD.field "labels" <| JD.list decodeLabel)
         |: (JD.field "cards" <| JD.list decodeCardLocation)
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
@@ -1471,23 +1473,23 @@ decodeIssue =
 decodePullRequest : JD.Decoder PullRequest
 decodePullRequest =
     JD.succeed PullRequest
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "created_at" JDE.date)
-        |: (JD.field "updated_at" JDE.date)
-        |: (JD.field "state" decodePullRequestState)
-        |: (JD.field "repo" decodeRepoLocation)
-        |: (JD.field "number" JD.int)
-        |: (JD.field "title" JD.string)
-        |: (JD.field "comment_count" JD.int)
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "created_at" JDE.date
+        |: JD.field "updated_at" JDE.date
+        |: JD.field "state" decodePullRequestState
+        |: JD.field "repo" decodeRepoLocation
+        |: JD.field "number" JD.int
+        |: JD.field "title" JD.string
+        |: JD.field "comment_count" JD.int
         |: (JD.field "reactions" <| JD.list decodeReactionGroup)
-        |: (JD.field "author" (JD.maybe decodeUser))
+        |: JD.field "author" (JD.maybe decodeUser)
         |: (JD.field "labels" <| JD.list decodeLabel)
         |: (JD.field "cards" <| JD.list decodeCardLocation)
-        |: (JD.field "additions" JD.int)
-        |: (JD.field "deletions" JD.int)
+        |: JD.field "additions" JD.int
+        |: JD.field "deletions" JD.int
         |: (JD.field "milestone" <| JD.maybe decodeMilestone)
-        |: (JD.field "mergeable" decodeMergeableState)
+        |: JD.field "mergeable" decodeMergeableState
         |: (JD.field "last_commit" <| JD.maybe decodeCommit)
 
 
@@ -1514,43 +1516,43 @@ decodeGitActor =
 decodePullRequestReview : JD.Decoder PullRequestReview
 decodePullRequestReview =
     JD.succeed PullRequestReview
-        |: (JD.field "author" decodeUser)
-        |: (JD.field "state" decodePullRequestReviewState)
-        |: (JD.field "created_at" JDE.date)
+        |: JD.field "author" decodeUser
+        |: JD.field "state" decodePullRequestReviewState
+        |: JD.field "created_at" JDE.date
 
 
 decodeRepoLocation : JD.Decoder RepoLocation
 decodeRepoLocation =
     JD.succeed RepoLocation
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "owner" JD.string)
-        |: (JD.field "name" JD.string)
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "owner" JD.string
+        |: JD.field "name" JD.string
 
 
 decodeLabel : JD.Decoder Label
 decodeLabel =
     JD.succeed Label
-        |: (JD.field "id" JD.string)
-        |: (JD.field "name" JD.string)
-        |: (JD.field "color" JD.string)
+        |: JD.field "id" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "color" JD.string
 
 
 decodeMilestone : JD.Decoder Milestone
 decodeMilestone =
     JD.succeed Milestone
-        |: (JD.field "id" JD.string)
-        |: (JD.field "number" JD.int)
-        |: (JD.field "title" JD.string)
-        |: (JD.field "state" decodeMilestoneState)
-        |: (JD.field "description" (JD.maybe JD.string))
+        |: JD.field "id" JD.string
+        |: JD.field "number" JD.int
+        |: JD.field "title" JD.string
+        |: JD.field "state" decodeMilestoneState
+        |: JD.field "description" (JD.maybe JD.string)
 
 
 decodeReactionGroup : JD.Decoder ReactionGroup
 decodeReactionGroup =
     JD.succeed ReactionGroup
-        |: (JD.field "type_" decodeReactionType)
-        |: (JD.field "count" JD.int)
+        |: JD.field "type_" decodeReactionType
+        |: JD.field "count" JD.int
 
 
 decodeReactionType : JD.Decoder ReactionType
@@ -1562,9 +1564,9 @@ decodeReactionType =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to ReactionType. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to ReactionType. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodeMilestoneState : JD.Decoder MilestoneState
@@ -1576,76 +1578,77 @@ decodeMilestoneState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to MilestoneState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to MilestoneState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodeUser : JD.Decoder User
 decodeUser =
     JD.succeed User
-        |: (JD.field "id" JD.string)
-        |: (JD.field "database_id" JD.int)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "login" JD.string)
-        |: (JD.field "avatar" JD.string)
+        |: JD.field "id" JD.string
+        |: JD.field "database_id" JD.int
+        |: JD.field "url" JD.string
+        |: JD.field "login" JD.string
+        |: JD.field "avatar" JD.string
+        |: JD.field "company" JD.string
 
 
 decodeStatus : JD.Decoder Status
 decodeStatus =
     JD.succeed Status
-        |: (JD.field "state" decodeStatusState)
-        |: (JD.field "contexts" (JD.list decodeStatusContext))
+        |: JD.field "state" decodeStatusState
+        |: JD.field "contexts" (JD.list decodeStatusContext)
 
 
 decodeStatusContext : JD.Decoder StatusContext
 decodeStatusContext =
     JD.succeed StatusContext
-        |: (JD.field "state" decodeStatusState)
-        |: (JD.field "context" JD.string)
-        |: (JD.field "target_url" JD.string)
-        |: (JD.field "creator" decodeActor)
+        |: JD.field "state" decodeStatusState
+        |: JD.field "context" JD.string
+        |: JD.field "target_url" (JD.maybe JD.string)
+        |: JD.field "creator" decodeActor
 
 
 decodeActor : JD.Decoder Actor
 decodeActor =
     JD.succeed Actor
-        |: (JD.field "url" JD.string)
-        |: (JD.field "login" JD.string)
-        |: (JD.field "avatar" JD.string)
+        |: JD.field "url" JD.string
+        |: JD.field "login" JD.string
+        |: JD.field "avatar" JD.string
 
 
 decodeProject : JD.Decoder Project
 decodeProject =
     JD.succeed Project
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "name" JD.string)
-        |: (JD.field "number" JD.int)
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "number" JD.int
         |: (JD.field "columns" <| JD.list decodeProjectColumn)
 
 
 decodeProjectLocation : JD.Decoder ProjectLocation
 decodeProjectLocation =
     JD.succeed ProjectLocation
-        |: (JD.field "id" JD.string)
-        |: (JD.field "url" JD.string)
-        |: (JD.field "name" JD.string)
-        |: (JD.field "number" JD.int)
+        |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "number" JD.int
 
 
 decodeProjectColumn : JD.Decoder ProjectColumn
 decodeProjectColumn =
     JD.succeed ProjectColumn
-        |: (JD.field "id" JD.string)
-        |: (JD.field "name" JD.string)
-        |: (JD.field "database_id" JD.int)
+        |: JD.field "id" JD.string
+        |: JD.field "name" JD.string
+        |: JD.field "database_id" JD.int
 
 
 decodeProjectColumnCard : JD.Decoder ProjectColumnCard
 decodeProjectColumnCard =
     JD.succeed ProjectColumnCard
-        |: (JD.field "id" JD.string)
+        |: JD.field "id" JD.string
         |: (JD.field "content" <| JD.maybe decodeCardContent)
         |: (JD.field "note" <| JD.maybe JD.string)
 
@@ -1661,22 +1664,22 @@ decodeCardContent =
 decodeCardLocation : JD.Decoder CardLocation
 decodeCardLocation =
     JD.succeed CardLocation
-        |: (JD.field "id" JD.string)
-        |: (JD.field "project" decodeProjectLocation)
+        |: JD.field "id" JD.string
+        |: JD.field "project" decodeProjectLocation
         |: (JD.field "column" <| JD.maybe decodeProjectColumn)
 
 
 decodeRepoSelector : JD.Decoder RepoSelector
 decodeRepoSelector =
     JD.succeed RepoSelector
-        |: (JD.field "owner" JD.string)
-        |: (JD.field "name" JD.string)
+        |: JD.field "owner" JD.string
+        |: JD.field "name" JD.string
 
 
 decodeOrgSelector : JD.Decoder OrgSelector
 decodeOrgSelector =
     JD.succeed OrgSelector
-        |: (JD.field "name" JD.string)
+        |: JD.field "name" JD.string
 
 
 decodePullRequestState : JD.Decoder PullRequestState
@@ -1688,9 +1691,9 @@ decodePullRequestState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to PullRequestState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to PullRequestState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodeIssueState : JD.Decoder IssueState
@@ -1702,9 +1705,9 @@ decodeIssueState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to IssueState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to IssueState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodeMergeableState : JD.Decoder MergeableState
@@ -1716,9 +1719,9 @@ decodeMergeableState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to MergeableState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to MergeableState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodePullRequestReviewState : JD.Decoder PullRequestReviewState
@@ -1730,9 +1733,9 @@ decodePullRequestReviewState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to PullRequestReviewState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to PullRequestReviewState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 decodeStatusState : JD.Decoder StatusState
@@ -1744,9 +1747,9 @@ decodeStatusState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to StatusState. Pattern: " ++ (toString string))
+                    Result.Err ("Not valid pattern for decoder to StatusState. Pattern: " ++ toString string)
     in
-        customDecoder JD.string decodeToType
+    customDecoder JD.string decodeToType
 
 
 encodeRepo : Repo -> JE.Value
@@ -1911,6 +1914,7 @@ encodeUser record =
         , ( "url", JE.string record.url )
         , ( "login", JE.string record.login )
         , ( "avatar", JE.string record.avatar )
+        , ( "company", JE.string record.company )
         ]
 
 
@@ -1927,7 +1931,7 @@ encodeStatusContext record =
     JE.object
         [ ( "state", encodeStatusState record.state )
         , ( "context", JE.string record.context )
-        , ( "target_url", JE.string record.targetUrl )
+        , ( "target_url", JEE.maybe JE.string record.targetUrl )
         , ( "creator", encodeActor record.creator )
         ]
 

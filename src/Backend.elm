@@ -1,33 +1,33 @@
 module Backend
     exposing
-        ( Indexed
+        ( ColumnCard
         , Data
+        , EventActor
+        , Indexed
         , Me
         , User
-        , EventActor
-        , ColumnCard
         , emptyData
+        , encodeEventActor
         , fetchData
+        , fetchMe
         , pollData
         , refreshCards
-        , refreshRepo
         , refreshIssue
         , refreshPR
-        , fetchMe
-        , encodeEventActor
+        , refreshRepo
         )
 
+import Date exposing (Date)
+import Date.Format
+import Dict exposing (Dict)
+import GitHubGraph
+import Http
 import HttpBuilder
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing ((|:))
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
-import Date.Format
-import Dict exposing (Dict)
-import GitHubGraph
 import Task
-import Http
-import Date exposing (Date)
 import Time
 
 
@@ -183,7 +183,7 @@ decodeCards =
 decodeColumnCard : JD.Decoder ColumnCard
 decodeColumnCard =
     JD.succeed ColumnCard
-        |: (JD.field "id" JD.string)
+        |: JD.field "id" JD.string
         |: (JD.maybe <| JD.field "contentId" JD.string)
         |: (JD.maybe <| JD.field "note" JD.string)
 
@@ -191,25 +191,25 @@ decodeColumnCard =
 decodeMe : JD.Decoder Me
 decodeMe =
     JD.succeed Me
-        |: (JD.field "token" JD.string)
-        |: (JD.field "user" decodeUser)
+        |: JD.field "token" JD.string
+        |: JD.field "user" decodeUser
 
 
 decodeUser : JD.Decoder User
 decodeUser =
     JD.succeed User
-        |: (JD.field "id" JD.int)
-        |: (JD.field "login" JD.string)
-        |: (JD.field "html_url" JD.string)
-        |: (JD.field "avatar_url" JD.string)
+        |: JD.field "id" JD.int
+        |: JD.field "login" JD.string
+        |: JD.field "html_url" JD.string
+        |: JD.field "avatar_url" JD.string
 
 
 decodeEventActor : JD.Decoder EventActor
 decodeEventActor =
     JD.succeed EventActor
-        |: (JD.field "user" (JD.maybe GitHubGraph.decodeUser))
-        |: (JD.field "avatar" JD.string)
-        |: (JD.field "createdAt" JDE.date)
+        |: JD.field "user" (JD.maybe GitHubGraph.decodeUser)
+        |: JD.field "avatar" JD.string
+        |: JD.field "createdAt" JDE.date
 
 
 encodeEventActor : EventActor -> JE.Value
