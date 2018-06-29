@@ -3774,44 +3774,29 @@ isOrgMember users user =
 
 
 subEdges : List (Graph.Edge e) -> List (List (Graph.Edge e))
-subEdges edges =
+subEdges =
     let
-        edgesContains nodeId =
-            List.any (\{ from, to } -> from == nodeId || to == nodeId)
+        edgesRelated edge =
+            List.any (\{ from, to } -> from == edge.from || from == edge.to || to == edge.from || to == edge.to)
 
-        go edges acc =
+        go acc edges =
             case edges of
                 [] ->
                     acc
 
                 edge :: rest ->
                     let
-                        hasFrom =
-                            List.filter (edgesContains edge.from) acc
-
-                        hasTo =
-                            List.filter (edgesContains edge.to) acc
-
-                        hasNeither =
-                            List.filter (\es -> not (edgesContains edge.from es) && not (edgesContains edge.to es)) acc
+                        ( connected, disconnected ) =
+                            List.partition (edgesRelated edge) acc
                     in
-                    case ( hasFrom, hasTo ) of
-                        ( [], [] ) ->
-                            go rest ([ edge ] :: acc)
-
-                        ( [ sub1 ], [ sub2 ] ) ->
-                            go rest ((edge :: (sub1 ++ sub2)) :: hasNeither)
-
-                        ( [ sub1 ], [] ) ->
-                            go rest ((edge :: sub1) :: hasNeither)
-
-                        ( [], [ sub2 ] ) ->
-                            go rest ((edge :: sub2) :: hasNeither)
+                    case connected of
+                        [] ->
+                            go ([ edge ] :: acc) rest
 
                         _ ->
-                            Debug.crash "impossible"
+                            go ((edge :: List.concat connected) :: disconnected) rest
     in
-    go edges []
+    go []
 
 
 subGraphs : Graph n e -> List (Graph n e)
