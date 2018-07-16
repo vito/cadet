@@ -38586,19 +38586,15 @@ var _vito$cadet$Main$viewNoteCard = F3(
 					_elm_lang$html$Html$div,
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html_Attributes$class('card-icons'),
+						_0: _elm_lang$html$Html_Attributes$class('card-info card-note'),
 						_1: {ctor: '[]'}
 					},
 					{
 						ctor: '::',
 						_0: A2(
-							_elm_lang$html$Html$span,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$class('octicon octicon-book'),
-								_1: {ctor: '[]'}
-							},
-							{ctor: '[]'}),
+							_evancz$elm_markdown$Markdown$toHtml,
+							{ctor: '[]'},
+							text),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
@@ -38607,15 +38603,19 @@ var _vito$cadet$Main$viewNoteCard = F3(
 						_elm_lang$html$Html$div,
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$class('card-info card-note'),
+							_0: _elm_lang$html$Html_Attributes$class('card-icons'),
 							_1: {ctor: '[]'}
 						},
 						{
 							ctor: '::',
 							_0: A2(
-								_evancz$elm_markdown$Markdown$toHtml,
-								{ctor: '[]'},
-								text),
+								_elm_lang$html$Html$span,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$class('octicon octicon-book'),
+									_1: {ctor: '[]'}
+								},
+								{ctor: '[]'}),
 							_1: {ctor: '[]'}
 						}),
 					_1: {ctor: '[]'}
