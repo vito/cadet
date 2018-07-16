@@ -163,42 +163,42 @@ viewDropArea model wrap candidate ownSource =
                 _ ->
                     Html.text ""
     in
-        Html.div
-            ([ HA.classList
-                [ ( "drop-area", True )
-                , ( "active", isActive )
-                , ( "never-left", hasNeverLeft model )
-                , ( "over", isOver )
-                ]
-             , HA.style <|
-                case model of
-                    NotDragging ->
+    Html.div
+        ([ HA.classList
+            [ ( "drop-area", True )
+            , ( "active", isActive )
+            , ( "never-left", hasNeverLeft model )
+            , ( "over", isOver )
+            ]
+         , HA.style <|
+            case model of
+                NotDragging ->
+                    []
+
+                Dragging { start } ->
+                    if isOver then
+                        -- drop-area height + card-margin
+                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
+                    else
                         []
 
-                    Dragging { start } ->
-                        if isOver then
-                            -- drop-area height + card-margin
-                            [ ( "min-height", toString (start.elementBounds.height) ++ "px" ) ]
-                        else
-                            []
+                Dropping { start } ->
+                    if isOver then
+                        -- drop-area height + 2 * card-margin
+                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
+                    else
+                        []
 
-                    Dropping { start } ->
-                        if isOver then
-                            -- drop-area height + 2 * card-margin
-                            [ ( "min-height", toString (start.elementBounds.height) ++ "px" ) ]
-                        else
-                            []
-
-                    Dropped { start } ->
-                        if isOver then
-                            -- drop-area height + 2 * card-margin
-                            [ ( "min-height", toString (start.elementBounds.height) ++ "px" ) ]
-                        else
-                            []
-             ]
-                ++ dragEvents
-            )
-            [ droppedElement ]
+                Dropped { start } ->
+                    if isOver then
+                        -- drop-area height + 2 * card-margin
+                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
+                    else
+                        []
+         ]
+            ++ dragEvents
+        )
+        [ droppedElement ]
 
 
 draggable : Model source target msg -> (Msg source target msg -> msg) -> source -> Html msg -> Html msg
@@ -211,6 +211,7 @@ draggable model wrap source view =
         , HA.draggable "true"
         , HE.on "dragstart" (JD.map (wrap << Start source) (decodeStartState view))
         , HE.on "dragend" (JD.succeed (wrap End))
+        , HA.attribute "ondragstart" "event.dataTransfer.setData('text/plain', '');"
         ]
         [ view ]
 

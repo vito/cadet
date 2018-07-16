@@ -36066,7 +36066,11 @@ var _vito$cadet$Drag$draggable = F4(
 								'dragend',
 								_elm_lang$core$Json_Decode$succeed(
 									wrap(_vito$cadet$Drag$End))),
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: A2(_elm_lang$html$Html_Attributes$attribute, 'ondragstart', 'event.dataTransfer.setData(\'text/plain\', \'\');'),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
