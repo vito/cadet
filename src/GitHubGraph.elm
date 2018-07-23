@@ -298,6 +298,7 @@ type alias ProjectColumn =
 
 type alias ProjectColumnCard =
     { id : ID
+    , url : String
     , content : Maybe CardContent
     , note : Maybe String
     }
@@ -318,6 +319,7 @@ type alias ProjectLocation =
 
 type alias CardLocation =
     { id : ID
+    , url : String
     , project : ProjectLocation
     , column : Maybe ProjectColumn
     }
@@ -1040,6 +1042,7 @@ projectCardObject : GB.ValueSpec GB.NonNull GB.ObjectType CardLocation vars
 projectCardObject =
     GB.object CardLocation
         |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "project" [] projectLocationObject)
         |> GB.with (GB.field "column" [] (GB.nullable columnObject))
 
@@ -1054,6 +1057,7 @@ projectColumnCardObject =
     in
     GB.object ProjectColumnCard
         |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "content" [] content)
         |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
@@ -1649,6 +1653,7 @@ decodeProjectColumnCard : JD.Decoder ProjectColumnCard
 decodeProjectColumnCard =
     JD.succeed ProjectColumnCard
         |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
         |: (JD.field "content" <| JD.maybe decodeCardContent)
         |: (JD.field "note" <| JD.maybe JD.string)
 
@@ -1665,6 +1670,7 @@ decodeCardLocation : JD.Decoder CardLocation
 decodeCardLocation =
     JD.succeed CardLocation
         |: JD.field "id" JD.string
+        |: JD.field "url" JD.string
         |: JD.field "project" decodeProjectLocation
         |: (JD.field "column" <| JD.maybe decodeProjectColumn)
 
@@ -1979,6 +1985,7 @@ encodeProjectColumnCard : ProjectColumnCard -> JE.Value
 encodeProjectColumnCard record =
     JE.object
         [ ( "id", JE.string record.id )
+        , ( "url", JE.string record.url )
         , ( "content"
           , case record.content of
                 Just (IssueCardContent issue) ->
@@ -1998,6 +2005,7 @@ encodeCardLocation : CardLocation -> JE.Value
 encodeCardLocation record =
     JE.object
         [ ( "id", JE.string record.id )
+        , ( "url", JE.string record.url )
         , ( "project", encodeProjectLocation record.project )
         , ( "column", JEE.maybe encodeProjectColumn record.column )
         ]

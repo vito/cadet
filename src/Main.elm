@@ -3473,14 +3473,19 @@ viewCard model card =
         [ Html.div [ HA.class "card-info" ]
             [ Html.div [ HA.class "card-actors" ] <|
                 List.map (viewCardActor model) (recentActors model card)
-            , Html.a
-                [ HA.href card.url
-                , HA.target "_blank"
-                , HA.class "card-title"
+            , Html.span
+                [ HA.class "card-title"
                 , HA.draggable "false"
                 ]
-                [ Html.text card.title
-                ]
+                ([ Html.a
+                    [ HA.href card.url
+                    , HA.target "_blank"
+                    ]
+                    [ Html.text card.title
+                    ]
+                 ]
+                    ++ externalIcons card
+                )
             , Html.span [ HA.class "card-labels" ] <|
                 List.map (viewLabel model) card.labels
             , Html.div [ HA.class "card-meta" ]
@@ -3557,6 +3562,20 @@ viewCard model card =
                 ++ prIcons model card
             )
         ]
+
+
+externalIcons : Card -> List (Html Msg)
+externalIcons card =
+    List.map
+        (\{ url } ->
+            Html.a
+                [ HA.target "_blank"
+                , HA.class "external-link octicon octicon-link-external"
+                , HA.href url
+                ]
+                []
+        )
+        card.cards
 
 
 prIcons : Model -> Card -> List (Html Msg)

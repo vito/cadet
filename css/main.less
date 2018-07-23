@@ -347,6 +347,19 @@ a {
     color: @gray-900;
     line-height: 1.25;
     padding: 1px 0; /* eliminate unclickable gap */
+
+    .external-link {
+      color: @gray-300;
+      margin-left: 10px;
+
+      &:hover {
+        color: @gray-900;
+      }
+    }
+
+    .external-link + .external-link {
+      margin-left: 5px;
+    }
   }
 
   .card-meta {
