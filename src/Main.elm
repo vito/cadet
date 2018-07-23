@@ -2381,7 +2381,9 @@ viewProjectColumn model project mod col =
             }
     in
     Html.div [ HA.class "project-column" ]
-        [ Html.div [ HA.class "column-name" ] [ Html.text col.name ]
+        [ Html.div [ HA.class "column-name" ]
+            [ Html.a [ HA.href ("/projects/" ++ project.name) ] [ Html.text col.name ]
+            ]
         , if List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
                 [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing

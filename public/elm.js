@@ -32388,9 +32388,9 @@ var _vito$cadet$GitHubGraph$decodeProject = A2(
 		_elm_lang$core$Json_Decode$field,
 		'columns',
 		_elm_lang$core$Json_Decode$list(_vito$cadet$GitHubGraph$decodeProjectColumn)));
-var _vito$cadet$GitHubGraph$ProjectColumnCard = F3(
-	function (a, b, c) {
-		return {id: a, content: b, note: c};
+var _vito$cadet$GitHubGraph$ProjectColumnCard = F4(
+	function (a, b, c, d) {
+		return {id: a, content: b, note: c, databaseId: d};
 	});
 var _vito$cadet$GitHubGraph$ProjectLocation = F4(
 	function (a, b, c, d) {
@@ -34026,7 +34026,15 @@ var _vito$cadet$GitHubGraph$encodeProjectColumnCard = function (record) {
 						_0: 'note',
 						_1: A2(_elm_community$json_extra$Json_Encode_Extra$maybe, _elm_lang$core$Json_Encode$string, record.note)
 					},
-					_1: {ctor: '[]'}
+					_1: {
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'database_id',
+							_1: _elm_lang$core$Json_Encode$int(record.databaseId)
+						},
+						_1: {ctor: '[]'}
+					}
 				}
 			}
 		});
@@ -34059,16 +34067,19 @@ var _vito$cadet$GitHubGraph$decodeProjectColumnCard = A2(
 		_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 		A2(
 			_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-			_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumnCard),
-			A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+			A2(
+				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
+				_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$ProjectColumnCard),
+				A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+			A2(
+				_elm_lang$core$Json_Decode$field,
+				'content',
+				_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeCardContent))),
 		A2(
 			_elm_lang$core$Json_Decode$field,
-			'content',
-			_elm_lang$core$Json_Decode$maybe(_vito$cadet$GitHubGraph$decodeCardContent))),
-	A2(
-		_elm_lang$core$Json_Decode$field,
-		'note',
-		_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$string)));
+			'note',
+			_elm_lang$core$Json_Decode$maybe(_elm_lang$core$Json_Decode$string))),
+	A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int));
 var _vito$cadet$GitHubGraph$CommitEvent = function (a) {
 	return {ctor: 'CommitEvent', _0: a};
 };
@@ -34754,24 +34765,31 @@ var _vito$cadet$GitHubGraph$projectColumnCardObject = function () {
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'note',
+			'databaseId',
 			{ctor: '[]'},
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'content',
+				'note',
 				{ctor: '[]'},
-				content),
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string)),
 			A2(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 				A3(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'id',
+					'content',
 					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumnCard))));
+					content),
+				A2(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+					A3(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+						'id',
+						{ctor: '[]'},
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$ProjectColumnCard)))));
 }();
 var _vito$cadet$GitHubGraph$moveCardMutation = function () {
 	var afterIDVar = A3(
@@ -36840,8 +36858,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3726, column: 13},
-					end: {line: 3734, column: 46}
+					start: {line: 3728, column: 13},
+					end: {line: 3736, column: 46}
 				},
 				_p17)('invalid hex');
 		}
@@ -36849,8 +36867,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3724, column: 5},
-				end: {line: 3737, column: 38}
+				start: {line: 3726, column: 5},
+				end: {line: 3739, column: 38}
 			},
 			_p16)('invalid hex');
 	}
@@ -37604,8 +37622,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3073, column: 13},
-							end: {line: 3078, column: 45}
+							start: {line: 3075, column: 13},
+							end: {line: 3080, column: 45}
 						},
 						_p63)('impossible');
 				}
@@ -37714,8 +37732,8 @@ var _vito$cadet$Main$prCircle = F3(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 2905, column: 13},
-						end: {line: 2910, column: 45}
+						start: {line: 2907, column: 13},
+						end: {line: 2912, column: 45}
 					},
 					_p69)('impossible');
 			}
@@ -44092,8 +44110,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 							return _elm_lang$core$Native_Utils.crashCase(
 								'Main',
 								{
-									start: {line: 2418, column: 13},
-									end: {line: 2425, column: 66}
+									start: {line: 2420, column: 13},
+									end: {line: 2427, column: 66}
 								},
 								_p319)('impossible: content has no card');
 						}
@@ -44108,8 +44126,8 @@ var _vito$cadet$Main$viewProjectColumnCard = F4(
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 2411, column: 5},
-				end: {line: 2428, column: 37}
+				start: {line: 2413, column: 5},
+				end: {line: 2430, column: 37}
 			},
 			_p318)('impossible');
 	});
@@ -44142,7 +44160,19 @@ var _vito$cadet$Main$viewProjectColumn = F4(
 					},
 					{
 						ctor: '::',
-						_0: _elm_lang$html$Html$text(col.name),
+						_0: A2(
+							_elm_lang$html$Html$a,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$href(
+									A2(_elm_lang$core$Basics_ops['++'], '/projects/', project.name)),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(col.name),
+								_1: {ctor: '[]'}
+							}),
 						_1: {ctor: '[]'}
 					}),
 				_1: {
