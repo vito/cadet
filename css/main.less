@@ -258,6 +258,10 @@ a {
     }
   }
 
+  &.paused {
+    opacity: 0.5;
+  }
+
   &.icebox::before {
     background: @gray;
   }
@@ -316,7 +320,7 @@ a {
   .closed { color: @red; }
   .merged { color: @purple; }
 
-  .accept, .reject {
+  .accept, .reject, .pause, .unpause {
     color: @gray-300;
     cursor: pointer;
   }
@@ -327,6 +331,10 @@ a {
 
   .rejected, .reject:hover {
     color: @orange;
+  }
+
+  .unpause, .pause:hover {
+    color: @gray-600;
   }
 
   .pending { color: @yellow; }
@@ -353,7 +361,7 @@ a {
       margin-left: 10px;
 
       &:hover {
-        color: @gray-900;
+        color: @gray-600;
       }
     }
 

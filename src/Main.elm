@@ -161,6 +161,7 @@ type alias CardProcessState =
     , hasAcceptedLabel : Bool
     , hasRejectedLabel : Bool
     , hasWontfixLabel : Bool
+    , hasPausedLabel : Bool
     }
 
 
@@ -222,6 +223,8 @@ type Msg
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | AcceptCard Card
     | RejectCard Card
+    | PauseCard Card
+    | UnpauseCard Card
     | MirrorMilestone String
     | CloseMilestone String
     | DeleteMilestone String
@@ -1103,6 +1106,22 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
+        PauseCard card ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, addIssueLabels model issue [ "paused" ] )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        UnpauseCard card ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, removeIssueLabel model issue "paused" )
+
+                _ ->
+                    ( model, Cmd.none )
+
         MirrorMilestone title ->
             let
                 cmds =
@@ -1506,6 +1525,7 @@ cardProcessState { cards, labels } =
     , hasAcceptedLabel = List.any ((==) "accepted" << .name) labels
     , hasRejectedLabel = List.any ((==) "rejected" << .name) labels
     , hasWontfixLabel = List.any ((==) "wontfix" << .name) labels
+    , hasPausedLabel = List.any ((==) "paused" << .name) labels
     }
 
 
@@ -3392,6 +3412,11 @@ isWontfix card =
     card.processState.hasWontfixLabel
 
 
+isPaused : Card -> Bool
+isPaused card =
+    card.processState.hasPausedLabel
+
+
 needsAcceptance : Card -> Bool
 needsAcceptance card =
     (isEnhancement card || isBug card) && not (isWontfix card) && not (isAccepted card)
@@ -3454,6 +3479,7 @@ viewCard model card =
             , ( "done", isDone card )
             , ( "icebox", isIcebox card )
             , ( "backlog", isBacklog card )
+            , ( "paused", isPaused card )
             , ( "anticipated", isAnticipated model card )
             , ( "highlighted", model.highlightedCard == Just card.id )
             , ( activityClass model.currentDate card.updatedAt, isPR card )
@@ -3558,6 +3584,23 @@ viewCard model card =
                     []
                else
                 Html.text ""
+             , case ( isInFlight card, isPaused card ) of
+                ( True, True ) ->
+                    Html.span
+                        [ HA.class "octicon unpause octicon-bookmark"
+                        , HE.onClick (UnpauseCard card)
+                        ]
+                        []
+
+                ( True, False ) ->
+                    Html.span
+                        [ HA.class "octicon pause octicon-bookmark"
+                        , HE.onClick (PauseCard card)
+                        ]
+                        []
+
+                _ ->
+                    Html.text ""
              ]
                 ++ prIcons model card
             )
