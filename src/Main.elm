@@ -2444,10 +2444,10 @@ viewProjectColumnCard model project col ghCard =
                     ]
 
                 Nothing ->
-                    Debug.crash "impossible: content has no card"
+                    flip always (Debug.log "impossible: content has no card" contentId) []
 
         _ ->
-            Debug.crash "impossible"
+            flip always (Debug.log "impossible?: card has no note or content" ghCard) []
 
 
 viewProjectPage : Model -> String -> Html Msg
