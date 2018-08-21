@@ -1095,32 +1095,32 @@ update msg model =
                 GitHubGraph.IssueCardContent issue ->
                     ( model, acceptIssue model issue )
 
-                _ ->
-                    ( model, Cmd.none )
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, acceptPR model pr )
 
         RejectCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
                     ( model, rejectIssue model issue )
 
-                _ ->
-                    ( model, Cmd.none )
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, rejectPR model pr )
 
         PauseCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
                     ( model, addIssueLabels model issue [ "paused" ] )
 
-                _ ->
-                    ( model, Cmd.none )
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, addPullRequestLabels model pr [ "paused" ] )
 
         UnpauseCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
                     ( model, removeIssueLabel model issue "paused" )
 
-                _ ->
-                    ( model, Cmd.none )
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, removePullRequestLabel model pr "paused" )
 
         MirrorMilestone title ->
             let
@@ -4045,6 +4045,53 @@ rejectIssue model issue =
             in
             addLabel
                 |> Task.andThen (\_ -> reopen)
+                |> Task.attempt (DataChanged (Cmd.batch refreshes))
+
+        Nothing ->
+            Cmd.none
+
+
+acceptPR : Model -> GitHubGraph.PullRequest -> Cmd Msg
+acceptPR model pr =
+    case model.me of
+        Just { token } ->
+            GitHubGraph.removePullRequestLabel token pr "rejected"
+                |> Task.onError (always (Task.succeed ()))
+                |> Task.andThen (\_ -> GitHubGraph.addPullRequestLabels token pr [ "accepted" ])
+                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
+
+        Nothing ->
+            Cmd.none
+
+
+rejectPR : Model -> GitHubGraph.PullRequest -> Cmd Msg
+rejectPR model pr =
+    case model.me of
+        Just { token } ->
+            let
+                backlogs card =
+                    Dict.get card.project.id model.data.projects
+                        |> Maybe.map .columns
+                        |> Maybe.withDefault []
+                        |> List.filter (detectColumn.backlog << .name)
+                        |> List.map .id
+
+                addLabel =
+                    Task.map (always ()) <|
+                        GitHubGraph.addPullRequestLabels token pr [ "rejected" ]
+
+                columnsToRefresh =
+                    Set.toList <|
+                        Set.union
+                            (Set.fromList <| List.filterMap (Maybe.map .id << .column) pr.cards)
+                            (Set.fromList <| List.concatMap backlogs pr.cards)
+
+                refreshes =
+                    Backend.refreshPR pr.id PullRequestRefreshed
+                        :: List.map (\id -> Backend.refreshCards id (CardsRefreshed id))
+                            columnsToRefresh
+            in
+            addLabel
                 |> Task.attempt (DataChanged (Cmd.batch refreshes))
 
         Nothing ->
