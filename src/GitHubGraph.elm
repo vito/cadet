@@ -925,6 +925,7 @@ projectsQuery =
         pageArgs =
             [ ( "first", GA.int 100 )
             , ( "after", GA.variable afterVar )
+            , ( "states", GA.list [ GA.enum "OPEN" ] )
             ]
 
         pageInfo =
