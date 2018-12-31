@@ -6,7 +6,8 @@
   "author": "Alex Suraci <suraci.alex@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "make"
   },
   "dependencies": {
     "body-parser": "^1.18.2",
@@ -16,12 +17,13 @@
     "express-enforces-ssl": "^1.1.0",
     "express-session": "^1.15.6",
     "helmet": "^3.9.0",
+    "natives": "^1.1.6",
     "passport": "^0.4.0",
     "passport-github": "^1.1.0",
     "xhr2": "^0.1.4"
   },
   "engines": {
-    "node": "^8.0.0"
+    "node": "^10.0.0"
   },
   "devDependencies": {
     "elm-format": "^0.7.0-exp",
