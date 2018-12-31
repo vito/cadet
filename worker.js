@@ -9180,6 +9180,50 @@ var _lukewestby$elm_http_builder$HttpBuilder$RequestBuilder = F9(
 		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g, queryParams: h, cacheBuster: i};
 	});
 
+var _mgold$elm_date_format$Date_Local$dutch = {
+	date: {
+		months: {jan: 'januari', feb: 'februari', mar: 'maart', apr: 'april', may: 'mei', jun: 'juni', jul: 'juli', aug: 'augustus', sep: 'september', oct: 'oktober', nov: 'november', dec: 'december'},
+		monthsAbbrev: {jan: 'jan', feb: 'feb', mar: 'mrt', apr: 'apr', may: 'mei', jun: 'jun', jul: 'jul', aug: 'aug', sep: 'sep', oct: 'okt', nov: 'nov', dec: 'dec'},
+		wdays: {mon: 'maandag', tue: 'dinsdag', wed: 'woensdag', thu: 'donderdag', fri: 'vrijdag', sat: 'zaterdag', sun: 'zondag'},
+		wdaysAbbrev: {mon: 'ma', tue: 'di', wed: 'wo', thu: 'do', fri: 'vr', sat: 'za', sun: 'zo'},
+		defaultFormat: _elm_lang$core$Maybe$Nothing
+	},
+	time: {
+		am: 'am',
+		pm: 'pm',
+		defaultFormat: _elm_lang$core$Maybe$Just('%H:%M')
+	},
+	timeZones: _elm_lang$core$Maybe$Nothing,
+	defaultFormat: _elm_lang$core$Maybe$Nothing
+};
+var _mgold$elm_date_format$Date_Local$greek = {
+	date: {
+		months: {jan: 'Ιανουαρίου', feb: 'Φεβρουαρίου', mar: 'Μαρτίου', apr: 'Απριλίου', may: 'Μαΐου', jun: 'Ιουνίου', jul: 'Ιουλίου', aug: 'Αυγούστου', sep: 'Σεπτεμβρίου', oct: 'Οκτωβρίου', nov: 'Νοεμβρίου', dec: 'Δεκεμβρίου'},
+		monthsAbbrev: {jan: 'Ιαν', feb: 'Φεβ', mar: 'Μαρ', apr: 'Απρ', may: 'Μαϊ', jun: 'Ιουν', jul: 'Ιουλ', aug: 'Αυγ', sep: 'Σεπ', oct: 'Οκτ', nov: 'Νοε', dec: 'Δεκ'},
+		wdays: {mon: 'Δευτέρα', tue: 'Τρίτη', wed: 'Τετάρτη', thu: 'Πέμπτη', fri: 'Παρασκευή', sat: 'Σάββατο', sun: 'Κυριακή'},
+		wdaysAbbrev: {mon: 'Δευ', tue: 'Τρι', wed: 'Τετ', thu: 'Πεμ', fri: 'Παρ', sat: 'Σαβ', sun: 'Κυρ'},
+		defaultFormat: _elm_lang$core$Maybe$Nothing
+	},
+	time: {am: 'πμ', pm: 'μμ', defaultFormat: _elm_lang$core$Maybe$Nothing},
+	timeZones: _elm_lang$core$Maybe$Nothing,
+	defaultFormat: _elm_lang$core$Maybe$Nothing
+};
+var _mgold$elm_date_format$Date_Local$german = {
+	date: {
+		months: {jan: 'Januar', feb: 'Februar', mar: 'März', apr: 'April', may: 'Mai', jun: 'Juni', jul: 'Juli', aug: 'August', sep: 'September', oct: 'Oktober', nov: 'November', dec: 'Dezember'},
+		monthsAbbrev: {jan: 'Jan', feb: 'Feb', mar: 'Mär', apr: 'Apr', may: 'Mai', jun: 'Jun', jul: 'Jul', aug: 'Aug', sep: 'Sep', oct: 'Okt', nov: 'Nov', dec: 'Dez'},
+		wdays: {mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag'},
+		wdaysAbbrev: {mon: 'Mo', tue: 'Di', wed: 'Mi', thu: 'Do', fri: 'Fr', sat: 'Sa', sun: 'So'},
+		defaultFormat: _elm_lang$core$Maybe$Just('%e. %B %Y')
+	},
+	time: {
+		am: 'am',
+		pm: 'pm',
+		defaultFormat: _elm_lang$core$Maybe$Just('%k:%M')
+	},
+	timeZones: _elm_lang$core$Maybe$Nothing,
+	defaultFormat: _elm_lang$core$Maybe$Nothing
+};
 var _mgold$elm_date_format$Date_Local$brazilian = {
 	date: {
 		months: {jan: 'Janeiro', feb: 'Fevereiro', mar: 'Março', apr: 'Abril', may: 'Maio', jun: 'Junho', jul: 'Julho', aug: 'Agosto', sep: 'Setembro', oct: 'Outubro', nov: 'Novembro', dec: 'Dezembro'},
@@ -9954,6 +9998,13 @@ var _vito$cadet$GitHubGraph$objectQuery = F2(
 							obj)))));
 		return _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$queryDocument(queryRoot);
 	});
+var _vito$cadet$GitHubGraph$nullableList = function (o) {
+	return A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$map,
+		_elm_lang$core$List$filterMap(_elm_lang$core$Basics$identity),
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(o)));
+};
 var _vito$cadet$GitHubGraph$auth = function (token) {
 	return _elm_lang$core$Native_Utils.eq(token, '') ? {ctor: '[]'} : {
 		ctor: '::',
@@ -11235,7 +11286,20 @@ var _vito$cadet$GitHubGraph$projectsQuery = function () {
 				_0: 'after',
 				_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$variable(afterVar)
 			},
-			_1: {ctor: '[]'}
+			_1: {
+				ctor: '::',
+				_0: {
+					ctor: '_Tuple2',
+					_0: 'states',
+					_1: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$list(
+						{
+							ctor: '::',
+							_0: _jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Arg$enum('OPEN'),
+							_1: {ctor: '[]'}
+						})
+				},
+				_1: {ctor: '[]'}
+			}
 		}
 	};
 	var orgNameVar = A3(
@@ -12873,7 +12937,7 @@ var _vito$cadet$GitHubGraph$issueObject = A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 					'nodes',
 					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectCardObject)))),
+					_vito$cadet$GitHubGraph$nullableList(_vito$cadet$GitHubGraph$projectCardObject)))),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
@@ -13288,7 +13352,7 @@ var _vito$cadet$GitHubGraph$prObject = A2(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 									'nodes',
 									{ctor: '[]'},
-									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$list(_vito$cadet$GitHubGraph$projectCardObject)))),
+									_vito$cadet$GitHubGraph$nullableList(_vito$cadet$GitHubGraph$projectCardObject)))),
 						A2(
 							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 							A3(

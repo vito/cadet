@@ -1,81 +1,80 @@
-module GitHubGraph
-    exposing
-        ( CardContent(..)
-        , CardLocation
-        , Error
-        , ID
-        , Issue
-        , IssueOrPRSelector
-        , IssueState(..)
-        , Label
-        , MergeableState(..)
-        , Milestone
-        , MilestoneState(..)
-        , Project
-        , ProjectColumn
-        , ProjectColumnCard
-        , PullRequest
-        , PullRequestReview
-        , PullRequestReviewState(..)
-        , PullRequestState(..)
-        , ReactionGroup
-        , ReactionType(..)
-        , Reactions
-        , Repo
-        , RepoLocation
-        , RepoSelector
-        , StatusState(..)
-        , TimelineEvent(..)
-        , User
-        , addContentCard
-        , addContentCardAfter
-        , addIssueLabels
-        , addPullRequestLabels
-        , closeIssue
-        , closeRepoMilestone
-        , createRepoLabel
-        , createRepoMilestone
-        , decodeIssue
-        , decodeProject
-        , decodeProjectColumnCard
-        , decodePullRequest
-        , decodePullRequestReview
-        , decodeRepo
-        , decodeUser
-        , deleteRepoLabel
-        , deleteRepoMilestone
-        , encodeIssue
-        , encodeProject
-        , encodeProjectColumnCard
-        , encodePullRequest
-        , encodePullRequestReview
-        , encodeRepo
-        , encodeUser
-        , fetchIssue
-        , fetchOrgProject
-        , fetchOrgProjects
-        , fetchOrgRepos
-        , fetchProjectColumnCards
-        , fetchPullRequest
-        , fetchPullRequestReviews
-        , fetchRepo
-        , fetchRepoIssue
-        , fetchRepoIssues
-        , fetchRepoPullRequest
-        , fetchRepoPullRequests
-        , fetchTimeline
-        , issueScore
-        , labelEq
-        , moveCardAfter
-        , pullRequestScore
-        , reactionScore
-        , removeIssueLabel
-        , removePullRequestLabel
-        , reopenIssue
-        , setIssueMilestone
-        , setPullRequestMilestone
-        , updateRepoLabel
-        )
+module GitHubGraph exposing
+    ( CardContent(..)
+    , CardLocation
+    , Error
+    , ID
+    , Issue
+    , IssueOrPRSelector
+    , IssueState(..)
+    , Label
+    , MergeableState(..)
+    , Milestone
+    , MilestoneState(..)
+    , Project
+    , ProjectColumn
+    , ProjectColumnCard
+    , PullRequest
+    , PullRequestReview
+    , PullRequestReviewState(..)
+    , PullRequestState(..)
+    , ReactionGroup
+    , ReactionType(..)
+    , Reactions
+    , Repo
+    , RepoLocation
+    , RepoSelector
+    , StatusState(..)
+    , TimelineEvent(..)
+    , User
+    , addContentCard
+    , addContentCardAfter
+    , addIssueLabels
+    , addPullRequestLabels
+    , closeIssue
+    , closeRepoMilestone
+    , createRepoLabel
+    , createRepoMilestone
+    , decodeIssue
+    , decodeProject
+    , decodeProjectColumnCard
+    , decodePullRequest
+    , decodePullRequestReview
+    , decodeRepo
+    , decodeUser
+    , deleteRepoLabel
+    , deleteRepoMilestone
+    , encodeIssue
+    , encodeProject
+    , encodeProjectColumnCard
+    , encodePullRequest
+    , encodePullRequestReview
+    , encodeRepo
+    , encodeUser
+    , fetchIssue
+    , fetchOrgProject
+    , fetchOrgProjects
+    , fetchOrgRepos
+    , fetchProjectColumnCards
+    , fetchPullRequest
+    , fetchPullRequestReviews
+    , fetchRepo
+    , fetchRepoIssue
+    , fetchRepoIssues
+    , fetchRepoPullRequest
+    , fetchRepoPullRequests
+    , fetchTimeline
+    , issueScore
+    , labelEq
+    , moveCardAfter
+    , pullRequestScore
+    , reactionScore
+    , removeIssueLabel
+    , removePullRequestLabel
+    , reopenIssue
+    , setIssueMilestone
+    , setPullRequestMilestone
+    , updateRepoLabel
+    )
 
 import Date exposing (Date)
 import Date.Format
@@ -716,6 +715,7 @@ auth : String -> List ( String, String )
 auth token =
     if token == "" then
         []
+
     else
         [ ( "Authorization", "token " ++ token ) ]
 
@@ -742,6 +742,7 @@ fetchPaged doc token psel =
             if pageInfo.hasNextPage then
                 fetchPaged doc token { psel | after = pageInfo.endCursor }
                     |> Task.map ((++) content)
+
             else
                 Task.succeed content
     in
@@ -1085,7 +1086,7 @@ issueObject =
         |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
         |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
-        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
+        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
 
 
@@ -1113,6 +1114,11 @@ statusObject =
         |> GB.with (GB.field "contexts" [] (GB.list statusContextObject))
 
 
+nullableList : GB.ValueSpec GB.NonNull coreType result vars -> GB.ValueSpec GB.NonNull (GB.ListType GB.Nullable coreType) (List result) vars
+nullableList o =
+    GB.map (List.filterMap identity) (GB.list (GB.nullable o))
+
+
 prObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequest vars
 prObject =
     GB.object PullRequest
@@ -1128,7 +1134,7 @@ prObject =
         |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
         |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
-        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list projectCardObject)))
+        |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "additions" [] GB.int)
         |> GB.with (GB.field "deletions" [] GB.int)
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
@@ -1884,6 +1890,7 @@ encodeMilestoneState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -1906,6 +1913,7 @@ encodeReactionType item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2034,6 +2042,7 @@ encodeIssueState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2048,6 +2057,7 @@ encodePullRequestState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2062,6 +2072,7 @@ encodeStatusState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2076,6 +2087,7 @@ encodeMergeableState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2090,6 +2102,7 @@ encodePullRequestReviewState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
