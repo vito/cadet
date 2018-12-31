@@ -9836,15 +9836,7 @@ var _vito$cadet$GitHubGraph$encodeUser = function (record) {
 								_0: 'avatar',
 								_1: _elm_lang$core$Json_Encode$string(record.avatar)
 							},
-							_1: {
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'company',
-									_1: _elm_lang$core$Json_Encode$string(record.company)
-								},
-								_1: {ctor: '[]'}
-							}
+							_1: {ctor: '[]'}
 						}
 					}
 				}
@@ -10811,62 +10803,61 @@ var _vito$cadet$GitHubGraph$ReactionGroup = F2(
 	function (a, b) {
 		return {type_: a, count: b};
 	});
-var _vito$cadet$GitHubGraph$User = F6(
-	function (a, b, c, d, e, f) {
-		return {id: a, databaseId: b, url: c, login: d, avatar: e, company: f};
+var _vito$cadet$GitHubGraph$User = F5(
+	function (a, b, c, d, e) {
+		return {id: a, databaseId: b, url: c, login: d, avatar: e};
 	});
 var _vito$cadet$GitHubGraph$userObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-		'company',
+		'avatarUrl',
 		{ctor: '[]'},
-		A2(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$map,
-			_elm_lang$core$Maybe$withDefault(''),
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string))),
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 		A3(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-			'avatarUrl',
+			'login',
 			{ctor: '[]'},
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 			A3(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'login',
+				'url',
 				{ctor: '[]'},
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
 			A2(
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 				A3(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-					'url',
+					'databaseId',
 					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
 				A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 					A3(
 						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-						'databaseId',
+						'id',
 						{ctor: '[]'},
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$int),
-					A2(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-						A3(
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-							'id',
-							{ctor: '[]'},
-							_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$User)))))));
-var _vito$cadet$GitHubGraph$authorObject = _jamesmacaulay$elm_graphql$GraphQL_Request_Builder$assume(
+						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$string),
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$User))))));
+var _vito$cadet$GitHubGraph$authorObject = A2(
+	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$inlineFragment,
 		_elm_lang$core$Maybe$Just(
-			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$onType('User')),
-		_vito$cadet$GitHubGraph$userObject));
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$onType('Bot')),
+		_vito$cadet$GitHubGraph$userObject),
+	A2(
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
+		A2(
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$inlineFragment,
+			_elm_lang$core$Maybe$Just(
+				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$onType('User')),
+			_vito$cadet$GitHubGraph$userObject),
+		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$pickEnum2)));
 var _vito$cadet$GitHubGraph$gitActorObject = A2(
 	_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 	A3(
@@ -10906,15 +10897,12 @@ var _vito$cadet$GitHubGraph$decodeUser = A2(
 				_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 				A2(
 					_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-					A2(
-						_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
-						_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$User),
-						A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
-					A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int)),
-				A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
-			A2(_elm_lang$core$Json_Decode$field, 'login', _elm_lang$core$Json_Decode$string)),
-		A2(_elm_lang$core$Json_Decode$field, 'avatar', _elm_lang$core$Json_Decode$string)),
-	A2(_elm_lang$core$Json_Decode$field, 'company', _elm_lang$core$Json_Decode$string));
+					_elm_lang$core$Json_Decode$succeed(_vito$cadet$GitHubGraph$User),
+					A2(_elm_lang$core$Json_Decode$field, 'id', _elm_lang$core$Json_Decode$string)),
+				A2(_elm_lang$core$Json_Decode$field, 'database_id', _elm_lang$core$Json_Decode$int)),
+			A2(_elm_lang$core$Json_Decode$field, 'url', _elm_lang$core$Json_Decode$string)),
+		A2(_elm_lang$core$Json_Decode$field, 'login', _elm_lang$core$Json_Decode$string)),
+	A2(_elm_lang$core$Json_Decode$field, 'avatar', _elm_lang$core$Json_Decode$string));
 var _vito$cadet$GitHubGraph$decodeGitActor = A2(
 	_elm_community$json_extra$Json_Decode_Extra_ops['|:'],
 	A2(
@@ -12964,8 +12952,7 @@ var _vito$cadet$GitHubGraph$issueObject = A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 					'author',
 					{ctor: '[]'},
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-						_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+					_vito$cadet$GitHubGraph$authorObject),
 				A2(
 					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 					A3(
@@ -13379,8 +13366,7 @@ var _vito$cadet$GitHubGraph$prObject = A2(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 									'author',
 									{ctor: '[]'},
-									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-										_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+									_vito$cadet$GitHubGraph$authorObject),
 								A2(
 									_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
 									A3(
@@ -13970,11 +13956,12 @@ var _vito$cadet$GitHubGraph$prReviewObject = A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$enum(_vito$cadet$GitHubGraph$pullRequestReviewStates)),
 		A2(
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
-			A3(
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
-				'author',
-				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject)),
+			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$assume(
+				A3(
+					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
+					'author',
+					{ctor: '[]'},
+					_vito$cadet$GitHubGraph$authorObject)),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$PullRequestReview))));
 var _vito$cadet$GitHubGraph$timelineQuery = function () {
 	var pageInfo = A2(
@@ -14040,8 +14027,7 @@ var _vito$cadet$GitHubGraph$timelineQuery = function () {
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 				'author',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+				_vito$cadet$GitHubGraph$authorObject),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$IssueCommentEvent)));
 	var event = A2(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$with,
@@ -14205,8 +14191,7 @@ var _vito$cadet$GitHubGraph$prReviewQuery = function () {
 				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$field,
 				'author',
 				{ctor: '[]'},
-				_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$nullable(
-					_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$extract(_vito$cadet$GitHubGraph$authorObject))),
+				_vito$cadet$GitHubGraph$authorObject),
 			_jamesmacaulay$elm_graphql$GraphQL_Request_Builder$object(_vito$cadet$GitHubGraph$IssueCommentEvent)));
 	var afterVar = A3(
 		_jamesmacaulay$elm_graphql$GraphQL_Request_Builder_Variable$required,

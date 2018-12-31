@@ -269,7 +269,6 @@ type alias User =
     , url : String
     , login : String
     , avatar : String
-    , company : String
     }
 
 
@@ -1031,13 +1030,13 @@ userObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "login" [] GB.string)
         |> GB.with (GB.field "avatarUrl" [] GB.string)
-        |> GB.with (GB.field "company" [] (GB.map (Maybe.withDefault "") <| GB.nullable GB.string))
 
 
-authorObject : GB.SelectionSpec GB.InlineFragment User vars
+authorObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe User) vars
 authorObject =
-    GB.assume
-        (GB.inlineFragment (Just <| GB.onType "User") userObject)
+    GB.object pickEnum2
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "User") userObject)
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "Bot") userObject)
 
 
 projectCardObject : GB.ValueSpec GB.NonNull GB.ObjectType CardLocation vars
@@ -1084,7 +1083,7 @@ issueObject =
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
-        |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+        |> GB.with (GB.field "author" [] authorObject)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
@@ -1132,7 +1131,7 @@ prObject =
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
-        |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+        |> GB.with (GB.field "author" [] authorObject)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "additions" [] GB.int)
@@ -1171,7 +1170,7 @@ gitActorObject =
 prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
 prReviewObject =
     GB.object PullRequestReview
-        |> GB.with (GB.field "author" [] (GB.extract authorObject))
+        |> GB.with (GB.assume <| GB.field "author" [] authorObject)
         |> GB.with (GB.field "state" [] (GB.enum pullRequestReviewStates))
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
 
@@ -1337,7 +1336,7 @@ timelineQuery =
 
         issueCommentEvent =
             GB.object IssueCommentEvent
-                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+                |> GB.with (GB.field "author" [] authorObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
 
         sourceID =
@@ -1403,7 +1402,7 @@ prReviewQuery =
 
         issueCommentEvent =
             GB.object IssueCommentEvent
-                |> GB.with (GB.field "author" [] (GB.nullable (GB.extract authorObject)))
+                |> GB.with (GB.field "author" [] authorObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
 
         pageArgs =
@@ -1602,7 +1601,6 @@ decodeUser =
         |: JD.field "url" JD.string
         |: JD.field "login" JD.string
         |: JD.field "avatar" JD.string
-        |: JD.field "company" JD.string
 
 
 decodeStatus : JD.Decoder Status
@@ -1929,7 +1927,6 @@ encodeUser record =
         , ( "url", JE.string record.url )
         , ( "login", JE.string record.login )
         , ( "avatar", JE.string record.avatar )
-        , ( "company", JE.string record.company )
         ]
 
 
