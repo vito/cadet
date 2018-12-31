@@ -9,10 +9,10 @@ clean:
 	rm -f public/elm.js public/elm.min.js public/main.css bindata.go
 
 worker.js: $(ELM_FILES)
-	sysconfcpus -n 4 elm make --warn --output $@ --yes src/Worker.elm
+	elm make --warn --output $@ --yes src/Worker.elm
 
 public/elm.js: $(ELM_FILES)
-	sysconfcpus -n 4 elm make --warn --output $@ --yes src/Main.elm
+	elm make --warn --output $@ --yes src/Main.elm
 
 public/main.css: css/main.less
 	lessc --autoprefix='last 2 Chrome versions, last 2 Firefox versions' --clean-css="--advanced" css/main.less $@
