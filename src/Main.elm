@@ -158,8 +158,6 @@ type alias CardProcessState =
     , inDoneColumn : Bool
     , hasEnhancementLabel : Bool
     , hasBugLabel : Bool
-    , hasAcceptedLabel : Bool
-    , hasRejectedLabel : Bool
     , hasWontfixLabel : Bool
     , hasPausedLabel : Bool
     }
@@ -221,8 +219,6 @@ type Msg
     | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
-    | AcceptCard Card
-    | RejectCard Card
     | PauseCard Card
     | UnpauseCard Card
     | MirrorMilestone String
@@ -1090,22 +1086,6 @@ update msg model =
             flip always (Debug.log "failed to refresh repo" msg) <|
                 ( model, Cmd.none )
 
-        AcceptCard card ->
-            case card.content of
-                GitHubGraph.IssueCardContent issue ->
-                    ( model, acceptIssue model issue )
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    ( model, acceptPR model pr )
-
-        RejectCard card ->
-            case card.content of
-                GitHubGraph.IssueCardContent issue ->
-                    ( model, rejectIssue model issue )
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    ( model, rejectPR model pr )
-
         PauseCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
@@ -1469,7 +1449,7 @@ computeDataView origModel =
                 nextMilestoneCards =
                     Dict.foldl
                         (\_ card acc ->
-                            if card.milestone == Nothing && (isAcceptedPR card || isAccepted card) then
+                            if card.milestone == Nothing && isAcceptedPR card then
                                 card :: acc
                             else
                                 acc
@@ -1522,8 +1502,6 @@ cardProcessState { cards, labels } =
     , inDoneColumn = inColumn detectColumn.done cards
     , hasEnhancementLabel = List.any ((==) "enhancement" << .name) labels
     , hasBugLabel = List.any ((==) "bug" << .name) labels
-    , hasAcceptedLabel = List.any ((==) "accepted" << .name) labels
-    , hasRejectedLabel = List.any ((==) "rejected" << .name) labels
     , hasWontfixLabel = List.any ((==) "wontfix" << .name) labels
     , hasPausedLabel = List.any ((==) "paused" << .name) labels
     }
@@ -2344,15 +2322,15 @@ labelColorStyle model color =
         ]
 
 
-onlyAcceptableCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
-onlyAcceptableCards model =
+onlyOpenCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
+onlyOpenCards model =
     List.filter <|
         \{ contentId } ->
             case contentId of
                 Just id ->
                     case Dict.get id model.allCards of
                         Just card ->
-                            isOpen card || needsAcceptance card
+                            isOpen card
 
                         Nothing ->
                             False
@@ -2379,7 +2357,7 @@ viewProject model { project, backlogs, inFlight, done } =
             , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyAcceptableCards model) done ]
+                [ viewProjectColumn model project (onlyOpenCards model) done ]
             ]
         ]
 
@@ -2475,7 +2453,7 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
             ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text project.name ] ]
              , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyAcceptableCards model) done ]
+                [ viewProjectColumn model project (onlyOpenCards model) done ]
              , Html.div [ HA.class "column in-flight-column" ]
                 [ viewProjectColumn model project identity inFlight ]
              ]
@@ -3417,21 +3395,6 @@ isPaused card =
     card.processState.hasPausedLabel
 
 
-needsAcceptance : Card -> Bool
-needsAcceptance card =
-    (isEnhancement card || isBug card) && not (isWontfix card) && not (isAccepted card)
-
-
-isAccepted : Card -> Bool
-isAccepted card =
-    card.processState.hasAcceptedLabel
-
-
-isRejected : Card -> Bool
-isRejected card =
-    card.processState.hasRejectedLabel
-
-
 isAcceptedPR : Card -> Bool
 isAcceptedPR card =
     (isEnhancement card || isBug card) && isMerged card
@@ -3542,16 +3505,7 @@ viewCard model card =
                     [ ( "octicon", True )
                     , ( "open", isOpen card )
                     , ( "closed", not (isOpen card) )
-                    , ( "rejected", isRejected card )
                     , ( "merged", isMerged card )
-                    , ( "octicon-issue-"
-                            ++ (if isRejected card then
-                                    "reopened"
-                                else
-                                    "opened"
-                               )
-                      , card.state == IssueState GitHubGraph.IssueStateOpen
-                      )
                     , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
                     , ( "octicon-git-pull-request", isPR card )
                     ]
@@ -3563,27 +3517,6 @@ viewCard model card =
                     )
                 ]
                 []
-             , if needsAcceptance card && isDone card then
-                Html.span
-                    [ HA.class "octicon accept octicon-thumbsup"
-                    , HE.onClick (AcceptCard card)
-                    ]
-                    []
-               else if isAccepted card then
-                Html.span
-                    [ HA.class "octicon accepted octicon-thumbsup"
-                    ]
-                    []
-               else
-                Html.text ""
-             , if needsAcceptance card && isDone card then
-                Html.span
-                    [ HA.class "octicon reject octicon-thumbsdown"
-                    , HE.onClick (RejectCard card)
-                    ]
-                    []
-               else
-                Html.text ""
              , case ( isInFlight card, isPaused card ) of
                 ( True, True ) ->
                     Html.span
@@ -3993,106 +3926,6 @@ deleteLabel model repo label =
         Just { token } ->
             GitHubGraph.deleteRepoLabel token repo label.name
                 |> Task.attempt (LabelChanged repo)
-
-        Nothing ->
-            Cmd.none
-
-
-acceptIssue : Model -> GitHubGraph.Issue -> Cmd Msg
-acceptIssue model issue =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.removeIssueLabel token issue "rejected"
-                |> Task.onError (always (Task.succeed ()))
-                |> Task.andThen (\_ -> GitHubGraph.addIssueLabels token issue [ "accepted" ])
-                |> Task.andThen (\_ -> GitHubGraph.closeIssue token issue)
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
-
-        Nothing ->
-            Cmd.none
-
-
-rejectIssue : Model -> GitHubGraph.Issue -> Cmd Msg
-rejectIssue model issue =
-    case model.me of
-        Just { token } ->
-            let
-                backlogs card =
-                    Dict.get card.project.id model.data.projects
-                        |> Maybe.map .columns
-                        |> Maybe.withDefault []
-                        |> List.filter (detectColumn.backlog << .name)
-                        |> List.map .id
-
-                addLabel =
-                    Task.map (always ()) <|
-                        GitHubGraph.addIssueLabels token issue [ "rejected" ]
-
-                reopen =
-                    Task.map (always ()) <|
-                        GitHubGraph.reopenIssue token issue
-
-                columnsToRefresh =
-                    Set.toList <|
-                        Set.union
-                            (Set.fromList <| List.filterMap (Maybe.map .id << .column) issue.cards)
-                            (Set.fromList <| List.concatMap backlogs issue.cards)
-
-                refreshes =
-                    Backend.refreshIssue issue.id IssueRefreshed
-                        :: List.map (\id -> Backend.refreshCards id (CardsRefreshed id))
-                            columnsToRefresh
-            in
-            addLabel
-                |> Task.andThen (\_ -> reopen)
-                |> Task.attempt (DataChanged (Cmd.batch refreshes))
-
-        Nothing ->
-            Cmd.none
-
-
-acceptPR : Model -> GitHubGraph.PullRequest -> Cmd Msg
-acceptPR model pr =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.removePullRequestLabel token pr "rejected"
-                |> Task.onError (always (Task.succeed ()))
-                |> Task.andThen (\_ -> GitHubGraph.addPullRequestLabels token pr [ "accepted" ])
-                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
-
-        Nothing ->
-            Cmd.none
-
-
-rejectPR : Model -> GitHubGraph.PullRequest -> Cmd Msg
-rejectPR model pr =
-    case model.me of
-        Just { token } ->
-            let
-                backlogs card =
-                    Dict.get card.project.id model.data.projects
-                        |> Maybe.map .columns
-                        |> Maybe.withDefault []
-                        |> List.filter (detectColumn.backlog << .name)
-                        |> List.map .id
-
-                addLabel =
-                    Task.map (always ()) <|
-                        GitHubGraph.addPullRequestLabels token pr [ "rejected" ]
-
-                columnsToRefresh =
-                    Set.toList <|
-                        Set.union
-                            (Set.fromList <| List.filterMap (Maybe.map .id << .column) pr.cards)
-                            (Set.fromList <| List.concatMap backlogs pr.cards)
-
-                refreshes =
-                    Backend.refreshPR pr.id PullRequestRefreshed
-                        :: List.map (\id -> Backend.refreshCards id (CardsRefreshed id))
-                            columnsToRefresh
-            in
-            addLabel
-                |> Task.attempt (DataChanged (Cmd.batch refreshes))
 
         Nothing ->
             Cmd.none
