@@ -36895,8 +36895,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3729, column: 13},
-					end: {line: 3737, column: 46}
+					start: {line: 3730, column: 13},
+					end: {line: 3738, column: 46}
 				},
 				_p17)('invalid hex');
 		}
@@ -36904,8 +36904,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3727, column: 5},
-				end: {line: 3740, column: 38}
+				start: {line: 3728, column: 5},
+				end: {line: 3741, column: 38}
 			},
 			_p16)('invalid hex');
 	}
@@ -42045,19 +42045,29 @@ var _vito$cadet$Main$viewCard = F2(
 																ctor: '::',
 																_0: {
 																	ctor: '_Tuple2',
-																	_0: 'octicon-issue-closed',
+																	_0: 'octicon-issue-opened',
 																	_1: _elm_lang$core$Native_Utils.eq(
 																		card.state,
-																		_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateClosed))
+																		_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateOpen))
 																},
 																_1: {
 																	ctor: '::',
 																	_0: {
 																		ctor: '_Tuple2',
-																		_0: 'octicon-git-pull-request',
-																		_1: _vito$cadet$Main$isPR(card)
+																		_0: 'octicon-issue-closed',
+																		_1: _elm_lang$core$Native_Utils.eq(
+																			card.state,
+																			_vito$cadet$Main$IssueState(_vito$cadet$GitHubGraph$IssueStateClosed))
 																	},
-																	_1: {ctor: '[]'}
+																	_1: {
+																		ctor: '::',
+																		_0: {
+																			ctor: '_Tuple2',
+																			_0: 'octicon-git-pull-request',
+																			_1: _vito$cadet$Main$isPR(card)
+																		},
+																		_1: {ctor: '[]'}
+																	}
 																}
 															}
 														}

@@ -3512,6 +3512,7 @@ viewCard model card =
                     , ( "open", isOpen card )
                     , ( "closed", not (isOpen card) )
                     , ( "merged", isMerged card )
+                    , ( "octicon-issue-opened", card.state == IssueState GitHubGraph.IssueStateOpen )
                     , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
                     , ( "octicon-git-pull-request", isPR card )
                     ]
