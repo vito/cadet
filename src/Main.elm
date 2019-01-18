@@ -2949,6 +2949,12 @@ reactionFlairArcs reviews card context =
                 GitHubGraph.ReactionTypeHooray ->
                     "🎉"
 
+                GitHubGraph.ReactionTypeRocket ->
+                    "🚀"
+
+                GitHubGraph.ReactionTypeEyes ->
+                    "👀"
+
         emojiReactions =
             flip List.map card.reactions <|
                 \{ type_, count } ->

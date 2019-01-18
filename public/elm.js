@@ -31391,8 +31391,12 @@ var _vito$cadet$GitHubGraph$reactionScore = function (reactions) {
 						return 0 - _p10;
 					case 'ReactionTypeHeart':
 						return 3 * _p10;
-					default:
+					case 'ReactionTypeHooray':
 						return 3 * _p10;
+					case 'ReactionTypeRocket':
+						return 3 * _p10;
+					default:
+						return 2 * _p10;
 				}
 			}));
 };
@@ -33487,6 +33491,8 @@ var _vito$cadet$GitHubGraph$encodeRepo = function (record) {
 			}
 		});
 };
+var _vito$cadet$GitHubGraph$ReactionTypeEyes = {ctor: 'ReactionTypeEyes'};
+var _vito$cadet$GitHubGraph$ReactionTypeRocket = {ctor: 'ReactionTypeRocket'};
 var _vito$cadet$GitHubGraph$ReactionTypeHeart = {ctor: 'ReactionTypeHeart'};
 var _vito$cadet$GitHubGraph$ReactionTypeConfused = {ctor: 'ReactionTypeConfused'};
 var _vito$cadet$GitHubGraph$ReactionTypeHooray = {ctor: 'ReactionTypeHooray'};
@@ -33511,7 +33517,15 @@ var _vito$cadet$GitHubGraph$reactionTypes = {
 					_1: {
 						ctor: '::',
 						_0: {ctor: '_Tuple2', _0: 'HEART', _1: _vito$cadet$GitHubGraph$ReactionTypeHeart},
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'ROCKET', _1: _vito$cadet$GitHubGraph$ReactionTypeRocket},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'EYES', _1: _vito$cadet$GitHubGraph$ReactionTypeEyes},
+								_1: {ctor: '[]'}
+							}
+						}
 					}
 				}
 			}
@@ -36881,8 +36895,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 			return _elm_lang$core$Native_Utils.crashCase(
 				'Main',
 				{
-					start: {line: 3723, column: 13},
-					end: {line: 3731, column: 46}
+					start: {line: 3729, column: 13},
+					end: {line: 3737, column: 46}
 				},
 				_p17)('invalid hex');
 		}
@@ -36890,8 +36904,8 @@ var _vito$cadet$Main$computeColorIsLight = function (hex) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Main',
 			{
-				start: {line: 3721, column: 5},
-				end: {line: 3734, column: 38}
+				start: {line: 3727, column: 5},
+				end: {line: 3740, column: 38}
 			},
 			_p16)('invalid hex');
 	}
@@ -37585,8 +37599,12 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return '😕';
 				case 'ReactionTypeHeart':
 					return '💖';
-				default:
+				case 'ReactionTypeHooray':
 					return '🎉';
+				case 'ReactionTypeRocket':
+					return '🚀';
+				default:
+					return '👀';
 			}
 		};
 		var emojiReactions = A3(
@@ -37663,8 +37681,8 @@ var _vito$cadet$Main$reactionFlairArcs = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Main',
 						{
-							start: {line: 3073, column: 13},
-							end: {line: 3078, column: 45}
+							start: {line: 3079, column: 13},
+							end: {line: 3084, column: 45}
 						},
 						_p65)('impossible');
 				}

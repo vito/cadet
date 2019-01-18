@@ -10034,8 +10034,12 @@ var _vito$cadet$GitHubGraph$reactionScore = function (reactions) {
 						return 0 - _p10;
 					case 'ReactionTypeHeart':
 						return 3 * _p10;
-					default:
+					case 'ReactionTypeHooray':
 						return 3 * _p10;
+					case 'ReactionTypeRocket':
+						return 3 * _p10;
+					default:
+						return 2 * _p10;
 				}
 			}));
 };
@@ -12130,6 +12134,8 @@ var _vito$cadet$GitHubGraph$encodeRepo = function (record) {
 			}
 		});
 };
+var _vito$cadet$GitHubGraph$ReactionTypeEyes = {ctor: 'ReactionTypeEyes'};
+var _vito$cadet$GitHubGraph$ReactionTypeRocket = {ctor: 'ReactionTypeRocket'};
 var _vito$cadet$GitHubGraph$ReactionTypeHeart = {ctor: 'ReactionTypeHeart'};
 var _vito$cadet$GitHubGraph$ReactionTypeConfused = {ctor: 'ReactionTypeConfused'};
 var _vito$cadet$GitHubGraph$ReactionTypeHooray = {ctor: 'ReactionTypeHooray'};
@@ -12154,7 +12160,15 @@ var _vito$cadet$GitHubGraph$reactionTypes = {
 					_1: {
 						ctor: '::',
 						_0: {ctor: '_Tuple2', _0: 'HEART', _1: _vito$cadet$GitHubGraph$ReactionTypeHeart},
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: {ctor: '_Tuple2', _0: 'ROCKET', _1: _vito$cadet$GitHubGraph$ReactionTypeRocket},
+							_1: {
+								ctor: '::',
+								_0: {ctor: '_Tuple2', _0: 'EYES', _1: _vito$cadet$GitHubGraph$ReactionTypeEyes},
+								_1: {ctor: '[]'}
+							}
+						}
 					}
 				}
 			}

@@ -1,80 +1,81 @@
-module GitHubGraph exposing
-    ( CardContent(..)
-    , CardLocation
-    , Error
-    , ID
-    , Issue
-    , IssueOrPRSelector
-    , IssueState(..)
-    , Label
-    , MergeableState(..)
-    , Milestone
-    , MilestoneState(..)
-    , Project
-    , ProjectColumn
-    , ProjectColumnCard
-    , PullRequest
-    , PullRequestReview
-    , PullRequestReviewState(..)
-    , PullRequestState(..)
-    , ReactionGroup
-    , ReactionType(..)
-    , Reactions
-    , Repo
-    , RepoLocation
-    , RepoSelector
-    , StatusState(..)
-    , TimelineEvent(..)
-    , User
-    , addContentCard
-    , addContentCardAfter
-    , addIssueLabels
-    , addPullRequestLabels
-    , closeIssue
-    , closeRepoMilestone
-    , createRepoLabel
-    , createRepoMilestone
-    , decodeIssue
-    , decodeProject
-    , decodeProjectColumnCard
-    , decodePullRequest
-    , decodePullRequestReview
-    , decodeRepo
-    , decodeUser
-    , deleteRepoLabel
-    , deleteRepoMilestone
-    , encodeIssue
-    , encodeProject
-    , encodeProjectColumnCard
-    , encodePullRequest
-    , encodePullRequestReview
-    , encodeRepo
-    , encodeUser
-    , fetchIssue
-    , fetchOrgProject
-    , fetchOrgProjects
-    , fetchOrgRepos
-    , fetchProjectColumnCards
-    , fetchPullRequest
-    , fetchPullRequestReviews
-    , fetchRepo
-    , fetchRepoIssue
-    , fetchRepoIssues
-    , fetchRepoPullRequest
-    , fetchRepoPullRequests
-    , fetchTimeline
-    , issueScore
-    , labelEq
-    , moveCardAfter
-    , pullRequestScore
-    , reactionScore
-    , removeIssueLabel
-    , removePullRequestLabel
-    , reopenIssue
-    , setIssueMilestone
-    , setPullRequestMilestone
-    , updateRepoLabel
-    )
+module GitHubGraph
+    exposing
+        ( CardContent(..)
+        , CardLocation
+        , Error
+        , ID
+        , Issue
+        , IssueOrPRSelector
+        , IssueState(..)
+        , Label
+        , MergeableState(..)
+        , Milestone
+        , MilestoneState(..)
+        , Project
+        , ProjectColumn
+        , ProjectColumnCard
+        , PullRequest
+        , PullRequestReview
+        , PullRequestReviewState(..)
+        , PullRequestState(..)
+        , ReactionGroup
+        , ReactionType(..)
+        , Reactions
+        , Repo
+        , RepoLocation
+        , RepoSelector
+        , StatusState(..)
+        , TimelineEvent(..)
+        , User
+        , addContentCard
+        , addContentCardAfter
+        , addIssueLabels
+        , addPullRequestLabels
+        , closeIssue
+        , closeRepoMilestone
+        , createRepoLabel
+        , createRepoMilestone
+        , decodeIssue
+        , decodeProject
+        , decodeProjectColumnCard
+        , decodePullRequest
+        , decodePullRequestReview
+        , decodeRepo
+        , decodeUser
+        , deleteRepoLabel
+        , deleteRepoMilestone
+        , encodeIssue
+        , encodeProject
+        , encodeProjectColumnCard
+        , encodePullRequest
+        , encodePullRequestReview
+        , encodeRepo
+        , encodeUser
+        , fetchIssue
+        , fetchOrgProject
+        , fetchOrgProjects
+        , fetchOrgRepos
+        , fetchProjectColumnCards
+        , fetchPullRequest
+        , fetchPullRequestReviews
+        , fetchRepo
+        , fetchRepoIssue
+        , fetchRepoIssues
+        , fetchRepoPullRequest
+        , fetchRepoPullRequests
+        , fetchTimeline
+        , issueScore
+        , labelEq
+        , moveCardAfter
+        , pullRequestScore
+        , reactionScore
+        , removeIssueLabel
+        , removePullRequestLabel
+        , reopenIssue
+        , setIssueMilestone
+        , setPullRequestMilestone
+        , updateRepoLabel
+        )
 
 import Date exposing (Date)
 import Date.Format
@@ -261,6 +262,8 @@ type ReactionType
     | ReactionTypeHooray
     | ReactionTypeConfused
     | ReactionTypeHeart
+    | ReactionTypeRocket
+    | ReactionTypeEyes
 
 
 type alias User =
@@ -704,6 +707,12 @@ reactionScore reactions =
                     ReactionTypeHooray ->
                         3 * count
 
+                    ReactionTypeRocket ->
+                        3 * count
+
+                    ReactionTypeEyes ->
+                        2 * count
+
 
 labelEq : Label -> Label -> Bool
 labelEq a b =
@@ -714,7 +723,6 @@ auth : String -> List ( String, String )
 auth token =
     if token == "" then
         []
-
     else
         [ ( "Authorization", "token " ++ token ) ]
 
@@ -741,7 +749,6 @@ fetchPaged doc token psel =
             if pageInfo.hasNextPage then
                 fetchPaged doc token { psel | after = pageInfo.endCursor }
                     |> Task.map ((++) content)
-
             else
                 Task.succeed content
     in
@@ -813,6 +820,8 @@ reactionTypes =
     , ( "HOORAY", ReactionTypeHooray )
     , ( "CONFUSED", ReactionTypeConfused )
     , ( "HEART", ReactionTypeHeart )
+    , ( "ROCKET", ReactionTypeRocket )
+    , ( "EYES", ReactionTypeEyes )
     ]
 
 
@@ -1888,7 +1897,6 @@ encodeMilestoneState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -1911,7 +1919,6 @@ encodeReactionType item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -2039,7 +2046,6 @@ encodeIssueState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -2054,7 +2060,6 @@ encodePullRequestState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -2069,7 +2074,6 @@ encodeStatusState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -2084,7 +2088,6 @@ encodeMergeableState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
@@ -2099,7 +2102,6 @@ encodePullRequestReviewState item =
             (\( a, b ) default ->
                 if b == item then
                     a
-
                 else
                     default
             )
