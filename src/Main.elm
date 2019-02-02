@@ -50,6 +50,7 @@ type alias Model =
     , projectDragRefresh : Maybe ProjectDragRefresh
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
+    , isPolling : Bool
     , dataIndex : Int
     , dataView : DataView
     , allCards : Dict GitHubGraph.ID Card
@@ -182,10 +183,10 @@ type CardSource
 
 
 type Msg
-    = Noop
-    | LinkClicked Browser.UrlRequest
+    = LinkClicked Browser.UrlRequest
     | UrlChanged Url
     | Tick Time.Posix
+    | RetryPolling
     | SetCurrentTime Time.Posix
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
@@ -379,6 +380,7 @@ init config url key =
             , page = GlobalGraphPage
             , me = Nothing
             , data = Backend.emptyData
+            , isPolling = True
             , dataIndex = 0
             , dataView =
                 { cardsByMilestone = Dict.empty
@@ -430,6 +432,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every (60 * 60 * 1000) SetCurrentTime
+        , Time.every (5 * 1000) (always RetryPolling)
         , if List.all (Tuple.second >> FG.isCompleted) model.cardGraphs then
             Sub.none
 
@@ -441,8 +444,11 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Noop ->
-            ( model, Cmd.none )
+        RetryPolling ->
+          if model.isPolling then
+            (model, Cmd.none)
+          else
+            ({ model | isPolling = True }, Backend.fetchData DataFetched)
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -853,7 +859,7 @@ update msg model =
 
         DataFetched (Err err) ->
             Log.debug "error fetching data" err <|
-                ( model, Backend.pollData DataFetched )
+                ( { model | isPolling = False }, Cmd.none)
 
         MirrorLabel newLabel ->
             let
