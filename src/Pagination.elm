@@ -51,18 +51,18 @@ parsePagination strategy response =
         decoded =
             Json.Decode.decodeString strategy.content response.body
     in
-        case decoded of
-            Err err ->
-                Err err
+    case decoded of
+        Err err ->
+            Err err
 
-            Ok content ->
-                Ok
-                    { content = content
-                    , pagination =
-                        { previousPage = strategy.previousPage response
-                        , nextPage = strategy.nextPage response
-                        }
+        Ok content ->
+            Ok
+                { content = content
+                , pagination =
+                    { previousPage = strategy.previousPage response
+                    , nextPage = strategy.nextPage response
                     }
+                }
 
 
 fetchAll : String -> List Http.Header -> Strategy page a -> Maybe page -> Task Http.Error (List a)

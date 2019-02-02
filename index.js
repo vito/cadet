@@ -11,12 +11,14 @@ const GitHubStrategy = require('passport-github').Strategy
 
 global.XMLHttpRequest = require("xhr2")
 
-const Elm = require('./worker');
-const worker = Elm.Main.worker({
-  githubOrg: process.env.GITHUB_ORG,
-  githubToken: process.env.GITHUB_TOKEN,
-  skipTimeline: process.env.SKIP_TIMELINE == "true",
-  noRefresh: process.env.NO_REFRESH == "true"
+const elmApp = require('./worker');
+const worker = elmApp.Elm.Main.init({
+  flags: {
+    githubOrg: process.env.GITHUB_ORG,
+    githubToken: process.env.GITHUB_TOKEN,
+    skipTimeline: process.env.SKIP_TIMELINE == "true",
+    noRefresh: process.env.NO_REFRESH == "true"
+  }
 });
 
 const app = express()

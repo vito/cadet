@@ -6,11 +6,13 @@ module Hash exposing (hash)
 {-| A simple hash function for Elm.
 
 @docs hash
+
 -}
 
 import Bitwise
 import Char exposing (toCode)
 import String exposing (foldl)
+
 
 
 {-
@@ -30,12 +32,12 @@ import String exposing (foldl)
 -}
 
 
-{-|
-Hashes a String to an Int using the
+{-| Hashes a String to an Int using the
 [djb2](http://www.cse.yorku.ca/~oz/hash.html) algorithm. This is in no way
 cryptographically secure. It is just for turning abirary strings in to numbers.
 
     hash "yolo swaggins" == 2438413579
+
 -}
 hash : String -> Int
 hash str =
@@ -44,4 +46,4 @@ hash str =
 
 updateHash : Char -> Int -> Int
 updateHash c h =
-    (Bitwise.shiftLeftBy h 5) + h + toCode c
+    Bitwise.shiftLeftBy h 5 + h + toCode c

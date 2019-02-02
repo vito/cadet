@@ -12,7 +12,7 @@
   "dependencies": {
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
-    "elm": "^0.18.0",
+    "elm": "^0.19.0-bugfix6",
     "express": "^4.16.2",
     "express-enforces-ssl": "^1.1.0",
     "express-session": "^1.15.6",
@@ -22,14 +22,11 @@
     "passport-github": "^1.1.0",
     "xhr2": "^0.1.4"
   },
-  "engines": {
-    "node": "^10.0.0"
-  },
   "devDependencies": {
-    "elm-format": "^0.7.0-exp",
+    "elm-format": "^0.8.1",
     "elm-oracle": "^1.1.1",
     "less": "^2.7.3",
-    "less-plugin-clean-css": "^1.5.1",
-    "less-plugin-autoprefix": "^1.5.1"
+    "less-plugin-autoprefix": "^1.5.1",
+    "less-plugin-clean-css": "^1.5.1"
   }
 }

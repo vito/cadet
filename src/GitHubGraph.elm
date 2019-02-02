@@ -1,84 +1,81 @@
-module GitHubGraph
-    exposing
-        ( CardContent(..)
-        , CardLocation
-        , Error
-        , ID
-        , Issue
-        , IssueOrPRSelector
-        , IssueState(..)
-        , Label
-        , MergeableState(..)
-        , Milestone
-        , MilestoneState(..)
-        , Project
-        , ProjectColumn
-        , ProjectColumnCard
-        , PullRequest
-        , PullRequestReview
-        , PullRequestReviewState(..)
-        , PullRequestState(..)
-        , ReactionGroup
-        , ReactionType(..)
-        , Reactions
-        , Repo
-        , RepoLocation
-        , RepoSelector
-        , StatusState(..)
-        , TimelineEvent(..)
-        , User
-        , addContentCard
-        , addContentCardAfter
-        , addIssueLabels
-        , addPullRequestLabels
-        , closeIssue
-        , closeRepoMilestone
-        , createRepoLabel
-        , createRepoMilestone
-        , decodeIssue
-        , decodeProject
-        , decodeProjectColumnCard
-        , decodePullRequest
-        , decodePullRequestReview
-        , decodeRepo
-        , decodeUser
-        , deleteRepoLabel
-        , deleteRepoMilestone
-        , encodeIssue
-        , encodeProject
-        , encodeProjectColumnCard
-        , encodePullRequest
-        , encodePullRequestReview
-        , encodeRepo
-        , encodeUser
-        , fetchIssue
-        , fetchOrgProject
-        , fetchOrgProjects
-        , fetchOrgRepos
-        , fetchProjectColumnCards
-        , fetchPullRequest
-        , fetchPullRequestReviews
-        , fetchRepo
-        , fetchRepoIssue
-        , fetchRepoIssues
-        , fetchRepoPullRequest
-        , fetchRepoPullRequests
-        , fetchTimeline
-        , issueScore
-        , labelEq
-        , moveCardAfter
-        , pullRequestScore
-        , reactionScore
-        , removeIssueLabel
-        , removePullRequestLabel
-        , reopenIssue
-        , setIssueMilestone
-        , setPullRequestMilestone
-        , updateRepoLabel
-        )
+module GitHubGraph exposing
+    ( CardContent(..)
+    , CardLocation
+    , Error
+    , ID
+    , Issue
+    , IssueOrPRSelector
+    , IssueState(..)
+    , Label
+    , MergeableState(..)
+    , Milestone
+    , MilestoneState(..)
+    , Project
+    , ProjectColumn
+    , ProjectColumnCard
+    , PullRequest
+    , PullRequestReview
+    , PullRequestReviewState(..)
+    , PullRequestState(..)
+    , ReactionGroup
+    , ReactionType(..)
+    , Reactions
+    , Repo
+    , RepoLocation
+    , RepoSelector
+    , StatusState(..)
+    , TimelineEvent(..)
+    , User
+    , addContentCard
+    , addContentCardAfter
+    , addIssueLabels
+    , addPullRequestLabels
+    , closeIssue
+    , closeRepoMilestone
+    , createRepoLabel
+    , createRepoMilestone
+    , decodeIssue
+    , decodeProject
+    , decodeProjectColumnCard
+    , decodePullRequest
+    , decodePullRequestReview
+    , decodeRepo
+    , decodeUser
+    , deleteRepoLabel
+    , deleteRepoMilestone
+    , encodeIssue
+    , encodeProject
+    , encodeProjectColumnCard
+    , encodePullRequest
+    , encodePullRequestReview
+    , encodeRepo
+    , encodeUser
+    , fetchIssue
+    , fetchOrgProject
+    , fetchOrgProjects
+    , fetchOrgRepos
+    , fetchProjectColumnCards
+    , fetchPullRequest
+    , fetchPullRequestReviews
+    , fetchRepo
+    , fetchRepoIssue
+    , fetchRepoIssues
+    , fetchRepoPullRequest
+    , fetchRepoPullRequests
+    , fetchTimeline
+    , issueScore
+    , labelEq
+    , moveCardAfter
+    , pullRequestScore
+    , reactionScore
+    , removeIssueLabel
+    , removePullRequestLabel
+    , reopenIssue
+    , setIssueMilestone
+    , setPullRequestMilestone
+    , updateRepoLabel
+    )
 
-import Date exposing (Date)
-import Date.Format
 import Dict
 import GraphQL.Client.Http as GH
 import GraphQL.Request.Builder as GB
@@ -86,11 +83,13 @@ import GraphQL.Request.Builder.Arg as GA
 import GraphQL.Request.Builder.Variable as GV
 import Http
 import HttpBuilder
+import Iso8601
 import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing ((|:))
+import Json.Decode.Extra as JDE exposing (andMap)
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
 import Task exposing (Task)
+import Time
 
 
 type alias Token =
@@ -119,8 +118,8 @@ type alias Repo =
 type alias Issue =
     { id : ID
     , url : String
-    , createdAt : Date
-    , updatedAt : Date
+    , createdAt : Time.Posix
+    , updatedAt : Time.Posix
     , state : IssueState
     , repo : RepoLocation
     , number : Int
@@ -142,8 +141,8 @@ type IssueState
 type alias PullRequest =
     { id : ID
     , url : String
-    , createdAt : Date
-    , updatedAt : Date
+    , createdAt : Time.Posix
+    , updatedAt : Time.Posix
     , state : PullRequestState
     , repo : RepoLocation
     , number : Int
@@ -166,8 +165,8 @@ type alias Commit =
     , status : Maybe Status
     , author : Maybe GitActor
     , committer : Maybe GitActor
-    , authoredAt : Date
-    , committedAt : Date
+    , authoredAt : Time.Posix
+    , committedAt : Time.Posix
     }
 
 
@@ -327,7 +326,7 @@ type alias CardLocation =
 
 
 type TimelineEvent
-    = IssueCommentEvent (Maybe User) Date
+    = IssueCommentEvent (Maybe User) Time.Posix
     | CrossReferencedEvent ID
     | CommitEvent Commit
 
@@ -335,7 +334,7 @@ type TimelineEvent
 type alias PullRequestReview =
     { author : User
     , state : PullRequestReviewState
-    , createdAt : Date
+    , createdAt : Time.Posix
     }
 
 
@@ -517,7 +516,7 @@ createRepoMilestone token repo title =
 
 closeRepoMilestone : Token -> Repo -> Milestone -> Task Error ()
 closeRepoMilestone token repo milestone =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ String.fromInt milestone.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
         |> HttpBuilder.toTask
@@ -526,7 +525,7 @@ closeRepoMilestone token repo milestone =
 
 deleteRepoMilestone : Token -> Repo -> Milestone -> Task Error ()
 deleteRepoMilestone token repo milestone =
-    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ toString milestone.number)
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/milestones/" ++ String.fromInt milestone.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
         |> Task.mapError GH.HttpError
@@ -534,7 +533,7 @@ deleteRepoMilestone token repo milestone =
 
 closeIssue : Token -> Issue -> Task Error ()
 closeIssue token issue =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "closed" ) ])
         |> HttpBuilder.toTask
@@ -543,7 +542,7 @@ closeIssue token issue =
 
 reopenIssue : Token -> Issue -> Task Error ()
 reopenIssue token issue =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "state", JE.string "open" ) ])
         |> HttpBuilder.toTask
@@ -552,16 +551,16 @@ reopenIssue token issue =
 
 addIssueLabels : Token -> Issue -> List String -> Task Error ()
 addIssueLabels token issue names =
-    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
+    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
-        |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
+        |> HttpBuilder.withJsonBody (JE.list JE.string names)
         |> HttpBuilder.toTask
         |> Task.mapError GH.HttpError
 
 
 removeIssueLabel : Token -> Issue -> String -> Task Error ()
 removeIssueLabel token issue name =
-    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
         |> Task.mapError GH.HttpError
@@ -569,7 +568,7 @@ removeIssueLabel token issue name =
 
 setIssueMilestone : Token -> Issue -> Maybe Milestone -> Task Error ()
 setIssueMilestone token issue mmilestone =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
@@ -578,16 +577,16 @@ setIssueMilestone token issue mmilestone =
 
 addPullRequestLabels : Token -> PullRequest -> List String -> Task Error ()
 addPullRequestLabels token issue names =
-    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels")
+    HttpBuilder.post ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number ++ "/labels")
         |> HttpBuilder.withHeaders (auth token)
-        |> HttpBuilder.withJsonBody (JE.list (List.map JE.string names))
+        |> HttpBuilder.withJsonBody (JE.list JE.string names)
         |> HttpBuilder.toTask
         |> Task.mapError GH.HttpError
 
 
 removePullRequestLabel : Token -> PullRequest -> String -> Task Error ()
 removePullRequestLabel token issue name =
-    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ toString issue.number ++ "/labels/" ++ name)
+    HttpBuilder.delete ("https://api.github.com/repos/" ++ issue.repo.owner ++ "/" ++ issue.repo.name ++ "/issues/" ++ String.fromInt issue.number ++ "/labels/" ++ name)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.toTask
         |> Task.mapError GH.HttpError
@@ -595,7 +594,7 @@ removePullRequestLabel token issue name =
 
 setPullRequestMilestone : Token -> PullRequest -> Maybe Milestone -> Task Error ()
 setPullRequestMilestone token pr mmilestone =
-    HttpBuilder.patch ("https://api.github.com/repos/" ++ pr.repo.owner ++ "/" ++ pr.repo.name ++ "/issues/" ++ toString pr.number)
+    HttpBuilder.patch ("https://api.github.com/repos/" ++ pr.repo.owner ++ "/" ++ pr.repo.name ++ "/issues/" ++ String.fromInt pr.number)
         |> HttpBuilder.withHeaders (auth token)
         |> HttpBuilder.withJsonBody (JE.object [ ( "milestone", JEE.maybe JE.int (Maybe.map .number mmilestone) ) ])
         |> HttpBuilder.toTask
@@ -686,7 +685,7 @@ pullRequestScore { reactions, commentCount } =
 reactionScore : Reactions -> Int
 reactionScore reactions =
     List.sum <|
-        flip List.map reactions <|
+        (\a -> List.map a reactions) <|
             \{ type_, count } ->
                 case type_ of
                     ReactionTypeThumbsUp ->
@@ -723,13 +722,14 @@ auth : String -> List ( String, String )
 auth token =
     if token == "" then
         []
+
     else
         [ ( "Authorization", "token " ++ token ) ]
 
 
 authHeaders : String -> List Http.Header
 authHeaders =
-    List.map (uncurry Http.header) << auth
+    List.map (\( a, b ) -> Http.header a b) << auth
 
 
 authedOptions : Token -> GH.RequestOptions
@@ -749,6 +749,7 @@ fetchPaged doc token psel =
             if pageInfo.hasNextPage then
                 fetchPaged doc token { psel | after = pageInfo.endCursor }
                     |> Task.map ((++) content)
+
             else
                 Task.succeed content
     in
@@ -1084,8 +1085,8 @@ issueObject =
     GB.object Issue
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
-        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
+        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.datetime))
         |> GB.with (GB.aliasAs "issueState" <| GB.field "state" [] (GB.enum issueStates))
         |> GB.with (GB.field "repository" [] repoLocationObject)
         |> GB.with (GB.field "number" [] GB.int)
@@ -1132,8 +1133,8 @@ prObject =
     GB.object PullRequest
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
-        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
+        |> GB.with (GB.field "updatedAt" [] (GB.customScalar DateType JDE.datetime))
         |> GB.with (GB.aliasAs "prState" <| GB.field "state" [] (GB.enum pullRequestStates))
         |> GB.with (GB.field "repository" [] repoLocationObject)
         |> GB.with (GB.field "number" [] GB.int)
@@ -1163,8 +1164,8 @@ commitObject =
         |> GB.with (GB.field "status" [] (GB.nullable statusObject))
         |> GB.with (GB.field "author" [] (GB.nullable gitActorObject))
         |> GB.with (GB.field "committer" [] (GB.nullable gitActorObject))
-        |> GB.with (GB.field "authoredDate" [] (GB.customScalar DateType JDE.date))
-        |> GB.with (GB.field "committedDate" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "authoredDate" [] (GB.customScalar DateType JDE.datetime))
+        |> GB.with (GB.field "committedDate" [] (GB.customScalar DateType JDE.datetime))
 
 
 gitActorObject : GB.ValueSpec GB.NonNull GB.ObjectType GitActor vars
@@ -1181,7 +1182,7 @@ prReviewObject =
     GB.object PullRequestReview
         |> GB.with (GB.assume <| GB.field "author" [] authorObject)
         |> GB.with (GB.field "state" [] (GB.enum pullRequestReviewStates))
-        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
 
 
 repoLocationObject : GB.ValueSpec GB.NonNull GB.ObjectType RepoLocation vars
@@ -1346,7 +1347,7 @@ timelineQuery =
         issueCommentEvent =
             GB.object IssueCommentEvent
                 |> GB.with (GB.field "author" [] authorObject)
-                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
 
         sourceID =
             GB.object pickEnum2
@@ -1412,7 +1413,7 @@ prReviewQuery =
         issueCommentEvent =
             GB.object IssueCommentEvent
                 |> GB.with (GB.field "author" [] authorObject)
-                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.date))
+                |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -1461,117 +1462,117 @@ pickEnum3 ma mb mc =
 decodeRepo : JD.Decoder Repo
 decodeRepo =
     JD.succeed Repo
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "owner" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "is_archived" JD.bool
-        |: JD.field "labels" (JD.list decodeLabel)
-        |: JD.field "milestones" (JD.list decodeMilestone)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "owner" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "is_archived" JD.bool)
+        |> andMap (JD.field "labels" (JD.list decodeLabel))
+        |> andMap (JD.field "milestones" (JD.list decodeMilestone))
 
 
 decodeIssue : JD.Decoder Issue
 decodeIssue =
     JD.succeed Issue
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "created_at" JDE.date
-        |: JD.field "updated_at" JDE.date
-        |: JD.field "state" decodeIssueState
-        |: JD.field "repo" decodeRepoLocation
-        |: JD.field "number" JD.int
-        |: JD.field "title" JD.string
-        |: JD.field "comment_count" JD.int
-        |: (JD.field "reactions" <| JD.list decodeReactionGroup)
-        |: JD.field "author" (JD.maybe decodeUser)
-        |: (JD.field "labels" <| JD.list decodeLabel)
-        |: (JD.field "cards" <| JD.list decodeCardLocation)
-        |: (JD.field "milestone" <| JD.maybe decodeMilestone)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "created_at" JDE.datetime)
+        |> andMap (JD.field "updated_at" JDE.datetime)
+        |> andMap (JD.field "state" decodeIssueState)
+        |> andMap (JD.field "repo" decodeRepoLocation)
+        |> andMap (JD.field "number" JD.int)
+        |> andMap (JD.field "title" JD.string)
+        |> andMap (JD.field "comment_count" JD.int)
+        |> andMap (JD.field "reactions" <| JD.list decodeReactionGroup)
+        |> andMap (JD.field "author" (JD.maybe decodeUser))
+        |> andMap (JD.field "labels" <| JD.list decodeLabel)
+        |> andMap (JD.field "cards" <| JD.list decodeCardLocation)
+        |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
 
 
 decodePullRequest : JD.Decoder PullRequest
 decodePullRequest =
     JD.succeed PullRequest
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "created_at" JDE.date
-        |: JD.field "updated_at" JDE.date
-        |: JD.field "state" decodePullRequestState
-        |: JD.field "repo" decodeRepoLocation
-        |: JD.field "number" JD.int
-        |: JD.field "title" JD.string
-        |: JD.field "comment_count" JD.int
-        |: (JD.field "reactions" <| JD.list decodeReactionGroup)
-        |: JD.field "author" (JD.maybe decodeUser)
-        |: (JD.field "labels" <| JD.list decodeLabel)
-        |: (JD.field "cards" <| JD.list decodeCardLocation)
-        |: JD.field "additions" JD.int
-        |: JD.field "deletions" JD.int
-        |: (JD.field "milestone" <| JD.maybe decodeMilestone)
-        |: JD.field "mergeable" decodeMergeableState
-        |: (JD.field "last_commit" <| JD.maybe decodeCommit)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "created_at" JDE.datetime)
+        |> andMap (JD.field "updated_at" JDE.datetime)
+        |> andMap (JD.field "state" decodePullRequestState)
+        |> andMap (JD.field "repo" decodeRepoLocation)
+        |> andMap (JD.field "number" JD.int)
+        |> andMap (JD.field "title" JD.string)
+        |> andMap (JD.field "comment_count" JD.int)
+        |> andMap (JD.field "reactions" <| JD.list decodeReactionGroup)
+        |> andMap (JD.field "author" (JD.maybe decodeUser))
+        |> andMap (JD.field "labels" <| JD.list decodeLabel)
+        |> andMap (JD.field "cards" <| JD.list decodeCardLocation)
+        |> andMap (JD.field "additions" JD.int)
+        |> andMap (JD.field "deletions" JD.int)
+        |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
+        |> andMap (JD.field "mergeable" decodeMergeableState)
+        |> andMap (JD.field "last_commit" <| JD.maybe decodeCommit)
 
 
 decodeCommit : JD.Decoder Commit
 decodeCommit =
     JD.succeed Commit
-        |: JD.field "sha" JD.string
-        |: JD.field "status" (JD.maybe decodeStatus)
-        |: JD.field "author" (JD.maybe decodeGitActor)
-        |: JD.field "committer" (JD.maybe decodeGitActor)
-        |: JD.field "authored_at" JDE.date
-        |: JD.field "committed_at" JDE.date
+        |> andMap (JD.field "sha" JD.string)
+        |> andMap (JD.field "status" (JD.maybe decodeStatus))
+        |> andMap (JD.field "author" (JD.maybe decodeGitActor))
+        |> andMap (JD.field "committer" (JD.maybe decodeGitActor))
+        |> andMap (JD.field "authored_at" JDE.datetime)
+        |> andMap (JD.field "committed_at" JDE.datetime)
 
 
 decodeGitActor : JD.Decoder GitActor
 decodeGitActor =
     JD.succeed GitActor
-        |: JD.field "email" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "avatar" JD.string
-        |: JD.field "user" (JD.maybe decodeUser)
+        |> andMap (JD.field "email" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "avatar" JD.string)
+        |> andMap (JD.field "user" (JD.maybe decodeUser))
 
 
 decodePullRequestReview : JD.Decoder PullRequestReview
 decodePullRequestReview =
     JD.succeed PullRequestReview
-        |: JD.field "author" decodeUser
-        |: JD.field "state" decodePullRequestReviewState
-        |: JD.field "created_at" JDE.date
+        |> andMap (JD.field "author" decodeUser)
+        |> andMap (JD.field "state" decodePullRequestReviewState)
+        |> andMap (JD.field "created_at" JDE.datetime)
 
 
 decodeRepoLocation : JD.Decoder RepoLocation
 decodeRepoLocation =
     JD.succeed RepoLocation
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "owner" JD.string
-        |: JD.field "name" JD.string
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "owner" JD.string)
+        |> andMap (JD.field "name" JD.string)
 
 
 decodeLabel : JD.Decoder Label
 decodeLabel =
     JD.succeed Label
-        |: JD.field "id" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "color" JD.string
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "color" JD.string)
 
 
 decodeMilestone : JD.Decoder Milestone
 decodeMilestone =
     JD.succeed Milestone
-        |: JD.field "id" JD.string
-        |: JD.field "number" JD.int
-        |: JD.field "title" JD.string
-        |: JD.field "state" decodeMilestoneState
-        |: JD.field "description" (JD.maybe JD.string)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "number" JD.int)
+        |> andMap (JD.field "title" JD.string)
+        |> andMap (JD.field "state" decodeMilestoneState)
+        |> andMap (JD.field "description" (JD.maybe JD.string))
 
 
 decodeReactionGroup : JD.Decoder ReactionGroup
 decodeReactionGroup =
     JD.succeed ReactionGroup
-        |: JD.field "type_" decodeReactionType
-        |: JD.field "count" JD.int
+        |> andMap (JD.field "type_" decodeReactionType)
+        |> andMap (JD.field "count" JD.int)
 
 
 decodeReactionType : JD.Decoder ReactionType
@@ -1583,7 +1584,7 @@ decodeReactionType =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to ReactionType. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to ReactionType. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1597,7 +1598,7 @@ decodeMilestoneState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to MilestoneState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to MilestoneState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1605,71 +1606,71 @@ decodeMilestoneState =
 decodeUser : JD.Decoder User
 decodeUser =
     JD.succeed User
-        |: JD.field "id" JD.string
-        |: JD.field "database_id" JD.int
-        |: JD.field "url" JD.string
-        |: JD.field "login" JD.string
-        |: JD.field "avatar" JD.string
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "database_id" JD.int)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "login" JD.string)
+        |> andMap (JD.field "avatar" JD.string)
 
 
 decodeStatus : JD.Decoder Status
 decodeStatus =
     JD.succeed Status
-        |: JD.field "state" decodeStatusState
-        |: JD.field "contexts" (JD.list decodeStatusContext)
+        |> andMap (JD.field "state" decodeStatusState)
+        |> andMap (JD.field "contexts" (JD.list decodeStatusContext))
 
 
 decodeStatusContext : JD.Decoder StatusContext
 decodeStatusContext =
     JD.succeed StatusContext
-        |: JD.field "state" decodeStatusState
-        |: JD.field "context" JD.string
-        |: JD.field "target_url" (JD.maybe JD.string)
-        |: JD.field "creator" decodeActor
+        |> andMap (JD.field "state" decodeStatusState)
+        |> andMap (JD.field "context" JD.string)
+        |> andMap (JD.field "target_url" (JD.maybe JD.string))
+        |> andMap (JD.field "creator" decodeActor)
 
 
 decodeActor : JD.Decoder Actor
 decodeActor =
     JD.succeed Actor
-        |: JD.field "url" JD.string
-        |: JD.field "login" JD.string
-        |: JD.field "avatar" JD.string
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "login" JD.string)
+        |> andMap (JD.field "avatar" JD.string)
 
 
 decodeProject : JD.Decoder Project
 decodeProject =
     JD.succeed Project
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "number" JD.int
-        |: (JD.field "columns" <| JD.list decodeProjectColumn)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "number" JD.int)
+        |> andMap (JD.field "columns" <| JD.list decodeProjectColumn)
 
 
 decodeProjectLocation : JD.Decoder ProjectLocation
 decodeProjectLocation =
     JD.succeed ProjectLocation
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "number" JD.int
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "number" JD.int)
 
 
 decodeProjectColumn : JD.Decoder ProjectColumn
 decodeProjectColumn =
     JD.succeed ProjectColumn
-        |: JD.field "id" JD.string
-        |: JD.field "name" JD.string
-        |: JD.field "database_id" JD.int
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "database_id" JD.int)
 
 
 decodeProjectColumnCard : JD.Decoder ProjectColumnCard
 decodeProjectColumnCard =
     JD.succeed ProjectColumnCard
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: (JD.field "content" <| JD.maybe decodeCardContent)
-        |: (JD.field "note" <| JD.maybe JD.string)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "content" <| JD.maybe decodeCardContent)
+        |> andMap (JD.field "note" <| JD.maybe JD.string)
 
 
 decodeCardContent : JD.Decoder CardContent
@@ -1683,23 +1684,23 @@ decodeCardContent =
 decodeCardLocation : JD.Decoder CardLocation
 decodeCardLocation =
     JD.succeed CardLocation
-        |: JD.field "id" JD.string
-        |: JD.field "url" JD.string
-        |: JD.field "project" decodeProjectLocation
-        |: (JD.field "column" <| JD.maybe decodeProjectColumn)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "project" decodeProjectLocation)
+        |> andMap (JD.field "column" <| JD.maybe decodeProjectColumn)
 
 
 decodeRepoSelector : JD.Decoder RepoSelector
 decodeRepoSelector =
     JD.succeed RepoSelector
-        |: JD.field "owner" JD.string
-        |: JD.field "name" JD.string
+        |> andMap (JD.field "owner" JD.string)
+        |> andMap (JD.field "name" JD.string)
 
 
 decodeOrgSelector : JD.Decoder OrgSelector
 decodeOrgSelector =
     JD.succeed OrgSelector
-        |: JD.field "name" JD.string
+        |> andMap (JD.field "name" JD.string)
 
 
 decodePullRequestState : JD.Decoder PullRequestState
@@ -1711,7 +1712,7 @@ decodePullRequestState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to PullRequestState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to PullRequestState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1725,7 +1726,7 @@ decodeIssueState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to IssueState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to IssueState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1739,7 +1740,7 @@ decodeMergeableState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to MergeableState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to MergeableState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1753,7 +1754,7 @@ decodePullRequestReviewState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to PullRequestReviewState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to PullRequestReviewState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1767,7 +1768,7 @@ decodeStatusState =
                     Result.Ok type_
 
                 Nothing ->
-                    Result.Err ("Not valid pattern for decoder to StatusState. Pattern: " ++ toString string)
+                    Result.Err ("Not valid pattern for decoder to StatusState. Pattern: " ++ string)
     in
     customDecoder JD.string decodeToType
 
@@ -1780,8 +1781,8 @@ encodeRepo record =
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
         , ( "is_archived", JE.bool record.isArchived )
-        , ( "labels", JE.list (List.map encodeLabel record.labels) )
-        , ( "milestones", JE.list (List.map encodeMilestone record.milestones) )
+        , ( "labels", JE.list encodeLabel record.labels )
+        , ( "milestones", JE.list encodeMilestone record.milestones )
         ]
 
 
@@ -1790,17 +1791,17 @@ encodeIssue record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
-        , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
+        , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
+        , ( "updated_at", JE.string (Iso8601.fromTime record.updatedAt) )
         , ( "state", encodeIssueState record.state )
         , ( "repo", encodeRepoLocation record.repo )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
         , ( "comment_count", JE.int record.commentCount )
-        , ( "reactions", JE.list (List.map encodeReactionGroup record.reactions) )
+        , ( "reactions", JE.list encodeReactionGroup record.reactions )
         , ( "author", JEE.maybe encodeUser record.author )
-        , ( "labels", JE.list <| List.map encodeLabel record.labels )
-        , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
+        , ( "labels", JE.list encodeLabel record.labels )
+        , ( "cards", JE.list encodeCardLocation record.cards )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         ]
 
@@ -1810,17 +1811,17 @@ encodePullRequest record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
-        , ( "updated_at", JE.string (Date.Format.formatISO8601 record.updatedAt) )
+        , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
+        , ( "updated_at", JE.string (Iso8601.fromTime record.updatedAt) )
         , ( "state", encodePullRequestState record.state )
         , ( "repo", encodeRepoLocation record.repo )
         , ( "number", JE.int record.number )
         , ( "title", JE.string record.title )
         , ( "comment_count", JE.int record.commentCount )
-        , ( "reactions", JE.list (List.map encodeReactionGroup record.reactions) )
+        , ( "reactions", JE.list encodeReactionGroup record.reactions )
         , ( "author", JEE.maybe encodeUser record.author )
-        , ( "labels", JE.list <| List.map encodeLabel record.labels )
-        , ( "cards", JE.list <| List.map encodeCardLocation record.cards )
+        , ( "labels", JE.list encodeLabel record.labels )
+        , ( "cards", JE.list encodeCardLocation record.cards )
         , ( "additions", JE.int record.additions )
         , ( "deletions", JE.int record.deletions )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
@@ -1836,8 +1837,8 @@ encodeCommit record =
         , ( "status", JEE.maybe encodeStatus record.status )
         , ( "author", JEE.maybe encodeGitActor record.author )
         , ( "committer", JEE.maybe encodeGitActor record.author )
-        , ( "authored_at", JE.string (Date.Format.formatISO8601 record.authoredAt) )
-        , ( "committed_at", JE.string (Date.Format.formatISO8601 record.committedAt) )
+        , ( "authored_at", JE.string (Iso8601.fromTime record.authoredAt) )
+        , ( "committed_at", JE.string (Iso8601.fromTime record.committedAt) )
         ]
 
 
@@ -1856,7 +1857,7 @@ encodePullRequestReview record =
     JE.object
         [ ( "author", encodeUser record.author )
         , ( "state", encodePullRequestReviewState record.state )
-        , ( "created_at", JE.string (Date.Format.formatISO8601 record.createdAt) )
+        , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
         ]
 
 
@@ -1897,6 +1898,7 @@ encodeMilestoneState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -1919,6 +1921,7 @@ encodeReactionType item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -1941,7 +1944,7 @@ encodeStatus : Status -> JE.Value
 encodeStatus record =
     JE.object
         [ ( "state", encodeStatusState record.state )
-        , ( "contexts", JE.list (List.map encodeStatusContext record.contexts) )
+        , ( "contexts", JE.list encodeStatusContext record.contexts )
         ]
 
 
@@ -1971,7 +1974,7 @@ encodeProject record =
         , ( "url", JE.string record.url )
         , ( "name", JE.string record.name )
         , ( "number", JE.int record.number )
-        , ( "columns", JE.list <| List.map encodeProjectColumn record.columns )
+        , ( "columns", JE.list encodeProjectColumn record.columns )
         ]
 
 
@@ -2046,6 +2049,7 @@ encodeIssueState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2060,6 +2064,7 @@ encodePullRequestState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2074,6 +2079,7 @@ encodeStatusState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2088,6 +2094,7 @@ encodeMergeableState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )
@@ -2102,6 +2109,7 @@ encodePullRequestReviewState item =
             (\( a, b ) default ->
                 if b == item then
                     a
+
                 else
                     default
             )

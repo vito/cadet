@@ -1,14 +1,13 @@
-port module Main exposing (..)
+port module Main exposing (Flags, Model, Msg(..), backOff, decodeAffectedColumnIds, decodeAndFetchIssueOrPR, decodeAndFetchPRForCommit, decodeAndFetchRepo, decodeIssueOrPRSelector, decodeRepoSelector, eventActor, fetchCards, fetchIssue, fetchIssueTimeline, fetchIssues, fetchPRTimelineAndReviews, fetchProjects, fetchPullRequest, fetchPullRequests, fetchRepo, fetchRepoIssue, fetchRepoIssueOrPR, fetchRepoPullRequest, fetchRepos, hook, init, log, main, maybeOr, refresh, setActors, setCards, setIssue, setIssues, setProjects, setPullRequest, setPullRequests, setReferences, setRepo, setRepos, setReviewers, subscriptions, update)
 
-import Date
-import Dict exposing (Dict)
-import Platform
-import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing ((|:))
-import Time exposing (Time)
-import Task
-import GitHubGraph
 import Backend
+import Dict exposing (Dict)
+import GitHubGraph
+import Json.Decode as JD
+import Json.Decode.Extra as JDE exposing (andMap)
+import Platform
+import Task
+import Time
 
 
 port setRepos : List JD.Value -> Cmd msg
@@ -52,7 +51,7 @@ port hook : (( String, JD.Value ) -> msg) -> Sub msg
 
 main : Program Flags Model Msg
 main =
-    Platform.programWithFlags
+    Platform.worker
         { init = init
         , update = update
         , subscriptions = subscriptions
@@ -81,9 +80,9 @@ type alias Model =
 
 type Msg
     = Noop
-    | Refresh Time
-    | PopQueue Time
-    | RetryQueue Time
+    | Refresh
+    | PopQueue
+    | RetryQueue
     | RefreshRequested String GitHubGraph.ID
     | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
@@ -101,7 +100,7 @@ type Msg
 
 init : Flags -> ( Model, Cmd Msg )
 init { githubToken, githubOrg, skipTimeline, noRefresh } =
-    update (Refresh 0)
+    update Refresh
         { githubToken = githubToken
         , githubOrg = githubOrg
         , skipTimeline = skipTimeline
@@ -116,14 +115,15 @@ init { githubToken, githubOrg, skipTimeline, noRefresh } =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every (100 * Time.millisecond) PopQueue
-        , Time.every Time.minute RetryQueue
+        [ Time.every 100 (always PopQueue)
+        , Time.every (60 * 1000) (always RetryQueue)
         , if model.noRefresh then
             Sub.none
+
           else
-            Time.every Time.hour Refresh
-        , refresh (uncurry RefreshRequested)
-        , hook (uncurry HookReceived)
+            Time.every (60 * 60 * 1000) (always Refresh)
+        , refresh (\( a, b ) -> RefreshRequested a b)
+        , hook (\( a, b ) -> HookReceived a b)
         ]
 
 
@@ -133,11 +133,10 @@ update msg model =
         Noop ->
             ( model, Cmd.none )
 
-        Refresh now ->
-            log "refreshing" now <|
-                ( { model | loadQueue = fetchRepos model :: fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
+        Refresh ->
+            ( { model | loadQueue = fetchRepos model :: fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
 
-        PopQueue _ ->
+        PopQueue ->
             case model.loadQueue of
                 first :: rest ->
                     ( { model | loadQueue = rest }, first )
@@ -145,9 +144,10 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        RetryQueue now ->
+        RetryQueue ->
             if List.isEmpty model.failedQueue then
                 ( model, Cmd.none )
+
             else
                 log "retrying failed fetches" (List.length model.failedQueue) <|
                     ( { model
@@ -224,12 +224,12 @@ update msg model =
                     Ok ids ->
                         let
                             affectedColumns =
-                                List.filter (flip List.member ids << .databaseId) <|
+                                List.filter ((\a -> List.member a ids) << .databaseId) <|
                                     List.concatMap .columns model.projects
                         in
-                            ( { model | loadQueue = List.map (fetchCards model << .id) affectedColumns ++ model.loadQueue }
-                            , Cmd.none
-                            )
+                        ( { model | loadQueue = List.map (fetchCards model << .id) affectedColumns ++ model.loadQueue }
+                        , Cmd.none
+                        )
 
         HookReceived "repository" payload ->
             log "repository hook received; refreshing repo" () <|
@@ -254,9 +254,9 @@ update msg model =
                         , fetchPullRequests model repo
                         ]
                 in
-                    ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
-                    , setRepos (List.map GitHubGraph.encodeRepo activeRepos)
-                    )
+                ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
+                , setRepos (List.map GitHubGraph.encodeRepo activeRepos)
+                )
 
         RepositoriesFetched (Err err) ->
             log "failed to fetch repos" err <|
@@ -276,11 +276,11 @@ update msg model =
                     ( next, cmd ) =
                         update (nextMsg projects) { model | projects = projects }
                 in
-                    ( next
-                    , Cmd.batch
-                        [ setProjects (List.map GitHubGraph.encodeProject projects)
-                        ]
-                    )
+                ( next
+                , Cmd.batch
+                    [ setProjects (List.map GitHubGraph.encodeProject projects)
+                    ]
+                )
 
         ProjectsFetched nextMsg (Err err) ->
             log "failed to fetch projects" err <|
@@ -306,10 +306,10 @@ update msg model =
                         |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
                         |> List.map (fetchIssueTimeline model << .id)
             in
-                log "issues fetched for" repo.url <|
-                    ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
-                    , setIssues (List.map GitHubGraph.encodeIssue issues)
-                    )
+            log "issues fetched for" repo.url <|
+                ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
+                , setIssues (List.map GitHubGraph.encodeIssue issues)
+                )
 
         IssuesFetched repo (Err err) ->
             log "failed to fetch issues" ( repo.url, err ) <|
@@ -322,7 +322,7 @@ update msg model =
                 )
 
         IssueFetched (Err err) ->
-            log "failed to fetch issue" (err) <|
+            log "failed to fetch issue" err <|
                 ( model, Cmd.none )
 
         PullRequestsFetched repo (Ok prs) ->
@@ -346,10 +346,10 @@ update msg model =
                         model.commitPRs
                         openPRs
             in
-                log "prs fetched for" repo.url <|
-                    ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
-                    , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
-                    )
+            log "prs fetched for" repo.url <|
+                ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
+                , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
+                )
 
         PullRequestsFetched repo (Err err) ->
             log "failed to fetch prs" ( repo.url, err ) <|
@@ -371,15 +371,15 @@ update msg model =
                 )
 
         PullRequestFetched (Err err) ->
-            log "failed to fetch pr" (err) <|
+            log "failed to fetch pr" err <|
                 ( model, Cmd.none )
 
         IssueTimelineFetched id (Ok timeline) ->
             let
                 findSource event =
                     case event of
-                        GitHubGraph.CrossReferencedEvent id ->
-                            Just id
+                        GitHubGraph.CrossReferencedEvent eid ->
+                            Just eid
 
                         _ ->
                             Nothing
@@ -390,13 +390,13 @@ update msg model =
                 actors =
                     List.map Backend.encodeEventActor (List.filterMap eventActor timeline)
             in
-                log "timeline fetched for" id <|
-                    ( model
-                    , Cmd.batch
-                        [ setReferences ( id, edges )
-                        , setActors ( id, actors )
-                        ]
-                    )
+            log "timeline fetched for" id <|
+                ( model
+                , Cmd.batch
+                    [ setReferences ( id, edges )
+                    , setActors ( id, actors )
+                    ]
+                )
 
         IssueTimelineFetched id (Err err) ->
             log "failed to fetch timeline" ( id, err ) <|
@@ -406,8 +406,8 @@ update msg model =
             let
                 findSource event =
                     case event of
-                        GitHubGraph.CrossReferencedEvent id ->
-                            Just id
+                        GitHubGraph.CrossReferencedEvent eid ->
+                            Just eid
 
                         _ ->
                             Nothing
@@ -425,7 +425,7 @@ update msg model =
                     (List.filterMap eventActor timeline
                         ++ List.map reviewActor reviews
                     )
-                        |> List.sortBy (.createdAt >> Date.toTime)
+                        |> List.sortBy (Time.posixToMillis << .createdAt)
                         |> List.map Backend.encodeEventActor
 
                 reviewers =
@@ -452,14 +452,14 @@ update msg model =
                         |> Dict.values
                         |> List.map GitHubGraph.encodePullRequestReview
             in
-                log "timeline and reviews fetched for" id <|
-                    ( model
-                    , Cmd.batch
-                        [ setReferences ( id, edges )
-                        , setActors ( id, actors )
-                        , setReviewers ( id, reviewers )
-                        ]
-                    )
+            log "timeline and reviews fetched for" id <|
+                ( model
+                , Cmd.batch
+                    [ setReferences ( id, edges )
+                    , setActors ( id, actors )
+                    , setReviewers ( id, reviewers )
+                    ]
+                )
 
         PullRequestTimelineAndReviewsFetched id (Err err) ->
             log "failed to fetch timeline and reviews" ( id, err ) <|
@@ -588,6 +588,7 @@ fetchIssueTimeline : Model -> GitHubGraph.ID -> Cmd Msg
 fetchIssueTimeline model id =
     if model.skipTimeline then
         Cmd.none
+
     else
         GitHubGraph.fetchTimeline model.githubToken { id = id }
             |> Task.attempt (IssueTimelineFetched id)
@@ -599,36 +600,37 @@ fetchPRTimelineAndReviews model id =
         fetchTimeline =
             if model.skipTimeline then
                 Task.succeed []
+
             else
                 GitHubGraph.fetchTimeline model.githubToken { id = id }
     in
-        fetchTimeline
-            |> Task.andThen
-                (\timeline ->
-                    GitHubGraph.fetchPullRequestReviews model.githubToken { id = id }
-                        |> Task.map ((,) timeline)
-                )
-            |> Task.attempt (PullRequestTimelineAndReviewsFetched id)
+    fetchTimeline
+        |> Task.andThen
+            (\timeline ->
+                GitHubGraph.fetchPullRequestReviews model.githubToken { id = id }
+                    |> Task.map (\b -> ( timeline, b ))
+            )
+        |> Task.attempt (PullRequestTimelineAndReviewsFetched id)
 
 
 log : String -> a -> b -> b
 log msg val =
-    flip always (Debug.log msg val)
+    \a -> always a (Debug.log msg val)
 
 
 decodeRepoSelector : JD.Decoder GitHubGraph.RepoSelector
 decodeRepoSelector =
     JD.succeed GitHubGraph.RepoSelector
-        |: JD.at [ "repository", "owner", "login" ] JD.string
-        |: JD.at [ "repository", "name" ] JD.string
+        |> andMap (JD.at [ "repository", "owner", "login" ] JD.string)
+        |> andMap (JD.at [ "repository", "name" ] JD.string)
 
 
 decodeIssueOrPRSelector : String -> JD.Decoder GitHubGraph.IssueOrPRSelector
 decodeIssueOrPRSelector field =
     JD.succeed GitHubGraph.IssueOrPRSelector
-        |: JD.at [ "repository", "owner", "login" ] JD.string
-        |: JD.at [ "repository", "name" ] JD.string
-        |: JD.at [ field, "number" ] JD.int
+        |> andMap (JD.at [ "repository", "owner", "login" ] JD.string)
+        |> andMap (JD.at [ "repository", "name" ] JD.string)
+        |> andMap (JD.at [ field, "number" ] JD.int)
 
 
 decodeAffectedColumnIds : JD.Decoder (List Int)

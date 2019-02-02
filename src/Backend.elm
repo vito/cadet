@@ -1,30 +1,28 @@
-module Backend
-    exposing
-        ( ColumnCard
-        , Data
-        , EventActor
-        , Indexed
-        , Me
-        , User
-        , emptyData
-        , encodeEventActor
-        , fetchData
-        , fetchMe
-        , pollData
-        , refreshCards
-        , refreshIssue
-        , refreshPR
-        , refreshRepo
-        )
+module Backend exposing
+    ( ColumnCard
+    , Data
+    , EventActor
+    , Indexed
+    , Me
+    , User
+    , emptyData
+    , encodeEventActor
+    , fetchData
+    , fetchMe
+    , pollData
+    , refreshCards
+    , refreshIssue
+    , refreshPR
+    , refreshRepo
+    )
 
-import Date exposing (Date)
-import Date.Format
 import Dict exposing (Dict)
 import GitHubGraph
 import Http
 import HttpBuilder
+import Iso8601
 import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing ((|:))
+import Json.Decode.Extra as JDE exposing (andMap)
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
 import Task
@@ -66,7 +64,7 @@ type alias User =
 type alias EventActor =
     { user : Maybe GitHubGraph.User
     , avatar : String
-    , createdAt : Date
+    , createdAt : Time.Posix
     }
 
 
@@ -94,15 +92,15 @@ expectJsonWithIndex : JD.Decoder a -> Http.Expect (Indexed a)
 expectJsonWithIndex decoder =
     Http.expectStringResponse <|
         \{ body, headers } ->
-            case ( JD.decodeString decoder body, Maybe.map String.toInt (Dict.get "x-data-index" headers) ) of
-                ( Ok value, Just (Ok index) ) ->
+            case ( JD.decodeString decoder body, Maybe.andThen String.toInt (Dict.get "x-data-index" headers) ) of
+                ( Ok value, Just index ) ->
                     Ok { index = index, value = value }
 
                 ( Ok value, _ ) ->
                     Ok { index = 1, value = value }
 
                 ( Err msg, _ ) ->
-                    Err msg
+                    Err (JD.errorToString msg)
 
 
 fetchData : (Result Http.Error (Indexed Data) -> msg) -> Cmd msg
@@ -117,7 +115,7 @@ pollData : (Result Http.Error (Indexed Data) -> msg) -> Cmd msg
 pollData f =
     HttpBuilder.get "/poll"
         |> HttpBuilder.withExpect (expectJsonWithIndex decodeData)
-        |> HttpBuilder.withTimeout (60 * Time.second)
+        |> HttpBuilder.withTimeout (60 * 1000)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
@@ -165,14 +163,14 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
-        |: (JD.field "repos" <| JD.dict GitHubGraph.decodeRepo)
-        |: (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
-        |: (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
-        |: (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
-        |: (JD.field "columnCards" <| JD.dict decodeCards)
-        |: (JD.field "references" <| JD.dict (JD.list JD.string))
-        |: (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
-        |: (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
+        |> andMap (JD.field "repos" <| JD.dict GitHubGraph.decodeRepo)
+        |> andMap (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
+        |> andMap (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
+        |> andMap (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
+        |> andMap (JD.field "columnCards" <| JD.dict decodeCards)
+        |> andMap (JD.field "references" <| JD.dict (JD.list JD.string))
+        |> andMap (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
+        |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
 
 
 decodeCards : JD.Decoder (List ColumnCard)
@@ -183,33 +181,33 @@ decodeCards =
 decodeColumnCard : JD.Decoder ColumnCard
 decodeColumnCard =
     JD.succeed ColumnCard
-        |: JD.field "id" JD.string
-        |: (JD.maybe <| JD.field "contentId" JD.string)
-        |: (JD.maybe <| JD.field "note" JD.string)
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.maybe <| JD.field "contentId" JD.string)
+        |> andMap (JD.maybe <| JD.field "note" JD.string)
 
 
 decodeMe : JD.Decoder Me
 decodeMe =
     JD.succeed Me
-        |: JD.field "token" JD.string
-        |: JD.field "user" decodeUser
+        |> andMap (JD.field "token" JD.string)
+        |> andMap (JD.field "user" decodeUser)
 
 
 decodeUser : JD.Decoder User
 decodeUser =
     JD.succeed User
-        |: JD.field "id" JD.int
-        |: JD.field "login" JD.string
-        |: JD.field "html_url" JD.string
-        |: JD.field "avatar_url" JD.string
+        |> andMap (JD.field "id" JD.int)
+        |> andMap (JD.field "login" JD.string)
+        |> andMap (JD.field "html_url" JD.string)
+        |> andMap (JD.field "avatar_url" JD.string)
 
 
 decodeEventActor : JD.Decoder EventActor
 decodeEventActor =
     JD.succeed EventActor
-        |: JD.field "user" (JD.maybe GitHubGraph.decodeUser)
-        |: JD.field "avatar" JD.string
-        |: JD.field "createdAt" JDE.date
+        |> andMap (JD.field "user" (JD.maybe GitHubGraph.decodeUser))
+        |> andMap (JD.field "avatar" JD.string)
+        |> andMap (JD.field "createdAt" JDE.datetime)
 
 
 encodeEventActor : EventActor -> JE.Value
@@ -217,5 +215,5 @@ encodeEventActor { user, avatar, createdAt } =
     JE.object
         [ ( "user", JEE.maybe GitHubGraph.encodeUser user )
         , ( "avatar", JE.string avatar )
-        , ( "createdAt", JE.string (Date.Format.formatISO8601 createdAt) )
+        , ( "createdAt", JE.string (Iso8601.fromTime createdAt) )
         ]

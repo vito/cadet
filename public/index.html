@@ -11,8 +11,10 @@
   <body>
     <script type="text/javascript" src="/public/elm.js"></script>
     <script type="text/javascript">
-      var app = Elm.Main.fullscreen({
-        initialDate: (new Date()).getTime()
+      var app = Elm.Main.init({
+        flags: {
+          initialTime: (new Date()).getTime()
+        }
       });
     </script>
   </body>

@@ -1,11 +1,11 @@
-module Drag exposing (..)
+module Drag exposing (DragState, DropCandidate, DropState, Model(..), Msg(..), StartState, complete, decodeStartState, draggable, drop, hasNeverLeft, init, isDragging, land, onDrop, update, viewDropArea)
 
 import DOM
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing ((|:))
+import Json.Decode.Extra as JDE exposing (andMap)
 
 
 type alias StartState msg =
@@ -52,16 +52,10 @@ onDrop : DropCandidate source target dropMsg -> (Msg source target dropMsg -> ms
 onDrop candidate f =
     [ HE.on "dragenter" (JD.succeed <| f (Over (Just candidate)))
     , HE.on "dragleave" (JD.succeed <| f (Over Nothing))
-    , HE.onWithOptions "dragover"
-        { stopPropagation = False
-        , preventDefault = True
-        }
-        (JD.succeed <| f (Over (Just candidate)))
-    , HE.onWithOptions "drop"
-        { stopPropagation = True
-        , preventDefault = False
-        }
-        (JD.succeed (f End))
+    , HE.preventDefaultOn "dragover"
+        (JD.succeed ( f (Over (Just candidate)), True ))
+    , HE.stopPropagationOn "drop"
+        (JD.succeed ( f End, True ))
     ]
 
 
@@ -130,6 +124,7 @@ viewDropArea model wrap candidate ownSource =
         dragEvents =
             if isActive then
                 onDrop candidate wrap
+
             else
                 []
 
@@ -157,6 +152,7 @@ viewDropArea model wrap candidate ownSource =
                 Dropped { start } ->
                     if isOver then
                         start.element
+
                     else
                         Html.text ""
 
@@ -170,33 +166,37 @@ viewDropArea model wrap candidate ownSource =
             , ( "never-left", hasNeverLeft model )
             , ( "over", isOver )
             ]
-         , HA.style <|
-            case model of
-                NotDragging ->
-                    []
-
-                Dragging { start } ->
-                    if isOver then
-                        -- drop-area height + card-margin
-                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
-                    else
-                        []
-
-                Dropping { start } ->
-                    if isOver then
-                        -- drop-area height + 2 * card-margin
-                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
-                    else
-                        []
-
-                Dropped { start } ->
-                    if isOver then
-                        -- drop-area height + 2 * card-margin
-                        [ ( "min-height", toString start.elementBounds.height ++ "px" ) ]
-                    else
-                        []
          ]
             ++ dragEvents
+            ++ (List.map (\( x, y ) -> HA.style x y) <|
+                    case model of
+                        NotDragging ->
+                            []
+
+                        Dragging { start } ->
+                            if isOver then
+                                -- drop-area height + card-margin
+                                [ ( "min-height", String.fromFloat start.elementBounds.height ++ "px" ) ]
+
+                            else
+                                []
+
+                        Dropping { start } ->
+                            if isOver then
+                                -- drop-area height + 2 * card-margin
+                                [ ( "min-height", String.fromFloat start.elementBounds.height ++ "px" ) ]
+
+                            else
+                                []
+
+                        Dropped { start } ->
+                            if isOver then
+                                -- drop-area height + 2 * card-margin
+                                [ ( "min-height", String.fromFloat start.elementBounds.height ++ "px" ) ]
+
+                            else
+                                []
+               )
         )
         [ droppedElement ]
 
@@ -267,5 +267,5 @@ hasNeverLeft model =
 decodeStartState : Html msg -> JD.Decoder (StartState msg)
 decodeStartState view =
     JD.succeed StartState
-        |: JD.field "currentTarget" DOM.boundingClientRect
-        |: JD.succeed view
+        |> andMap (JD.field "currentTarget" DOM.boundingClientRect)
+        |> andMap (JD.succeed view)

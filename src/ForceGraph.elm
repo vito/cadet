@@ -1,18 +1,18 @@
-module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, member, update, tick, isCompleted)
+module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, isCompleted, member, tick, update)
 
+import Force
 import Graph exposing (Graph)
 import Random
-import Visualization.Force as VF
 
 
 type alias ForceGraph n =
     { graph : Graph (ForceNode n) ()
-    , simulation : VF.State Graph.NodeId
+    , simulation : Force.State Graph.NodeId
     }
 
 
 type alias ForceNode n =
-    VF.Entity Graph.NodeId { value : n, size : Float }
+    Force.Entity Graph.NodeId { value : n, size : Float }
 
 
 fromGraph : Graph { value : n, size : Float } () -> ForceGraph n
@@ -29,17 +29,17 @@ fromGraph g =
                             20 + ceiling (tnc.node.label.size + fnc.node.label.size)
 
                         _ ->
-                            Debug.crash "impossible: unknown target"
+                            Debug.todo "impossible: unknown target"
             in
-                { source = from
-                , target = to
-                , distance = toFloat distance
-                , strength = Nothing
-                }
+            { source = from
+            , target = to
+            , distance = toFloat distance
+            , strength = Nothing
+            }
 
         forces =
-            [ VF.customLinks 1 <| List.map link <| Graph.edges graph
-            , VF.manyBodyStrength -200 <| List.map .id <| Graph.nodes graph
+            [ Force.customLinks 1 <| List.map link <| Graph.edges graph
+            , Force.manyBodyStrength -200 <| List.map .id <| Graph.nodes graph
             ]
 
         size =
@@ -48,16 +48,18 @@ fromGraph g =
         iterations =
             if size == 1 then
                 1
+
             else if size < 5 then
                 50
+
             else
                 size * 10
 
         newSimulation =
-            VF.iterations iterations <|
-                VF.simulation forces
+            Force.iterations iterations <|
+                Force.simulation forces
     in
-        computeSimulation { graph = graph, simulation = newSimulation }
+    computeSimulation { graph = graph, simulation = newSimulation }
 
 
 member : Graph.NodeId -> ForceGraph n -> Bool
@@ -73,16 +75,16 @@ update id f fg =
                 (Maybe.map
                     (\nc ->
                         let
-                            node =
+                            ncnode =
                                 nc.node
 
                             label =
-                                node.label
+                                ncnode.label
 
                             value =
                                 label.value
                         in
-                            { nc | node = { node | label = { label | value = f value } } }
+                        { nc | node = { ncnode | label = { label | value = f value } } }
                     )
                 )
                 fg.graph
@@ -92,38 +94,40 @@ update id f fg =
 node : Graph.NodeContext { value : n, size : Float } () -> Graph.NodeContext (ForceNode n) ()
 node nc =
     let
-        node =
+        ncnode =
             nc.node
 
         canvas =
             500
 
         ( x, s2 ) =
-            Random.step (Random.float 0 canvas) (Random.initialSeed node.id)
+            Random.step (Random.float 0 canvas) (Random.initialSeed ncnode.id)
 
         ( y, s3 ) =
             Random.step (Random.float 0 canvas) s2
     in
-        { nc
-            | node =
-                { node
-                    | label =
-                        { x = x
-                        , y = y
-                        , vx = 0.0
-                        , vy = 0.0
-                        , id = node.id
-                        , value = node.label.value
-                        , size = node.label.size
-                        }
-                }
+    { incoming = nc.incoming
+    , outgoing = nc.outgoing
+    , node =
+        { id = ncnode.id
+        , label =
+            { x = x
+            , y = y
+            , vx = 0.0
+            , vy = 0.0
+            , id = ncnode.id
+            , value = ncnode.label.value
+            , size = ncnode.label.size
+            }
         }
+    }
 
 
 computeSimulation : ForceGraph n -> ForceGraph n
 computeSimulation fg =
     if isCompleted fg then
         fg
+
     else
         computeSimulation (tick fg)
 
@@ -132,6 +136,7 @@ simulate : Int -> ForceGraph n -> ForceGraph n
 simulate num fg =
     if num == 0 then
         fg
+
     else
         simulate (num - 1) (tick fg)
 
@@ -140,16 +145,16 @@ tick : ForceGraph n -> ForceGraph n
 tick { graph, simulation } =
     let
         ( newState, list ) =
-            VF.tick simulation (List.map .label (Graph.nodes graph))
+            Force.tick simulation (List.map .label (Graph.nodes graph))
     in
-        { graph = updateGraphWithList graph list
-        , simulation = newState
-        }
+    { graph = updateGraphWithList graph list
+    , simulation = newState
+    }
 
 
 isCompleted : ForceGraph n -> Bool
 isCompleted =
-    .simulation >> VF.isCompleted
+    .simulation >> Force.isCompleted
 
 
 updateGraphWithList : Graph (ForceNode n) () -> List (ForceNode n) -> Graph (ForceNode n) ()
@@ -158,16 +163,16 @@ updateGraphWithList =
         graphUpdater value =
             Maybe.map (\ctx -> updateContextWithValue ctx value)
     in
-        List.foldr (\node -> Graph.update node.id (graphUpdater node))
+    List.foldr (\ncnode -> Graph.update ncnode.id (graphUpdater ncnode))
 
 
 updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceNode n -> Graph.NodeContext (ForceNode n) ()
-updateContextWithValue nodeCtx value =
+updateContextWithValue nc value =
     let
-        node =
-            nodeCtx.node
+        ncnode =
+            nc.node
 
         label =
-            node.label
+            ncnode.label
     in
-        { nodeCtx | node = { node | label = value } }
+    { nc | node = { ncnode | label = value } }
