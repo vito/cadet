@@ -11769,16 +11769,16 @@ var author$project$Main$computeColorIsLight = function (hex) {
 			return _Debug_todo(
 				'Main',
 				{
-					start: {line: 3736, column: 21},
-					end: {line: 3736, column: 31}
+					start: {line: 3749, column: 21},
+					end: {line: 3749, column: 31}
 				})('invalid hex');
 		}
 	} else {
 		return _Debug_todo(
 			'Main',
 			{
-				start: {line: 3739, column: 13},
-				end: {line: 3739, column: 23}
+				start: {line: 3752, column: 13},
+				end: {line: 3752, column: 23}
 			})('invalid hex');
 	}
 };
@@ -14304,8 +14304,8 @@ var author$project$Main$prCircle = F3(
 				return _Debug_todo(
 					'Main',
 					{
-						start: {line: 2889, column: 21},
-						end: {line: 2889, column: 31}
+						start: {line: 2902, column: 21},
+						end: {line: 2902, column: 31}
 					})('impossible');
 			}
 		};
@@ -14574,8 +14574,8 @@ var author$project$Main$reactionFlairArcs = F3(
 					return _Debug_todo(
 						'Main',
 						{
-							start: {line: 3061, column: 21},
-							end: {line: 3061, column: 31}
+							start: {line: 3074, column: 21},
+							end: {line: 3074, column: 31}
 						})('impossible');
 				}
 			});
@@ -16200,6 +16200,7 @@ var author$project$Main$removePullRequestLabel = F3(
 		}
 	});
 var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
+var author$project$Main$BouncePage = {$: 'BouncePage'};
 var author$project$Main$LabelsPage = {$: 'LabelsPage'};
 var author$project$Main$MilestonesPage = {$: 'MilestonesPage'};
 var author$project$Main$ProjectPage = function (a) {
@@ -16369,7 +16370,22 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$PullRequestsPage,
-			elm$url$Url$Parser$s('pull-requests'))
+			elm$url$Url$Parser$s('pull-requests')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('auth'),
+				elm$url$Url$Parser$s('github'))),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			elm$url$Url$Parser$s('auth')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			elm$url$Url$Parser$s('logout'))
 		]));
 var elm_community$json_extra$Json$Encode$Extra$maybe = function (encoder) {
 	return A2(
@@ -16888,32 +16904,42 @@ var author$project$Main$update = F2(
 					var url = msg.a;
 					var _n2 = A2(elm$url$Url$Parser$parse, author$project$Main$routeParser, url);
 					if (_n2.$ === 'Just') {
-						var page = _n2.a;
-						var baseGraphFilter = function () {
-							switch (page.$) {
-								case 'AllProjectsPage':
-									return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-								case 'GlobalGraphPage':
-									return elm$core$Maybe$Nothing;
-								case 'ProjectPage':
-									var name = page.a;
-									return elm$core$Maybe$Just(
-										author$project$Main$InProjectFilter(name));
-								case 'LabelsPage':
-									return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-								case 'MilestonesPage':
-									return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-								default:
-									return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-							}
-						}();
-						return _Utils_Tuple2(
-							author$project$Main$computeGraph(
-								author$project$Main$computeDataView(
-									_Utils_update(
-										model,
-										{baseGraphFilter: baseGraphFilter, page: page}))),
-							elm$core$Platform$Cmd$none);
+						if (_n2.a.$ === 'BouncePage') {
+							var _n3 = _n2.a;
+							return _Utils_Tuple2(
+								model,
+								elm$browser$Browser$Navigation$load(
+									elm$url$Url$toString(url)));
+						} else {
+							var page = _n2.a;
+							var baseGraphFilter = function () {
+								switch (page.$) {
+									case 'AllProjectsPage':
+										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+									case 'GlobalGraphPage':
+										return elm$core$Maybe$Nothing;
+									case 'ProjectPage':
+										var name = page.a;
+										return elm$core$Maybe$Just(
+											author$project$Main$InProjectFilter(name));
+									case 'LabelsPage':
+										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+									case 'MilestonesPage':
+										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+									case 'PullRequestsPage':
+										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+									default:
+										return elm$core$Maybe$Nothing;
+								}
+							}();
+							return _Utils_Tuple2(
+								author$project$Main$computeGraph(
+									author$project$Main$computeDataView(
+										_Utils_update(
+											model,
+											{baseGraphFilter: baseGraphFilter, page: page}))),
+								elm$core$Platform$Cmd$none);
+						}
 					} else {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					}
@@ -16924,9 +16950,9 @@ var author$project$Main$update = F2(
 							{
 								cardGraphs: A2(
 									elm$core$List$map,
-									function (_n4) {
-										var s = _n4.a;
-										var g = _n4.b;
+									function (_n5) {
+										var s = _n5.a;
+										var g = _n5.b;
 										return author$project$ForceGraph$isCompleted(g) ? _Utils_Tuple2(s, g) : _Utils_Tuple2(
 											s,
 											author$project$ForceGraph$tick(g));
@@ -17000,9 +17026,9 @@ var author$project$Main$update = F2(
 					if (msg.b.$ === 'Ok') {
 						var col = msg.a;
 						var content = msg.b.a.content;
-						var _n8 = model.projectDrag;
-						if (_n8.$ === 'Dropped') {
-							var drag = _n8.a;
+						var _n9 = model.projectDrag;
+						if (_n9.$ === 'Dropped') {
+							var drag = _n9.a;
 							var wrapValue = F2(
 								function (f, indexed) {
 									return _Utils_update(
@@ -17012,15 +17038,15 @@ var author$project$Main$update = F2(
 										});
 								});
 							var msourceId = function () {
-								var _n12 = drag.source;
-								if (_n12.$ === 'FromColumnCardSource') {
-									var cs = _n12.a;
+								var _n13 = drag.source;
+								if (_n13.$ === 'FromColumnCardSource') {
+									var cs = _n13.a;
 									return _Utils_eq(cs.columnId, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.columnId);
 								} else {
 									return elm$core$Maybe$Nothing;
 								}
 							}();
-							var _n9 = function () {
+							var _n10 = function () {
 								if (content.$ === 'Just') {
 									if (content.a.$ === 'IssueCardContent') {
 										var issue = content.a.a;
@@ -17061,8 +17087,8 @@ var author$project$Main$update = F2(
 									return _Utils_Tuple2(elm$core$Maybe$Nothing, elm$core$Platform$Cmd$none);
 								}
 							}();
-							var mcontentId = _n9.a;
-							var refreshContent = _n9.b;
+							var mcontentId = _n10.a;
+							var refreshContent = _n10.b;
 							if (msourceId.$ === 'Just') {
 								var sourceId = msourceId.a;
 								return _Utils_Tuple2(
@@ -17126,11 +17152,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n13 = model.projectDragRefresh;
-						if (_n13.$ === 'Nothing') {
+						var _n14 = model.projectDragRefresh;
+						if (_n14.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n13.a;
+							var pdr = _n14.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17160,11 +17186,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n14 = model.projectDragRefresh;
-						if (_n14.$ === 'Nothing') {
+						var _n15 = model.projectDragRefresh;
+						if (_n15.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n14.a;
+							var pdr = _n15.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17194,11 +17220,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n15 = model.projectDragRefresh;
-						if (_n15.$ === 'Nothing') {
+						var _n16 = model.projectDragRefresh;
+						if (_n16.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n15.a;
+							var pdr = _n16.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17261,7 +17287,7 @@ var author$project$Main$update = F2(
 					var cardsByTitle = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n20, card) {
+							function (_n21, card) {
 								return A2(
 									elm$core$Dict$insert,
 									elm$core$String$toLower(card.title),
@@ -17269,12 +17295,12 @@ var author$project$Main$update = F2(
 							}),
 						elm$core$Dict$empty,
 						model.allCards);
-					var _n16 = A2(
+					var _n17 = A2(
 						elm$core$List$partition,
 						elm$core$String$contains(':'),
 						tokens);
-					var filterTokens = _n16.a;
-					var rest = _n16.b;
+					var filterTokens = _n17.a;
+					var rest = _n17.b;
 					var filters = A2(
 						elm$core$List$map,
 						elm$core$String$split(':'),
@@ -17288,8 +17314,8 @@ var author$project$Main$update = F2(
 							}(
 								function (filter) {
 									if (((filter.b && (filter.a === 'label')) && filter.b.b) && (!filter.b.b.b)) {
-										var _n19 = filter.b;
-										var name = _n19.a;
+										var _n20 = filter.b;
+										var name = _n20.a;
 										return A3(author$project$Main$hasLabel, model, name, card);
 									} else {
 										return false;
@@ -17299,7 +17325,7 @@ var author$project$Main$update = F2(
 					var foundCards = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n17, card) {
+							function (_n18, card) {
 								return elm$core$Set$insert(card.id);
 							}),
 						elm$core$Set$empty,
@@ -17415,20 +17441,20 @@ var author$project$Main$update = F2(
 								if (_Utils_cmp(index, model.dataIndex) > 0) {
 									var prCards = A2(
 										elm$core$Dict$map,
-										function (_n25) {
+										function (_n26) {
 											return author$project$Main$prCard;
 										},
 										value.prs);
 									var issueCards = A2(
 										elm$core$Dict$map,
-										function (_n24) {
+										function (_n25) {
 											return author$project$Main$issueCard;
 										},
 										value.issues);
 									var allLabels = A3(
 										elm$core$Dict$foldl,
 										F3(
-											function (_n23, r, ls) {
+											function (_n24, r, ls) {
 												return A3(
 													elm$core$List$foldl,
 													function (l) {
@@ -17442,8 +17468,8 @@ var author$project$Main$update = F2(
 									var colorLightnessCache = A3(
 										elm$core$Dict$foldl,
 										F3(
-											function (_n21, _n22, cache) {
-												var color = _n22.color;
+											function (_n22, _n23, cache) {
+												var color = _n23.color;
 												return A3(
 													elm$core$Dict$insert,
 													color,
@@ -17489,8 +17515,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n26, r, acc) {
-								var _n27 = A2(
+							function (_n27, r, acc) {
+								var _n28 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -17499,13 +17525,13 @@ var author$project$Main$update = F2(
 											return $.name;
 										}),
 									r.labels);
-								if (!_n27.b) {
+								if (!_n28.b) {
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _n27.a;
+									var label = _n28.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Main$updateLabel, model, r, label, newLabel),
@@ -17546,15 +17572,15 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n28, r, acc) {
-								var _n29 = A2(
+							function (_n29, r, acc) {
+								var _n30 = A2(
 									elm$core$List$filter,
 									author$project$Main$matchesLabel(label),
 									r.labels);
-								if (!_n29.b) {
+								if (!_n30.b) {
 									return acc;
 								} else {
-									var repoLabel = _n29.a;
+									var repoLabel = _n30.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$deleteLabel, model, r, repoLabel),
@@ -17627,7 +17653,7 @@ var author$project$Main$update = F2(
 								editingLabels: A2(
 									elm$core$Dict$map,
 									F2(
-										function (_n30, label) {
+										function (_n31, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -17641,14 +17667,14 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _n31 = A2(
+					var _n32 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_n31.$ === 'Nothing') {
+					if (_n32.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n31.a;
+						var newLabel = _n32.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17663,24 +17689,24 @@ var author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _n32 = A2(
+					var _n33 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_n32.$ === 'Nothing') {
+					if (_n33.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n32.a;
+						var newLabel = _n33.a;
 						var cmds = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n33, r, acc) {
-									var _n34 = A2(
+								function (_n34, r, acc) {
+									var _n35 = A2(
 										elm$core$List$filter,
 										author$project$Main$matchesLabel(oldLabel),
 										r.labels);
-									if (_n34.b) {
-										var repoLabel = _n34.a;
+									if (_n35.b) {
+										var repoLabel = _n35.a;
 										return A2(
 											elm$core$List$cons,
 											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
@@ -17773,8 +17799,8 @@ var author$project$Main$update = F2(
 						var colorLightnessCache = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n35, _n36, cache) {
-									var color = _n36.color;
+								function (_n36, _n37, cache) {
+									var color = _n37.color;
 									return A3(
 										elm$core$Dict$insert,
 										color,
@@ -17810,9 +17836,9 @@ var author$project$Main$update = F2(
 					}
 				case 'PauseCard':
 					var card = msg.a;
-					var _n37 = card.content;
-					if (_n37.$ === 'IssueCardContent') {
-						var issue = _n37.a;
+					var _n38 = card.content;
+					if (_n38.$ === 'IssueCardContent') {
+						var issue = _n38.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -17822,7 +17848,7 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									['paused'])));
 					} else {
-						var pr = _n37.a;
+						var pr = _n38.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -17834,14 +17860,14 @@ var author$project$Main$update = F2(
 					}
 				case 'UnpauseCard':
 					var card = msg.a;
-					var _n38 = card.content;
-					if (_n38.$ === 'IssueCardContent') {
-						var issue = _n38.a;
+					var _n39 = card.content;
+					if (_n39.$ === 'IssueCardContent') {
+						var issue = _n39.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removeIssueLabel, model, issue, 'paused'));
 					} else {
-						var pr = _n38.a;
+						var pr = _n39.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, 'paused'));
@@ -17851,7 +17877,7 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n39, r, acc) {
+							function (_n40, r, acc) {
 								return A2(
 									elm$core$List$any,
 									A2(
@@ -17875,8 +17901,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n40, r, acc) {
-								var _n41 = A2(
+							function (_n41, r, acc) {
+								var _n42 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -17885,8 +17911,8 @@ var author$project$Main$update = F2(
 											return $.title;
 										}),
 									r.milestones);
-								if (_n41.b) {
-									var m = _n41.a;
+								if (_n42.b) {
+									var m = _n42.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$closeMilestone, model, r, m),
@@ -17905,8 +17931,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n42, r, acc) {
-								var _n43 = A2(
+							function (_n43, r, acc) {
+								var _n44 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -17915,8 +17941,8 @@ var author$project$Main$update = F2(
 											return $.title;
 										}),
 									r.milestones);
-								if (_n43.b) {
-									var m = _n43.a;
+								if (_n44.b) {
+									var m = _n44.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$deleteMilestone, model, r, m),
@@ -17956,11 +17982,11 @@ var author$project$Main$update = F2(
 							{newMilestoneName: name}),
 						elm$core$Platform$Cmd$none);
 				case 'CreateMilestone':
-					var _n44 = model.newMilestoneName;
-					if (_n44 === '') {
+					var _n45 = model.newMilestoneName;
+					if (_n45 === '') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var name = _n44;
+						var name = _n45;
 						var $temp$msg = author$project$Main$MirrorMilestone(name),
 							$temp$model = model;
 						msg = $temp$msg;
@@ -17971,12 +17997,12 @@ var author$project$Main$update = F2(
 					var card = msg.a;
 					var mtitle = msg.b;
 					var set = function () {
-						var _n48 = card.content;
-						if (_n48.$ === 'IssueCardContent') {
-							var issue = _n48.a;
+						var _n49 = card.content;
+						if (_n49.$ === 'IssueCardContent') {
+							var issue = _n49.a;
 							return A2(author$project$Main$setIssueMilestone, model, issue);
 						} else {
-							var pr = _n48.a;
+							var pr = _n49.a;
 							return A2(author$project$Main$setPRMilestone, model, pr);
 						}
 					}();
@@ -17986,10 +18012,10 @@ var author$project$Main$update = F2(
 							set(elm$core$Maybe$Nothing));
 					} else {
 						var title = mtitle.a;
-						var _n46 = A2(elm$core$Dict$get, card.repo.id, model.data.repos);
-						if (_n46.$ === 'Just') {
-							var repo = _n46.a;
-							var _n47 = A2(
+						var _n47 = A2(elm$core$Dict$get, card.repo.id, model.data.repos);
+						if (_n47.$ === 'Just') {
+							var repo = _n47.a;
+							var _n48 = A2(
 								elm$core$List$filter,
 								A2(
 									elm$core$Basics$composeL,
@@ -17998,8 +18024,8 @@ var author$project$Main$update = F2(
 										return $.title;
 									}),
 								repo.milestones);
-							if (_n47.b) {
-								var milestone = _n47.a;
+							if (_n48.b) {
+								var milestone = _n48.a;
 								return _Utils_Tuple2(
 									model,
 									set(
@@ -18213,25 +18239,25 @@ var author$project$Main$update = F2(
 							return A2(elm$core$Dict$get, a, model.allCards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n49 = A2(
+					var _n50 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n49.a;
-					var removePairs = _n49.b;
+					var addPairs = _n50.a;
+					var removePairs = _n50.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n51 = card.content;
-							if (_n51.$ === 'IssueCardContent') {
-								var issue = _n51.a;
+							var _n52 = card.content;
+							if (_n52.$ === 'IssueCardContent') {
+								var issue = _n52.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n51.a;
+								var pr = _n52.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -18244,13 +18270,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n50 = card.content;
-										if (_n50.$ === 'IssueCardContent') {
-											var issue = _n50.a;
+										var _n51 = card.content;
+										if (_n51.$ === 'IssueCardContent') {
+											var issue = _n51.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n50.a;
+											var pr = _n51.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -22107,8 +22133,10 @@ var author$project$Main$viewPage = function (model) {
 										return author$project$Main$viewLabelsPage(model);
 									case 'MilestonesPage':
 										return author$project$Main$viewMilestonesPage(model);
-									default:
+									case 'PullRequestsPage':
 										return author$project$Main$viewPullRequestsPage(model);
+									default:
+										return elm$html$Html$text('you shouldn\'t see this');
 								}
 							}()
 							])),

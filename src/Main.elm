@@ -255,6 +255,7 @@ type Page
     | LabelsPage
     | MilestonesPage
     | PullRequestsPage
+    | BouncePage
 
 
 detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
@@ -333,6 +334,9 @@ routeParser =
         , UP.map LabelsPage (UP.s "labels")
         , UP.map MilestonesPage (UP.s "milestones")
         , UP.map PullRequestsPage (UP.s "pull-requests")
+        , UP.map BouncePage (UP.s "auth" </> UP.s "github")
+        , UP.map BouncePage (UP.s "auth")
+        , UP.map BouncePage (UP.s "logout")
         ]
 
 
@@ -368,52 +372,51 @@ type alias Node a =
 
 init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
 init config url key =
-  let
-      model =
-        { key = key
-        , config = config
-        , page = GlobalGraphPage
-        , me = Nothing
-        , data = Backend.emptyData
-        , dataIndex = 0
-        , dataView =
-              { cardsByMilestone = Dict.empty
-              , allMilestones = []
-              , nextMilestoneCards = []
-              , reposByLabel = Dict.empty
-              , prsByRepo = Dict.empty
-              }
-        , allCards = Dict.empty
-        , allLabels = Dict.empty
-        , colorLightnessCache = Dict.empty
-        , cardSearch = ""
-        , selectedCards = OrderedSet.empty
-        , anticipatedCards = Set.empty
-        , highlightedCard = Nothing
-        , highlightedNode = Nothing
-        , currentTime = Time.millisToPosix config.initialTime
-        , cardGraphs = []
-        , baseGraphFilter = Nothing
-        , graphFilters = []
-        , graphSort = ImpactSort
-        , projectDrag = Drag.init
-        , projectDragRefresh = Nothing
-        , milestoneDrag = Drag.init
-        , deletingLabels = Set.empty
-        , editingLabels = Dict.empty
-        , newLabel = { name = "", color = "ffffff" }
-        , newLabelColored = False
-        , newMilestoneName = ""
-        , showLabelFilters = False
-        , labelSearch = ""
-        , showLabelOperations = False
-        , cardLabelOperations = Dict.empty
-        }
+    let
+        model =
+            { key = key
+            , config = config
+            , page = GlobalGraphPage
+            , me = Nothing
+            , data = Backend.emptyData
+            , dataIndex = 0
+            , dataView =
+                { cardsByMilestone = Dict.empty
+                , allMilestones = []
+                , nextMilestoneCards = []
+                , reposByLabel = Dict.empty
+                , prsByRepo = Dict.empty
+                }
+            , allCards = Dict.empty
+            , allLabels = Dict.empty
+            , colorLightnessCache = Dict.empty
+            , cardSearch = ""
+            , selectedCards = OrderedSet.empty
+            , anticipatedCards = Set.empty
+            , highlightedCard = Nothing
+            , highlightedNode = Nothing
+            , currentTime = Time.millisToPosix config.initialTime
+            , cardGraphs = []
+            , baseGraphFilter = Nothing
+            , graphFilters = []
+            , graphSort = ImpactSort
+            , projectDrag = Drag.init
+            , projectDragRefresh = Nothing
+            , milestoneDrag = Drag.init
+            , deletingLabels = Set.empty
+            , editingLabels = Dict.empty
+            , newLabel = { name = "", color = "ffffff" }
+            , newLabelColored = False
+            , newMilestoneName = ""
+            , showLabelFilters = False
+            , labelSearch = ""
+            , showLabelOperations = False
+            , cardLabelOperations = Dict.empty
+            }
 
-      (navedModel, navedMsgs) =
-        update (UrlChanged url) model
-  in
-
+        ( navedModel, navedMsgs ) =
+            update (UrlChanged url) model
+    in
     ( navedModel
     , Cmd.batch
         [ Backend.fetchData DataFetched
@@ -451,6 +454,9 @@ update msg model =
 
         UrlChanged url ->
             case UP.parse routeParser url of
+                Just BouncePage ->
+                    ( model, Nav.load (Url.toString url) )
+
                 Just page ->
                     let
                         baseGraphFilter =
@@ -472,6 +478,9 @@ update msg model =
 
                                 PullRequestsPage ->
                                     Just ExcludeAllFilter
+
+                                BouncePage ->
+                                    Nothing
                     in
                     ( computeGraph <|
                         computeDataView
@@ -483,6 +492,7 @@ update msg model =
                     )
 
                 Nothing ->
+                    -- 404 would be nice
                     ( model, Cmd.none )
 
         Tick _ ->
@@ -1556,6 +1566,9 @@ viewPage model =
 
                     PullRequestsPage ->
                         viewPullRequestsPage model
+
+                    BouncePage ->
+                        Html.text "you shouldn't see this"
                 ]
             , Html.div
                 [ HA.classList
