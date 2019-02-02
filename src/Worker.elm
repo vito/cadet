@@ -1,10 +1,11 @@
-port module Main exposing (Flags, Model, Msg(..), backOff, decodeAffectedColumnIds, decodeAndFetchIssueOrPR, decodeAndFetchPRForCommit, decodeAndFetchRepo, decodeIssueOrPRSelector, decodeRepoSelector, eventActor, fetchCards, fetchIssue, fetchIssueTimeline, fetchIssues, fetchPRTimelineAndReviews, fetchProjects, fetchPullRequest, fetchPullRequests, fetchRepo, fetchRepoIssue, fetchRepoIssueOrPR, fetchRepoPullRequest, fetchRepos, hook, init, log, main, maybeOr, refresh, setActors, setCards, setIssue, setIssues, setProjects, setPullRequest, setPullRequests, setReferences, setRepo, setRepos, setReviewers, subscriptions, update)
+port module Main exposing (main)
 
 import Backend
 import Dict exposing (Dict)
 import GitHubGraph
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
+import Log
 import Platform
 import Task
 import Time
@@ -149,7 +150,7 @@ update msg model =
                 ( model, Cmd.none )
 
             else
-                log "retrying failed fetches" (List.length model.failedQueue) <|
+                Log.debug "retrying failed fetches" (List.length model.failedQueue) <|
                     ( { model
                         | failedQueue = []
                         , loadQueue = model.failedQueue ++ model.loadQueue
@@ -175,50 +176,50 @@ update msg model =
             ( model, fetchPullRequest model id )
 
         RefreshRequested field id ->
-            log "cannot refresh" ( field, id ) <|
+            Log.debug "cannot refresh" ( field, id ) <|
                 ( model, Cmd.none )
 
         HookReceived "label" payload ->
-            log "label hook received; refreshing repo" () <|
+            Log.debug "label hook received; refreshing repo" () <|
                 ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "issues" payload ->
-            log "issue hook received; refreshing issue and timeline" () <|
+            Log.debug "issue hook received; refreshing issue and timeline" () <|
                 ( decodeAndFetchIssueOrPR "issue" payload fetchRepoIssue model, Cmd.none )
 
         HookReceived "issue_comment" payload ->
-            log "issue_comment hook received; refreshing issue and timeline" () <|
+            Log.debug "issue_comment hook received; refreshing issue and timeline" () <|
                 ( decodeAndFetchIssueOrPR "issue" payload fetchRepoIssueOrPR model, Cmd.none )
 
         HookReceived "pull_request" payload ->
-            log "pull_request hook received; refreshing pr and timeline" () <|
+            Log.debug "pull_request hook received; refreshing pr and timeline" () <|
                 ( decodeAndFetchIssueOrPR "pull_request" payload fetchRepoPullRequest model, Cmd.none )
 
         HookReceived "pull_request_review" payload ->
-            log "pull_request_review hook received; refreshing pr and timeline" () <|
+            Log.debug "pull_request_review hook received; refreshing pr and timeline" () <|
                 ( decodeAndFetchIssueOrPR "pull_request" payload fetchRepoPullRequest model, Cmd.none )
 
         HookReceived "pull_request_review_comment" payload ->
-            log "pull_request_review_comment hook received; refreshing pr and timeline" () <|
+            Log.debug "pull_request_review_comment hook received; refreshing pr and timeline" () <|
                 ( decodeAndFetchIssueOrPR "pull_request" payload fetchRepoPullRequest model, Cmd.none )
 
         HookReceived "milestone" payload ->
-            log "milestone hook received; refreshing repo" () <|
+            Log.debug "milestone hook received; refreshing repo" () <|
                 ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "project" payload ->
-            log "project hook received; refreshing projects" () <|
+            Log.debug "project hook received; refreshing projects" () <|
                 ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
 
         HookReceived "project_column" payload ->
-            log "project_column hook received; refreshing projects" () <|
+            Log.debug "project_column hook received; refreshing projects" () <|
                 ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
 
         HookReceived "project_card" payload ->
-            log "project_card hook received; refreshing projects and cards" () <|
+            Log.debug "project_card hook received; refreshing projects and cards" () <|
                 case JD.decodeValue decodeAffectedColumnIds payload of
                     Err err ->
-                        log "failed to decode column ids" err <|
+                        Log.debug "failed to decode column ids" err <|
                             ( model, Cmd.none )
 
                     Ok ids ->
@@ -232,19 +233,19 @@ update msg model =
                         )
 
         HookReceived "repository" payload ->
-            log "repository hook received; refreshing repo" () <|
+            Log.debug "repository hook received; refreshing repo" () <|
                 ( decodeAndFetchRepo payload model, Cmd.none )
 
         HookReceived "status" payload ->
-            log "status hook received; refreshing associated pr" () <|
+            Log.debug "status hook received; refreshing associated pr" () <|
                 ( decodeAndFetchPRForCommit payload model, Cmd.none )
 
         HookReceived event payload ->
-            log "hook received" ( event, payload ) <|
+            Log.debug "hook received" ( event, payload ) <|
                 ( model, Cmd.none )
 
         RepositoriesFetched (Ok repos) ->
-            log "repositories fetched" (List.map .name repos) <|
+            Log.debug "repositories fetched" (List.map .name repos) <|
                 let
                     activeRepos =
                         List.filter (not << .isArchived) repos
@@ -259,19 +260,19 @@ update msg model =
                 )
 
         RepositoriesFetched (Err err) ->
-            log "failed to fetch repos" err <|
+            Log.debug "failed to fetch repos" err <|
                 backOff model (fetchRepos model)
 
         RepositoryFetched (Ok repo) ->
-            log "repository fetched" repo.name <|
+            Log.debug "repository fetched" repo.name <|
                 ( model, setRepo (GitHubGraph.encodeRepo repo) )
 
         RepositoryFetched (Err err) ->
-            log "failed to fetch repos" err <|
+            Log.debug "failed to fetch repos" err <|
                 ( model, Cmd.none )
 
         ProjectsFetched nextMsg (Ok projects) ->
-            log "projects fetched" (List.map .name projects) <|
+            Log.debug "projects fetched" (List.map .name projects) <|
                 let
                     ( next, cmd ) =
                         update (nextMsg projects) { model | projects = projects }
@@ -283,20 +284,20 @@ update msg model =
                 )
 
         ProjectsFetched nextMsg (Err err) ->
-            log "failed to fetch projects" err <|
+            Log.debug "failed to fetch projects" err <|
                 backOff model (fetchProjects model nextMsg)
 
         FetchCards projects ->
             ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue }, Cmd.none )
 
         CardsFetched colId (Ok cards) ->
-            log "cards fetched for" colId <|
+            Log.debug "cards fetched for" colId <|
                 ( model
                 , setCards ( colId, List.map GitHubGraph.encodeProjectColumnCard cards )
                 )
 
         CardsFetched colId (Err err) ->
-            log "failed to fetch cards" ( colId, err ) <|
+            Log.debug "failed to fetch cards" ( colId, err ) <|
                 backOff model (fetchCards model colId)
 
         IssuesFetched repo (Ok issues) ->
@@ -306,23 +307,23 @@ update msg model =
                         |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
                         |> List.map (fetchIssueTimeline model << .id)
             in
-            log "issues fetched for" repo.url <|
+            Log.debug "issues fetched for" repo.url <|
                 ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
                 , setIssues (List.map GitHubGraph.encodeIssue issues)
                 )
 
         IssuesFetched repo (Err err) ->
-            log "failed to fetch issues" ( repo.url, err ) <|
+            Log.debug "failed to fetch issues" ( repo.url, err ) <|
                 backOff model (fetchIssues model repo)
 
         IssueFetched (Ok issue) ->
-            log "issue fetched" issue.url <|
+            Log.debug "issue fetched" issue.url <|
                 ( { model | loadQueue = fetchIssueTimeline model issue.id :: model.loadQueue }
                 , setIssue (GitHubGraph.encodeIssue issue)
                 )
 
         IssueFetched (Err err) ->
-            log "failed to fetch issue" err <|
+            Log.debug "failed to fetch issue" err <|
                 ( model, Cmd.none )
 
         PullRequestsFetched repo (Ok prs) ->
@@ -346,17 +347,17 @@ update msg model =
                         model.commitPRs
                         openPRs
             in
-            log "prs fetched for" repo.url <|
+            Log.debug "prs fetched for" repo.url <|
                 ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
                 , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
                 )
 
         PullRequestsFetched repo (Err err) ->
-            log "failed to fetch prs" ( repo.url, err ) <|
+            Log.debug "failed to fetch prs" ( repo.url, err ) <|
                 backOff model (fetchPullRequests model repo)
 
         PullRequestFetched (Ok pr) ->
-            log "pr fetched" pr.url <|
+            Log.debug "pr fetched" pr.url <|
                 ( { model
                     | commitPRs =
                         case pr.lastCommit of
@@ -371,7 +372,7 @@ update msg model =
                 )
 
         PullRequestFetched (Err err) ->
-            log "failed to fetch pr" err <|
+            Log.debug "failed to fetch pr" err <|
                 ( model, Cmd.none )
 
         IssueTimelineFetched id (Ok timeline) ->
@@ -390,7 +391,7 @@ update msg model =
                 actors =
                     List.map Backend.encodeEventActor (List.filterMap eventActor timeline)
             in
-            log "timeline fetched for" id <|
+            Log.debug "timeline fetched for" id <|
                 ( model
                 , Cmd.batch
                     [ setReferences ( id, edges )
@@ -399,7 +400,7 @@ update msg model =
                 )
 
         IssueTimelineFetched id (Err err) ->
-            log "failed to fetch timeline" ( id, err ) <|
+            Log.debug "failed to fetch timeline" ( id, err ) <|
                 backOff model (fetchIssueTimeline model id)
 
         PullRequestTimelineAndReviewsFetched id (Ok ( timeline, reviews )) ->
@@ -452,7 +453,7 @@ update msg model =
                         |> Dict.values
                         |> List.map GitHubGraph.encodePullRequestReview
             in
-            log "timeline and reviews fetched for" id <|
+            Log.debug "timeline and reviews fetched for" id <|
                 ( model
                 , Cmd.batch
                     [ setReferences ( id, edges )
@@ -462,7 +463,7 @@ update msg model =
                 )
 
         PullRequestTimelineAndReviewsFetched id (Err err) ->
-            log "failed to fetch timeline and reviews" ( id, err ) <|
+            Log.debug "failed to fetch timeline and reviews" ( id, err ) <|
                 backOff model (fetchPRTimelineAndReviews model id)
 
 
@@ -551,7 +552,7 @@ decodeAndFetchRepo payload model =
             { model | loadQueue = fetchRepo model sel :: model.loadQueue }
 
         Err err ->
-            log "failed to decode repo" ( err, payload ) <|
+            Log.debug "failed to decode repo" ( err, payload ) <|
                 model
 
 
@@ -561,15 +562,15 @@ decodeAndFetchPRForCommit payload model =
         Ok sha ->
             case Dict.get sha model.commitPRs of
                 Just id ->
-                    log "refreshing pr for commit" ( sha, id ) <|
+                    Log.debug "refreshing pr for commit" ( sha, id ) <|
                         { model | loadQueue = fetchPullRequest model id :: model.loadQueue }
 
                 Nothing ->
-                    log "no associated pr to refresh" sha <|
+                    Log.debug "no associated pr to refresh" sha <|
                         model
 
         Err err ->
-            log "failed to decode sha" ( err, payload ) <|
+            Log.debug "failed to decode sha" ( err, payload ) <|
                 model
 
 
@@ -580,7 +581,7 @@ decodeAndFetchIssueOrPR field payload fetch model =
             { model | loadQueue = fetch model sel :: model.loadQueue }
 
         Err err ->
-            log "failed to decode issue or PR" ( err, field, payload ) <|
+            Log.debug "failed to decode issue or PR" ( err, field, payload ) <|
                 model
 
 
@@ -611,11 +612,6 @@ fetchPRTimelineAndReviews model id =
                     |> Task.map (\b -> ( timeline, b ))
             )
         |> Task.attempt (PullRequestTimelineAndReviewsFetched id)
-
-
-log : String -> a -> b -> b
-log msg val =
-    \a -> always a (Debug.log msg val)
 
 
 decodeRepoSelector : JD.Decoder GitHubGraph.RepoSelector

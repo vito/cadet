@@ -29,7 +29,7 @@ fromGraph g =
                             20 + ceiling (tnc.node.label.size + fnc.node.label.size)
 
                         _ ->
-                            Debug.todo "impossible: unknown target"
+                            0
             in
             { source = from
             , target = to

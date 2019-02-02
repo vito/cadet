@@ -4,7 +4,6 @@ import Backend exposing (Data, Me)
 import Browser
 import Browser.Events
 import Browser.Navigation as Nav
-import Debug
 import Dict exposing (Dict)
 import Drag
 import ForceGraph as FG exposing (ForceGraph)
@@ -17,6 +16,7 @@ import Html.Events as HE
 import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
+import Log
 import Markdown
 import OrderedSet exposing (OrderedSet)
 import ParseInt
@@ -634,7 +634,7 @@ update msg model =
                     ( model, Cmd.none )
 
         CardMoved col (Err err) ->
-            (\a -> always a (Debug.log "failed to move card" err)) <|
+            Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
 
         CardDropContentRefreshed (Ok { index, value }) ->
@@ -652,7 +652,7 @@ update msg model =
                     )
 
         CardDropContentRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh card" err)) <|
+            Log.debug "failed to refresh card" err <|
                 ( model, Cmd.none )
 
         CardDropSourceRefreshed (Ok { index, value }) ->
@@ -670,7 +670,7 @@ update msg model =
                     )
 
         CardDropSourceRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh card" err)) <|
+            Log.debug "failed to refresh card" err <|
                 ( model, Cmd.none )
 
         CardDropTargetRefreshed (Ok { index, value }) ->
@@ -688,7 +688,7 @@ update msg model =
                     )
 
         CardDropTargetRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh card" err)) <|
+            Log.debug "failed to refresh card" err <|
                 ( model, Cmd.none )
 
         CardsRefreshed col (Ok { index, value }) ->
@@ -702,7 +702,7 @@ update msg model =
             ( computeDataView { model | data = newData, dataIndex = max index model.dataIndex }, Cmd.none )
 
         CardsRefreshed col (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh cards" err)) <|
+            Log.debug "failed to refresh cards" err <|
                 ( model, Cmd.none )
 
         SearchCards str ->
@@ -808,7 +808,7 @@ update msg model =
             ( computeGraphState { model | me = me }, Cmd.none )
 
         MeFetched (Err err) ->
-            (\a -> always a (Debug.log "error fetching self" err)) <|
+            Log.debug "error fetching self" err <|
                 ( model, Cmd.none )
 
         DataFetched (Ok { index, value }) ->
@@ -846,13 +846,13 @@ update msg model =
                             }
 
               else
-                (\a -> always a (Debug.log "ignoring stale index" ( index, model.dataIndex ))) <|
+                Log.debug "ignoring stale index" ( index, model.dataIndex ) <|
                     model
             , Backend.pollData DataFetched
             )
 
         DataFetched (Err err) ->
-            (\a -> always a (Debug.log "error fetching data" err)) <|
+            Log.debug "error fetching data" err <|
                 ( model, Backend.pollData DataFetched )
 
         MirrorLabel newLabel ->
@@ -1003,7 +1003,7 @@ update msg model =
             ( model, Backend.refreshRepo repoSel RepoRefreshed )
 
         LabelChanged repo (Err err) ->
-            (\a -> always a (Debug.log "failed to modify labels" err)) <|
+            Log.debug "failed to modify labels" err <|
                 ( model, Cmd.none )
 
         RepoRefreshed (Ok { index, value }) ->
@@ -1033,7 +1033,7 @@ update msg model =
             )
 
         RepoRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh repo" err)) <|
+            Log.debug "failed to refresh repo" err <|
                 ( model, Cmd.none )
 
         PauseCard card ->
@@ -1110,7 +1110,7 @@ update msg model =
             ( model, Backend.refreshRepo repoSel RepoRefreshed )
 
         MilestoneChanged repo (Err err) ->
-            (\a -> always a (Debug.log "failed to modify labels" err)) <|
+            Log.debug "failed to modify labels" err <|
                 ( model, Cmd.none )
 
         SetNewMilestoneName name ->
@@ -1157,14 +1157,14 @@ update msg model =
             )
 
         IssueMilestoned issue (Err err) ->
-            (\a -> always a (Debug.log "failed to change milestone" err)) <|
+            Log.debug "failed to change milestone" err <|
                 ( model, Cmd.none )
 
         DataChanged cb (Ok ()) ->
             ( model, cb )
 
         DataChanged cb (Err err) ->
-            (\a -> always a (Debug.log "failed to change data" err)) <|
+            Log.debug "failed to change data" err <|
                 ( model, Cmd.none )
 
         RefreshIssue id ->
@@ -1181,7 +1181,7 @@ update msg model =
             )
 
         IssueRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh issue" err)) <|
+            Log.debug "failed to refresh issue" err <|
                 ( model, Cmd.none )
 
         PullRequestMilestoned pr (Ok ()) ->
@@ -1190,7 +1190,7 @@ update msg model =
             )
 
         PullRequestMilestoned pr (Err err) ->
-            (\a -> always a (Debug.log "failed to change milestone" err)) <|
+            Log.debug "failed to change milestone" err <|
                 ( model, Cmd.none )
 
         RefreshPullRequest id ->
@@ -1207,7 +1207,7 @@ update msg model =
             )
 
         PullRequestRefreshed (Err err) ->
-            (\a -> always a (Debug.log "failed to refresh pr" err)) <|
+            Log.debug "failed to refresh pr" err <|
                 ( model, Cmd.none )
 
         AddFilter filter ->
@@ -2415,10 +2415,12 @@ viewProjectColumnCard model project col ghCard =
                     ]
 
                 Nothing ->
-                    always [] (Debug.log "impossible: content has no card" contentId)
+                    Log.debug "impossible: content has no card" contentId <|
+                        []
 
         _ ->
-            always [] (Debug.log "impossible?: card has no note or content" ghCard)
+            Log.debug "impossible?: card has no note or content" ghCard <|
+                []
 
 
 viewProjectPage : Model -> String -> Html Msg
@@ -2899,7 +2901,9 @@ prCircle pr card context =
                     s
 
                 _ ->
-                    Debug.todo "impossible"
+                    Log.debug "impossible: empty segments"
+                        ( i, segments )
+                        emptyArc
     in
     Svg.g [] <|
         (\a -> List.indexedMap a flairs) <|
@@ -3071,7 +3075,9 @@ reactionFlairArcs reviews card context =
                     s
 
                 _ ->
-                    Debug.todo "impossible"
+                    Log.debug "impossible: empty segments"
+                        ( i, segments )
+                        emptyArc
     in
     (\a -> List.indexedMap a flairs) <|
         \i (( content, class, count ) as reaction) ->
@@ -3726,7 +3732,7 @@ colorIsLight model hex =
             res
 
         Nothing ->
-            computeColorIsLight (Debug.log "color lightness cache miss" hex)
+            computeColorIsLight (Log.debug "color lightness cache miss" hex hex)
 
 
 computeColorIsLight : String -> Bool
@@ -3746,10 +3752,12 @@ computeColorIsLight hex =
                         False
 
                 _ ->
-                    Debug.todo "invalid hex"
+                    Log.debug "invalid hex" hex <|
+                        False
 
         _ ->
-            Debug.todo "invalid hex"
+            Log.debug "invalid hex" hex <|
+                False
 
 
 viewLabel : Model -> GitHubGraph.ID -> Html Msg
@@ -4139,3 +4147,15 @@ finishProjectDragRefresh model =
 
                 _ ->
                     model
+
+
+emptyArc : Shape.Arc
+emptyArc =
+    { startAngle = 0
+    , endAngle = 0
+    , padAngle = 0
+    , innerRadius = 0
+    , outerRadius = 0
+    , cornerRadius = 0
+    , padRadius = 0
+    }
