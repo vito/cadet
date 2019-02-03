@@ -32,7 +32,7 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
-port setComparison : ( GitHubGraph.ID, GitHubGraph.V3Comparison ) -> Cmd msg
+port setComparison : ( GitHubGraph.ID, JD.Value) -> Cmd msg
 
 
 port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
@@ -364,7 +364,7 @@ update msg model =
         ComparisonFetched repo (Ok comparison) ->
             Log.debug "comparison fetched for" repo.url <|
                 ( model
-                , setComparison ( repo.id, comparison )
+                , setComparison ( repo.id, GitHubGraph.encodeV3Comparison comparison )
                 )
 
         PullRequestsFetched repo (Err err) ->

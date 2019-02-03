@@ -4169,6 +4169,66 @@ var author$project$GitHubGraph$encodeRepo = function (record) {
 				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeRelease, record.releases))
 			]));
 };
+var author$project$GitHubGraph$encodeV3Commit = function (record) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'url',
+				elm$json$Json$Encode$string(record.url)),
+				_Utils_Tuple2(
+				'sha',
+				elm$json$Json$Encode$string(record.sha))
+			]));
+};
+var author$project$GitHubGraph$encodeV3File = function (record) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'sha',
+				elm$json$Json$Encode$string(record.sha)),
+				_Utils_Tuple2(
+				'filename',
+				elm$json$Json$Encode$string(record.filename)),
+				_Utils_Tuple2(
+				'status',
+				elm$json$Json$Encode$string(record.status))
+			]));
+};
+var author$project$GitHubGraph$encodeV3Comparison = function (record) {
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'url',
+				elm$json$Json$Encode$string(record.url)),
+				_Utils_Tuple2(
+				'status',
+				elm$json$Json$Encode$string(record.status)),
+				_Utils_Tuple2(
+				'base_commit',
+				author$project$GitHubGraph$encodeV3Commit(record.baseCommit)),
+				_Utils_Tuple2(
+				'merge_base_commit',
+				author$project$GitHubGraph$encodeV3Commit(record.mergeBaseCommit)),
+				_Utils_Tuple2(
+				'ahead_by',
+				elm$json$Json$Encode$int(record.aheadBy)),
+				_Utils_Tuple2(
+				'behind_by',
+				elm$json$Json$Encode$int(record.behindBy)),
+				_Utils_Tuple2(
+				'total_commits',
+				elm$json$Json$Encode$int(record.totalCommits)),
+				_Utils_Tuple2(
+				'commits',
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeV3Commit, record.commits)),
+				_Utils_Tuple2(
+				'files',
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeV3File, record.files))
+			]));
+};
 var elm$core$Basics$always = F2(
 	function (a, _n0) {
 		return a;
@@ -9509,88 +9569,7 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 			_List_fromArray(
 				[
 					elm$json$Json$Encode$string(a),
-					function ($) {
-					return elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'aheadBy',
-								elm$json$Json$Encode$int($.aheadBy)),
-								_Utils_Tuple2(
-								'baseCommit',
-								function ($) {
-									return elm$json$Json$Encode$object(
-										_List_fromArray(
-											[
-												_Utils_Tuple2(
-												'sha',
-												elm$json$Json$Encode$string($.sha)),
-												_Utils_Tuple2(
-												'url',
-												elm$json$Json$Encode$string($.url))
-											]));
-								}($.baseCommit)),
-								_Utils_Tuple2(
-								'behindBy',
-								elm$json$Json$Encode$int($.behindBy)),
-								_Utils_Tuple2(
-								'commits',
-								elm$json$Json$Encode$list(
-									function ($) {
-										return elm$json$Json$Encode$object(
-											_List_fromArray(
-												[
-													_Utils_Tuple2(
-													'sha',
-													elm$json$Json$Encode$string($.sha)),
-													_Utils_Tuple2(
-													'url',
-													elm$json$Json$Encode$string($.url))
-												]));
-									})($.commits)),
-								_Utils_Tuple2(
-								'files',
-								elm$json$Json$Encode$list(
-									function ($) {
-										return elm$json$Json$Encode$object(
-											_List_fromArray(
-												[
-													_Utils_Tuple2(
-													'filename',
-													elm$json$Json$Encode$string($.filename)),
-													_Utils_Tuple2(
-													'sha',
-													elm$json$Json$Encode$string($.sha)),
-													_Utils_Tuple2(
-													'status',
-													elm$json$Json$Encode$string($.status))
-												]));
-									})($.files)),
-								_Utils_Tuple2(
-								'mergeBaseCommit',
-								function ($) {
-									return elm$json$Json$Encode$object(
-										_List_fromArray(
-											[
-												_Utils_Tuple2(
-												'sha',
-												elm$json$Json$Encode$string($.sha)),
-												_Utils_Tuple2(
-												'url',
-												elm$json$Json$Encode$string($.url))
-											]));
-								}($.mergeBaseCommit)),
-								_Utils_Tuple2(
-								'status',
-								elm$json$Json$Encode$string($.status)),
-								_Utils_Tuple2(
-								'totalCommits',
-								elm$json$Json$Encode$int($.totalCommits)),
-								_Utils_Tuple2(
-								'url',
-								elm$json$Json$Encode$string($.url))
-							]));
-				}(b)
+					elm$core$Basics$identity(b)
 				]));
 	});
 var author$project$Main$setIssue = _Platform_outgoingPort('setIssue', elm$core$Basics$identity);
@@ -10188,7 +10167,9 @@ var author$project$Main$update = F2(
 						_Utils_Tuple2(
 							model,
 							author$project$Main$setComparison(
-								_Utils_Tuple2(repo.id, comparison))));
+								_Utils_Tuple2(
+									repo.id,
+									author$project$GitHubGraph$encodeV3Comparison(comparison)))));
 				}
 			case 'PullRequestsFetched':
 				if (msg.b.$ === 'Ok') {
