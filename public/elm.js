@@ -770,11 +770,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.aE.b0 === region.fi.b0)
+	if (region.aD.b0 === region.fh.b0)
 	{
-		return 'on line ' + region.aE.b0;
+		return 'on line ' + region.aD.b0;
 	}
-	return 'on lines ' + region.aE.b0 + ' through ' + region.fi.b0;
+	return 'on lines ' + region.aD.b0 + ' through ' + region.fh.b0;
 }
 
 
@@ -1970,7 +1970,7 @@ var _Http_toTask = F2(function(request, maybeProgress)
 			callback(_Scheduler_fail(elm$http$Http$Timeout));
 		});
 		xhr.addEventListener('load', function() {
-			callback(_Http_handleResponse(xhr, request.$7.a));
+			callback(_Http_handleResponse(xhr, request.dm.a));
 		});
 
 		try
@@ -2020,7 +2020,7 @@ function _Http_configureRequest(xhr, request)
 		xhr.setRequestHeader(headers.a.a, headers.a.b);
 	}
 
-	xhr.responseType = request.$7.b;
+	xhr.responseType = request.dm.b;
 	xhr.withCredentials = request.it;
 
 	elm$core$Maybe$isJust(request.ic) && (xhr.timeout = request.ic.a);
@@ -2056,7 +2056,7 @@ function _Http_toResponse(xhr)
 {
 	return {
 		$9: xhr.responseURL,
-		c1: { g$: xhr.status, aS: xhr.statusText },
+		cZ: { g$: xhr.status, aR: xhr.statusText },
 		ho: _Http_parseHeaders(xhr.getAllResponseHeaders()),
 		gT: xhr.response
 	};
@@ -2720,8 +2720,8 @@ var _Regex_never = /.^/;
 var _Regex_fromStringWith = F2(function(options, string)
 {
 	var flags = 'g';
-	if (options.fU) { flags += 'm'; }
-	if (options.eU) { flags += 'i'; }
+	if (options.fT) { flags += 'm'; }
+	if (options.eT) { flags += 'i'; }
 
 	try
 	{
@@ -3160,9 +3160,9 @@ var _VirtualDom_mapEventTuple = F2(function(func, tuple)
 var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
-		aS: func(record.aS),
-		en: record.en,
-		d8: record.d8
+		aR: func(record.aR),
+		em: record.em,
+		d7: record.d7
 	}
 });
 
@@ -3430,11 +3430,11 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 		// 3 = Custom
 
 		var value = result.a;
-		var message = !tag ? value : tag < 3 ? value.a : value.aS;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.en;
+		var message = !tag ? value : tag < 3 ? value.a : value.aR;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.em;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.d8) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.d7) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -4424,7 +4424,7 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 		impl.im,
 		impl.h7,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.b9 && impl.b9(sendToApp)
+			var divertHrefToApp = impl.b8 && impl.b8(sendToApp)
 			var view = impl.ip;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
@@ -4499,7 +4499,7 @@ function _Browser_application(impl)
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		b9: function(sendToApp)
+		b8: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4516,7 +4516,7 @@ function _Browser_application(impl)
 					sendToApp(onUrlRequest(
 						(next
 							&& curr.f8 === next.f8
-							&& curr.ft === next.ft
+							&& curr.fs === next.fs
 							&& curr.f2.a === next.f2.a
 						)
 							? elm$browser$Browser$Internal(next)
@@ -4693,7 +4693,7 @@ function _Browser_getViewport()
 			iv: _Browser_window.pageXOffset,
 			iy: _Browser_window.pageYOffset,
 			gJ: _Browser_doc.documentElement.clientWidth,
-			du: _Browser_doc.documentElement.clientHeight
+			ds: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4704,7 +4704,7 @@ function _Browser_getScene()
 	var elem = _Browser_doc.documentElement;
 	return {
 		gJ: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		du: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		ds: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4729,13 +4729,13 @@ function _Browser_getViewportOf(id)
 		return {
 			go: {
 				gJ: node.scrollWidth,
-				du: node.scrollHeight
+				ds: node.scrollHeight
 			},
 			gG: {
 				iv: node.scrollLeft,
 				iy: node.scrollTop,
 				gJ: node.clientWidth,
-				du: node.clientHeight
+				ds: node.clientHeight
 			}
 		};
 	});
@@ -4770,13 +4770,13 @@ function _Browser_getElement(id)
 				iv: x,
 				iy: y,
 				gJ: _Browser_doc.documentElement.clientWidth,
-				du: _Browser_doc.documentElement.clientHeight
+				ds: _Browser_doc.documentElement.clientHeight
 			},
-			fg: {
+			ff: {
 				iv: x + rect.left,
 				iy: y + rect.top,
 				gJ: rect.width,
-				du: rect.height
+				ds: rect.height
 			}
 		};
 	});
@@ -4886,9 +4886,9 @@ function _Markdown_formatOptions(options)
 {
 	function toHighlight(code, lang)
 	{
-		if (!lang && elm$core$Maybe$isJust(options.e9))
+		if (!lang && elm$core$Maybe$isJust(options.e8))
 		{
-			lang = options.e9.a;
+			lang = options.e8.a;
 		}
 
 		if (typeof hljs !== 'undefined' && lang && hljs.listLanguages().indexOf(lang) >= 0)
@@ -4899,7 +4899,7 @@ function _Markdown_formatOptions(options)
 		return code;
 	}
 
-	var gfm = options.fq.a;
+	var gfm = options.fp.a;
 
 	return {
 		highlight: toHighlight,
@@ -4918,14 +4918,14 @@ var author$project$Main$UrlChanged = function (a) {
 };
 var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
-var author$project$Backend$emptyData = {eH: elm$core$Dict$empty, eZ: elm$core$Dict$empty, e0: elm$core$Dict$empty, fC: elm$core$Dict$empty, f7: elm$core$Dict$empty, f9: elm$core$Dict$empty, gc: elm$core$Dict$empty, gf: elm$core$Dict$empty, gj: elm$core$Dict$empty};
+var author$project$Backend$emptyData = {eG: elm$core$Dict$empty, eY: elm$core$Dict$empty, e$: elm$core$Dict$empty, fB: elm$core$Dict$empty, f7: elm$core$Dict$empty, f9: elm$core$Dict$empty, gc: elm$core$Dict$empty, gf: elm$core$Dict$empty, gj: elm$core$Dict$empty};
 var author$project$Backend$Data = F9(
 	function (repos, issues, prs, projects, columnCards, references, actors, reviewers, comparisons) {
-		return {eH: actors, eZ: columnCards, e0: comparisons, fC: issues, f7: projects, f9: prs, gc: references, gf: repos, gj: reviewers};
+		return {eG: actors, eY: columnCards, e$: comparisons, fB: issues, f7: projects, f9: prs, gc: references, gf: repos, gj: reviewers};
 	});
 var author$project$Backend$ColumnCard = F3(
 	function (id, contentId, note) {
-		return {g4: contentId, fw: id, hP: note};
+		return {g4: contentId, fv: id, hP: note};
 	});
 var elm$core$Basics$apL = F2(
 	function (f, x) {
@@ -5433,11 +5433,11 @@ var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Backend$decodeCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
 var author$project$Backend$EventActor = F3(
 	function (user, avatar, createdAt) {
-		return {dc: avatar, e5: createdAt, ew: user};
+		return {c9: avatar, e4: createdAt, ev: user};
 	});
 var author$project$GitHubGraph$User = F5(
 	function (id, databaseId, url, login, avatar) {
-		return {dc: avatar, cD: databaseId, fw: id, hx: login, $9: url};
+		return {c9: avatar, cA: databaseId, fv: id, hx: login, $9: url};
 	});
 var elm$json$Json$Decode$int = _Json_decodeInt;
 var author$project$GitHubGraph$decodeUser = A2(
@@ -5529,10 +5529,10 @@ var elm$core$List$map = F2(
 	});
 var elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
-		return {eX: col, f3: problem, gk: row};
+		return {eW: col, f3: problem, gk: row};
 	});
 var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.gk, p.eX, p.f3);
+	return A3(elm$parser$Parser$DeadEnd, p.gk, p.eW, p.f3);
 };
 var elm$parser$Parser$Advanced$bagToList = F2(
 	function (bag, list) {
@@ -5564,7 +5564,7 @@ var elm$parser$Parser$Advanced$run = F2(
 	function (_n0, src) {
 		var parse = _n0;
 		var _n1 = parse(
-			{eX: 1, e2: _List_Nil, n: 1, b: 0, gk: 1, a: src});
+			{eW: 1, e1: _List_Nil, m: 1, b: 0, gk: 1, a: src});
 		if (!_n1.$) {
 			var value = _n1.b;
 			return elm$core$Result$Ok(value);
@@ -5639,7 +5639,7 @@ var elm$parser$Parser$Advanced$AddRight = F2(
 	});
 var elm$parser$Parser$Advanced$DeadEnd = F4(
 	function (row, col, problem, contextStack) {
-		return {eX: col, g5: contextStack, f3: problem, gk: row};
+		return {eW: col, g5: contextStack, f3: problem, gk: row};
 	});
 var elm$parser$Parser$Advanced$Empty = {$: 0};
 var elm$parser$Parser$Advanced$fromState = F2(
@@ -5647,7 +5647,7 @@ var elm$parser$Parser$Advanced$fromState = F2(
 		return A2(
 			elm$parser$Parser$Advanced$AddRight,
 			elm$parser$Parser$Advanced$Empty,
-			A4(elm$parser$Parser$Advanced$DeadEnd, s.gk, s.eX, x, s.e2));
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.gk, s.eW, x, s.e1));
 	});
 var elm$parser$Parser$Advanced$end = function (x) {
 	return function (s) {
@@ -5793,7 +5793,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 	var expecting = _n0.b;
 	var progress = !elm$core$String$isEmpty(str);
 	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.gk, s.eX, s.a);
+		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.gk, s.eW, s.a);
 		var newOffset = _n1.a;
 		var newRow = _n1.b;
 		var newCol = _n1.c;
@@ -5804,7 +5804,7 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 			elm$parser$Parser$Advanced$Good,
 			progress,
 			0,
-			{eX: newCol, e2: s.e2, n: s.n, b: newOffset, gk: newRow, a: s.a});
+			{eW: newCol, e1: s.e1, m: s.m, b: newOffset, gk: newRow, a: s.a});
 	};
 };
 var elm$parser$Parser$Advanced$symbol = elm$parser$Parser$Advanced$token;
@@ -5828,7 +5828,7 @@ var elm$parser$Parser$Advanced$chompWhileHelp = F5(
 					elm$parser$Parser$Advanced$Good,
 					_Utils_cmp(s0.b, offset) < 0,
 					0,
-					{eX: col, e2: s0.e2, n: s0.n, b: offset, gk: row, a: s0.a});
+					{eW: col, e1: s0.e1, m: s0.m, b: offset, gk: row, a: s0.a});
 			} else {
 				if (_Utils_eq(newOffset, -2)) {
 					var $temp$isGood = isGood,
@@ -5860,7 +5860,7 @@ var elm$parser$Parser$Advanced$chompWhileHelp = F5(
 	});
 var elm$parser$Parser$Advanced$chompWhile = function (isGood) {
 	return function (s) {
-		return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.b, s.gk, s.eX, s);
+		return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.b, s.gk, s.eW, s);
 	};
 };
 var elm$parser$Parser$chompWhile = elm$parser$Parser$Advanced$chompWhile;
@@ -6175,7 +6175,7 @@ var author$project$GitHubGraph$Issue = function (id) {
 											return function (labels) {
 												return function (cards) {
 													return function (milestone) {
-														return {aw: author, cx: cards, bd: commentCount, e5: createdAt, fw: id, bk: labels, cO: milestone, k: number, by: reactions, q: repo, _: state, bF: title, c7: updatedAt, $9: url};
+														return {av: author, cv: cards, bd: commentCount, e4: createdAt, fv: id, bk: labels, cL: milestone, j: number, by: reactions, q: repo, Z: state, bF: title, c3: updatedAt, $9: url};
 													};
 												};
 											};
@@ -6192,11 +6192,11 @@ var author$project$GitHubGraph$Issue = function (id) {
 };
 var author$project$GitHubGraph$CardLocation = F4(
 	function (id, url, project, column) {
-		return {eY: column, fw: id, f6: project, $9: url};
+		return {eX: column, fv: id, f6: project, $9: url};
 	});
 var author$project$GitHubGraph$ProjectColumn = F3(
 	function (id, name, databaseId) {
-		return {cD: databaseId, fw: id, hE: name};
+		return {cA: databaseId, fv: id, hE: name};
 	});
 var author$project$GitHubGraph$decodeProjectColumn = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6210,7 +6210,7 @@ var author$project$GitHubGraph$decodeProjectColumn = A2(
 			elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectColumn))));
 var author$project$GitHubGraph$ProjectLocation = F4(
 	function (id, url, name, number) {
-		return {fw: id, hE: name, k: number, $9: url};
+		return {fv: id, hE: name, j: number, $9: url};
 	});
 var author$project$GitHubGraph$decodeProjectLocation = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6433,7 +6433,7 @@ var author$project$GitHubGraph$decodeIssueState = function () {
 }();
 var author$project$GitHubGraph$Label = F3(
 	function (id, name, color) {
-		return {cz: color, fw: id, hE: name};
+		return {cw: color, fv: id, hE: name};
 	});
 var author$project$GitHubGraph$decodeLabel = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6447,7 +6447,7 @@ var author$project$GitHubGraph$decodeLabel = A2(
 			elm$json$Json$Decode$succeed(author$project$GitHubGraph$Label))));
 var author$project$GitHubGraph$Milestone = F5(
 	function (id, number, title, state, description) {
-		return {fc: description, fw: id, k: number, _: state, bF: title};
+		return {fb: description, fv: id, j: number, Z: state, bF: title};
 	});
 var author$project$GitHubGraph$MilestoneStateClosed = 1;
 var author$project$GitHubGraph$MilestoneStateOpen = 0;
@@ -6492,7 +6492,7 @@ var author$project$GitHubGraph$decodeMilestone = A2(
 					elm$json$Json$Decode$succeed(author$project$GitHubGraph$Milestone))))));
 var author$project$GitHubGraph$ReactionGroup = F2(
 	function (type_, count) {
-		return {dj: count, et: type_};
+		return {dh: count, es: type_};
 	});
 var author$project$GitHubGraph$ReactionTypeConfused = 4;
 var author$project$GitHubGraph$ReactionTypeEyes = 7;
@@ -6537,7 +6537,7 @@ var author$project$GitHubGraph$decodeReactionGroup = A2(
 		elm$json$Json$Decode$succeed(author$project$GitHubGraph$ReactionGroup)));
 var author$project$GitHubGraph$RepoLocation = F4(
 	function (id, url, owner, name) {
-		return {fw: id, hE: name, hY: owner, $9: url};
+		return {fv: id, hE: name, hY: owner, $9: url};
 	});
 var author$project$GitHubGraph$decodeRepoLocation = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6612,7 +6612,7 @@ var author$project$GitHubGraph$decodeIssue = A2(
 														elm$json$Json$Decode$succeed(author$project$GitHubGraph$Issue)))))))))))))));
 var author$project$GitHubGraph$Project = F5(
 	function (id, url, name, number, columns) {
-		return {e_: columns, fw: id, hE: name, k: number, $9: url};
+		return {eZ: columns, fv: id, hE: name, j: number, $9: url};
 	});
 var author$project$GitHubGraph$decodeProject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6652,7 +6652,7 @@ var author$project$GitHubGraph$PullRequest = function (id) {
 																return function (mergeable) {
 																	return function (lastCommit) {
 																		return function (mergeCommit) {
-																			return {eJ: additions, aw: author, cx: cards, bd: commentCount, e5: createdAt, fb: deletions, fw: id, bk: labels, fF: lastCommit, fL: mergeCommit, fM: mergeable, cO: milestone, k: number, by: reactions, q: repo, _: state, bF: title, c7: updatedAt, $9: url};
+																			return {eI: additions, av: author, cv: cards, bd: commentCount, e4: createdAt, fa: deletions, fv: id, bk: labels, fE: lastCommit, fK: mergeCommit, fL: mergeable, cL: milestone, j: number, by: reactions, q: repo, Z: state, bF: title, c3: updatedAt, $9: url};
 																		};
 																	};
 																};
@@ -6674,11 +6674,11 @@ var author$project$GitHubGraph$PullRequest = function (id) {
 };
 var author$project$GitHubGraph$Commit = F6(
 	function (sha, status, author, committer, authoredAt, committedAt) {
-		return {aw: author, eQ: authoredAt, e$: committedAt, g3: committer, cZ: sha, c1: status};
+		return {av: author, eP: authoredAt, e_: committedAt, g3: committer, cV: sha, cZ: status};
 	});
 var author$project$GitHubGraph$GitActor = F4(
 	function (email, name, avatar, user) {
-		return {dc: avatar, fh: email, hE: name, ew: user};
+		return {c9: avatar, fg: email, hE: name, ev: user};
 	});
 var author$project$GitHubGraph$decodeGitActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6698,15 +6698,15 @@ var author$project$GitHubGraph$decodeGitActor = A2(
 				elm$json$Json$Decode$succeed(author$project$GitHubGraph$GitActor)))));
 var author$project$GitHubGraph$Status = F2(
 	function (state, contexts) {
-		return {e3: contexts, _: state};
+		return {e2: contexts, Z: state};
 	});
 var author$project$GitHubGraph$StatusContext = F4(
 	function (state, context, targetUrl, creator) {
-		return {e2: context, e6: creator, _: state, gz: targetUrl};
+		return {e1: context, e5: creator, Z: state, gz: targetUrl};
 	});
 var author$project$GitHubGraph$Actor = F3(
 	function (url, login, avatar) {
-		return {dc: avatar, hx: login, $9: url};
+		return {c9: avatar, hx: login, $9: url};
 	});
 var author$project$GitHubGraph$decodeActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6929,7 +6929,7 @@ var author$project$GitHubGraph$decodePullRequest = A2(
 																			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequest))))))))))))))))))));
 var author$project$GitHubGraph$PullRequestReview = F3(
 	function (author, state, createdAt) {
-		return {aw: author, e5: createdAt, _: state};
+		return {av: author, e4: createdAt, Z: state};
 	});
 var author$project$GitHubGraph$PullRequestReviewStateApproved = 2;
 var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = 3;
@@ -6971,15 +6971,15 @@ var author$project$GitHubGraph$decodePullRequestReview = A2(
 			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequestReview))));
 var author$project$GitHubGraph$Repo = F8(
 	function (id, url, owner, name, isArchived, labels, milestones, releases) {
-		return {fw: id, fB: isArchived, bk: labels, fN: milestones, hE: name, hY: owner, gd: releases, $9: url};
+		return {fv: id, fA: isArchived, bk: labels, fM: milestones, hE: name, hY: owner, gd: releases, $9: url};
 	});
 var author$project$GitHubGraph$Release = F4(
 	function (id, url, name, tag) {
-		return {fw: id, hE: name, gx: tag, $9: url};
+		return {fv: id, hE: name, gx: tag, $9: url};
 	});
 var author$project$GitHubGraph$Tag = F2(
 	function (name, target) {
-		return {hE: name, av: target};
+		return {hE: name, au: target};
 	});
 var author$project$GitHubGraph$GitObject = F2(
 	function (url, oid) {
@@ -7049,11 +7049,11 @@ var author$project$GitHubGraph$decodeRepo = A2(
 								elm$json$Json$Decode$succeed(author$project$GitHubGraph$Repo)))))))));
 var author$project$GitHubGraph$V3Comparison = F9(
 	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits, files) {
-		return {gO: aheadBy, gR: baseCommit, gS: behindBy, g2: commits, hk: files, hB: mergeBaseCommit, c1: status, il: totalCommits, $9: url};
+		return {gO: aheadBy, gR: baseCommit, gS: behindBy, g2: commits, hk: files, hB: mergeBaseCommit, cZ: status, il: totalCommits, $9: url};
 	});
 var author$project$GitHubGraph$V3Commit = F2(
 	function (url, sha) {
-		return {cZ: sha, $9: url};
+		return {cV: sha, $9: url};
 	});
 var author$project$GitHubGraph$decodeV3Commit = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -7064,7 +7064,7 @@ var author$project$GitHubGraph$decodeV3Commit = A2(
 		elm$json$Json$Decode$succeed(author$project$GitHubGraph$V3Commit)));
 var author$project$GitHubGraph$V3File = F3(
 	function (sha, filename, status) {
-		return {hj: filename, cZ: sha, c1: status};
+		return {hj: filename, cV: sha, cZ: status};
 	});
 var author$project$GitHubGraph$decodeV3File = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -7615,11 +7615,11 @@ var author$project$Backend$expectJsonWithIndex = function (decoder) {
 					var value = _n1.a.a;
 					var index = _n1.b.a;
 					return elm$core$Result$Ok(
-						{dH: index, ex: value});
+						{dF: index, ew: value});
 				} else {
 					var value = _n1.a.a;
 					return elm$core$Result$Ok(
-						{dH: 1, ex: value});
+						{dF: 1, ew: value});
 				}
 			} else {
 				var msg = _n1.a.a;
@@ -7727,14 +7727,14 @@ var lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl = F2(
 	function (method, url) {
 		return {
 			gT: elm$http$Http$emptyBody,
-			al: elm$core$Maybe$Nothing,
-			$7: elm$http$Http$expectStringResponse(
+			ak: elm$core$Maybe$Nothing,
+			dm: elm$http$Http$expectStringResponse(
 				function (_n0) {
 					return elm$core$Result$Ok(0);
 				}),
 			ho: _List_Nil,
 			hC: method,
-			ae: _List_Nil,
+			ad: _List_Nil,
 			ic: elm$core$Maybe$Nothing,
 			$9: url,
 			it: false
@@ -7776,7 +7776,7 @@ var lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded = function (args) {
 		A2(elm$core$List$map, lukewestby$elm_http_builder$HttpBuilder$queryPair, args));
 };
 var lukewestby$elm_http_builder$HttpBuilder$requestUrl = function (builder) {
-	var encodedParams = lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(builder.ae);
+	var encodedParams = lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(builder.ad);
 	var fullUrl = elm$core$String$isEmpty(encodedParams) ? builder.$9 : (builder.$9 + ('?' + encodedParams));
 	return fullUrl;
 };
@@ -7784,7 +7784,7 @@ var lukewestby$elm_http_builder$HttpBuilder$toRequest = function (builder) {
 	return elm$http$Http$request(
 		{
 			gT: builder.gT,
-			$7: builder.$7,
+			dm: builder.dm,
 			ho: builder.ho,
 			hC: builder.hC,
 			ic: builder.ic,
@@ -7817,7 +7817,7 @@ var lukewestby$elm_http_builder$HttpBuilder$withQueryParams = F2(
 		return _Utils_update(
 			builder,
 			{
-				ae: _Utils_ap(builder.ae, queryParams)
+				ad: _Utils_ap(builder.ad, queryParams)
 			});
 	});
 var lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster = F2(
@@ -7838,7 +7838,7 @@ var lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster = F2(
 		return A2(elm$core$Task$andThen, request, elm$time$Time$now);
 	});
 var lukewestby$elm_http_builder$HttpBuilder$toTask = function (builder) {
-	var _n0 = builder.al;
+	var _n0 = builder.ak;
 	if (!_n0.$) {
 		var paramName = _n0.a;
 		return A2(lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster, paramName, builder);
@@ -7848,7 +7848,7 @@ var lukewestby$elm_http_builder$HttpBuilder$toTask = function (builder) {
 };
 var lukewestby$elm_http_builder$HttpBuilder$withExpect = F2(
 	function (expect, builder) {
-		return {gT: builder.gT, al: builder.al, $7: expect, ho: builder.ho, hC: builder.hC, ae: builder.ae, ic: builder.ic, $9: builder.$9, it: builder.it};
+		return {gT: builder.gT, ak: builder.ak, dm: expect, ho: builder.ho, hC: builder.hC, ad: builder.ad, ic: builder.ic, $9: builder.$9, it: builder.it};
 	});
 var author$project$Backend$fetchData = function (f) {
 	return A2(
@@ -7862,11 +7862,11 @@ var author$project$Backend$fetchData = function (f) {
 };
 var author$project$Backend$Me = F2(
 	function (token, user) {
-		return {ik: token, ew: user};
+		return {ik: token, ev: user};
 	});
 var author$project$Backend$User = F4(
 	function (id, login, url, avatar) {
-		return {dc: avatar, fw: id, hx: login, $9: url};
+		return {c9: avatar, fv: id, hx: login, $9: url};
 	});
 var author$project$Backend$decodeUser = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -8002,17 +8002,6 @@ var author$project$Drag$drop = function (model) {
 		return model;
 	}
 };
-var author$project$Drag$land = function (model) {
-	if (model.$ === 3) {
-		var state = model.a;
-		return author$project$Drag$Dropped(
-			_Utils_update(
-				state,
-				{b_: true}));
-	} else {
-		return model;
-	}
-};
 var author$project$Drag$Dragging = function (a) {
 	return {$: 1, a: a};
 };
@@ -8027,7 +8016,7 @@ var author$project$Drag$update = F2(
 					var source = msg.a;
 					var startState = msg.b;
 					return author$project$Drag$Dragging(
-						{bR: elm$core$Maybe$Nothing, b1: true, aD: source, aE: startState});
+						{bR: elm$core$Maybe$Nothing, b1: true, aC: source, aD: startState});
 				} else {
 					return author$project$Drag$NotDragging;
 				}
@@ -8047,15 +8036,15 @@ var author$project$Drag$update = F2(
 						if (_n3.$ === 1) {
 							return author$project$Drag$NotDragging;
 						} else {
-							var target = _n3.a.av;
-							var msgFunc = _n3.a.fT;
+							var target = _n3.a.au;
+							var msgFunc = _n3.a.fS;
 							return author$project$Drag$Dropping(
 								{
 									b_: false,
-									fS: A2(msgFunc, drag.aD, target),
+									fR: A2(msgFunc, drag.aC, target),
+									aC: drag.aC,
 									aD: drag.aD,
-									aE: drag.aE,
-									av: target
+									au: target
 								});
 						}
 				}
@@ -8067,25 +8056,25 @@ var author$project$Drag$update = F2(
 	});
 var gampleman$elm_visualization$Force$isCompleted = function (_n0) {
 	var alpha = _n0.a9;
-	var minAlpha = _n0.dU;
+	var minAlpha = _n0.dS;
 	return _Utils_cmp(alpha, minAlpha) < 1;
 };
 var author$project$ForceGraph$isCompleted = A2(
 	elm$core$Basics$composeR,
 	function ($) {
-		return $.ca;
+		return $.b9;
 	},
 	gampleman$elm_visualization$Force$isCompleted);
 var author$project$ForceGraph$updateContextWithValue = F2(
 	function (nc, value) {
 		var ncnode = nc.aU;
-		var label = ncnode.ar;
+		var label = ncnode.aq;
 		return _Utils_update(
 			nc,
 			{
 				aU: _Utils_update(
 					ncnode,
-					{ar: value})
+					{aq: value})
 			});
 	});
 var elm$core$Maybe$map = F2(
@@ -8108,11 +8097,11 @@ var elm_community$intdict$IntDict$foldl = F3(
 					return acc;
 				case 1:
 					var l = dict.a;
-					return A3(f, l.dJ, l.ex, acc);
+					return A3(f, l.dH, l.ew, acc);
 				default:
 					var i = dict.a;
 					var $temp$f = f,
-						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.fG),
+						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.fF),
 						$temp$dict = i.d;
 					f = $temp$f;
 					acc = $temp$acc;
@@ -8134,7 +8123,7 @@ var elm_community$intdict$IntDict$size = function (dict) {
 			return 1;
 		default:
 			var i = dict.a;
-			return i.c_;
+			return i.cW;
 	}
 };
 var elm_community$intdict$IntDict$inner = F3(
@@ -8150,10 +8139,10 @@ var elm_community$intdict$IntDict$inner = F3(
 			} else {
 				return elm_community$intdict$IntDict$Inner(
 					{
-						fG: l,
+						fF: l,
 						f: p,
 						d: r,
-						c_: elm_community$intdict$IntDict$size(l) + elm_community$intdict$IntDict$size(r)
+						cW: elm_community$intdict$IntDict$size(l) + elm_community$intdict$IntDict$size(r)
 					});
 			}
 		}
@@ -8193,7 +8182,7 @@ var elm_community$intdict$IntDict$lcp = F2(
 		var branchingBit = elm_community$intdict$IntDict$highestBitSet(x ^ y);
 		var mask = elm_community$intdict$IntDict$higherBitMask(branchingBit);
 		var prefixBits = x & mask;
-		return {ba: branchingBit, at: prefixBits};
+		return {ba: branchingBit, as: prefixBits};
 	});
 var elm_community$intdict$IntDict$Leaf = function (a) {
 	return {$: 1, a: a};
@@ -8201,13 +8190,13 @@ var elm_community$intdict$IntDict$Leaf = function (a) {
 var elm_community$intdict$IntDict$leaf = F2(
 	function (k, v) {
 		return elm_community$intdict$IntDict$Leaf(
-			{dJ: k, ex: v});
+			{dH: k, ew: v});
 	});
 var elm_community$intdict$IntDict$prefixMatches = F2(
 	function (p, n) {
 		return _Utils_eq(
 			n & elm_community$intdict$IntDict$higherBitMask(p.ba),
-			p.at);
+			p.as);
 	});
 var elm_community$intdict$IntDict$update = F3(
 	function (key, alter, dict) {
@@ -8234,29 +8223,29 @@ var elm_community$intdict$IntDict$update = F3(
 				return alteredNode(elm$core$Maybe$Nothing);
 			case 1:
 				var l = dict.a;
-				return _Utils_eq(l.dJ, key) ? alteredNode(
-					elm$core$Maybe$Just(l.ex)) : A2(
+				return _Utils_eq(l.dH, key) ? alteredNode(
+					elm$core$Maybe$Just(l.ew)) : A2(
 					join,
 					_Utils_Tuple2(
 						key,
 						alteredNode(elm$core$Maybe$Nothing)),
-					_Utils_Tuple2(l.dJ, dict));
+					_Utils_Tuple2(l.dH, dict));
 			default:
 				var i = dict.a;
 				return A2(elm_community$intdict$IntDict$prefixMatches, i.f, key) ? (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.f, key) ? A3(
 					elm_community$intdict$IntDict$inner,
 					i.f,
-					i.fG,
+					i.fF,
 					A3(elm_community$intdict$IntDict$update, key, alter, i.d)) : A3(
 					elm_community$intdict$IntDict$inner,
 					i.f,
-					A3(elm_community$intdict$IntDict$update, key, alter, i.fG),
+					A3(elm_community$intdict$IntDict$update, key, alter, i.fF),
 					i.d)) : A2(
 					join,
 					_Utils_Tuple2(
 						key,
 						alteredNode(elm$core$Maybe$Nothing)),
-					_Utils_Tuple2(i.f.at, dict));
+					_Utils_Tuple2(i.f.as, dict));
 		}
 	});
 var elm_community$graph$Graph$applyEdgeDiff = F3(
@@ -8274,7 +8263,7 @@ var elm_community$graph$Graph$applyEdgeDiff = F3(
 				return _Utils_update(
 					node,
 					{
-						fx: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.fx)
+						fw: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.fw)
 					});
 			});
 		var flippedFoldl = F3(
@@ -8306,7 +8295,7 @@ var elm_community$graph$Graph$applyEdgeDiff = F3(
 			A3(
 				flippedFoldl,
 				updateAdjacency(updateIncomingEdge),
-				diff.fx,
+				diff.fw,
 				graphRep));
 	});
 var elm_community$graph$Graph$Insert = function (a) {
@@ -8323,7 +8312,7 @@ var elm_community$graph$Graph$crashHack = function (msg) {
 		continue crashHack;
 	}
 };
-var elm_community$graph$Graph$emptyDiff = {fx: elm_community$intdict$IntDict$empty, fX: elm_community$intdict$IntDict$empty};
+var elm_community$graph$Graph$emptyDiff = {fw: elm_community$intdict$IntDict$empty, fX: elm_community$intdict$IntDict$empty};
 var elm_community$graph$Graph$computeEdgeDiff = F2(
 	function (old, _new) {
 		var collectUpdates = F3(
@@ -8371,8 +8360,8 @@ var elm_community$graph$Graph$computeEdgeDiff = F2(
 				var _n4 = _n0.a;
 				var ins = _n0.b.a;
 				return {
-					fx: A3(collect, elm_community$graph$Graph$Insert, ins.fX, elm_community$intdict$IntDict$empty),
-					fX: A3(collect, elm_community$graph$Graph$Insert, ins.fx, elm_community$intdict$IntDict$empty)
+					fw: A3(collect, elm_community$graph$Graph$Insert, ins.fX, elm_community$intdict$IntDict$empty),
+					fX: A3(collect, elm_community$graph$Graph$Insert, ins.fw, elm_community$intdict$IntDict$empty)
 				};
 			}
 		} else {
@@ -8380,14 +8369,14 @@ var elm_community$graph$Graph$computeEdgeDiff = F2(
 				var rem = _n0.a.a;
 				var _n3 = _n0.b;
 				return {
-					fx: A3(collect, elm_community$graph$Graph$Remove, rem.fX, elm_community$intdict$IntDict$empty),
-					fX: A3(collect, elm_community$graph$Graph$Remove, rem.fx, elm_community$intdict$IntDict$empty)
+					fw: A3(collect, elm_community$graph$Graph$Remove, rem.fX, elm_community$intdict$IntDict$empty),
+					fX: A3(collect, elm_community$graph$Graph$Remove, rem.fw, elm_community$intdict$IntDict$empty)
 				};
 			} else {
 				var rem = _n0.a.a;
 				var ins = _n0.b.a;
 				return _Utils_eq(rem, ins) ? elm_community$graph$Graph$emptyDiff : {
-					fx: A3(
+					fw: A3(
 						collect,
 						elm_community$graph$Graph$Insert,
 						ins.fX,
@@ -8395,8 +8384,8 @@ var elm_community$graph$Graph$computeEdgeDiff = F2(
 					fX: A3(
 						collect,
 						elm_community$graph$Graph$Insert,
-						ins.fx,
-						A3(collect, elm_community$graph$Graph$Remove, rem.fx, elm_community$intdict$IntDict$empty))
+						ins.fw,
+						A3(collect, elm_community$graph$Graph$Remove, rem.fw, elm_community$intdict$IntDict$empty))
 				};
 			}
 		}
@@ -8431,7 +8420,7 @@ var elm_community$intdict$IntDict$get = F2(
 					return elm$core$Maybe$Nothing;
 				case 1:
 					var l = dict.a;
-					return _Utils_eq(l.dJ, key) ? elm$core$Maybe$Just(l.ex) : elm$core$Maybe$Nothing;
+					return _Utils_eq(l.dH, key) ? elm$core$Maybe$Just(l.ew) : elm$core$Maybe$Nothing;
 				default:
 					var i = dict.a;
 					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.f, key)) {
@@ -8445,7 +8434,7 @@ var elm_community$intdict$IntDict$get = F2(
 							continue get;
 						} else {
 							var $temp$key = key,
-								$temp$dict = i.fG;
+								$temp$dict = i.fF;
 							key = $temp$key;
 							dict = $temp$dict;
 							continue get;
@@ -8471,14 +8460,14 @@ var elm_community$graph$Graph$update = F2(
 				return elm_community$intdict$IntDict$filter(
 					F2(
 						function (id, _n0) {
-							return _Utils_eq(id, ctx.aU.fw) || A2(elm_community$intdict$IntDict$member, id, rep);
+							return _Utils_eq(id, ctx.aU.fv) || A2(elm_community$intdict$IntDict$member, id, rep);
 						}));
 			};
 			var cleanUpEdges = function (ctx) {
 				return _Utils_update(
 					ctx,
 					{
-						fx: A2(filterInvalidEdges, ctx, ctx.fx),
+						fw: A2(filterInvalidEdges, ctx, ctx.fw),
 						fX: A2(filterInvalidEdges, ctx, ctx.fX)
 					});
 			};
@@ -8509,7 +8498,7 @@ var author$project$ForceGraph$updateGraphWithList = function () {
 		function (ncnode) {
 			return A2(
 				elm_community$graph$Graph$update,
-				ncnode.fw,
+				ncnode.fv,
 				graphUpdater(ncnode));
 		});
 }();
@@ -8522,12 +8511,12 @@ var elm_community$intdict$IntDict$foldr = F3(
 					return acc;
 				case 1:
 					var l = dict.a;
-					return A3(f, l.dJ, l.ex, acc);
+					return A3(f, l.dH, l.ew, acc);
 				default:
 					var i = dict.a;
 					var $temp$f = f,
 						$temp$acc = A3(elm_community$intdict$IntDict$foldr, f, acc, i.d),
-						$temp$dict = i.fG;
+						$temp$dict = i.fF;
 					f = $temp$f;
 					acc = $temp$acc;
 					dict = $temp$dict;
@@ -8699,7 +8688,7 @@ var ianmackenzie$elm_geometry$Vector2d$zero = ianmackenzie$elm_geometry$Vector2d
 var gampleman$elm_visualization$Force$ManyBody$applyForce = F4(
 	function (alpha, theta, qtree, vertex) {
 		var isFarAway = function (treePart) {
-			var distance = A2(ianmackenzie$elm_geometry$Point2d$distanceFrom, vertex.hZ, treePart.eL.hZ);
+			var distance = A2(ianmackenzie$elm_geometry$Point2d$distanceFrom, vertex.hZ, treePart.eK.hZ);
 			var _n2 = ianmackenzie$elm_geometry$BoundingBox2d$dimensions(treePart.gU);
 			var width = _n2.a;
 			return _Utils_cmp(width / distance, theta) < 0;
@@ -8711,7 +8700,7 @@ var gampleman$elm_visualization$Force$ManyBody$applyForce = F4(
 				return elm$core$Basics$isNaN(weight) ? ianmackenzie$elm_geometry$Vector2d$zero : A2(ianmackenzie$elm_geometry$Vector2d$scaleBy, weight, delta);
 			});
 		var useAggregate = function (treePart) {
-			return A2(calculateVelocity, vertex, treePart.eL);
+			return A2(calculateVelocity, vertex, treePart.eK);
 		};
 		switch (qtree.$) {
 			case 0:
@@ -8723,7 +8712,7 @@ var gampleman$elm_visualization$Force$ManyBody$applyForce = F4(
 				} else {
 					var applyForceFromPoint = F2(
 						function (point, accum) {
-							return _Utils_eq(point.dJ, vertex.dJ) ? accum : A2(
+							return _Utils_eq(point.dH, vertex.dH) ? accum : A2(
 								ianmackenzie$elm_geometry$Vector2d$sum,
 								A2(calculateVelocity, vertex, point),
 								accum);
@@ -8880,7 +8869,7 @@ var gampleman$elm_visualization$Force$QuadTree$singleton = F2(
 	function (toPoint, vertex) {
 		return gampleman$elm_visualization$Force$QuadTree$Leaf(
 			{
-				eL: 0,
+				eK: 0,
 				gU: ianmackenzie$elm_geometry$BoundingBox2d$singleton(
 					toPoint(vertex)),
 				g_: _Utils_Tuple2(vertex, _List_Nil)
@@ -8929,7 +8918,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 			case 0:
 				return gampleman$elm_visualization$Force$QuadTree$Leaf(
 					{
-						eL: 0,
+						eK: 0,
 						gU: ianmackenzie$elm_geometry$BoundingBox2d$singleton(
 							toPoint(vertex)),
 						g_: _Utils_Tuple2(vertex, _List_Nil)
@@ -8944,7 +8933,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 				if (_Utils_cmp(newSize, maxSize) > -1) {
 					var initial = gampleman$elm_visualization$Force$QuadTree$Node(
 						{
-							eL: 0,
+							eK: 0,
 							gU: A2(
 								ianmackenzie$elm_geometry$BoundingBox2d$hull,
 								leaf.gU,
@@ -8963,7 +8952,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 				} else {
 					return gampleman$elm_visualization$Force$QuadTree$Leaf(
 						{
-							eL: 0,
+							eK: 0,
 							gU: A2(
 								ianmackenzie$elm_geometry$BoundingBox2d$hull,
 								leaf.gU,
@@ -9023,7 +9012,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 						case 0:
 							return gampleman$elm_visualization$Force$QuadTree$Node(
 								{
-									eL: 0,
+									eK: 0,
 									gU: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
 										{bl: maxX + width, bm: maxY + height, bn: minX, bo: minY}),
 									hG: A2(gampleman$elm_visualization$Force$QuadTree$singleton, toPoint, vertex),
@@ -9034,7 +9023,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 						case 2:
 							return gampleman$elm_visualization$Force$QuadTree$Node(
 								{
-									eL: 0,
+									eK: 0,
 									gU: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
 										{bl: maxX + width, bm: maxY, bn: minX, bo: minY - height}),
 									hG: gampleman$elm_visualization$Force$QuadTree$Empty,
@@ -9045,7 +9034,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 						case 1:
 							return gampleman$elm_visualization$Force$QuadTree$Node(
 								{
-									eL: 0,
+									eK: 0,
 									gU: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
 										{bl: maxX, bm: maxY + height, bn: minX - width, bo: minY}),
 									hG: gampleman$elm_visualization$Force$QuadTree$Empty,
@@ -9056,7 +9045,7 @@ var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
 						default:
 							return gampleman$elm_visualization$Force$QuadTree$Node(
 								{
-									eL: 0,
+									eK: 0,
 									gU: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
 										{bl: maxX, bm: maxY, bn: minX - width, bo: minY - height}),
 									hG: qtree,
@@ -9097,10 +9086,10 @@ var gampleman$elm_visualization$Force$QuadTree$getAggregate = function (qtree) {
 		case 0:
 			return elm$core$Maybe$Nothing;
 		case 1:
-			var aggregate = qtree.a.eL;
+			var aggregate = qtree.a.eK;
 			return elm$core$Maybe$Just(aggregate);
 		default:
-			var aggregate = qtree.a.eL;
+			var aggregate = qtree.a.eK;
 			return elm$core$Maybe$Just(aggregate);
 	}
 };
@@ -9118,7 +9107,7 @@ var gampleman$elm_visualization$Force$QuadTree$performAggregate = F2(
 				var rest = _n1.b;
 				return gampleman$elm_visualization$Force$QuadTree$Leaf(
 					{
-						eL: A2(combineVertices, first, rest),
+						eK: A2(combineVertices, first, rest),
 						gU: leaf.gU,
 						g_: _Utils_Tuple2(first, rest)
 					});
@@ -9140,7 +9129,7 @@ var gampleman$elm_visualization$Force$QuadTree$performAggregate = F2(
 					var xs = subresults.b;
 					return gampleman$elm_visualization$Force$QuadTree$Node(
 						{
-							eL: A2(combineAggregates, x, xs),
+							eK: A2(combineAggregates, x, xs),
 							gU: node.gU,
 							hG: newNe,
 							hR: newNw,
@@ -9165,9 +9154,9 @@ var gampleman$elm_visualization$Force$ManyBody$manyBody = F3(
 			return _Utils_update(
 				vertex,
 				{
-					cn: A2(
+					cm: A2(
 						ianmackenzie$elm_geometry$Vector2d$sum,
-						vertex.cn,
+						vertex.cm,
 						A4(gampleman$elm_visualization$Force$ManyBody$applyForce, alpha, theta, withAggregates, vertex))
 				});
 		};
@@ -9187,11 +9176,11 @@ var gampleman$elm_visualization$Force$ManyBody$wrapper = F4(
 					0,
 					A2(elm$core$Dict$get, key, strengths));
 				return {
-					dJ: key,
+					dH: key,
 					hZ: ianmackenzie$elm_geometry$Point2d$fromCoordinates(
 						_Utils_Tuple2(x, y)),
 					h5: strength,
-					cn: ianmackenzie$elm_geometry$Vector2d$zero
+					cm: ianmackenzie$elm_geometry$Vector2d$zero
 				};
 			},
 			elm$core$Dict$toList(points));
@@ -9201,7 +9190,7 @@ var gampleman$elm_visualization$Force$ManyBody$wrapper = F4(
 					return elm$core$Maybe$Nothing;
 				} else {
 					var point = maybePoint.a;
-					var _n1 = ianmackenzie$elm_geometry$Vector2d$components(newVertex.cn);
+					var _n1 = ianmackenzie$elm_geometry$Vector2d$components(newVertex.cm);
 					var dvx = _n1.a;
 					var dvy = _n1.b;
 					return elm$core$Maybe$Just(
@@ -9215,7 +9204,7 @@ var gampleman$elm_visualization$Force$ManyBody$wrapper = F4(
 			function (newVertex, pointsDict) {
 				return A3(
 					elm$core$Dict$update,
-					newVertex.dJ,
+					newVertex.dH,
 					updater(newVertex),
 					pointsDict);
 			});
@@ -9262,11 +9251,11 @@ var gampleman$elm_visualization$Force$applyForce = F3(
 					elm$core$List$foldl,
 					F2(
 						function (_n5, ents) {
-							var source = _n5.aD;
-							var target = _n5.av;
+							var source = _n5.aC;
+							var target = _n5.au;
 							var distance = _n5.g9;
 							var strength = _n5.h5;
-							var bias = _n5.df;
+							var bias = _n5.dc;
 							var _n6 = _Utils_Tuple2(
 								A2(elm$core$Dict$get, source, ents),
 								A2(elm$core$Dict$get, target, ents));
@@ -9322,21 +9311,21 @@ var gampleman$elm_visualization$Force$tick = F2(
 		var updateEntity = function (ent) {
 			return _Utils_update(
 				ent,
-				{iq: ent.iq * state.co, ir: ent.ir * state.co, iv: ent.iv + (ent.iq * state.co), iy: ent.iy + (ent.ir * state.co)});
+				{iq: ent.iq * state.cn, ir: ent.ir * state.cn, iv: ent.iv + (ent.iq * state.cn), iy: ent.iy + (ent.ir * state.cn)});
 		};
 		var dictNodes = A3(
 			elm$core$List$foldl,
 			function (node) {
-				return A2(elm$core$Dict$insert, node.fw, node);
+				return A2(elm$core$Dict$insert, node.fv, node);
 			},
 			elm$core$Dict$empty,
 			nodes);
-		var alpha = state.a9 + ((state.eO - state.a9) * state.c9);
+		var alpha = state.a9 + ((state.eN - state.a9) * state.c6);
 		var newNodes = A3(
 			elm$core$List$foldl,
 			gampleman$elm_visualization$Force$applyForce(alpha),
 			dictNodes,
-			state.fo);
+			state.fn);
 		return _Utils_Tuple2(
 			_Utils_update(
 				state,
@@ -9348,21 +9337,21 @@ var gampleman$elm_visualization$Force$tick = F2(
 	});
 var author$project$ForceGraph$tick = function (_n0) {
 	var graph = _n0.a0;
-	var simulation = _n0.ca;
+	var simulation = _n0.b9;
 	var _n1 = A2(
 		gampleman$elm_visualization$Force$tick,
 		simulation,
 		A2(
 			elm$core$List$map,
 			function ($) {
-				return $.ar;
+				return $.aq;
 			},
 			elm_community$graph$Graph$nodes(graph)));
 	var newState = _n1.a;
 	var list = _n1.b;
 	return {
 		a0: A2(author$project$ForceGraph$updateGraphWithList, graph, list),
-		ca: newState
+		b9: newState
 	};
 };
 var author$project$GitHubGraph$IssueCardContent = function (a) {
@@ -9399,23 +9388,20 @@ var author$project$Main$InProjectFilter = function (a) {
 	return {$: 1, a: a};
 };
 var author$project$Main$IssueRefreshed = function (a) {
-	return {$: 51, a: a};
+	return {$: 42, a: a};
 };
 var author$project$Main$MirrorLabel = function (a) {
 	return {$: 24, a: a};
 };
-var author$project$Main$MirrorMilestone = function (a) {
-	return {$: 41, a: a};
-};
 var author$project$Main$PullRequestRefreshed = function (a) {
-	return {$: 53, a: a};
+	return {$: 44, a: a};
 };
 var author$project$Main$RepoRefreshed = function (a) {
 	return {$: 38, a: a};
 };
 var author$project$GitHubGraph$ProjectColumnCard = F4(
 	function (id, url, content, note) {
-		return {cB: content, fw: id, hP: note, $9: url};
+		return {cy: content, fv: id, hP: note, $9: url};
 	});
 var author$project$GitHubGraph$DateType = 0;
 var author$project$GitHubGraph$pickEnum2 = F2(
@@ -9449,7 +9435,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet = elm$co
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet = _List_Nil;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType = function (sourceType) {
 	if (!sourceType.$) {
-		var selectionSet = sourceType.a.I;
+		var selectionSet = sourceType.a.G;
 		return selectionSet;
 	} else {
 		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet;
@@ -9500,13 +9486,13 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$toDefinitionAST =
 	if (!_var.$) {
 		var variableName = _var.a;
 		var typeRef = _var.b;
-		return {fa: elm$core$Maybe$Nothing, hE: variableName, gE: typeRef};
+		return {e9: elm$core$Maybe$Nothing, hE: variableName, gE: typeRef};
 	} else {
 		var variableName = _var.a;
 		var typeRef = _var.b;
 		var defaultValue = _var.d;
 		return {
-			fa: elm$core$Maybe$Just(defaultValue),
+			e9: elm$core$Maybe$Just(defaultValue),
 			hE: variableName,
 			gE: typeRef
 		};
@@ -9555,11 +9541,11 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field = F3(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$varsFromArguments(_arguments),
 			fieldVars);
 		var astFieldInfo = {
-			eM: elm$core$Maybe$Nothing,
-			ak: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
-			J: _List_Nil,
+			eL: elm$core$Maybe$Nothing,
+			aj: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
+			H: _List_Nil,
 			hE: name,
-			I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType)
+			G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType)
 		};
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
@@ -9583,7 +9569,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec = F2(
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				{ao: coreType, aQ: elm$core$Basics$always, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
+				{an: coreType, aP: elm$core$Basics$always, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
 			elm$core$Basics$always(decoder),
 			_List_Nil,
 			_List_Nil);
@@ -9591,7 +9577,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec = F2(
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, 0, elm$json$Json$Decode$int);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType = 0;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-	{ao: 0, aQ: elm$core$Basics$always, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
+	{an: 0, aP: elm$core$Basics$always, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
 	return A4(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
@@ -9604,7 +9590,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType = 0;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, 0, elm$json$Json$Decode$string);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Util$responseKey = function (fieldInfo) {
-	var _n0 = fieldInfo.eM;
+	var _n0 = fieldInfo.eL;
 	if (_n0.$ === 1) {
 		return fieldInfo.hE;
 	} else {
@@ -9634,10 +9620,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract = function (_n0) {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
 			{
-				ao: 0,
-				aQ: elm$core$Basics$always,
+				an: 0,
+				aP: elm$core$Basics$always,
 				br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
-				I: _List_fromArray(
+				G: _List_fromArray(
 					[selectionAST])
 			}),
 		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionDecoder, selectionAST, decoder),
@@ -9661,8 +9647,8 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join = F2(
 					_Utils_update(
 						typeInfoA,
 						{
-							ao: A2(typeInfoA.aQ, typeInfoA.ao, typeInfoB.ao),
-							I: A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.I, typeInfoB.I)
+							an: A2(typeInfoA.aP, typeInfoA.an, typeInfoB.an),
+							G: A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.G, typeInfoB.G)
 						}));
 			} else {
 				var _n2 = _n0.b;
@@ -9744,9 +9730,9 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment = F2(
 		var vars = _n0.c;
 		var fragments = _n0.d;
 		var astInlineFragmentInfo = {
-			J: _List_Nil,
-			I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType),
-			c6: maybeTypeCondition
+			H: _List_Nil,
+			G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType),
+			c2: maybeTypeCondition
 		};
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
@@ -9892,7 +9878,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumWithFallback = F2(
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				{ao: labels, aQ: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumJoin, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
+				{an: labels, aP: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumJoin, br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
 			elm$core$Basics$always(decoder),
 			_List_Nil,
 			_List_Nil);
@@ -9917,7 +9903,7 @@ var elm$json$Json$Decode$nullable = function (decoder) {
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 1};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
 	function (nullability, coreType, join, selectionSet) {
-		return {ao: coreType, aQ: join, br: nullability, I: selectionSet};
+		return {an: coreType, aP: join, br: nullability, G: selectionSet};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = 0;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = 0;
@@ -9931,7 +9917,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_n0) 
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.ao, typeInfo.aQ, typeInfo.I)),
+				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.an, typeInfo.aP, typeInfo.G)),
 			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
 			vars,
 			fragments);
@@ -9984,10 +9970,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list = function (_n0) {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
 			{
-				ao: itemType,
-				aQ: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$listJoin,
+				an: itemType,
+				aP: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$listJoin,
 				br: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
-				I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(itemType)
+				G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(itemType)
 			}),
 		A2(elm$core$Basics$composeL, elm$json$Json$Decode$list, decoder),
 		vars,
@@ -10104,7 +10090,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 					_Utils_update(
 						info,
 						{
-							eM: elm$core$Maybe$Just(responseKey)
+							eL: elm$core$Maybe$Just(responseKey)
 						})),
 				decoder,
 				vars,
@@ -10518,7 +10504,7 @@ var author$project$GitHubGraph$projectColumnCardObject = function () {
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation = elm$core$Basics$identity;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Document = elm$core$Basics$identity;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$fragmentDefinitionsFromOperation = function (_n0) {
-	var spec = _n0.Z;
+	var spec = _n0.Y;
 	var _n1 = spec;
 	var fragments = _n1.d;
 	return fragments;
@@ -10528,7 +10514,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST = function (_
 	var name = _n0.a;
 	var _arguments = _n0.b;
 	return {
-		ak: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
+		aj: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
 		hE: name
 	};
 };
@@ -10552,13 +10538,13 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableDefinitionsAST = f
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationAST = function (_n0) {
 	var operationType = _n0.bs;
 	var name = _n0.hE;
-	var directives = _n0.J;
-	var spec = _n0.Z;
+	var directives = _n0.H;
+	var spec = _n0.Y;
 	return {
-		J: A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST, directives),
+		H: A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST, directives),
 		hE: name,
 		bs: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationTypeAST(operationType),
-		I: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSpec(spec),
+		G: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSpec(spec),
 		io: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableDefinitionsAST(spec)
 	};
 };
@@ -10649,7 +10635,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDi
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective = function (_n0) {
 	var name = _n0.hE;
-	var _arguments = _n0.ak;
+	var _arguments = _n0.aj;
 	return A2(
 		elm$core$String$join,
 		'',
@@ -10680,7 +10666,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFr
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFragmentSpread = F2(
 	function (indentLevel, _n0) {
 		var name = _n0.hE;
-		var directives = _n0.J;
+		var directives = _n0.H;
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent,
 			indentLevel,
@@ -10708,7 +10694,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFi
 					_List_fromArray(
 						[
 							jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(
-							A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFieldAlias, field.eM)),
+							A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFieldAlias, field.eL)),
 							_List_fromArray(
 							[
 								A2(
@@ -10717,17 +10703,17 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFi
 								A2(
 									elm$core$List$cons,
 									field.hE,
-									jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeArgList(field.ak)))
+									jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeArgList(field.aj)))
 							]),
-							A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, field.J),
-							A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, indentLevel, field.I)
+							A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, field.H),
+							A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, indentLevel, field.G)
 						]))));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeInlineFragment = F2(
 	function (indentLevel, _n2) {
-		var typeCondition = _n2.c6;
-		var directives = _n2.J;
-		var selectionSet = _n2.I;
+		var typeCondition = _n2.c2;
+		var directives = _n2.H;
+		var selectionSet = _n2.G;
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent,
 			indentLevel,
@@ -10776,9 +10762,9 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSe
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFragmentDefinition = function (_n0) {
 	var name = _n0.hE;
-	var typeCondition = _n0.c6;
-	var directives = _n0.J;
-	var selectionSet = _n0.I;
+	var typeCondition = _n0.c2;
+	var directives = _n0.H;
+	var selectionSet = _n0.G;
 	return A2(
 		elm$core$String$join,
 		' ',
@@ -10845,7 +10831,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVa
 						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeTypeRef(info.gE)
 					]),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(
-					A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefaultValue, info.fa))
+					A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefaultValue, info.e9))
 				])));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinitions = function (defs) {
@@ -10870,8 +10856,8 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOp
 					]),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(info.hE),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinitions(info.io),
-					A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, info.J),
-					A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, 0, info.I)
+					A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, info.H),
+					A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, 0, info.G)
 				])));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefinition = function (definition) {
@@ -10907,16 +10893,16 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$document = function (opera
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationAST(operation))
 			]));
 	return {
-		db: ast,
-		cR: operation,
-		ef: jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDocument(ast)
+		c8: ast,
+		cN: operation,
+		ee: jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDocument(ast)
 	};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$MutationOperationType = 1;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationOperationType = 1;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument = function (spec) {
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$document(
-		{J: _List_Nil, hE: elm$core$Maybe$Nothing, bs: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationOperationType, Z: spec});
+		{H: _List_Nil, hE: elm$core$Maybe$Nothing, bs: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationOperationType, Y: spec});
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep = A2(elm$core$Basics$composeR, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getVariables, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue = function (a) {
@@ -11012,7 +10998,7 @@ var author$project$GitHubGraph$addCardMutation = function () {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'columnId',
 		function ($) {
-			return $.cA;
+			return $.cx;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
@@ -11097,11 +11083,11 @@ var elm$core$Result$withDefault = F2(
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Response$RequestError = F2(
 	function (message, locations) {
-		return {hw: locations, aS: message};
+		return {hw: locations, aR: message};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Response$DocumentLocation = F2(
 	function (line, column) {
-		return {eY: column, b0: line};
+		return {eX: column, b0: line};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Response$documentLocationDecoder = A3(
 	elm$json$Json$Decode$map2,
@@ -11224,7 +11210,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$requestConfig = F4(
 			A2(jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$postBody, documentString, variableValues));
 		var url = _n0.a;
 		var body = _n0.b;
-		return {gT: body, $7: expect, ho: requestOptions.ho, hC: requestOptions.hC, ic: requestOptions.ic, $9: url, it: requestOptions.it};
+		return {gT: body, dm: expect, ho: requestOptions.ho, hC: requestOptions.hC, ic: requestOptions.ic, $9: url, it: requestOptions.it};
 	});
 var elm$json$Json$Encode$bool = _Json_wrap;
 var elm$json$Json$Encode$float = _Json_wrap;
@@ -11286,7 +11272,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$jsonVariableValues = funct
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$requestBody = function (_n0) {
 	var requestRecord = _n0;
-	return requestRecord.fd;
+	return requestRecord.fc;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$sendExpecting = F3(
 	function (expect, requestOptions, request) {
@@ -11322,15 +11308,15 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$specDecoder = function (_n
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentResponseDecoder = function (_n0) {
-	var operation = _n0.cR;
+	var operation = _n0.cN;
 	var _n1 = operation;
-	var spec = _n1.Z;
+	var spec = _n1.Y;
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$specDecoder(spec);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentVariables = function (_n0) {
-	var operation = _n0.cR;
+	var operation = _n0.cN;
 	var _n1 = operation;
-	var spec = _n1.Z;
+	var spec = _n1.Y;
 	var _n2 = spec;
 	var vars = _n2.c;
 	return vars;
@@ -11366,12 +11352,12 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$extractValuesFrom
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request = F2(
 	function (vars, doc) {
-		var operation = doc.cR;
-		var ast = doc.db;
-		var serialized = doc.ef;
+		var operation = doc.cN;
+		var ast = doc.c8;
+		var serialized = doc.ee;
 		return {
 			ha: ast,
-			fd: serialized,
+			fc: serialized,
 			gi: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentResponseDecoder(doc),
 			gF: A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$extractValuesFrom,
@@ -11386,7 +11372,7 @@ var author$project$GitHubGraph$addContentCard = F3(
 			author$project$GitHubGraph$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{cA: columnID, g4: contentID},
+				{cx: columnID, g4: contentID},
 				author$project$GitHubGraph$addCardMutation));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = 0;
@@ -11414,21 +11400,21 @@ var author$project$GitHubGraph$moveCardMutation = function () {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'columnId',
 		function ($) {
-			return $.cA;
+			return $.cx;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	var cardIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'cardId',
 		function ($) {
-			return $.eT;
+			return $.eS;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	var afterIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'afterId',
 		function ($) {
-			return $.eK;
+			return $.eJ;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id));
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
@@ -11469,7 +11455,7 @@ var author$project$GitHubGraph$moveCardAfter = F4(
 			author$project$GitHubGraph$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{eK: mafterID, eT: cardID, cA: columnID},
+				{eJ: mafterID, eS: cardID, cx: columnID},
 				author$project$GitHubGraph$moveCardMutation));
 	});
 var author$project$GitHubGraph$addContentCardAfter = F4(
@@ -11477,7 +11463,7 @@ var author$project$GitHubGraph$addContentCardAfter = F4(
 		return A2(
 			elm$core$Task$andThen,
 			function (_n0) {
-				var id = _n0.fw;
+				var id = _n0.fv;
 				return A4(author$project$GitHubGraph$moveCardAfter, token, columnID, id, mafterID);
 			},
 			A3(author$project$GitHubGraph$addContentCard, token, columnID, contentID));
@@ -11488,7 +11474,7 @@ var author$project$Main$CardMoved = F2(
 	});
 var author$project$Main$contentCardId = F3(
 	function (model, projectId, contentId) {
-		var _n0 = A2(elm$core$Dict$get, contentId, model.p);
+		var _n0 = A2(elm$core$Dict$get, contentId, model.o);
 		if (!_n0.$) {
 			var card = _n0.a;
 			var _n1 = A2(
@@ -11499,15 +11485,15 @@ var author$project$Main$contentCardId = F3(
 						elm$core$Basics$composeL,
 						elm$core$Basics$eq(projectId),
 						function ($) {
-							return $.fw;
+							return $.fv;
 						}),
 					function ($) {
 						return $.f6;
 					}),
-				card.cx);
+				card.cv);
 			if (_n1.b && (!_n1.b.b)) {
 				var c = _n1.a;
-				return elm$core$Maybe$Just(c.fw);
+				return elm$core$Maybe$Just(c.fv);
 			} else {
 				return elm$core$Maybe$Nothing;
 			}
@@ -11519,10 +11505,10 @@ var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$addCard = F3(
 	function (model, _n0, contentId) {
-		var projectId = _n0.b7;
-		var columnId = _n0.cA;
-		var afterId = _n0.eK;
-		var _n1 = model.g;
+		var projectId = _n0.b6;
+		var columnId = _n0.cx;
+		var afterId = _n0.eJ;
+		var _n1 = model.p;
 		if (!_n1.$) {
 			var token = _n1.a.ik;
 			var _n2 = A3(author$project$Main$contentCardId, model, projectId, contentId);
@@ -11583,21 +11569,21 @@ var author$project$GitHubGraph$addIssueLabels = F3(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 						author$project$GitHubGraph$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$post(
-							'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.k) + '/labels'))))))))));
+							'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.j) + '/labels'))))))))));
 	});
 var author$project$Main$DataChanged = F2(
 	function (a, b) {
-		return {$: 63, a: a, b: b};
+		return {$: 54, a: a, b: b};
 	});
 var author$project$Main$addIssueLabels = F3(
 	function (model, issue, labels) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshIssue, issue.fw, author$project$Main$IssueRefreshed)),
+					A2(author$project$Backend$refreshIssue, issue.fv, author$project$Main$IssueRefreshed)),
 				A3(author$project$GitHubGraph$addIssueLabels, token, issue, labels));
 		} else {
 			return elm$core$Platform$Cmd$none;
@@ -11616,57 +11602,18 @@ var author$project$GitHubGraph$addPullRequestLabels = F3(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 						author$project$GitHubGraph$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$post(
-							'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.k) + '/labels'))))))))));
+							'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.j) + '/labels'))))))))));
 	});
 var author$project$Main$addPullRequestLabels = F3(
 	function (model, pr, labels) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshPR, pr.fw, author$project$Main$PullRequestRefreshed)),
+					A2(author$project$Backend$refreshPR, pr.fv, author$project$Main$PullRequestRefreshed)),
 				A3(author$project$GitHubGraph$addPullRequestLabels, token, pr, labels));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
-var author$project$GitHubGraph$closeRepoMilestone = F3(
-	function (token, repo, milestone) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'state',
-								elm$json$Json$Encode$string('closed'))
-							])),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$patch(
-							'https://api.github.com/repos/' + (repo.hY + ('/' + (repo.hE + ('/milestones/' + elm$core$String$fromInt(milestone.k))))))))));
-	});
-var author$project$Main$MilestoneChanged = F2(
-	function (a, b) {
-		return {$: 44, a: a, b: b};
-	});
-var author$project$Main$closeMilestone = F3(
-	function (model, repo, milestone) {
-		var _n0 = model.g;
-		if (!_n0.$) {
-			var token = _n0.a.ik;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$MilestoneChanged(repo),
-				A3(author$project$GitHubGraph$closeRepoMilestone, token, repo, milestone));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -11684,13 +11631,13 @@ var author$project$Main$hexBrightness = function (h) {
 };
 var elm$regex$Regex$Match = F4(
 	function (match, index, number, submatches) {
-		return {dH: index, hy: match, k: number, h6: submatches};
+		return {dF: index, hy: match, j: number, h6: submatches};
 	});
 var elm$regex$Regex$fromStringWith = _Regex_fromStringWith;
 var elm$regex$Regex$fromString = function (string) {
 	return A2(
 		elm$regex$Regex$fromStringWith,
-		{eU: false, fU: false},
+		{eT: false, fT: false},
 		string);
 };
 var elm$regex$Regex$never = _Regex_never;
@@ -11812,24 +11759,24 @@ var author$project$Main$computeColorIsLight = function (hex) {
 	}
 };
 var author$project$Main$isBug = function (card) {
-	return card.ac.dq;
+	return card.ab.$7;
 };
 var author$project$Main$isEnhancement = function (card) {
-	return card.ac.dr;
+	return card.ab.dp;
 };
 var author$project$Main$PullRequestState = function (a) {
 	return {$: 1, a: a};
 };
 var author$project$Main$isMerged = function (card) {
 	return _Utils_eq(
-		card._,
+		card.Z,
 		author$project$Main$PullRequestState(2));
 };
 var author$project$Main$isAcceptedPR = function (card) {
 	return (author$project$Main$isEnhancement(card) || author$project$Main$isBug(card)) && author$project$Main$isMerged(card);
 };
 var author$project$Main$isOpen = function (card) {
-	var _n0 = card._;
+	var _n0 = card.Z;
 	_n0$2:
 	while (true) {
 		if (!_n0.$) {
@@ -11851,7 +11798,7 @@ var author$project$Main$isOpen = function (card) {
 	return false;
 };
 var author$project$Main$isPR = function (card) {
-	var _n0 = card._;
+	var _n0 = card.Z;
 	if (_n0.$ === 1) {
 		return true;
 	} else {
@@ -11870,7 +11817,7 @@ var elm$core$Set$union = F2(
 	});
 var elm$core$String$toLower = _String_toLower;
 var author$project$Main$computeDataView = function (origModel) {
-	var dataView = origModel.D;
+	var dataView = origModel.N;
 	var add = function (x) {
 		return A2(
 			elm$core$Basics$composeL,
@@ -11894,20 +11841,20 @@ var author$project$Main$computeDataView = function (origModel) {
 							elm$core$Dict$update,
 							_Utils_Tuple2(
 								label.hE,
-								elm$core$String$toLower(label.cz)),
+								elm$core$String$toLower(label.cw)),
 							add(repo));
 					},
 					cbn,
 					repo.bk);
 			}),
 		elm$core$Dict$empty);
-	var model = origModel.aC ? _Utils_update(
+	var model = origModel.aB ? _Utils_update(
 		origModel,
 		{
-			D: _Utils_update(
+			N: _Utils_update(
 				dataView,
 				{
-					aB: groupRepoLabels(origModel.c.gf)
+					aA: groupRepoLabels(origModel.c.gf)
 				})
 		}) : origModel;
 	var _n0 = model.bv;
@@ -11917,15 +11864,15 @@ var author$project$Main$computeDataView = function (origModel) {
 				elm$core$Dict$foldl,
 				F3(
 					function (_n4, card, acc) {
-						return (_Utils_eq(card.cO, elm$core$Maybe$Nothing) && author$project$Main$isAcceptedPR(card)) ? A2(elm$core$List$cons, card, acc) : acc;
+						return (_Utils_eq(card.cL, elm$core$Maybe$Nothing) && author$project$Main$isAcceptedPR(card)) ? A2(elm$core$List$cons, card, acc) : acc;
 					}),
 				_List_Nil,
-				model.p);
+				model.o);
 			var cardsByMilestone = A3(
 				elm$core$Dict$foldl,
 				F3(
 					function (_n2, card, acc) {
-						var _n3 = card.cO;
+						var _n3 = card.cL;
 						if (!_n3.$) {
 							var milestone = _n3.a;
 							return A3(
@@ -11938,7 +11885,7 @@ var author$project$Main$computeDataView = function (origModel) {
 						}
 					}),
 				elm$core$Dict$empty,
-				model.p);
+				model.o);
 			var allMilestones = elm$core$Set$toList(
 				A3(
 					elm$core$Dict$foldl,
@@ -11957,18 +11904,18 @@ var author$project$Main$computeDataView = function (origModel) {
 												elm$core$Basics$composeL,
 												elm$core$Basics$eq(0),
 												function ($) {
-													return $._;
+													return $.Z;
 												}),
-											repo.fN))));
+											repo.fM))));
 						}),
 					elm$core$Set$empty,
 					model.c.gf));
 			return _Utils_update(
 				model,
 				{
-					D: _Utils_update(
+					N: _Utils_update(
 						dataView,
-						{cp: allMilestones, cy: cardsByMilestone, cQ: nextMilestoneCards})
+						{c5: allMilestones, df: cardsByMilestone, dW: nextMilestoneCards})
 				});
 		case 5:
 			var prsByRepo = A3(
@@ -11977,47 +11924,47 @@ var author$project$Main$computeDataView = function (origModel) {
 					function (_n5, card, acc) {
 						return (author$project$Main$isOpen(card) && author$project$Main$isPR(card)) ? A3(
 							elm$core$Dict$update,
-							card.q.fw,
+							card.q.fv,
 							add(card),
 							acc) : acc;
 					}),
 				elm$core$Dict$empty,
-				model.p);
+				model.o);
 			return _Utils_update(
 				model,
 				{
-					D: _Utils_update(
+					N: _Utils_update(
 						dataView,
-						{cX: prsByRepo})
+						{cT: prsByRepo})
 				});
 		case 3:
 			return _Utils_update(
 				model,
 				{
-					D: _Utils_update(
+					N: _Utils_update(
 						dataView,
 						{
-							aB: groupRepoLabels(model.c.gf)
+							aA: groupRepoLabels(model.c.gf)
 						})
 				});
 		case 1:
 			return _Utils_update(
 				model,
 				{
-					D: _Utils_update(
+					N: _Utils_update(
 						dataView,
 						{
-							aB: groupRepoLabels(model.c.gf)
+							aA: groupRepoLabels(model.c.gf)
 						})
 				});
 		case 2:
 			return _Utils_update(
 				model,
 				{
-					D: _Utils_update(
+					N: _Utils_update(
 						dataView,
 						{
-							aB: groupRepoLabels(model.c.gf)
+							aA: groupRepoLabels(model.c.gf)
 						})
 				});
 		default:
@@ -12090,7 +12037,7 @@ var author$project$ForceGraph$node = function (nc) {
 	var _n0 = A2(
 		elm$random$Random$step,
 		A2(elm$random$Random$float, 0, canvas),
-		elm$random$Random$initialSeed(ncnode.fw));
+		elm$random$Random$initialSeed(ncnode.fv));
 	var x = _n0.a;
 	var s2 = _n0.b;
 	var _n1 = A2(
@@ -12100,10 +12047,10 @@ var author$project$ForceGraph$node = function (nc) {
 	var y = _n1.a;
 	var s3 = _n1.b;
 	return {
-		fx: nc.fx,
+		fw: nc.fw,
 		aU: {
-			fw: ncnode.fw,
-			ar: {fw: ncnode.fw, c_: ncnode.ar.c_, ex: ncnode.ar.ex, iq: 0.0, ir: 0.0, iv: x, iy: y}
+			fv: ncnode.fv,
+			aq: {fv: ncnode.fv, cW: ncnode.aq.cW, ew: ncnode.aq.ew, iq: 0.0, ir: 0.0, iv: x, iy: y}
 		},
 		fX: nc.fX
 	};
@@ -12120,7 +12067,7 @@ var elm_community$graph$Graph$edges = function (graph) {
 				F2(
 					function (node2, e) {
 						return elm$core$List$cons(
-							{hn: node1, ar: e, id: node2});
+							{hn: node1, aq: e, id: node2});
 					}),
 				ctx.fX);
 		});
@@ -12146,7 +12093,7 @@ var elm_community$intdict$IntDict$findMax = function (dict) {
 			case 1:
 				var l = dict.a;
 				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.dJ, l.ex));
+					_Utils_Tuple2(l.dH, l.ew));
 			default:
 				var i = dict.a;
 				var $temp$dict = i.d;
@@ -12164,10 +12111,10 @@ var elm_community$intdict$IntDict$findMin = function (dict) {
 			case 1:
 				var l = dict.a;
 				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.dJ, l.ex));
+					_Utils_Tuple2(l.dH, l.ew));
 			default:
 				var i = dict.a;
-				var $temp$dict = i.fG;
+				var $temp$dict = i.fF;
 				dict = $temp$dict;
 				continue findMin;
 		}
@@ -12217,7 +12164,7 @@ var elm_community$graph$Graph$fold = F3(
 					if (!maybeContext.$) {
 						var ctx = maybeContext.a;
 						var $temp$acc1 = A2(f, ctx, acc1),
-							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.aU.fw, graph1);
+							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.aU.fv, graph1);
 						acc1 = $temp$acc1;
 						graph1 = $temp$graph1;
 						continue go;
@@ -12232,7 +12179,7 @@ var elm_community$graph$Graph$insert = F2(
 	function (nodeContext, graph) {
 		return A3(
 			elm_community$graph$Graph$update,
-			nodeContext.aU.fw,
+			nodeContext.aU.fv,
 			elm$core$Basics$always(
 				elm$core$Maybe$Just(nodeContext)),
 			graph);
@@ -12257,8 +12204,8 @@ var gampleman$elm_visualization$Force$customLinks = F2(
 			elm$core$List$foldr,
 			F2(
 				function (_n1, d) {
-					var source = _n1.aD;
-					var target = _n1.av;
+					var source = _n1.aC;
+					var target = _n1.au;
 					return A3(
 						elm$core$Dict$update,
 						target,
@@ -12297,14 +12244,14 @@ var gampleman$elm_visualization$Force$customLinks = F2(
 			A2(
 				elm$core$List$map,
 				function (_n0) {
-					var source = _n0.aD;
-					var target = _n0.av;
+					var source = _n0.aC;
+					var target = _n0.au;
 					var distance = _n0.g9;
 					var strength = _n0.h5;
 					return {
-						df: count(source) / (count(source) + count(target)),
+						dc: count(source) / (count(source) + count(target)),
 						g9: distance,
-						aD: source,
+						aC: source,
 						h5: A2(
 							elm$core$Maybe$withDefault,
 							1 / A2(
@@ -12312,7 +12259,7 @@ var gampleman$elm_visualization$Force$customLinks = F2(
 								count(source),
 								count(target)),
 							strength),
-						av: target
+						au: target
 					};
 				},
 				list));
@@ -12323,7 +12270,7 @@ var gampleman$elm_visualization$Force$iterations = F2(
 		return _Utils_update(
 			config,
 			{
-				c9: 1 - A2(elm$core$Basics$pow, config.dU, 1 / iters)
+				c6: 1 - A2(elm$core$Basics$pow, config.dS, 1 / iters)
 			});
 	});
 var gampleman$elm_visualization$Force$ManyBody = F2(
@@ -12348,11 +12295,11 @@ var gampleman$elm_visualization$Force$manyBodyStrength = function (strength) {
 var gampleman$elm_visualization$Force$simulation = function (forces) {
 	return {
 		a9: 1.0,
-		c9: 1 - A2(elm$core$Basics$pow, 1.0e-3, 1 / 300),
-		eO: 0.0,
-		fo: forces,
-		dU: 1.0e-3,
-		co: 0.6
+		c6: 1 - A2(elm$core$Basics$pow, 1.0e-3, 1 / 300),
+		eN: 0.0,
+		fn: forces,
+		dS: 1.0e-3,
+		cn: 0.6
 	};
 };
 var author$project$ForceGraph$fromGraph = function (g) {
@@ -12367,12 +12314,12 @@ var author$project$ForceGraph$fromGraph = function (g) {
 			if ((!_n0.a.$) && (!_n0.b.$)) {
 				var fnc = _n0.a.a;
 				var tnc = _n0.b.a;
-				return 20 + elm$core$Basics$ceiling(tnc.aU.ar.c_ + fnc.aU.ar.c_);
+				return 20 + elm$core$Basics$ceiling(tnc.aU.aq.cW + fnc.aU.aq.cW);
 			} else {
 				return 0;
 			}
 		}();
-		return {g9: distance, aD: from, h5: elm$core$Maybe$Nothing, av: to};
+		return {g9: distance, aC: from, h5: elm$core$Maybe$Nothing, au: to};
 	};
 	var size = elm_community$graph$Graph$size(graph);
 	var iterations = (size === 1) ? 1 : ((size < 5) ? 50 : (size * 10));
@@ -12391,7 +12338,7 @@ var author$project$ForceGraph$fromGraph = function (g) {
 			A2(
 				elm$core$List$map,
 				function ($) {
-					return $.fw;
+					return $.fv;
 				},
 				elm_community$graph$Graph$nodes(graph)))
 		]);
@@ -12400,7 +12347,7 @@ var author$project$ForceGraph$fromGraph = function (g) {
 		iterations,
 		gampleman$elm_visualization$Force$simulation(forces));
 	return author$project$ForceGraph$computeSimulation(
-		{a0: graph, ca: newSimulation});
+		{a0: graph, b9: newSimulation});
 };
 var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	function (a, b) {
@@ -12408,17 +12355,17 @@ var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	});
 var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
 var author$project$Main$baseGraphState = function (model) {
-	return {u: elm$core$Set$empty, cw: model.c.eH, M: model.M, m: model.m, W: elm$core$Maybe$Nothing, g: model.g, s: y0hy0h$ordered_containers$OrderedSet$empty};
+	return {u: elm$core$Set$empty, cu: model.c.eG, K: model.K, l: model.l, V: elm$core$Maybe$Nothing, p: model.p, s: y0hy0h$ordered_containers$OrderedSet$empty};
 };
 var author$project$Main$cardRadiusBase = F2(
 	function (card, _n0) {
-		var incoming = _n0.fx;
+		var incoming = _n0.fw;
 		var outgoing = _n0.fX;
 		return (15 + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2))) + function () {
-			var _n1 = card.cB;
+			var _n1 = card.cy;
 			if (_n1.$ === 1) {
 				var pr = _n1.a;
-				return A2(elm$core$Basics$min, 50, (pr.eJ + pr.fb) / 50);
+				return A2(elm$core$Basics$min, 50, (pr.eI + pr.fa) / 50);
 			} else {
 				return 0;
 			}
@@ -12471,7 +12418,7 @@ var folkertdev$one_true_path_experiment$SubPath$SubPath = function (a) {
 	return {$: 0, a: a};
 };
 var folkertdev$elm_deque$Deque$Deque = elm$core$Basics$identity;
-var folkertdev$elm_deque$Internal$empty = {aq: _List_Nil, au: _List_Nil, af: 0, ag: 0};
+var folkertdev$elm_deque$Internal$empty = {ap: _List_Nil, at: _List_Nil, ae: 0, af: 0};
 var folkertdev$elm_deque$Deque$empty = folkertdev$elm_deque$Internal$empty;
 var elm$core$List$drop = F2(
 	function (n, list) {
@@ -12621,10 +12568,10 @@ var elm$core$List$take = F2(
 		return A3(elm$core$List$takeFast, 0, n, list);
 	});
 var folkertdev$elm_deque$Internal$rebalance = function (deque) {
-	var sizeF = deque.af;
-	var sizeR = deque.ag;
-	var front = deque.aq;
-	var rear = deque.au;
+	var sizeF = deque.ae;
+	var sizeR = deque.af;
+	var front = deque.ap;
+	var rear = deque.at;
 	var size1 = ((sizeF + sizeR) / 2) | 0;
 	var size2 = (sizeF + sizeR) - size1;
 	var balanceConstant = 4;
@@ -12639,7 +12586,7 @@ var folkertdev$elm_deque$Internal$rebalance = function (deque) {
 			var newFront = A2(elm$core$List$take, size1, front);
 			return _Utils_update(
 				deque,
-				{aq: newFront, au: newRear, af: size1, ag: size2});
+				{ap: newFront, at: newRear, ae: size1, af: size2});
 		} else {
 			if (_Utils_cmp(sizeR, (balanceConstant * sizeF) + 1) > 0) {
 				var newRear = A2(elm$core$List$take, size1, rear);
@@ -12649,7 +12596,7 @@ var folkertdev$elm_deque$Internal$rebalance = function (deque) {
 						A2(elm$core$List$drop, size1, rear)));
 				return _Utils_update(
 					deque,
-					{aq: newFront, au: newRear, af: size1, ag: size2});
+					{ap: newFront, at: newRear, ae: size1, af: size2});
 			} else {
 				return deque;
 			}
@@ -12661,8 +12608,8 @@ var folkertdev$elm_deque$Internal$fromList = function (list) {
 		_Utils_update(
 			folkertdev$elm_deque$Internal$empty,
 			{
-				aq: list,
-				af: elm$core$List$length(list)
+				ap: list,
+				ae: elm$core$List$length(list)
 			}));
 };
 var folkertdev$elm_deque$Deque$fromList = A2(elm$core$Basics$composeL, elm$core$Basics$identity, folkertdev$elm_deque$Internal$fromList);
@@ -12672,8 +12619,8 @@ var folkertdev$elm_deque$Deque$unwrap = function (_n0) {
 };
 var folkertdev$elm_deque$Internal$toList = function (deque) {
 	return _Utils_ap(
-		deque.aq,
-		elm$core$List$reverse(deque.au));
+		deque.ap,
+		elm$core$List$reverse(deque.at));
 };
 var folkertdev$elm_deque$Deque$toList = A2(elm$core$Basics$composeL, folkertdev$elm_deque$Internal$toList, folkertdev$elm_deque$Deque$unwrap);
 var folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath = {$: 4};
@@ -12792,11 +12739,11 @@ var folkertdev$one_true_path_experiment$SubPath$compress = function (subpath) {
 			_Utils_update(
 				data,
 				{
-					fe: folkertdev$one_true_path_experiment$SubPath$compressHelper(data.fe)
+					fd: folkertdev$one_true_path_experiment$SubPath$compressHelper(data.fd)
 				}));
 	}
 };
-var folkertdev$one_true_path_experiment$SubPath$defaultConfig = {cE: elm$core$Maybe$Nothing, cN: false};
+var folkertdev$one_true_path_experiment$SubPath$defaultConfig = {cB: elm$core$Maybe$Nothing, cK: false};
 var folkertdev$one_true_path_experiment$SubPath$optionFolder = F2(
 	function (option, config) {
 		if (!option.$) {
@@ -12804,12 +12751,12 @@ var folkertdev$one_true_path_experiment$SubPath$optionFolder = F2(
 			return _Utils_update(
 				config,
 				{
-					cE: elm$core$Maybe$Just(n)
+					cB: elm$core$Maybe$Just(n)
 				});
 		} else {
 			return _Utils_update(
 				config,
-				{cN: true});
+				{cK: true});
 		}
 	});
 var folkertdev$svg_path_lowlevel$Path$LowLevel$Absolute = 1;
@@ -12860,15 +12807,15 @@ var folkertdev$one_true_path_experiment$SubPath$toLowLevel = function (subpath) 
 	if (subpath.$ === 1) {
 		return elm$core$Maybe$Nothing;
 	} else {
-		var moveto = subpath.a.fR;
-		var drawtos = subpath.a.fe;
+		var moveto = subpath.a.fQ;
+		var drawtos = subpath.a.fd;
 		return elm$core$Maybe$Just(
 			{
-				fe: A2(
+				fd: A2(
 					elm$core$List$map,
 					folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelDrawTo,
 					folkertdev$elm_deque$Deque$toList(drawtos)),
-				fR: folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo(moveto)
+				fQ: folkertdev$one_true_path_experiment$LowLevel$Command$toLowLevelMoveTo(moveto)
 			});
 	}
 };
@@ -13003,10 +12950,10 @@ var folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags = function (_n0) {
 var folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyEllipticalArcArgument = F2(
 	function (config, _n0) {
 		var radii = _n0.aW;
-		var xAxisRotate = _n0.aJ;
-		var arcFlag = _n0.da;
-		var direction = _n0.dm;
-		var target = _n0.av;
+		var xAxisRotate = _n0.aI;
+		var arcFlag = _n0.c7;
+		var direction = _n0.dk;
+		var target = _n0.au;
 		var _n1 = folkertdev$svg_path_lowlevel$Path$LowLevel$encodeFlags(
 			_Utils_Tuple2(arcFlag, direction));
 		var arc = _n1.a;
@@ -13136,8 +13083,8 @@ var folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo = F2(
 	});
 var folkertdev$svg_path_lowlevel$Path$LowLevel$toStringSubPath = F2(
 	function (config, _n0) {
-		var moveto = _n0.fR;
-		var drawtos = _n0.fe;
+		var moveto = _n0.fQ;
+		var drawtos = _n0.fd;
 		return A2(folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyMoveTo, config, moveto) + (' ' + A2(
 			elm$core$String$join,
 			' ',
@@ -13161,7 +13108,7 @@ var folkertdev$one_true_path_experiment$SubPath$toStringWith = F2(
 	function (options, subpath) {
 		var config = A3(elm$core$List$foldl, folkertdev$one_true_path_experiment$SubPath$optionFolder, folkertdev$one_true_path_experiment$SubPath$defaultConfig, options);
 		var lowLevelOptions = function () {
-			var _n0 = config.cE;
+			var _n0 = config.cB;
 			if (_n0.$ === 1) {
 				return _List_Nil;
 			} else {
@@ -13182,7 +13129,7 @@ var folkertdev$one_true_path_experiment$SubPath$toStringWith = F2(
 					folkertdev$svg_path_lowlevel$Path$LowLevel$toStringWith(lowLevelOptions),
 					elm$core$List$singleton),
 				folkertdev$one_true_path_experiment$SubPath$toLowLevel(
-					(config.cN ? folkertdev$one_true_path_experiment$SubPath$compress : elm$core$Basics$identity)(subpath))));
+					(config.cK ? folkertdev$one_true_path_experiment$SubPath$compress : elm$core$Basics$identity)(subpath))));
 	});
 var folkertdev$one_true_path_experiment$SubPath$toString = function (subpath) {
 	return A2(folkertdev$one_true_path_experiment$SubPath$toStringWith, _List_Nil, subpath);
@@ -13209,8 +13156,8 @@ var elm$core$Basics$sin = _Basics_sin;
 var folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = elm$core$Basics$identity;
 var folkertdev$one_true_path_experiment$LowLevel$Command$moveTo = elm$core$Basics$identity;
 var folkertdev$elm_deque$Internal$popBack = function (deque) {
-	var front = deque.aq;
-	var rear = deque.au;
+	var front = deque.ap;
+	var rear = deque.at;
 	var _n0 = _Utils_Tuple2(front, rear);
 	if (!_n0.b.b) {
 		if (!_n0.a.b) {
@@ -13235,7 +13182,7 @@ var folkertdev$elm_deque$Internal$popBack = function (deque) {
 			folkertdev$elm_deque$Internal$rebalance(
 				_Utils_update(
 					deque,
-					{au: rs, ag: deque.ag - 1})));
+					{at: rs, af: deque.af - 1})));
 	}
 };
 var folkertdev$elm_deque$Deque$popBack = A2(
@@ -13259,8 +13206,8 @@ var folkertdev$elm_deque$Deque$pushBack = F2(
 			_Utils_update(
 				deque,
 				{
-					au: A2(elm$core$List$cons, elem, deque.au),
-					ag: deque.ag + 1
+					at: A2(elm$core$List$cons, elem, deque.at),
+					af: deque.af + 1
 				}));
 	});
 var folkertdev$one_true_path_experiment$LowLevel$Command$closePath = folkertdev$one_true_path_experiment$LowLevel$Command$ClosePath;
@@ -13268,8 +13215,8 @@ var folkertdev$one_true_path_experiment$SubPath$close = function (subpath) {
 	if (subpath.$ === 1) {
 		return folkertdev$one_true_path_experiment$SubPath$Empty;
 	} else {
-		var moveto = subpath.a.fR;
-		var drawtos = subpath.a.fe;
+		var moveto = subpath.a.fQ;
+		var drawtos = subpath.a.fd;
 		var _n1 = folkertdev$elm_deque$Deque$popBack(drawtos);
 		if ((!_n1.a.$) && (_n1.a.a.$ === 4)) {
 			var _n2 = _n1.a.a;
@@ -13278,15 +13225,15 @@ var folkertdev$one_true_path_experiment$SubPath$close = function (subpath) {
 		} else {
 			return folkertdev$one_true_path_experiment$SubPath$SubPath(
 				{
-					fe: A2(folkertdev$elm_deque$Deque$pushBack, folkertdev$one_true_path_experiment$LowLevel$Command$closePath, drawtos),
-					fR: moveto
+					fd: A2(folkertdev$elm_deque$Deque$pushBack, folkertdev$one_true_path_experiment$LowLevel$Command$closePath, drawtos),
+					fQ: moveto
 				});
 		}
 	}
 };
 var folkertdev$one_true_path_experiment$LowLevel$Command$lineTo = folkertdev$one_true_path_experiment$LowLevel$Command$LineTo;
 var folkertdev$one_true_path_experiment$SubPath$firstPoint = function (_n0) {
-	var moveto = _n0.fR;
+	var moveto = _n0.fQ;
 	var p = moveto;
 	return p;
 };
@@ -13320,11 +13267,11 @@ var folkertdev$one_true_path_experiment$SubPath$pushBack = F2(
 		return _Utils_update(
 			data,
 			{
-				fe: A2(folkertdev$elm_deque$Deque$pushBack, drawto, data.fe)
+				fd: A2(folkertdev$elm_deque$Deque$pushBack, drawto, data.fd)
 			});
 	});
 var folkertdev$elm_deque$Internal$length = function (deque) {
-	return deque.af + deque.ag;
+	return deque.ae + deque.af;
 };
 var folkertdev$elm_deque$Internal$isEmpty = function (deque) {
 	return !folkertdev$elm_deque$Internal$length(deque);
@@ -13335,15 +13282,15 @@ var folkertdev$elm_deque$Deque$append = F2(
 		var x = p;
 		var y = q;
 		return folkertdev$elm_deque$Deque$isEmpty(p) ? q : (folkertdev$elm_deque$Deque$isEmpty(q) ? p : {
-			aq: _Utils_ap(
-				x.aq,
-				elm$core$List$reverse(x.au)),
-			au: elm$core$List$reverse(
+			ap: _Utils_ap(
+				x.ap,
+				elm$core$List$reverse(x.at)),
+			at: elm$core$List$reverse(
 				_Utils_ap(
-					y.aq,
-					elm$core$List$reverse(y.au))),
-			af: x.af + x.ag,
-			ag: y.af + y.ag
+					y.ap,
+					elm$core$List$reverse(y.at))),
+			ae: x.ae + x.af,
+			af: y.ae + y.af
 		});
 	});
 var folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate = F2(
@@ -13351,7 +13298,7 @@ var folkertdev$one_true_path_experiment$SubPath$unsafeConcatenate = F2(
 		return _Utils_update(
 			a,
 			{
-				fe: A2(folkertdev$elm_deque$Deque$append, a.fe, b.fe)
+				fd: A2(folkertdev$elm_deque$Deque$append, a.fd, b.fd)
 			});
 	});
 var folkertdev$one_true_path_experiment$SubPath$connect = function () {
@@ -13376,8 +13323,8 @@ var folkertdev$one_true_path_experiment$SubPath$with = F2(
 	function (moveto, drawtos) {
 		return folkertdev$one_true_path_experiment$SubPath$SubPath(
 			{
-				fe: folkertdev$elm_deque$Deque$fromList(drawtos),
-				fR: moveto
+				fd: folkertdev$elm_deque$Deque$fromList(drawtos),
+				fQ: moveto
 			});
 	});
 var folkertdev$one_true_path_experiment$LowLevel$Command$arcTo = folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc;
@@ -13428,22 +13375,22 @@ var gampleman$elm_visualization$Shape$Pie$arc_ = F6(
 							_List_fromArray(
 								[
 									{
-									da: folkertdev$one_true_path_experiment$LowLevel$Command$largestArc,
-									dm: cw,
+									c7: folkertdev$one_true_path_experiment$LowLevel$Command$largestArc,
+									dk: cw,
 									aW: _Utils_Tuple2(r, r),
-									av: _Utils_Tuple2(x - dx, y - dy),
-									aJ: 0
+									au: _Utils_Tuple2(x - dx, y - dy),
+									aI: 0
 								}
 								])),
 							folkertdev$one_true_path_experiment$LowLevel$Command$arcTo(
 							_List_fromArray(
 								[
 									{
-									da: folkertdev$one_true_path_experiment$LowLevel$Command$largestArc,
-									dm: cw,
+									c7: folkertdev$one_true_path_experiment$LowLevel$Command$largestArc,
+									dk: cw,
 									aW: _Utils_Tuple2(r, r),
-									av: _Utils_Tuple2(x0_, y0_),
-									aJ: 0
+									au: _Utils_Tuple2(x0_, y0_),
+									aI: 0
 								}
 								]))
 						]));
@@ -13458,14 +13405,14 @@ var gampleman$elm_visualization$Shape$Pie$arc_ = F6(
 							_List_fromArray(
 								[
 									{
-									da: gampleman$elm_visualization$Shape$Pie$boolToArc(
+									c7: gampleman$elm_visualization$Shape$Pie$boolToArc(
 										_Utils_cmp(da_, elm$core$Basics$pi) > -1),
-									dm: cw,
+									dk: cw,
 									aW: _Utils_Tuple2(r, r),
-									av: _Utils_Tuple2(
+									au: _Utils_Tuple2(
 										x + (r * elm$core$Basics$cos(a1)),
 										y + (r * elm$core$Basics$sin(a1))),
-									aJ: 0
+									aI: 0
 								}
 								]))
 						]));
@@ -13509,7 +13456,7 @@ var gampleman$elm_visualization$Shape$Pie$cornerTangents = F7(
 			A2(elm$core$Basics$pow, dx1, 2) + A2(elm$core$Basics$pow, dy1, 2)) > 0) ? _Utils_Tuple2(cx1, cy1) : _Utils_Tuple2(cx0, cy0);
 		var fcx = _n0.a;
 		var fxy = _n0.b;
-		return {N: fcx, O: fxy, ah: -ox, aI: fcx * ((r1 / r) - 1), ai: -oy, aK: fxy * ((r1 / r) - 1)};
+		return {L: fcx, M: fxy, ag: -ox, aH: fcx * ((r1 / r) - 1), ah: -oy, aJ: fxy * ((r1 / r) - 1)};
 	});
 var gampleman$elm_visualization$Shape$Pie$intersect = F8(
 	function (x0, y0, x1, y1, x2, y2, x3, y3) {
@@ -13523,9 +13470,9 @@ var gampleman$elm_visualization$Shape$Pie$intersect = F8(
 var folkertdev$elm_deque$Internal$foldl = F3(
 	function (f, initial, deque) {
 		return function (initial_) {
-			return A3(elm$core$List$foldr, f, initial_, deque.au);
+			return A3(elm$core$List$foldr, f, initial_, deque.at);
 		}(
-			A3(elm$core$List$foldl, f, initial, deque.aq));
+			A3(elm$core$List$foldl, f, initial, deque.ap));
 	});
 var folkertdev$elm_deque$Deque$foldl = F2(
 	function (f, initial) {
@@ -13557,16 +13504,16 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 		var noControlPoint = function (currentState) {
 			return _Utils_update(
 				currentState,
-				{G: elm$core$Maybe$Nothing});
+				{E: elm$core$Maybe$Nothing});
 		};
 		var maybeUpdateCursor = function (coordinate) {
 			return _Utils_update(
 				state,
 				{
-					o: A2(elm$core$Maybe$withDefault, state.o, coordinate)
+					n: A2(elm$core$Maybe$withDefault, state.n, coordinate)
 				});
 		};
-		var _n0 = state.o;
+		var _n0 = state.n;
 		var cursorX = _n0.a;
 		var cursorY = _n0.b;
 		switch (drawto.$) {
@@ -13588,8 +13535,8 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 					return _Utils_update(
 						state,
 						{
-							o: target,
-							G: elm$core$Maybe$Just(control2)
+							n: target,
+							E: elm$core$Maybe$Just(control2)
 						});
 				}
 			case 2:
@@ -13604,8 +13551,8 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 					return _Utils_update(
 						state,
 						{
-							o: target,
-							G: elm$core$Maybe$Just(control)
+							n: target,
+							E: elm$core$Maybe$Just(control)
 						});
 				}
 			case 3:
@@ -13615,7 +13562,7 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 						A2(
 							elm$core$Maybe$map,
 							function ($) {
-								return $.av;
+								return $.au;
 							},
 							elm_community$list_extra$List$Extra$last(_arguments))));
 			default:
@@ -13623,26 +13570,26 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState = F2(
 		}
 	});
 var folkertdev$one_true_path_experiment$SubPath$finalCursorState = function (_n0) {
-	var moveto = _n0.fR;
-	var drawtos = _n0.fe;
+	var moveto = _n0.fQ;
+	var drawtos = _n0.fd;
 	var _n1 = moveto;
 	var start = _n1;
-	var initial = {o: start, G: elm$core$Maybe$Nothing, aE: start};
+	var initial = {n: start, E: elm$core$Maybe$Nothing, aD: start};
 	return A3(folkertdev$elm_deque$Deque$foldl, folkertdev$one_true_path_experiment$LowLevel$Command$updateCursorState, initial, drawtos);
 };
 var folkertdev$one_true_path_experiment$SubPath$finalPoint = A2(
 	elm$core$Basics$composeR,
 	folkertdev$one_true_path_experiment$SubPath$finalCursorState,
 	function ($) {
-		return $.o;
+		return $.n;
 	});
 var folkertdev$elm_deque$Internal$map = F2(
 	function (f, deque) {
 		return {
-			aq: A2(elm$core$List$map, f, deque.aq),
-			au: A2(elm$core$List$map, f, deque.au),
-			af: deque.af,
-			ag: deque.ag
+			ap: A2(elm$core$List$map, f, deque.ap),
+			at: A2(elm$core$List$map, f, deque.at),
+			ae: deque.ae,
+			af: deque.af
 		};
 	});
 var folkertdev$elm_deque$Deque$map = function (f) {
@@ -13697,7 +13644,7 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$mapCoordinateDrawTo = F
 							return _Utils_update(
 								argument,
 								{
-									av: f(argument.av)
+									au: f(argument.au)
 								});
 						},
 						_arguments));
@@ -13707,15 +13654,15 @@ var folkertdev$one_true_path_experiment$LowLevel$Command$mapCoordinateDrawTo = F
 	});
 var folkertdev$one_true_path_experiment$SubPath$mapCoordinateInstructions = F2(
 	function (f, _n0) {
-		var moveto = _n0.fR;
-		var drawtos = _n0.fe;
+		var moveto = _n0.fQ;
+		var drawtos = _n0.fd;
 		var coordinate = moveto;
 		return {
-			fe: A2(
+			fd: A2(
 				folkertdev$elm_deque$Deque$map,
 				folkertdev$one_true_path_experiment$LowLevel$Command$mapCoordinateDrawTo(f),
 				drawtos),
-			fR: f(coordinate)
+			fQ: f(coordinate)
 		};
 	});
 var ianmackenzie$elm_geometry$Vector2d$difference = F2(
@@ -13764,7 +13711,7 @@ var gampleman$elm_visualization$Shape$Pie$myAsin = function (x) {
 };
 var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 	var a1 = arcData.bT - (elm$core$Basics$pi / 2);
-	var a0 = arcData.cc - (elm$core$Basics$pi / 2);
+	var a0 = arcData.cb - (elm$core$Basics$pi / 2);
 	var cw = _Utils_cmp(a1, a0) > 0;
 	var da = elm$core$Basics$abs(a1 - a0);
 	var _n0 = (_Utils_cmp(arcData.bY, arcData.bu) > 0) ? _Utils_Tuple2(arcData.bu, arcData.bY) : _Utils_Tuple2(arcData.bY, arcData.bu);
@@ -13825,9 +13772,9 @@ var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 				var rc = A2(
 					elm$core$Basics$min,
 					elm$core$Basics$abs(r1 - r0) / 2,
-					arcData.cC);
-				var ap = arcData.cU / 2;
-				var rp = (_Utils_cmp(ap, gampleman$elm_visualization$Shape$Pie$epsilon) > 0) ? ((arcData.cV > 0) ? arcData.cV : elm$core$Basics$sqrt(
+					arcData.cz);
+				var ap = arcData.cQ / 2;
+				var rp = (_Utils_cmp(ap, gampleman$elm_visualization$Shape$Pie$epsilon) > 0) ? ((arcData.cR > 0) ? arcData.cR : elm$core$Basics$sqrt(
 					A2(elm$core$Basics$pow, r0, 2) + A2(elm$core$Basics$pow, r1, 2))) : 0;
 				var p0 = gampleman$elm_visualization$Shape$Pie$myAsin(
 					(rp / r0) * elm$core$Basics$sin(ap));
@@ -13884,39 +13831,39 @@ var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 							var p = A2(
 								folkertdev$one_true_path_experiment$SubPath$with,
 								folkertdev$one_true_path_experiment$LowLevel$Command$moveTo(
-									_Utils_Tuple2(t0.N + t0.ah, t0.O + t0.ai)),
+									_Utils_Tuple2(t0.L + t0.ag, t0.M + t0.ah)),
 								_List_Nil);
 							return (_Utils_cmp(rc1, rc) < 0) ? A7(
 								gampleman$elm_visualization$Shape$Pie$makeArc,
-								t0.N,
-								t0.O,
+								t0.L,
+								t0.M,
 								rc1,
-								A2(elm$core$Basics$atan2, t0.ai, t0.ah),
-								A2(elm$core$Basics$atan2, t1.ai, t1.ah),
+								A2(elm$core$Basics$atan2, t0.ah, t0.ag),
+								A2(elm$core$Basics$atan2, t1.ah, t1.ag),
 								!cw,
 								p) : A7(
 								gampleman$elm_visualization$Shape$Pie$makeArc,
-								t1.N,
-								t1.O,
+								t1.L,
+								t1.M,
 								rc1,
-								A2(elm$core$Basics$atan2, t1.aK, t1.aI),
-								A2(elm$core$Basics$atan2, t1.ai, t1.ah),
+								A2(elm$core$Basics$atan2, t1.aJ, t1.aH),
+								A2(elm$core$Basics$atan2, t1.ah, t1.ag),
 								!cw,
 								A7(
 									gampleman$elm_visualization$Shape$Pie$makeArc,
 									0,
 									0,
 									r1,
-									A2(elm$core$Basics$atan2, t0.O + t0.aK, t0.N + t0.aI),
-									A2(elm$core$Basics$atan2, t1.O + t1.aK, t1.N + t1.aI),
+									A2(elm$core$Basics$atan2, t0.M + t0.aJ, t0.L + t0.aH),
+									A2(elm$core$Basics$atan2, t1.M + t1.aJ, t1.L + t1.aH),
 									!cw,
 									A7(
 										gampleman$elm_visualization$Shape$Pie$makeArc,
-										t0.N,
-										t0.O,
+										t0.L,
+										t0.M,
 										rc1,
-										A2(elm$core$Basics$atan2, t0.ai, t0.ah),
-										A2(elm$core$Basics$atan2, t0.aK, t0.aI),
+										A2(elm$core$Basics$atan2, t0.ah, t0.ag),
+										A2(elm$core$Basics$atan2, t0.aJ, t0.aH),
 										!cw,
 										p)));
 						} else {
@@ -13958,7 +13905,7 @@ var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 							A2(
 								folkertdev$one_true_path_experiment$SubPath$with,
 								folkertdev$one_true_path_experiment$LowLevel$Command$moveTo(
-									_Utils_Tuple2(t0.N + t0.ah, t0.O + t0.ai)),
+									_Utils_Tuple2(t0.L + t0.ag, t0.M + t0.ah)),
 								_List_Nil),
 							outerRing);
 						return (_Utils_cmp(rc0, rc) < 0) ? _List_fromArray(
@@ -13966,11 +13913,11 @@ var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 								folkertdev$one_true_path_experiment$SubPath$close(
 								A7(
 									gampleman$elm_visualization$Shape$Pie$makeArc,
-									t0.N,
-									t0.O,
+									t0.L,
+									t0.M,
 									rc0,
-									A2(elm$core$Basics$atan2, t0.ai, t0.ah),
-									A2(elm$core$Basics$atan2, t1.ai, t1.ah),
+									A2(elm$core$Basics$atan2, t0.ah, t0.ag),
+									A2(elm$core$Basics$atan2, t1.ah, t1.ag),
 									!cw,
 									p))
 							]) : _List_fromArray(
@@ -13978,27 +13925,27 @@ var gampleman$elm_visualization$Shape$Pie$arc = function (arcData) {
 								folkertdev$one_true_path_experiment$SubPath$close(
 								A7(
 									gampleman$elm_visualization$Shape$Pie$makeArc,
-									t1.N,
-									t1.O,
+									t1.L,
+									t1.M,
 									rc0,
-									A2(elm$core$Basics$atan2, t1.aK, t1.aI),
-									A2(elm$core$Basics$atan2, t1.ai, t1.ah),
+									A2(elm$core$Basics$atan2, t1.aJ, t1.aH),
+									A2(elm$core$Basics$atan2, t1.ah, t1.ag),
 									!cw,
 									A7(
 										gampleman$elm_visualization$Shape$Pie$makeArc,
 										0,
 										0,
 										r0,
-										A2(elm$core$Basics$atan2, t0.O + t0.aK, t0.N + t0.aI),
-										A2(elm$core$Basics$atan2, t1.O + t1.aK, t1.N + t1.aI),
+										A2(elm$core$Basics$atan2, t0.M + t0.aJ, t0.L + t0.aH),
+										A2(elm$core$Basics$atan2, t1.M + t1.aJ, t1.L + t1.aH),
 										cw,
 										A7(
 											gampleman$elm_visualization$Shape$Pie$makeArc,
-											t0.N,
-											t0.O,
+											t0.L,
+											t0.M,
 											rc0,
-											A2(elm$core$Basics$atan2, t0.ai, t0.ah),
-											A2(elm$core$Basics$atan2, t0.aK, t0.aI),
+											A2(elm$core$Basics$atan2, t0.ah, t0.ag),
+											A2(elm$core$Basics$atan2, t0.aJ, t0.aH),
 											!cw,
 											p))))
 							]);
@@ -14118,7 +14065,7 @@ var gampleman$elm_visualization$Shape$Pie$pie = F2(
 			});
 		var summer = F2(
 			function (a, b) {
-				var v = settings.ey(a);
+				var v = settings.ex(a);
 				return (v > 0) ? (v + b) : b;
 			});
 		var sum = A3(elm$core$List$foldr, summer, 0, data);
@@ -14132,31 +14079,31 @@ var gampleman$elm_visualization$Shape$Pie$pie = F2(
 						function (_n2, _n3) {
 							var a = _n2.b;
 							var b = _n3.b;
-							return A2(settings.em, a, b);
+							return A2(settings.el, a, b);
 						}))),
 			elm$core$List$indexedMap(elm$core$Tuple$pair));
 		var dataArray = elm$core$Array$fromList(data);
 		var da = A2(
 			elm$core$Basics$min,
 			2 * elm$core$Basics$pi,
-			A2(elm$core$Basics$max, (-2) * elm$core$Basics$pi, settings.bT - settings.cc));
+			A2(elm$core$Basics$max, (-2) * elm$core$Basics$pi, settings.bT - settings.cb));
 		var p = A2(
 			elm$core$Basics$min,
 			elm$core$Basics$abs(da) / elm$core$List$length(data),
-			settings.cU);
+			settings.cQ);
 		var pa = p * ((da < 0) ? (-1) : 1);
 		var k = (!sum) ? 0 : ((da - (elm$core$List$length(data) * pa)) / sum);
 		var computeValue = F2(
 			function (el, angle) {
-				var value = settings.ey(el);
+				var value = settings.ex(el);
 				return {
-					cC: settings.cC,
+					cz: settings.cz,
 					bT: (angle + ((value > 0) ? (value * k) : 0)) + pa,
 					bY: settings.bY,
 					bu: settings.bu,
-					cU: p,
-					cV: settings.cV,
-					cc: angle
+					cQ: p,
+					cR: settings.cR,
+					cb: angle
 				};
 			});
 		var helper = F2(
@@ -14175,7 +14122,7 @@ var gampleman$elm_visualization$Shape$Pie$pie = F2(
 			A3(
 				elm$core$List$foldl,
 				helper,
-				_Utils_Tuple2(settings.cc, elm$core$Dict$empty),
+				_Utils_Tuple2(settings.cb, elm$core$Dict$empty),
 				sortedIndices(data)).b);
 	});
 var gampleman$elm_visualization$Shape$pie = gampleman$elm_visualization$Shape$Pie$pie;
@@ -14185,18 +14132,18 @@ var author$project$Main$cardLabelArcs = F3(
 		var labelSegments = A2(
 			gampleman$elm_visualization$Shape$pie,
 			{
-				cC: 0,
+				cz: 0,
 				bT: 2 * elm$core$Basics$pi,
 				bY: radius,
 				bu: radius + 3,
-				cU: 0,
-				cV: 0,
-				em: F2(
+				cQ: 0,
+				cR: 0,
+				el: F2(
 					function (_n0, _n1) {
 						return 1;
 					}),
-				cc: 0,
-				ey: elm$core$Basics$always(1.0)
+				cb: 0,
+				ex: elm$core$Basics$always(1.0)
 			},
 			A2(
 				elm$core$List$repeat,
@@ -14211,7 +14158,7 @@ var author$project$Main$cardLabelArcs = F3(
 						gampleman$elm_visualization$Shape$arc(arc),
 						_List_fromArray(
 							[
-								elm$svg$Svg$Attributes$fill('#' + label.cz)
+								elm$svg$Svg$Attributes$fill('#' + label.cw)
 							]));
 				}),
 			labelSegments,
@@ -14236,7 +14183,7 @@ var author$project$Main$cardRadiusWithFlair = F2(
 		var reactionCounts = A2(
 			elm$core$List$map,
 			function ($) {
-				return $.dj;
+				return $.dh;
 			},
 			card.by);
 		var highestFlair = A3(
@@ -14249,7 +14196,7 @@ var author$project$Main$cardRadiusWithFlair = F2(
 			A2(elm$core$List$cons, card.bd, reactionCounts));
 		return (A2(author$project$Main$cardRadiusWithoutFlair, card, context) + author$project$Main$flairRadiusBase) + highestFlair;
 	});
-var author$project$Main$emptyArc = {cC: 0, bT: 0, bY: 0, bu: 0, cU: 0, cV: 0, cc: 0};
+var author$project$Main$emptyArc = {cz: 0, bT: 0, bY: 0, bu: 0, cQ: 0, cR: 0, cb: 0};
 var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
 var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var author$project$Main$prCircle = F3(
@@ -14257,24 +14204,24 @@ var author$project$Main$prCircle = F3(
 		var radius = A2(author$project$Main$cardRadiusBase, card, context);
 		var flairs = _List_fromArray(
 			[
-				_Utils_Tuple2('deletions', pr.fb),
-				_Utils_Tuple2('additions', pr.eJ)
+				_Utils_Tuple2('deletions', pr.fa),
+				_Utils_Tuple2('additions', pr.eI)
 			]);
 		var segments = A2(
 			gampleman$elm_visualization$Shape$pie,
 			{
-				cC: 0,
+				cz: 0,
 				bT: 2 * elm$core$Basics$pi,
 				bY: 0,
 				bu: radius,
-				cU: 0,
-				cV: 0,
-				em: F2(
+				cQ: 0,
+				cR: 0,
+				el: F2(
 					function (_n2, _n3) {
 						return 1;
 					}),
-				cc: 0,
-				ey: elm$core$Basics$toFloat
+				cb: 0,
+				ex: elm$core$Basics$toFloat
 			},
 			A2(elm$core$List$map, elm$core$Tuple$second, flairs));
 		var segment = function (i) {
@@ -14367,7 +14314,7 @@ var author$project$Main$reactionFlairArcs = F3(
 		};
 		var radius = A2(author$project$Main$cardRadiusWithoutFlair, card, context);
 		var prSegments = function () {
-			var _n7 = card.cB;
+			var _n7 = card.cy;
 			if (!_n7.$) {
 				return _List_Nil;
 			} else {
@@ -14376,11 +14323,11 @@ var author$project$Main$reactionFlairArcs = F3(
 					var _n10 = A2(
 						elm$core$Maybe$map,
 						function ($) {
-							return $.c1;
+							return $.cZ;
 						},
-						pr.fF);
+						pr.fE);
 					if ((!_n10.$) && (!_n10.a.$)) {
-						var contexts = _n10.a.a.e3;
+						var contexts = _n10.a.a.e2;
 						return function (a) {
 							return A2(elm$core$List$map, a, contexts);
 						}(
@@ -14397,7 +14344,7 @@ var author$project$Main$reactionFlairArcs = F3(
 														_Utils_Tuple2('octicon', true),
 														_Utils_Tuple2(
 														function () {
-															var _n11 = c._;
+															var _n11 = c.Z;
 															switch (_n11) {
 																case 3:
 																	return 'octicon-primitive-dot';
@@ -14416,7 +14363,7 @@ var author$project$Main$reactionFlairArcs = F3(
 											]),
 										_List_Nil),
 									function () {
-										var _n12 = c._;
+										var _n12 = c.Z;
 										switch (_n12) {
 											case 3:
 												return 'pending';
@@ -14445,11 +14392,11 @@ var author$project$Main$reactionFlairArcs = F3(
 								_List_fromArray(
 									[
 										elm$html$Html$Attributes$class('status-actor'),
-										elm$html$Html$Attributes$src(r.aw.dc)
+										elm$html$Html$Attributes$src(r.av.c9)
 									]),
 								_List_Nil),
 							function () {
-								var _n9 = r._;
+								var _n9 = r.Z;
 								switch (_n9) {
 									case 0:
 										return 'pending';
@@ -14477,7 +14424,7 @@ var author$project$Main$reactionFlairArcs = F3(
 								]),
 							_List_Nil),
 						function () {
-							var _n8 = pr.fM;
+							var _n8 = pr.fL;
 							switch (_n8) {
 								case 0:
 									return 'success';
@@ -14495,8 +14442,8 @@ var author$project$Main$reactionFlairArcs = F3(
 			return A2(elm$core$List$map, a, card.by);
 		}(
 			function (_n6) {
-				var type_ = _n6.et;
-				var count = _n6.dj;
+				var type_ = _n6.es;
+				var count = _n6.dh;
 				return _Utils_Tuple3(
 					elm$html$Html$text(
 						reactionTypeEmoji(type_)),
@@ -14527,18 +14474,18 @@ var author$project$Main$reactionFlairArcs = F3(
 		var segments = A2(
 			gampleman$elm_visualization$Shape$pie,
 			{
-				cC: 3,
+				cz: 3,
 				bT: 2 * elm$core$Basics$pi,
 				bY: radius,
 				bu: radius + author$project$Main$flairRadiusBase,
-				cU: 3.0e-2,
-				cV: 0,
-				em: F2(
+				cQ: 3.0e-2,
+				cR: 0,
+				el: F2(
 					function (_n3, _n4) {
 						return 1;
 					}),
-				cc: 0,
-				ey: elm$core$Basics$always(1.0)
+				cb: 0,
+				ex: elm$core$Basics$always(1.0)
 			},
 			A2(
 				elm$core$List$repeat,
@@ -14576,7 +14523,7 @@ var author$project$Main$reactionFlairArcs = F3(
 						{bu: segmentArc.bu + count});
 					var _n0 = function () {
 						var r = arc.bY + 12;
-						var a = ((arc.cc + arc.bT) / 2) - (elm$core$Basics$pi / 2);
+						var a = ((arc.cb + arc.bT) / 2) - (elm$core$Basics$pi / 2);
 						return _Utils_Tuple2(
 							(elm$core$Basics$cos(a) * r) - 8,
 							(elm$core$Basics$sin(a) * r) - 8);
@@ -14624,16 +14571,16 @@ var author$project$Main$UnanticipateCardFromNode = function (a) {
 	return {$: 20, a: a};
 };
 var author$project$Main$isBacklog = function (card) {
-	return card.ac.dx;
+	return card.ab.dv;
 };
 var author$project$Main$isDone = function (card) {
-	return card.ac.dy;
+	return card.ab.dw;
 };
 var author$project$Main$isIcebox = function (card) {
-	return card.ac.dz;
+	return card.ab.dx;
 };
 var author$project$Main$isInFlight = function (card) {
-	return card.ac.dA;
+	return card.ab.dy;
 };
 var elm$core$Set$member = F2(
 	function (key, _n0) {
@@ -14691,10 +14638,10 @@ var author$project$Main$viewCardNode = F6(
 					author$project$Main$isInFlight(card) ? elm$svg$Svg$Attributes$class('project-status in-flight') : (author$project$Main$isDone(card) ? elm$svg$Svg$Attributes$class('project-status done') : (author$project$Main$isIcebox(card) ? elm$svg$Svg$Attributes$class('project-status icebox') : (author$project$Main$isBacklog(card) ? elm$svg$Svg$Attributes$class('project-status backlog') : elm$svg$Svg$Attributes$class('project-status untriaged'))))
 				]),
 			_List_Nil);
-		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.fw, state.s);
-		var isHighlighted = A2(elm$core$Set$member, card.fw, state.u) || _Utils_eq(
-			state.W,
-			elm$core$Maybe$Just(card.fw));
+		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.fv, state.s);
+		var isHighlighted = A2(elm$core$Set$member, card.fv, state.u) || _Utils_eq(
+			state.V,
+			elm$core$Maybe$Just(card.fv));
 		var scale = isHighlighted ? '1.1' : '1';
 		return A2(
 			elm$svg$Svg$g,
@@ -14704,11 +14651,11 @@ var author$project$Main$viewCardNode = F6(
 					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
 					author$project$Main$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Main$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Main$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Main$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
 					elm$svg$Svg$Events$onMouseOver(
-					author$project$Main$AnticipateCardFromNode(card.fw)),
+					author$project$Main$AnticipateCardFromNode(card.fv)),
 					elm$svg$Svg$Events$onMouseOut(
-					author$project$Main$UnanticipateCardFromNode(card.fw)),
+					author$project$Main$UnanticipateCardFromNode(card.fv)),
 					elm$svg$Svg$Events$onClick(
-					isSelected ? author$project$Main$DeselectCard(card.fw) : author$project$Main$SelectCard(card.fw))
+					isSelected ? author$project$Main$DeselectCard(card.fv) : author$project$Main$SelectCard(card.fv))
 				]),
 			A2(
 				elm$core$List$cons,
@@ -14729,11 +14676,11 @@ var author$project$Main$lastActivityIsByUser = F3(
 		var events = A2(
 			elm$core$Maybe$withDefault,
 			_List_Nil,
-			A2(elm$core$Dict$get, card.fw, cardEvents));
+			A2(elm$core$Dict$get, card.fv, cardEvents));
 		var _n0 = elm$core$List$head(
 			elm$core$List$reverse(events));
 		if (!_n0.$) {
-			var user = _n0.a.ew;
+			var user = _n0.a.ev;
 			if (!user.$) {
 				var u = user.a;
 				return _Utils_eq(u.hx, login);
@@ -14749,27 +14696,27 @@ var author$project$Main$viewCardNodeFlair = F5(
 	function (card, radii, flair, _n0, state) {
 		var x = _n0.iv;
 		var y = _n0.iy;
-		var isHighlighted = A2(elm$core$Set$member, card.fw, state.u) || _Utils_eq(
-			state.W,
-			elm$core$Maybe$Just(card.fw));
+		var isHighlighted = A2(elm$core$Set$member, card.fv, state.u) || _Utils_eq(
+			state.V,
+			elm$core$Maybe$Just(card.fv));
 		var scale = isHighlighted ? '1.1' : '1';
 		var classes = _Utils_ap(
 			_List_fromArray(
 				[
 					'flair',
-					A2(author$project$Main$activityClass, state.M, card.c7)
+					A2(author$project$Main$activityClass, state.K, card.c3)
 				]),
 			function () {
-				var _n1 = state.g;
+				var _n1 = state.p;
 				if (_n1.$ === 1) {
 					return _List_Nil;
 				} else {
-					var user = _n1.a.ew;
-					return A3(author$project$Main$lastActivityIsByUser, state.cw, user.hx, card) ? _List_fromArray(
+					var user = _n1.a.ev;
+					return A3(author$project$Main$lastActivityIsByUser, state.cu, user.hx, card) ? _List_fromArray(
 						['last-activity-is-me']) : _List_Nil;
 				}
 			}());
-		var anticipateRadius = elm$core$List$isEmpty(card.bk) ? (radii.bK + 5) : (radii.eC + 5);
+		var anticipateRadius = elm$core$List$isEmpty(card.bk) ? (radii.bK + 5) : (radii.eB + 5);
 		var anticipatedHalo = isHighlighted ? A2(
 			elm$svg$Svg$circle,
 			_List_fromArray(
@@ -14801,19 +14748,19 @@ var author$project$Main$cardNode = F3(
 		var radii = {
 			bK: A2(author$project$Main$cardRadiusBase, card, context),
 			bI: A2(author$project$Main$cardRadiusWithFlair, card, context),
-			eC: A2(author$project$Main$cardRadiusWithoutFlair, card, context)
+			eB: A2(author$project$Main$cardRadiusWithoutFlair, card, context)
 		};
-		var labelArcs = A3(author$project$Main$cardLabelArcs, model.aj, card, context);
+		var labelArcs = A3(author$project$Main$cardLabelArcs, model.ai, card, context);
 		var flairArcs = A3(
 			author$project$Main$reactionFlairArcs,
 			A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
-				A2(elm$core$Dict$get, card.fw, model.c.gj)),
+				A2(elm$core$Dict$get, card.fv, model.c.gj)),
 			card,
 			context);
 		var circle = function () {
-			var _n1 = card.cB;
+			var _n1 = card.cy;
 			if (!_n1.$) {
 				return A2(
 					elm$svg$Svg$g,
@@ -14840,7 +14787,7 @@ var author$project$Main$cardNode = F3(
 							_List_fromArray(
 								[
 									elm$svg$Svg$text(
-									elm$core$String$fromInt(card.k))
+									elm$core$String$fromInt(card.j))
 								]))
 						]));
 			} else {
@@ -14862,21 +14809,21 @@ var author$project$Main$cardNode = F3(
 							_List_fromArray(
 								[
 									elm$svg$Svg$text(
-									elm$core$String$fromInt(card.k))
+									elm$core$String$fromInt(card.j))
 								]))
 						]));
 			}
 		}();
 		return {
-			dh: function (_n0) {
+			de: function (_n0) {
 				var x = _n0.iv;
 				var y = _n0.iy;
-				return {eD: x - radii.bI, eE: x + radii.bI, eF: y - radii.bI, eG: y + radii.bI};
+				return {eC: x - radii.bI, eD: x + radii.bI, eE: y - radii.bI, eF: y + radii.bI};
 			},
 			bb: card,
 			a4: card.a4,
-			ez: A3(author$project$Main$viewCardNodeFlair, card, radii, flairArcs),
-			eA: A4(author$project$Main$viewCardNode, card, radii, circle, labelArcs)
+			ey: A3(author$project$Main$viewCardNodeFlair, card, radii, flairArcs),
+			ez: A4(author$project$Main$viewCardNode, card, radii, circle, labelArcs)
 		};
 	});
 var elm$core$List$maximum = function (list) {
@@ -14902,18 +14849,18 @@ var author$project$Main$graphAllActivityCompare = F3(
 							return elm$time$Time$posixToMillis(
 								A2(
 									elm$core$Maybe$withDefault,
-									n.ar.ex.bb.c7,
+									n.aq.ew.bb.c3,
 									elm$core$List$head(
 										A2(
 											elm$core$List$map,
 											function ($) {
-												return $.e5;
+												return $.e4;
 											},
 											elm$core$List$reverse(
 												A2(
 													elm$core$Maybe$withDefault,
 													_List_Nil,
-													A2(elm$core$Dict$get, n.ar.ex.bb.fw, model.c.eH)))))));
+													A2(elm$core$Dict$get, n.aq.ew.bb.fv, model.c.eG)))))));
 						},
 						elm_community$graph$Graph$nodes(g))));
 		};
@@ -14938,12 +14885,12 @@ var author$project$Main$graphSizeCompare = F2(
 						A2(
 							elm$core$Basics$composeR,
 							function ($) {
-								return $.ar;
+								return $.aq;
 							},
 							A2(
 								elm$core$Basics$composeR,
 								function ($) {
-									return $.ex;
+									return $.ew;
 								},
 								function ($) {
 									return $.a4;
@@ -14977,7 +14924,7 @@ var author$project$Main$graphUserActivityCompare = F4(
 										A2(
 											elm$core$Basics$composeR,
 											function ($) {
-												return $.e5;
+												return $.e4;
 											},
 											elm$time$Time$posixToMillis),
 										A2(
@@ -14985,7 +14932,7 @@ var author$project$Main$graphUserActivityCompare = F4(
 											A2(
 												elm$core$Basics$composeR,
 												function ($) {
-													return $.ew;
+													return $.ev;
 												},
 												A2(
 													elm$core$Basics$composeR,
@@ -14999,7 +14946,7 @@ var author$project$Main$graphUserActivityCompare = F4(
 												A2(
 													elm$core$Maybe$withDefault,
 													_List_Nil,
-													A2(elm$core$Dict$get, n.ar.ex.bb.fw, model.c.eH)))))));
+													A2(elm$core$Dict$get, n.aq.ew.bb.fv, model.c.eG)))))));
 						},
 						elm_community$graph$Graph$nodes(g))));
 		};
@@ -15014,9 +14961,9 @@ var author$project$Main$hasLabelAndColor = F4(
 			elm$core$Dict$filter,
 			F2(
 				function (_n0, l) {
-					return _Utils_eq(l.hE, name) && _Utils_eq(l.cz, color);
+					return _Utils_eq(l.hE, name) && _Utils_eq(l.cw, color);
 				}),
-			model.aj);
+			model.ai);
 		return A2(
 			elm$core$List$any,
 			function (a) {
@@ -15031,7 +14978,7 @@ var author$project$Main$involvesUser = F3(
 			A2(
 				elm$core$Basics$composeR,
 				function ($) {
-					return $.ew;
+					return $.ev;
 				},
 				A2(
 					elm$core$Basics$composeR,
@@ -15044,7 +14991,7 @@ var author$project$Main$involvesUser = F3(
 			A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
-				A2(elm$core$Dict$get, card.fw, model.c.eH)));
+				A2(elm$core$Dict$get, card.fv, model.c.eG)));
 	});
 var elm$core$List$member = F2(
 	function (x, xs) {
@@ -15070,10 +15017,10 @@ var author$project$Main$isInProject = F2(
 					function ($) {
 						return $.hE;
 					}),
-				card.cx));
+				card.cv));
 	});
 var author$project$Main$isUntriaged = function (card) {
-	return elm$core$List$isEmpty(card.cx);
+	return elm$core$List$isEmpty(card.cv);
 };
 var author$project$Main$satisfiesFilter = F3(
 	function (model, filter, card) {
@@ -15218,7 +15165,7 @@ var author$project$Main$subGraphs = function (graph) {
 		elm_community$graph$Graph$fold,
 		F2(
 			function (nc, ncs) {
-				return (elm_community$intdict$IntDict$isEmpty(nc.fx) && elm_community$intdict$IntDict$isEmpty(nc.fX)) ? A2(elm$core$List$cons, nc, ncs) : ncs;
+				return (elm_community$intdict$IntDict$isEmpty(nc.fw) && elm_community$intdict$IntDict$isEmpty(nc.fX)) ? A2(elm$core$List$cons, nc, ncs) : ncs;
 			}),
 		_List_Nil,
 		graph);
@@ -15245,11 +15192,11 @@ var author$project$Main$subGraphs = function (graph) {
 };
 var elm_community$graph$Graph$Node = F2(
 	function (id, label) {
-		return {fw: id, ar: label};
+		return {fv: id, aq: label};
 	});
 var elm_community$graph$Graph$NodeContext = F3(
 	function (node, incoming, outgoing) {
-		return {fx: incoming, aU: node, fX: outgoing};
+		return {fw: incoming, aU: node, fX: outgoing};
 	});
 var elm_community$graph$Graph$fromNodesAndEdges = F2(
 	function (nodes_, edges_) {
@@ -15258,7 +15205,7 @@ var elm_community$graph$Graph$fromNodesAndEdges = F2(
 			function (n) {
 				return A2(
 					elm_community$intdict$IntDict$insert,
-					n.fw,
+					n.fv,
 					A3(elm_community$graph$Graph$NodeContext, n, elm_community$intdict$IntDict$empty, elm_community$intdict$IntDict$empty));
 			},
 			elm_community$intdict$IntDict$empty,
@@ -15269,14 +15216,14 @@ var elm_community$graph$Graph$fromNodesAndEdges = F2(
 					return _Utils_update(
 						ctx,
 						{
-							fX: A3(elm_community$intdict$IntDict$insert, edge.id, edge.ar, ctx.fX)
+							fX: A3(elm_community$intdict$IntDict$insert, edge.id, edge.aq, ctx.fX)
 						});
 				};
 				var updateIncoming = function (ctx) {
 					return _Utils_update(
 						ctx,
 						{
-							fx: A3(elm_community$intdict$IntDict$insert, edge.hn, edge.ar, ctx.fx)
+							fw: A3(elm_community$intdict$IntDict$insert, edge.hn, edge.aq, ctx.fw)
 						});
 				};
 				return A3(
@@ -15297,7 +15244,7 @@ var elm_community$graph$Graph$fromNodesAndEdges = F2(
 	});
 var author$project$Main$computeGraph = function (model) {
 	var sortFunc = function () {
-		var _n2 = model.aO;
+		var _n2 = model.aN;
 		switch (_n2.$) {
 			case 0:
 				return author$project$Main$graphSizeCompare;
@@ -15311,8 +15258,8 @@ var author$project$Main$computeGraph = function (model) {
 	var node = F2(
 		function (card, context) {
 			return {
-				c_: A2(author$project$Main$cardRadiusBase, card, context),
-				ex: A3(author$project$Main$cardNode, model, card, context)
+				cW: A2(author$project$Main$cardRadiusBase, card, context),
+				ew: A3(author$project$Main$cardNode, model, card, context)
 			};
 		});
 	var cardEdges = A3(
@@ -15326,7 +15273,7 @@ var author$project$Main$computeGraph = function (model) {
 						function (sourceId) {
 							return {
 								hn: author$project$Hash$hash(sourceId),
-								ar: 0,
+								aq: 0,
 								id: id
 							};
 						},
@@ -15338,22 +15285,22 @@ var author$project$Main$computeGraph = function (model) {
 	var baseState = author$project$Main$baseGraphState(model);
 	var applyWithContext = function (nc) {
 		return {
-			fx: nc.fx,
+			fw: nc.fw,
 			aU: {
-				fw: nc.aU.fw,
-				ar: nc.aU.ar(
-					{fx: nc.fx, fX: nc.fX})
+				fv: nc.aU.fv,
+				aq: nc.aU.aq(
+					{fw: nc.fw, fX: nc.fX})
 			},
 			fX: nc.fX
 		};
 	};
 	var allFilters = function () {
-		var _n1 = model.cs;
+		var _n1 = model.cq;
 		if (!_n1.$) {
 			var f = _n1.a;
-			return A2(elm$core$List$cons, f, model.ab);
+			return A2(elm$core$List$cons, f, model.aa);
 		} else {
-			return model.ab;
+			return model.aa;
 		}
 	}();
 	var cardNodeThunks = A3(
@@ -15364,12 +15311,12 @@ var author$project$Main$computeGraph = function (model) {
 					elm$core$List$cons,
 					A2(
 						elm_community$graph$Graph$Node,
-						author$project$Hash$hash(card.fw),
+						author$project$Hash$hash(card.fv),
 						node(card)),
 					thunks) : thunks;
 			}),
 		_List_Nil,
-		model.p);
+		model.o);
 	var graph = A2(
 		elm_community$graph$Graph$mapContexts,
 		applyWithContext,
@@ -15377,7 +15324,7 @@ var author$project$Main$computeGraph = function (model) {
 	return _Utils_update(
 		model,
 		{
-			ax: A2(
+			aw: A2(
 				elm$core$List$map,
 				function (g) {
 					return _Utils_Tuple2(baseState, g);
@@ -15408,10 +15355,10 @@ var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
 };
 var author$project$Main$isBaseGraphState = F2(
 	function (model, state) {
-		return _Utils_eq(state.M, model.M) && (_Utils_eq(state.g, model.g) && (_Utils_eq(state.m, model.m) && (elm$core$Set$isEmpty(state.u) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.s) && _Utils_eq(state.W, elm$core$Maybe$Nothing)))));
+		return _Utils_eq(state.K, model.K) && (_Utils_eq(state.p, model.p) && (_Utils_eq(state.l, model.l) && (elm$core$Set$isEmpty(state.u) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.s) && _Utils_eq(state.V, elm$core$Maybe$Nothing)))));
 	});
 var author$project$Main$computeGraphState = function (model) {
-	var newState = {u: model.u, cw: model.c.eH, M: model.M, m: model.m, W: model.W, g: model.g, s: model.s};
+	var newState = {u: model.u, cu: model.c.eG, K: model.K, l: model.l, V: model.V, p: model.p, s: model.s};
 	var affectedByState = function (_n2) {
 		var graph = _n2.a0;
 		return A3(
@@ -15422,9 +15369,9 @@ var author$project$Main$computeGraphState = function (model) {
 					if (affected) {
 						return true;
 					} else {
-						var id = node.ar.ex.bb.fw;
+						var id = node.aq.ew.bb.fv;
 						return A2(y0hy0h$ordered_containers$OrderedSet$member, id, newState.s) || (A2(elm$core$Set$member, id, newState.u) || _Utils_eq(
-							newState.W,
+							newState.V,
 							elm$core$Maybe$Just(id)));
 					}
 				}),
@@ -15434,7 +15381,7 @@ var author$project$Main$computeGraphState = function (model) {
 	return _Utils_update(
 		model,
 		{
-			ax: A2(
+			aw: A2(
 				elm$core$List$map,
 				function (_n0) {
 					var s = _n0.a;
@@ -15443,7 +15390,7 @@ var author$project$Main$computeGraphState = function (model) {
 						author$project$Main$baseGraphState(model),
 						g));
 				},
-				model.ax)
+				model.aw)
 		});
 };
 var author$project$GitHubGraph$encodeLabelPatch = F2(
@@ -15479,46 +15426,13 @@ var author$project$Main$LabelChanged = F2(
 	});
 var author$project$Main$createLabel = F3(
 	function (model, repo, label) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$LabelChanged(repo),
-				A4(author$project$GitHubGraph$createRepoLabel, token, repo, label.hE, label.cz));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$GitHubGraph$createRepoMilestone = F3(
-	function (token, repo, title) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'title',
-								elm$json$Json$Encode$string(title))
-							])),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$post('https://api.github.com/repos/' + (repo.hY + ('/' + (repo.hE + '/milestones'))))))));
-	});
-var author$project$Main$createMilestone = F3(
-	function (model, repo, title) {
-		var _n0 = model.g;
-		if (!_n0.$) {
-			var token = _n0.a.ik;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$MilestoneChanged(repo),
-				A3(author$project$GitHubGraph$createRepoMilestone, token, repo, title));
+				A4(author$project$GitHubGraph$createRepoLabel, token, repo, label.hE, label.cw));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -15537,7 +15451,7 @@ var author$project$GitHubGraph$deleteRepoLabel = F3(
 	});
 var author$project$Main$deleteLabel = F3(
 	function (model, repo, label) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
@@ -15548,31 +15462,17 @@ var author$project$Main$deleteLabel = F3(
 			return elm$core$Platform$Cmd$none;
 		}
 	});
-var author$project$GitHubGraph$deleteRepoMilestone = F3(
-	function (token, repo, milestone) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
-					lukewestby$elm_http_builder$HttpBuilder$delete(
-						'https://api.github.com/repos/' + (repo.hY + ('/' + (repo.hE + ('/milestones/' + elm$core$String$fromInt(milestone.k)))))))));
-	});
-var author$project$Main$deleteMilestone = F3(
-	function (model, repo, milestone) {
-		var _n0 = model.g;
-		if (!_n0.$) {
-			var token = _n0.a.ik;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$MilestoneChanged(repo),
-				A3(author$project$GitHubGraph$deleteRepoMilestone, token, repo, milestone));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
+var author$project$Drag$land = function (model) {
+	if (model.$ === 3) {
+		var state = model.a;
+		return author$project$Drag$Dropped(
+			_Utils_update(
+				state,
+				{b_: true}));
+	} else {
+		return model;
+	}
+};
 var elm$core$List$sum = function (numbers) {
 	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
 };
@@ -15582,8 +15482,8 @@ var author$project$GitHubGraph$reactionScore = function (reactions) {
 			return A2(elm$core$List$map, a, reactions);
 		}(
 			function (_n0) {
-				var type_ = _n0.et;
-				var count = _n0.dj;
+				var type_ = _n0.es;
+				var count = _n0.dh;
 				switch (type_) {
 					case 0:
 						return 2 * count;
@@ -15614,10 +15514,10 @@ var author$project$Main$IssueState = function (a) {
 };
 var elm$core$String$startsWith = _String_startsWith;
 var author$project$Main$detectColumn = {
-	cq: elm$core$String$startsWith('Backlog'),
-	aM: elm$core$Basics$eq('Done'),
+	co: elm$core$String$startsWith('Backlog'),
+	aL: elm$core$Basics$eq('Done'),
 	bg: elm$core$Basics$eq('Icebox'),
-	aP: elm$core$Basics$eq('In Flight')
+	aO: elm$core$Basics$eq('In Flight')
 };
 var author$project$Main$inColumn = function (match) {
 	return elm$core$List$any(
@@ -15634,14 +15534,14 @@ var author$project$Main$inColumn = function (match) {
 							return $.hE;
 						}))),
 			function ($) {
-				return $.eY;
+				return $.eX;
 			}));
 };
 var author$project$Main$cardProcessState = function (_n0) {
-	var cards = _n0.cx;
+	var cards = _n0.cv;
 	var labels = _n0.bk;
 	return {
-		dq: A2(
+		$7: A2(
 			elm$core$List$any,
 			A2(
 				elm$core$Basics$composeL,
@@ -15650,7 +15550,7 @@ var author$project$Main$cardProcessState = function (_n0) {
 					return $.hE;
 				}),
 			labels),
-		dr: A2(
+		dp: A2(
 			elm$core$List$any,
 			A2(
 				elm$core$Basics$composeL,
@@ -15659,7 +15559,7 @@ var author$project$Main$cardProcessState = function (_n0) {
 					return $.hE;
 				}),
 			labels),
-		ds: A2(
+		dq: A2(
 			elm$core$List$any,
 			A2(
 				elm$core$Basics$composeL,
@@ -15668,7 +15568,7 @@ var author$project$Main$cardProcessState = function (_n0) {
 					return $.hE;
 				}),
 			labels),
-		dt: A2(
+		dr: A2(
 			elm$core$List$any,
 			A2(
 				elm$core$Basics$composeL,
@@ -15677,48 +15577,48 @@ var author$project$Main$cardProcessState = function (_n0) {
 					return $.hE;
 				}),
 			labels),
-		dx: A2(author$project$Main$inColumn, author$project$Main$detectColumn.cq, cards),
-		dy: A2(author$project$Main$inColumn, author$project$Main$detectColumn.aM, cards),
-		dz: A2(author$project$Main$inColumn, author$project$Main$detectColumn.bg, cards),
-		dA: A2(author$project$Main$inColumn, author$project$Main$detectColumn.aP, cards)
+		dv: A2(author$project$Main$inColumn, author$project$Main$detectColumn.co, cards),
+		dw: A2(author$project$Main$inColumn, author$project$Main$detectColumn.aL, cards),
+		dx: A2(author$project$Main$inColumn, author$project$Main$detectColumn.bg, cards),
+		dy: A2(author$project$Main$inColumn, author$project$Main$detectColumn.aO, cards)
 	};
 };
 var author$project$Main$issueCard = function (issue) {
-	var id = issue.fw;
+	var id = issue.fv;
 	var url = issue.$9;
 	var repo = issue.q;
-	var number = issue.k;
+	var number = issue.j;
 	var title = issue.bF;
-	var updatedAt = issue.c7;
-	var author = issue.aw;
+	var updatedAt = issue.c3;
+	var author = issue.av;
 	var labels = issue.bk;
-	var cards = issue.cx;
+	var cards = issue.cv;
 	var commentCount = issue.bd;
 	var reactions = issue.by;
-	var state = issue._;
-	var milestone = issue.cO;
+	var state = issue.Z;
+	var milestone = issue.cL;
 	return {
-		aw: author,
-		cx: cards,
+		av: author,
+		cv: cards,
 		bd: commentCount,
-		cB: author$project$GitHubGraph$IssueCardContent(issue),
-		fw: id,
+		cy: author$project$GitHubGraph$IssueCardContent(issue),
+		fv: id,
 		bk: A2(
 			elm$core$List$map,
 			function ($) {
-				return $.fw;
+				return $.fv;
 			},
 			labels),
-		cO: milestone,
-		k: number,
-		ac: author$project$Main$cardProcessState(
-			{cx: cards, bk: labels}),
+		cL: milestone,
+		j: number,
+		ab: author$project$Main$cardProcessState(
+			{cv: cards, bk: labels}),
 		by: reactions,
 		q: repo,
 		a4: author$project$GitHubGraph$issueScore(issue),
-		_: author$project$Main$IssueState(state),
+		Z: author$project$Main$IssueState(state),
 		bF: title,
-		c7: updatedAt,
+		c3: updatedAt,
 		$9: url
 	};
 };
@@ -15728,41 +15628,41 @@ var author$project$GitHubGraph$pullRequestScore = function (_n0) {
 	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
 };
 var author$project$Main$prCard = function (pr) {
-	var id = pr.fw;
+	var id = pr.fv;
 	var url = pr.$9;
 	var repo = pr.q;
-	var number = pr.k;
+	var number = pr.j;
 	var title = pr.bF;
-	var updatedAt = pr.c7;
-	var author = pr.aw;
+	var updatedAt = pr.c3;
+	var author = pr.av;
 	var labels = pr.bk;
-	var cards = pr.cx;
+	var cards = pr.cv;
 	var commentCount = pr.bd;
 	var reactions = pr.by;
-	var state = pr._;
-	var milestone = pr.cO;
+	var state = pr.Z;
+	var milestone = pr.cL;
 	return {
-		aw: author,
-		cx: cards,
+		av: author,
+		cv: cards,
 		bd: commentCount,
-		cB: author$project$GitHubGraph$PullRequestCardContent(pr),
-		fw: id,
+		cy: author$project$GitHubGraph$PullRequestCardContent(pr),
+		fv: id,
 		bk: A2(
 			elm$core$List$map,
 			function ($) {
-				return $.fw;
+				return $.fv;
 			},
 			labels),
-		cO: milestone,
-		k: number,
-		ac: author$project$Main$cardProcessState(
-			{cx: cards, bk: labels}),
+		cL: milestone,
+		j: number,
+		ab: author$project$Main$cardProcessState(
+			{cv: cards, bk: labels}),
 		by: reactions,
 		q: repo,
 		a4: author$project$GitHubGraph$pullRequestScore(pr),
-		_: author$project$Main$PullRequestState(state),
+		Z: author$project$Main$PullRequestState(state),
 		bF: title,
-		c7: updatedAt,
+		c3: updatedAt,
 		$9: url
 	};
 };
@@ -15775,15 +15675,15 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 				return _Utils_update(
 					m,
 					{
-						p: A3(
+						o: A3(
 							elm$core$Dict$insert,
-							issue.fw,
+							issue.fv,
 							author$project$Main$issueCard(issue),
-							m.p),
+							m.o),
 						c: _Utils_update(
 							data,
 							{
-								fC: A3(elm$core$Dict$insert, issue.fw, issue, data.fC)
+								fB: A3(elm$core$Dict$insert, issue.fv, issue, data.fB)
 							})
 					});
 			} else {
@@ -15791,15 +15691,15 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 				return _Utils_update(
 					m,
 					{
-						p: A3(
+						o: A3(
 							elm$core$Dict$insert,
-							pr.fw,
+							pr.fv,
 							author$project$Main$prCard(pr),
-							m.p),
+							m.o),
 						c: _Utils_update(
 							data,
 							{
-								f9: A3(elm$core$Dict$insert, pr.fw, pr, data.f9)
+								f9: A3(elm$core$Dict$insert, pr.fv, pr, data.f9)
 							})
 					});
 			}
@@ -15813,18 +15713,18 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 					c: _Utils_update(
 						data,
 						{
-							eZ: A3(elm$core$Dict$insert, id, cards, data.eZ)
+							eY: A3(elm$core$Dict$insert, id, cards, data.eY)
 						})
 				});
 		});
-	var _n0 = model.ad;
+	var _n0 = model.ac;
 	if (_n0.$ === 1) {
 		return model;
 	} else {
 		var pdr = _n0.a;
 		var _n1 = _Utils_Tuple2(
-			_Utils_Tuple3(pdr.g4, pdr.cB, pdr.c$),
-			_Utils_Tuple3(pdr.cb, pdr.c2, pdr.ce));
+			_Utils_Tuple3(pdr.g4, pdr.cy, pdr.cX),
+			_Utils_Tuple3(pdr.ca, pdr.c_, pdr.cd));
 		_n1$6:
 		while (true) {
 			if (!_n1.a.a.$) {
@@ -15849,7 +15749,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 										_Utils_update(
 											model,
 											{
-												h: author$project$Drag$complete(model.h)
+												g: author$project$Drag$complete(model.g)
 											}))));
 						} else {
 							break _n1$6;
@@ -15879,7 +15779,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 												_Utils_update(
 													model,
 													{
-														h: author$project$Drag$complete(model.h)
+														g: author$project$Drag$complete(model.g)
 													})))));
 							} else {
 								var _n8 = _n1.a;
@@ -15897,7 +15797,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 										_Utils_update(
 											model,
 											{
-												h: author$project$Drag$land(model.h)
+												g: author$project$Drag$land(model.g)
 											})));
 							}
 						} else {
@@ -15926,7 +15826,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 								_Utils_update(
 									model,
 									{
-										h: author$project$Drag$complete(model.h)
+										g: author$project$Drag$complete(model.g)
 									}));
 						} else {
 							break _n1$6;
@@ -15953,7 +15853,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 										_Utils_update(
 											model,
 											{
-												h: author$project$Drag$complete(model.h)
+												g: author$project$Drag$complete(model.g)
 											})));
 							} else {
 								var _n20 = _n1.a;
@@ -15969,7 +15869,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 									_Utils_update(
 										model,
 										{
-											h: author$project$Drag$land(model.h)
+											g: author$project$Drag$land(model.g)
 										}));
 							}
 						} else {
@@ -16073,7 +15973,7 @@ var author$project$Main$hasLabel = F3(
 				function (_n0, l) {
 					return _Utils_eq(l.hE, name);
 				}),
-			model.aj);
+			model.ai);
 		return A2(
 			elm$core$List$any,
 			function (a) {
@@ -16084,19 +15984,19 @@ var author$project$Main$hasLabel = F3(
 var author$project$Main$labelKey = function (label) {
 	return _Utils_Tuple2(
 		label.hE,
-		elm$core$String$toLower(label.cz));
+		elm$core$String$toLower(label.cw));
 };
 var author$project$Main$matchesLabel = F2(
 	function (sl, l) {
 		return _Utils_eq(l.hE, sl.hE) && _Utils_eq(
-			elm$core$String$toLower(l.cz),
-			elm$core$String$toLower(sl.cz));
+			elm$core$String$toLower(l.cw),
+			elm$core$String$toLower(sl.cw));
 	});
 var author$project$Main$moveCard = F3(
 	function (model, _n0, cardId) {
-		var columnId = _n0.cA;
-		var afterId = _n0.eK;
-		var _n1 = model.g;
+		var columnId = _n0.cx;
+		var afterId = _n0.eJ;
+		var _n1 = model.p;
 		if (!_n1.$) {
 			var token = _n1.a.ik;
 			return A2(
@@ -16120,11 +16020,11 @@ var author$project$Main$randomizeColor = function (label) {
 		elm$core$Maybe$withDefault,
 		0,
 		elm$core$Result$toMaybe(
-			fredcy$elm_parseint$ParseInt$parseIntHex(label.cz)));
+			fredcy$elm_parseint$ParseInt$parseIntHex(label.cw)));
 	var randomHex = author$project$Main$generateColor(currentColor);
 	return _Utils_update(
 		label,
-		{cz: randomHex});
+		{cw: randomHex});
 };
 var author$project$GitHubGraph$removeIssueLabel = F3(
 	function (token, issue, name) {
@@ -16136,17 +16036,17 @@ var author$project$GitHubGraph$removeIssueLabel = F3(
 					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					author$project$GitHubGraph$auth(token),
 					lukewestby$elm_http_builder$HttpBuilder$delete(
-						'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.k) + ('/labels/' + name))))))))));
+						'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.j) + ('/labels/' + name))))))))));
 	});
 var author$project$Main$removeIssueLabel = F3(
 	function (model, issue, label) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshIssue, issue.fw, author$project$Main$IssueRefreshed)),
+					A2(author$project$Backend$refreshIssue, issue.fv, author$project$Main$IssueRefreshed)),
 				A3(author$project$GitHubGraph$removeIssueLabel, token, issue, label));
 		} else {
 			return elm$core$Platform$Cmd$none;
@@ -16162,17 +16062,17 @@ var author$project$GitHubGraph$removePullRequestLabel = F3(
 					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 					author$project$GitHubGraph$auth(token),
 					lukewestby$elm_http_builder$HttpBuilder$delete(
-						'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.k) + ('/labels/' + name))))))))));
+						'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + (elm$core$String$fromInt(issue.j) + ('/labels/' + name))))))))));
 	});
 var author$project$Main$removePullRequestLabel = F3(
 	function (model, pr, label) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshPR, pr.fw, author$project$Main$PullRequestRefreshed)),
+					A2(author$project$Backend$refreshPR, pr.fv, author$project$Main$PullRequestRefreshed)),
 				A3(author$project$GitHubGraph$removePullRequestLabel, token, pr, label));
 		} else {
 			return elm$core$Platform$Cmd$none;
@@ -16181,15 +16081,15 @@ var author$project$Main$removePullRequestLabel = F3(
 var author$project$Main$AllProjectsPage = {$: 0};
 var author$project$Main$BouncePage = {$: 6};
 var author$project$Main$LabelsPage = {$: 3};
-var author$project$Main$MilestonesPage = {$: 4};
 var author$project$Main$ProjectPage = function (a) {
 	return {$: 2, a: a};
 };
 var author$project$Main$PullRequestsPage = {$: 5};
+var author$project$Main$ShipItPage = {$: 4};
 var elm$url$Url$Parser$Parser = elm$core$Basics$identity;
 var elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
-		return {a$: frag, a2: params, aY: unvisited, ex: value, a7: visited};
+		return {a$: frag, a2: params, aY: unvisited, ew: value, a7: visited};
 	});
 var elm$url$Url$Parser$mapState = F2(
 	function (func, _n0) {
@@ -16197,7 +16097,7 @@ var elm$url$Url$Parser$mapState = F2(
 		var unvisited = _n0.aY;
 		var params = _n0.a2;
 		var frag = _n0.a$;
-		var value = _n0.ex;
+		var value = _n0.ew;
 		return A5(
 			elm$url$Url$Parser$State,
 			visited,
@@ -16214,7 +16114,7 @@ var elm$url$Url$Parser$map = F2(
 			var unvisited = _n1.aY;
 			var params = _n1.a2;
 			var frag = _n1.a$;
-			var value = _n1.ex;
+			var value = _n1.ew;
 			return A2(
 				elm$core$List$map,
 				elm$url$Url$Parser$mapState(value),
@@ -16244,7 +16144,7 @@ var elm$url$Url$Parser$s = function (str) {
 		var unvisited = _n0.aY;
 		var params = _n0.a2;
 		var frag = _n0.a$;
-		var value = _n0.ex;
+		var value = _n0.ew;
 		if (!unvisited.b) {
 			return _List_Nil;
 		} else {
@@ -16281,7 +16181,7 @@ var elm$url$Url$Parser$custom = F2(
 			var unvisited = _n0.aY;
 			var params = _n0.a2;
 			var frag = _n0.a$;
-			var value = _n0.ex;
+			var value = _n0.ew;
 			if (!unvisited.b) {
 				return _List_Nil;
 			} else {
@@ -16336,8 +16236,8 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			elm$url$Url$Parser$s('labels')),
 			A2(
 			elm$url$Url$Parser$map,
-			author$project$Main$MilestonesPage,
-			elm$url$Url$Parser$s('milestones')),
+			author$project$Main$ShipItPage,
+			elm$url$Url$Parser$s('shipit')),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$PullRequestsPage,
@@ -16358,104 +16258,7 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			author$project$Main$BouncePage,
 			elm$url$Url$Parser$s('logout'))
 		]));
-var elm_community$json_extra$Json$Encode$Extra$maybe = function (encoder) {
-	return A2(
-		elm$core$Basics$composeR,
-		elm$core$Maybe$map(encoder),
-		elm$core$Maybe$withDefault(elm$json$Json$Encode$null));
-};
-var author$project$GitHubGraph$setIssueMilestone = F3(
-	function (token, issue, mmilestone) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'milestone',
-								A2(
-									elm_community$json_extra$Json$Encode$Extra$maybe,
-									elm$json$Json$Encode$int,
-									A2(
-										elm$core$Maybe$map,
-										function ($) {
-											return $.k;
-										},
-										mmilestone)))
-							])),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$patch(
-							'https://api.github.com/repos/' + (issue.q.hY + ('/' + (issue.q.hE + ('/issues/' + elm$core$String$fromInt(issue.k))))))))));
-	});
-var author$project$Main$IssueMilestoned = F2(
-	function (a, b) {
-		return {$: 48, a: a, b: b};
-	});
-var author$project$Main$setIssueMilestone = F3(
-	function (model, issue, mmilestone) {
-		var _n0 = model.g;
-		if (!_n0.$) {
-			var token = _n0.a.ik;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$IssueMilestoned(issue),
-				A3(author$project$GitHubGraph$setIssueMilestone, token, issue, mmilestone));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$GitHubGraph$setPullRequestMilestone = F3(
-	function (token, pr, mmilestone) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					elm$json$Json$Encode$object(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'milestone',
-								A2(
-									elm_community$json_extra$Json$Encode$Extra$maybe,
-									elm$json$Json$Encode$int,
-									A2(
-										elm$core$Maybe$map,
-										function ($) {
-											return $.k;
-										},
-										mmilestone)))
-							])),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$patch(
-							'https://api.github.com/repos/' + (pr.q.hY + ('/' + (pr.q.hE + ('/issues/' + elm$core$String$fromInt(pr.k))))))))));
-	});
-var author$project$Main$PullRequestMilestoned = F2(
-	function (a, b) {
-		return {$: 49, a: a, b: b};
-	});
-var author$project$Main$setPRMilestone = F3(
-	function (model, pr, mmilestone) {
-		var _n0 = model.g;
-		if (!_n0.$) {
-			var token = _n0.a.ik;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$PullRequestMilestoned(pr),
-				A3(author$project$GitHubGraph$setPullRequestMilestone, token, pr, mmilestone));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
+var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
 var author$project$GitHubGraph$updateRepoLabel = F5(
 	function (token, repo, label, name, color) {
 		return A2(
@@ -16472,13 +16275,13 @@ var author$project$GitHubGraph$updateRepoLabel = F5(
 	});
 var author$project$Main$updateLabel = F4(
 	function (model, repo, label1, label2) {
-		var _n0 = model.g;
+		var _n0 = model.p;
 		if (!_n0.$) {
 			var token = _n0.a.ik;
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$LabelChanged(repo),
-				A5(author$project$GitHubGraph$updateRepoLabel, token, repo, label1, label2.hE, label2.cz));
+				A5(author$project$GitHubGraph$updateRepoLabel, token, repo, label1, label2.hE, label2.cw));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -16521,7 +16324,7 @@ var elm$core$String$left = F2(
 	});
 var elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {fp: fragment, ft: host, f0: path, f2: port_, f8: protocol, ga: query};
+		return {fo: fragment, fs: host, f0: path, f2: port_, f8: protocol, ga: query};
 	});
 var elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
@@ -16676,7 +16479,7 @@ var elm$url$Url$toString = function (url) {
 	return A3(
 		elm$url$Url$addPrefixed,
 		'#',
-		url.fp,
+		url.fo,
 		A3(
 			elm$url$Url$addPrefixed,
 			'?',
@@ -16685,7 +16488,7 @@ var elm$url$Url$toString = function (url) {
 				A2(
 					elm$url$Url$addPort,
 					url.f2,
-					_Utils_ap(http, url.ft)),
+					_Utils_ap(http, url.fs)),
 				url.f0)));
 };
 var elm$url$Url$Parser$getFirstMatch = function (states) {
@@ -16698,10 +16501,10 @@ var elm$url$Url$Parser$getFirstMatch = function (states) {
 			var rest = states.b;
 			var _n1 = state.aY;
 			if (!_n1.b) {
-				return elm$core$Maybe$Just(state.ex);
+				return elm$core$Maybe$Just(state.ew);
 			} else {
 				if ((_n1.a === '') && (!_n1.b.b)) {
-					return elm$core$Maybe$Just(state.ex);
+					return elm$core$Maybe$Just(state.ew);
 				} else {
 					var $temp$states = rest;
 					states = $temp$states;
@@ -16800,7 +16603,7 @@ var elm$url$Url$Parser$parse = F2(
 					_List_Nil,
 					elm$url$Url$Parser$preparePath(url.f0),
 					elm$url$Url$Parser$prepareQuery(url.ga),
-					url.fp,
+					url.fo,
 					elm$core$Basics$identity)));
 	});
 var y0hy0h$ordered_containers$OrderedSet$insert = F2(
@@ -16862,7 +16665,7 @@ var author$project$Main$update = F2(
 							model,
 							A2(
 								elm$browser$Browser$Navigation$pushUrl,
-								model.dJ,
+								model.dH,
 								elm$url$Url$toString(url)));
 					} else {
 						var href = urlRequest.a;
@@ -16907,7 +16710,7 @@ var author$project$Main$update = F2(
 									author$project$Main$computeDataView(
 										_Utils_update(
 											model,
-											{cs: baseGraphFilter, bv: page}))),
+											{cq: baseGraphFilter, bv: page}))),
 								elm$core$Platform$Cmd$none);
 						}
 					} else {
@@ -16918,7 +16721,7 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								ax: A2(
+								aw: A2(
 									elm$core$List$map,
 									function (_n5) {
 										var s = _n5.a;
@@ -16927,7 +16730,7 @@ var author$project$Main$update = F2(
 											s,
 											author$project$ForceGraph$tick(g));
 									},
-									model.ax)
+									model.aw)
 							}),
 						elm$core$Platform$Cmd$none);
 				case 4:
@@ -16936,21 +16739,21 @@ var author$project$Main$update = F2(
 						author$project$Main$computeGraphState(
 							_Utils_update(
 								model,
-								{M: date})),
+								{K: date})),
 						elm$core$Platform$Cmd$none);
 				case 5:
 					var subMsg = msg.a;
-					var dragModel = A2(author$project$Drag$update, subMsg, model.h);
+					var dragModel = A2(author$project$Drag$update, subMsg, model.g);
 					var newModel = _Utils_update(
 						model,
-						{h: dragModel});
+						{g: dragModel});
 					if (dragModel.$ === 2) {
 						var state = dragModel.a;
-						var $temp$msg = state.fS,
+						var $temp$msg = state.fR,
 							$temp$model = _Utils_update(
 							newModel,
 							{
-								h: author$project$Drag$drop(newModel.h)
+								g: author$project$Drag$drop(newModel.g)
 							});
 						msg = $temp$msg;
 						model = $temp$model;
@@ -16960,17 +16763,17 @@ var author$project$Main$update = F2(
 					}
 				case 6:
 					var subMsg = msg.a;
-					var dragModel = A2(author$project$Drag$update, subMsg, model.E);
+					var dragModel = A2(author$project$Drag$update, subMsg, model.aS);
 					var newModel = _Utils_update(
 						model,
-						{E: dragModel});
+						{aS: dragModel});
 					if (dragModel.$ === 2) {
 						var state = dragModel.a;
-						var $temp$msg = state.fS,
+						var $temp$msg = state.fR,
 							$temp$model = _Utils_update(
 							newModel,
 							{
-								h: author$project$Drag$drop(newModel.h)
+								g: author$project$Drag$drop(newModel.g)
 							});
 						msg = $temp$msg;
 						model = $temp$model;
@@ -16982,7 +16785,7 @@ var author$project$Main$update = F2(
 					var source = msg.a;
 					var dest = msg.b;
 					if (!source.$) {
-						var cardId = source.a.eT;
+						var cardId = source.a.eS;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$moveCard, model, dest, cardId));
@@ -16995,8 +16798,8 @@ var author$project$Main$update = F2(
 				case 8:
 					if (!msg.b.$) {
 						var col = msg.a;
-						var content = msg.b.a.cB;
-						var _n9 = model.h;
+						var content = msg.b.a.cy;
+						var _n9 = model.g;
 						if (_n9.$ === 3) {
 							var drag = _n9.a;
 							var wrapValue = F2(
@@ -17004,14 +16807,14 @@ var author$project$Main$update = F2(
 									return _Utils_update(
 										indexed,
 										{
-											ex: f(indexed.ex)
+											ew: f(indexed.ew)
 										});
 								});
 							var msourceId = function () {
-								var _n13 = drag.aD;
+								var _n13 = drag.aC;
 								if (!_n13.$) {
 									var cs = _n13.a;
-									return _Utils_eq(cs.cA, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.cA);
+									return _Utils_eq(cs.cx, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.cx);
 								} else {
 									return elm$core$Maybe$Nothing;
 								}
@@ -17021,35 +16824,35 @@ var author$project$Main$update = F2(
 									if (!content.a.$) {
 										var issue = content.a.a;
 										return _Utils_Tuple2(
-											elm$core$Maybe$Just(issue.fw),
+											elm$core$Maybe$Just(issue.fv),
 											A2(
 												author$project$Backend$refreshIssue,
-												issue.fw,
+												issue.fv,
 												A2(
 													elm$core$Basics$composeL,
 													author$project$Main$CardDropContentRefreshed,
 													elm$core$Result$map(
 														function (x) {
 															return {
-																dH: x.dH,
-																ex: author$project$GitHubGraph$IssueCardContent(x.ex)
+																dF: x.dF,
+																ew: author$project$GitHubGraph$IssueCardContent(x.ew)
 															};
 														}))));
 									} else {
 										var pr = content.a.a;
 										return _Utils_Tuple2(
-											elm$core$Maybe$Just(pr.fw),
+											elm$core$Maybe$Just(pr.fv),
 											A2(
 												author$project$Backend$refreshPR,
-												pr.fw,
+												pr.fv,
 												A2(
 													elm$core$Basics$composeL,
 													author$project$Main$CardDropContentRefreshed,
 													elm$core$Result$map(
 														function (x) {
 															return {
-																dH: x.dH,
-																ex: author$project$GitHubGraph$PullRequestCardContent(x.ex)
+																dF: x.dF,
+																ew: author$project$GitHubGraph$PullRequestCardContent(x.ew)
 															};
 														}))));
 									}
@@ -17065,14 +16868,14 @@ var author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											ad: elm$core$Maybe$Just(
+											ac: elm$core$Maybe$Just(
 												{
-													cB: elm$core$Maybe$Nothing,
+													cy: elm$core$Maybe$Nothing,
 													g4: mcontentId,
-													cb: elm$core$Maybe$Nothing,
-													c$: elm$core$Maybe$Just(sourceId),
-													ce: elm$core$Maybe$Nothing,
-													c2: elm$core$Maybe$Just(col)
+													ca: elm$core$Maybe$Nothing,
+													cX: elm$core$Maybe$Just(sourceId),
+													cd: elm$core$Maybe$Nothing,
+													c_: elm$core$Maybe$Just(col)
 												})
 										}),
 									elm$core$Platform$Cmd$batch(
@@ -17087,14 +16890,14 @@ var author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											ad: elm$core$Maybe$Just(
+											ac: elm$core$Maybe$Just(
 												{
-													cB: elm$core$Maybe$Nothing,
+													cy: elm$core$Maybe$Nothing,
 													g4: mcontentId,
-													cb: elm$core$Maybe$Nothing,
-													c$: elm$core$Maybe$Nothing,
-													ce: elm$core$Maybe$Nothing,
-													c2: elm$core$Maybe$Just(col)
+													ca: elm$core$Maybe$Nothing,
+													cX: elm$core$Maybe$Nothing,
+													cd: elm$core$Maybe$Nothing,
+													c_: elm$core$Maybe$Just(col)
 												})
 										}),
 									elm$core$Platform$Cmd$batch(
@@ -17118,9 +16921,9 @@ var author$project$Main$update = F2(
 					}
 				case 9:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
-						var _n14 = model.ad;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
+						var _n14 = model.ac;
 						if (_n14.$ === 1) {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
@@ -17130,12 +16933,12 @@ var author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											m: A2(elm$core$Basics$max, index, model.m),
-											ad: elm$core$Maybe$Just(
+											l: A2(elm$core$Basics$max, index, model.l),
+											ac: elm$core$Maybe$Just(
 												_Utils_update(
 													pdr,
 													{
-														cB: elm$core$Maybe$Just(value)
+														cy: elm$core$Maybe$Just(value)
 													}))
 										})),
 								elm$core$Platform$Cmd$none);
@@ -17150,9 +16953,9 @@ var author$project$Main$update = F2(
 					}
 				case 10:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
-						var _n15 = model.ad;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
+						var _n15 = model.ac;
 						if (_n15.$ === 1) {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
@@ -17162,12 +16965,12 @@ var author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											m: A2(elm$core$Basics$max, index, model.m),
-											ad: elm$core$Maybe$Just(
+											l: A2(elm$core$Basics$max, index, model.l),
+											ac: elm$core$Maybe$Just(
 												_Utils_update(
 													pdr,
 													{
-														cb: elm$core$Maybe$Just(value)
+														ca: elm$core$Maybe$Just(value)
 													}))
 										})),
 								elm$core$Platform$Cmd$none);
@@ -17182,9 +16985,9 @@ var author$project$Main$update = F2(
 					}
 				case 11:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
-						var _n16 = model.ad;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
+						var _n16 = model.ac;
 						if (_n16.$ === 1) {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
@@ -17194,12 +16997,12 @@ var author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											m: A2(elm$core$Basics$max, index, model.m),
-											ad: elm$core$Maybe$Just(
+											l: A2(elm$core$Basics$max, index, model.l),
+											ac: elm$core$Maybe$Just(
 												_Utils_update(
 													pdr,
 													{
-														ce: elm$core$Maybe$Just(value)
+														cd: elm$core$Maybe$Just(value)
 													}))
 										})),
 								elm$core$Platform$Cmd$none);
@@ -17215,13 +17018,13 @@ var author$project$Main$update = F2(
 				case 12:
 					if (!msg.b.$) {
 						var col = msg.a;
-						var index = msg.b.a.dH;
-						var value = msg.b.a.ex;
+						var index = msg.b.a.dF;
+						var value = msg.b.a.ew;
 						var data = model.c;
 						var newData = _Utils_update(
 							data,
 							{
-								eZ: A3(elm$core$Dict$insert, col, value, data.eZ)
+								eY: A3(elm$core$Dict$insert, col, value, data.eY)
 							});
 						return _Utils_Tuple2(
 							author$project$Main$computeDataView(
@@ -17229,7 +17032,7 @@ var author$project$Main$update = F2(
 									model,
 									{
 										c: newData,
-										m: A2(elm$core$Basics$max, index, model.m)
+										l: A2(elm$core$Basics$max, index, model.l)
 									})),
 							elm$core$Platform$Cmd$none);
 					} else {
@@ -17254,7 +17057,7 @@ var author$project$Main$update = F2(
 									card);
 							}),
 						elm$core$Dict$empty,
-						model.p);
+						model.o);
 					var _n17 = A2(
 						elm$core$List$partition,
 						elm$core$String$contains(':'),
@@ -17286,7 +17089,7 @@ var author$project$Main$update = F2(
 						elm$core$Dict$foldl,
 						F2(
 							function (_n18, card) {
-								return elm$core$Set$insert(card.fw);
+								return elm$core$Set$insert(card.fv);
 							}),
 						elm$core$Set$empty,
 						A2(elm$core$Dict$filter, cardMatch, cardsByTitle));
@@ -17340,7 +17143,7 @@ var author$project$Main$update = F2(
 							_Utils_update(
 								model,
 								{
-									W: elm$core$Maybe$Just(id)
+									V: elm$core$Maybe$Just(id)
 								})),
 						elm$core$Platform$Cmd$none);
 				case 18:
@@ -17349,7 +17152,7 @@ var author$project$Main$update = F2(
 						author$project$Main$computeGraphState(
 							_Utils_update(
 								model,
-								{W: elm$core$Maybe$Nothing})),
+								{V: elm$core$Maybe$Nothing})),
 						elm$core$Platform$Cmd$none);
 				case 19:
 					var id = msg.a;
@@ -17380,7 +17183,7 @@ var author$project$Main$update = F2(
 							author$project$Main$computeGraphState(
 								_Utils_update(
 									model,
-									{g: me})),
+									{p: me})),
 							elm$core$Platform$Cmd$none);
 					} else {
 						var err = msg.a.a;
@@ -17392,11 +17195,11 @@ var author$project$Main$update = F2(
 					}
 				case 14:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
 						return _Utils_Tuple2(
 							function () {
-								if (_Utils_cmp(index, model.m) > 0) {
+								if (_Utils_cmp(index, model.l) > 0) {
 									var prCards = A2(
 										elm$core$Dict$map,
 										function (_n26) {
@@ -17408,7 +17211,7 @@ var author$project$Main$update = F2(
 										function (_n25) {
 											return author$project$Main$issueCard;
 										},
-										value.fC);
+										value.fB);
 									var allLabels = A3(
 										elm$core$Dict$foldl,
 										F3(
@@ -17416,7 +17219,7 @@ var author$project$Main$update = F2(
 												return A3(
 													elm$core$List$foldl,
 													function (l) {
-														return A2(elm$core$Dict$insert, l.fw, l);
+														return A2(elm$core$Dict$insert, l.fv, l);
 													},
 													ls,
 													r.bk);
@@ -17427,7 +17230,7 @@ var author$project$Main$update = F2(
 										elm$core$Dict$foldl,
 										F3(
 											function (_n22, _n23, cache) {
-												var color = _n23.cz;
+												var color = _n23.cw;
 												return A3(
 													elm$core$Dict$insert,
 													color,
@@ -17442,12 +17245,12 @@ var author$project$Main$update = F2(
 											author$project$Main$computeDataView(
 												_Utils_update(
 													model,
-													{p: allCards, aj: allLabels, bN: colorLightnessCache, c: value, m: index}))));
+													{o: allCards, ai: allLabels, bN: colorLightnessCache, c: value, l: index}))));
 								} else {
 									return A3(
 										author$project$Log$debug,
 										'ignoring stale index',
-										_Utils_Tuple2(index, model.m),
+										_Utils_Tuple2(index, model.l),
 										model);
 								}
 							}(),
@@ -17486,7 +17289,7 @@ var author$project$Main$update = F2(
 										acc);
 								} else {
 									var label = _n28.a;
-									return _Utils_eq(label.cz, newLabel.cz) ? acc : A2(
+									return _Utils_eq(label.cw, newLabel.cw) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Main$updateLabel, model, r, label, newLabel),
 										acc);
@@ -17503,10 +17306,10 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								ap: A2(
+								ao: A2(
 									elm$core$Set$insert,
 									author$project$Main$labelKey(label),
-									model.ap)
+									model.ao)
 							}),
 						elm$core$Platform$Cmd$none);
 				case 26:
@@ -17515,10 +17318,10 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								ap: A2(
+								ao: A2(
 									elm$core$Set$remove,
 									author$project$Main$labelKey(label),
-									model.ap)
+									model.ao)
 							}),
 						elm$core$Platform$Cmd$none);
 				case 27:
@@ -17547,10 +17350,10 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								ap: A2(
+								ao: A2(
 									elm$core$Set$remove,
 									author$project$Main$labelKey(label),
-									model.ap)
+									model.ao)
 							}),
 						elm$core$Platform$Cmd$batch(cmds));
 				case 28:
@@ -17599,7 +17402,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 31:
 					var newColor = msg.a;
-					var newLabel = model.F;
+					var newLabel = model.D;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
@@ -17610,12 +17413,12 @@ var author$project$Main$update = F2(
 										function (_n31, label) {
 											return _Utils_update(
 												label,
-												{cz: newColor});
+												{cw: newColor});
 										}),
 									model.t),
-								F: elm$core$String$isEmpty(newLabel.hE) ? newLabel : _Utils_update(
+								D: elm$core$String$isEmpty(newLabel.hE) ? newLabel : _Utils_update(
 									newLabel,
-									{cz: newColor}),
+									{cw: newColor}),
 								bp: !elm$core$String$isEmpty(newLabel.hE)
 							}),
 						elm$core$Platform$Cmd$none);
@@ -17683,14 +17486,14 @@ var author$project$Main$update = F2(
 							elm$core$Platform$Cmd$batch(cmds));
 					}
 				case 34:
-					if (model.F.hE === '') {
+					if (model.D.hE === '') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var $temp$msg = author$project$Main$MirrorLabel(model.F),
+						var $temp$msg = author$project$Main$MirrorLabel(model.D),
 							$temp$model = _Utils_update(
 							model,
 							{
-								F: {cz: 'ffffff', hE: ''},
+								D: {cw: 'ffffff', hE: ''},
 								bp: false
 							});
 						msg = $temp$msg;
@@ -17702,22 +17505,22 @@ var author$project$Main$update = F2(
 						_Utils_update(
 							model,
 							{
-								F: author$project$Main$randomizeColor(model.F),
+								D: author$project$Main$randomizeColor(model.D),
 								bp: true
 							}),
 						elm$core$Platform$Cmd$none);
 				case 36:
 					var name = msg.a;
-					var newLabel = model.F;
-					var newColor = model.bp ? model.F.cz : author$project$Main$generateColor(
+					var newLabel = model.D;
+					var newColor = model.bp ? model.D.cw : author$project$Main$generateColor(
 						author$project$Hash$hash(name));
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								F: _Utils_update(
+								D: _Utils_update(
 									newLabel,
-									{cz: newColor, hE: name})
+									{cw: newColor, hE: name})
 							}),
 						elm$core$Platform$Cmd$none);
 				case 37:
@@ -17738,21 +17541,21 @@ var author$project$Main$update = F2(
 					}
 				case 38:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
 						var data = model.c;
 						var allLabels = A3(
 							elm$core$List$foldl,
 							function (l) {
-								return A2(elm$core$Dict$insert, l.fw, l);
+								return A2(elm$core$Dict$insert, l.fv, l);
 							},
-							model.aj,
+							model.ai,
 							value.bk);
 						var colorLightnessCache = A3(
 							elm$core$Dict$foldl,
 							F3(
 								function (_n36, _n37, cache) {
-									var color = _n37.cz;
+									var color = _n37.cw;
 									return A3(
 										elm$core$Dict$insert,
 										color,
@@ -17766,14 +17569,14 @@ var author$project$Main$update = F2(
 								_Utils_update(
 									model,
 									{
-										aj: allLabels,
+										ai: allLabels,
 										bN: colorLightnessCache,
 										c: _Utils_update(
 											data,
 											{
-												gf: A3(elm$core$Dict$insert, value.fw, value, data.gf)
+												gf: A3(elm$core$Dict$insert, value.fv, value, data.gf)
 											}),
-										m: A2(elm$core$Basics$max, index, model.m)
+										l: A2(elm$core$Basics$max, index, model.l)
 									})),
 							elm$core$Platform$Cmd$none);
 					} else {
@@ -17786,7 +17589,7 @@ var author$project$Main$update = F2(
 					}
 				case 39:
 					var card = msg.a;
-					var _n38 = card.cB;
+					var _n38 = card.cy;
 					if (!_n38.$) {
 						var issue = _n38.a;
 						return _Utils_Tuple2(
@@ -17810,7 +17613,7 @@ var author$project$Main$update = F2(
 					}
 				case 40:
 					var card = msg.a;
-					var _n39 = card.cB;
+					var _n39 = card.cy;
 					if (!_n39.$) {
 						var issue = _n39.a;
 						return _Utils_Tuple2(
@@ -17822,189 +17625,7 @@ var author$project$Main$update = F2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, 'paused'));
 					}
-				case 41:
-					var title = msg.a;
-					var cmds = A3(
-						elm$core$Dict$foldl,
-						F3(
-							function (_n40, r, acc) {
-								return A2(
-									elm$core$List$any,
-									A2(
-										elm$core$Basics$composeL,
-										elm$core$Basics$eq(title),
-										function ($) {
-											return $.bF;
-										}),
-									r.fN) ? acc : A2(
-									elm$core$List$cons,
-									A3(author$project$Main$createMilestone, model, r, title),
-									acc);
-							}),
-						_List_Nil,
-						model.c.gf);
-					return _Utils_Tuple2(
-						model,
-						elm$core$Platform$Cmd$batch(cmds));
-				case 42:
-					var title = msg.a;
-					var cmds = A3(
-						elm$core$Dict$foldl,
-						F3(
-							function (_n41, r, acc) {
-								var _n42 = A2(
-									elm$core$List$filter,
-									A2(
-										elm$core$Basics$composeL,
-										elm$core$Basics$eq(title),
-										function ($) {
-											return $.bF;
-										}),
-									r.fN);
-								if (_n42.b) {
-									var m = _n42.a;
-									return A2(
-										elm$core$List$cons,
-										A3(author$project$Main$closeMilestone, model, r, m),
-										acc);
-								} else {
-									return acc;
-								}
-							}),
-						_List_Nil,
-						model.c.gf);
-					return _Utils_Tuple2(
-						model,
-						elm$core$Platform$Cmd$batch(cmds));
-				case 43:
-					var title = msg.a;
-					var cmds = A3(
-						elm$core$Dict$foldl,
-						F3(
-							function (_n43, r, acc) {
-								var _n44 = A2(
-									elm$core$List$filter,
-									A2(
-										elm$core$Basics$composeL,
-										elm$core$Basics$eq(title),
-										function ($) {
-											return $.bF;
-										}),
-									r.fN);
-								if (_n44.b) {
-									var m = _n44.a;
-									return A2(
-										elm$core$List$cons,
-										A3(author$project$Main$deleteMilestone, model, r, m),
-										acc);
-								} else {
-									return acc;
-								}
-							}),
-						_List_Nil,
-						model.c.gf);
-					return _Utils_Tuple2(
-						model,
-						elm$core$Platform$Cmd$batch(cmds));
-				case 44:
-					if (!msg.b.$) {
-						var repo = msg.a;
-						var repoSel = {hE: repo.hE, hY: repo.hY};
-						return _Utils_Tuple2(
-							model,
-							A2(author$project$Backend$refreshRepo, repoSel, author$project$Main$RepoRefreshed));
-					} else {
-						var repo = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to modify labels',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 45:
-					var name = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{b2: name}),
-						elm$core$Platform$Cmd$none);
-				case 46:
-					var _n45 = model.b2;
-					if (_n45 === '') {
-						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-					} else {
-						var name = _n45;
-						var $temp$msg = author$project$Main$MirrorMilestone(name),
-							$temp$model = model;
-						msg = $temp$msg;
-						model = $temp$model;
-						continue update;
-					}
-				case 47:
-					var card = msg.a;
-					var mtitle = msg.b;
-					var set = function () {
-						var _n49 = card.cB;
-						if (!_n49.$) {
-							var issue = _n49.a;
-							return A2(author$project$Main$setIssueMilestone, model, issue);
-						} else {
-							var pr = _n49.a;
-							return A2(author$project$Main$setPRMilestone, model, pr);
-						}
-					}();
-					if (mtitle.$ === 1) {
-						return _Utils_Tuple2(
-							model,
-							set(elm$core$Maybe$Nothing));
-					} else {
-						var title = mtitle.a;
-						var _n47 = A2(elm$core$Dict$get, card.q.fw, model.c.gf);
-						if (!_n47.$) {
-							var repo = _n47.a;
-							var _n48 = A2(
-								elm$core$List$filter,
-								A2(
-									elm$core$Basics$composeL,
-									elm$core$Basics$eq(title),
-									function ($) {
-										return $.bF;
-									}),
-								repo.fN);
-							if (_n48.b) {
-								var milestone = _n48.a;
-								return _Utils_Tuple2(
-									model,
-									set(
-										elm$core$Maybe$Just(milestone)));
-							} else {
-								return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-							}
-						} else {
-							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-						}
-					}
-				case 48:
-					if (!msg.b.$) {
-						var issue = msg.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									E: author$project$Drag$land(model.E)
-								}),
-							A2(author$project$Backend$refreshIssue, issue.fw, author$project$Main$IssueRefreshed));
-					} else {
-						var issue = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to change milestone',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 63:
+				case 54:
 					if (!msg.b.$) {
 						var cb = msg.a;
 						return _Utils_Tuple2(model, cb);
@@ -18017,27 +17638,27 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
-				case 50:
+				case 41:
 					var id = msg.a;
 					return _Utils_Tuple2(
 						model,
 						A2(author$project$Backend$refreshIssue, id, author$project$Main$IssueRefreshed));
-				case 51:
+				case 42:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
 						return _Utils_Tuple2(
 							author$project$Main$computeDataView(
 								_Utils_update(
 									model,
 									{
-										p: A3(
+										o: A3(
 											elm$core$Dict$insert,
-											value.fw,
+											value.fv,
 											author$project$Main$issueCard(value),
-											model.p),
-										m: A2(elm$core$Basics$max, index, model.m),
-										E: author$project$Drag$complete(model.E)
+											model.o),
+										l: A2(elm$core$Basics$max, index, model.l),
+										aS: author$project$Drag$complete(model.aS)
 									})),
 							elm$core$Platform$Cmd$none);
 					} else {
@@ -18048,46 +17669,27 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
-				case 49:
-					if (!msg.b.$) {
-						var pr = msg.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									E: author$project$Drag$land(model.E)
-								}),
-							A2(author$project$Backend$refreshPR, pr.fw, author$project$Main$PullRequestRefreshed));
-					} else {
-						var pr = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to change milestone',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 52:
+				case 43:
 					var id = msg.a;
 					return _Utils_Tuple2(
 						model,
 						A2(author$project$Backend$refreshPR, id, author$project$Main$PullRequestRefreshed));
-				case 53:
+				case 44:
 					if (!msg.a.$) {
-						var index = msg.a.a.dH;
-						var value = msg.a.a.ex;
+						var index = msg.a.a.dF;
+						var value = msg.a.a.ew;
 						return _Utils_Tuple2(
 							author$project$Main$computeDataView(
 								_Utils_update(
 									model,
 									{
-										p: A3(
+										o: A3(
 											elm$core$Dict$insert,
-											value.fw,
+											value.fv,
 											author$project$Main$prCard(value),
-											model.p),
-										m: A2(elm$core$Basics$max, index, model.m),
-										E: author$project$Drag$complete(model.E)
+											model.o),
+										l: A2(elm$core$Basics$max, index, model.l),
+										aS: author$project$Drag$complete(model.aS)
 									})),
 							elm$core$Platform$Cmd$none);
 					} else {
@@ -18098,104 +17700,104 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
-				case 54:
+				case 45:
 					var filter = msg.a;
 					return _Utils_Tuple2(
 						author$project$Main$computeGraph(
 							_Utils_update(
 								model,
 								{
-									ab: A2(elm$core$List$cons, filter, model.ab)
+									aa: A2(elm$core$List$cons, filter, model.aa)
 								})),
 						elm$core$Platform$Cmd$none);
-				case 55:
+				case 46:
 					var filter = msg.a;
 					return _Utils_Tuple2(
 						author$project$Main$computeGraph(
 							_Utils_update(
 								model,
 								{
-									ab: A2(
+									aa: A2(
 										elm$core$List$filter,
 										elm$core$Basics$neq(filter),
-										model.ab)
+										model.aa)
 								})),
 						elm$core$Platform$Cmd$none);
-				case 56:
+				case 47:
 					var sort = msg.a;
 					return _Utils_Tuple2(
 						author$project$Main$computeGraph(
 							_Utils_update(
 								model,
-								{aO: sort})),
+								{aN: sort})),
 						elm$core$Platform$Cmd$none);
-				case 57:
+				case 48:
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{bA: !model.bA}),
 						elm$core$Platform$Cmd$none);
-				case 58:
+				case 49:
 					var string = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{bj: string}),
 						elm$core$Platform$Cmd$none);
-				case 59:
+				case 50:
 					return _Utils_Tuple2(
-						model.aC ? _Utils_update(
+						model.aB ? _Utils_update(
 							model,
-							{ay: elm$core$Dict$empty, bj: '', aC: false}) : author$project$Main$computeDataView(
+							{ax: elm$core$Dict$empty, bj: '', aB: false}) : author$project$Main$computeDataView(
 							_Utils_update(
 								model,
-								{aC: true})),
+								{aB: true})),
 						elm$core$Platform$Cmd$none);
-				case 60:
+				case 51:
 					var name = msg.a;
 					var op = msg.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								ay: A3(elm$core$Dict$insert, name, op, model.ay)
+								ax: A3(elm$core$Dict$insert, name, op, model.ax)
 							}),
 						elm$core$Platform$Cmd$none);
-				case 61:
+				case 52:
 					var name = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								ay: A2(elm$core$Dict$remove, name, model.ay)
+								ax: A2(elm$core$Dict$remove, name, model.ax)
 							}),
 						elm$core$Platform$Cmd$none);
 				default:
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
-							return A2(elm$core$Dict$get, a, model.p);
+							return A2(elm$core$Dict$get, a, model.o);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.s));
-					var _n50 = A2(
+					var _n40 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(0),
 							elm$core$Tuple$second),
-						elm$core$Dict$toList(model.ay));
-					var addPairs = _n50.a;
-					var removePairs = _n50.b;
+						elm$core$Dict$toList(model.ax));
+					var addPairs = _n40.a;
+					var removePairs = _n40.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n52 = card.cB;
-							if (!_n52.$) {
-								var issue = _n52.a;
+							var _n42 = card.cy;
+							if (!_n42.$) {
+								var issue = _n42.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n52.a;
+								var pr = _n42.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -18208,13 +17810,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n51 = card.cB;
-										if (!_n51.$) {
-											var issue = _n51.a;
+										var _n41 = card.cy;
+										if (!_n41.$) {
+											var issue = _n41.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n51.a;
+											var pr = _n41.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -18235,39 +17837,39 @@ var author$project$Main$update = F2(
 var author$project$Main$init = F3(
 	function (config, url, key) {
 		var model = {
-			p: elm$core$Dict$empty,
-			aj: elm$core$Dict$empty,
+			o: elm$core$Dict$empty,
+			ai: elm$core$Dict$empty,
 			u: elm$core$Set$empty,
-			cs: elm$core$Maybe$Nothing,
-			ax: _List_Nil,
-			ay: elm$core$Dict$empty,
+			cq: elm$core$Maybe$Nothing,
+			aw: _List_Nil,
+			ax: elm$core$Dict$empty,
 			bc: '',
 			bN: elm$core$Dict$empty,
-			e1: config,
-			M: elm$time$Time$millisToPosix(config.dI),
+			e0: config,
+			K: elm$time$Time$millisToPosix(config.dG),
 			c: author$project$Backend$emptyData,
-			m: 0,
-			D: {cp: _List_Nil, cy: elm$core$Dict$empty, cQ: _List_Nil, cX: elm$core$Dict$empty, aB: elm$core$Dict$empty},
-			ap: elm$core$Set$empty,
+			l: 0,
+			N: {c5: _List_Nil, df: elm$core$Dict$empty, dW: _List_Nil, cT: elm$core$Dict$empty, aA: elm$core$Dict$empty},
+			ao: elm$core$Set$empty,
 			t: elm$core$Dict$empty,
-			ab: _List_Nil,
-			aO: author$project$Main$ImpactSort,
+			aa: _List_Nil,
+			aN: author$project$Main$ImpactSort,
 			bX: elm$core$Maybe$Nothing,
-			W: elm$core$Maybe$Nothing,
+			V: elm$core$Maybe$Nothing,
 			bZ: true,
-			dJ: key,
+			dH: key,
 			bj: '',
-			g: elm$core$Maybe$Nothing,
-			E: author$project$Drag$init,
-			F: {cz: 'ffffff', hE: ''},
+			p: elm$core$Maybe$Nothing,
+			aS: author$project$Drag$init,
+			D: {cw: 'ffffff', hE: ''},
 			bp: false,
-			b2: '',
+			fU: '',
 			bv: author$project$Main$GlobalGraphPage,
-			h: author$project$Drag$init,
-			ad: elm$core$Maybe$Nothing,
+			g: author$project$Drag$init,
+			ac: elm$core$Maybe$Nothing,
 			s: y0hy0h$ordered_containers$OrderedSet$empty,
 			bA: false,
-			aC: false
+			aB: false
 		};
 		var _n0 = A2(
 			author$project$Main$update,
@@ -18297,7 +17899,7 @@ var elm$browser$Browser$AnimationManager$Time = function (a) {
 };
 var elm$browser$Browser$AnimationManager$State = F3(
 	function (subs, request, oldTime) {
-		return {d_: oldTime, gg: request, gw: subs};
+		return {dZ: oldTime, gg: request, gw: subs};
 	});
 var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
 	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
@@ -18309,7 +17911,7 @@ var elm$core$Process$spawn = _Scheduler_spawn;
 var elm$browser$Browser$AnimationManager$onEffects = F3(
 	function (router, subs, _n0) {
 		var request = _n0.gg;
-		var oldTime = _n0.d_;
+		var oldTime = _n0.dZ;
 		var _n1 = _Utils_Tuple2(request, subs);
 		if (_n1.a.$ === 1) {
 			if (!_n1.b.b) {
@@ -18356,7 +17958,7 @@ var elm$browser$Browser$AnimationManager$onEffects = F3(
 var elm$browser$Browser$AnimationManager$onSelfMsg = F3(
 	function (router, newTime, _n0) {
 		var subs = _n0.gw;
-		var oldTime = _n0.d_;
+		var oldTime = _n0.dZ;
 		var send = function (sub) {
 			if (!sub.$) {
 				var tagger = sub.a;
@@ -18655,7 +18257,7 @@ var author$project$Main$subscriptions = function (model) {
 				A2(
 				elm$core$List$all,
 				A2(elm$core$Basics$composeR, elm$core$Tuple$second, author$project$ForceGraph$isCompleted),
-				model.ax) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onAnimationFrame(author$project$Main$Tick)
+				model.aw) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onAnimationFrame(author$project$Main$Tick)
 			]));
 };
 var author$project$Main$selectStatefulProject = function (project) {
@@ -18668,12 +18270,12 @@ var author$project$Main$selectStatefulProject = function (project) {
 				function ($) {
 					return $.hE;
 				}),
-			project.e_);
+			project.eZ);
 	};
 	var icebox = findColumns(author$project$Main$detectColumn.bg);
-	var inFlights = findColumns(author$project$Main$detectColumn.aP);
-	var dones = findColumns(author$project$Main$detectColumn.aM);
-	var backlogs = findColumns(author$project$Main$detectColumn.cq);
+	var inFlights = findColumns(author$project$Main$detectColumn.aO);
+	var dones = findColumns(author$project$Main$detectColumn.aL);
+	var backlogs = findColumns(author$project$Main$detectColumn.co);
 	var _n0 = _Utils_Tuple2(
 		backlogs,
 		_Utils_Tuple3(icebox, inFlights, dones));
@@ -18687,7 +18289,7 @@ var author$project$Main$selectStatefulProject = function (project) {
 		var _n4 = _n1.c;
 		var d = _n4.a;
 		return elm$core$Maybe$Just(
-			{cr: bs, aM: d, bg: ib, aP: i, f6: project});
+			{cp: bs, aL: d, bg: ib, aO: i, f6: project});
 	} else {
 		return elm$core$Maybe$Nothing;
 	}
@@ -18698,7 +18300,7 @@ var author$project$Main$onlyOpenCards = function (model) {
 			var contentId = _n0.g4;
 			if (!contentId.$) {
 				var id = contentId.a;
-				var _n2 = A2(elm$core$Dict$get, id, model.p);
+				var _n2 = A2(elm$core$Dict$get, id, model.o);
 				if (!_n2.$) {
 					var card = _n2.a;
 					return author$project$Main$isOpen(card);
@@ -18790,21 +18392,21 @@ var author$project$Drag$viewDropArea = F4(
 					var state = model.a;
 					var _n5 = state.bR;
 					if (!_n5.$) {
-						var target = _n5.a.av;
-						return _Utils_eq(target, candidate.av);
+						var target = _n5.a.au;
+						return _Utils_eq(target, candidate.au);
 					} else {
 						return state.b1 && _Utils_eq(
-							elm$core$Maybe$Just(state.aD),
+							elm$core$Maybe$Just(state.aC),
 							ownSource);
 					}
 				case 2:
-					var target = model.a.av;
+					var target = model.a.au;
 					var landed = model.a.b_;
-					return _Utils_eq(target, candidate.av) && (!landed);
+					return _Utils_eq(target, candidate.au) && (!landed);
 				default:
-					var target = model.a.av;
+					var target = model.a.au;
 					var landed = model.a.b_;
-					return _Utils_eq(target, candidate.av) && (!landed);
+					return _Utils_eq(target, candidate.au) && (!landed);
 			}
 		}();
 		var isActive = function () {
@@ -18816,8 +18418,8 @@ var author$project$Drag$viewDropArea = F4(
 		}();
 		var droppedElement = function () {
 			if (model.$ === 3) {
-				var start = model.a.aE;
-				return isOver ? start.fg : elm$html$Html$text('');
+				var start = model.a.aD;
+				return isOver ? start.ff : elm$html$Html$text('');
 			} else {
 				return elm$html$Html$text('');
 			}
@@ -18853,28 +18455,28 @@ var author$project$Drag$viewDropArea = F4(
 								case 0:
 									return _List_Nil;
 								case 1:
-									var start = model.a.aE;
+									var start = model.a.aD;
 									return isOver ? _List_fromArray(
 										[
 											_Utils_Tuple2(
 											'min-height',
-											elm$core$String$fromFloat(start.cG.du) + 'px')
+											elm$core$String$fromFloat(start.cD.ds) + 'px')
 										]) : _List_Nil;
 								case 2:
-									var start = model.a.aE;
+									var start = model.a.aD;
 									return isOver ? _List_fromArray(
 										[
 											_Utils_Tuple2(
 											'min-height',
-											elm$core$String$fromFloat(start.cG.du) + 'px')
+											elm$core$String$fromFloat(start.cD.ds) + 'px')
 										]) : _List_Nil;
 								default:
-									var start = model.a.aE;
+									var start = model.a.aD;
 									return isOver ? _List_fromArray(
 										[
 											_Utils_Tuple2(
 											'min-height',
-											elm$core$String$fromFloat(start.cG.du) + 'px')
+											elm$core$String$fromFloat(start.cD.ds) + 'px')
 										]) : _List_Nil;
 							}
 						}()))),
@@ -18894,7 +18496,7 @@ var author$project$Drag$Start = F2(
 	});
 var author$project$Drag$StartState = F2(
 	function (elementBounds, element) {
-		return {fg: element, cG: elementBounds};
+		return {ff: element, cD: elementBounds};
 	});
 var elm$json$Json$Decode$float = _Json_decodeFloat;
 var debois$elm_dom$DOM$offsetHeight = A2(elm$json$Json$Decode$field, 'offsetHeight', elm$json$Json$Decode$float);
@@ -18946,7 +18548,7 @@ var debois$elm_dom$DOM$boundingClientRect = A4(
 		function (_n0, width, height) {
 			var x = _n0.a;
 			var y = _n0.b;
-			return {du: height, fG: x, gB: y, gJ: width};
+			return {ds: height, fF: x, gB: y, gJ: width};
 		}),
 	A2(debois$elm_dom$DOM$position, 0, 0),
 	debois$elm_dom$DOM$offsetWidth,
@@ -18965,10 +18567,10 @@ var author$project$Drag$isDragging = F2(
 		switch (model.$) {
 			case 1:
 				var state = model.a;
-				return _Utils_eq(state.aD, source);
+				return _Utils_eq(state.aC, source);
 			case 3:
 				var state = model.a;
-				return _Utils_eq(state.aD, source);
+				return _Utils_eq(state.aC, source);
 			default:
 				return false;
 		}
@@ -19027,10 +18629,10 @@ var author$project$Main$PauseCard = function (a) {
 	return {$: 39, a: a};
 };
 var author$project$Main$RefreshIssue = function (a) {
-	return {$: 50, a: a};
+	return {$: 41, a: a};
 };
 var author$project$Main$RefreshPullRequest = function (a) {
-	return {$: 52, a: a};
+	return {$: 43, a: a};
 };
 var author$project$Main$UnhighlightNode = function (a) {
 	return {$: 18, a: a};
@@ -19061,18 +18663,18 @@ var author$project$Main$externalIcons = function (card) {
 					]),
 				_List_Nil);
 		},
-		card.cx);
+		card.cv);
 };
 var author$project$Main$isAnticipated = F2(
 	function (model, card) {
-		return A2(elm$core$Set$member, card.fw, model.u) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.fw, model.s));
+		return A2(elm$core$Set$member, card.fv, model.u) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.fv, model.s));
 	});
 var author$project$Main$isPaused = function (card) {
-	return card.ac.ds;
+	return card.ab.dq;
 };
 var author$project$Main$prIcons = F2(
 	function (model, card) {
-		var _n0 = card.cB;
+		var _n0 = card.cy;
 		if (!_n0.$) {
 			return _List_Nil;
 		} else {
@@ -19081,11 +18683,11 @@ var author$project$Main$prIcons = F2(
 				var _n3 = A2(
 					elm$core$Maybe$map,
 					function ($) {
-						return $.c1;
+						return $.cZ;
 					},
-					pr.fF);
+					pr.fE);
 				if ((!_n3.$) && (!_n3.a.$)) {
-					var contexts = _n3.a.a.e3;
+					var contexts = _n3.a.a.e2;
 					return function (a) {
 						return A2(elm$core$List$map, a, contexts);
 					}(
@@ -19101,7 +18703,7 @@ var author$project$Main$prIcons = F2(
 												_Utils_Tuple2('octicon', true),
 												_Utils_Tuple2(
 												function () {
-													var _n4 = c._;
+													var _n4 = c.Z;
 													switch (_n4) {
 														case 3:
 															return 'octicon-primitive-dot';
@@ -19118,7 +18720,7 @@ var author$project$Main$prIcons = F2(
 												true),
 												_Utils_Tuple2(
 												function () {
-													var _n5 = c._;
+													var _n5 = c.Z;
 													switch (_n5) {
 														case 3:
 															return 'pending';
@@ -19144,12 +18746,12 @@ var author$project$Main$prIcons = F2(
 			var reviews = A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
-				A2(elm$core$Dict$get, card.fw, model.c.gj));
+				A2(elm$core$Dict$get, card.fv, model.c.gj));
 			var reviewStates = A2(
 				elm$core$List$map,
 				function (r) {
 					var reviewClass = function () {
-						var _n2 = r._;
+						var _n2 = r.Z;
 						switch (_n2) {
 							case 0:
 								return 'pending';
@@ -19168,13 +18770,13 @@ var author$project$Main$prIcons = F2(
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$class('status-actor ' + reviewClass),
-								elm$html$Html$Attributes$src(r.aw.dc)
+								elm$html$Html$Attributes$src(r.av.c9)
 							]),
 						_List_Nil);
 				},
 				reviews);
 			var mergeClass = function () {
-				var _n1 = pr.fM;
+				var _n1 = pr.fL;
 				switch (_n1) {
 					case 0:
 						return 'success';
@@ -19206,18 +18808,18 @@ var author$project$Main$recentActors = F2(
 					A2(
 						elm$core$Maybe$withDefault,
 						_List_Nil,
-						A2(elm$core$Dict$get, card.fw, model.c.eH)))));
+						A2(elm$core$Dict$get, card.fv, model.c.eG)))));
 	});
 var author$project$Main$viewCardActor = F2(
 	function (model, _n0) {
-		var createdAt = _n0.e5;
-		var avatar = _n0.dc;
+		var createdAt = _n0.e4;
+		var avatar = _n0.c9;
 		return A2(
 			elm$html$Html$img,
 			_List_fromArray(
 				[
 					elm$html$Html$Attributes$class(
-					'card-actor ' + A2(author$project$Main$activityClass, model.M, createdAt)),
+					'card-actor ' + A2(author$project$Main$activityClass, model.K, createdAt)),
 					elm$html$Html$Attributes$src(avatar + '&s=88'),
 					elm$html$Html$Attributes$draggable('false')
 				]),
@@ -19262,10 +18864,10 @@ var elm$html$Html$Events$onClick = function (msg) {
 var author$project$Main$viewLabel = F2(
 	function (model, id) {
 		var _n0 = function () {
-			var _n1 = A2(elm$core$Dict$get, id, model.aj);
+			var _n1 = A2(elm$core$Dict$get, id, model.ai);
 			if (!_n1.$) {
 				var label = _n1.a;
-				return _Utils_Tuple2(label.hE, label.cz);
+				return _Utils_Tuple2(label.hE, label.cw);
 			} else {
 				return _Utils_Tuple2('unknown', 'ff00ff');
 			}
@@ -19340,28 +18942,28 @@ var author$project$Main$viewCard = F2(
 							'highlighted',
 							_Utils_eq(
 								model.bX,
-								elm$core$Maybe$Just(card.fw))),
+								elm$core$Maybe$Just(card.fv))),
 							_Utils_Tuple2(
-							A2(author$project$Main$activityClass, model.M, card.c7),
+							A2(author$project$Main$activityClass, model.K, card.c3),
 							author$project$Main$isPR(card)),
 							_Utils_Tuple2(
 							'last-activity-is-me',
 							function () {
-								var _n0 = model.g;
+								var _n0 = model.p;
 								if (!_n0.$) {
-									var user = _n0.a.ew;
-									return A3(author$project$Main$lastActivityIsByUser, model.c.eH, user.hx, card);
+									var user = _n0.a.ev;
+									return A3(author$project$Main$lastActivityIsByUser, model.c.eG, user.hx, card);
 								} else {
 									return false;
 								}
 							}())
 						])),
 					elm$html$Html$Events$onClick(
-					author$project$Main$SelectCard(card.fw)),
+					author$project$Main$SelectCard(card.fv)),
 					elm$html$Html$Events$onMouseOver(
-					author$project$Main$HighlightNode(card.fw)),
+					author$project$Main$HighlightNode(card.fv)),
 					elm$html$Html$Events$onMouseOut(
-					author$project$Main$UnhighlightNode(card.fw))
+					author$project$Main$UnhighlightNode(card.fv))
 				]),
 			_List_fromArray(
 				[
@@ -19435,12 +19037,12 @@ var author$project$Main$viewCard = F2(
 									_List_fromArray(
 										[
 											elm$html$Html$text(
-											'#' + elm$core$String$fromInt(card.k))
+											'#' + elm$core$String$fromInt(card.j))
 										])),
 									elm$html$Html$text(' '),
 									elm$html$Html$text('opened by '),
 									function () {
-									var _n1 = card.aw;
+									var _n1 = card.av;
 									if (!_n1.$) {
 										var user = _n1.a;
 										return A2(
@@ -19490,19 +19092,19 @@ var author$project$Main$viewCard = F2(
 												_Utils_Tuple2(
 												'octicon-issue-opened',
 												_Utils_eq(
-													card._,
+													card.Z,
 													author$project$Main$IssueState(0))),
 												_Utils_Tuple2(
 												'octicon-issue-closed',
 												_Utils_eq(
-													card._,
+													card.Z,
 													author$project$Main$IssueState(1))),
 												_Utils_Tuple2(
 												'octicon-git-pull-request',
 												author$project$Main$isPR(card))
 											])),
 										elm$html$Html$Events$onClick(
-										author$project$Main$isPR(card) ? author$project$Main$RefreshPullRequest(card.fw) : author$project$Main$RefreshIssue(card.fw))
+										author$project$Main$isPR(card) ? author$project$Main$RefreshPullRequest(card.fv) : author$project$Main$RefreshIssue(card.fv))
 									]),
 								_List_Nil),
 								function () {
@@ -19540,8 +19142,8 @@ var author$project$Main$viewCard = F2(
 				]));
 	});
 var elm_explorations$markdown$Markdown$defaultOptions = {
-	e9: elm$core$Maybe$Nothing,
-	fq: elm$core$Maybe$Just(
+	e8: elm$core$Maybe$Nothing,
+	fp: elm$core$Maybe$Just(
 		{gV: false, ia: false}),
 	gm: true,
 	gr: false
@@ -19560,13 +19162,13 @@ var author$project$Main$viewNoteCard = F3(
 							_Utils_Tuple2('card', true),
 							_Utils_Tuple2(
 							'in-flight',
-							author$project$Main$detectColumn.aP(col.hE)),
+							author$project$Main$detectColumn.aO(col.hE)),
 							_Utils_Tuple2(
 							'done',
-							author$project$Main$detectColumn.aM(col.hE)),
+							author$project$Main$detectColumn.aL(col.hE)),
 							_Utils_Tuple2(
 							'backlog',
-							author$project$Main$detectColumn.cq(col.hE))
+							author$project$Main$detectColumn.co(col.hE))
 						]))
 				]),
 			_List_fromArray(
@@ -19602,15 +19204,15 @@ var author$project$Main$viewNoteCard = F3(
 var author$project$Main$viewProjectColumnCard = F4(
 	function (model, project, col, ghCard) {
 		var dropCandidate = {
-			fT: author$project$Main$MoveCardAfter,
-			av: {
-				eK: elm$core$Maybe$Just(ghCard.fw),
-				cA: col.fw,
-				b7: project.fw
+			fS: author$project$Main$MoveCardAfter,
+			au: {
+				eJ: elm$core$Maybe$Just(ghCard.fv),
+				cx: col.fv,
+				b6: project.fv
 			}
 		};
 		var dragId = author$project$Main$FromColumnCardSource(
-			{eT: ghCard.fw, cA: col.fw});
+			{eS: ghCard.fv, cx: col.fv});
 		var _n0 = _Utils_Tuple2(ghCard.hP, ghCard.g4);
 		_n0$2:
 		while (true) {
@@ -19622,13 +19224,13 @@ var author$project$Main$viewProjectColumnCard = F4(
 						[
 							A4(
 							author$project$Drag$draggable,
-							model.h,
+							model.g,
 							author$project$Main$ProjectDrag,
 							dragId,
 							A3(author$project$Main$viewNoteCard, model, col, n)),
 							A4(
 							author$project$Drag$viewDropArea,
-							model.h,
+							model.g,
 							author$project$Main$ProjectDrag,
 							dropCandidate,
 							elm$core$Maybe$Just(dragId))
@@ -19640,20 +19242,20 @@ var author$project$Main$viewProjectColumnCard = F4(
 				if (!_n0.b.$) {
 					var _n2 = _n0.a;
 					var contentId = _n0.b.a;
-					var _n3 = A2(elm$core$Dict$get, contentId, model.p);
+					var _n3 = A2(elm$core$Dict$get, contentId, model.o);
 					if (!_n3.$) {
 						var card = _n3.a;
 						return _List_fromArray(
 							[
 								A4(
 								author$project$Drag$draggable,
-								model.h,
+								model.g,
 								author$project$Main$ProjectDrag,
 								dragId,
 								A2(author$project$Main$viewCard, model, card)),
 								A4(
 								author$project$Drag$viewDropArea,
-								model.h,
+								model.g,
 								author$project$Main$ProjectDrag,
 								dropCandidate,
 								elm$core$Maybe$Just(dragId))
@@ -19671,14 +19273,14 @@ var author$project$Main$viewProjectColumnCard = F4(
 var author$project$Main$viewProjectColumn = F4(
 	function (model, project, mod, col) {
 		var dropCandidate = {
-			fT: author$project$Main$MoveCardAfter,
-			av: {eK: elm$core$Maybe$Nothing, cA: col.fw, b7: project.fw}
+			fS: author$project$Main$MoveCardAfter,
+			au: {eJ: elm$core$Maybe$Nothing, cx: col.fv, b6: project.fv}
 		};
 		var cards = mod(
 			A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
-				A2(elm$core$Dict$get, col.fw, model.c.eZ)));
+				A2(elm$core$Dict$get, col.fv, model.c.eY)));
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -19714,7 +19316,7 @@ var author$project$Main$viewProjectColumn = F4(
 						]),
 					_List_fromArray(
 						[
-							A4(author$project$Drag$viewDropArea, model.h, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
+							A4(author$project$Drag$viewDropArea, model.g, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
 						])) : A2(
 					elm$html$Html$div,
 					_List_fromArray(
@@ -19723,7 +19325,7 @@ var author$project$Main$viewProjectColumn = F4(
 						]),
 					A2(
 						elm$core$List$cons,
-						A4(author$project$Drag$viewDropArea, model.h, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
+						A4(author$project$Drag$viewDropArea, model.g, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
 						A2(
 							elm$core$List$concatMap,
 							A3(author$project$Main$viewProjectColumnCard, model, project, col),
@@ -19734,9 +19336,9 @@ var elm$html$Html$h4 = _VirtualDom_node('h4');
 var author$project$Main$viewProject = F2(
 	function (model, _n0) {
 		var project = _n0.f6;
-		var backlogs = _n0.cr;
-		var inFlight = _n0.aP;
-		var done = _n0.aM;
+		var backlogs = _n0.cp;
+		var inFlight = _n0.aO;
+		var done = _n0.aL;
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -19854,7 +19456,7 @@ var author$project$Main$NewContentCardSource = function (a) {
 var author$project$Main$viewCardEntry = F2(
 	function (model, card) {
 		var dragSource = author$project$Main$NewContentCardSource(
-			{g4: card.fw});
+			{g4: card.fv});
 		var cardView = A2(author$project$Main$viewCard, model, card);
 		var anticipated = A2(author$project$Main$isAnticipated, model, card);
 		return A2(
@@ -19865,7 +19467,7 @@ var author$project$Main$viewCardEntry = F2(
 				]),
 			_List_fromArray(
 				[
-					A4(author$project$Drag$draggable, model.h, author$project$Main$ProjectDrag, dragSource, cardView),
+					A4(author$project$Drag$draggable, model.g, author$project$Main$ProjectDrag, dragSource, cardView),
 					A2(
 					elm$html$Html$div,
 					_List_fromArray(
@@ -19879,7 +19481,7 @@ var author$project$Main$viewCardEntry = F2(
 							_List_fromArray(
 								[
 									elm$html$Html$Events$onClick(
-									author$project$Main$DeselectCard(card.fw)),
+									author$project$Main$DeselectCard(card.fv)),
 									elm$html$Html$Attributes$class('octicon octicon-x')
 								]),
 							_List_fromArray(
@@ -19927,7 +19529,7 @@ var author$project$Main$includesLabel = F3(
 		return A2(
 			elm$core$List$any,
 			function (id) {
-				var _n0 = A2(elm$core$Dict$get, id, model.aj);
+				var _n0 = A2(elm$core$Dict$get, id, model.ai);
 				if (!_n0.$) {
 					var l = _n0.a;
 					return A2(author$project$Main$matchesLabel, label, l);
@@ -19990,7 +19592,7 @@ var author$project$Main$viewLabelRow = F3(
 						A2(elm$core$List$cons, c, is))) : _Utils_Tuple2(ps, is);
 				}),
 			_Utils_Tuple2(_List_Nil, _List_Nil),
-			model.p);
+			model.o);
 		var prs = _n0.a;
 		var issues = _n0.b;
 		return A2(
@@ -20028,7 +19630,7 @@ var author$project$Main$viewLabelRow = F3(
 												]),
 											_List_fromArray(
 												[
-													(elm$core$String$isEmpty(model.F.hE) && elm$core$Dict$isEmpty(model.t)) ? A2(
+													(elm$core$String$isEmpty(model.D.hE) && elm$core$Dict$isEmpty(model.t)) ? A2(
 													elm$html$Html$span,
 													_Utils_ap(
 														_List_fromArray(
@@ -20037,7 +19639,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																A2(author$project$Main$searchLabel, model, label.hE))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.cz)),
+														A2(author$project$Main$labelColorStyles, model, label.cw)),
 													_List_Nil) : A2(
 													elm$html$Html$span,
 													_Utils_ap(
@@ -20045,9 +19647,9 @@ var author$project$Main$viewLabelRow = F3(
 															[
 																elm$html$Html$Attributes$class('label-icon label-color-control octicon octicon-paintcan'),
 																elm$html$Html$Events$onClick(
-																author$project$Main$SetLabelColor(label.cz))
+																author$project$Main$SetLabelColor(label.cw))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.cz)),
+														A2(author$project$Main$labelColorStyles, model, label.cw)),
 													_List_Nil),
 													A2(
 													elm$html$Html$span,
@@ -20058,7 +19660,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																A2(author$project$Main$searchLabel, model, label.hE))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.cz)),
+														A2(author$project$Main$labelColorStyles, model, label.cw)),
 													_List_fromArray(
 														[
 															A2(
@@ -20094,7 +19696,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																author$project$Main$RandomizeLabelColor(label))
 															]),
-														A2(author$project$Main$labelColorStyles, model, newLabel.cz)),
+														A2(author$project$Main$labelColorStyles, model, newLabel.cw)),
 													_List_Nil),
 													A2(
 													elm$html$Html$input,
@@ -20105,7 +19707,7 @@ var author$project$Main$viewLabelRow = F3(
 																author$project$Main$SetLabelName(label)),
 																elm$html$Html$Attributes$value(newLabel.hE)
 															]),
-														A2(author$project$Main$labelColorStyles, model, newLabel.cz)),
+														A2(author$project$Main$labelColorStyles, model, newLabel.cw)),
 													_List_Nil)
 												]));
 									}
@@ -20302,7 +19904,7 @@ var author$project$Main$viewLabelRow = F3(
 											elm$html$Html$Attributes$class('button octicon octicon-pencil')
 										]),
 									_List_Nil),
-									A2(elm$core$Set$member, stateKey, model.ap) ? A2(
+									A2(elm$core$Set$member, stateKey, model.ao) ? A2(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
@@ -20322,7 +19924,7 @@ var author$project$Main$viewLabelRow = F3(
 								])),
 							function () {
 							var isEditing = A2(elm$core$Dict$member, stateKey, model.t);
-							var isDeleting = A2(elm$core$Set$member, stateKey, model.ap);
+							var isDeleting = A2(elm$core$Set$member, stateKey, model.ao);
 							return A2(
 								elm$html$Html$div,
 								_List_fromArray(
@@ -20400,7 +20002,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 													elm$html$Html$Attributes$class('label-icon label-color-control octicon octicon-sync'),
 													elm$html$Html$Events$onClick(author$project$Main$RandomizeNewLabelColor)
 												]),
-											A2(author$project$Main$labelColorStyles, model, model.F.cz)),
+											A2(author$project$Main$labelColorStyles, model, model.D.cw)),
 										_List_Nil),
 										A2(
 										elm$html$Html$input,
@@ -20408,9 +20010,9 @@ var author$project$Main$viewLabelsPage = function (model) {
 											_List_fromArray(
 												[
 													elm$html$Html$Events$onInput(author$project$Main$SetNewLabelName),
-													elm$html$Html$Attributes$value(model.F.hE)
+													elm$html$Html$Attributes$value(model.D.hE)
 												]),
-											A2(author$project$Main$labelColorStyles, model, model.F.cz)),
+											A2(author$project$Main$labelColorStyles, model, model.D.cw)),
 										_List_Nil)
 									]))
 							]))
@@ -20494,7 +20096,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 		return A2(
 			elm$core$List$map,
 			a,
-			elm$core$Dict$toList(model.D.aB));
+			elm$core$Dict$toList(model.N.aA));
 	}(
 		function (_n0) {
 			var _n1 = _n0.a;
@@ -20504,7 +20106,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 			return A3(
 				author$project$Main$viewLabelRow,
 				model,
-				{cz: color, hE: name},
+				{cw: color, hE: name},
 				repos);
 		});
 	return A2(
@@ -20514,235 +20116,6 @@ var author$project$Main$viewLabelsPage = function (model) {
 				elm$html$Html$Attributes$class('all-labels')
 			]),
 		A2(elm$core$List$cons, newLabel, labelRows));
-};
-var author$project$Main$CreateMilestone = {$: 46};
-var author$project$Main$SetNewMilestoneName = function (a) {
-	return {$: 45, a: a};
-};
-var author$project$Main$newMilestone = function (model) {
-	return A2(
-		elm$html$Html$form,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('new-milestone'),
-				elm$html$Html$Events$onSubmit(author$project$Main$CreateMilestone)
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$input,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onInput(author$project$Main$SetNewMilestoneName),
-						elm$html$Html$Attributes$value(model.b2)
-					]),
-				_List_Nil),
-				A2(
-				elm$html$Html$span,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onClick(author$project$Main$CreateMilestone),
-						elm$html$Html$Attributes$class('button octicon octicon-plus')
-					]),
-				_List_Nil)
-			]));
-};
-var author$project$Main$MilestoneDrag = function (a) {
-	return {$: 6, a: a};
-};
-var author$project$Main$SetCardMilestone = F2(
-	function (a, b) {
-		return {$: 47, a: a, b: b};
-	});
-var author$project$Main$viewInbox = F2(
-	function (model, cards) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('milestone inbox')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('milestone-title')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('milestone-title-label')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-inbox')
-										]),
-									_List_Nil),
-									elm$html$Html$text('Inbox')
-								]))
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('cards')
-						]),
-					A2(
-						elm$core$List$map,
-						function (card) {
-							return A4(
-								author$project$Drag$draggable,
-								model.E,
-								author$project$Main$MilestoneDrag,
-								card,
-								A2(author$project$Main$viewCard, model, card));
-						},
-						cards)),
-					A4(
-					author$project$Drag$viewDropArea,
-					model.E,
-					author$project$Main$MilestoneDrag,
-					{fT: author$project$Main$SetCardMilestone, av: elm$core$Maybe$Nothing},
-					elm$core$Maybe$Nothing)
-				]));
-	});
-var author$project$Main$CloseMilestone = function (a) {
-	return {$: 42, a: a};
-};
-var author$project$Main$DeleteMilestone = function (a) {
-	return {$: 43, a: a};
-};
-var author$project$Main$viewMilestone = F3(
-	function (model, title, cards) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('milestone')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('milestone-title')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('milestone-title-label')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-milestone')
-										]),
-									_List_Nil),
-									elm$html$Html$text(title)
-								])),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('milestone-title-controls')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-mirror'),
-											elm$html$Html$Events$onClick(
-											author$project$Main$MirrorMilestone(title))
-										]),
-									_List_Nil),
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-check'),
-											elm$html$Html$Events$onClick(
-											author$project$Main$CloseMilestone(title))
-										]),
-									_List_Nil),
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-trashcan'),
-											elm$html$Html$Events$onClick(
-											author$project$Main$DeleteMilestone(title))
-										]),
-									_List_Nil)
-								]))
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('cards')
-						]),
-					A2(
-						elm$core$List$map,
-						function (card) {
-							return A4(
-								author$project$Drag$draggable,
-								model.E,
-								author$project$Main$MilestoneDrag,
-								card,
-								A2(author$project$Main$viewCard, model, card));
-						},
-						cards)),
-					A4(
-					author$project$Drag$viewDropArea,
-					model.E,
-					author$project$Main$MilestoneDrag,
-					{
-						fT: author$project$Main$SetCardMilestone,
-						av: elm$core$Maybe$Just(title)
-					},
-					elm$core$Maybe$Nothing)
-				]));
-	});
-var author$project$Main$viewMilestonesPage = function (model) {
-	var nextMilestone = A2(author$project$Main$viewInbox, model, model.D.cQ);
-	var milestones = A2(
-		elm$core$List$map,
-		function (title) {
-			var milestoneCards = A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, title, model.D.cy));
-			return A3(author$project$Main$viewMilestone, model, title, milestoneCards);
-		},
-		model.D.cp);
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('all-milestones')
-			]),
-		A2(
-			elm$core$List$cons,
-			author$project$Main$newMilestone(model),
-			A2(elm$core$List$cons, nextMilestone, milestones)));
 };
 var author$project$Main$SelectAnticipatedCards = {$: 22};
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
@@ -20795,7 +20168,7 @@ var author$project$Main$viewNavBar = function (model) {
 				_List_fromArray(
 					[
 						function () {
-						var _n0 = model.g;
+						var _n0 = model.p;
 						if (_n0.$ === 1) {
 							return A2(
 								elm$html$Html$a,
@@ -20816,7 +20189,7 @@ var author$project$Main$viewNavBar = function (model) {
 										elm$html$Html$text('log in')
 									]));
 						} else {
-							var user = _n0.a.ew;
+							var user = _n0.a.ev;
 							return A2(
 								elm$html$Html$a,
 								_List_fromArray(
@@ -20831,7 +20204,7 @@ var author$project$Main$viewNavBar = function (model) {
 										_List_fromArray(
 											[
 												elm$html$Html$Attributes$class('user-avatar'),
-												elm$html$Html$Attributes$src(user.dc)
+												elm$html$Html$Attributes$src(user.c9)
 											]),
 										_List_Nil),
 										elm$html$Html$text(user.hx)
@@ -20894,7 +20267,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/milestones')
+								elm$html$Html$Attributes$href('/shipit')
 							]),
 						_List_fromArray(
 							[
@@ -20902,7 +20275,7 @@ var author$project$Main$viewNavBar = function (model) {
 								elm$html$Html$span,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$class('octicon octicon-milestone')
+										elm$html$Html$Attributes$class('octicon octicon-squirrel')
 									]),
 								_List_Nil)
 							])),
@@ -20943,7 +20316,7 @@ var author$project$Main$linkPath = F2(
 						return $.aU;
 					},
 					function ($) {
-						return $.ar;
+						return $.aq;
 					}),
 				A2(elm_community$graph$Graph$get, edge.id, graph));
 			if (!_n1.$) {
@@ -20963,7 +20336,7 @@ var author$project$Main$linkPath = F2(
 						return $.aU;
 					},
 					function ($) {
-						return $.ar;
+						return $.aq;
 					}),
 				A2(elm_community$graph$Graph$get, edge.hn, graph));
 			if (!_n0.$) {
@@ -20991,9 +20364,9 @@ var author$project$Main$linkPath = F2(
 			_List_Nil);
 	});
 var author$project$Main$nodeBounds = function (nc) {
-	var y = nc.aU.ar.iy;
-	var x = nc.aU.ar.iv;
-	return nc.aU.ar.ex.dh(
+	var y = nc.aU.aq.iy;
+	var x = nc.aU.aq.iv;
+	return nc.aU.aq.ew.de(
 		{iv: x, iy: y});
 };
 var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
@@ -21003,15 +20376,15 @@ var author$project$Main$viewNodeLowerUpper = F3(
 		var node = _n0.aU;
 		var fs = _n1.a;
 		var ns = _n1.b;
-		var pos = {iv: node.ar.iv, iy: node.ar.iy};
+		var pos = {iv: node.aq.iv, iy: node.aq.iy};
 		return _Utils_Tuple2(
 			A2(
 				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.ar.ex.ez, pos, state),
+				A3(elm$svg$Svg$Lazy$lazy2, node.aq.ew.ey, pos, state),
 				fs),
 			A2(
 				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.ar.ex.eA, pos, state),
+				A3(elm$svg$Svg$Lazy$lazy2, node.aq.ew.ez, pos, state),
 				ns));
 	});
 var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
@@ -21032,7 +20405,7 @@ var author$project$Main$viewGraph = F2(
 			elm$core$List$foldl,
 			F2(
 				function (_n5, acc) {
-					var x2 = _n5.eE;
+					var x2 = _n5.eD;
 					return A2(elm$core$Basics$max, x2, acc);
 				}),
 			0,
@@ -21041,7 +20414,7 @@ var author$project$Main$viewGraph = F2(
 			elm$core$List$foldl,
 			F2(
 				function (_n4, acc) {
-					var y2 = _n4.eG;
+					var y2 = _n4.eF;
 					return A2(elm$core$Basics$max, y2, acc);
 				}),
 			0,
@@ -21050,7 +20423,7 @@ var author$project$Main$viewGraph = F2(
 			elm$core$List$foldl,
 			F2(
 				function (_n3, acc) {
-					var x1 = _n3.eD;
+					var x1 = _n3.eC;
 					return A2(elm$core$Basics$min, x1, acc);
 				}),
 			999999,
@@ -21060,7 +20433,7 @@ var author$project$Main$viewGraph = F2(
 			elm$core$List$foldl,
 			F2(
 				function (_n2, acc) {
-					var y1 = _n2.eF;
+					var y1 = _n2.eE;
 					return A2(elm$core$Basics$min, y1, acc);
 				}),
 			999999,
@@ -21110,7 +20483,7 @@ var author$project$Main$viewGraph = F2(
 				]));
 	});
 var author$project$Main$AddFilter = function (a) {
-	return {$: 54, a: a};
+	return {$: 45, a: a};
 };
 var author$project$Main$AllActivitySort = {$: 2};
 var author$project$Main$HasLabelFilter = F2(
@@ -21122,22 +20495,22 @@ var author$project$Main$InvolvesUserFilter = function (a) {
 };
 var author$project$Main$PullRequestsFilter = {$: 4};
 var author$project$Main$RemoveFilter = function (a) {
-	return {$: 55, a: a};
+	return {$: 46, a: a};
 };
 var author$project$Main$SetGraphSort = function (a) {
-	return {$: 56, a: a};
+	return {$: 47, a: a};
 };
 var author$project$Main$SetLabelSearch = function (a) {
-	return {$: 58, a: a};
+	return {$: 49, a: a};
 };
-var author$project$Main$ToggleLabelFilters = {$: 57};
+var author$project$Main$ToggleLabelFilters = {$: 48};
 var author$project$Main$UntriagedFilter = {$: 5};
 var author$project$Main$UserActivitySort = function (a) {
 	return {$: 1, a: a};
 };
 var author$project$Main$hasFilter = F2(
 	function (model, filter) {
-		return A2(elm$core$List$member, filter, model.ab);
+		return A2(elm$core$List$member, filter, model.aa);
 	});
 var author$project$Main$viewGraphControls = function (model) {
 	var labelFilters = A2(
@@ -21172,12 +20545,12 @@ var author$project$Main$viewGraphControls = function (model) {
 				return elm$core$Maybe$Nothing;
 			}
 		},
-		model.ab);
+		model.aa);
 	var allLabelFilters = function (a) {
 		return A2(
 			elm$core$List$filterMap,
 			a,
-			elm$core$Dict$toList(model.D.aB));
+			elm$core$Dict$toList(model.N.aA));
 	}(
 		function (_n2) {
 			var _n3 = _n2.a;
@@ -21302,9 +20675,9 @@ var author$project$Main$viewGraphControls = function (model) {
 									]));
 						}(),
 							function () {
-							var _n0 = model.g;
+							var _n0 = model.p;
 							if (!_n0.$) {
-								var user = _n0.a.ew;
+								var user = _n0.a.ev;
 								var filter = author$project$Main$InvolvesUserFilter(user.hx);
 								return A2(
 									elm$html$Html$div,
@@ -21427,7 +20800,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										_Utils_Tuple2('control-setting', true),
 										_Utils_Tuple2(
 										'active',
-										_Utils_eq(model.aO, author$project$Main$ImpactSort))
+										_Utils_eq(model.aN, author$project$Main$ImpactSort))
 									])),
 								elm$html$Html$Events$onClick(
 								author$project$Main$SetGraphSort(author$project$Main$ImpactSort))
@@ -21453,7 +20826,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										_Utils_Tuple2('control-setting', true),
 										_Utils_Tuple2(
 										'active',
-										_Utils_eq(model.aO, author$project$Main$AllActivitySort))
+										_Utils_eq(model.aN, author$project$Main$AllActivitySort))
 									])),
 								elm$html$Html$Events$onClick(
 								author$project$Main$SetGraphSort(author$project$Main$AllActivitySort))
@@ -21470,9 +20843,9 @@ var author$project$Main$viewGraphControls = function (model) {
 								elm$html$Html$text('all activity')
 							])),
 						function () {
-						var _n1 = model.g;
+						var _n1 = model.p;
 						if (!_n1.$) {
-							var user = _n1.a.ew;
+							var user = _n1.a.ev;
 							return A2(
 								elm$html$Html$div,
 								_List_fromArray(
@@ -21484,7 +20857,7 @@ var author$project$Main$viewGraphControls = function (model) {
 												_Utils_Tuple2(
 												'active',
 												_Utils_eq(
-													model.aO,
+													model.aN,
 													author$project$Main$UserActivitySort(user.hx)))
 											])),
 										elm$html$Html$Events$onClick(
@@ -21529,15 +20902,15 @@ var author$project$Main$viewSpatialGraph = function (model) {
 						return A2(f, a, b);
 					})(
 					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
-				model.ax)));
+				model.aw)));
 };
 var author$project$Main$viewSingleProject = F2(
 	function (model, _n0) {
 		var project = _n0.f6;
 		var icebox = _n0.bg;
-		var backlogs = _n0.cr;
-		var inFlight = _n0.aP;
-		var done = _n0.aM;
+		var backlogs = _n0.cp;
+		var inFlight = _n0.aO;
+		var done = _n0.aL;
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -21623,10 +20996,10 @@ var author$project$Main$viewSingleProject = F2(
 							author$project$Main$viewSpatialGraph(model),
 							function () {
 							var dropCandidate = {
-								fT: author$project$Main$MoveCardAfter,
-								av: {eK: elm$core$Maybe$Nothing, cA: icebox.fw, b7: project.fw}
+								fS: author$project$Main$MoveCardAfter,
+								au: {eJ: elm$core$Maybe$Nothing, cx: icebox.fv, b6: project.fv}
 							};
-							return A4(author$project$Drag$viewDropArea, model.h, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing);
+							return A4(author$project$Drag$viewDropArea, model.g, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing);
 						}()
 						]))
 				]));
@@ -21739,24 +21112,33 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 				A2(
 					elm$core$List$sortBy,
 					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
-					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.D.cX)))));
+					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.N.cT)))));
 };
-var author$project$Main$ApplyLabelOperations = {$: 62};
+var author$project$Main$viewShipItPage = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('shipit')
+			]),
+		_List_Nil);
+};
+var author$project$Main$ApplyLabelOperations = {$: 53};
 var author$project$Main$ClearSelectedCards = {$: 23};
 var author$project$Main$RemoveLabelOperation = 1;
 var author$project$Main$SetLabelOperation = F2(
 	function (a, b) {
-		return {$: 60, a: a, b: b};
+		return {$: 51, a: a, b: b};
 	});
-var author$project$Main$ToggleLabelOperations = {$: 59};
+var author$project$Main$ToggleLabelOperations = {$: 50};
 var author$project$Main$UnsetLabelOperation = function (a) {
-	return {$: 61, a: a};
+	return {$: 52, a: a};
 };
 var author$project$Main$viewSidebarControls = function (model) {
 	var viewLabelOperation = F2(
 		function (name, color) {
 			var _n1 = function () {
-				var _n2 = A2(elm$core$Dict$get, name, model.ay);
+				var _n2 = A2(elm$core$Dict$get, name, model.ax);
 				if (!_n2.$) {
 					if (!_n2.a) {
 						var _n3 = _n2.a;
@@ -21773,7 +21155,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
-							return A2(elm$core$Dict$get, a, model.p);
+							return A2(elm$core$Dict$get, a, model.o);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.s));
 					return ((!elm$core$List$isEmpty(cards)) && A2(
@@ -21833,7 +21215,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 							]))
 					]));
 		});
-	var labelOptions = model.aC ? A2(
+	var labelOptions = model.aB ? A2(
 		elm$core$List$map,
 		function (_n0) {
 			var a = _n0.a;
@@ -21846,7 +21228,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 				elm$core$Basics$composeL,
 				elm$core$String$contains(model.bj),
 				elm$core$Tuple$first),
-			elm$core$Dict$keys(model.D.aB))) : _List_Nil;
+			elm$core$Dict$keys(model.N.aA))) : _List_Nil;
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
@@ -21881,7 +21263,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 								_List_fromArray(
 									[
 										_Utils_Tuple2('control-setting', true),
-										_Utils_Tuple2('active', model.aC)
+										_Utils_Tuple2('active', model.aB)
 									])),
 								elm$html$Html$Events$onClick(author$project$Main$ToggleLabelOperations)
 							]),
@@ -21916,7 +21298,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 						_List_fromArray(
 							[
 								_Utils_Tuple2('label-operations', true),
-								_Utils_Tuple2('visible', model.aC)
+								_Utils_Tuple2('visible', model.aB)
 							]))
 					]),
 				_List_fromArray(
@@ -21992,7 +21374,7 @@ var author$project$Main$viewPage = function (model) {
 		A2(
 			elm$core$List$filterMap,
 			function (a) {
-				return A2(elm$core$Dict$get, a, model.p);
+				return A2(elm$core$Dict$get, a, model.o);
 			},
 			y0hy0h$ordered_containers$OrderedSet$toList(model.s)));
 	var anticipatedCards = A2(
@@ -22001,7 +21383,7 @@ var author$project$Main$viewPage = function (model) {
 		A2(
 			elm$core$List$filterMap,
 			function (a) {
-				return A2(elm$core$Dict$get, a, model.p);
+				return A2(elm$core$Dict$get, a, model.o);
 			},
 			A2(
 				elm$core$List$filter,
@@ -22070,7 +21452,7 @@ var author$project$Main$viewPage = function (model) {
 									case 3:
 										return author$project$Main$viewLabelsPage(model);
 									case 4:
-										return author$project$Main$viewMilestonesPage(model);
+										return author$project$Main$viewShipItPage(model);
 									case 5:
 										return author$project$Main$viewPullRequestsPage(model);
 									default:
@@ -22132,6 +21514,6 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 		elm$json$Json$Decode$andThen,
 		function (initialTime) {
 			return elm$json$Json$Decode$succeed(
-				{dI: initialTime});
+				{dG: initialTime});
 		},
 		A2(elm$json$Json$Decode$field, 'initialTime', elm$json$Json$Decode$int)))(0)}});}(this));

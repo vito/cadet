@@ -224,15 +224,6 @@ type Msg
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | PauseCard Card
     | UnpauseCard Card
-    | MirrorMilestone String
-    | CloseMilestone String
-    | DeleteMilestone String
-    | MilestoneChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
-    | SetNewMilestoneName String
-    | CreateMilestone
-    | SetCardMilestone Card (Maybe String)
-    | IssueMilestoned GitHubGraph.Issue (Result GitHubGraph.Error ())
-    | PullRequestMilestoned GitHubGraph.PullRequest (Result GitHubGraph.Error ())
     | RefreshIssue GitHubGraph.ID
     | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
     | RefreshPullRequest GitHubGraph.ID
@@ -254,7 +245,7 @@ type Page
     | GlobalGraphPage
     | ProjectPage String
     | LabelsPage
-    | MilestonesPage
+    | ShipItPage
     | PullRequestsPage
     | BouncePage
 
@@ -333,7 +324,7 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
-        , UP.map MilestonesPage (UP.s "milestones")
+        , UP.map ShipItPage (UP.s "shipit")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
@@ -480,7 +471,7 @@ update msg model =
                                 LabelsPage ->
                                     Just ExcludeAllFilter
 
-                                MilestonesPage ->
+                                ShipItPage ->
                                     Just ExcludeAllFilter
 
                                 PullRequestsPage ->
@@ -1059,114 +1050,6 @@ update msg model =
                 GitHubGraph.PullRequestCardContent pr ->
                     ( model, removePullRequestLabel model pr "paused" )
 
-        MirrorMilestone title ->
-            let
-                cmds =
-                    Dict.foldl
-                        (\_ r acc ->
-                            if List.any ((==) title << .title) r.milestones then
-                                acc
-
-                            else
-                                createMilestone model r title :: acc
-                        )
-                        []
-                        model.data.repos
-            in
-            ( model, Cmd.batch cmds )
-
-        CloseMilestone title ->
-            let
-                cmds =
-                    Dict.foldl
-                        (\_ r acc ->
-                            case List.filter ((==) title << .title) r.milestones of
-                                m :: _ ->
-                                    closeMilestone model r m :: acc
-
-                                [] ->
-                                    acc
-                        )
-                        []
-                        model.data.repos
-            in
-            ( model, Cmd.batch cmds )
-
-        DeleteMilestone title ->
-            let
-                cmds =
-                    Dict.foldl
-                        (\_ r acc ->
-                            case List.filter ((==) title << .title) r.milestones of
-                                m :: _ ->
-                                    deleteMilestone model r m :: acc
-
-                                [] ->
-                                    acc
-                        )
-                        []
-                        model.data.repos
-            in
-            ( model, Cmd.batch cmds )
-
-        MilestoneChanged repo (Ok ()) ->
-            let
-                repoSel =
-                    { owner = repo.owner, name = repo.name }
-            in
-            ( model, Backend.refreshRepo repoSel RepoRefreshed )
-
-        MilestoneChanged repo (Err err) ->
-            Log.debug "failed to modify labels" err <|
-                ( model, Cmd.none )
-
-        SetNewMilestoneName name ->
-            ( { model | newMilestoneName = name }, Cmd.none )
-
-        CreateMilestone ->
-            case model.newMilestoneName of
-                "" ->
-                    ( model, Cmd.none )
-
-                name ->
-                    update (MirrorMilestone name) model
-
-        SetCardMilestone card mtitle ->
-            let
-                set =
-                    case card.content of
-                        GitHubGraph.IssueCardContent issue ->
-                            setIssueMilestone model issue
-
-                        GitHubGraph.PullRequestCardContent pr ->
-                            setPRMilestone model pr
-            in
-            case mtitle of
-                Nothing ->
-                    ( model, set Nothing )
-
-                Just title ->
-                    case Dict.get card.repo.id model.data.repos of
-                        Just repo ->
-                            case List.filter ((==) title << .title) repo.milestones of
-                                milestone :: _ ->
-                                    ( model, set (Just milestone) )
-
-                                [] ->
-                                    ( model, Cmd.none )
-
-                        Nothing ->
-                            ( model, Cmd.none )
-
-        IssueMilestoned issue (Ok ()) ->
-            ( { model | milestoneDrag = Drag.land model.milestoneDrag }
-            , Backend.refreshIssue issue.id IssueRefreshed
-            )
-
-        IssueMilestoned issue (Err err) ->
-            Log.debug "failed to change milestone" err <|
-                ( model, Cmd.none )
-
         DataChanged cb (Ok ()) ->
             ( model, cb )
 
@@ -1189,15 +1072,6 @@ update msg model =
 
         IssueRefreshed (Err err) ->
             Log.debug "failed to refresh issue" err <|
-                ( model, Cmd.none )
-
-        PullRequestMilestoned pr (Ok ()) ->
-            ( { model | milestoneDrag = Drag.land model.milestoneDrag }
-            , Backend.refreshPR pr.id PullRequestRefreshed
-            )
-
-        PullRequestMilestoned pr (Err err) ->
-            Log.debug "failed to change milestone" err <|
                 ( model, Cmd.none )
 
         RefreshPullRequest id ->
@@ -1382,7 +1256,7 @@ computeDataView origModel =
                 origModel
     in
     case model.page of
-        MilestonesPage ->
+        ShipItPage ->
             let
                 allMilestones =
                     Set.toList <|
@@ -1568,8 +1442,8 @@ viewPage model =
                     LabelsPage ->
                         viewLabelsPage model
 
-                    MilestonesPage ->
-                        viewMilestonesPage model
+                    ShipItPage ->
+                        viewShipItPage model
 
                     PullRequestsPage ->
                         viewPullRequestsPage model
@@ -1864,8 +1738,8 @@ viewNavBar model =
             , Html.a [ HA.class "button", HA.href "/labels" ]
                 [ Html.span [ HA.class "octicon octicon-tag" ] []
                 ]
-            , Html.a [ HA.class "button", HA.href "/milestones" ]
-                [ Html.span [ HA.class "octicon octicon-milestone" ] []
+            , Html.a [ HA.class "button", HA.href "/shipit" ]
+                [ Html.span [ HA.class "octicon octicon-squirrel" ] []
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
                 [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
@@ -1985,25 +1859,10 @@ viewLabelsPage model =
         (newLabel :: labelRows)
 
 
-viewMilestonesPage : Model -> Html Msg
-viewMilestonesPage model =
-    let
-        nextMilestone =
-            viewInbox model model.dataView.nextMilestoneCards
-
-        milestones =
-            List.map
-                (\title ->
-                    let
-                        milestoneCards =
-                            Maybe.withDefault [] (Dict.get title model.dataView.cardsByMilestone)
-                    in
-                    viewMilestone model title milestoneCards
-                )
-                model.dataView.allMilestones
-    in
-    Html.div [ HA.class "all-milestones" ]
-        (newMilestone model :: nextMilestone :: milestones)
+viewShipItPage : Model -> Html Msg
+viewShipItPage model =
+    Html.div [ HA.class "shipit" ]
+        []
 
 
 viewPullRequestsPage : Model -> Html Msg
@@ -2037,75 +1896,6 @@ viewPullRequestsPage model =
         )
 
 
-newMilestone : Model -> Html Msg
-newMilestone model =
-    Html.form [ HA.class "new-milestone", HE.onSubmit CreateMilestone ]
-        [ Html.input
-            [ HE.onInput SetNewMilestoneName
-            , HA.value model.newMilestoneName
-            ]
-            []
-        , Html.span
-            [ HE.onClick CreateMilestone
-            , HA.class "button octicon octicon-plus"
-            ]
-            []
-        ]
-
-
-viewInbox : Model -> List Card -> Html Msg
-viewInbox model cards =
-    Html.div [ HA.class "milestone inbox" ]
-        [ Html.div [ HA.class "milestone-title" ]
-            [ Html.div [ HA.class "milestone-title-label" ]
-                [ Html.span [ HA.class "octicon octicon-inbox" ] []
-                , Html.text "Inbox"
-                ]
-            ]
-        , Html.div [ HA.class "cards" ] <|
-            List.map
-                (\card ->
-                    Drag.draggable model.milestoneDrag MilestoneDrag card (viewCard model card)
-                )
-                cards
-        , Drag.viewDropArea model.milestoneDrag MilestoneDrag { msgFunc = SetCardMilestone, target = Nothing } Nothing
-        ]
-
-
-viewMilestone : Model -> String -> List Card -> Html Msg
-viewMilestone model title cards =
-    Html.div [ HA.class "milestone" ]
-        [ Html.div [ HA.class "milestone-title" ]
-            [ Html.div [ HA.class "milestone-title-label" ]
-                [ Html.span [ HA.class "octicon octicon-milestone" ] []
-                , Html.text title
-                ]
-            , Html.div [ HA.class "milestone-title-controls" ]
-                [ Html.span
-                    [ HA.class "octicon octicon-mirror"
-                    , HE.onClick (MirrorMilestone title)
-                    ]
-                    []
-                , Html.span
-                    [ HA.class "octicon octicon-check"
-                    , HE.onClick (CloseMilestone title)
-                    ]
-                    []
-                , Html.span
-                    [ HA.class "octicon octicon-trashcan"
-                    , HE.onClick (DeleteMilestone title)
-                    ]
-                    []
-                ]
-            ]
-        , Html.div [ HA.class "cards" ] <|
-            List.map
-                (\card ->
-                    Drag.draggable model.milestoneDrag MilestoneDrag card (viewCard model card)
-                )
-                cards
-        , Drag.viewDropArea model.milestoneDrag MilestoneDrag { msgFunc = SetCardMilestone, target = Just title } Nothing
-        ]
 
 
 matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool
@@ -3966,60 +3756,6 @@ deleteLabel model repo label =
         Nothing ->
             Cmd.none
 
-
-createMilestone : Model -> GitHubGraph.Repo -> String -> Cmd Msg
-createMilestone model repo title =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.createRepoMilestone token repo title
-                |> Task.attempt (MilestoneChanged repo)
-
-        Nothing ->
-            Cmd.none
-
-
-closeMilestone : Model -> GitHubGraph.Repo -> GitHubGraph.Milestone -> Cmd Msg
-closeMilestone model repo milestone =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.closeRepoMilestone token repo milestone
-                |> Task.attempt (MilestoneChanged repo)
-
-        Nothing ->
-            Cmd.none
-
-
-deleteMilestone : Model -> GitHubGraph.Repo -> GitHubGraph.Milestone -> Cmd Msg
-deleteMilestone model repo milestone =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.deleteRepoMilestone token repo milestone
-                |> Task.attempt (MilestoneChanged repo)
-
-        Nothing ->
-            Cmd.none
-
-
-setIssueMilestone : Model -> GitHubGraph.Issue -> Maybe GitHubGraph.Milestone -> Cmd Msg
-setIssueMilestone model issue mmilestone =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.setIssueMilestone token issue mmilestone
-                |> Task.attempt (IssueMilestoned issue)
-
-        Nothing ->
-            Cmd.none
-
-
-setPRMilestone : Model -> GitHubGraph.PullRequest -> Maybe GitHubGraph.Milestone -> Cmd Msg
-setPRMilestone model pr mmilestone =
-    case model.me of
-        Just { token } ->
-            GitHubGraph.setPullRequestMilestone token pr mmilestone
-                |> Task.attempt (PullRequestMilestoned pr)
-
-        Nothing ->
-            Cmd.none
 
 
 addIssueLabels : Model -> GitHubGraph.Issue -> List String -> Cmd Msg
