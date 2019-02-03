@@ -124,8 +124,8 @@ type alias Repo =
 type alias Release =
     { id : ID
     , url : String
-    , name : String
-    , tag : Tag
+    , name : Maybe String
+    , tag : Maybe Tag
     }
 
 
@@ -898,7 +898,7 @@ repoObject =
         |> GB.with (GB.field "isArchived" [] GB.bool)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "milestones" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list milestoneObject)))
-        |> GB.with (GB.field "releases" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list releaseObject)))
+        |> GB.with (GB.field "releases" [ ( "first", GA.int 100 ), ( "orderBy", GA.object [ ( "field", GA.enum "CREATED_AT" ), ( "direction", GA.enum "DESC" ) ] ) ] (GB.extract <| GB.field "nodes" [] (GB.list releaseObject)))
 
 
 repoQuery : GB.Document GB.Query Repo RepoSelector
@@ -1092,8 +1092,8 @@ releaseObject =
     GB.object Release
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.field "name" [] GB.string)
-        |> GB.with (GB.field "tag" [] tagObject)
+        |> GB.with (GB.field "name" [] (GB.nullable GB.string))
+        |> GB.with (GB.field "tag" [] (GB.nullable tagObject))
 
 
 tagObject : GB.ValueSpec GB.NonNull GB.ObjectType Tag vars
@@ -1564,8 +1564,8 @@ decodeRelease =
     JD.succeed Release
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "url" JD.string)
-        |> andMap (JD.field "name" JD.string)
-        |> andMap (JD.field "tag" decodeTag)
+        |> andMap (JD.field "name" (JD.maybe JD.string))
+        |> andMap (JD.field "tag" (JD.maybe decodeTag))
 
 
 decodeTag : JD.Decoder Tag
@@ -2028,8 +2028,8 @@ encodeRelease record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
-        , ( "name", JE.string record.name )
-        , ( "tag", encodeTag record.tag )
+        , ( "name", JEE.maybe JE.string record.name )
+        , ( "tag", JEE.maybe encodeTag record.tag )
         ]
 
 

@@ -77,14 +77,14 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
   return fun.a === 9 ? fun.f(a, b, c, d, e, f, g, h, i) : fun(a)(b)(c)(d)(e)(f)(g)(h)(i);
 }
 
+console.warn('Compiled in DEV mode. Follow the advice at https://elm-lang.org/0.19.0/optimize for better performance and smaller assets.');
 
 
+var _List_Nil_UNUSED = { $: 0 };
+var _List_Nil = { $: '[]' };
 
-var _List_Nil = { $: 0 };
-var _List_Nil_UNUSED = { $: '[]' };
-
-function _List_Cons(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons_UNUSED(hd, tl) { return { $: '::', a: hd, b: tl }; }
+function _List_Cons_UNUSED(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons(hd, tl) { return { $: '::', a: hd, b: tl }; }
 
 
 var _List_cons = F2(_List_Cons);
@@ -194,7 +194,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 		return false;
 	}
 
-	/**_UNUSED/
+	/**/
 	if (x.$ === 'Set_elm_builtin')
 	{
 		x = elm$core$Set$toList(x);
@@ -207,7 +207,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 	}
 	//*/
 
-	/**/
+	/**_UNUSED/
 	if (x.$ < 0)
 	{
 		x = elm$core$Dict$toList(x);
@@ -242,7 +242,7 @@ function _Utils_cmp(x, y, ord)
 		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
 	}
 
-	/**_UNUSED/
+	/**/
 	if (x instanceof String)
 	{
 		var a = x.valueOf();
@@ -251,10 +251,10 @@ function _Utils_cmp(x, y, ord)
 	}
 	//*/
 
-	/**/
+	/**_UNUSED/
 	if (!x.$)
 	//*/
-	/**_UNUSED/
+	/**/
 	if (x.$[0] === '#')
 	//*/
 	{
@@ -284,17 +284,17 @@ var _Utils_compare = F2(function(x, y)
 
 // COMMON VALUES
 
-var _Utils_Tuple0 = 0;
-var _Utils_Tuple0_UNUSED = { $: '#0' };
+var _Utils_Tuple0_UNUSED = 0;
+var _Utils_Tuple0 = { $: '#0' };
 
-function _Utils_Tuple2(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2_UNUSED(a, b) { return { $: '#2', a: a, b: b }; }
+function _Utils_Tuple2_UNUSED(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2(a, b) { return { $: '#2', a: a, b: b }; }
 
-function _Utils_Tuple3(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3_UNUSED(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+function _Utils_Tuple3_UNUSED(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
 
-function _Utils_chr(c) { return c; }
-function _Utils_chr_UNUSED(c) { return new String(c); }
+function _Utils_chr_UNUSED(c) { return c; }
+function _Utils_chr(c) { return new String(c); }
 
 
 // RECORDS
@@ -499,12 +499,12 @@ var _JsArray_appendN = F3(function(n, dest, source)
 
 // LOG
 
-var _Debug_log = F2(function(tag, value)
+var _Debug_log_UNUSED = F2(function(tag, value)
 {
 	return value;
 });
 
-var _Debug_log_UNUSED = F2(function(tag, value)
+var _Debug_log = F2(function(tag, value)
 {
 	console.log(tag + ': ' + _Debug_toString(value));
 	return value;
@@ -530,12 +530,12 @@ function _Debug_todoCase(moduleName, region, value)
 
 // TO STRING
 
-function _Debug_toString(value)
+function _Debug_toString_UNUSED(value)
 {
 	return '<internals>';
 }
 
-function _Debug_toString_UNUSED(value)
+function _Debug_toString(value)
 {
 	return _Debug_toAnsiString(false, value);
 }
@@ -706,13 +706,13 @@ function _Debug_internalColor(ansi, string)
 // CRASH
 
 
-function _Debug_crash(identifier)
+function _Debug_crash_UNUSED(identifier)
 {
 	throw new Error('https://github.com/elm/core/blob/1.0.0/hints/' + identifier + '.md');
 }
 
 
-function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
+function _Debug_crash(identifier, fact1, fact2, fact3, fact4)
 {
 	switch(identifier)
 	{
@@ -770,11 +770,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.dv.bx === region.el.bx)
+	if (region.start.line === region.end.line)
 	{
-		return 'on line ' + region.dv.bx;
+		return 'on line ' + region.start.line;
 	}
-	return 'on lines ' + region.dv.bx + ' through ' + region.el.bx;
+	return 'on lines ' + region.start.line + ' through ' + region.end.line;
 }
 
 
@@ -1200,7 +1200,7 @@ function _String_fromList(chars)
 
 
 
-/**_UNUSED/
+/**/
 function _Json_errorToString(error)
 {
 	return elm$json$Json$Decode$errorToString(error);
@@ -1604,11 +1604,11 @@ var _Json_encode = F2(function(indentLevel, value)
 	return JSON.stringify(_Json_unwrap(value), null, indentLevel) + '';
 });
 
-function _Json_wrap_UNUSED(value) { return { $: 0, a: value }; }
-function _Json_unwrap_UNUSED(value) { return value.a; }
+function _Json_wrap(value) { return { $: 0, a: value }; }
+function _Json_unwrap(value) { return value.a; }
 
-function _Json_wrap(value) { return value; }
-function _Json_unwrap(value) { return value; }
+function _Json_wrap_UNUSED(value) { return value; }
+function _Json_unwrap_UNUSED(value) { return value; }
 
 function _Json_emptyArray() { return []; }
 function _Json_emptyObject() { return {}; }
@@ -1882,9 +1882,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.gA,
-		impl.hq,
-		impl.hc,
+		impl.init,
+		impl.update,
+		impl.subscriptions,
 		function() { return function() {} }
 	);
 });
@@ -1897,7 +1897,7 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 function _Platform_initialize(flagDecoder, args, init, update, subscriptions, stepperBuilder)
 {
 	var result = A2(_Json_run, flagDecoder, _Json_wrap(args ? args['flags'] : undefined));
-	elm$core$Result$isOk(result) || _Debug_crash(2 /**_UNUSED/, _Json_errorToString(result.a) /**/);
+	elm$core$Result$isOk(result) || _Debug_crash(2 /**/, _Json_errorToString(result.a) /**/);
 	var managers = {};
 	result = init(result.a);
 	var model = result.a;
@@ -2296,7 +2296,7 @@ function _Platform_setupIncomingPort(name, sendToApp)
 //
 
 
-function _Platform_export(exports)
+function _Platform_export_UNUSED(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsProd(scope['Elm'], exports)
@@ -2317,7 +2317,7 @@ function _Platform_mergeExportsProd(obj, exports)
 }
 
 
-function _Platform_export_UNUSED(exports)
+function _Platform_export(exports)
 {
 	scope['Elm']
 		? _Platform_mergeExportsDebug('Elm', scope['Elm'], exports)
@@ -2486,21 +2486,21 @@ var _Http_toTask = F2(function(request, maybeProgress)
 			callback(_Scheduler_fail(elm$http$Http$Timeout));
 		});
 		xhr.addEventListener('load', function() {
-			callback(_Http_handleResponse(xhr, request.cD.a));
+			callback(_Http_handleResponse(xhr, request.expect.a));
 		});
 
 		try
 		{
-			xhr.open(request.gI, request.hr, true);
+			xhr.open(request.method, request.url, true);
 		}
 		catch (e)
 		{
-			return callback(_Scheduler_fail(elm$http$Http$BadUrl(request.hr)));
+			return callback(_Scheduler_fail(elm$http$Http$BadUrl(request.url)));
 		}
 
 		_Http_configureRequest(xhr, request);
 
-		var body = request.fZ;
+		var body = request.body;
 		xhr.send(elm$http$Http$Internal$isStringBody(body)
 			? (xhr.setRequestHeader('Content-Type', body.a), body.b)
 			: body.a
@@ -2523,23 +2523,23 @@ function _Http_configureProgress(xhr, maybeProgress)
 			return;
 		}
 		_Scheduler_rawSpawn(maybeProgress.a({
-			f0: event.loaded,
-			f1: event.total
+			bytes: event.loaded,
+			bytesExpected: event.total
 		}));
 	});
 }
 
 function _Http_configureRequest(xhr, request)
 {
-	for (var headers = request.gu; headers.b; headers = headers.b) // WHILE_CONS
+	for (var headers = request.headers; headers.b; headers = headers.b) // WHILE_CONS
 	{
 		xhr.setRequestHeader(headers.a.a, headers.a.b);
 	}
 
-	xhr.responseType = request.cD.b;
-	xhr.withCredentials = request.hu;
+	xhr.responseType = request.expect.b;
+	xhr.withCredentials = request.withCredentials;
 
-	elm$core$Maybe$isJust(request.hh) && (xhr.timeout = request.hh.a);
+	elm$core$Maybe$isJust(request.timeout) && (xhr.timeout = request.timeout.a);
 }
 
 
@@ -2571,10 +2571,10 @@ function _Http_handleResponse(xhr, responseToResult)
 function _Http_toResponse(xhr)
 {
 	return {
-		hr: xhr.responseURL,
-		ce: { f5: xhr.status, az: xhr.statusText },
-		gu: _Http_parseHeaders(xhr.getAllResponseHeaders()),
-		fZ: xhr.response
+		url: xhr.responseURL,
+		status: { code: xhr.status, message: xhr.statusText },
+		headers: _Http_parseHeaders(xhr.getAllResponseHeaders()),
+		body: xhr.response
 	};
 }
 
@@ -2711,20 +2711,20 @@ function _Time_getZoneName()
 		callback(_Scheduler_succeed(name));
 	});
 }
-var author$project$Main$Refresh = {$: 1};
+var author$project$Main$Refresh = {$: 'Refresh'};
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
 	function (a, b, c, d) {
-		return {$: 0, a: a, b: b, c: c, d: d};
+		return {$: 'Array_elm_builtin', a: a, b: b, c: c, d: d};
 	});
-var elm$core$Basics$EQ = 1;
-var elm$core$Basics$GT = 2;
-var elm$core$Basics$LT = 0;
+var elm$core$Basics$EQ = {$: 'EQ'};
+var elm$core$Basics$GT = {$: 'GT'};
+var elm$core$Basics$LT = {$: 'LT'};
 var elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
 		while (true) {
-			if (t.$ === -2) {
+			if (t.$ === 'RBEmpty_elm_builtin') {
 				return acc;
 			} else {
 				var key = t.b;
@@ -2770,7 +2770,7 @@ var elm$core$Dict$keys = function (dict) {
 		dict);
 };
 var elm$core$Set$toList = function (_n0) {
-	var dict = _n0;
+	var dict = _n0.a;
 	return elm$core$Dict$keys(dict);
 };
 var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
@@ -2780,7 +2780,7 @@ var elm$core$Array$foldr = F3(
 		var tail = _n0.d;
 		var helper = F2(
 			function (node, acc) {
-				if (!node.$) {
+				if (node.$ === 'SubTree') {
 					var subTree = node.a;
 					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
 				} else {
@@ -2809,10 +2809,10 @@ var elm$core$Array$shiftStep = elm$core$Basics$ceiling(
 var elm$core$Elm$JsArray$empty = _JsArray_empty;
 var elm$core$Array$empty = A4(elm$core$Array$Array_elm_builtin, 0, elm$core$Array$shiftStep, elm$core$Elm$JsArray$empty, elm$core$Elm$JsArray$empty);
 var elm$core$Array$Leaf = function (a) {
-	return {$: 1, a: a};
+	return {$: 'Leaf', a: a};
 };
 var elm$core$Array$SubTree = function (a) {
-	return {$: 0, a: a};
+	return {$: 'SubTree', a: a};
 };
 var elm$core$Elm$JsArray$initializeFromList = _JsArray_initializeFromList;
 var elm$core$List$foldl = F3(
@@ -2900,28 +2900,28 @@ var elm$core$Basics$sub = _Basics_sub;
 var elm$core$Elm$JsArray$length = _JsArray_length;
 var elm$core$Array$builderToArray = F2(
 	function (reverseNodeList, builder) {
-		if (!builder.r) {
+		if (!builder.nodeListSize) {
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.t),
+				elm$core$Elm$JsArray$length(builder.tail),
 				elm$core$Array$shiftStep,
 				elm$core$Elm$JsArray$empty,
-				builder.t);
+				builder.tail);
 		} else {
-			var treeLen = builder.r * elm$core$Array$branchFactor;
+			var treeLen = builder.nodeListSize * elm$core$Array$branchFactor;
 			var depth = elm$core$Basics$floor(
 				A2(elm$core$Basics$logBase, elm$core$Array$branchFactor, treeLen - 1));
-			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.u) : builder.u;
-			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.r);
+			var correctNodeList = reverseNodeList ? elm$core$List$reverse(builder.nodeList) : builder.nodeList;
+			var tree = A2(elm$core$Array$treeFromBuilder, correctNodeList, builder.nodeListSize);
 			return A4(
 				elm$core$Array$Array_elm_builtin,
-				elm$core$Elm$JsArray$length(builder.t) + treeLen,
+				elm$core$Elm$JsArray$length(builder.tail) + treeLen,
 				A2(elm$core$Basics$max, 5, depth * elm$core$Array$shiftStep),
 				tree,
-				builder.t);
+				builder.tail);
 		}
 	});
-var elm$core$Basics$False = 1;
+var elm$core$Basics$False = {$: 'False'};
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -2933,7 +2933,7 @@ var elm$core$Array$initializeHelp = F5(
 				return A2(
 					elm$core$Array$builderToArray,
 					false,
-					{u: nodeList, r: (len / elm$core$Array$branchFactor) | 0, t: tail});
+					{nodeList: nodeList, nodeListSize: (len / elm$core$Array$branchFactor) | 0, tail: tail});
 			} else {
 				var leaf = elm$core$Array$Leaf(
 					A3(elm$core$Elm$JsArray$initialize, elm$core$Array$branchFactor, fromIndex, fn));
@@ -2965,18 +2965,18 @@ var elm$core$Array$initialize = F2(
 		}
 	});
 var elm$core$Maybe$Just = function (a) {
-	return {$: 0, a: a};
+	return {$: 'Just', a: a};
 };
-var elm$core$Maybe$Nothing = {$: 1};
+var elm$core$Maybe$Nothing = {$: 'Nothing'};
 var elm$core$Result$Err = function (a) {
-	return {$: 1, a: a};
+	return {$: 'Err', a: a};
 };
 var elm$core$Result$Ok = function (a) {
-	return {$: 0, a: a};
+	return {$: 'Ok', a: a};
 };
-var elm$core$Basics$True = 0;
+var elm$core$Basics$True = {$: 'True'};
 var elm$core$Result$isOk = function (result) {
-	if (!result.$) {
+	if (result.$ === 'Ok') {
 		return true;
 	} else {
 		return false;
@@ -2984,18 +2984,18 @@ var elm$core$Result$isOk = function (result) {
 };
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
-		return {$: 3, a: a, b: b};
+		return {$: 'Failure', a: a, b: b};
 	});
 var elm$json$Json$Decode$Field = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Field', a: a, b: b};
 	});
 var elm$json$Json$Decode$Index = F2(
 	function (a, b) {
-		return {$: 1, a: a, b: b};
+		return {$: 'Index', a: a, b: b};
 	});
 var elm$json$Json$Decode$OneOf = function (a) {
-	return {$: 2, a: a};
+	return {$: 'OneOf', a: a};
 };
 var elm$core$Basics$and = _Basics_and;
 var elm$core$Basics$append = _Utils_append;
@@ -3097,12 +3097,12 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 		errorToStringHelp:
 		while (true) {
 			switch (error.$) {
-				case 0:
+				case 'Field':
 					var f = error.a;
 					var err = error.b;
 					var isSimple = function () {
 						var _n1 = elm$core$String$uncons(f);
-						if (_n1.$ === 1) {
+						if (_n1.$ === 'Nothing') {
 							return false;
 						} else {
 							var _n2 = _n1.a;
@@ -3117,7 +3117,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 1:
+				case 'Index':
 					var i = error.a;
 					var err = error.b;
 					var indexName = '[' + (elm$core$String$fromInt(i) + ']');
@@ -3126,7 +3126,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 					error = $temp$error;
 					context = $temp$context;
 					continue errorToStringHelp;
-				case 2:
+				case 'OneOf':
 					var errors = error.a;
 					if (!errors.b) {
 						return 'Ran into a Json.Decode.oneOf with no possibilities' + function () {
@@ -3198,7 +3198,7 @@ var elm$json$Json$Encode$object = function (pairs) {
 					var v = _n0.b;
 					return A3(_Json_addField, k, v, obj);
 				}),
-			_Json_emptyObject(0),
+			_Json_emptyObject(_Utils_Tuple0),
 			pairs));
 };
 var elm$json$Json$Encode$string = _Json_wrap;
@@ -3208,19 +3208,19 @@ var author$project$GitHubGraph$encodeUser = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'database_id',
-				elm$json$Json$Encode$int(record.bX)),
+				elm$json$Json$Encode$int(record.databaseId)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'login',
-				elm$json$Json$Encode$string(record.gD)),
+				elm$json$Json$Encode$string(record.login)),
 				_Utils_Tuple2(
 				'avatar',
-				elm$json$Json$Encode$string(record.cq))
+				elm$json$Json$Encode$string(record.avatar))
 			]));
 };
 var elm$core$Basics$composeR = F3(
@@ -3230,7 +3230,7 @@ var elm$core$Basics$composeR = F3(
 	});
 var elm$core$Maybe$map = F2(
 	function (f, maybe) {
-		if (!maybe.$) {
+		if (maybe.$ === 'Just') {
 			var value = maybe.a;
 			return elm$core$Maybe$Just(
 				f(value));
@@ -3240,7 +3240,7 @@ var elm$core$Maybe$map = F2(
 	});
 var elm$core$Maybe$withDefault = F2(
 	function (_default, maybe) {
-		if (!maybe.$) {
+		if (maybe.$ === 'Just') {
 			var value = maybe.a;
 			return value;
 		} else {
@@ -3259,7 +3259,7 @@ var elm$time$Time$flooredDiv = F2(
 		return elm$core$Basics$floor(numerator / denominator);
 	});
 var elm$time$Time$posixToMillis = function (_n0) {
-	var millis = _n0;
+	var millis = _n0.a;
 	return millis;
 };
 var elm$time$Time$toAdjustedMinutesHelp = F3(
@@ -3271,8 +3271,8 @@ var elm$time$Time$toAdjustedMinutesHelp = F3(
 			} else {
 				var era = eras.a;
 				var olderEras = eras.b;
-				if (_Utils_cmp(era.dv, posixMinutes) < 0) {
-					return posixMinutes + era.b;
+				if (_Utils_cmp(era.start, posixMinutes) < 0) {
+					return posixMinutes + era.offset;
 				} else {
 					var $temp$defaultOffset = defaultOffset,
 						$temp$posixMinutes = posixMinutes,
@@ -3312,15 +3312,15 @@ var elm$time$Time$toCivil = function (minutes) {
 	var month = mp + ((mp < 10) ? 3 : (-9));
 	var year = yearOfEra + (era * 400);
 	return {
-		eb: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
-		eU: month,
-		fR: year + ((month <= 2) ? 1 : 0)
+		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
+		month: month,
+		year: year + ((month <= 2) ? 1 : 0)
 	};
 };
 var elm$time$Time$toDay = F2(
 	function (zone, time) {
 		return elm$time$Time$toCivil(
-			A2(elm$time$Time$toAdjustedMinutes, zone, time)).eb;
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).day;
 	});
 var elm$core$Basics$modBy = _Basics_modBy;
 var elm$time$Time$toHour = F2(
@@ -3347,47 +3347,47 @@ var elm$time$Time$toMinute = F2(
 			60,
 			A2(elm$time$Time$toAdjustedMinutes, zone, time));
 	});
-var elm$time$Time$Apr = 3;
-var elm$time$Time$Aug = 7;
-var elm$time$Time$Dec = 11;
-var elm$time$Time$Feb = 1;
-var elm$time$Time$Jan = 0;
-var elm$time$Time$Jul = 6;
-var elm$time$Time$Jun = 5;
-var elm$time$Time$Mar = 2;
-var elm$time$Time$May = 4;
-var elm$time$Time$Nov = 10;
-var elm$time$Time$Oct = 9;
-var elm$time$Time$Sep = 8;
+var elm$time$Time$Apr = {$: 'Apr'};
+var elm$time$Time$Aug = {$: 'Aug'};
+var elm$time$Time$Dec = {$: 'Dec'};
+var elm$time$Time$Feb = {$: 'Feb'};
+var elm$time$Time$Jan = {$: 'Jan'};
+var elm$time$Time$Jul = {$: 'Jul'};
+var elm$time$Time$Jun = {$: 'Jun'};
+var elm$time$Time$Mar = {$: 'Mar'};
+var elm$time$Time$May = {$: 'May'};
+var elm$time$Time$Nov = {$: 'Nov'};
+var elm$time$Time$Oct = {$: 'Oct'};
+var elm$time$Time$Sep = {$: 'Sep'};
 var elm$time$Time$toMonth = F2(
 	function (zone, time) {
 		var _n0 = elm$time$Time$toCivil(
-			A2(elm$time$Time$toAdjustedMinutes, zone, time)).eU;
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).month;
 		switch (_n0) {
 			case 1:
-				return 0;
+				return elm$time$Time$Jan;
 			case 2:
-				return 1;
+				return elm$time$Time$Feb;
 			case 3:
-				return 2;
+				return elm$time$Time$Mar;
 			case 4:
-				return 3;
+				return elm$time$Time$Apr;
 			case 5:
-				return 4;
+				return elm$time$Time$May;
 			case 6:
-				return 5;
+				return elm$time$Time$Jun;
 			case 7:
-				return 6;
+				return elm$time$Time$Jul;
 			case 8:
-				return 7;
+				return elm$time$Time$Aug;
 			case 9:
-				return 8;
+				return elm$time$Time$Sep;
 			case 10:
-				return 9;
+				return elm$time$Time$Oct;
 			case 11:
-				return 10;
+				return elm$time$Time$Nov;
 			default:
-				return 11;
+				return elm$time$Time$Dec;
 		}
 	});
 var elm$time$Time$toSecond = F2(
@@ -3403,36 +3403,36 @@ var elm$time$Time$toSecond = F2(
 var elm$time$Time$toYear = F2(
 	function (zone, time) {
 		return elm$time$Time$toCivil(
-			A2(elm$time$Time$toAdjustedMinutes, zone, time)).fR;
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).year;
 	});
 var elm$time$Time$Zone = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Zone', a: a, b: b};
 	});
 var elm$time$Time$utc = A2(elm$time$Time$Zone, 0, _List_Nil);
 var rtfeldman$elm_iso8601_date_strings$Iso8601$fromMonth = function (month) {
-	switch (month) {
-		case 0:
+	switch (month.$) {
+		case 'Jan':
 			return 1;
-		case 1:
+		case 'Feb':
 			return 2;
-		case 2:
+		case 'Mar':
 			return 3;
-		case 3:
+		case 'Apr':
 			return 4;
-		case 4:
+		case 'May':
 			return 5;
-		case 5:
+		case 'Jun':
 			return 6;
-		case 6:
+		case 'Jul':
 			return 7;
-		case 7:
+		case 'Aug':
 			return 8;
-		case 8:
+		case 'Sep':
 			return 9;
-		case 9:
+		case 'Oct':
 			return 10;
-		case 10:
+		case 'Nov':
 			return 11;
 		default:
 			return 12;
@@ -3471,7 +3471,7 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$toPaddedString = F2(
 		return A3(
 			elm$core$String$padLeft,
 			digits,
-			'0',
+			_Utils_chr('0'),
 			elm$core$String$fromInt(time));
 	});
 var rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
@@ -3500,9 +3500,9 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
 		A2(elm$time$Time$toMillis, elm$time$Time$utc, time)) + 'Z'))))))))))));
 };
 var author$project$Backend$encodeEventActor = function (_n0) {
-	var user = _n0.dF;
-	var avatar = _n0.cq;
-	var createdAt = _n0.d9;
+	var user = _n0.user;
+	var avatar = _n0.avatar;
+	var createdAt = _n0.createdAt;
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
@@ -3518,21 +3518,21 @@ var author$project$Backend$encodeEventActor = function (_n0) {
 					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(createdAt)))
 			]));
 };
-var author$project$GitHubGraph$IssueStateOpen = 0;
-var author$project$GitHubGraph$PullRequestStateOpen = 0;
+var author$project$GitHubGraph$IssueStateOpen = {$: 'IssueStateOpen'};
+var author$project$GitHubGraph$PullRequestStateOpen = {$: 'PullRequestStateOpen'};
 var author$project$GitHubGraph$encodeProjectColumn = function (record) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'database_id',
-				elm$json$Json$Encode$int(record.bX))
+				elm$json$Json$Encode$int(record.databaseId))
 			]));
 };
 var author$project$GitHubGraph$encodeProjectLocation = function (record) {
@@ -3541,16 +3541,16 @@ var author$project$GitHubGraph$encodeProjectLocation = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'number',
-				elm$json$Json$Encode$int(record.k))
+				elm$json$Json$Encode$int(record.number))
 			]));
 };
 var author$project$GitHubGraph$encodeCardLocation = function (record) {
@@ -3559,23 +3559,23 @@ var author$project$GitHubGraph$encodeCardLocation = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'project',
-				author$project$GitHubGraph$encodeProjectLocation(record.e8)),
+				author$project$GitHubGraph$encodeProjectLocation(record.project)),
 				_Utils_Tuple2(
 				'column',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeProjectColumn, record.d1))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeProjectColumn, record.column))
 			]));
 };
-var author$project$GitHubGraph$IssueStateClosed = 1;
+var author$project$GitHubGraph$IssueStateClosed = {$: 'IssueStateClosed'};
 var author$project$GitHubGraph$issueStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', 0),
-		_Utils_Tuple2('CLOSED', 1)
+		_Utils_Tuple2('OPEN', author$project$GitHubGraph$IssueStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$IssueStateClosed)
 	]);
 var author$project$GitHubGraph$encodeIssueState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3596,21 +3596,21 @@ var author$project$GitHubGraph$encodeLabel = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'color',
-				elm$json$Json$Encode$string(record.bU))
+				elm$json$Json$Encode$string(record.color))
 			]));
 };
-var author$project$GitHubGraph$MilestoneStateClosed = 1;
-var author$project$GitHubGraph$MilestoneStateOpen = 0;
+var author$project$GitHubGraph$MilestoneStateClosed = {$: 'MilestoneStateClosed'};
+var author$project$GitHubGraph$MilestoneStateOpen = {$: 'MilestoneStateOpen'};
 var author$project$GitHubGraph$milestoneStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', 0),
-		_Utils_Tuple2('CLOSED', 1)
+		_Utils_Tuple2('OPEN', author$project$GitHubGraph$MilestoneStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$MilestoneStateClosed)
 	]);
 var author$project$GitHubGraph$encodeMilestoneState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3631,39 +3631,39 @@ var author$project$GitHubGraph$encodeMilestone = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'number',
-				elm$json$Json$Encode$int(record.k)),
+				elm$json$Json$Encode$int(record.number)),
 				_Utils_Tuple2(
 				'title',
-				elm$json$Json$Encode$string(record.bh)),
+				elm$json$Json$Encode$string(record.title)),
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodeMilestoneState(record.S)),
+				author$project$GitHubGraph$encodeMilestoneState(record.state)),
 				_Utils_Tuple2(
 				'description',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.eg))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.description))
 			]));
 };
-var author$project$GitHubGraph$ReactionTypeConfused = 4;
-var author$project$GitHubGraph$ReactionTypeEyes = 7;
-var author$project$GitHubGraph$ReactionTypeHeart = 5;
-var author$project$GitHubGraph$ReactionTypeHooray = 3;
-var author$project$GitHubGraph$ReactionTypeLaugh = 2;
-var author$project$GitHubGraph$ReactionTypeRocket = 6;
-var author$project$GitHubGraph$ReactionTypeThumbsDown = 1;
-var author$project$GitHubGraph$ReactionTypeThumbsUp = 0;
+var author$project$GitHubGraph$ReactionTypeConfused = {$: 'ReactionTypeConfused'};
+var author$project$GitHubGraph$ReactionTypeEyes = {$: 'ReactionTypeEyes'};
+var author$project$GitHubGraph$ReactionTypeHeart = {$: 'ReactionTypeHeart'};
+var author$project$GitHubGraph$ReactionTypeHooray = {$: 'ReactionTypeHooray'};
+var author$project$GitHubGraph$ReactionTypeLaugh = {$: 'ReactionTypeLaugh'};
+var author$project$GitHubGraph$ReactionTypeRocket = {$: 'ReactionTypeRocket'};
+var author$project$GitHubGraph$ReactionTypeThumbsDown = {$: 'ReactionTypeThumbsDown'};
+var author$project$GitHubGraph$ReactionTypeThumbsUp = {$: 'ReactionTypeThumbsUp'};
 var author$project$GitHubGraph$reactionTypes = _List_fromArray(
 	[
-		_Utils_Tuple2('THUMBS_UP', 0),
-		_Utils_Tuple2('THUMBS_DOWN', 1),
-		_Utils_Tuple2('LAUGH', 2),
-		_Utils_Tuple2('HOORAY', 3),
-		_Utils_Tuple2('CONFUSED', 4),
-		_Utils_Tuple2('HEART', 5),
-		_Utils_Tuple2('ROCKET', 6),
-		_Utils_Tuple2('EYES', 7)
+		_Utils_Tuple2('THUMBS_UP', author$project$GitHubGraph$ReactionTypeThumbsUp),
+		_Utils_Tuple2('THUMBS_DOWN', author$project$GitHubGraph$ReactionTypeThumbsDown),
+		_Utils_Tuple2('LAUGH', author$project$GitHubGraph$ReactionTypeLaugh),
+		_Utils_Tuple2('HOORAY', author$project$GitHubGraph$ReactionTypeHooray),
+		_Utils_Tuple2('CONFUSED', author$project$GitHubGraph$ReactionTypeConfused),
+		_Utils_Tuple2('HEART', author$project$GitHubGraph$ReactionTypeHeart),
+		_Utils_Tuple2('ROCKET', author$project$GitHubGraph$ReactionTypeRocket),
+		_Utils_Tuple2('EYES', author$project$GitHubGraph$ReactionTypeEyes)
 	]);
 var author$project$GitHubGraph$encodeReactionType = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3684,10 +3684,10 @@ var author$project$GitHubGraph$encodeReactionGroup = function (record) {
 			[
 				_Utils_Tuple2(
 				'type_',
-				author$project$GitHubGraph$encodeReactionType(record.dC)),
+				author$project$GitHubGraph$encodeReactionType(record.type_)),
 				_Utils_Tuple2(
 				'count',
-				elm$json$Json$Encode$int(record.cx))
+				elm$json$Json$Encode$int(record.count))
 			]));
 };
 var author$project$GitHubGraph$encodeRepoLocation = function (record) {
@@ -3696,16 +3696,16 @@ var author$project$GitHubGraph$encodeRepoLocation = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'owner',
-				elm$json$Json$Encode$string(record.g2)),
+				elm$json$Json$Encode$string(record.owner)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK))
+				elm$json$Json$Encode$string(record.name))
 			]));
 };
 var elm$json$Json$Encode$list = F2(
@@ -3714,7 +3714,7 @@ var elm$json$Json$Encode$list = F2(
 			A3(
 				elm$core$List$foldl,
 				_Json_addEntry(func),
-				_Json_emptyArray(0),
+				_Json_emptyArray(_Utils_Tuple0),
 				entries));
 	});
 var author$project$GitHubGraph$encodeIssue = function (record) {
@@ -3723,48 +3723,48 @@ var author$project$GitHubGraph$encodeIssue = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'created_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.d9))),
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.createdAt))),
 				_Utils_Tuple2(
 				'updated_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.cj))),
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.updatedAt))),
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodeIssueState(record.S)),
+				author$project$GitHubGraph$encodeIssueState(record.state)),
 				_Utils_Tuple2(
 				'repo',
-				author$project$GitHubGraph$encodeRepoLocation(record.o)),
+				author$project$GitHubGraph$encodeRepoLocation(record.repo)),
 				_Utils_Tuple2(
 				'number',
-				elm$json$Json$Encode$int(record.k)),
+				elm$json$Json$Encode$int(record.number)),
 				_Utils_Tuple2(
 				'title',
-				elm$json$Json$Encode$string(record.bh)),
+				elm$json$Json$Encode$string(record.title)),
 				_Utils_Tuple2(
 				'comment_count',
-				elm$json$Json$Encode$int(record.aT)),
+				elm$json$Json$Encode$int(record.commentCount)),
 				_Utils_Tuple2(
 				'reactions',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeReactionGroup, record.a9)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeReactionGroup, record.reactions)),
 				_Utils_Tuple2(
 				'author',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.aj)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.author)),
 				_Utils_Tuple2(
 				'labels',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.aZ)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.labels)),
 				_Utils_Tuple2(
 				'cards',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeCardLocation, record.bT)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeCardLocation, record.cards)),
 				_Utils_Tuple2(
 				'milestone',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeMilestone, record.b5))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeMilestone, record.milestone))
 			]));
 };
 var author$project$GitHubGraph$encodeProject = function (record) {
@@ -3773,19 +3773,19 @@ var author$project$GitHubGraph$encodeProject = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'number',
-				elm$json$Json$Encode$int(record.k)),
+				elm$json$Json$Encode$int(record.number)),
 				_Utils_Tuple2(
 				'columns',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeProjectColumn, record.d3))
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeProjectColumn, record.columns))
 			]));
 };
 var author$project$GitHubGraph$encodeGitActor = function (record) {
@@ -3794,16 +3794,16 @@ var author$project$GitHubGraph$encodeGitActor = function (record) {
 			[
 				_Utils_Tuple2(
 				'email',
-				elm$json$Json$Encode$string(record.ek)),
+				elm$json$Json$Encode$string(record.email)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'avatar',
-				elm$json$Json$Encode$string(record.cq)),
+				elm$json$Json$Encode$string(record.avatar)),
 				_Utils_Tuple2(
 				'user',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.dF))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.user))
 			]));
 };
 var author$project$GitHubGraph$encodeActor = function (record) {
@@ -3812,27 +3812,27 @@ var author$project$GitHubGraph$encodeActor = function (record) {
 			[
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'login',
-				elm$json$Json$Encode$string(record.gD)),
+				elm$json$Json$Encode$string(record.login)),
 				_Utils_Tuple2(
 				'avatar',
-				elm$json$Json$Encode$string(record.cq))
+				elm$json$Json$Encode$string(record.avatar))
 			]));
 };
-var author$project$GitHubGraph$StatusStateError = 1;
-var author$project$GitHubGraph$StatusStateExpected = 0;
-var author$project$GitHubGraph$StatusStateFailure = 2;
-var author$project$GitHubGraph$StatusStatePending = 3;
-var author$project$GitHubGraph$StatusStateSuccess = 4;
+var author$project$GitHubGraph$StatusStateError = {$: 'StatusStateError'};
+var author$project$GitHubGraph$StatusStateExpected = {$: 'StatusStateExpected'};
+var author$project$GitHubGraph$StatusStateFailure = {$: 'StatusStateFailure'};
+var author$project$GitHubGraph$StatusStatePending = {$: 'StatusStatePending'};
+var author$project$GitHubGraph$StatusStateSuccess = {$: 'StatusStateSuccess'};
 var author$project$GitHubGraph$statusStates = _List_fromArray(
 	[
-		_Utils_Tuple2('EXPECTED', 0),
-		_Utils_Tuple2('ERROR', 1),
-		_Utils_Tuple2('FAILURE', 2),
-		_Utils_Tuple2('PENDING', 3),
-		_Utils_Tuple2('SUCCESS', 4)
+		_Utils_Tuple2('EXPECTED', author$project$GitHubGraph$StatusStateExpected),
+		_Utils_Tuple2('ERROR', author$project$GitHubGraph$StatusStateError),
+		_Utils_Tuple2('FAILURE', author$project$GitHubGraph$StatusStateFailure),
+		_Utils_Tuple2('PENDING', author$project$GitHubGraph$StatusStatePending),
+		_Utils_Tuple2('SUCCESS', author$project$GitHubGraph$StatusStateSuccess)
 	]);
 var author$project$GitHubGraph$encodeStatusState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3853,16 +3853,16 @@ var author$project$GitHubGraph$encodeStatusContext = function (record) {
 			[
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodeStatusState(record.S)),
+				author$project$GitHubGraph$encodeStatusState(record.state)),
 				_Utils_Tuple2(
 				'context',
-				elm$json$Json$Encode$string(record.d6)),
+				elm$json$Json$Encode$string(record.context)),
 				_Utils_Tuple2(
 				'target_url',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.fD)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.targetUrl)),
 				_Utils_Tuple2(
 				'creator',
-				author$project$GitHubGraph$encodeActor(record.ea))
+				author$project$GitHubGraph$encodeActor(record.creator))
 			]));
 };
 var author$project$GitHubGraph$encodeStatus = function (record) {
@@ -3871,10 +3871,10 @@ var author$project$GitHubGraph$encodeStatus = function (record) {
 			[
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodeStatusState(record.S)),
+				author$project$GitHubGraph$encodeStatusState(record.state)),
 				_Utils_Tuple2(
 				'contexts',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeStatusContext, record.d7))
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeStatusContext, record.contexts))
 			]));
 };
 var author$project$GitHubGraph$encodeCommit = function (record) {
@@ -3883,34 +3883,34 @@ var author$project$GitHubGraph$encodeCommit = function (record) {
 			[
 				_Utils_Tuple2(
 				'sha',
-				elm$json$Json$Encode$string(record.cc)),
+				elm$json$Json$Encode$string(record.sha)),
 				_Utils_Tuple2(
 				'status',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeStatus, record.ce)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeStatus, record.status)),
 				_Utils_Tuple2(
 				'author',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeGitActor, record.aj)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeGitActor, record.author)),
 				_Utils_Tuple2(
 				'committer',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeGitActor, record.aj)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeGitActor, record.author)),
 				_Utils_Tuple2(
 				'authored_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.dV))),
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.authoredAt))),
 				_Utils_Tuple2(
 				'committed_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.d4)))
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.committedAt)))
 			]));
 };
-var author$project$GitHubGraph$MergeableStateConflicting = 1;
-var author$project$GitHubGraph$MergeableStateMergeable = 0;
-var author$project$GitHubGraph$MergeableStateUnknown = 2;
+var author$project$GitHubGraph$MergeableStateConflicting = {$: 'MergeableStateConflicting'};
+var author$project$GitHubGraph$MergeableStateMergeable = {$: 'MergeableStateMergeable'};
+var author$project$GitHubGraph$MergeableStateUnknown = {$: 'MergeableStateUnknown'};
 var author$project$GitHubGraph$mergeableStates = _List_fromArray(
 	[
-		_Utils_Tuple2('MERGEABLE', 0),
-		_Utils_Tuple2('CONFLICTING', 1),
-		_Utils_Tuple2('UNKNOWN', 2)
+		_Utils_Tuple2('MERGEABLE', author$project$GitHubGraph$MergeableStateMergeable),
+		_Utils_Tuple2('CONFLICTING', author$project$GitHubGraph$MergeableStateConflicting),
+		_Utils_Tuple2('UNKNOWN', author$project$GitHubGraph$MergeableStateUnknown)
 	]);
 var author$project$GitHubGraph$encodeMergeableState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3925,13 +3925,13 @@ var author$project$GitHubGraph$encodeMergeableState = function (item) {
 			'UNKNOWN',
 			author$project$GitHubGraph$mergeableStates));
 };
-var author$project$GitHubGraph$PullRequestStateClosed = 1;
-var author$project$GitHubGraph$PullRequestStateMerged = 2;
+var author$project$GitHubGraph$PullRequestStateClosed = {$: 'PullRequestStateClosed'};
+var author$project$GitHubGraph$PullRequestStateMerged = {$: 'PullRequestStateMerged'};
 var author$project$GitHubGraph$pullRequestStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', 0),
-		_Utils_Tuple2('CLOSED', 1),
-		_Utils_Tuple2('MERGED', 2)
+		_Utils_Tuple2('OPEN', author$project$GitHubGraph$PullRequestStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$PullRequestStateClosed),
+		_Utils_Tuple2('MERGED', author$project$GitHubGraph$PullRequestStateMerged)
 	]);
 var author$project$GitHubGraph$encodePullRequestState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -3952,63 +3952,63 @@ var author$project$GitHubGraph$encodePullRequest = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'created_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.d9))),
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.createdAt))),
 				_Utils_Tuple2(
 				'updated_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.cj))),
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.updatedAt))),
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodePullRequestState(record.S)),
+				author$project$GitHubGraph$encodePullRequestState(record.state)),
 				_Utils_Tuple2(
 				'repo',
-				author$project$GitHubGraph$encodeRepoLocation(record.o)),
+				author$project$GitHubGraph$encodeRepoLocation(record.repo)),
 				_Utils_Tuple2(
 				'number',
-				elm$json$Json$Encode$int(record.k)),
+				elm$json$Json$Encode$int(record.number)),
 				_Utils_Tuple2(
 				'title',
-				elm$json$Json$Encode$string(record.bh)),
+				elm$json$Json$Encode$string(record.title)),
 				_Utils_Tuple2(
 				'comment_count',
-				elm$json$Json$Encode$int(record.aT)),
+				elm$json$Json$Encode$int(record.commentCount)),
 				_Utils_Tuple2(
 				'reactions',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeReactionGroup, record.a9)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeReactionGroup, record.reactions)),
 				_Utils_Tuple2(
 				'author',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.aj)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeUser, record.author)),
 				_Utils_Tuple2(
 				'labels',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.aZ)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.labels)),
 				_Utils_Tuple2(
 				'cards',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeCardLocation, record.bT)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeCardLocation, record.cards)),
 				_Utils_Tuple2(
 				'additions',
-				elm$json$Json$Encode$int(record.dO)),
+				elm$json$Json$Encode$int(record.additions)),
 				_Utils_Tuple2(
 				'deletions',
-				elm$json$Json$Encode$int(record.ef)),
+				elm$json$Json$Encode$int(record.deletions)),
 				_Utils_Tuple2(
 				'milestone',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeMilestone, record.b5)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeMilestone, record.milestone)),
 				_Utils_Tuple2(
 				'mergeable',
-				author$project$GitHubGraph$encodeMergeableState(record.eR)),
+				author$project$GitHubGraph$encodeMergeableState(record.mergeable)),
 				_Utils_Tuple2(
 				'last_commit',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeCommit, record.eK)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeCommit, record.lastCommit)),
 				_Utils_Tuple2(
 				'merge_commit',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeCommit, record.eQ))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeCommit, record.mergeCommit))
 			]));
 };
 var author$project$GitHubGraph$encodeProjectColumnCard = function (record) {
@@ -4017,16 +4017,16 @@ var author$project$GitHubGraph$encodeProjectColumnCard = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'content',
 				function () {
-					var _n0 = record.bW;
-					if (!_n0.$) {
-						if (!_n0.a.$) {
+					var _n0 = record.content;
+					if (_n0.$ === 'Just') {
+						if (_n0.a.$ === 'IssueCardContent') {
 							var issue = _n0.a.a;
 							return elm$json$Json$Encode$object(
 								_List_fromArray(
@@ -4051,21 +4051,21 @@ var author$project$GitHubGraph$encodeProjectColumnCard = function (record) {
 				}()),
 				_Utils_Tuple2(
 				'note',
-				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.gV))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.note))
 			]));
 };
-var author$project$GitHubGraph$PullRequestReviewStateApproved = 2;
-var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = 3;
-var author$project$GitHubGraph$PullRequestReviewStateCommented = 1;
-var author$project$GitHubGraph$PullRequestReviewStateDismissed = 4;
-var author$project$GitHubGraph$PullRequestReviewStatePending = 0;
+var author$project$GitHubGraph$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
+var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
+var author$project$GitHubGraph$PullRequestReviewStateCommented = {$: 'PullRequestReviewStateCommented'};
+var author$project$GitHubGraph$PullRequestReviewStateDismissed = {$: 'PullRequestReviewStateDismissed'};
+var author$project$GitHubGraph$PullRequestReviewStatePending = {$: 'PullRequestReviewStatePending'};
 var author$project$GitHubGraph$pullRequestReviewStates = _List_fromArray(
 	[
-		_Utils_Tuple2('PENDING', 0),
-		_Utils_Tuple2('COMMENTED', 1),
-		_Utils_Tuple2('APPROVED', 2),
-		_Utils_Tuple2('CHANGES_REQUESTED', 3),
-		_Utils_Tuple2('DISMISSED', 4)
+		_Utils_Tuple2('PENDING', author$project$GitHubGraph$PullRequestReviewStatePending),
+		_Utils_Tuple2('COMMENTED', author$project$GitHubGraph$PullRequestReviewStateCommented),
+		_Utils_Tuple2('APPROVED', author$project$GitHubGraph$PullRequestReviewStateApproved),
+		_Utils_Tuple2('CHANGES_REQUESTED', author$project$GitHubGraph$PullRequestReviewStateChangesRequested),
+		_Utils_Tuple2('DISMISSED', author$project$GitHubGraph$PullRequestReviewStateDismissed)
 	]);
 var author$project$GitHubGraph$encodePullRequestReviewState = function (item) {
 	return elm$json$Json$Encode$string(
@@ -4086,14 +4086,14 @@ var author$project$GitHubGraph$encodePullRequestReview = function (record) {
 			[
 				_Utils_Tuple2(
 				'author',
-				author$project$GitHubGraph$encodeUser(record.aj)),
+				author$project$GitHubGraph$encodeUser(record.author)),
 				_Utils_Tuple2(
 				'state',
-				author$project$GitHubGraph$encodePullRequestReviewState(record.S)),
+				author$project$GitHubGraph$encodePullRequestReviewState(record.state)),
 				_Utils_Tuple2(
 				'created_at',
 				elm$json$Json$Encode$string(
-					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.d9)))
+					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.createdAt)))
 			]));
 };
 var author$project$GitHubGraph$encodeGitObject = function (record) {
@@ -4102,10 +4102,10 @@ var author$project$GitHubGraph$encodeGitObject = function (record) {
 			[
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'oid',
-				elm$json$Json$Encode$string(record.eZ))
+				elm$json$Json$Encode$string(record.oid))
 			]));
 };
 var author$project$GitHubGraph$encodeTag = function (record) {
@@ -4114,10 +4114,10 @@ var author$project$GitHubGraph$encodeTag = function (record) {
 			[
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'target',
-				author$project$GitHubGraph$encodeGitObject(record.fC))
+				author$project$GitHubGraph$encodeGitObject(record.target))
 			]));
 };
 var author$project$GitHubGraph$encodeRelease = function (record) {
@@ -4126,16 +4126,16 @@ var author$project$GitHubGraph$encodeRelease = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, elm$json$Json$Encode$string, record.name)),
 				_Utils_Tuple2(
 				'tag',
-				author$project$GitHubGraph$encodeTag(record.fA))
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHubGraph$encodeTag, record.tag))
 			]));
 };
 var elm$json$Json$Encode$bool = _Json_wrap;
@@ -4145,38 +4145,46 @@ var author$project$GitHubGraph$encodeRepo = function (record) {
 			[
 				_Utils_Tuple2(
 				'id',
-				elm$json$Json$Encode$string(record.eB)),
+				elm$json$Json$Encode$string(record.id)),
 				_Utils_Tuple2(
 				'url',
-				elm$json$Json$Encode$string(record.hr)),
+				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'owner',
-				elm$json$Json$Encode$string(record.g2)),
+				elm$json$Json$Encode$string(record.owner)),
 				_Utils_Tuple2(
 				'name',
-				elm$json$Json$Encode$string(record.gK)),
+				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'is_archived',
-				elm$json$Json$Encode$bool(record.eF)),
+				elm$json$Json$Encode$bool(record.isArchived)),
 				_Utils_Tuple2(
 				'labels',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.aZ)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeLabel, record.labels)),
 				_Utils_Tuple2(
 				'milestones',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeMilestone, record.eS)),
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeMilestone, record.milestones)),
 				_Utils_Tuple2(
 				'releases',
-				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeRelease, record.ff))
+				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeRelease, record.releases))
 			]));
 };
-var author$project$Log$debug = F3(
-	function (ctx, err, a) {
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
 		return a;
 	});
+var elm$core$Debug$log = _Debug_log;
+var author$project$Log$debug = F3(
+	function (ctx, err, a) {
+		return A2(
+			elm$core$Basics$always,
+			a,
+			A2(elm$core$Debug$log, ctx, err));
+	});
 var author$project$Main$FetchCards = function (a) {
-	return {$: 9, a: a};
+	return {$: 'FetchCards', a: a};
 };
-var author$project$Main$Noop = {$: 0};
+var author$project$Main$Noop = {$: 'Noop'};
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var author$project$Main$backOff = F2(
@@ -4185,11 +4193,11 @@ var author$project$Main$backOff = F2(
 			_Utils_update(
 				model,
 				{
-					aw: A2(
+					failedQueue: A2(
 						elm$core$List$cons,
 						cmd,
-						_Utils_ap(model.c, model.aw)),
-					c: _List_Nil
+						_Utils_ap(model.loadQueue, model.failedQueue)),
+					loadQueue: _List_Nil
 				}),
 			elm$core$Platform$Cmd$none);
 	});
@@ -4270,7 +4278,7 @@ var author$project$Main$decodeAffectedColumnIds = A3(
 	elm$json$Json$Decode$map2,
 	F2(
 		function (id, from) {
-			if (from.$ === 1) {
+			if (from.$ === 'Nothing') {
 				return _List_fromArray(
 					[id]);
 			} else {
@@ -4292,7 +4300,7 @@ var author$project$Main$decodeAffectedColumnIds = A3(
 			elm$json$Json$Decode$int)));
 var author$project$GitHubGraph$IssueOrPRSelector = F3(
 	function (owner, repo, number) {
-		return {k: number, g2: owner, o: repo};
+		return {number: number, owner: owner, repo: repo};
 	});
 var elm$json$Json$Decode$string = _Json_decodeString;
 var elm_community$json_extra$Json$Decode$Extra$andMap = elm$json$Json$Decode$map2(elm$core$Basics$apR);
@@ -4327,15 +4335,15 @@ var author$project$Main$decodeAndFetchIssueOrPR = F4(
 			elm$json$Json$Decode$decodeValue,
 			author$project$Main$decodeIssueOrPRSelector(field),
 			payload);
-		if (!_n0.$) {
+		if (_n0.$ === 'Ok') {
 			var sel = _n0.a;
 			return _Utils_update(
 				model,
 				{
-					c: A2(
+					loadQueue: A2(
 						elm$core$List$cons,
 						A2(fetch, model, sel),
-						model.c)
+						model.loadQueue)
 				});
 		} else {
 			var err = _n0.a;
@@ -4373,7 +4381,7 @@ var elm$core$List$map = F2(
 	});
 var elm$http$Http$Internal$Header = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Header', a: a, b: b};
 	});
 var elm$http$Http$header = elm$http$Http$Internal$Header;
 var author$project$GitHubGraph$authHeaders = A2(
@@ -4387,18 +4395,18 @@ var author$project$GitHubGraph$authHeaders = A2(
 	author$project$GitHubGraph$auth);
 var author$project$GitHubGraph$authedOptions = function (token) {
 	return {
-		gu: author$project$GitHubGraph$authHeaders(token),
-		gI: 'POST',
-		hh: elm$core$Maybe$Nothing,
-		hr: 'https://api.github.com/graphql',
-		hu: false
+		headers: author$project$GitHubGraph$authHeaders(token),
+		method: 'POST',
+		timeout: elm$core$Maybe$Nothing,
+		url: 'https://api.github.com/graphql',
+		withCredentials: false
 	};
 };
 var elm$json$Json$Decode$andThen = _Json_andThen;
 var elm$json$Json$Decode$fail = _Json_fail;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec = F4(
 	function (a, b, c, d) {
-		return {$: 0, a: a, b: b, c: c, d: d};
+		return {$: 'SelectionSpec', a: a, b: b, c: c, d: d};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume = function (_n0) {
 	var ast = _n0.a;
@@ -4413,7 +4421,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume = function (_n0) {
 			decoder,
 			elm$json$Json$Decode$andThen(
 				function (maybeValue) {
-					if (!maybeValue.$) {
+					if (maybeValue.$ === 'Just') {
 						var value = maybeValue.a;
 						return elm$json$Json$Decode$succeed(value);
 					} else {
@@ -4423,27 +4431,23 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume = function (_n0) {
 		vars,
 		fragments);
 };
-var elm$core$Basics$always = F2(
-	function (a, _n0) {
-		return a;
-	});
 var elm$core$Basics$identity = function (x) {
 	return x;
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType = {$: 'ObjectType'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType = function (a) {
-	return {$: 0, a: a};
+	return {$: 'SpecifiedType', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec = F4(
 	function (a, b, c, d) {
-		return {$: 0, a: a, b: b, c: c, d: d};
+		return {$: 'ValueSpec', a: a, b: b, c: c, d: d};
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NonNullFlag = 1;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag = 1;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NonNullFlag = {$: 'NonNullFlag'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NonNullFlag;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Util$responseKey = function (fieldInfo) {
-	var _n0 = fieldInfo.dR;
-	if (_n0.$ === 1) {
-		return fieldInfo.gK;
+	var _n0 = fieldInfo.alias;
+	if (_n0.$ === 'Nothing') {
+		return fieldInfo.name;
 	} else {
 		var alias = _n0.a;
 		return alias;
@@ -4451,7 +4455,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Util$responseKey = fu
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionDecoder = F2(
 	function (selectionAST, decoder) {
-		if (!selectionAST.$) {
+		if (selectionAST.$ === 'Field') {
 			var fieldInfo = selectionAST.a;
 			return A2(
 				elm$core$Basics$composeL,
@@ -4462,7 +4466,9 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionDecoder = F2(
 			return decoder;
 		}
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet = function (a) {
+	return {$: 'SelectionSet', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract = function (_n0) {
 	var selectionAST = _n0.a;
 	var decoder = _n0.b;
@@ -4472,11 +4478,12 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract = function (_n0) {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
 			{
-				ac: 0,
-				ax: elm$core$Basics$always,
-				a4: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
-				B: _List_fromArray(
-					[selectionAST])
+				coreType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType,
+				join: elm$core$Basics$always,
+				nullability: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
+				selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet(
+					_List_fromArray(
+						[selectionAST]))
 			}),
 		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionDecoder, selectionAST, decoder),
 		vars,
@@ -4496,10 +4503,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getAST = function (_n0
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST = elm$core$List$map(
 	elm$core$Tuple$mapSecond(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getAST));
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet = _List_Nil;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet = jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet(_List_Nil);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType = function (sourceType) {
-	if (!sourceType.$) {
-		var selectionSet = sourceType.a.B;
+	if (sourceType.$ === 'SpecifiedType') {
+		var selectionSet = sourceType.a.selectionSet;
 		return selectionSet;
 	} else {
 		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet;
@@ -4546,21 +4553,25 @@ var elm$core$List$any = F2(
 			}
 		}
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition = function (a) {
+	return {$: 'VariableDefinition', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$toDefinitionAST = function (_var) {
-	if (!_var.$) {
+	if (_var.$ === 'RequiredVariable') {
 		var variableName = _var.a;
 		var typeRef = _var.b;
-		return {ee: elm$core$Maybe$Nothing, gK: variableName, fJ: typeRef};
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition(
+			{defaultValue: elm$core$Maybe$Nothing, name: variableName, variableType: typeRef});
 	} else {
 		var variableName = _var.a;
 		var typeRef = _var.b;
 		var defaultValue = _var.d;
-		return {
-			ee: elm$core$Maybe$Just(defaultValue),
-			gK: variableName,
-			fJ: typeRef
-		};
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition(
+			{
+				defaultValue: elm$core$Maybe$Just(defaultValue),
+				name: variableName,
+				variableType: typeRef
+			});
 	}
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$variableIsNotInList = F2(
@@ -4593,7 +4604,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$varsFromArguments = functi
 		_arguments);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Field = function (a) {
-	return {$: 0, a: a};
+	return {$: 'Field', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field = F3(
 	function (name, _arguments, _n0) {
@@ -4606,11 +4617,11 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field = F3(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$varsFromArguments(_arguments),
 			fieldVars);
 		var astFieldInfo = {
-			dR: elm$core$Maybe$Nothing,
-			Z: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
-			C: _List_Nil,
-			gK: name,
-			B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType)
+			alias: elm$core$Maybe$Nothing,
+			_arguments: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
+			directives: _List_Nil,
+			name: name,
+			selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType)
 		};
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
@@ -4620,7 +4631,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field = F3(
 			fragments);
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$InlineFragment = function (a) {
-	return {$: 2, a: a};
+	return {$: 'InlineFragment', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment = F2(
 	function (maybeTypeCondition, spec) {
@@ -4630,9 +4641,9 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment = F2(
 		var vars = _n0.c;
 		var fragments = _n0.d;
 		var astInlineFragmentInfo = {
-			C: _List_Nil,
-			B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType),
-			ci: maybeTypeCondition
+			directives: _List_Nil,
+			selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType),
+			typeCondition: maybeTypeCondition
 		};
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
@@ -4641,32 +4652,41 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment = F2(
 			vars,
 			fragments);
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeCondition = elm$core$Basics$identity;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType = elm$core$Basics$identity;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation = elm$core$Basics$identity;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Document = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeCondition = function (a) {
+	return {$: 'TypeCondition', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType = jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeCondition;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation = function (a) {
+	return {$: 'Operation', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Document = function (a) {
+	return {$: 'Document', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$fragmentDefinitionsFromOperation = function (_n0) {
-	var spec = _n0.R;
+	var spec = _n0.a.spec;
 	var _n1 = spec;
 	var fragments = _n1.d;
 	return fragments;
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Directive = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Directive = function (a) {
+	return {$: 'Directive', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST = function (_n0) {
 	var name = _n0.a;
 	var _arguments = _n0.b;
-	return {
-		Z: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
-		gK: name
-	};
+	return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Directive(
+		{
+			_arguments: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST(_arguments),
+			name: name
+		});
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Mutation = 1;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Query = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Mutation = {$: 'Mutation'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Query = {$: 'Query'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationTypeAST = function (operationType) {
-	if (!operationType) {
-		return 0;
+	if (operationType.$ === 'QueryOperationType') {
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Query;
 	} else {
-		return 1;
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Mutation;
 	}
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSpec = function (_n0) {
@@ -4678,24 +4698,26 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableDefinitionsAST = f
 	return A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$toDefinitionAST, vars);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationAST = function (_n0) {
-	var operationType = _n0.a5;
-	var name = _n0.gK;
-	var directives = _n0.C;
-	var spec = _n0.R;
+	var operationType = _n0.a.operationType;
+	var name = _n0.a.name;
+	var directives = _n0.a.directives;
+	var spec = _n0.a.spec;
 	return {
-		C: A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST, directives),
-		gK: name,
-		a5: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationTypeAST(operationType),
-		B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSpec(spec),
-		hs: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableDefinitionsAST(spec)
+		directives: A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$directiveAST, directives),
+		name: name,
+		operationType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationTypeAST(operationType),
+		selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSpec(spec),
+		variableDefinitions: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableDefinitionsAST(spec)
 	};
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Document = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Document = function (a) {
+	return {$: 'Document', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$FragmentDefinition = function (a) {
-	return {$: 2, a: a};
+	return {$: 'FragmentDefinition', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$OperationDefinition = function (a) {
-	return {$: 0, a: a};
+	return {$: 'OperationDefinition', a: a};
 };
 var elm$core$List$append = F2(
 	function (xs, ys) {
@@ -4723,33 +4745,33 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeKe
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeValue = function (value) {
 	switch (value.$) {
-		case 0:
+		case 'VariableValue':
 			var name = value.b;
 			return '$' + name;
-		case 1:
+		case 'IntValue':
 			var _int = value.a;
 			return elm$core$String$fromInt(_int);
-		case 2:
+		case 'FloatValue':
 			var _float = value.a;
 			return elm$core$String$fromFloat(_float);
-		case 3:
+		case 'StringValue':
 			var string = value.a;
 			return A2(
 				elm$json$Json$Encode$encode,
 				0,
 				elm$json$Json$Encode$string(string));
-		case 4:
+		case 'BooleanValue':
 			if (value.a) {
 				return 'true';
 			} else {
 				return 'false';
 			}
-		case 5:
+		case 'NullValue':
 			return 'null';
-		case 6:
+		case 'EnumValue':
 			var symbol = value.a;
 			return symbol;
-		case 7:
+		case 'ListValue':
 			var values = value.a;
 			return '[' + (A2(
 				elm$core$String$join,
@@ -4776,8 +4798,8 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDi
 	return '@' + name;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective = function (_n0) {
-	var name = _n0.gK;
-	var _arguments = _n0.Z;
+	var name = _n0.a.name;
+	var _arguments = _n0.a._arguments;
 	return A2(
 		elm$core$String$join,
 		'',
@@ -4791,7 +4813,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent = F2
 		return (level <= 0) ? string : ('  ' + A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent, level - 1, string));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe = function (m) {
-	if (m.$ === 1) {
+	if (m.$ === 'Nothing') {
 		return _List_Nil;
 	} else {
 		var x = m.a;
@@ -4807,8 +4829,8 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFr
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFragmentSpread = F2(
 	function (indentLevel, _n0) {
-		var name = _n0.gK;
-		var directives = _n0.C;
+		var name = _n0.name;
+		var directives = _n0.directives;
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent,
 			indentLevel,
@@ -4821,7 +4843,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFr
 					A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, directives))));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeTypeCondition = function (_n0) {
-	var namedType = _n0;
+	var namedType = _n0.a;
 	return 'on ' + namedType;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeField = F2(
@@ -4836,7 +4858,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFi
 					_List_fromArray(
 						[
 							jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(
-							A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFieldAlias, field.dR)),
+							A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFieldAlias, field.alias)),
 							_List_fromArray(
 							[
 								A2(
@@ -4844,18 +4866,18 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFi
 								'',
 								A2(
 									elm$core$List$cons,
-									field.gK,
-									jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeArgList(field.Z)))
+									field.name,
+									jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeArgList(field._arguments)))
 							]),
-							A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, field.C),
-							A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, indentLevel, field.B)
+							A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, field.directives),
+							A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, indentLevel, field.selectionSet)
 						]))));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeInlineFragment = F2(
 	function (indentLevel, _n2) {
-		var typeCondition = _n2.ci;
-		var directives = _n2.C;
-		var selectionSet = _n2.B;
+		var typeCondition = _n2.typeCondition;
+		var directives = _n2.directives;
+		var selectionSet = _n2.selectionSet;
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$indent,
 			indentLevel,
@@ -4877,10 +4899,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeIn
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelection = F2(
 	function (indentLevel, selection) {
 		switch (selection.$) {
-			case 0:
+			case 'Field':
 				var field = selection.a;
 				return A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeField, indentLevel, field);
-			case 1:
+			case 'FragmentSpread':
 				var fragmentSpread = selection.a;
 				return A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFragmentSpread, indentLevel, fragmentSpread);
 			default:
@@ -4890,7 +4912,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSe
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet = F2(
 	function (indentLevel, _n0) {
-		var selections = _n0;
+		var selections = _n0.a;
 		return elm$core$List$isEmpty(selections) ? _List_Nil : _List_fromArray(
 			[
 				'{\n' + (A2(
@@ -4903,10 +4925,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSe
 			]);
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFragmentDefinition = function (_n0) {
-	var name = _n0.gK;
-	var typeCondition = _n0.ci;
-	var directives = _n0.C;
-	var selectionSet = _n0.B;
+	var name = _n0.name;
+	var typeCondition = _n0.typeCondition;
+	var directives = _n0.directives;
+	var selectionSet = _n0.selectionSet;
 	return A2(
 		elm$core$String$join,
 		' ',
@@ -4924,7 +4946,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeFr
 				])));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOperationType = function (opType) {
-	if (!opType) {
+	if (opType.$ === 'Query') {
 		return 'query';
 	} else {
 		return 'mutation';
@@ -4934,14 +4956,14 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDe
 	return '= ' + jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeValue(value);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeNullability = function (nullability) {
-	if (!nullability) {
+	if (nullability.$ === 'Nullable') {
 		return '';
 	} else {
 		return '!';
 	}
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeCoreTypeRef = function (coreTypeRef) {
-	if (!coreTypeRef.$) {
+	if (coreTypeRef.$ === 'NamedTypeRef') {
 		var name = coreTypeRef.a;
 		return name;
 	} else {
@@ -4960,7 +4982,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVa
 	return '$' + name;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinition = function (_n0) {
-	var info = _n0;
+	var info = _n0.a;
 	return A2(
 		elm$core$String$join,
 		' ',
@@ -4969,11 +4991,11 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVa
 				[
 					_List_fromArray(
 					[
-						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableName(info.gK) + ':',
-						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeTypeRef(info.fJ)
+						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableName(info.name) + ':',
+						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeTypeRef(info.variableType)
 					]),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(
-					A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefaultValue, info.ee))
+					A2(elm$core$Maybe$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefaultValue, info.defaultValue))
 				])));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinitions = function (defs) {
@@ -4994,20 +5016,20 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOp
 				[
 					_List_fromArray(
 					[
-						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOperationType(info.a5)
+						jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOperationType(info.operationType)
 					]),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(info.gK),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinitions(info.hs),
-					A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, info.C),
-					A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, 0, info.B)
+					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$listFromMaybe(info.name),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeVariableDefinitions(info.variableDefinitions),
+					A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDirective, info.directives),
+					A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeSelectionSet, 0, info.selectionSet)
 				])));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDefinition = function (definition) {
 	switch (definition.$) {
-		case 0:
+		case 'OperationDefinition':
 			var operationInfo = definition.a;
 			return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeOperation(operationInfo);
-		case 1:
+		case 'QueryShorthand':
 			var selectionSet = definition.a;
 			return A2(
 				elm$core$String$join,
@@ -5019,7 +5041,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDe
 	}
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDocument = function (_n0) {
-	var definitions = _n0;
+	var definitions = _n0.a;
 	return A2(
 		elm$core$String$join,
 		'\n\n',
@@ -5027,31 +5049,34 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDo
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$document = function (operation) {
 	var fragmentDefinitions = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$fragmentDefinitionsFromOperation(operation);
-	var ast = _Utils_ap(
-		A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$FragmentDefinition, fragmentDefinitions),
-		_List_fromArray(
-			[
-				jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$OperationDefinition(
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationAST(operation))
-			]));
-	return {
-		cp: ast,
-		b7: operation,
-		dn: jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDocument(ast)
-	};
+	var ast = jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Document(
+		_Utils_ap(
+			A2(elm$core$List$map, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$FragmentDefinition, fragmentDefinitions),
+			_List_fromArray(
+				[
+					jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$OperationDefinition(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$operationAST(operation))
+				])));
+	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Document(
+		{
+			ast: ast,
+			operation: operation,
+			serialized: jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Serialize$serializeDocument(ast)
+		});
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$QueryOperationType = 0;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$QueryOperationType = {$: 'QueryOperationType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$QueryOperationType;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument = function (spec) {
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$document(
-		{C: _List_Nil, gK: elm$core$Maybe$Nothing, a5: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType, R: spec});
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation(
+			{directives: _List_Nil, name: elm$core$Maybe$Nothing, operationType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType, spec: spec}));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Value', a: a, b: b};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$name = function (_var) {
-	if (!_var.$) {
+	if (_var.$ === 'RequiredVariable') {
 		var variableName = _var.a;
 		return variableName;
 	} else {
@@ -5061,43 +5086,43 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$name = function (
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableValue = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'VariableValue', a: a, b: b};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable = function (_var) {
 	return A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableValue,
-			0,
+			_Utils_Tuple0,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$name(_var)),
 		_List_fromArray(
 			[_var]));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NamedTypeRef = function (a) {
-	return {$: 0, a: a};
+	return {$: 'NamedTypeRef', a: a};
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NonNull = 1;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NonNull = {$: 'NonNull'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'TypeRef', a: a, b: b};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType = A2(
 	elm$core$Basics$composeL,
-	jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef(1),
+	jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NonNull),
 	jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NamedTypeRef);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$id = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('ID');
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull = {$: 'NonNull'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec = F3(
 	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
+		return {$: 'VariableSpec', a: a, b: b, c: c};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue = function (a) {
-	return {$: 3, a: a};
+	return {$: 'StringValue', a: a};
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, 0, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$id, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$id, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$RequiredVariable = F3(
 	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
+		return {$: 'RequiredVariable', a: a, b: b, c: c};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required = F3(
 	function (variableName, extract, _n0) {
@@ -5115,7 +5140,7 @@ var author$project$GitHubGraph$objectQuery = F2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 			'id',
 			function ($) {
-				return $.eB;
+				return $.id;
 			},
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 		var queryRoot = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
@@ -5137,7 +5162,7 @@ var author$project$GitHubGraph$objectQuery = F2(
 							obj)))));
 		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
 	});
-var author$project$GitHubGraph$DateType = 0;
+var author$project$GitHubGraph$DateType = {$: 'DateType'};
 var author$project$GitHubGraph$PullRequest = function (id) {
 	return function (url) {
 		return function (createdAt) {
@@ -5157,7 +5182,7 @@ var author$project$GitHubGraph$PullRequest = function (id) {
 																return function (mergeable) {
 																	return function (lastCommit) {
 																		return function (mergeCommit) {
-																			return {dO: additions, aj: author, bT: cards, aT: commentCount, d9: createdAt, ef: deletions, eB: id, aZ: labels, eK: lastCommit, eQ: mergeCommit, eR: mergeable, b5: milestone, k: number, a9: reactions, o: repo, S: state, bh: title, cj: updatedAt, hr: url};
+																			return {additions: additions, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
 																		};
 																	};
 																};
@@ -5179,7 +5204,7 @@ var author$project$GitHubGraph$PullRequest = function (id) {
 };
 var author$project$GitHubGraph$pickEnum2 = F2(
 	function (ma, mb) {
-		if (!ma.$) {
+		if (ma.$ === 'Just') {
 			var x = ma.a;
 			return elm$core$Maybe$Just(x);
 		} else {
@@ -5188,22 +5213,22 @@ var author$project$GitHubGraph$pickEnum2 = F2(
 	});
 var author$project$GitHubGraph$User = F5(
 	function (id, databaseId, url, login, avatar) {
-		return {cq: avatar, bX: databaseId, eB: id, gD: login, hr: url};
+		return {avatar: avatar, databaseId: databaseId, id: id, login: login, url: url};
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType = {$: 'IntType'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec = F2(
 	function (coreType, decoder) {
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				{ac: coreType, ax: elm$core$Basics$always, a4: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
+				{coreType: coreType, join: elm$core$Basics$always, nullability: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
 			elm$core$Basics$always(decoder),
 			_List_Nil,
 			_List_Nil);
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, 0, elm$json$Json$Decode$int);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType, elm$json$Json$Decode$int);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-	{ac: 0, ax: elm$core$Basics$always, a4: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
+	{coreType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType, join: elm$core$Basics$always, nullability: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
 	return A4(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
@@ -5213,27 +5238,28 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
 		_List_Nil,
 		_List_Nil);
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType = 0;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, 0, elm$json$Json$Decode$string);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType = {$: 'StringType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType, elm$json$Json$Decode$string);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets = F2(
 	function (_n0, _n1) {
-		var selectionsA = _n0;
-		var selectionsB = _n1;
-		return _Utils_ap(selectionsA, selectionsB);
+		var selectionsA = _n0.a;
+		var selectionsB = _n1.a;
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet(
+			_Utils_ap(selectionsA, selectionsB));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join = F2(
 	function (a, b) {
 		var _n0 = _Utils_Tuple2(a, b);
-		if (!_n0.a.$) {
-			if (!_n0.b.$) {
+		if (_n0.a.$ === 'SpecifiedType') {
+			if (_n0.b.$ === 'SpecifiedType') {
 				var typeInfoA = _n0.a.a;
 				var typeInfoB = _n0.b.a;
 				return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
 					_Utils_update(
 						typeInfoA,
 						{
-							ac: A2(typeInfoA.ax, typeInfoA.ac, typeInfoB.ac),
-							B: A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.B, typeInfoB.B)
+							coreType: A2(typeInfoA.join, typeInfoA.coreType, typeInfoB.coreType),
+							selectionSet: A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.selectionSet, typeInfoB.selectionSet)
 						}));
 			} else {
 				var _n2 = _n0.b;
@@ -5321,11 +5347,11 @@ var author$project$GitHubGraph$authorObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$pickEnum2)));
 var author$project$GitHubGraph$Commit = F6(
 	function (sha, status, author, committer, authoredAt, committedAt) {
-		return {aj: author, dV: authoredAt, d4: committedAt, f9: committer, cc: sha, ce: status};
+		return {author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status};
 	});
 var author$project$GitHubGraph$GitActor = F4(
 	function (email, name, avatar, user) {
-		return {cq: avatar, ek: email, gK: name, dF: user};
+		return {avatar: avatar, email: email, name: name, user: user};
 	});
 var elm$json$Json$Decode$null = _Json_decodeNull;
 var elm$json$Json$Decode$nullable = function (decoder) {
@@ -5336,24 +5362,24 @@ var elm$json$Json$Decode$nullable = function (decoder) {
 				A2(elm$json$Json$Decode$map, elm$core$Maybe$Just, decoder)
 			]));
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 1};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 'AnyType'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
 	function (nullability, coreType, join, selectionSet) {
-		return {ac: coreType, ax: join, a4: nullability, B: selectionSet};
+		return {coreType: coreType, join: join, nullability: nullability, selectionSet: selectionSet};
 	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = 0;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = {$: 'NullableFlag'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_n0) {
 	var sourceType = _n0.a;
 	var decoder = _n0.b;
 	var vars = _n0.c;
 	var fragments = _n0.d;
-	if (!sourceType.$) {
+	if (sourceType.$ === 'SpecifiedType') {
 		var typeInfo = sourceType.a;
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.ac, typeInfo.ax, typeInfo.B)),
+				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.coreType, typeInfo.join, typeInfo.selectionSet)),
 			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
 			vars,
 			fragments);
@@ -5385,15 +5411,15 @@ var author$project$GitHubGraph$gitActorObject = A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$GitActor)))));
 var author$project$GitHubGraph$Status = F2(
 	function (state, contexts) {
-		return {d7: contexts, S: state};
+		return {contexts: contexts, state: state};
 	});
 var author$project$GitHubGraph$StatusContext = F4(
 	function (state, context, targetUrl, creator) {
-		return {d6: context, ea: creator, S: state, fD: targetUrl};
+		return {context: context, creator: creator, state: state, targetUrl: targetUrl};
 	});
 var author$project$GitHubGraph$Actor = F3(
 	function (url, login, avatar) {
-		return {cq: avatar, gD: login, hr: url};
+		return {avatar: avatar, login: login, url: url};
 	});
 var author$project$GitHubGraph$actorObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -5405,25 +5431,27 @@ var author$project$GitHubGraph$actorObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Actor))));
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$EnumType = elm$core$Basics$identity;
-var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$EnumType = function (a) {
+	return {$: 'EnumType', a: a};
+};
+var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
-var elm$core$Dict$Black = 1;
+var elm$core$Dict$Black = {$: 'Black'};
 var elm$core$Dict$RBNode_elm_builtin = F5(
 	function (a, b, c, d, e) {
-		return {$: -1, a: a, b: b, c: c, d: d, e: e};
+		return {$: 'RBNode_elm_builtin', a: a, b: b, c: c, d: d, e: e};
 	});
 var elm$core$Basics$compare = _Utils_compare;
-var elm$core$Dict$Red = 0;
+var elm$core$Dict$Red = {$: 'Red'};
 var elm$core$Dict$balance = F5(
 	function (color, key, value, left, right) {
-		if ((right.$ === -1) && (!right.a)) {
+		if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Red')) {
 			var _n1 = right.a;
 			var rK = right.b;
 			var rV = right.c;
 			var rLeft = right.d;
 			var rRight = right.e;
-			if ((left.$ === -1) && (!left.a)) {
+			if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
 				var _n3 = left.a;
 				var lK = left.b;
 				var lV = left.c;
@@ -5431,22 +5459,22 @@ var elm$core$Dict$balance = F5(
 				var lRight = left.e;
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					0,
+					elm$core$Dict$Red,
 					key,
 					value,
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, rK, rV, rLeft, rRight));
 			} else {
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
 					color,
 					rK,
 					rV,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, key, value, left, rLeft),
 					rRight);
 			}
 		} else {
-			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
+			if ((((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) && (left.d.$ === 'RBNode_elm_builtin')) && (left.d.a.$ === 'Red')) {
 				var _n5 = left.a;
 				var lK = left.b;
 				var lV = left.c;
@@ -5459,11 +5487,11 @@ var elm$core$Dict$balance = F5(
 				var lRight = left.e;
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					0,
+					elm$core$Dict$Red,
 					lK,
 					lV,
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, llK, llV, llLeft, llRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, lRight, right));
 			} else {
 				return A5(elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
 			}
@@ -5471,8 +5499,8 @@ var elm$core$Dict$balance = F5(
 	});
 var elm$core$Dict$insertHelp = F3(
 	function (key, value, dict) {
-		if (dict.$ === -2) {
-			return A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
 		} else {
 			var nColor = dict.a;
 			var nKey = dict.b;
@@ -5480,8 +5508,8 @@ var elm$core$Dict$insertHelp = F3(
 			var nLeft = dict.d;
 			var nRight = dict.e;
 			var _n1 = A2(elm$core$Basics$compare, key, nKey);
-			switch (_n1) {
-				case 0:
+			switch (_n1.$) {
+				case 'LT':
 					return A5(
 						elm$core$Dict$balance,
 						nColor,
@@ -5489,7 +5517,7 @@ var elm$core$Dict$insertHelp = F3(
 						nValue,
 						A3(elm$core$Dict$insertHelp, key, value, nLeft),
 						nRight);
-				case 1:
+				case 'EQ':
 					return A5(elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
 				default:
 					return A5(
@@ -5505,13 +5533,13 @@ var elm$core$Dict$insertHelp = F3(
 var elm$core$Dict$insert = F3(
 	function (key, value, dict) {
 		var _n0 = A3(elm$core$Dict$insertHelp, key, value, dict);
-		if ((_n0.$ === -1) && (!_n0.a)) {
+		if ((_n0.$ === 'RBNode_elm_builtin') && (_n0.a.$ === 'Red')) {
 			var _n1 = _n0.a;
 			var k = _n0.b;
 			var v = _n0.c;
 			var l = _n0.d;
 			var r = _n0.e;
-			return A5(elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
+			return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, k, v, l, r);
 		} else {
 			var x = _n0;
 			return x;
@@ -5533,7 +5561,7 @@ var elm$core$Dict$get = F2(
 	function (targetKey, dict) {
 		get:
 		while (true) {
-			if (dict.$ === -2) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
 				return elm$core$Maybe$Nothing;
 			} else {
 				var key = dict.b;
@@ -5541,14 +5569,14 @@ var elm$core$Dict$get = F2(
 				var left = dict.d;
 				var right = dict.e;
 				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
-				switch (_n1) {
-					case 0:
+				switch (_n1.$) {
+					case 'LT':
 						var $temp$targetKey = targetKey,
 							$temp$dict = left;
 						targetKey = $temp$targetKey;
 						dict = $temp$dict;
 						continue get;
-					case 1:
+					case 'EQ':
 						return elm$core$Maybe$Just(value);
 					default:
 						var $temp$targetKey = targetKey,
@@ -5570,7 +5598,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$decoderFromEnumLabel = F2(
 		};
 		var decoder = function (enumString) {
 			var _n0 = valueFromLabel(enumString);
-			if (!_n0.$) {
+			if (_n0.$ === 'Just') {
 				var value = _n0.a;
 				return elm$json$Json$Decode$succeed(value);
 			} else {
@@ -5579,12 +5607,15 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$decoderFromEnumLabel = F2(
 		};
 		return decoder;
 	});
-var elm$core$Set$Set_elm_builtin = elm$core$Basics$identity;
-var elm$core$Set$empty = elm$core$Dict$empty;
+var elm$core$Set$Set_elm_builtin = function (a) {
+	return {$: 'Set_elm_builtin', a: a};
+};
+var elm$core$Set$empty = elm$core$Set$Set_elm_builtin(elm$core$Dict$empty);
 var elm$core$Set$insert = F2(
 	function (key, _n0) {
-		var dict = _n0;
-		return A3(elm$core$Dict$insert, key, 0, dict);
+		var dict = _n0.a;
+		return elm$core$Set$Set_elm_builtin(
+			A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
 	});
 var elm$core$Set$fromList = function (list) {
 	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
@@ -5593,7 +5624,7 @@ var elm$core$Dict$foldl = F3(
 	function (func, acc, dict) {
 		foldl:
 		while (true) {
-			if (dict.$ === -2) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
 				return acc;
 			} else {
 				var key = dict.b;
@@ -5628,7 +5659,7 @@ var elm$core$Dict$filter = F2(
 var elm$core$Dict$member = F2(
 	function (key, dict) {
 		var _n0 = A2(elm$core$Dict$get, key, dict);
-		if (!_n0.$) {
+		if (_n0.$ === 'Just') {
 			return true;
 		} else {
 			return false;
@@ -5646,19 +5677,21 @@ var elm$core$Dict$intersect = F2(
 	});
 var elm$core$Set$intersect = F2(
 	function (_n0, _n1) {
-		var dict1 = _n0;
-		var dict2 = _n1;
-		return A2(elm$core$Dict$intersect, dict1, dict2);
+		var dict1 = _n0.a;
+		var dict2 = _n1.a;
+		return elm$core$Set$Set_elm_builtin(
+			A2(elm$core$Dict$intersect, dict1, dict2));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumJoin = F2(
 	function (_n0, _n1) {
-		var labelsA = _n0;
-		var labelsB = _n1;
-		return elm$core$Set$toList(
-			A2(
-				elm$core$Set$intersect,
-				elm$core$Set$fromList(labelsB),
-				elm$core$Set$fromList(labelsA)));
+		var labelsA = _n0.a;
+		var labelsB = _n1.a;
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$EnumType(
+			elm$core$Set$toList(
+				A2(
+					elm$core$Set$intersect,
+					elm$core$Set$fromList(labelsB),
+					elm$core$Set$fromList(labelsA))));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumWithFallback = F2(
 	function (fallbackDecoder, labelledValues) {
@@ -5668,7 +5701,12 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumWithFallback = F2(
 		return A4(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				{ac: labels, ax: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumJoin, a4: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet}),
+				{
+					coreType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$EnumType(labels),
+					join: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enumJoin,
+					nullability: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
+					selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet
+				}),
 			elm$core$Basics$always(decoder),
 			_List_Nil,
 			_List_Nil);
@@ -5703,12 +5741,15 @@ var author$project$GitHubGraph$statusContextObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$statusStates)),
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$StatusContext)))));
 var elm$json$Json$Decode$list = _Json_decodeList;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType = function (a) {
+	return {$: 'ListType', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$listJoin = F2(
 	function (_n0, _n1) {
-		var itemSourceTypeA = _n0;
-		var itemSourceTypeB = _n1;
-		return A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join, itemSourceTypeA, itemSourceTypeB);
+		var itemSourceTypeA = _n0.a;
+		var itemSourceTypeB = _n1.a;
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType(
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join, itemSourceTypeA, itemSourceTypeB));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list = function (_n0) {
 	var itemType = _n0.a;
@@ -5719,10 +5760,10 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list = function (_n0) {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
 			{
-				ac: itemType,
-				ax: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$listJoin,
-				a4: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
-				B: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(itemType)
+				coreType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType(itemType),
+				join: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$listJoin,
+				nullability: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag,
+				selectionSet: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(itemType)
 			}),
 		A2(elm$core$Basics$composeL, elm$json$Json$Decode$list, decoder),
 		vars,
@@ -5745,19 +5786,19 @@ var author$project$GitHubGraph$statusObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Status)));
 var elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
-		return {d0: col, e5: problem, fm: row};
+		return {col: col, problem: problem, row: row};
 	});
 var elm$parser$Parser$problemToDeadEnd = function (p) {
-	return A3(elm$parser$Parser$DeadEnd, p.fm, p.d0, p.e5);
+	return A3(elm$parser$Parser$DeadEnd, p.row, p.col, p.problem);
 };
 var elm$parser$Parser$Advanced$bagToList = F2(
 	function (bag, list) {
 		bagToList:
 		while (true) {
 			switch (bag.$) {
-				case 0:
+				case 'Empty':
 					return list;
-				case 1:
+				case 'AddRight':
 					var bag1 = bag.a;
 					var x = bag.b;
 					var $temp$bag = bag1,
@@ -5778,10 +5819,10 @@ var elm$parser$Parser$Advanced$bagToList = F2(
 	});
 var elm$parser$Parser$Advanced$run = F2(
 	function (_n0, src) {
-		var parse = _n0;
+		var parse = _n0.a;
 		var _n1 = parse(
-			{d0: 1, d6: _List_Nil, m: 1, b: 0, fm: 1, a: src});
-		if (!_n1.$) {
+			{col: 1, context: _List_Nil, indent: 1, offset: 0, row: 1, src: src});
+		if (_n1.$ === 'Good') {
 			var value = _n1.b;
 			return elm$core$Result$Ok(value);
 		} else {
@@ -5793,7 +5834,7 @@ var elm$parser$Parser$Advanced$run = F2(
 var elm$parser$Parser$run = F2(
 	function (parser, source) {
 		var _n0 = A2(elm$parser$Parser$Advanced$run, parser, source);
-		if (!_n0.$) {
+		if (_n0.$ === 'Ok') {
 			var a = _n0.a;
 			return elm$core$Result$Ok(a);
 		} else {
@@ -5804,102 +5845,107 @@ var elm$parser$Parser$run = F2(
 	});
 var elm$parser$Parser$Advanced$Bad = F2(
 	function (a, b) {
-		return {$: 1, a: a, b: b};
+		return {$: 'Bad', a: a, b: b};
 	});
 var elm$parser$Parser$Advanced$Good = F3(
 	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
+		return {$: 'Good', a: a, b: b, c: c};
 	});
-var elm$parser$Parser$Advanced$Parser = elm$core$Basics$identity;
+var elm$parser$Parser$Advanced$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
 var elm$parser$Parser$Advanced$andThen = F2(
 	function (callback, _n0) {
-		var parseA = _n0;
-		return function (s0) {
-			var _n1 = parseA(s0);
-			if (_n1.$ === 1) {
-				var p = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
-				var p1 = _n1.a;
-				var a = _n1.b;
-				var s1 = _n1.c;
-				var _n2 = callback(a);
-				var parseB = _n2;
-				var _n3 = parseB(s1);
-				if (_n3.$ === 1) {
-					var p2 = _n3.a;
-					var x = _n3.b;
-					return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+		var parseA = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parseA(s0);
+				if (_n1.$ === 'Bad') {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
 				} else {
-					var p2 = _n3.a;
-					var b = _n3.b;
-					var s2 = _n3.c;
-					return A3(elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+					var p1 = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					var _n2 = callback(a);
+					var parseB = _n2.a;
+					var _n3 = parseB(s1);
+					if (_n3.$ === 'Bad') {
+						var p2 = _n3.a;
+						var x = _n3.b;
+						return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _n3.a;
+						var b = _n3.b;
+						var s2 = _n3.c;
+						return A3(elm$parser$Parser$Advanced$Good, p1 || p2, b, s2);
+					}
 				}
-			}
-		};
+			});
 	});
 var elm$parser$Parser$andThen = elm$parser$Parser$Advanced$andThen;
-var elm$parser$Parser$ExpectingEnd = {$: 10};
+var elm$parser$Parser$ExpectingEnd = {$: 'ExpectingEnd'};
 var elm$parser$Parser$Advanced$AddRight = F2(
 	function (a, b) {
-		return {$: 1, a: a, b: b};
+		return {$: 'AddRight', a: a, b: b};
 	});
 var elm$parser$Parser$Advanced$DeadEnd = F4(
 	function (row, col, problem, contextStack) {
-		return {d0: col, gb: contextStack, e5: problem, fm: row};
+		return {col: col, contextStack: contextStack, problem: problem, row: row};
 	});
-var elm$parser$Parser$Advanced$Empty = {$: 0};
+var elm$parser$Parser$Advanced$Empty = {$: 'Empty'};
 var elm$parser$Parser$Advanced$fromState = F2(
 	function (s, x) {
 		return A2(
 			elm$parser$Parser$Advanced$AddRight,
 			elm$parser$Parser$Advanced$Empty,
-			A4(elm$parser$Parser$Advanced$DeadEnd, s.fm, s.d0, x, s.d6));
+			A4(elm$parser$Parser$Advanced$DeadEnd, s.row, s.col, x, s.context));
 	});
 var elm$parser$Parser$Advanced$end = function (x) {
-	return function (s) {
-		return _Utils_eq(
-			elm$core$String$length(s.a),
-			s.b) ? A3(elm$parser$Parser$Advanced$Good, false, 0, s) : A2(
-			elm$parser$Parser$Advanced$Bad,
-			false,
-			A2(elm$parser$Parser$Advanced$fromState, s, x));
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return _Utils_eq(
+				elm$core$String$length(s.src),
+				s.offset) ? A3(elm$parser$Parser$Advanced$Good, false, _Utils_Tuple0, s) : A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, x));
+		});
 };
 var elm$parser$Parser$end = elm$parser$Parser$Advanced$end(elm$parser$Parser$ExpectingEnd);
 var elm$parser$Parser$Advanced$map2 = F3(
 	function (func, _n0, _n1) {
-		var parseA = _n0;
-		var parseB = _n1;
-		return function (s0) {
-			var _n2 = parseA(s0);
-			if (_n2.$ === 1) {
-				var p = _n2.a;
-				var x = _n2.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
-				var p1 = _n2.a;
-				var a = _n2.b;
-				var s1 = _n2.c;
-				var _n3 = parseB(s1);
-				if (_n3.$ === 1) {
-					var p2 = _n3.a;
-					var x = _n3.b;
-					return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+		var parseA = _n0.a;
+		var parseB = _n1.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n2 = parseA(s0);
+				if (_n2.$ === 'Bad') {
+					var p = _n2.a;
+					var x = _n2.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
 				} else {
-					var p2 = _n3.a;
-					var b = _n3.b;
-					var s2 = _n3.c;
-					return A3(
-						elm$parser$Parser$Advanced$Good,
-						p1 || p2,
-						A2(func, a, b),
-						s2);
+					var p1 = _n2.a;
+					var a = _n2.b;
+					var s1 = _n2.c;
+					var _n3 = parseB(s1);
+					if (_n3.$ === 'Bad') {
+						var p2 = _n3.a;
+						var x = _n3.b;
+						return A2(elm$parser$Parser$Advanced$Bad, p1 || p2, x);
+					} else {
+						var p2 = _n3.a;
+						var b = _n3.b;
+						var s2 = _n3.c;
+						return A3(
+							elm$parser$Parser$Advanced$Good,
+							p1 || p2,
+							A2(func, a, b),
+							s2);
+					}
 				}
-			}
-		};
+			});
 	});
 var elm$parser$Parser$Advanced$ignorer = F2(
 	function (keepParser, ignoreParser) {
@@ -5913,29 +5959,30 @@ var elm$parser$Parser$Advanced$keeper = F2(
 var elm$parser$Parser$keeper = elm$parser$Parser$Advanced$keeper;
 var elm$parser$Parser$Advanced$map = F2(
 	function (func, _n0) {
-		var parse = _n0;
-		return function (s0) {
-			var _n1 = parse(s0);
-			if (!_n1.$) {
-				var p = _n1.a;
-				var a = _n1.b;
-				var s1 = _n1.c;
-				return A3(
-					elm$parser$Parser$Advanced$Good,
-					p,
-					func(a),
-					s1);
-			} else {
-				var p = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			}
-		};
+		var parse = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parse(s0);
+				if (_n1.$ === 'Good') {
+					var p = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					return A3(
+						elm$parser$Parser$Advanced$Good,
+						p,
+						func(a),
+						s1);
+				} else {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				}
+			});
 	});
 var elm$parser$Parser$map = elm$parser$Parser$Advanced$map;
 var elm$parser$Parser$Advanced$Append = F2(
 	function (a, b) {
-		return {$: 2, a: a, b: b};
+		return {$: 'Append', a: a, b: b};
 	});
 var elm$parser$Parser$Advanced$oneOfHelp = F3(
 	function (s0, bag, parsers) {
@@ -5944,10 +5991,10 @@ var elm$parser$Parser$Advanced$oneOfHelp = F3(
 			if (!parsers.b) {
 				return A2(elm$parser$Parser$Advanced$Bad, false, bag);
 			} else {
-				var parse = parsers.a;
+				var parse = parsers.a.a;
 				var remainingParsers = parsers.b;
 				var _n1 = parse(s0);
-				if (!_n1.$) {
+				if (_n1.$ === 'Good') {
 					var step = _n1;
 					return step;
 				} else {
@@ -5970,23 +6017,25 @@ var elm$parser$Parser$Advanced$oneOfHelp = F3(
 		}
 	});
 var elm$parser$Parser$Advanced$oneOf = function (parsers) {
-	return function (s) {
-		return A3(elm$parser$Parser$Advanced$oneOfHelp, s, elm$parser$Parser$Advanced$Empty, parsers);
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3(elm$parser$Parser$Advanced$oneOfHelp, s, elm$parser$Parser$Advanced$Empty, parsers);
+		});
 };
 var elm$parser$Parser$oneOf = elm$parser$Parser$Advanced$oneOf;
 var elm$parser$Parser$Advanced$succeed = function (a) {
-	return function (s) {
-		return A3(elm$parser$Parser$Advanced$Good, false, a, s);
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A3(elm$parser$Parser$Advanced$Good, false, a, s);
+		});
 };
 var elm$parser$Parser$succeed = elm$parser$Parser$Advanced$succeed;
 var elm$parser$Parser$ExpectingSymbol = function (a) {
-	return {$: 8, a: a};
+	return {$: 'ExpectingSymbol', a: a};
 };
 var elm$parser$Parser$Advanced$Token = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Token', a: a, b: b};
 	});
 var elm$core$String$isEmpty = function (string) {
 	return string === '';
@@ -5996,20 +6045,21 @@ var elm$parser$Parser$Advanced$token = function (_n0) {
 	var str = _n0.a;
 	var expecting = _n0.b;
 	var progress = !elm$core$String$isEmpty(str);
-	return function (s) {
-		var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.b, s.fm, s.d0, s.a);
-		var newOffset = _n1.a;
-		var newRow = _n1.b;
-		var newCol = _n1.c;
-		return _Utils_eq(newOffset, -1) ? A2(
-			elm$parser$Parser$Advanced$Bad,
-			false,
-			A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
-			elm$parser$Parser$Advanced$Good,
-			progress,
-			0,
-			{d0: newCol, d6: s.d6, m: s.m, b: newOffset, fm: newRow, a: s.a});
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			var _n1 = A5(elm$parser$Parser$Advanced$isSubString, str, s.offset, s.row, s.col, s.src);
+			var newOffset = _n1.a;
+			var newRow = _n1.b;
+			var newCol = _n1.c;
+			return _Utils_eq(newOffset, -1) ? A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, expecting)) : A3(
+				elm$parser$Parser$Advanced$Good,
+				progress,
+				_Utils_Tuple0,
+				{col: newCol, context: s.context, indent: s.indent, offset: newOffset, row: newRow, src: s.src});
+		});
 };
 var elm$parser$Parser$Advanced$symbol = elm$parser$Parser$Advanced$token;
 var elm$parser$Parser$symbol = function (str) {
@@ -6026,13 +6076,13 @@ var elm$parser$Parser$Advanced$chompWhileHelp = F5(
 	function (isGood, offset, row, col, s0) {
 		chompWhileHelp:
 		while (true) {
-			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.a);
+			var newOffset = A3(elm$parser$Parser$Advanced$isSubChar, isGood, offset, s0.src);
 			if (_Utils_eq(newOffset, -1)) {
 				return A3(
 					elm$parser$Parser$Advanced$Good,
-					_Utils_cmp(s0.b, offset) < 0,
-					0,
-					{d0: col, d6: s0.d6, m: s0.m, b: offset, fm: row, a: s0.a});
+					_Utils_cmp(s0.offset, offset) < 0,
+					_Utils_Tuple0,
+					{col: col, context: s0.context, indent: s0.indent, offset: offset, row: row, src: s0.src});
 			} else {
 				if (_Utils_eq(newOffset, -2)) {
 					var $temp$isGood = isGood,
@@ -6063,50 +6113,53 @@ var elm$parser$Parser$Advanced$chompWhileHelp = F5(
 		}
 	});
 var elm$parser$Parser$Advanced$chompWhile = function (isGood) {
-	return function (s) {
-		return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.b, s.fm, s.d0, s);
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A5(elm$parser$Parser$Advanced$chompWhileHelp, isGood, s.offset, s.row, s.col, s);
+		});
 };
 var elm$parser$Parser$chompWhile = elm$parser$Parser$Advanced$chompWhile;
 var elm$core$String$slice = _String_slice;
 var elm$parser$Parser$Advanced$mapChompedString = F2(
 	function (func, _n0) {
-		var parse = _n0;
-		return function (s0) {
-			var _n1 = parse(s0);
-			if (_n1.$ === 1) {
-				var p = _n1.a;
-				var x = _n1.b;
-				return A2(elm$parser$Parser$Advanced$Bad, p, x);
-			} else {
-				var p = _n1.a;
-				var a = _n1.b;
-				var s1 = _n1.c;
-				return A3(
-					elm$parser$Parser$Advanced$Good,
-					p,
-					A2(
-						func,
-						A3(elm$core$String$slice, s0.b, s1.b, s0.a),
-						a),
-					s1);
-			}
-		};
+		var parse = _n0.a;
+		return elm$parser$Parser$Advanced$Parser(
+			function (s0) {
+				var _n1 = parse(s0);
+				if (_n1.$ === 'Bad') {
+					var p = _n1.a;
+					var x = _n1.b;
+					return A2(elm$parser$Parser$Advanced$Bad, p, x);
+				} else {
+					var p = _n1.a;
+					var a = _n1.b;
+					var s1 = _n1.c;
+					return A3(
+						elm$parser$Parser$Advanced$Good,
+						p,
+						A2(
+							func,
+							A3(elm$core$String$slice, s0.offset, s1.offset, s0.src),
+							a),
+						s1);
+				}
+			});
 	});
 var elm$parser$Parser$Advanced$getChompedString = function (parser) {
 	return A2(elm$parser$Parser$Advanced$mapChompedString, elm$core$Basics$always, parser);
 };
 var elm$parser$Parser$getChompedString = elm$parser$Parser$Advanced$getChompedString;
 var elm$parser$Parser$Problem = function (a) {
-	return {$: 12, a: a};
+	return {$: 'Problem', a: a};
 };
 var elm$parser$Parser$Advanced$problem = function (x) {
-	return function (s) {
-		return A2(
-			elm$parser$Parser$Advanced$Bad,
-			false,
-			A2(elm$parser$Parser$Advanced$fromState, s, x));
-	};
+	return elm$parser$Parser$Advanced$Parser(
+		function (s) {
+			return A2(
+				elm$parser$Parser$Advanced$Bad,
+				false,
+				A2(elm$parser$Parser$Advanced$fromState, s, x));
+		});
 };
 var elm$parser$Parser$problem = function (msg) {
 	return elm$parser$Parser$Advanced$problem(
@@ -6117,7 +6170,7 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
 	function (str) {
 		if (elm$core$String$length(str) <= 9) {
 			var _n0 = elm$core$String$toFloat('0.' + str);
-			if (!_n0.$) {
+			if (_n0.$ === 'Just') {
 				var floatVal = _n0.a;
 				return elm$parser$Parser$succeed(
 					elm$core$Basics$round(floatVal * 1000));
@@ -6132,8 +6185,10 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$fractionsOfASecondInMs = A2(
 	},
 	elm$parser$Parser$getChompedString(
 		elm$parser$Parser$chompWhile(elm$core$Char$isDigit)));
-var elm$time$Time$Posix = elm$core$Basics$identity;
-var elm$time$Time$millisToPosix = elm$core$Basics$identity;
+var elm$time$Time$Posix = function (a) {
+	return {$: 'Posix', a: a};
+};
+var elm$time$Time$millisToPosix = elm$time$Time$Posix;
 var rtfeldman$elm_iso8601_date_strings$Iso8601$fromParts = F6(
 	function (monthYearDayMs, hour, minute, second, ms, utcOffsetMinutes) {
 		return elm$time$Time$millisToPosix((((monthYearDayMs + (((hour * 60) * 60) * 1000)) + (((minute - utcOffsetMinutes) * 60) * 1000)) + (second * 1000)) + ms);
@@ -6147,7 +6202,7 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$paddedInt = function (quantity) {
 				elm$core$String$length(str),
 				quantity)) {
 				var _n0 = elm$core$String$toInt(str);
-				if (!_n0.$) {
+				if (_n0.$ === 'Just') {
 					var intVal = _n0.a;
 					return elm$parser$Parser$succeed(intVal);
 				} else {
@@ -6343,7 +6398,7 @@ var elm_community$json_extra$Json$Decode$Extra$datetime = A2(
 	elm$json$Json$Decode$andThen,
 	function (dateString) {
 		var _n0 = rtfeldman$elm_iso8601_date_strings$Iso8601$toTime(dateString);
-		if (!_n0.$) {
+		if (_n0.$ === 'Ok') {
 			var v = _n0.a;
 			return elm$json$Json$Decode$succeed(v);
 		} else {
@@ -6361,14 +6416,14 @@ var author$project$GitHubGraph$commitObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'committedDate',
 		_List_Nil,
-		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'authoredDate',
 			_List_Nil,
-			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(
@@ -6396,7 +6451,7 @@ var author$project$GitHubGraph$commitObject = A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Commit)))))));
 var author$project$GitHubGraph$Label = F3(
 	function (id, name, color) {
-		return {bU: color, eB: id, gK: name};
+		return {color: color, id: id, name: name};
 	});
 var author$project$GitHubGraph$labelObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6410,7 +6465,7 @@ var author$project$GitHubGraph$labelObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Label))));
 var author$project$GitHubGraph$Milestone = F5(
 	function (id, number, title, state, description) {
-		return {eg: description, eB: id, k: number, S: state, bh: title};
+		return {description: description, id: id, number: number, state: state, title: title};
 	});
 var author$project$GitHubGraph$milestoneObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6439,7 +6494,7 @@ var author$project$GitHubGraph$milestoneObject = A2(
 var elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _n0 = f(mx);
-		if (!_n0.$) {
+		if (_n0.$ === 'Just') {
 			var x = _n0.a;
 			return A2(elm$core$List$cons, x, xs);
 		} else {
@@ -6479,11 +6534,11 @@ var author$project$GitHubGraph$nullableList = function (o) {
 };
 var author$project$GitHubGraph$CardLocation = F4(
 	function (id, url, project, column) {
-		return {d1: column, eB: id, e8: project, hr: url};
+		return {column: column, id: id, project: project, url: url};
 	});
 var author$project$GitHubGraph$ProjectColumn = F3(
 	function (id, name, databaseId) {
-		return {bX: databaseId, eB: id, gK: name};
+		return {databaseId: databaseId, id: id, name: name};
 	});
 var author$project$GitHubGraph$columnObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6497,7 +6552,7 @@ var author$project$GitHubGraph$columnObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ProjectColumn))));
 var author$project$GitHubGraph$ProjectLocation = F4(
 	function (id, url, name, number) {
-		return {eB: id, gK: name, k: number, hr: url};
+		return {id: id, name: name, number: number, url: url};
 	});
 var author$project$GitHubGraph$projectLocationObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6531,7 +6586,7 @@ var author$project$GitHubGraph$projectCardObject = A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$CardLocation)))));
 var author$project$GitHubGraph$ReactionGroup = F2(
 	function (type_, count) {
-		return {cx: count, dC: type_};
+		return {count: count, type_: type_};
 	});
 var author$project$GitHubGraph$reactionGroupObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6551,7 +6606,7 @@ var author$project$GitHubGraph$reactionGroupObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ReactionGroup)));
 var author$project$GitHubGraph$RepoLocation = F4(
 	function (id, url, owner, name) {
-		return {eB: id, gK: name, g2: owner, hr: url};
+		return {id: id, name: name, owner: owner, url: url};
 	});
 var author$project$GitHubGraph$repoLocationObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -6586,7 +6641,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 		var decoder = selection.b;
 		var vars = selection.c;
 		var fragments = selection.d;
-		if (!ast.$) {
+		if (ast.$ === 'Field') {
 			var info = ast.a;
 			return A4(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
@@ -6594,7 +6649,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 					_Utils_update(
 						info,
 						{
-							dR: elm$core$Maybe$Just(responseKey)
+							alias: elm$core$Maybe$Just(responseKey)
 						})),
 				decoder,
 				vars,
@@ -6604,7 +6659,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 		}
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue = function (a) {
-	return {$: 1, a: a};
+	return {$: 'IntValue', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int = function (x) {
 	return A2(
@@ -6738,14 +6793,14 @@ var author$project$GitHubGraph$prObject = A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 																	'updatedAt',
 																	_List_Nil,
-																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																	A3(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 																		'createdAt',
 																		_List_Nil,
-																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																	A2(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -6762,12 +6817,14 @@ var elm$core$Task$mapError = F2(
 			A2(elm$core$Basics$composeL, elm$core$Task$fail, convert),
 			task);
 	});
-var elm$http$Http$Internal$Request = elm$core$Basics$identity;
-var elm$http$Http$request = elm$core$Basics$identity;
+var elm$http$Http$Internal$Request = function (a) {
+	return {$: 'Request', a: a};
+};
+var elm$http$Http$request = elm$http$Http$Internal$Request;
 var elm$core$Dict$getMin = function (dict) {
 	getMin:
 	while (true) {
-		if ((dict.$ === -1) && (dict.d.$ === -1)) {
+		if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
 			var left = dict.d;
 			var $temp$dict = left;
 			dict = $temp$dict;
@@ -6778,8 +6835,8 @@ var elm$core$Dict$getMin = function (dict) {
 	}
 };
 var elm$core$Dict$moveRedLeft = function (dict) {
-	if (((dict.$ === -1) && (dict.d.$ === -1)) && (dict.e.$ === -1)) {
-		if ((dict.e.d.$ === -1) && (!dict.e.d.a)) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.e.d.$ === 'RBNode_elm_builtin') && (dict.e.d.a.$ === 'Red')) {
 			var clr = dict.a;
 			var k = dict.b;
 			var v = dict.c;
@@ -6802,17 +6859,17 @@ var elm$core$Dict$moveRedLeft = function (dict) {
 			var rRight = _n2.e;
 			return A5(
 				elm$core$Dict$RBNode_elm_builtin,
-				0,
+				elm$core$Dict$Red,
 				rlK,
 				rlV,
 				A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, lK, lV, lLeft, lRight),
 					rlL),
-				A5(elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rlR, rRight));
+				A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, rK, rV, rlR, rRight));
 		} else {
 			var clr = dict.a;
 			var k = dict.b;
@@ -6829,22 +6886,22 @@ var elm$core$Dict$moveRedLeft = function (dict) {
 			var rV = _n5.c;
 			var rLeft = _n5.d;
 			var rRight = _n5.e;
-			if (clr === 1) {
+			if (clr.$ === 'Black') {
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, rK, rV, rLeft, rRight));
 			} else {
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, rK, rV, rLeft, rRight));
 			}
 		}
 	} else {
@@ -6852,8 +6909,8 @@ var elm$core$Dict$moveRedLeft = function (dict) {
 	}
 };
 var elm$core$Dict$moveRedRight = function (dict) {
-	if (((dict.$ === -1) && (dict.d.$ === -1)) && (dict.e.$ === -1)) {
-		if ((dict.d.d.$ === -1) && (!dict.d.d.a)) {
+	if (((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) && (dict.e.$ === 'RBNode_elm_builtin')) {
+		if ((dict.d.d.$ === 'RBNode_elm_builtin') && (dict.d.d.a.$ === 'Red')) {
 			var clr = dict.a;
 			var k = dict.b;
 			var v = dict.c;
@@ -6876,17 +6933,17 @@ var elm$core$Dict$moveRedRight = function (dict) {
 			var rRight = _n4.e;
 			return A5(
 				elm$core$Dict$RBNode_elm_builtin,
-				0,
+				elm$core$Dict$Red,
 				lK,
 				lV,
-				A5(elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
+				A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, llK, llV, llLeft, llRight),
 				A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
 					lRight,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight)));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, rK, rV, rLeft, rRight)));
 		} else {
 			var clr = dict.a;
 			var k = dict.b;
@@ -6903,22 +6960,22 @@ var elm$core$Dict$moveRedRight = function (dict) {
 			var rV = _n6.c;
 			var rLeft = _n6.d;
 			var rRight = _n6.e;
-			if (clr === 1) {
+			if (clr.$ === 'Black') {
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, rK, rV, rLeft, rRight));
 			} else {
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
-					1,
+					elm$core$Dict$Black,
 					k,
 					v,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, rK, rV, rLeft, rRight));
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, rK, rV, rLeft, rRight));
 			}
 		}
 	} else {
@@ -6927,7 +6984,7 @@ var elm$core$Dict$moveRedRight = function (dict) {
 };
 var elm$core$Dict$removeHelpPrepEQGT = F7(
 	function (targetKey, dict, color, key, value, left, right) {
-		if ((left.$ === -1) && (!left.a)) {
+		if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Red')) {
 			var _n1 = left.a;
 			var lK = left.b;
 			var lV = left.c;
@@ -6939,13 +6996,13 @@ var elm$core$Dict$removeHelpPrepEQGT = F7(
 				lK,
 				lV,
 				lLeft,
-				A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, lRight, right));
+				A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Red, key, value, lRight, right));
 		} else {
 			_n2$2:
 			while (true) {
-				if ((right.$ === -1) && (right.a === 1)) {
-					if (right.d.$ === -1) {
-						if (right.d.a === 1) {
+				if ((right.$ === 'RBNode_elm_builtin') && (right.a.$ === 'Black')) {
+					if (right.d.$ === 'RBNode_elm_builtin') {
+						if (right.d.a.$ === 'Black') {
 							var _n3 = right.a;
 							var _n4 = right.d;
 							var _n5 = _n4.a;
@@ -6966,7 +7023,7 @@ var elm$core$Dict$removeHelpPrepEQGT = F7(
 		}
 	});
 var elm$core$Dict$removeMin = function (dict) {
-	if ((dict.$ === -1) && (dict.d.$ === -1)) {
+	if ((dict.$ === 'RBNode_elm_builtin') && (dict.d.$ === 'RBNode_elm_builtin')) {
 		var color = dict.a;
 		var key = dict.b;
 		var value = dict.c;
@@ -6974,8 +7031,8 @@ var elm$core$Dict$removeMin = function (dict) {
 		var lColor = left.a;
 		var lLeft = left.d;
 		var right = dict.e;
-		if (lColor === 1) {
-			if ((lLeft.$ === -1) && (!lLeft.a)) {
+		if (lColor.$ === 'Black') {
+			if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
 				var _n3 = lLeft.a;
 				return A5(
 					elm$core$Dict$RBNode_elm_builtin,
@@ -6986,7 +7043,7 @@ var elm$core$Dict$removeMin = function (dict) {
 					right);
 			} else {
 				var _n4 = elm$core$Dict$moveRedLeft(dict);
-				if (_n4.$ === -1) {
+				if (_n4.$ === 'RBNode_elm_builtin') {
 					var nColor = _n4.a;
 					var nKey = _n4.b;
 					var nValue = _n4.c;
@@ -7018,7 +7075,7 @@ var elm$core$Dict$removeMin = function (dict) {
 };
 var elm$core$Dict$removeHelp = F2(
 	function (targetKey, dict) {
-		if (dict.$ === -2) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
 			return elm$core$Dict$RBEmpty_elm_builtin;
 		} else {
 			var color = dict.a;
@@ -7027,10 +7084,10 @@ var elm$core$Dict$removeHelp = F2(
 			var left = dict.d;
 			var right = dict.e;
 			if (_Utils_cmp(targetKey, key) < 0) {
-				if ((left.$ === -1) && (left.a === 1)) {
+				if ((left.$ === 'RBNode_elm_builtin') && (left.a.$ === 'Black')) {
 					var _n4 = left.a;
 					var lLeft = left.d;
-					if ((lLeft.$ === -1) && (!lLeft.a)) {
+					if ((lLeft.$ === 'RBNode_elm_builtin') && (lLeft.a.$ === 'Red')) {
 						var _n6 = lLeft.a;
 						return A5(
 							elm$core$Dict$RBNode_elm_builtin,
@@ -7041,7 +7098,7 @@ var elm$core$Dict$removeHelp = F2(
 							right);
 					} else {
 						var _n7 = elm$core$Dict$moveRedLeft(dict);
-						if (_n7.$ === -1) {
+						if (_n7.$ === 'RBNode_elm_builtin') {
 							var nColor = _n7.a;
 							var nKey = _n7.b;
 							var nValue = _n7.c;
@@ -7077,7 +7134,7 @@ var elm$core$Dict$removeHelp = F2(
 	});
 var elm$core$Dict$removeHelpEQGT = F2(
 	function (targetKey, dict) {
-		if (dict.$ === -1) {
+		if (dict.$ === 'RBNode_elm_builtin') {
 			var color = dict.a;
 			var key = dict.b;
 			var value = dict.c;
@@ -7085,7 +7142,7 @@ var elm$core$Dict$removeHelpEQGT = F2(
 			var right = dict.e;
 			if (_Utils_eq(targetKey, key)) {
 				var _n1 = elm$core$Dict$getMin(right);
-				if (_n1.$ === -1) {
+				if (_n1.$ === 'RBNode_elm_builtin') {
 					var minKey = _n1.b;
 					var minValue = _n1.c;
 					return A5(
@@ -7114,13 +7171,13 @@ var elm$core$Dict$removeHelpEQGT = F2(
 var elm$core$Dict$remove = F2(
 	function (key, dict) {
 		var _n0 = A2(elm$core$Dict$removeHelp, key, dict);
-		if ((_n0.$ === -1) && (!_n0.a)) {
+		if ((_n0.$ === 'RBNode_elm_builtin') && (_n0.a.$ === 'Red')) {
 			var _n1 = _n0.a;
 			var k = _n0.b;
 			var v = _n0.c;
 			var l = _n0.d;
 			var r = _n0.e;
-			return A5(elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
+			return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, k, v, l, r);
 		} else {
 			var x = _n0;
 			return x;
@@ -7130,7 +7187,7 @@ var elm$core$Dict$update = F3(
 	function (targetKey, alter, dictionary) {
 		var _n0 = alter(
 			A2(elm$core$Dict$get, targetKey, dictionary));
-		if (!_n0.$) {
+		if (_n0.$ === 'Just') {
 			var value = _n0.a;
 			return A3(elm$core$Dict$insert, targetKey, value, dictionary);
 		} else {
@@ -7138,7 +7195,7 @@ var elm$core$Dict$update = F3(
 		}
 	});
 var elm$core$Maybe$isJust = function (maybe) {
-	if (!maybe.$) {
+	if (maybe.$ === 'Just') {
 		return true;
 	} else {
 		return false;
@@ -7146,7 +7203,7 @@ var elm$core$Maybe$isJust = function (maybe) {
 };
 var elm$core$Result$map = F2(
 	function (func, ra) {
-		if (!ra.$) {
+		if (ra.$ === 'Ok') {
 			var a = ra.a;
 			return elm$core$Result$Ok(
 				func(a));
@@ -7157,39 +7214,39 @@ var elm$core$Result$map = F2(
 	});
 var elm$http$Http$BadPayload = F2(
 	function (a, b) {
-		return {$: 4, a: a, b: b};
+		return {$: 'BadPayload', a: a, b: b};
 	});
 var elm$http$Http$BadStatus = function (a) {
-	return {$: 3, a: a};
+	return {$: 'BadStatus', a: a};
 };
 var elm$http$Http$BadUrl = function (a) {
-	return {$: 0, a: a};
+	return {$: 'BadUrl', a: a};
 };
-var elm$http$Http$NetworkError = {$: 2};
-var elm$http$Http$Timeout = {$: 1};
+var elm$http$Http$NetworkError = {$: 'NetworkError'};
+var elm$http$Http$Timeout = {$: 'Timeout'};
 var elm$http$Http$Internal$FormDataBody = function (a) {
-	return {$: 2, a: a};
+	return {$: 'FormDataBody', a: a};
 };
 var elm$http$Http$Internal$isStringBody = function (body) {
-	if (body.$ === 1) {
+	if (body.$ === 'StringBody') {
 		return true;
 	} else {
 		return false;
 	}
 };
 var elm$http$Http$toTask = function (_n0) {
-	var request_ = _n0;
+	var request_ = _n0.a;
 	return A2(_Http_toTask, request_, elm$core$Maybe$Nothing);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$GraphQLError = function (a) {
-	return {$: 1, a: a};
+	return {$: 'GraphQLError', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError = function (a) {
-	return {$: 0, a: a};
+	return {$: 'HttpError', a: a};
 };
 var elm$core$Result$withDefault = F2(
 	function (def, result) {
-		if (!result.$) {
+		if (result.$ === 'Ok') {
 			var a = result.a;
 			return a;
 		} else {
@@ -7199,11 +7256,11 @@ var elm$core$Result$withDefault = F2(
 var elm$json$Json$Decode$decodeString = _Json_runOnString;
 var jamesmacaulay$elm_graphql$GraphQL$Response$RequestError = F2(
 	function (message, locations) {
-		return {gC: locations, az: message};
+		return {locations: locations, message: message};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Response$DocumentLocation = F2(
 	function (line, column) {
-		return {d1: column, bx: line};
+		return {column: column, line: line};
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Response$documentLocationDecoder = A3(
 	elm$json$Json$Decode$map2,
@@ -7237,17 +7294,17 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$convertHttpError = F3(
 					A2(elm$json$Json$Decode$decodeString, jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$errorsResponseDecoder, responseBody)));
 		};
 		switch (httpError.$) {
-			case 3:
-				var body = httpError.a.fZ;
+			case 'BadStatus':
+				var body = httpError.a.body;
 				return handleErrorWithResponseBody(body);
-			case 4:
-				var body = httpError.b.fZ;
+			case 'BadPayload':
+				var body = httpError.b.body;
 				return handleErrorWithResponseBody(body);
 			default:
 				return wrapHttpError(httpError);
 		}
 	});
-var elm$http$Http$Internal$EmptyBody = {$: 0};
+var elm$http$Http$Internal$EmptyBody = {$: 'EmptyBody'};
 var elm$http$Http$emptyBody = elm$http$Http$Internal$EmptyBody;
 var elm$core$String$contains = _String_contains;
 var elm$url$Url$percentEncode = _Url_percentEncode;
@@ -7271,7 +7328,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$parameterizedUrl = F3(
 	});
 var elm$http$Http$Internal$StringBody = F2(
 	function (a, b) {
-		return {$: 1, a: a, b: b};
+		return {$: 'StringBody', a: a, b: b};
 	});
 var elm$http$Http$jsonBody = function (value) {
 	return A2(
@@ -7309,38 +7366,38 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$postBody = F2(
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$requestConfig = F4(
 	function (requestOptions, documentString, expect, variableValues) {
-		var _n0 = (requestOptions.gI === 'GET') ? _Utils_Tuple2(
-			A3(jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$parameterizedUrl, requestOptions.hr, documentString, variableValues),
+		var _n0 = (requestOptions.method === 'GET') ? _Utils_Tuple2(
+			A3(jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$parameterizedUrl, requestOptions.url, documentString, variableValues),
 			elm$http$Http$emptyBody) : _Utils_Tuple2(
-			requestOptions.hr,
+			requestOptions.url,
 			A2(jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$postBody, documentString, variableValues));
 		var url = _n0.a;
 		var body = _n0.b;
-		return {fZ: body, cD: expect, gu: requestOptions.gu, gI: requestOptions.gI, hh: requestOptions.hh, hr: url, hu: requestOptions.hu};
+		return {body: body, expect: expect, headers: requestOptions.headers, method: requestOptions.method, timeout: requestOptions.timeout, url: url, withCredentials: requestOptions.withCredentials};
 	});
 var elm$json$Json$Encode$float = _Json_wrap;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Value$Json$Encode$encode = function (value) {
 	switch (value.$) {
-		case 0:
+		case 'VariableValue':
 			return elm$json$Json$Encode$null;
-		case 1:
+		case 'IntValue':
 			var _int = value.a;
 			return elm$json$Json$Encode$int(_int);
-		case 2:
+		case 'FloatValue':
 			var _float = value.a;
 			return elm$json$Json$Encode$float(_float);
-		case 3:
+		case 'StringValue':
 			var string = value.a;
 			return elm$json$Json$Encode$string(string);
-		case 4:
+		case 'BooleanValue':
 			var bool = value.a;
 			return elm$json$Json$Encode$bool(bool);
-		case 5:
+		case 'NullValue':
 			return elm$json$Json$Encode$null;
-		case 6:
+		case 'EnumValue':
 			var string = value.a;
 			return elm$json$Json$Encode$string(string);
-		case 7:
+		case 'ListValue':
 			var values = value.a;
 			return A2(elm$json$Json$Encode$list, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Value$Json$Encode$encode, values);
 		default:
@@ -7361,12 +7418,12 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableValuesToJson = fun
 				kvPairs)));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$jsonVariableValues = function (_n0) {
-	var variableValues = _n0.fK;
+	var variableValues = _n0.a.variableValues;
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$variableValuesToJson(variableValues);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$requestBody = function (_n0) {
-	var requestRecord = _n0;
-	return requestRecord.eh;
+	var requestRecord = _n0.a;
+	return requestRecord.documentString;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$sendExpecting = F3(
 	function (expect, requestOptions, request) {
@@ -7383,8 +7440,8 @@ var elm$http$Http$expectStringResponse = _Http_expectStringResponse;
 var elm$http$Http$expectJson = function (decoder) {
 	return elm$http$Http$expectStringResponse(
 		function (response) {
-			var _n0 = A2(elm$json$Json$Decode$decodeString, decoder, response.fZ);
-			if (_n0.$ === 1) {
+			var _n0 = A2(elm$json$Json$Decode$decodeString, decoder, response.body);
+			if (_n0.$ === 'Err') {
 				var decodeError = _n0.a;
 				return elm$core$Result$Err(
 					elm$json$Json$Decode$errorToString(decodeError));
@@ -7399,8 +7456,8 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$Util$defaultExpect = A2(
 	elm$http$Http$expectJson,
 	elm$json$Json$Decode$field('data'));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$responseDataDecoder = function (_n0) {
-	var requestRecord = _n0;
-	return requestRecord.fk;
+	var requestRecord = _n0.a;
+	return requestRecord.responseDataDecoder;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$send = F2(
 	function (options, request) {
@@ -7409,7 +7466,9 @@ var jamesmacaulay$elm_graphql$GraphQL$Client$Http$send = F2(
 		return A3(jamesmacaulay$elm_graphql$GraphQL$Client$Http$sendExpecting, expect, options, request);
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery = jamesmacaulay$elm_graphql$GraphQL$Client$Http$send;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Request = elm$core$Basics$identity;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Request = function (a) {
+	return {$: 'Request', a: a};
+};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$specDecoder = function (_n0) {
 	var sourceType = _n0.a;
 	var decoderFromSelectionSet = _n0.b;
@@ -7417,22 +7476,22 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$specDecoder = function (_n
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$selectionSetFromSourceType(sourceType));
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentResponseDecoder = function (_n0) {
-	var operation = _n0.b7;
+	var operation = _n0.a.operation;
 	var _n1 = operation;
-	var spec = _n1.R;
+	var spec = _n1.a.spec;
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$specDecoder(spec);
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentVariables = function (_n0) {
-	var operation = _n0.b7;
+	var operation = _n0.a.operation;
 	var _n1 = operation;
-	var spec = _n1.R;
+	var spec = _n1.a.spec;
 	var _n2 = spec;
 	var vars = _n2.c;
 	return vars;
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$valueFromSource = F2(
 	function (source, _var) {
-		if (!_var.$) {
+		if (_var.$ === 'RequiredVariable') {
 			var f = _var.c;
 			return elm$core$Maybe$Just(
 				_Utils_Tuple2(
@@ -7441,7 +7500,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$valueFromSource =
 		} else {
 			var f = _var.c;
 			var _n1 = f(source);
-			if (_n1.$ === 1) {
+			if (_n1.$ === 'Nothing') {
 				return elm$core$Maybe$Nothing;
 			} else {
 				var value = _n1.a;
@@ -7461,18 +7520,19 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$extractValuesFrom
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request = F2(
 	function (vars, doc) {
-		var operation = doc.b7;
-		var ast = doc.cp;
-		var serialized = doc.dn;
-		return {
-			gg: ast,
-			eh: serialized,
-			fk: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentResponseDecoder(doc),
-			fK: A2(
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$extractValuesFrom,
-				vars,
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentVariables(doc))
-		};
+		var operation = doc.a.operation;
+		var ast = doc.a.ast;
+		var serialized = doc.a.serialized;
+		return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Request(
+			{
+				documentAST: ast,
+				documentString: serialized,
+				responseDataDecoder: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentResponseDecoder(doc),
+				variableValues: A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$extractValuesFrom,
+					vars,
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentVariables(doc))
+			});
 	});
 var author$project$GitHubGraph$fetchPullRequest = F2(
 	function (token, id) {
@@ -7481,16 +7541,18 @@ var author$project$GitHubGraph$fetchPullRequest = F2(
 			author$project$GitHubGraph$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{eB: id},
+				{id: id},
 				A2(author$project$GitHubGraph$objectQuery, 'PullRequest', author$project$GitHubGraph$prObject)));
 	});
 var author$project$Main$PullRequestFetched = function (a) {
-	return {$: 15, a: a};
+	return {$: 'PullRequestFetched', a: a};
 };
-var elm$core$Task$Perform = elm$core$Basics$identity;
+var elm$core$Task$Perform = function (a) {
+	return {$: 'Perform', a: a};
+};
 var elm$core$Task$andThen = _Scheduler_andThen;
 var elm$core$Task$succeed = _Scheduler_succeed;
-var elm$core$Task$init = elm$core$Task$succeed(0);
+var elm$core$Task$init = elm$core$Task$succeed(_Utils_Tuple0);
 var elm$core$Task$map = F2(
 	function (func, taskA) {
 		return A2(
@@ -7526,7 +7588,7 @@ var elm$core$Task$sequence = function (tasks) {
 var elm$core$Platform$sendToApp = _Platform_sendToApp;
 var elm$core$Task$spawnCmd = F2(
 	function (router, _n0) {
-		var task = _n0;
+		var task = _n0.a;
 		return _Scheduler_spawn(
 			A2(
 				elm$core$Task$andThen,
@@ -7538,7 +7600,7 @@ var elm$core$Task$onEffects = F3(
 		return A2(
 			elm$core$Task$map,
 			function (_n0) {
-				return 0;
+				return _Utils_Tuple0;
 			},
 			elm$core$Task$sequence(
 				A2(
@@ -7548,38 +7610,40 @@ var elm$core$Task$onEffects = F3(
 	});
 var elm$core$Task$onSelfMsg = F3(
 	function (_n0, _n1, _n2) {
-		return elm$core$Task$succeed(0);
+		return elm$core$Task$succeed(_Utils_Tuple0);
 	});
 var elm$core$Task$cmdMap = F2(
 	function (tagger, _n0) {
-		var task = _n0;
-		return A2(elm$core$Task$map, tagger, task);
+		var task = _n0.a;
+		return elm$core$Task$Perform(
+			A2(elm$core$Task$map, tagger, task));
 	});
 _Platform_effectManagers['Task'] = _Platform_createManager(elm$core$Task$init, elm$core$Task$onEffects, elm$core$Task$onSelfMsg, elm$core$Task$cmdMap);
 var elm$core$Task$command = _Platform_leaf('Task');
 var elm$core$Task$attempt = F2(
 	function (resultToMessage, task) {
 		return elm$core$Task$command(
-			A2(
-				elm$core$Task$onError,
+			elm$core$Task$Perform(
 				A2(
-					elm$core$Basics$composeL,
-					A2(elm$core$Basics$composeL, elm$core$Task$succeed, resultToMessage),
-					elm$core$Result$Err),
-				A2(
-					elm$core$Task$andThen,
+					elm$core$Task$onError,
 					A2(
 						elm$core$Basics$composeL,
 						A2(elm$core$Basics$composeL, elm$core$Task$succeed, resultToMessage),
-						elm$core$Result$Ok),
-					task)));
+						elm$core$Result$Err),
+					A2(
+						elm$core$Task$andThen,
+						A2(
+							elm$core$Basics$composeL,
+							A2(elm$core$Basics$composeL, elm$core$Task$succeed, resultToMessage),
+							elm$core$Result$Ok),
+						task))));
 	});
 var author$project$Main$fetchPullRequest = F2(
 	function (model, id) {
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$PullRequestFetched,
-			A2(author$project$GitHubGraph$fetchPullRequest, model.q, id));
+			A2(author$project$GitHubGraph$fetchPullRequest, model.githubToken, id));
 	});
 var author$project$Main$decodeAndFetchPRForCommit = F2(
 	function (payload, model) {
@@ -7587,10 +7651,10 @@ var author$project$Main$decodeAndFetchPRForCommit = F2(
 			elm$json$Json$Decode$decodeValue,
 			A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
 			payload);
-		if (!_n0.$) {
+		if (_n0.$ === 'Ok') {
 			var sha = _n0.a;
-			var _n1 = A2(elm$core$Dict$get, sha, model.au);
-			if (!_n1.$) {
+			var _n1 = A2(elm$core$Dict$get, sha, model.commitPRs);
+			if (_n1.$ === 'Just') {
 				var id = _n1.a;
 				return A3(
 					author$project$Log$debug,
@@ -7599,10 +7663,10 @@ var author$project$Main$decodeAndFetchPRForCommit = F2(
 					_Utils_update(
 						model,
 						{
-							c: A2(
+							loadQueue: A2(
 								elm$core$List$cons,
 								A2(author$project$Main$fetchPullRequest, model, id),
-								model.c)
+								model.loadQueue)
 						}));
 			} else {
 				return A3(author$project$Log$debug, 'no associated pr to refresh', sha, model);
@@ -7618,7 +7682,7 @@ var author$project$Main$decodeAndFetchPRForCommit = F2(
 	});
 var author$project$GitHubGraph$RepoSelector = F2(
 	function (owner, name) {
-		return {gK: name, g2: owner};
+		return {name: name, owner: owner};
 	});
 var author$project$Main$decodeRepoSelector = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -7637,19 +7701,19 @@ var author$project$Main$decodeRepoSelector = A2(
 		elm$json$Json$Decode$succeed(author$project$GitHubGraph$RepoSelector)));
 var author$project$GitHubGraph$Repo = F8(
 	function (id, url, owner, name, isArchived, labels, milestones, releases) {
-		return {eB: id, eF: isArchived, aZ: labels, eS: milestones, gK: name, g2: owner, ff: releases, hr: url};
+		return {id: id, isArchived: isArchived, labels: labels, milestones: milestones, name: name, owner: owner, releases: releases, url: url};
 	});
 var author$project$GitHubGraph$Release = F4(
 	function (id, url, name, tag) {
-		return {eB: id, gK: name, fA: tag, hr: url};
+		return {id: id, name: name, tag: tag, url: url};
 	});
 var author$project$GitHubGraph$Tag = F2(
 	function (name, target) {
-		return {gK: name, fC: target};
+		return {name: name, target: target};
 	});
 var author$project$GitHubGraph$GitObject = F2(
 	function (url, oid) {
-		return {eZ: oid, hr: url};
+		return {oid: oid, url: url};
 	});
 var author$project$GitHubGraph$gitObjectObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -7667,10 +7731,18 @@ var author$project$GitHubGraph$tagObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Tag)));
 var author$project$GitHubGraph$releaseObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'tag', _List_Nil, author$project$GitHubGraph$tagObject),
+	A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'tag',
+		_List_Nil,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$tagObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'name',
+			_List_Nil,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -7679,8 +7751,40 @@ var author$project$GitHubGraph$releaseObject = A2(
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Release)))));
 var elm$json$Json$Decode$bool = _Json_decodeBool;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$BooleanType = 0;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, 0, elm$json$Json$Decode$bool);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$BooleanType = {$: 'BooleanType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$BooleanType, elm$json$Json$Decode$bool);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue = function (a) {
+	return {$: 'EnumValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum = function (symbol) {
+	return A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue(symbol),
+		_List_Nil);
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep = A2(elm$core$Basics$composeR, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getVariables, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue = function (a) {
+	return {$: 'ObjectValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object = function (pairs) {
+	return A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue(
+			A2(
+				elm$core$List$map,
+				function (_n0) {
+					var k = _n0.a;
+					var _n1 = _n0.b;
+					var ast = _n1.a;
+					return _Utils_Tuple2(k, ast);
+				},
+				pairs)),
+		A3(
+			elm$core$List$foldr,
+			A2(elm$core$Basics$composeR, elm$core$Tuple$second, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep),
+			_List_Nil,
+			pairs));
+};
 var author$project$GitHubGraph$repoObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
@@ -7690,7 +7794,19 @@ var author$project$GitHubGraph$repoObject = A2(
 			[
 				_Utils_Tuple2(
 				'first',
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100))
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100)),
+				_Utils_Tuple2(
+				'orderBy',
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'field',
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('CREATED_AT')),
+							_Utils_Tuple2(
+							'direction',
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('DESC'))
+						])))
 			]),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 			A3(
@@ -7754,20 +7870,20 @@ var author$project$GitHubGraph$repoObject = A2(
 								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Repo)))))))));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, 0, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
 var author$project$GitHubGraph$repoQuery = function () {
 	var ownerVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'owner',
 		function ($) {
-			return $.g2;
+			return $.owner;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var nameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'name',
 		function ($) {
-			return $.gK;
+			return $.name;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var queryRoot = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
@@ -7794,27 +7910,27 @@ var author$project$GitHubGraph$fetchRepo = F2(
 			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, repo, author$project$GitHubGraph$repoQuery));
 	});
 var author$project$Main$RepositoryFetched = function (a) {
-	return {$: 7, a: a};
+	return {$: 'RepositoryFetched', a: a};
 };
 var author$project$Main$fetchRepo = F2(
 	function (model, sel) {
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$RepositoryFetched,
-			A2(author$project$GitHubGraph$fetchRepo, model.q, sel));
+			A2(author$project$GitHubGraph$fetchRepo, model.githubToken, sel));
 	});
 var author$project$Main$decodeAndFetchRepo = F2(
 	function (payload, model) {
 		var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$decodeRepoSelector, payload);
-		if (!_n0.$) {
+		if (_n0.$ === 'Ok') {
 			var sel = _n0.a;
 			return _Utils_update(
 				model,
 				{
-					c: A2(
+					loadQueue: A2(
 						elm$core$List$cons,
 						A2(author$project$Main$fetchRepo, model, sel),
-						model.c)
+						model.loadQueue)
 				});
 		} else {
 			var err = _n0.a;
@@ -7827,47 +7943,47 @@ var author$project$Main$decodeAndFetchRepo = F2(
 	});
 var author$project$Main$eventActor = function (event) {
 	switch (event.$) {
-		case 0:
+		case 'IssueCommentEvent':
 			var muser = event.a;
 			var date = event.b;
-			if (!muser.$) {
+			if (muser.$ === 'Just') {
 				var user = muser.a;
 				return elm$core$Maybe$Just(
 					{
-						cq: user.cq,
-						d9: date,
-						dF: elm$core$Maybe$Just(user)
+						avatar: user.avatar,
+						createdAt: date,
+						user: elm$core$Maybe$Just(user)
 					});
 			} else {
 				return elm$core$Maybe$Nothing;
 			}
-		case 2:
+		case 'CommitEvent':
 			var commit = event.a;
-			var _n2 = _Utils_Tuple2(commit.aj, commit.f9);
-			if (!_n2.a.$) {
-				if (!_n2.b.$) {
+			var _n2 = _Utils_Tuple2(commit.author, commit.committer);
+			if (_n2.a.$ === 'Just') {
+				if (_n2.b.$ === 'Just') {
 					var author = _n2.a.a;
 					var committer = _n2.b.a;
-					var _n3 = author.dF;
-					if (!_n3.$) {
+					var _n3 = author.user;
+					if (_n3.$ === 'Just') {
 						return elm$core$Maybe$Just(
-							{cq: author.cq, d9: commit.d4, dF: author.dF});
+							{avatar: author.avatar, createdAt: commit.committedAt, user: author.user});
 					} else {
 						return elm$core$Maybe$Just(
-							{cq: committer.cq, d9: commit.d4, dF: committer.dF});
+							{avatar: committer.avatar, createdAt: commit.committedAt, user: committer.user});
 					}
 				} else {
 					var author = _n2.a.a;
 					var _n5 = _n2.b;
 					return elm$core$Maybe$Just(
-						{cq: author.cq, d9: commit.d4, dF: author.dF});
+						{avatar: author.avatar, createdAt: commit.committedAt, user: author.user});
 				}
 			} else {
-				if (!_n2.b.$) {
+				if (_n2.b.$ === 'Just') {
 					var _n4 = _n2.a;
 					var committer = _n2.b.a;
 					return elm$core$Maybe$Just(
-						{cq: committer.cq, d9: commit.d4, dF: committer.dF});
+						{avatar: committer.avatar, createdAt: commit.committedAt, user: committer.user});
 				} else {
 					var _n6 = _n2.a;
 					var _n7 = _n2.b;
@@ -7880,21 +7996,21 @@ var author$project$Main$eventActor = function (event) {
 };
 var author$project$GitHubGraph$PageInfo = F2(
 	function (endCursor, hasNextPage) {
-		return {en: endCursor, ew: hasNextPage};
+		return {endCursor: endCursor, hasNextPage: hasNextPage};
 	});
 var author$project$GitHubGraph$PagedResult = F2(
 	function (content, pageInfo) {
-		return {bW: content, e0: pageInfo};
+		return {content: content, pageInfo: pageInfo};
 	});
 var author$project$GitHubGraph$IssueCardContent = function (a) {
-	return {$: 0, a: a};
+	return {$: 'IssueCardContent', a: a};
 };
 var author$project$GitHubGraph$ProjectColumnCard = F4(
 	function (id, url, content, note) {
-		return {bW: content, eB: id, gV: note, hr: url};
+		return {content: content, id: id, note: note, url: url};
 	});
 var author$project$GitHubGraph$PullRequestCardContent = function (a) {
-	return {$: 1, a: a};
+	return {$: 'PullRequestCardContent', a: a};
 };
 var author$project$GitHubGraph$Issue = function (id) {
 	return function (url) {
@@ -7910,7 +8026,7 @@ var author$project$GitHubGraph$Issue = function (id) {
 											return function (labels) {
 												return function (cards) {
 													return function (milestone) {
-														return {aj: author, bT: cards, aT: commentCount, d9: createdAt, eB: id, aZ: labels, b5: milestone, k: number, a9: reactions, o: repo, S: state, bh: title, cj: updatedAt, hr: url};
+														return {author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
 													};
 												};
 											};
@@ -8009,14 +8125,14 @@ var author$project$GitHubGraph$issueObject = A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 												'updatedAt',
 												_List_Nil,
-												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 												A3(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 													'createdAt',
 													_List_Nil,
-													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -8058,20 +8174,20 @@ var author$project$GitHubGraph$projectColumnCardObject = function () {
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ProjectColumnCard)))));
 }();
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = 0;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_n0) {
 	var coreTypeRef = _n0.b;
-	return A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef, 0, coreTypeRef);
+	return A2(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable, coreTypeRef);
 };
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable = 0;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue = {$: 5};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable = {$: 'Nullable'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue = {$: 'NullValue'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable = function (_n0) {
 	var _n1 = _n0.a;
 	var typeRef = _n0.b;
 	var convert = _n0.c;
 	return A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec,
-		0,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable,
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable(typeRef),
 		A2(
 			elm$core$Basics$composeR,
@@ -8107,17 +8223,17 @@ var author$project$GitHubGraph$cardsQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.eB;
+				return $.id;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -8153,9 +8269,9 @@ var author$project$GitHubGraph$cardsQuery = function () {
 var author$project$GitHubGraph$fetchPaged = F3(
 	function (doc, token, psel) {
 		var fetchNextPage = function (_n0) {
-			var content = _n0.bW;
-			var pageInfo = _n0.e0;
-			return pageInfo.ew ? A2(
+			var content = _n0.content;
+			var pageInfo = _n0.pageInfo;
+			return pageInfo.hasNextPage ? A2(
 				elm$core$Task$map,
 				elm$core$Basics$append(content),
 				A3(
@@ -8164,7 +8280,7 @@ var author$project$GitHubGraph$fetchPaged = F3(
 					token,
 					_Utils_update(
 						psel,
-						{x: pageInfo.en}))) : elm$core$Task$succeed(content);
+						{after: pageInfo.endCursor}))) : elm$core$Task$succeed(content);
 		};
 		return A2(
 			elm$core$Task$andThen,
@@ -8180,11 +8296,11 @@ var author$project$GitHubGraph$fetchProjectColumnCards = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$cardsQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: col});
+			{after: elm$core$Maybe$Nothing, selector: col});
 	});
 var author$project$Main$CardsFetched = F2(
 	function (a, b) {
-		return {$: 10, a: a, b: b};
+		return {$: 'CardsFetched', a: a, b: b};
 	});
 var author$project$Main$fetchCards = F2(
 	function (model, colId) {
@@ -8193,16 +8309,16 @@ var author$project$Main$fetchCards = F2(
 			author$project$Main$CardsFetched(colId),
 			A2(
 				author$project$GitHubGraph$fetchProjectColumnCards,
-				model.q,
-				{eB: colId}));
+				model.githubToken,
+				{id: colId}));
 	});
 var author$project$GitHubGraph$V3Comparison = F9(
 	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits, files) {
-		return {fU: aheadBy, fX: baseCommit, fY: behindBy, f8: commits, gr: files, gH: mergeBaseCommit, ce: status, hp: totalCommits, hr: url};
+		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, files: files, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
 	});
 var author$project$GitHubGraph$V3Commit = F2(
 	function (url, sha) {
-		return {cc: sha, hr: url};
+		return {sha: sha, url: url};
 	});
 var author$project$GitHubGraph$decodeV3Commit = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -8213,7 +8329,7 @@ var author$project$GitHubGraph$decodeV3Commit = A2(
 		elm$json$Json$Decode$succeed(author$project$GitHubGraph$V3Commit)));
 var author$project$GitHubGraph$V3File = F3(
 	function (sha, filename, status) {
-		return {gq: filename, cc: sha, ce: status};
+		return {filename: filename, sha: sha, status: status};
 	});
 var author$project$GitHubGraph$decodeV3File = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -8262,18 +8378,18 @@ var author$project$GitHubGraph$decodeV3Comparison = A2(
 var lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl = F2(
 	function (method, url) {
 		return {
-			fZ: elm$http$Http$emptyBody,
-			_: elm$core$Maybe$Nothing,
-			cD: elm$http$Http$expectStringResponse(
+			body: elm$http$Http$emptyBody,
+			cacheBuster: elm$core$Maybe$Nothing,
+			expect: elm$http$Http$expectStringResponse(
 				function (_n0) {
-					return elm$core$Result$Ok(0);
+					return elm$core$Result$Ok(_Utils_Tuple0);
 				}),
-			gu: _List_Nil,
-			gI: method,
-			U: _List_Nil,
-			hh: elm$core$Maybe$Nothing,
-			hr: url,
-			hu: false
+			headers: _List_Nil,
+			method: method,
+			queryParams: _List_Nil,
+			timeout: elm$core$Maybe$Nothing,
+			url: url,
+			withCredentials: false
 		};
 	});
 var lukewestby$elm_http_builder$HttpBuilder$get = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('GET');
@@ -8300,20 +8416,20 @@ var lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded = function (args) {
 		A2(elm$core$List$map, lukewestby$elm_http_builder$HttpBuilder$queryPair, args));
 };
 var lukewestby$elm_http_builder$HttpBuilder$requestUrl = function (builder) {
-	var encodedParams = lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(builder.U);
-	var fullUrl = elm$core$String$isEmpty(encodedParams) ? builder.hr : (builder.hr + ('?' + encodedParams));
+	var encodedParams = lukewestby$elm_http_builder$HttpBuilder$joinUrlEncoded(builder.queryParams);
+	var fullUrl = elm$core$String$isEmpty(encodedParams) ? builder.url : (builder.url + ('?' + encodedParams));
 	return fullUrl;
 };
 var lukewestby$elm_http_builder$HttpBuilder$toRequest = function (builder) {
 	return elm$http$Http$request(
 		{
-			fZ: builder.fZ,
-			cD: builder.cD,
-			gu: builder.gu,
-			gI: builder.gI,
-			hh: builder.hh,
-			hr: lukewestby$elm_http_builder$HttpBuilder$requestUrl(builder),
-			hu: builder.hu
+			body: builder.body,
+			expect: builder.expect,
+			headers: builder.headers,
+			method: builder.method,
+			timeout: builder.timeout,
+			url: lukewestby$elm_http_builder$HttpBuilder$requestUrl(builder),
+			withCredentials: builder.withCredentials
 		});
 };
 var lukewestby$elm_http_builder$HttpBuilder$toTaskPlain = function (builder) {
@@ -8321,10 +8437,10 @@ var lukewestby$elm_http_builder$HttpBuilder$toTaskPlain = function (builder) {
 		lukewestby$elm_http_builder$HttpBuilder$toRequest(builder));
 };
 var elm$time$Time$Name = function (a) {
-	return {$: 0, a: a};
+	return {$: 'Name', a: a};
 };
 var elm$time$Time$Offset = function (a) {
-	return {$: 1, a: a};
+	return {$: 'Offset', a: a};
 };
 var elm$time$Time$customZone = elm$time$Time$Zone;
 var elm$time$Time$now = _Time_now(elm$time$Time$millisToPosix);
@@ -8333,7 +8449,7 @@ var lukewestby$elm_http_builder$HttpBuilder$withQueryParams = F2(
 		return _Utils_update(
 			builder,
 			{
-				U: _Utils_ap(builder.U, queryParams)
+				queryParams: _Utils_ap(builder.queryParams, queryParams)
 			});
 	});
 var lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster = F2(
@@ -8354,8 +8470,8 @@ var lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster = F2(
 		return A2(elm$core$Task$andThen, request, elm$time$Time$now);
 	});
 var lukewestby$elm_http_builder$HttpBuilder$toTask = function (builder) {
-	var _n0 = builder._;
-	if (!_n0.$) {
+	var _n0 = builder.cacheBuster;
+	if (_n0.$ === 'Just') {
 		var paramName = _n0.a;
 		return A2(lukewestby$elm_http_builder$HttpBuilder$toTaskWithCacheBuster, paramName, builder);
 	} else {
@@ -8365,15 +8481,15 @@ var lukewestby$elm_http_builder$HttpBuilder$toTask = function (builder) {
 var lukewestby$elm_http_builder$HttpBuilder$withExpectJson = F2(
 	function (decoder, builder) {
 		return {
-			fZ: builder.fZ,
-			_: builder._,
-			cD: elm$http$Http$expectJson(decoder),
-			gu: builder.gu,
-			gI: builder.gI,
-			U: builder.U,
-			hh: builder.hh,
-			hr: builder.hr,
-			hu: builder.hu
+			body: builder.body,
+			cacheBuster: builder.cacheBuster,
+			expect: elm$http$Http$expectJson(decoder),
+			headers: builder.headers,
+			method: builder.method,
+			queryParams: builder.queryParams,
+			timeout: builder.timeout,
+			url: builder.url,
+			withCredentials: builder.withCredentials
 		};
 	});
 var lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
@@ -8381,7 +8497,7 @@ var lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 		return _Utils_update(
 			builder,
 			{
-				gu: _Utils_ap(
+				headers: _Utils_ap(
 					A2(
 						elm$core$List$map,
 						function (_n0) {
@@ -8390,7 +8506,7 @@ var lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 							return A2(elm$http$Http$header, key, value);
 						},
 						headerPairs),
-					builder.gu)
+					builder.headers)
 			});
 	});
 var author$project$GitHubGraph$compareRepoRefs = F4(
@@ -8405,30 +8521,42 @@ var author$project$GitHubGraph$compareRepoRefs = F4(
 					A2(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
 						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$get('https://api.github.com/repos/' + (repo.g2 + ('/' + (repo.gK + ('/compare/' + (base + ('...' + mergeBase)))))))))));
+						lukewestby$elm_http_builder$HttpBuilder$get('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/compare/' + (base + ('...' + mergeBase)))))))))));
 	});
 var author$project$Main$ComparisonFetched = F2(
 	function (a, b) {
-		return {$: 14, a: a, b: b};
+		return {$: 'ComparisonFetched', a: a, b: b};
 	});
 var author$project$Main$fetchComparison = F2(
 	function (model, repo) {
-		var base = function () {
-			var _n0 = elm$core$List$head(repo.ff);
-			if (!_n0.$) {
-				var release = _n0.a;
-				return release.fA.gK;
-			} else {
-				return 'HEAD';
+		var findTag = function (releases) {
+			findTag:
+			while (true) {
+				if (!releases.b) {
+					return 'HEAD';
+				} else {
+					var release = releases.a;
+					var rest = releases.b;
+					var _n1 = release.tag;
+					if (_n1.$ === 'Just') {
+						var t = _n1.a;
+						return t.name;
+					} else {
+						var $temp$releases = rest;
+						releases = $temp$releases;
+						continue findTag;
+					}
+				}
 			}
-		}();
+		};
+		var base = findTag(repo.releases);
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$ComparisonFetched(repo),
 			A4(
 				author$project$GitHubGraph$compareRepoRefs,
-				model.q,
-				{gK: repo.gK, g2: repo.g2},
+				model.githubToken,
+				{name: repo.name, owner: repo.owner},
 				base,
 				'HEAD'));
 	});
@@ -8439,28 +8567,28 @@ var author$project$GitHubGraph$fetchIssue = F2(
 			author$project$GitHubGraph$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{eB: id},
+				{id: id},
 				A2(author$project$GitHubGraph$objectQuery, 'Issue', author$project$GitHubGraph$issueObject)));
 	});
 var author$project$Main$IssueFetched = function (a) {
-	return {$: 12, a: a};
+	return {$: 'IssueFetched', a: a};
 };
 var author$project$Main$fetchIssue = F2(
 	function (model, id) {
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$IssueFetched,
-			A2(author$project$GitHubGraph$fetchIssue, model.q, id));
+			A2(author$project$GitHubGraph$fetchIssue, model.githubToken, id));
 	});
 var author$project$GitHubGraph$CommitEvent = function (a) {
-	return {$: 2, a: a};
+	return {$: 'CommitEvent', a: a};
 };
 var author$project$GitHubGraph$CrossReferencedEvent = function (a) {
-	return {$: 1, a: a};
+	return {$: 'CrossReferencedEvent', a: a};
 };
 var author$project$GitHubGraph$IssueCommentEvent = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'IssueCommentEvent', a: a, b: b};
 	});
 var author$project$GitHubGraph$pickEnum3 = F3(
 	function (ma, mb, mc) {
@@ -8504,10 +8632,10 @@ var author$project$GitHubGraph$timelineQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.eB;
+				return $.id;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	var issueCommentEvent = A2(
@@ -8516,7 +8644,7 @@ var author$project$GitHubGraph$timelineQuery = function () {
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'createdAt',
 			_List_Nil,
-			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
@@ -8567,7 +8695,7 @@ var author$project$GitHubGraph$timelineQuery = function () {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -8616,21 +8744,21 @@ var author$project$GitHubGraph$fetchTimeline = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$timelineQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: issue});
+			{after: elm$core$Maybe$Nothing, selector: issue});
 	});
 var author$project$Main$IssueTimelineFetched = F2(
 	function (a, b) {
-		return {$: 16, a: a, b: b};
+		return {$: 'IssueTimelineFetched', a: a, b: b};
 	});
 var author$project$Main$fetchIssueTimeline = F2(
 	function (model, id) {
-		return model.aM ? elm$core$Platform$Cmd$none : A2(
+		return model.skipTimeline ? elm$core$Platform$Cmd$none : A2(
 			elm$core$Task$attempt,
 			author$project$Main$IssueTimelineFetched(id),
 			A2(
 				author$project$GitHubGraph$fetchTimeline,
-				model.q,
-				{eB: id}));
+				model.githubToken,
+				{id: id}));
 	});
 var author$project$GitHubGraph$issuesQuery = function () {
 	var repoNameVar = A3(
@@ -8639,10 +8767,10 @@ var author$project$GitHubGraph$issuesQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.gK;
+				return $.name;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var pageInfo = A2(
@@ -8673,17 +8801,17 @@ var author$project$GitHubGraph$issuesQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.g2;
+				return $.owner;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -8718,11 +8846,11 @@ var author$project$GitHubGraph$fetchRepoIssues = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$issuesQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: repo});
+			{after: elm$core$Maybe$Nothing, selector: repo});
 	});
 var author$project$Main$IssuesFetched = F2(
 	function (a, b) {
-		return {$: 11, a: a, b: b};
+		return {$: 'IssuesFetched', a: a, b: b};
 	});
 var author$project$Main$fetchIssues = F2(
 	function (model, repo) {
@@ -8731,12 +8859,12 @@ var author$project$Main$fetchIssues = F2(
 			author$project$Main$IssuesFetched(repo),
 			A2(
 				author$project$GitHubGraph$fetchRepoIssues,
-				model.q,
-				{gK: repo.gK, g2: repo.g2}));
+				model.githubToken,
+				{name: repo.name, owner: repo.owner}));
 	});
 var author$project$GitHubGraph$PullRequestReview = F3(
 	function (author, state, createdAt) {
-		return {aj: author, d9: createdAt, S: state};
+		return {author: author, createdAt: createdAt, state: state};
 	});
 var author$project$GitHubGraph$prReviewObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -8744,7 +8872,7 @@ var author$project$GitHubGraph$prReviewObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'createdAt',
 		_List_Nil,
-		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
@@ -8786,7 +8914,7 @@ var author$project$GitHubGraph$prReviewQuery = function () {
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'createdAt',
 			_List_Nil,
-			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, 0, elm_community$json_extra$Json$Decode$Extra$datetime)),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
@@ -8797,17 +8925,17 @@ var author$project$GitHubGraph$prReviewQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.eB;
+				return $.id;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -8846,18 +8974,18 @@ var author$project$GitHubGraph$fetchPullRequestReviews = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$prReviewQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: pr});
+			{after: elm$core$Maybe$Nothing, selector: pr});
 	});
 var author$project$Main$PullRequestTimelineAndReviewsFetched = F2(
 	function (a, b) {
-		return {$: 17, a: a, b: b};
+		return {$: 'PullRequestTimelineAndReviewsFetched', a: a, b: b};
 	});
 var author$project$Main$fetchPRTimelineAndReviews = F2(
 	function (model, id) {
-		var fetchTimeline = model.aM ? elm$core$Task$succeed(_List_Nil) : A2(
+		var fetchTimeline = model.skipTimeline ? elm$core$Task$succeed(_List_Nil) : A2(
 			author$project$GitHubGraph$fetchTimeline,
-			model.q,
-			{eB: id});
+			model.githubToken,
+			{id: id});
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$PullRequestTimelineAndReviewsFetched(id),
@@ -8871,14 +8999,14 @@ var author$project$Main$fetchPRTimelineAndReviews = F2(
 						},
 						A2(
 							author$project$GitHubGraph$fetchPullRequestReviews,
-							model.q,
-							{eB: id}));
+							model.githubToken,
+							{id: id}));
 				},
 				fetchTimeline));
 	});
 var author$project$GitHubGraph$Project = F5(
 	function (id, url, name, number, columns) {
-		return {d3: columns, eB: id, gK: name, k: number, hr: url};
+		return {columns: columns, id: id, name: name, number: number, url: url};
 	});
 var author$project$GitHubGraph$projectObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -8910,18 +9038,8 @@ var author$project$GitHubGraph$projectObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Project))))));
-var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue = function (a) {
-	return {$: 6, a: a};
-};
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum = function (symbol) {
-	return A2(
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue(symbol),
-		_List_Nil);
-};
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep = A2(elm$core$Basics$composeR, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getVariables, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables);
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
-	return {$: 7, a: a};
+	return {$: 'ListValue', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list = function (values) {
 	return A2(
@@ -8965,17 +9083,17 @@ var author$project$GitHubGraph$projectsQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.gK;
+				return $.name;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -9014,11 +9132,11 @@ var author$project$GitHubGraph$fetchOrgProjects = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$projectsQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: org});
+			{after: elm$core$Maybe$Nothing, selector: org});
 	});
 var author$project$Main$ProjectsFetched = F2(
 	function (a, b) {
-		return {$: 8, a: a, b: b};
+		return {$: 'ProjectsFetched', a: a, b: b};
 	});
 var author$project$Main$fetchProjects = F2(
 	function (model, nextMsg) {
@@ -9027,8 +9145,8 @@ var author$project$Main$fetchProjects = F2(
 			author$project$Main$ProjectsFetched(nextMsg),
 			A2(
 				author$project$GitHubGraph$fetchOrgProjects,
-				model.q,
-				{gK: model.aI}));
+				model.githubToken,
+				{name: model.githubOrg}));
 	});
 var author$project$GitHubGraph$pullRequestsQuery = function () {
 	var repoNameVar = A3(
@@ -9037,10 +9155,10 @@ var author$project$GitHubGraph$pullRequestsQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.gK;
+				return $.name;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var pageInfo = A2(
@@ -9071,17 +9189,17 @@ var author$project$GitHubGraph$pullRequestsQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.g2;
+				return $.owner;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -9116,11 +9234,11 @@ var author$project$GitHubGraph$fetchRepoPullRequests = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$pullRequestsQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: repo});
+			{after: elm$core$Maybe$Nothing, selector: repo});
 	});
 var author$project$Main$PullRequestsFetched = F2(
 	function (a, b) {
-		return {$: 13, a: a, b: b};
+		return {$: 'PullRequestsFetched', a: a, b: b};
 	});
 var author$project$Main$fetchPullRequests = F2(
 	function (model, repo) {
@@ -9129,31 +9247,31 @@ var author$project$Main$fetchPullRequests = F2(
 			author$project$Main$PullRequestsFetched(repo),
 			A2(
 				author$project$GitHubGraph$fetchRepoPullRequests,
-				model.q,
-				{gK: repo.gK, g2: repo.g2}));
+				model.githubToken,
+				{name: repo.name, owner: repo.owner}));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Int');
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, 0, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue);
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue);
 var author$project$GitHubGraph$issueQuery = function () {
 	var repoNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'repoName',
 		function ($) {
-			return $.o;
+			return $.repo;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var orgNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'orgName',
 		function ($) {
-			return $.g2;
+			return $.owner;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var numberVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'number',
 		function ($) {
-			return $.k;
+			return $.number;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int);
 	var queryRoot = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
@@ -9194,28 +9312,28 @@ var author$project$Main$fetchRepoIssue = F2(
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$IssueFetched,
-			A2(author$project$GitHubGraph$fetchRepoIssue, model.q, sel));
+			A2(author$project$GitHubGraph$fetchRepoIssue, model.githubToken, sel));
 	});
 var author$project$GitHubGraph$pullRequestQuery = function () {
 	var repoNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'repoName',
 		function ($) {
-			return $.o;
+			return $.repo;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var orgNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'orgName',
 		function ($) {
-			return $.g2;
+			return $.owner;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var numberVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'number',
 		function ($) {
-			return $.k;
+			return $.number;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int);
 	var queryRoot = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
@@ -9256,7 +9374,7 @@ var author$project$Main$fetchRepoPullRequest = F2(
 		return A2(
 			elm$core$Task$attempt,
 			author$project$Main$PullRequestFetched,
-			A2(author$project$GitHubGraph$fetchRepoPullRequest, model.q, sel));
+			A2(author$project$GitHubGraph$fetchRepoPullRequest, model.githubToken, sel));
 	});
 var author$project$Main$fetchRepoIssueOrPR = F2(
 	function (model, sel) {
@@ -9296,17 +9414,17 @@ var author$project$GitHubGraph$reposQuery = function () {
 		A2(
 			elm$core$Basics$composeL,
 			function ($) {
-				return $.gK;
+				return $.name;
 			},
 			function ($) {
-				return $.w;
+				return $.selector;
 			}),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
 	var afterVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
 		function ($) {
-			return $.x;
+			return $.after;
 		},
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
 	var pageArgs = _List_fromArray(
@@ -9338,10 +9456,10 @@ var author$project$GitHubGraph$fetchOrgRepos = F2(
 			author$project$GitHubGraph$fetchPaged,
 			author$project$GitHubGraph$reposQuery,
 			token,
-			{x: elm$core$Maybe$Nothing, w: org});
+			{after: elm$core$Maybe$Nothing, selector: org});
 	});
 var author$project$Main$RepositoriesFetched = function (a) {
-	return {$: 6, a: a};
+	return {$: 'RepositoriesFetched', a: a};
 };
 var author$project$Main$fetchRepos = function (model) {
 	return A2(
@@ -9349,8 +9467,8 @@ var author$project$Main$fetchRepos = function (model) {
 		author$project$Main$RepositoriesFetched,
 		A2(
 			author$project$GitHubGraph$fetchOrgRepos,
-			model.q,
-			{gK: model.aI}));
+			model.githubToken,
+			{name: model.githubOrg}));
 };
 var author$project$Main$setActors = _Platform_outgoingPort(
 	'setActors',
@@ -9397,7 +9515,7 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 							[
 								_Utils_Tuple2(
 								'aheadBy',
-								elm$json$Json$Encode$int($.fU)),
+								elm$json$Json$Encode$int($.aheadBy)),
 								_Utils_Tuple2(
 								'baseCommit',
 								function ($) {
@@ -9406,15 +9524,15 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 											[
 												_Utils_Tuple2(
 												'sha',
-												elm$json$Json$Encode$string($.cc)),
+												elm$json$Json$Encode$string($.sha)),
 												_Utils_Tuple2(
 												'url',
-												elm$json$Json$Encode$string($.hr))
+												elm$json$Json$Encode$string($.url))
 											]));
-								}($.fX)),
+								}($.baseCommit)),
 								_Utils_Tuple2(
 								'behindBy',
-								elm$json$Json$Encode$int($.fY)),
+								elm$json$Json$Encode$int($.behindBy)),
 								_Utils_Tuple2(
 								'commits',
 								elm$json$Json$Encode$list(
@@ -9424,12 +9542,12 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 												[
 													_Utils_Tuple2(
 													'sha',
-													elm$json$Json$Encode$string($.cc)),
+													elm$json$Json$Encode$string($.sha)),
 													_Utils_Tuple2(
 													'url',
-													elm$json$Json$Encode$string($.hr))
+													elm$json$Json$Encode$string($.url))
 												]));
-									})($.f8)),
+									})($.commits)),
 								_Utils_Tuple2(
 								'files',
 								elm$json$Json$Encode$list(
@@ -9439,15 +9557,15 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 												[
 													_Utils_Tuple2(
 													'filename',
-													elm$json$Json$Encode$string($.gq)),
+													elm$json$Json$Encode$string($.filename)),
 													_Utils_Tuple2(
 													'sha',
-													elm$json$Json$Encode$string($.cc)),
+													elm$json$Json$Encode$string($.sha)),
 													_Utils_Tuple2(
 													'status',
-													elm$json$Json$Encode$string($.ce))
+													elm$json$Json$Encode$string($.status))
 												]));
-									})($.gr)),
+									})($.files)),
 								_Utils_Tuple2(
 								'mergeBaseCommit',
 								function ($) {
@@ -9456,21 +9574,21 @@ var author$project$Main$setComparison = _Platform_outgoingPort(
 											[
 												_Utils_Tuple2(
 												'sha',
-												elm$json$Json$Encode$string($.cc)),
+												elm$json$Json$Encode$string($.sha)),
 												_Utils_Tuple2(
 												'url',
-												elm$json$Json$Encode$string($.hr))
+												elm$json$Json$Encode$string($.url))
 											]));
-								}($.gH)),
+								}($.mergeBaseCommit)),
 								_Utils_Tuple2(
 								'status',
-								elm$json$Json$Encode$string($.ce)),
+								elm$json$Json$Encode$string($.status)),
 								_Utils_Tuple2(
 								'totalCommits',
-								elm$json$Json$Encode$int($.hp)),
+								elm$json$Json$Encode$int($.totalCommits)),
 								_Utils_Tuple2(
 								'url',
-								elm$json$Json$Encode$string($.hr))
+								elm$json$Json$Encode$string($.url))
 							]));
 				}(b)
 				]));
@@ -9546,49 +9664,49 @@ var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
-			case 0:
+			case 'Noop':
 				return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-			case 1:
+			case 'Refresh':
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							c: A2(
+							loadQueue: A2(
 								elm$core$List$cons,
 								author$project$Main$fetchRepos(model),
 								A2(
 									elm$core$List$cons,
 									A2(author$project$Main$fetchProjects, model, author$project$Main$FetchCards),
-									model.c))
+									model.loadQueue))
 						}),
 					elm$core$Platform$Cmd$none);
-			case 2:
-				var _n1 = model.c;
+			case 'PopQueue':
+				var _n1 = model.loadQueue;
 				if (_n1.b) {
 					var first = _n1.a;
 					var rest = _n1.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{c: rest}),
+							{loadQueue: rest}),
 						first);
 				} else {
 					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
-			case 3:
-				return elm$core$List$isEmpty(model.aw) ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : A3(
+			case 'RetryQueue':
+				return elm$core$List$isEmpty(model.failedQueue) ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : A3(
 					author$project$Log$debug,
 					'retrying failed fetches',
-					elm$core$List$length(model.aw),
+					elm$core$List$length(model.failedQueue),
 					_Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								aw: _List_Nil,
-								c: _Utils_ap(model.aw, model.c)
+								failedQueue: _List_Nil,
+								loadQueue: _Utils_ap(model.failedQueue, model.loadQueue)
 							}),
 						elm$core$Platform$Cmd$none));
-			case 4:
+			case 'RefreshRequested':
 				switch (msg.a) {
 					case 'columnCards':
 						var colId = msg.b;
@@ -9607,7 +9725,7 @@ var author$project$Main$update = F2(
 								A2(
 									author$project$Main$fetchRepo,
 									model,
-									{gK: name, g2: owner}));
+									{name: name, owner: owner}));
 						} else {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						}
@@ -9630,14 +9748,14 @@ var author$project$Main$update = F2(
 							_Utils_Tuple2(field, id),
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
-			case 5:
+			case 'HookReceived':
 				switch (msg.a) {
 					case 'label':
 						var payload = msg.b;
 						return A3(
 							author$project$Log$debug,
 							'label hook received; refreshing repo',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A2(author$project$Main$decodeAndFetchRepo, payload, model),
 								elm$core$Platform$Cmd$none));
@@ -9646,7 +9764,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'issue hook received; refreshing issue and timeline',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A4(author$project$Main$decodeAndFetchIssueOrPR, 'issue', payload, author$project$Main$fetchRepoIssue, model),
 								elm$core$Platform$Cmd$none));
@@ -9655,7 +9773,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'issue_comment hook received; refreshing issue and timeline',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A4(author$project$Main$decodeAndFetchIssueOrPR, 'issue', payload, author$project$Main$fetchRepoIssueOrPR, model),
 								elm$core$Platform$Cmd$none));
@@ -9664,7 +9782,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'pull_request hook received; refreshing pr and timeline',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A4(author$project$Main$decodeAndFetchIssueOrPR, 'pull_request', payload, author$project$Main$fetchRepoPullRequest, model),
 								elm$core$Platform$Cmd$none));
@@ -9673,7 +9791,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'pull_request_review hook received; refreshing pr and timeline',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A4(author$project$Main$decodeAndFetchIssueOrPR, 'pull_request', payload, author$project$Main$fetchRepoPullRequest, model),
 								elm$core$Platform$Cmd$none));
@@ -9682,7 +9800,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'pull_request_review_comment hook received; refreshing pr and timeline',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A4(author$project$Main$decodeAndFetchIssueOrPR, 'pull_request', payload, author$project$Main$fetchRepoPullRequest, model),
 								elm$core$Platform$Cmd$none));
@@ -9691,7 +9809,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'milestone hook received; refreshing repo',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A2(author$project$Main$decodeAndFetchRepo, payload, model),
 								elm$core$Platform$Cmd$none));
@@ -9700,18 +9818,18 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'project hook received; refreshing projects',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										c: A2(
+										loadQueue: A2(
 											elm$core$List$cons,
 											A2(
 												author$project$Main$fetchProjects,
 												model,
 												elm$core$Basics$always(author$project$Main$Noop)),
-											model.c)
+											model.loadQueue)
 									}),
 								elm$core$Platform$Cmd$none));
 					case 'project_column':
@@ -9719,18 +9837,18 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'project_column hook received; refreshing projects',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										c: A2(
+										loadQueue: A2(
 											elm$core$List$cons,
 											A2(
 												author$project$Main$fetchProjects,
 												model,
 												elm$core$Basics$always(author$project$Main$Noop)),
-											model.c)
+											model.loadQueue)
 									}),
 								elm$core$Platform$Cmd$none));
 					case 'project_card':
@@ -9738,10 +9856,10 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'project_card hook received; refreshing projects and cards',
-							0,
+							_Utils_Tuple0,
 							function () {
 								var _n4 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$decodeAffectedColumnIds, payload);
-								if (_n4.$ === 1) {
+								if (_n4.$ === 'Err') {
 									var err = _n4.a;
 									return A3(
 										author$project$Log$debug,
@@ -9758,29 +9876,29 @@ var author$project$Main$update = F2(
 												return A2(elm$core$List$member, a, ids);
 											},
 											function ($) {
-												return $.bX;
+												return $.databaseId;
 											}),
 										A2(
 											elm$core$List$concatMap,
 											function ($) {
-												return $.d3;
+												return $.columns;
 											},
-											model.e9));
+											model.projects));
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
 											{
-												c: _Utils_ap(
+												loadQueue: _Utils_ap(
 													A2(
 														elm$core$List$map,
 														A2(
 															elm$core$Basics$composeL,
 															author$project$Main$fetchCards(model),
 															function ($) {
-																return $.eB;
+																return $.id;
 															}),
 														affectedColumns),
-													model.c)
+													model.loadQueue)
 											}),
 										elm$core$Platform$Cmd$none);
 								}
@@ -9790,7 +9908,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'repository hook received; refreshing repo',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A2(author$project$Main$decodeAndFetchRepo, payload, model),
 								elm$core$Platform$Cmd$none));
@@ -9799,7 +9917,7 @@ var author$project$Main$update = F2(
 						return A3(
 							author$project$Log$debug,
 							'status hook received; refreshing associated pr',
-							0,
+							_Utils_Tuple0,
 							_Utils_Tuple2(
 								A2(author$project$Main$decodeAndFetchPRForCommit, payload, model),
 								elm$core$Platform$Cmd$none));
@@ -9812,8 +9930,8 @@ var author$project$Main$update = F2(
 							_Utils_Tuple2(event, payload),
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
-			case 6:
-				if (!msg.a.$) {
+			case 'RepositoriesFetched':
+				if (msg.a.$ === 'Ok') {
 					var repos = msg.a.a;
 					return A3(
 						author$project$Log$debug,
@@ -9821,7 +9939,7 @@ var author$project$Main$update = F2(
 						A2(
 							elm$core$List$map,
 							function ($) {
-								return $.gK;
+								return $.name;
 							},
 							repos),
 						function () {
@@ -9839,16 +9957,16 @@ var author$project$Main$update = F2(
 									elm$core$Basics$composeL,
 									elm$core$Basics$not,
 									function ($) {
-										return $.eF;
+										return $.isArchived;
 									}),
 								repos);
 							return _Utils_Tuple2(
 								_Utils_update(
 									model,
 									{
-										c: _Utils_ap(
+										loadQueue: _Utils_ap(
 											A2(elm$core$List$concatMap, fetch, activeRepos),
-											model.c)
+											model.loadQueue)
 									}),
 								author$project$Main$setRepos(
 									A2(elm$core$List$map, author$project$GitHubGraph$encodeRepo, activeRepos)));
@@ -9864,13 +9982,13 @@ var author$project$Main$update = F2(
 							model,
 							author$project$Main$fetchRepos(model)));
 				}
-			case 7:
-				if (!msg.a.$) {
+			case 'RepositoryFetched':
+				if (msg.a.$ === 'Ok') {
 					var repo = msg.a.a;
 					return A3(
 						author$project$Log$debug,
 						'repository fetched',
-						repo.gK,
+						repo.name,
 						_Utils_Tuple2(
 							model,
 							author$project$Main$setRepo(
@@ -9883,8 +10001,8 @@ var author$project$Main$update = F2(
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
-			case 8:
-				if (!msg.b.$) {
+			case 'ProjectsFetched':
+				if (msg.b.$ === 'Ok') {
 					var nextMsg = msg.a;
 					var projects = msg.b.a;
 					return A3(
@@ -9893,7 +10011,7 @@ var author$project$Main$update = F2(
 						A2(
 							elm$core$List$map,
 							function ($) {
-								return $.gK;
+								return $.name;
 							},
 							projects),
 						function () {
@@ -9902,7 +10020,7 @@ var author$project$Main$update = F2(
 								nextMsg(projects),
 								_Utils_update(
 									model,
-									{e9: projects}));
+									{projects: projects}));
 							var next = _n5.a;
 							var cmd = _n5.b;
 							return _Utils_Tuple2(
@@ -9926,13 +10044,13 @@ var author$project$Main$update = F2(
 							model,
 							A2(author$project$Main$fetchProjects, model, nextMsg)));
 				}
-			case 9:
+			case 'FetchCards':
 				var projects = msg.a;
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
 						{
-							c: _Utils_ap(
+							loadQueue: _Utils_ap(
 								A2(
 									elm$core$List$concatMap,
 									A2(
@@ -9942,17 +10060,17 @@ var author$project$Main$update = F2(
 												elm$core$Basics$composeL,
 												author$project$Main$fetchCards(model),
 												function ($) {
-													return $.eB;
+													return $.id;
 												})),
 										function ($) {
-											return $.d3;
+											return $.columns;
 										}),
 									projects),
-								model.c)
+								model.loadQueue)
 						}),
 					elm$core$Platform$Cmd$none);
-			case 10:
-				if (!msg.b.$) {
+			case 'CardsFetched':
+				if (msg.b.$ === 'Ok') {
 					var colId = msg.a;
 					var cards = msg.b.a;
 					return A3(
@@ -9977,8 +10095,8 @@ var author$project$Main$update = F2(
 							model,
 							A2(author$project$Main$fetchCards, model, colId)));
 				}
-			case 11:
-				if (!msg.b.$) {
+			case 'IssuesFetched':
+				if (msg.b.$ === 'Ok') {
 					var repo = msg.a;
 					var issues = msg.b.a;
 					var fetchTimelines = A2(
@@ -9987,26 +10105,26 @@ var author$project$Main$update = F2(
 							elm$core$Basics$composeL,
 							author$project$Main$fetchIssueTimeline(model),
 							function ($) {
-								return $.eB;
+								return $.id;
 							}),
 						A2(
 							elm$core$List$filter,
 							A2(
 								elm$core$Basics$composeR,
 								function ($) {
-									return $.S;
+									return $.state;
 								},
-								elm$core$Basics$eq(0)),
+								elm$core$Basics$eq(author$project$GitHubGraph$IssueStateOpen)),
 							issues));
 					return A3(
 						author$project$Log$debug,
 						'issues fetched for',
-						repo.hr,
+						repo.url,
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									c: _Utils_ap(model.c, fetchTimelines)
+									loadQueue: _Utils_ap(model.loadQueue, fetchTimelines)
 								}),
 							author$project$Main$setIssues(
 								A2(elm$core$List$map, author$project$GitHubGraph$encodeIssue, issues))));
@@ -10016,27 +10134,27 @@ var author$project$Main$update = F2(
 					return A3(
 						author$project$Log$debug,
 						'failed to fetch issues',
-						_Utils_Tuple2(repo.hr, err),
+						_Utils_Tuple2(repo.url, err),
 						A2(
 							author$project$Main$backOff,
 							model,
 							A2(author$project$Main$fetchIssues, model, repo)));
 				}
-			case 12:
-				if (!msg.a.$) {
+			case 'IssueFetched':
+				if (msg.a.$ === 'Ok') {
 					var issue = msg.a.a;
 					return A3(
 						author$project$Log$debug,
 						'issue fetched',
-						issue.hr,
+						issue.url,
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									c: A2(
+									loadQueue: A2(
 										elm$core$List$cons,
-										A2(author$project$Main$fetchIssueTimeline, model, issue.eB),
-										model.c)
+										A2(author$project$Main$fetchIssueTimeline, model, issue.id),
+										model.loadQueue)
 								}),
 							author$project$Main$setIssue(
 								author$project$GitHubGraph$encodeIssue(issue))));
@@ -10048,14 +10166,14 @@ var author$project$Main$update = F2(
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
-			case 14:
-				if (msg.b.$ === 1) {
+			case 'ComparisonFetched':
+				if (msg.b.$ === 'Err') {
 					var repo = msg.a;
 					var err = msg.b.a;
 					return A3(
 						author$project$Log$debug,
 						'failed to fetch comparison',
-						_Utils_Tuple2(repo.hr, err),
+						_Utils_Tuple2(repo.url, err),
 						A2(
 							author$project$Main$backOff,
 							model,
@@ -10066,14 +10184,14 @@ var author$project$Main$update = F2(
 					return A3(
 						author$project$Log$debug,
 						'comparison fetched for',
-						repo.hr,
+						repo.url,
 						_Utils_Tuple2(
 							model,
 							author$project$Main$setComparison(
-								_Utils_Tuple2(repo.eB, comparison))));
+								_Utils_Tuple2(repo.id, comparison))));
 				}
-			case 13:
-				if (!msg.b.$) {
+			case 'PullRequestsFetched':
+				if (msg.b.$ === 'Ok') {
 					var repo = msg.a;
 					var prs = msg.b.a;
 					var openPRs = A2(
@@ -10081,9 +10199,9 @@ var author$project$Main$update = F2(
 						A2(
 							elm$core$Basics$composeR,
 							function ($) {
-								return $.S;
+								return $.state;
 							},
-							elm$core$Basics$eq(0)),
+							elm$core$Basics$eq(author$project$GitHubGraph$PullRequestStateOpen)),
 						prs);
 					var fetchTimelines = A2(
 						elm$core$List$map,
@@ -10091,32 +10209,32 @@ var author$project$Main$update = F2(
 							elm$core$Basics$composeL,
 							author$project$Main$fetchPRTimelineAndReviews(model),
 							function ($) {
-								return $.eB;
+								return $.id;
 							}),
 						openPRs);
 					var commitPRs = A3(
 						elm$core$List$foldl,
 						function (pr) {
-							var _n6 = pr.eK;
-							if (!_n6.$) {
-								var sha = _n6.a.cc;
-								return A2(elm$core$Dict$insert, sha, pr.eB);
+							var _n6 = pr.lastCommit;
+							if (_n6.$ === 'Just') {
+								var sha = _n6.a.sha;
+								return A2(elm$core$Dict$insert, sha, pr.id);
 							} else {
 								return elm$core$Basics$identity;
 							}
 						},
-						model.au,
+						model.commitPRs,
 						openPRs);
 					return A3(
 						author$project$Log$debug,
 						'prs fetched for',
-						repo.hr,
+						repo.url,
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									au: commitPRs,
-									c: _Utils_ap(model.c, fetchTimelines)
+									commitPRs: commitPRs,
+									loadQueue: _Utils_ap(model.loadQueue, fetchTimelines)
 								}),
 							author$project$Main$setPullRequests(
 								A2(elm$core$List$map, author$project$GitHubGraph$encodePullRequest, prs))));
@@ -10126,36 +10244,36 @@ var author$project$Main$update = F2(
 					return A3(
 						author$project$Log$debug,
 						'failed to fetch prs',
-						_Utils_Tuple2(repo.hr, err),
+						_Utils_Tuple2(repo.url, err),
 						A2(
 							author$project$Main$backOff,
 							model,
 							A2(author$project$Main$fetchPullRequests, model, repo)));
 				}
-			case 15:
-				if (!msg.a.$) {
+			case 'PullRequestFetched':
+				if (msg.a.$ === 'Ok') {
 					var pr = msg.a.a;
 					return A3(
 						author$project$Log$debug,
 						'pr fetched',
-						pr.hr,
+						pr.url,
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									au: function () {
-										var _n7 = pr.eK;
-										if (!_n7.$) {
-											var sha = _n7.a.cc;
-											return A3(elm$core$Dict$insert, sha, pr.eB, model.au);
+									commitPRs: function () {
+										var _n7 = pr.lastCommit;
+										if (_n7.$ === 'Just') {
+											var sha = _n7.a.sha;
+											return A3(elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
-											return model.au;
+											return model.commitPRs;
 										}
 									}(),
-									c: A2(
+									loadQueue: A2(
 										elm$core$List$cons,
-										A2(author$project$Main$fetchPRTimelineAndReviews, model, pr.eB),
-										model.c)
+										A2(author$project$Main$fetchPRTimelineAndReviews, model, pr.id),
+										model.loadQueue)
 								}),
 							author$project$Main$setPullRequest(
 								author$project$GitHubGraph$encodePullRequest(pr))));
@@ -10167,12 +10285,12 @@ var author$project$Main$update = F2(
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
-			case 16:
-				if (!msg.b.$) {
+			case 'IssueTimelineFetched':
+				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
 					var timeline = msg.b.a;
 					var findSource = function (event) {
-						if (event.$ === 1) {
+						if (event.$ === 'CrossReferencedEvent') {
 							var eid = event.a;
 							return elm$core$Maybe$Just(eid);
 						} else {
@@ -10211,7 +10329,7 @@ var author$project$Main$update = F2(
 							A2(author$project$Main$fetchIssueTimeline, model, id)));
 				}
 			default:
-				if (!msg.b.$) {
+				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
 					var _n9 = msg.b.a;
 					var timeline = _n9.a;
@@ -10223,31 +10341,31 @@ var author$project$Main$update = F2(
 							A3(
 								elm$core$List$foldl,
 								function (r) {
-									var _n11 = r.S;
-									switch (_n11) {
-										case 0:
-											return A2(elm$core$Dict$insert, r.aj.eB, r);
-										case 1:
+									var _n11 = r.state;
+									switch (_n11.$) {
+										case 'PullRequestReviewStatePending':
+											return A2(elm$core$Dict$insert, r.author.id, r);
+										case 'PullRequestReviewStateCommented':
 											return elm$core$Basics$identity;
-										case 2:
-											return A2(elm$core$Dict$insert, r.aj.eB, r);
-										case 3:
-											return A2(elm$core$Dict$insert, r.aj.eB, r);
+										case 'PullRequestReviewStateApproved':
+											return A2(elm$core$Dict$insert, r.author.id, r);
+										case 'PullRequestReviewStateChangesRequested':
+											return A2(elm$core$Dict$insert, r.author.id, r);
 										default:
-											return elm$core$Dict$remove(r.aj.eB);
+											return elm$core$Dict$remove(r.author.id);
 									}
 								},
 								elm$core$Dict$empty,
 								reviews)));
 					var reviewActor = function (review) {
 						return {
-							cq: review.aj.cq,
-							d9: review.d9,
-							dF: elm$core$Maybe$Just(review.aj)
+							avatar: review.author.avatar,
+							createdAt: review.createdAt,
+							user: elm$core$Maybe$Just(review.author)
 						};
 					};
 					var findSource = function (event) {
-						if (event.$ === 1) {
+						if (event.$ === 'CrossReferencedEvent') {
 							var eid = event.a;
 							return elm$core$Maybe$Just(eid);
 						} else {
@@ -10264,7 +10382,7 @@ var author$project$Main$update = F2(
 								elm$core$Basics$composeL,
 								elm$time$Time$posixToMillis,
 								function ($) {
-									return $.d9;
+									return $.createdAt;
 								}),
 							_Utils_ap(
 								A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline),
@@ -10300,25 +10418,25 @@ var author$project$Main$update = F2(
 		}
 	});
 var author$project$Main$init = function (_n0) {
-	var githubToken = _n0.q;
-	var githubOrg = _n0.aI;
-	var skipTimeline = _n0.aM;
-	var noRefresh = _n0.a3;
+	var githubToken = _n0.githubToken;
+	var githubOrg = _n0.githubOrg;
+	var skipTimeline = _n0.skipTimeline;
+	var noRefresh = _n0.noRefresh;
 	return A2(
 		author$project$Main$update,
 		author$project$Main$Refresh,
-		{au: elm$core$Dict$empty, aw: _List_Nil, aI: githubOrg, q: githubToken, c: _List_Nil, a3: noRefresh, e9: _List_Nil, aM: skipTimeline});
+		{commitPRs: elm$core$Dict$empty, failedQueue: _List_Nil, githubOrg: githubOrg, githubToken: githubToken, loadQueue: _List_Nil, noRefresh: noRefresh, projects: _List_Nil, skipTimeline: skipTimeline});
 };
 var author$project$Main$HookReceived = F2(
 	function (a, b) {
-		return {$: 5, a: a, b: b};
+		return {$: 'HookReceived', a: a, b: b};
 	});
-var author$project$Main$PopQueue = {$: 2};
+var author$project$Main$PopQueue = {$: 'PopQueue'};
 var author$project$Main$RefreshRequested = F2(
 	function (a, b) {
-		return {$: 4, a: a, b: b};
+		return {$: 'RefreshRequested', a: a, b: b};
 	});
-var author$project$Main$RetryQueue = {$: 3};
+var author$project$Main$RetryQueue = {$: 'RetryQueue'};
 var elm$json$Json$Decode$index = _Json_decodeIndex;
 var elm$json$Json$Decode$value = _Json_decodeValue;
 var author$project$Main$hook = _Platform_incomingPort(
@@ -10353,11 +10471,11 @@ var elm$core$Platform$Sub$batch = _Platform_batch;
 var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var elm$time$Time$Every = F2(
 	function (a, b) {
-		return {$: 0, a: a, b: b};
+		return {$: 'Every', a: a, b: b};
 	});
 var elm$time$Time$State = F2(
 	function (taggers, processes) {
-		return {e7: processes, fB: taggers};
+		return {processes: processes, taggers: taggers};
 	});
 var elm$time$Time$init = elm$core$Task$succeed(
 	A2(elm$time$Time$State, elm$core$Dict$empty, elm$core$Dict$empty));
@@ -10428,7 +10546,7 @@ var elm$time$Time$addMySub = F2(
 		var interval = _n0.a;
 		var tagger = _n0.b;
 		var _n1 = A2(elm$core$Dict$get, interval, state);
-		if (_n1.$ === 1) {
+		if (_n1.$ === 'Nothing') {
 			return A3(
 				elm$core$Dict$insert,
 				interval,
@@ -10471,7 +10589,7 @@ var elm$time$Time$spawnHelp = F3(
 	});
 var elm$time$Time$onEffects = F3(
 	function (router, subs, _n0) {
-		var processes = _n0.e7;
+		var processes = _n0.processes;
 		var rightStep = F3(
 			function (_n6, id, _n7) {
 				var spawns = _n7.a;
@@ -10518,7 +10636,7 @@ var elm$time$Time$onEffects = F3(
 			_Utils_Tuple3(
 				_List_Nil,
 				elm$core$Dict$empty,
-				elm$core$Task$succeed(0)));
+				elm$core$Task$succeed(_Utils_Tuple0)));
 		var spawnList = _n1.a;
 		var existingDict = _n1.b;
 		var killTask = _n1.c;
@@ -10537,8 +10655,8 @@ var elm$time$Time$onEffects = F3(
 	});
 var elm$time$Time$onSelfMsg = F3(
 	function (router, interval, state) {
-		var _n0 = A2(elm$core$Dict$get, interval, state.fB);
-		if (_n0.$ === 1) {
+		var _n0 = A2(elm$core$Dict$get, interval, state.taggers);
+		if (_n0.$ === 'Nothing') {
 			return elm$core$Task$succeed(state);
 		} else {
 			var taggers = _n0.a;
@@ -10590,7 +10708,7 @@ var author$project$Main$subscriptions = function (model) {
 				elm$time$Time$every,
 				60 * 1000,
 				elm$core$Basics$always(author$project$Main$RetryQueue)),
-				model.a3 ? elm$core$Platform$Sub$none : A2(
+				model.noRefresh ? elm$core$Platform$Sub$none : A2(
 				elm$time$Time$every,
 				(60 * 60) * 1000,
 				elm$core$Basics$always(author$project$Main$Refresh)),
@@ -10610,7 +10728,7 @@ var author$project$Main$subscriptions = function (model) {
 };
 var elm$core$Platform$worker = _Platform_worker;
 var author$project$Main$main = elm$core$Platform$worker(
-	{gA: author$project$Main$init, hc: author$project$Main$subscriptions, hq: author$project$Main$update});
+	{init: author$project$Main$init, subscriptions: author$project$Main$subscriptions, update: author$project$Main$update});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	A2(
 		elm$json$Json$Decode$andThen,
@@ -10625,7 +10743,7 @@ _Platform_export({'Main':{'init':author$project$Main$main(
 								elm$json$Json$Decode$andThen,
 								function (githubOrg) {
 									return elm$json$Json$Decode$succeed(
-										{aI: githubOrg, q: githubToken, a3: noRefresh, aM: skipTimeline});
+										{githubOrg: githubOrg, githubToken: githubToken, noRefresh: noRefresh, skipTimeline: skipTimeline});
 								},
 								A2(elm$json$Json$Decode$field, 'githubOrg', elm$json$Json$Decode$string));
 						},

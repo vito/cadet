@@ -1896,8 +1896,6 @@ viewPullRequestsPage model =
         )
 
 
-
-
 matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool
 matchesLabel sl l =
     l.name == sl.name && String.toLower l.color == String.toLower sl.color
@@ -3755,7 +3753,6 @@ deleteLabel model repo label =
 
         Nothing ->
             Cmd.none
-
 
 
 addIssueLabels : Model -> GitHubGraph.Issue -> List String -> Cmd Msg
