@@ -38,7 +38,7 @@ const data = {
   prs: {},
 
   // repo comparisons to last release, by repo id
-  comparisons: {}
+  comparisons: {},
 
   // map from issue/pr id to issues/pr ids that referenced it
   references: {},
