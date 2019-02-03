@@ -445,10 +445,11 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         RetryPolling ->
-          if model.isPolling then
-            (model, Cmd.none)
-          else
-            ({ model | isPolling = True }, Backend.fetchData DataFetched)
+            if model.isPolling then
+                ( model, Cmd.none )
+
+            else
+                ( { model | isPolling = True }, Backend.fetchData DataFetched )
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -859,7 +860,7 @@ update msg model =
 
         DataFetched (Err err) ->
             Log.debug "error fetching data" err <|
-                ( { model | isPolling = False }, Cmd.none)
+                ( { model | isPolling = False }, Cmd.none )
 
         MirrorLabel newLabel ->
             let

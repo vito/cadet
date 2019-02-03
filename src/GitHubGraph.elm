@@ -26,12 +26,16 @@ module GitHubGraph exposing
     , StatusState(..)
     , TimelineEvent(..)
     , User
+    , V3Commit
+    , V3Comparison
+    , V3File
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
     , addPullRequestLabels
     , closeIssue
     , closeRepoMilestone
+    , compareRepoRefs
     , createRepoLabel
     , createRepoMilestone
     , decodeIssue
@@ -41,6 +45,7 @@ module GitHubGraph exposing
     , decodePullRequestReview
     , decodeRepo
     , decodeUser
+    , decodeV3Comparison
     , deleteRepoLabel
     , deleteRepoMilestone
     , encodeIssue
@@ -112,6 +117,53 @@ type alias Repo =
     , isArchived : Bool
     , labels : List Label
     , milestones : List Milestone
+    , releases : List Release
+    }
+
+
+type alias Release =
+    { id : ID
+    , url : String
+    , name : String
+    , tag : Tag
+    }
+
+
+type alias Tag =
+    { name : String
+    , target : GitObject
+    }
+
+
+type alias GitObject =
+    { url : String
+    , oid : String
+    }
+
+
+type alias V3Comparison =
+    { url : String
+    , status : String
+    , baseCommit : V3Commit
+    , mergeBaseCommit : V3Commit
+    , aheadBy : Int
+    , behindBy : Int
+    , totalCommits : Int
+    , commits : List V3Commit
+    , files : List V3File
+    }
+
+
+type alias V3Commit =
+    { url : String
+    , sha : String
+    }
+
+
+type alias V3File =
+    { sha : String
+    , filename : String
+    , status : String
     }
 
 
@@ -157,6 +209,7 @@ type alias PullRequest =
     , milestone : Maybe Milestone
     , mergeable : MergeableState
     , lastCommit : Maybe Commit
+    , mergeCommit : Maybe Commit
     }
 
 
@@ -414,6 +467,15 @@ fetchRepo token repo =
 fetchRepoIssues : Token -> RepoSelector -> Task Error (List Issue)
 fetchRepoIssues token repo =
     fetchPaged issuesQuery token { selector = repo, after = Nothing }
+
+
+compareRepoRefs : Token -> RepoSelector -> String -> String -> Task Error V3Comparison
+compareRepoRefs token repo base mergeBase =
+    HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/compare/" ++ base ++ "..." ++ mergeBase)
+        |> HttpBuilder.withHeaders (auth token)
+        |> HttpBuilder.withExpectJson decodeV3Comparison
+        |> HttpBuilder.toTask
+        |> Task.mapError GH.HttpError
 
 
 fetchRepoIssue : Token -> IssueOrPRSelector -> Task Error Issue
@@ -836,6 +898,7 @@ repoObject =
         |> GB.with (GB.field "isArchived" [] GB.bool)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "milestones" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list milestoneObject)))
+        |> GB.with (GB.field "releases" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list releaseObject)))
 
 
 repoQuery : GB.Document GB.Query Repo RepoSelector
@@ -1024,6 +1087,29 @@ milestoneObject =
         |> GB.with (GB.field "description" [] (GB.nullable GB.string))
 
 
+releaseObject : GB.ValueSpec GB.NonNull GB.ObjectType Release vars
+releaseObject =
+    GB.object Release
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "tag" [] tagObject)
+
+
+tagObject : GB.ValueSpec GB.NonNull GB.ObjectType Tag vars
+tagObject =
+    GB.object Tag
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "target" [] gitObjectObject)
+
+
+gitObjectObject : GB.ValueSpec GB.NonNull GB.ObjectType GitObject vars
+gitObjectObject =
+    GB.object GitObject
+        |> GB.with (GB.field "commitUrl" [] GB.string)
+        |> GB.with (GB.field "oid" [] GB.string)
+
+
 columnObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumn vars
 columnObject =
     GB.object ProjectColumn
@@ -1155,6 +1241,7 @@ prObject =
                     GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] commitObject))))
                 )
             )
+        |> GB.with (GB.field "mergeCommit" [] (GB.nullable commitObject))
 
 
 commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
@@ -1469,6 +1556,30 @@ decodeRepo =
         |> andMap (JD.field "is_archived" JD.bool)
         |> andMap (JD.field "labels" (JD.list decodeLabel))
         |> andMap (JD.field "milestones" (JD.list decodeMilestone))
+        |> andMap (JD.field "releases" (JD.list decodeRelease))
+
+
+decodeRelease : JD.Decoder Release
+decodeRelease =
+    JD.succeed Release
+        |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "tag" decodeTag)
+
+
+decodeTag : JD.Decoder Tag
+decodeTag =
+    JD.succeed Tag
+        |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "target" decodeGitObject)
+
+
+decodeGitObject : JD.Decoder GitObject
+decodeGitObject =
+    JD.succeed GitObject
+        |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "oid" JD.string)
 
 
 decodeIssue : JD.Decoder Issue
@@ -1511,6 +1622,7 @@ decodePullRequest =
         |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
         |> andMap (JD.field "mergeable" decodeMergeableState)
         |> andMap (JD.field "last_commit" <| JD.maybe decodeCommit)
+        |> andMap (JD.field "merge_commit" <| JD.maybe decodeCommit)
 
 
 decodeCommit : JD.Decoder Commit
@@ -1703,6 +1815,35 @@ decodeOrgSelector =
         |> andMap (JD.field "name" JD.string)
 
 
+decodeV3Comparison : JD.Decoder V3Comparison
+decodeV3Comparison =
+    JD.succeed V3Comparison
+        |> andMap (JD.field "html_url" JD.string)
+        |> andMap (JD.field "status" JD.string)
+        |> andMap (JD.field "base_commit" decodeV3Commit)
+        |> andMap (JD.field "merge_base_commit" decodeV3Commit)
+        |> andMap (JD.field "ahead_by" JD.int)
+        |> andMap (JD.field "behind_by" JD.int)
+        |> andMap (JD.field "total_commits" JD.int)
+        |> andMap (JD.field "commits" (JD.list decodeV3Commit))
+        |> andMap (JD.field "files" (JD.list decodeV3File))
+
+
+decodeV3Commit : JD.Decoder V3Commit
+decodeV3Commit =
+    JD.succeed V3Commit
+        |> andMap (JD.field "html_url" JD.string)
+        |> andMap (JD.field "sha" JD.string)
+
+
+decodeV3File : JD.Decoder V3File
+decodeV3File =
+    JD.succeed V3File
+        |> andMap (JD.field "sha" JD.string)
+        |> andMap (JD.field "filename" JD.string)
+        |> andMap (JD.field "status" JD.string)
+
+
 decodePullRequestState : JD.Decoder PullRequestState
 decodePullRequestState =
     let
@@ -1783,6 +1924,7 @@ encodeRepo record =
         , ( "is_archived", JE.bool record.isArchived )
         , ( "labels", JE.list encodeLabel record.labels )
         , ( "milestones", JE.list encodeMilestone record.milestones )
+        , ( "releases", JE.list encodeRelease record.releases )
         ]
 
 
@@ -1827,6 +1969,7 @@ encodePullRequest record =
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         , ( "mergeable", encodeMergeableState record.mergeable )
         , ( "last_commit", JEE.maybe encodeCommit record.lastCommit )
+        , ( "merge_commit", JEE.maybe encodeCommit record.mergeCommit )
         ]
 
 
@@ -1877,6 +2020,32 @@ encodeLabel record =
         [ ( "id", JE.string record.id )
         , ( "name", JE.string record.name )
         , ( "color", JE.string record.color )
+        ]
+
+
+encodeRelease : Release -> JE.Value
+encodeRelease record =
+    JE.object
+        [ ( "id", JE.string record.id )
+        , ( "url", JE.string record.url )
+        , ( "name", JE.string record.name )
+        , ( "tag", encodeTag record.tag )
+        ]
+
+
+encodeTag : Tag -> JE.Value
+encodeTag record =
+    JE.object
+        [ ( "name", JE.string record.name )
+        , ( "target", encodeGitObject record.target )
+        ]
+
+
+encodeGitObject : GitObject -> JE.Value
+encodeGitObject record =
+    JE.object
+        [ ( "url", JE.string record.url )
+        , ( "oid", JE.string record.oid )
         ]
 
 

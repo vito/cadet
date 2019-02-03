@@ -32,6 +32,9 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
+port setComparison : ( GitHubGraph.ID, GitHubGraph.V3Comparison ) -> Cmd msg
+
+
 port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
 
 
@@ -94,6 +97,7 @@ type Msg
     | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
     | IssueFetched (Result GitHubGraph.Error GitHubGraph.Issue)
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
+    | ComparisonFetched GitHubGraph.Repo (Result GitHubGraph.Error GitHubGraph.V3Comparison)
     | PullRequestFetched (Result GitHubGraph.Error GitHubGraph.PullRequest)
     | IssueTimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
     | PullRequestTimelineAndReviewsFetched GitHubGraph.ID (Result GitHubGraph.Error ( List GitHubGraph.TimelineEvent, List GitHubGraph.PullRequestReview ))
@@ -253,6 +257,7 @@ update msg model =
                     fetch repo =
                         [ fetchIssues model repo
                         , fetchPullRequests model repo
+                        , fetchComparison model repo
                         ]
                 in
                 ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
@@ -350,6 +355,16 @@ update msg model =
             Log.debug "prs fetched for" repo.url <|
                 ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
                 , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
+                )
+
+        ComparisonFetched repo (Err err) ->
+            Log.debug "failed to fetch comparison" ( repo.url, err ) <|
+                backOff model (fetchComparison model repo)
+
+        ComparisonFetched repo (Ok comparison) ->
+            Log.debug "comparison fetched for" repo.url <|
+                ( model
+                , setComparison ( repo.id, comparison )
                 )
 
         PullRequestsFetched repo (Err err) ->
@@ -525,6 +540,22 @@ fetchPullRequests : Model -> GitHubGraph.Repo -> Cmd Msg
 fetchPullRequests model repo =
     GitHubGraph.fetchRepoPullRequests model.githubToken { owner = repo.owner, name = repo.name }
         |> Task.attempt (PullRequestsFetched repo)
+
+
+fetchComparison : Model -> GitHubGraph.Repo -> Cmd Msg
+fetchComparison model repo =
+    let
+        base =
+            case List.head repo.releases of
+                Just release ->
+                    release.tag.name
+
+                Nothing ->
+                    -- just yield an empty comparison
+                    "HEAD"
+    in
+    GitHubGraph.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
+        |> Task.attempt (ComparisonFetched repo)
 
 
 fetchRepoPullRequest : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg

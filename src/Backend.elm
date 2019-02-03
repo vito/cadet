@@ -44,6 +44,7 @@ type alias Data =
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
     , actors : Dict GitHubGraph.ID (List EventActor)
     , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+    , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
     }
 
 
@@ -85,6 +86,7 @@ emptyData =
     , references = Dict.empty
     , actors = Dict.empty
     , reviewers = Dict.empty
+    , comparisons = Dict.empty
     }
 
 
@@ -171,6 +173,7 @@ decodeData =
         |> andMap (JD.field "references" <| JD.dict (JD.list JD.string))
         |> andMap (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
         |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
+        |> andMap (JD.field "comparisons" <| JD.dict GitHubGraph.decodeV3Comparison)
 
 
 decodeCards : JD.Decoder (List ColumnCard)

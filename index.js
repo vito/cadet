@@ -37,6 +37,9 @@ const data = {
   // prs by id
   prs: {},
 
+  // repo comparisons to last release, by repo id
+  comparisons: {}
+
   // map from issue/pr id to issues/pr ids that referenced it
   references: {},
 
@@ -174,6 +177,14 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   data.prs[pr.id] = pr;
   dataIndex++;
   popRefresh("pr", pr.id, pr);
+  popPoll();
+});
+
+worker.ports.setComparison.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.comparisons[id] = val;
+  dataIndex++;
   popPoll();
 });
 
