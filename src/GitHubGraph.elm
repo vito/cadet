@@ -54,8 +54,8 @@ module GitHubGraph exposing
     , encodePullRequest
     , encodePullRequestReview
     , encodeRepo
-    , encodeV3Comparison
     , encodeUser
+    , encodeV3Comparison
     , fetchIssue
     , fetchOrgProject
     , fetchOrgProjects
@@ -1928,10 +1928,11 @@ encodeRepo record =
         , ( "releases", JE.list encodeRelease record.releases )
         ]
 
+
 encodeV3Comparison : V3Comparison -> JE.Value
 encodeV3Comparison record =
     JE.object
-        [ ( "url", JE.string record.url )
+        [ ( "html_url", JE.string record.url )
         , ( "status", JE.string record.status )
         , ( "base_commit", encodeV3Commit record.baseCommit )
         , ( "merge_base_commit", encodeV3Commit record.mergeBaseCommit )
@@ -1942,12 +1943,14 @@ encodeV3Comparison record =
         , ( "files", JE.list encodeV3File record.files )
         ]
 
+
 encodeV3Commit : V3Commit -> JE.Value
 encodeV3Commit record =
     JE.object
-        [ ( "url", JE.string record.url )
+        [ ( "html_url", JE.string record.url )
         , ( "sha", JE.string record.sha )
         ]
+
 
 encodeV3File : V3File -> JE.Value
 encodeV3File record =

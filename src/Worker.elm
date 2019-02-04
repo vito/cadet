@@ -32,7 +32,7 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
-port setComparison : ( GitHubGraph.ID, JD.Value) -> Cmd msg
+port setComparison : ( GitHubGraph.ID, JD.Value ) -> Cmd msg
 
 
 port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg

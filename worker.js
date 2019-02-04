@@ -4174,7 +4174,7 @@ var author$project$GitHubGraph$encodeV3Commit = function (record) {
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
-				'url',
+				'html_url',
 				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'sha',
@@ -4201,7 +4201,7 @@ var author$project$GitHubGraph$encodeV3Comparison = function (record) {
 		_List_fromArray(
 			[
 				_Utils_Tuple2(
-				'url',
+				'html_url',
 				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
 				'status',
