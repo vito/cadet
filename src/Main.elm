@@ -74,6 +74,7 @@ type alias Model =
     , labelSearch : String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
+    , shipItRepoTab : ShipItRepoTab
     }
 
 
@@ -93,12 +94,33 @@ type CardLabelOperation
 
 
 type alias DataView =
-    { cardsByMilestone : Dict String (List Card)
-    , allMilestones : List String
-    , nextMilestoneCards : List Card
-    , reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
+    { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     , prsByRepo : Dict GitHubGraph.ID (List Card)
+    , shipItRepos : Dict GitHubGraph.ID ShipItRepo
     }
+
+
+type alias ShipItRepo =
+    { repo : GitHubGraph.Repo
+    , nextMilestone : Maybe GitHubGraph.Milestone
+    , comparison : GitHubGraph.V3Comparison
+    , openPRs : List Card
+    , mergedPRs : List Card
+    , closedIssues : List Card
+    , openIssues : List Card
+    , undocumentedCards : List Card
+    , documentedCards : List Card
+    , leftUndocumentedCards : List Card
+    , unreleasedCards : List Card
+    }
+
+
+type ShipItRepoTab
+    = ToDoTab
+    | UndocumentedTab
+    | DocumentedTab
+    | LeftUndocumentedTab
+    | UnreleasedTab
 
 
 type GraphFilter
@@ -106,6 +128,7 @@ type GraphFilter
     | InProjectFilter String
     | HasLabelFilter String String
     | InvolvesUserFilter String
+    | IssuesFilter
     | PullRequestsFilter
     | UntriagedFilter
 
@@ -238,6 +261,7 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
+    | SetShipItRepoTab ShipItRepoTab
 
 
 type Page
@@ -246,6 +270,7 @@ type Page
     | ProjectPage String
     | LabelsPage
     | ShipItPage
+    | ShipItRepoPage String
     | PullRequestsPage
     | BouncePage
 
@@ -271,51 +296,6 @@ main =
         }
 
 
-renderHash : Model -> String
-renderHash model =
-    let
-        selects =
-            List.map (\id -> "s-" ++ id) (OrderedSet.toList model.selectedCards)
-
-        filters =
-            List.map
-                (\f ->
-                    case f of
-                        ExcludeAllFilter ->
-                            "filter-exclude-all"
-
-                        InProjectFilter project ->
-                            "filter-in-project-" ++ project
-
-                        InvolvesUserFilter login ->
-                            "filter-involves-" ++ login
-
-                        HasLabelFilter label color ->
-                            "filter-label-" ++ label ++ "-" ++ color
-
-                        PullRequestsFilter ->
-                            "filter-pull-requests"
-
-                        UntriagedFilter ->
-                            "filter-untriaged"
-                )
-                model.graphFilters
-
-        sort =
-            case model.graphSort of
-                ImpactSort ->
-                    -- default
-                    []
-
-                UserActivitySort login ->
-                    [ "sort-user-activity-" ++ login ]
-
-                AllActivitySort ->
-                    [ "sort-all-activity" ]
-    in
-    String.join "." (selects ++ filters ++ sort)
-
-
 routeParser : UP.Parser (Page -> a) a
 routeParser =
     UP.oneOf
@@ -324,6 +304,7 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
+        , UP.map ShipItRepoPage (UP.s "shipit" </> UP.string)
         , UP.map ShipItPage (UP.s "shipit")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
@@ -374,11 +355,9 @@ init config url key =
             , isPolling = True
             , dataIndex = 0
             , dataView =
-                { cardsByMilestone = Dict.empty
-                , allMilestones = []
-                , nextMilestoneCards = []
-                , reposByLabel = Dict.empty
+                { reposByLabel = Dict.empty
                 , prsByRepo = Dict.empty
+                , shipItRepos = Dict.empty
                 }
             , allCards = Dict.empty
             , allLabels = Dict.empty
@@ -405,6 +384,7 @@ init config url key =
             , labelSearch = ""
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
+            , shipItRepoTab = UndocumentedTab
             }
 
         ( navedModel, navedMsgs ) =
@@ -469,6 +449,9 @@ update msg model =
                                     Just (InProjectFilter name)
 
                                 LabelsPage ->
+                                    Just ExcludeAllFilter
+
+                                ShipItRepoPage _ ->
                                     Just ExcludeAllFilter
 
                                 ShipItPage ->
@@ -1180,6 +1163,9 @@ update msg model =
             in
             ( model, Cmd.batch (adds ++ removals) )
 
+        SetShipItRepoTab tab ->
+            ( { model | shipItRepoTab = tab }, Cmd.none )
+
 
 computeGraphState : Model -> Model
 computeGraphState model =
@@ -1245,65 +1231,21 @@ computeDataView origModel =
                 )
                 Dict.empty
 
-        dataView =
+        origDataView =
             origModel.dataView
 
-        model =
-            if origModel.showLabelOperations then
-                { origModel | dataView = { dataView | reposByLabel = groupRepoLabels origModel.data.repos } }
+        dataView =
+            { origDataView | reposByLabel = groupRepoLabels origModel.data.repos }
 
-            else
-                origModel
+        model =
+            { origModel | dataView = dataView }
     in
     case model.page of
         ShipItPage ->
-            let
-                allMilestones =
-                    Set.toList <|
-                        Dict.foldl
-                            (\_ repo ->
-                                repo.milestones
-                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                                    |> List.map .title
-                                    |> Set.fromList
-                                    |> Set.union
-                            )
-                            Set.empty
-                            model.data.repos
+            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
 
-                cardsByMilestone =
-                    Dict.foldl
-                        (\_ card acc ->
-                            case card.milestone of
-                                Just milestone ->
-                                    Dict.update milestone.title (add card) acc
-
-                                Nothing ->
-                                    acc
-                        )
-                        Dict.empty
-                        model.allCards
-
-                nextMilestoneCards =
-                    Dict.foldl
-                        (\_ card acc ->
-                            if card.milestone == Nothing && isAcceptedPR card then
-                                card :: acc
-
-                            else
-                                acc
-                        )
-                        []
-                        model.allCards
-            in
-            { model
-                | dataView =
-                    { dataView
-                        | cardsByMilestone = cardsByMilestone
-                        , allMilestones = allMilestones
-                        , nextMilestoneCards = nextMilestoneCards
-                    }
-            }
+        ShipItRepoPage _ ->
+            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
 
         PullRequestsPage ->
             let
@@ -1322,16 +1264,147 @@ computeDataView origModel =
             { model | dataView = { dataView | prsByRepo = prsByRepo } }
 
         LabelsPage ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+            model
 
         GlobalGraphPage ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+            model
 
         ProjectPage _ ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
-
-        _ ->
             model
+
+        AllProjectsPage ->
+            model
+
+        BouncePage ->
+            model
+
+
+computeShipItRepos : Model -> Dict String ShipItRepo
+computeShipItRepos model =
+    let
+        selectPRsInComparison comparison prId pr acc =
+            case pr.mergeCommit of
+                Nothing ->
+                    acc
+
+                Just { sha } ->
+                    if List.any ((==) sha << .sha) comparison.commits then
+                        case Dict.get prId model.allCards of
+                            Just prc ->
+                                prc :: acc
+
+                            Nothing ->
+                                acc
+
+                    else
+                        acc
+
+        selectCardsInMilestone milestone cardId card acc =
+            case card.milestone of
+                Nothing ->
+                    acc
+
+                Just { id } ->
+                    -- don't double-count merged PRs - they are collected via the
+                    -- comparison
+                    if milestone.id == id && not (isMerged card) then
+                        card :: acc
+
+                    else
+                        acc
+
+        makeShipItRepo repoId comparison acc =
+            if comparison.totalCommits == 0 then
+                acc
+
+            else
+                case Dict.get repoId model.data.repos of
+                    Just repo ->
+                        let
+                            nextMilestone =
+                                repo.milestones
+                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                    |> List.sortBy .number
+                                    |> List.head
+
+                            mergedPRs =
+                                Dict.foldl (selectPRsInComparison comparison) [] model.data.prs
+
+                            milestoneCards =
+                                case nextMilestone of
+                                    Nothing ->
+                                        []
+
+                                    Just nm ->
+                                        Dict.foldl (selectCardsInMilestone nm) [] model.allCards
+
+                            allCards =
+                                milestoneCards ++ mergedPRs
+
+                            categorizeByDocumentedState card sir =
+                                if hasLabel model "documented" card then
+                                    { sir | documentedCards = card :: sir.documentedCards }
+
+                                else if hasLabel model "left-undocumented" card then
+                                    { sir | leftUndocumentedCards = card :: sir.leftUndocumentedCards }
+
+                                else if hasLabel model "unreleased" card then
+                                    { sir | unreleasedCards = card :: sir.unreleasedCards }
+
+                                else
+                                    { sir | undocumentedCards = card :: sir.undocumentedCards }
+
+                            categorizeByCardState card sir =
+                                case card.state of
+                                    IssueState GitHubGraph.IssueStateOpen ->
+                                        { sir | openIssues = card :: sir.openIssues }
+
+                                    IssueState GitHubGraph.IssueStateClosed ->
+                                        { sir | closedIssues = card :: sir.closedIssues }
+
+                                    PullRequestState GitHubGraph.PullRequestStateOpen ->
+                                        { sir | openPRs = card :: sir.openPRs }
+
+                                    PullRequestState GitHubGraph.PullRequestStateMerged ->
+                                        { sir | mergedPRs = card :: sir.mergedPRs }
+
+                                    PullRequestState GitHubGraph.PullRequestStateClosed ->
+                                        -- ignored
+                                        sir
+
+                            categorizeCard card sir =
+                                let
+                                    byState =
+                                        categorizeByCardState card sir
+                                in
+                                if isOpen card then
+                                    byState
+
+                                else
+                                    categorizeByDocumentedState card byState
+
+                            shipItRepo =
+                                List.foldl categorizeCard
+                                    { repo = repo
+                                    , nextMilestone = nextMilestone
+                                    , comparison = comparison
+                                    , openPRs = []
+                                    , mergedPRs = []
+                                    , openIssues = []
+                                    , closedIssues = []
+                                    , undocumentedCards = []
+                                    , documentedCards = []
+                                    , leftUndocumentedCards = []
+                                    , unreleasedCards = []
+                                    }
+                                    allCards
+                        in
+                        Dict.insert repo.name shipItRepo acc
+
+                    Nothing ->
+                        acc
+    in
+    Dict.foldl makeShipItRepo Dict.empty model.data.comparisons
 
 
 cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
@@ -1412,21 +1485,10 @@ viewPage model =
             anticipatedCards ++ List.reverse selectedCards
     in
     Html.div [ HA.class "cadet" ]
-        [ Html.div
-            [ HA.classList
-                [ ( "main-page", True )
-                , ( "contains-graph"
-                  , case model.page of
-                        GlobalGraphPage ->
-                            True
-
-                        ProjectPage id ->
-                            True
-
-                        _ ->
-                            False
-                  )
-                ]
+        [ viewNavBar model
+        , Html.div
+            [ HA.class "main-page"
+            , HA.class (pageClass model.page)
             ]
             [ Html.div [ HA.class "page-content" ]
                 [ case model.page of
@@ -1444,6 +1506,14 @@ viewPage model =
 
                     ShipItPage ->
                         viewShipItPage model
+
+                    ShipItRepoPage repoName ->
+                        case Dict.get repoName model.dataView.shipItRepos of
+                            Just sir ->
+                                viewShipItRepoPage model sir
+
+                            Nothing ->
+                                Html.text "repo not found"
 
                     PullRequestsPage ->
                         viewPullRequestsPage model
@@ -1466,8 +1536,23 @@ viewPage model =
                     Html.div [ HA.class "cards" ] sidebarCards
                 ]
             ]
-        , viewNavBar model
         ]
+
+
+pageClass : Page -> String
+pageClass page =
+    case page of
+        ShipItRepoPage _ ->
+            "shipit-repo-page"
+
+        GlobalGraphPage ->
+            "contains-graph"
+
+        ProjectPage _ ->
+            "contains-graph"
+
+        _ ->
+            "normal"
 
 
 viewSidebarControls : Model -> Html Msg
@@ -1505,7 +1590,7 @@ viewSidebarControls model =
                      ]
                         ++ labelColorStyles model color
                     )
-                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                    [ octicon "tag"
                     , Html.text name
                     ]
                 ]
@@ -1526,7 +1611,7 @@ viewSidebarControls model =
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
                 , HE.onClick ToggleLabelOperations
                 ]
-                [ Html.span [ HA.class "octicon octicon-tag" ] []
+                [ octicon "tag"
                 , Html.text "labels"
                 ]
             , Html.span
@@ -1540,11 +1625,11 @@ viewSidebarControls model =
             , Html.div [ HA.class "label-options" ] labelOptions
             , Html.div [ HA.class "buttons" ]
                 [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
-                    [ Html.span [ HA.class "octicon octicon-x" ] []
+                    [ octicon "x"
                     , Html.text "cancel"
                     ]
                 , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
-                    [ Html.span [ HA.class "octicon octicon-check" ] []
+                    [ octicon "check"
                     , Html.text "apply"
                     ]
                 ]
@@ -1574,7 +1659,7 @@ viewGraphControls model =
                                      ]
                                         ++ labelColorStyles model color
                                     )
-                                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                                    [ octicon "tag"
                                     , Html.text name
                                     ]
 
@@ -1595,7 +1680,7 @@ viewGraphControls model =
                                      ]
                                         ++ labelColorStyles model color
                                     )
-                                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                                    [ octicon "tag"
                                     , Html.text name
                                     ]
                                 ]
@@ -1619,8 +1704,24 @@ viewGraphControls model =
                     else
                         AddFilter filter
                 ]
-                [ Html.span [ HA.class "octicon octicon-inbox" ] []
+                [ octicon "inbox"
                 , Html.text "untriaged"
+                ]
+             , let
+                filter =
+                    IssuesFilter
+               in
+               Html.div
+                [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
+                , HE.onClick <|
+                    if hasFilter model filter then
+                        RemoveFilter filter
+
+                    else
+                        AddFilter filter
+                ]
+                [ octicon "issue-opened"
+                , Html.text "issues"
                 ]
              , let
                 filter =
@@ -1635,7 +1736,7 @@ viewGraphControls model =
                     else
                         AddFilter filter
                 ]
-                [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                [ octicon "git-pull-request"
                 , Html.text "pull requests"
                 ]
              , case model.me of
@@ -1653,7 +1754,7 @@ viewGraphControls model =
                             else
                                 AddFilter filter
                         ]
-                        [ Html.span [ HA.class "octicon octicon-comment-discussion" ] []
+                        [ octicon "comment-discussion"
                         , Html.text "involving me"
                         ]
 
@@ -1669,7 +1770,7 @@ viewGraphControls model =
                     [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelFilters ) ]
                     , HE.onClick ToggleLabelFilters
                     ]
-                    [ Html.span [ HA.class "octicon octicon-tag" ] []
+                    [ octicon "tag"
                     , Html.text "label"
                     ]
                 ]
@@ -1682,14 +1783,14 @@ viewGraphControls model =
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
                 , HE.onClick (SetGraphSort ImpactSort)
                 ]
-                [ Html.span [ HA.class "octicon octicon-flame" ] []
+                [ octicon "flame"
                 , Html.text "impact"
                 ]
             , Html.div
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
                 , HE.onClick (SetGraphSort AllActivitySort)
                 ]
-                [ Html.span [ HA.class "octicon octicon-clock" ] []
+                [ octicon "clock"
                 , Html.text "all activity"
                 ]
             , case model.me of
@@ -1698,7 +1799,7 @@ viewGraphControls model =
                         [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
                         , HE.onClick (SetGraphSort (UserActivitySort user.login))
                         ]
-                        [ Html.span [ HA.class "octicon octicon-clock" ] []
+                        [ octicon "clock"
                         , Html.text "my activity"
                         ]
 
@@ -1715,7 +1816,7 @@ hasFilter model filter =
 
 viewNavBar : Model -> Html Msg
 viewNavBar model =
-    Html.div [ HA.class "bottom-bar" ]
+    Html.div [ HA.class "nav-bar" ]
         [ Html.div [ HA.class "nav" ]
             [ case model.me of
                 Nothing ->
@@ -1730,19 +1831,19 @@ viewNavBar model =
                         , Html.text user.login
                         ]
             , Html.a [ HA.class "button", HA.href "/" ]
-                [ Html.span [ HA.class "octicon octicon-list-unordered" ] []
+                [ octicon "list-unordered"
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ Html.span [ HA.class "octicon octicon-globe" ] []
-                ]
-            , Html.a [ HA.class "button", HA.href "/labels" ]
-                [ Html.span [ HA.class "octicon octicon-tag" ] []
-                ]
-            , Html.a [ HA.class "button", HA.href "/shipit" ]
-                [ Html.span [ HA.class "octicon octicon-squirrel" ] []
+                [ octicon "globe"
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
-                [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                [ octicon "git-pull-request"
+                ]
+            , Html.a [ HA.class "button", HA.href "/shipit" ]
+                [ octicon "squirrel"
+                ]
+            , Html.a [ HA.class "button", HA.href "/labels" ]
+                [ octicon "tag"
                 ]
             ]
         , viewSearch model
@@ -1861,8 +1962,139 @@ viewLabelsPage model =
 
 viewShipItPage : Model -> Html Msg
 viewShipItPage model =
-    Html.div [ HA.class "shipit" ]
-        []
+    let
+        repos =
+            Dict.values model.dataView.shipItRepos
+                |> List.sortBy (.totalCommits << .comparison)
+                |> List.reverse
+    in
+    Html.div [ HA.class "shipit-page" ]
+        (List.map (viewShipItRepo model) repos)
+
+
+viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
+viewShipItRepoPage model sir =
+    Html.div [ HA.class "shipit-repo-content" ]
+        [ Html.div [ HA.class "shipit-header" ]
+            [ Html.div [ HA.class "repo-name-label" ]
+                [ octicon "repo"
+                , Html.a [ HA.href "/shipit" ] [ Html.text sir.repo.owner ]
+                , Html.text " / "
+                , Html.span [ HA.style "font-weight" "bold" ] [ Html.text sir.repo.name ]
+                ]
+            , case sir.nextMilestone of
+                Just nm ->
+                    Html.div [ HA.class "repo-milestone-label" ]
+                        [ octicon "milestone"
+                        , Html.text nm.title
+                        ]
+
+                Nothing ->
+                    Html.text ""
+            ]
+        , Html.div [ HA.class "shipit-repo-tabview" ]
+            [ let
+                tabAttrs tab =
+                    [ HA.classList [ ( "shipit-repo-tab", True ), ( "selected", model.shipItRepoTab == tab ) ]
+                    , HE.onClick (SetShipItRepoTab tab)
+                    ]
+
+                tabCount count =
+                    Html.span [ HA.class "counter" ]
+                        [ Html.text (String.fromInt count) ]
+              in
+              Html.div [ HA.class "shipit-repo-tabs" ]
+                [ Html.span (tabAttrs ToDoTab)
+                    [ Html.text "To Do"
+                    , tabCount (List.length sir.openIssues + List.length sir.openPRs)
+                    ]
+                , Html.span (tabAttrs UndocumentedTab)
+                    [ Html.text "Done"
+                    , tabCount (List.length sir.undocumentedCards)
+                    ]
+                , Html.span (tabAttrs DocumentedTab)
+                    [ Html.text "Documented"
+                    , tabCount (List.length sir.documentedCards)
+                    ]
+                , Html.span (tabAttrs LeftUndocumentedTab)
+                    [ Html.text "Undocumented"
+                    , tabCount (List.length sir.leftUndocumentedCards)
+                    ]
+                , Html.span (tabAttrs UnreleasedTab)
+                    [ Html.text "Unreleased"
+                    , tabCount (List.length sir.unreleasedCards)
+                    ]
+                ]
+            ]
+        , Html.div
+            [ HA.classList
+                [ ( "shipit-repo-cards", True )
+                , ( "first-tab", model.shipItRepoTab == ToDoTab )
+                ]
+            ]
+          <|
+            let
+                cards =
+                    case model.shipItRepoTab of
+                        ToDoTab ->
+                            sir.openIssues ++ sir.openPRs
+
+                        UndocumentedTab ->
+                            sir.undocumentedCards
+
+                        DocumentedTab ->
+                            sir.documentedCards
+
+                        LeftUndocumentedTab ->
+                            sir.leftUndocumentedCards
+
+                        UnreleasedTab ->
+                            sir.unreleasedCards
+            in
+            cards
+                |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                |> List.reverse
+                |> List.map (viewCard model)
+        ]
+
+
+viewShipItRepo : Model -> ShipItRepo -> Html Msg
+viewShipItRepo model sir =
+    Html.div [ HA.class "shipit-repo" ]
+        [ Html.div [ HA.class "repo-name" ]
+            [ Html.div [ HA.class "repo-name-label" ]
+                [ octicon "repo"
+                , Html.a
+                    [ HA.href ("/shipit/" ++ sir.repo.name)
+                    ]
+                    [ Html.text sir.repo.name ]
+                ]
+            ]
+        , Html.div [ HA.class "shipit-metric shipit-metric-commits" ]
+            [ octicon "git-commit"
+            , Html.text (String.fromInt sir.comparison.totalCommits ++ " commits since last release")
+            ]
+        , Html.div [ HA.class "shipit-metric shipit-metric-merged-prs" ]
+            [ octicon "git-pull-request"
+            , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
+            ]
+        , if List.isEmpty sir.closedIssues then
+            Html.text ""
+
+          else
+            Html.div [ HA.class "shipit-metric shipit-metric-closed-issues" ]
+                [ octicon "issue-closed"
+                , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
+                ]
+        , if List.isEmpty sir.openIssues then
+            Html.text ""
+
+          else
+            Html.div [ HA.class "shipit-metric shipit-metric-open-issues" ]
+                [ octicon "issue-opened"
+                , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
+                ]
+        ]
 
 
 viewPullRequestsPage : Model -> Html Msg
@@ -1880,7 +2112,7 @@ viewPullRequestsPage model =
             Html.div [ HA.class "repo-pull-requests" ]
                 [ Html.div [ HA.class "repo-name" ]
                     [ Html.div [ HA.class "repo-name-label" ]
-                        [ Html.span [ HA.class "octicon octicon-repo" ] []
+                        [ octicon "repo"
                         , Html.text repo.name
                         ]
                     ]
@@ -1993,7 +2225,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts first" ]
                 [ Html.span [ HA.class "count" ]
-                    [ Html.span [ HA.class "octicon octicon-issue-opened" ] []
+                    [ octicon "issue-opened"
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length issues))
                         ]
@@ -2003,7 +2235,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts" ]
                 [ Html.span [ HA.class "count" ]
-                    [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+                    [ octicon "git-pull-request"
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length prs))
                         ]
@@ -2013,7 +2245,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts last" ]
                 [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
-                    [ Html.span [ HA.class "octicon octicon-repo" ] []
+                    [ octicon "repo"
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length repos))
                         ]
@@ -2414,6 +2646,9 @@ satisfiesFilter model filter card =
 
         PullRequestsFilter ->
             isPR card
+
+        IssuesFilter ->
+            not (isPR card)
 
         UntriagedFilter ->
             isUntriaged card
@@ -2847,7 +3082,7 @@ reactionFlairArcs reviews card context =
         flairs =
             prSegments
                 ++ (List.filter (\( _, _, count ) -> count > 0) <|
-                        (( Html.span [ HA.class "octicon octicon-comment" ] [], "comments", card.commentCount ) :: emojiReactions)
+                        (( octicon "comment", "comments", card.commentCount ) :: emojiReactions)
                    )
 
         segments =
@@ -3170,6 +3405,20 @@ isMerged card =
     card.state == PullRequestState GitHubGraph.PullRequestStateMerged
 
 
+labelNames : Model -> Card -> List String
+labelNames model card =
+    let
+        selectLabel id acc =
+            case Dict.get id model.allLabels of
+                Just l ->
+                    l.name :: acc
+
+                Nothing ->
+                    acc
+    in
+    List.foldl selectLabel [] card.labels
+
+
 hasLabel : Model -> String -> Card -> Bool
 hasLabel model name card =
     let
@@ -3487,7 +3736,7 @@ viewNoteCard model col text =
         [ Html.div [ HA.class "card-info card-note" ]
             [ Markdown.toHtml [] text ]
         , Html.div [ HA.class "card-icons" ]
-            [ Html.span [ HA.class "octicon octicon-book" ] []
+            [ octicon "book"
             ]
         ]
 
@@ -3899,3 +4148,8 @@ emptyArc =
     , cornerRadius = 0
     , padRadius = 0
     }
+
+
+octicon : String -> Html Msg
+octicon label =
+    Html.span [ HA.class ("octicon octicon-" ++ label) ] []

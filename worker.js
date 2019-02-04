@@ -4235,11 +4235,11 @@ var elm$core$Basics$always = F2(
 	});
 var elm$core$Debug$log = _Debug_log;
 var author$project$Log$debug = F3(
-	function (ctx, err, a) {
+	function (ctx, thing, a) {
 		return A2(
 			elm$core$Basics$always,
 			a,
-			A2(elm$core$Debug$log, ctx, err));
+			A2(elm$core$Debug$log, ctx, thing));
 	});
 var author$project$Main$FetchCards = function (a) {
 	return {$: 'FetchCards', a: a};

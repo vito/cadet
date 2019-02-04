@@ -7949,6 +7949,7 @@ var author$project$Main$ImpactSort = {$: 'ImpactSort'};
 var author$project$Main$MeFetched = function (a) {
 	return {$: 'MeFetched', a: a};
 };
+var author$project$Main$UndocumentedTab = {$: 'UndocumentedTab'};
 var lukewestby$elm_http_builder$HttpBuilder$withTimeout = F2(
 	function (timeout, builder) {
 		return _Utils_update(
@@ -9409,11 +9410,11 @@ var author$project$Hash$hash = function (str) {
 };
 var elm$core$Debug$log = _Debug_log;
 var author$project$Log$debug = F3(
-	function (ctx, err, a) {
+	function (ctx, thing, a) {
 		return A2(
 			elm$core$Basics$always,
 			a,
-			A2(elm$core$Debug$log, ctx, err));
+			A2(elm$core$Debug$log, ctx, thing));
 	});
 var author$project$Main$AddLabelOperation = {$: 'AddLabelOperation'};
 var author$project$Main$CardDropContentRefreshed = function (a) {
@@ -11861,12 +11862,22 @@ var author$project$Main$computeColorIsLight = function (hex) {
 		return A3(author$project$Log$debug, 'invalid hex', hex, false);
 	}
 };
-var author$project$Main$isBug = function (card) {
-	return card.processState.hasBugLabel;
-};
-var author$project$Main$isEnhancement = function (card) {
-	return card.processState.hasEnhancementLabel;
-};
+var author$project$Main$hasLabel = F3(
+	function (model, name, card) {
+		var matchingLabels = A2(
+			elm$core$Dict$filter,
+			F2(
+				function (_n0, l) {
+					return _Utils_eq(l.name, name);
+				}),
+			model.allLabels);
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return A2(elm$core$Dict$member, a, matchingLabels);
+			},
+			card.labels);
+	});
 var author$project$Main$PullRequestState = function (a) {
 	return {$: 'PullRequestState', a: a};
 };
@@ -11874,9 +11885,6 @@ var author$project$Main$isMerged = function (card) {
 	return _Utils_eq(
 		card.state,
 		author$project$Main$PullRequestState(author$project$GitHubGraph$PullRequestStateMerged));
-};
-var author$project$Main$isAcceptedPR = function (card) {
-	return (author$project$Main$isEnhancement(card) || author$project$Main$isBug(card)) && author$project$Main$isMerged(card);
 };
 var author$project$Main$isOpen = function (card) {
 	var _n0 = card.state;
@@ -11900,6 +11908,166 @@ var author$project$Main$isOpen = function (card) {
 	}
 	return false;
 };
+var elm$core$List$sortBy = _List_sortBy;
+var author$project$Main$computeShipItRepos = function (model) {
+	var selectPRsInComparison = F4(
+		function (comparison, prId, pr, acc) {
+			var _n9 = pr.mergeCommit;
+			if (_n9.$ === 'Nothing') {
+				return acc;
+			} else {
+				var sha = _n9.a.sha;
+				if (A2(
+					elm$core$List$any,
+					A2(
+						elm$core$Basics$composeL,
+						elm$core$Basics$eq(sha),
+						function ($) {
+							return $.sha;
+						}),
+					comparison.commits)) {
+					var _n10 = A2(elm$core$Dict$get, prId, model.allCards);
+					if (_n10.$ === 'Just') {
+						var prc = _n10.a;
+						return A2(elm$core$List$cons, prc, acc);
+					} else {
+						return acc;
+					}
+				} else {
+					return acc;
+				}
+			}
+		});
+	var selectCardsInMilestone = F4(
+		function (milestone, cardId, card, acc) {
+			var _n8 = card.milestone;
+			if (_n8.$ === 'Nothing') {
+				return acc;
+			} else {
+				var id = _n8.a.id;
+				return (_Utils_eq(milestone.id, id) && (!author$project$Main$isMerged(card))) ? A2(elm$core$List$cons, card, acc) : acc;
+			}
+		});
+	var makeShipItRepo = F3(
+		function (repoId, comparison, acc) {
+			if (!comparison.totalCommits) {
+				return acc;
+			} else {
+				var _n0 = A2(elm$core$Dict$get, repoId, model.data.repos);
+				if (_n0.$ === 'Just') {
+					var repo = _n0.a;
+					var nextMilestone = elm$core$List$head(
+						A2(
+							elm$core$List$sortBy,
+							function ($) {
+								return $.number;
+							},
+							A2(
+								elm$core$List$filter,
+								A2(
+									elm$core$Basics$composeL,
+									elm$core$Basics$eq(author$project$GitHubGraph$MilestoneStateOpen),
+									function ($) {
+										return $.state;
+									}),
+								repo.milestones)));
+					var milestoneCards = function () {
+						if (nextMilestone.$ === 'Nothing') {
+							return _List_Nil;
+						} else {
+							var nm = nextMilestone.a;
+							return A3(
+								elm$core$Dict$foldl,
+								selectCardsInMilestone(nm),
+								_List_Nil,
+								model.allCards);
+						}
+					}();
+					var mergedPRs = A3(
+						elm$core$Dict$foldl,
+						selectPRsInComparison(comparison),
+						_List_Nil,
+						model.data.prs);
+					var categorizeByDocumentedState = F2(
+						function (card, sir) {
+							return A3(author$project$Main$hasLabel, model, 'documented', card) ? _Utils_update(
+								sir,
+								{
+									documentedCards: A2(elm$core$List$cons, card, sir.documentedCards)
+								}) : (A3(author$project$Main$hasLabel, model, 'left-undocumented', card) ? _Utils_update(
+								sir,
+								{
+									leftUndocumentedCards: A2(elm$core$List$cons, card, sir.leftUndocumentedCards)
+								}) : (A3(author$project$Main$hasLabel, model, 'unreleased', card) ? _Utils_update(
+								sir,
+								{
+									unreleasedCards: A2(elm$core$List$cons, card, sir.unreleasedCards)
+								}) : _Utils_update(
+								sir,
+								{
+									undocumentedCards: A2(elm$core$List$cons, card, sir.undocumentedCards)
+								})));
+						});
+					var categorizeByCardState = F2(
+						function (card, sir) {
+							var _n1 = card.state;
+							if (_n1.$ === 'IssueState') {
+								if (_n1.a.$ === 'IssueStateOpen') {
+									var _n2 = _n1.a;
+									return _Utils_update(
+										sir,
+										{
+											openIssues: A2(elm$core$List$cons, card, sir.openIssues)
+										});
+								} else {
+									var _n3 = _n1.a;
+									return _Utils_update(
+										sir,
+										{
+											closedIssues: A2(elm$core$List$cons, card, sir.closedIssues)
+										});
+								}
+							} else {
+								switch (_n1.a.$) {
+									case 'PullRequestStateOpen':
+										var _n4 = _n1.a;
+										return _Utils_update(
+											sir,
+											{
+												openPRs: A2(elm$core$List$cons, card, sir.openPRs)
+											});
+									case 'PullRequestStateMerged':
+										var _n5 = _n1.a;
+										return _Utils_update(
+											sir,
+											{
+												mergedPRs: A2(elm$core$List$cons, card, sir.mergedPRs)
+											});
+									default:
+										var _n6 = _n1.a;
+										return sir;
+								}
+							}
+						});
+					var categorizeCard = F2(
+						function (card, sir) {
+							var byState = A2(categorizeByCardState, card, sir);
+							return author$project$Main$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
+						});
+					var allCards = _Utils_ap(milestoneCards, mergedPRs);
+					var shipItRepo = A3(
+						elm$core$List$foldl,
+						categorizeCard,
+						{closedIssues: _List_Nil, comparison: comparison, documentedCards: _List_Nil, leftUndocumentedCards: _List_Nil, mergedPRs: _List_Nil, nextMilestone: nextMilestone, openIssues: _List_Nil, openPRs: _List_Nil, repo: repo, undocumentedCards: _List_Nil, unreleasedCards: _List_Nil},
+						allCards);
+					return A3(elm$core$Dict$insert, repo.name, shipItRepo, acc);
+				} else {
+					return acc;
+				}
+			}
+		});
+	return A3(elm$core$Dict$foldl, makeShipItRepo, elm$core$Dict$empty, model.data.comparisons);
+};
 var author$project$Main$isPR = function (card) {
 	var _n0 = card.state;
 	if (_n0.$ === 'PullRequestState') {
@@ -11908,20 +12076,9 @@ var author$project$Main$isPR = function (card) {
 		return false;
 	}
 };
-var elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
-	});
-var elm$core$Set$union = F2(
-	function (_n0, _n1) {
-		var dict1 = _n0.a;
-		var dict2 = _n1.a;
-		return elm$core$Set$Set_elm_builtin(
-			A2(elm$core$Dict$union, dict1, dict2));
-	});
 var elm$core$String$toLower = _String_toLower;
 var author$project$Main$computeDataView = function (origModel) {
-	var dataView = origModel.dataView;
+	var origDataView = origModel.dataView;
 	var add = function (x) {
 		return A2(
 			elm$core$Basics$composeL,
@@ -11937,7 +12094,7 @@ var author$project$Main$computeDataView = function (origModel) {
 	var groupRepoLabels = A2(
 		elm$core$Dict$foldl,
 		F3(
-			function (_n6, repo, cbn) {
+			function (_n2, repo, cbn) {
 				return A3(
 					elm$core$List$foldl,
 					function (label) {
@@ -11952,80 +12109,41 @@ var author$project$Main$computeDataView = function (origModel) {
 					repo.labels);
 			}),
 		elm$core$Dict$empty);
-	var model = origModel.showLabelOperations ? _Utils_update(
-		origModel,
+	var dataView = _Utils_update(
+		origDataView,
 		{
-			dataView: _Utils_update(
-				dataView,
-				{
-					reposByLabel: groupRepoLabels(origModel.data.repos)
-				})
-		}) : origModel;
+			reposByLabel: groupRepoLabels(origModel.data.repos)
+		});
+	var model = _Utils_update(
+		origModel,
+		{dataView: dataView});
 	var _n0 = model.page;
 	switch (_n0.$) {
 		case 'ShipItPage':
-			var nextMilestoneCards = A3(
-				elm$core$Dict$foldl,
-				F3(
-					function (_n4, card, acc) {
-						return (_Utils_eq(card.milestone, elm$core$Maybe$Nothing) && author$project$Main$isAcceptedPR(card)) ? A2(elm$core$List$cons, card, acc) : acc;
-					}),
-				_List_Nil,
-				model.allCards);
-			var cardsByMilestone = A3(
-				elm$core$Dict$foldl,
-				F3(
-					function (_n2, card, acc) {
-						var _n3 = card.milestone;
-						if (_n3.$ === 'Just') {
-							var milestone = _n3.a;
-							return A3(
-								elm$core$Dict$update,
-								milestone.title,
-								add(card),
-								acc);
-						} else {
-							return acc;
-						}
-					}),
-				elm$core$Dict$empty,
-				model.allCards);
-			var allMilestones = elm$core$Set$toList(
-				A3(
-					elm$core$Dict$foldl,
-					F2(
-						function (_n1, repo) {
-							return elm$core$Set$union(
-								elm$core$Set$fromList(
-									A2(
-										elm$core$List$map,
-										function ($) {
-											return $.title;
-										},
-										A2(
-											elm$core$List$filter,
-											A2(
-												elm$core$Basics$composeL,
-												elm$core$Basics$eq(author$project$GitHubGraph$MilestoneStateOpen),
-												function ($) {
-													return $.state;
-												}),
-											repo.milestones))));
-						}),
-					elm$core$Set$empty,
-					model.data.repos));
 			return _Utils_update(
 				model,
 				{
 					dataView: _Utils_update(
 						dataView,
-						{allMilestones: allMilestones, cardsByMilestone: cardsByMilestone, nextMilestoneCards: nextMilestoneCards})
+						{
+							shipItRepos: author$project$Main$computeShipItRepos(model)
+						})
+				});
+		case 'ShipItRepoPage':
+			return _Utils_update(
+				model,
+				{
+					dataView: _Utils_update(
+						dataView,
+						{
+							shipItRepos: author$project$Main$computeShipItRepos(model)
+						})
 				});
 		case 'PullRequestsPage':
 			var prsByRepo = A3(
 				elm$core$Dict$foldl,
 				F3(
-					function (_n5, card, acc) {
+					function (_n1, card, acc) {
 						return (author$project$Main$isOpen(card) && author$project$Main$isPR(card)) ? A3(
 							elm$core$Dict$update,
 							card.repo.id,
@@ -12042,35 +12160,13 @@ var author$project$Main$computeDataView = function (origModel) {
 						{prsByRepo: prsByRepo})
 				});
 		case 'LabelsPage':
-			return _Utils_update(
-				model,
-				{
-					dataView: _Utils_update(
-						dataView,
-						{
-							reposByLabel: groupRepoLabels(model.data.repos)
-						})
-				});
+			return model;
 		case 'GlobalGraphPage':
-			return _Utils_update(
-				model,
-				{
-					dataView: _Utils_update(
-						dataView,
-						{
-							reposByLabel: groupRepoLabels(model.data.repos)
-						})
-				});
+			return model;
 		case 'ProjectPage':
-			return _Utils_update(
-				model,
-				{
-					dataView: _Utils_update(
-						dataView,
-						{
-							reposByLabel: groupRepoLabels(model.data.repos)
-						})
-				});
+			return model;
+		case 'AllProjectsPage':
+			return model;
 		default:
 			return model;
 	}
@@ -14403,10 +14499,7 @@ var author$project$Main$prCircle = F3(
 								]));
 					})));
 	});
-var elm$html$Html$img = _VirtualDom_node('img');
 var elm$html$Html$span = _VirtualDom_node('span');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -14415,6 +14508,18 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var author$project$Main$octicon = function (label) {
+	return A2(
+		elm$html$Html$span,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('octicon octicon-' + label)
+			]),
+		_List_Nil);
+};
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$classList = function (classes) {
 	return elm$html$Html$Attributes$class(
 		A2(
@@ -14604,13 +14709,7 @@ var author$project$Main$reactionFlairArcs = F3(
 				A2(
 					elm$core$List$cons,
 					_Utils_Tuple3(
-						A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('octicon octicon-comment')
-								]),
-							_List_Nil),
+						author$project$Main$octicon('comment'),
 						'comments',
 						card.commentCount),
 					emojiReactions)));
@@ -15182,6 +15281,8 @@ var author$project$Main$satisfiesFilter = F3(
 				return A3(author$project$Main$involvesUser, model, login, card);
 			case 'PullRequestsFilter':
 				return author$project$Main$isPR(card);
+			case 'IssuesFilter':
+				return !author$project$Main$isPR(card);
 			default:
 				return author$project$Main$isUntriaged(card);
 		}
@@ -16112,22 +16213,6 @@ var author$project$Main$generateColor = function (seed) {
 		_Utils_chr('0'),
 		fredcy$elm_parseint$ParseInt$toHex(randomColor));
 };
-var author$project$Main$hasLabel = F3(
-	function (model, name, card) {
-		var matchingLabels = A2(
-			elm$core$Dict$filter,
-			F2(
-				function (_n0, l) {
-					return _Utils_eq(l.name, name);
-				}),
-			model.allLabels);
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return A2(elm$core$Dict$member, a, matchingLabels);
-			},
-			card.labels);
-	});
 var author$project$Main$labelKey = function (label) {
 	return _Utils_Tuple2(
 		label.name,
@@ -16233,6 +16318,9 @@ var author$project$Main$ProjectPage = function (a) {
 };
 var author$project$Main$PullRequestsPage = {$: 'PullRequestsPage'};
 var author$project$Main$ShipItPage = {$: 'ShipItPage'};
+var author$project$Main$ShipItRepoPage = function (a) {
+	return {$: 'ShipItRepoPage', a: a};
+};
 var elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -16389,6 +16477,13 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			elm$url$Url$Parser$map,
 			author$project$Main$LabelsPage,
 			elm$url$Url$Parser$s('labels')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$ShipItRepoPage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('shipit'),
+				elm$url$Url$Parser$string)),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$ShipItPage,
@@ -16588,6 +16683,10 @@ var elm$url$Url$fromString = function (str) {
 };
 var elm$browser$Browser$Navigation$load = _Browser_load;
 var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
+	});
 var elm$core$Set$foldr = F3(
 	function (func, initialState, _n0) {
 		var dict = _n0.a;
@@ -16855,6 +16954,8 @@ var author$project$Main$update = F2(
 										return elm$core$Maybe$Just(
 											author$project$Main$InProjectFilter(name));
 									case 'LabelsPage':
+										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+									case 'ShipItRepoPage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
 									case 'ShipItPage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
@@ -17931,7 +18032,7 @@ var author$project$Main$update = F2(
 								cardLabelOperations: A2(elm$core$Dict$remove, name, model.cardLabelOperations)
 							}),
 						elm$core$Platform$Cmd$none);
-				default:
+				case 'ApplyLabelOperations':
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
@@ -17990,6 +18091,13 @@ var author$project$Main$update = F2(
 						model,
 						elm$core$Platform$Cmd$batch(
 							_Utils_ap(adds, removals)));
+				default:
+					var tab = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{shipItRepoTab: tab}),
+						elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -18008,7 +18116,7 @@ var author$project$Main$init = F3(
 			currentTime: elm$time$Time$millisToPosix(config.initialTime),
 			data: author$project$Backend$emptyData,
 			dataIndex: 0,
-			dataView: {allMilestones: _List_Nil, cardsByMilestone: elm$core$Dict$empty, nextMilestoneCards: _List_Nil, prsByRepo: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty},
+			dataView: {prsByRepo: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty, shipItRepos: elm$core$Dict$empty},
 			deletingLabels: elm$core$Set$empty,
 			editingLabels: elm$core$Dict$empty,
 			graphFilters: _List_Nil,
@@ -18027,6 +18135,7 @@ var author$project$Main$init = F3(
 			projectDrag: author$project$Drag$init,
 			projectDragRefresh: elm$core$Maybe$Nothing,
 			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
+			shipItRepoTab: author$project$Main$UndocumentedTab,
 			showLabelFilters: false,
 			showLabelOperations: false
 		};
@@ -18418,6 +18527,18 @@ var author$project$Main$subscriptions = function (model) {
 				A2(elm$core$Basics$composeR, elm$core$Tuple$second, author$project$ForceGraph$isCompleted),
 				model.cardGraphs) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onAnimationFrame(author$project$Main$Tick)
 			]));
+};
+var author$project$Main$pageClass = function (page) {
+	switch (page.$) {
+		case 'ShipItRepoPage':
+			return 'shipit-repo-page';
+		case 'GlobalGraphPage':
+			return 'contains-graph';
+		case 'ProjectPage':
+			return 'contains-graph';
+		default:
+			return 'normal';
+	}
 };
 var author$project$Main$selectStatefulProject = function (project) {
 	var findColumns = function (match) {
@@ -19350,13 +19471,7 @@ var author$project$Main$viewNoteCard = F3(
 						]),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('octicon octicon-book')
-								]),
-							_List_Nil)
+							author$project$Main$octicon('book')
 						]))
 				]));
 	});
@@ -19897,13 +20012,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('octicon octicon-issue-opened')
-												]),
-											_List_Nil),
+											author$project$Main$octicon('issue-opened'),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -19943,13 +20052,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('octicon octicon-git-pull-request')
-												]),
-											_List_Nil),
+											author$project$Main$octicon('git-pull-request'),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -19999,13 +20102,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('octicon octicon-repo')
-												]),
-											_List_Nil),
+											author$project$Main$octicon('repo'),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -20314,7 +20411,7 @@ var author$project$Main$viewNavBar = function (model) {
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('bottom-bar')
+				elm$html$Html$Attributes$class('nav-bar')
 			]),
 		_List_fromArray(
 			[
@@ -20379,13 +20476,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-list-unordered')
-									]),
-								_List_Nil)
+								author$project$Main$octicon('list-unordered')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20396,47 +20487,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-globe')
-									]),
-								_List_Nil)
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/labels')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-tag')
-									]),
-								_List_Nil)
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/shipit')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-squirrel')
-									]),
-								_List_Nil)
+								author$project$Main$octicon('globe')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20447,13 +20498,29 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-git-pull-request')
-									]),
-								_List_Nil)
+								author$project$Main$octicon('git-pull-request')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/shipit')
+							]),
+						_List_fromArray(
+							[
+								author$project$Main$octicon('squirrel')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/labels')
+							]),
+						_List_fromArray(
+							[
+								author$project$Main$octicon('tag')
 							]))
 					])),
 				author$project$Main$viewSearch(model)
@@ -20652,6 +20719,7 @@ var author$project$Main$HasLabelFilter = F2(
 var author$project$Main$InvolvesUserFilter = function (a) {
 	return {$: 'InvolvesUserFilter', a: a};
 };
+var author$project$Main$IssuesFilter = {$: 'IssuesFilter'};
 var author$project$Main$PullRequestsFilter = {$: 'PullRequestsFilter'};
 var author$project$Main$RemoveFilter = function (a) {
 	return {$: 'RemoveFilter', a: a};
@@ -20691,13 +20759,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							A2(author$project$Main$labelColorStyles, model, color)),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-tag')
-									]),
-								_List_Nil),
+								author$project$Main$octicon('tag'),
 								elm$html$Html$text(name)
 							])));
 			} else {
@@ -20737,13 +20799,7 @@ var author$project$Main$viewGraphControls = function (model) {
 								A2(author$project$Main$labelColorStyles, model, color)),
 							_List_fromArray(
 								[
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('octicon octicon-tag')
-										]),
-									_List_Nil),
+									author$project$Main$octicon('tag'),
 									elm$html$Html$text(name)
 								]))
 						]))) : elm$core$Maybe$Nothing;
@@ -20794,14 +20850,31 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
+										author$project$Main$octicon('inbox'),
+										elm$html$Html$text('untriaged')
+									]));
+						}(),
+							function () {
+							var filter = author$project$Main$IssuesFilter;
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
 										_List_fromArray(
 											[
-												elm$html$Html$Attributes$class('octicon octicon-inbox')
-											]),
-										_List_Nil),
-										elm$html$Html$text('untriaged')
+												_Utils_Tuple2('control-setting', true),
+												_Utils_Tuple2(
+												'active',
+												A2(author$project$Main$hasFilter, model, filter))
+											])),
+										elm$html$Html$Events$onClick(
+										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
+									]),
+								_List_fromArray(
+									[
+										author$project$Main$octicon('issue-opened'),
+										elm$html$Html$text('issues')
 									]));
 						}(),
 							function () {
@@ -20823,13 +20896,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('octicon octicon-git-pull-request')
-											]),
-										_List_Nil),
+										author$project$Main$octicon('git-pull-request'),
 										elm$html$Html$text('pull requests')
 									]));
 						}(),
@@ -20855,13 +20922,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('octicon octicon-comment-discussion')
-												]),
-											_List_Nil),
+											author$project$Main$octicon('comment-discussion'),
 											elm$html$Html$text('involving me')
 										]));
 							} else {
@@ -20919,13 +20980,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										]),
 									_List_fromArray(
 										[
-											A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('octicon octicon-tag')
-												]),
-											_List_Nil),
+											author$project$Main$octicon('tag'),
 											elm$html$Html$text('label')
 										]))
 								]))
@@ -20966,13 +21021,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-flame')
-									]),
-								_List_Nil),
+								author$project$Main$octicon('flame'),
 								elm$html$Html$text('impact')
 							])),
 						A2(
@@ -20992,13 +21041,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-clock')
-									]),
-								_List_Nil),
+								author$project$Main$octicon('clock'),
 								elm$html$Html$text('all activity')
 							])),
 						function () {
@@ -21025,13 +21068,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('octicon octicon-clock')
-											]),
-										_List_Nil),
+										author$project$Main$octicon('clock'),
 										elm$html$Html$text('my activity')
 									]));
 						} else {
@@ -21191,7 +21228,6 @@ var author$project$Main$viewProjectPage = F2(
 			return elm$html$Html$text('project not found');
 		}
 	});
-var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$viewPullRequestsPage = function (model) {
 	var viewRepoPRs = F2(
 		function (repo, prs) {
@@ -21219,13 +21255,7 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('octicon octicon-repo')
-											]),
-										_List_Nil),
+										author$project$Main$octicon('repo'),
 										elm$html$Html$text(repo.name)
 									]))
 							])),
@@ -21273,15 +21303,336 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
 					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))));
 };
+var author$project$Main$viewShipItRepo = F2(
+	function (model, sir) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('shipit-repo')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('repo-name')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('repo-name-label')
+								]),
+							_List_fromArray(
+								[
+									author$project$Main$octicon('repo'),
+									A2(
+									elm$html$Html$a,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(sir.repo.name)
+										]))
+								]))
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-commits')
+						]),
+					_List_fromArray(
+						[
+							author$project$Main$octicon('git-commit'),
+							elm$html$Html$text(
+							elm$core$String$fromInt(sir.comparison.totalCommits) + ' commits since last release')
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-merged-prs')
+						]),
+					_List_fromArray(
+						[
+							author$project$Main$octicon('git-pull-request'),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.mergedPRs)) + ' merged pull requests')
+						])),
+					elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-closed-issues')
+						]),
+					_List_fromArray(
+						[
+							author$project$Main$octicon('issue-closed'),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.closedIssues)) + ' closed issues')
+						])),
+					elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-open-issues')
+						]),
+					_List_fromArray(
+						[
+							author$project$Main$octicon('issue-opened'),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.openIssues)) + ' open issues')
+						]))
+				]));
+	});
 var author$project$Main$viewShipItPage = function (model) {
+	var repos = elm$core$List$reverse(
+		A2(
+			elm$core$List$sortBy,
+			A2(
+				elm$core$Basics$composeL,
+				function ($) {
+					return $.totalCommits;
+				},
+				function ($) {
+					return $.comparison;
+				}),
+			elm$core$Dict$values(model.dataView.shipItRepos)));
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('shipit')
+				elm$html$Html$Attributes$class('shipit-page')
 			]),
-		_List_Nil);
+		A2(
+			elm$core$List$map,
+			author$project$Main$viewShipItRepo(model),
+			repos));
 };
+var author$project$Main$DocumentedTab = {$: 'DocumentedTab'};
+var author$project$Main$LeftUndocumentedTab = {$: 'LeftUndocumentedTab'};
+var author$project$Main$SetShipItRepoTab = function (a) {
+	return {$: 'SetShipItRepoTab', a: a};
+};
+var author$project$Main$ToDoTab = {$: 'ToDoTab'};
+var author$project$Main$UnreleasedTab = {$: 'UnreleasedTab'};
+var author$project$Main$viewShipItRepoPage = F2(
+	function (model, sir) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('shipit-repo-content')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-header')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('repo-name-label')
+								]),
+							_List_fromArray(
+								[
+									author$project$Main$octicon('repo'),
+									A2(
+									elm$html$Html$a,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$href('/shipit')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(sir.repo.owner)
+										])),
+									elm$html$Html$text(' / '),
+									A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											A2(elm$html$Html$Attributes$style, 'font-weight', 'bold')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(sir.repo.name)
+										]))
+								])),
+							function () {
+							var _n0 = sir.nextMilestone;
+							if (_n0.$ === 'Just') {
+								var nm = _n0.a;
+								return A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('repo-milestone-label')
+										]),
+									_List_fromArray(
+										[
+											author$project$Main$octicon('milestone'),
+											elm$html$Html$text(nm.title)
+										]));
+							} else {
+								return elm$html$Html$text('');
+							}
+						}()
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-repo-tabview')
+						]),
+					_List_fromArray(
+						[
+							function () {
+							var tabCount = function (count) {
+								return A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('counter')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(
+											elm$core$String$fromInt(count))
+										]));
+							};
+							var tabAttrs = function (tab) {
+								return _List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('shipit-repo-tab', true),
+												_Utils_Tuple2(
+												'selected',
+												_Utils_eq(model.shipItRepoTab, tab))
+											])),
+										elm$html$Html$Events$onClick(
+										author$project$Main$SetShipItRepoTab(tab))
+									]);
+							};
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('shipit-repo-tabs')
+									]),
+								_List_fromArray(
+									[
+										A2(
+										elm$html$Html$span,
+										tabAttrs(author$project$Main$ToDoTab),
+										_List_fromArray(
+											[
+												elm$html$Html$text('To Do'),
+												tabCount(
+												elm$core$List$length(sir.openIssues) + elm$core$List$length(sir.openPRs))
+											])),
+										A2(
+										elm$html$Html$span,
+										tabAttrs(author$project$Main$UndocumentedTab),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Done'),
+												tabCount(
+												elm$core$List$length(sir.undocumentedCards))
+											])),
+										A2(
+										elm$html$Html$span,
+										tabAttrs(author$project$Main$DocumentedTab),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Documented'),
+												tabCount(
+												elm$core$List$length(sir.documentedCards))
+											])),
+										A2(
+										elm$html$Html$span,
+										tabAttrs(author$project$Main$LeftUndocumentedTab),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Undocumented'),
+												tabCount(
+												elm$core$List$length(sir.leftUndocumentedCards))
+											])),
+										A2(
+										elm$html$Html$span,
+										tabAttrs(author$project$Main$UnreleasedTab),
+										_List_fromArray(
+											[
+												elm$html$Html$text('Unreleased'),
+												tabCount(
+												elm$core$List$length(sir.unreleasedCards))
+											]))
+									]));
+						}()
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2('shipit-repo-cards', true),
+									_Utils_Tuple2(
+									'first-tab',
+									_Utils_eq(model.shipItRepoTab, author$project$Main$ToDoTab))
+								]))
+						]),
+					function () {
+						var cards = function () {
+							var _n1 = model.shipItRepoTab;
+							switch (_n1.$) {
+								case 'ToDoTab':
+									return _Utils_ap(sir.openIssues, sir.openPRs);
+								case 'UndocumentedTab':
+									return sir.undocumentedCards;
+								case 'DocumentedTab':
+									return sir.documentedCards;
+								case 'LeftUndocumentedTab':
+									return sir.leftUndocumentedCards;
+								default:
+									return sir.unreleasedCards;
+							}
+						}();
+						return A2(
+							elm$core$List$map,
+							author$project$Main$viewCard(model),
+							elm$core$List$reverse(
+								A2(
+									elm$core$List$sortBy,
+									A2(
+										elm$core$Basics$composeR,
+										function ($) {
+											return $.updatedAt;
+										},
+										elm$time$Time$posixToMillis),
+									cards)));
+					}())
+				]));
+	});
 var author$project$Main$ApplyLabelOperations = {$: 'ApplyLabelOperations'};
 var author$project$Main$ClearSelectedCards = {$: 'ClearSelectedCards'};
 var author$project$Main$RemoveLabelOperation = {$: 'RemoveLabelOperation'};
@@ -21363,13 +21714,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 							A2(author$project$Main$labelColorStyles, model, color)),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-tag')
-									]),
-								_List_Nil),
+								author$project$Main$octicon('tag'),
 								elm$html$Html$text(name)
 							]))
 					]));
@@ -21428,13 +21773,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('octicon octicon-tag')
-									]),
-								_List_Nil),
+								author$project$Main$octicon('tag'),
 								elm$html$Html$text('labels')
 							])),
 						A2(
@@ -21495,13 +21834,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('octicon octicon-x')
-											]),
-										_List_Nil),
+										author$project$Main$octicon('x'),
 										elm$html$Html$text('cancel')
 									])),
 								A2(
@@ -21513,13 +21846,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('octicon octicon-check')
-											]),
-										_List_Nil),
+										author$project$Main$octicon('check'),
 										elm$html$Html$text('apply')
 									]))
 							]))
@@ -21564,29 +21891,14 @@ var author$project$Main$viewPage = function (model) {
 			]),
 		_List_fromArray(
 			[
+				author$project$Main$viewNavBar(model),
 				A2(
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('main-page', true),
-								_Utils_Tuple2(
-								'contains-graph',
-								function () {
-									var _n0 = model.page;
-									switch (_n0.$) {
-										case 'GlobalGraphPage':
-											return true;
-										case 'ProjectPage':
-											var id = _n0.a;
-											return true;
-										default:
-											return false;
-									}
-								}())
-							]))
+						elm$html$Html$Attributes$class('main-page'),
+						elm$html$Html$Attributes$class(
+						author$project$Main$pageClass(model.page))
 					]),
 				_List_fromArray(
 					[
@@ -21599,19 +21911,28 @@ var author$project$Main$viewPage = function (model) {
 						_List_fromArray(
 							[
 								function () {
-								var _n1 = model.page;
-								switch (_n1.$) {
+								var _n0 = model.page;
+								switch (_n0.$) {
 									case 'AllProjectsPage':
 										return author$project$Main$viewAllProjectsPage(model);
 									case 'GlobalGraphPage':
 										return author$project$Main$viewSpatialGraph(model);
 									case 'ProjectPage':
-										var id = _n1.a;
+										var id = _n0.a;
 										return A2(author$project$Main$viewProjectPage, model, id);
 									case 'LabelsPage':
 										return author$project$Main$viewLabelsPage(model);
 									case 'ShipItPage':
 										return author$project$Main$viewShipItPage(model);
+									case 'ShipItRepoPage':
+										var repoName = _n0.a;
+										var _n1 = A2(elm$core$Dict$get, repoName, model.dataView.shipItRepos);
+										if (_n1.$ === 'Just') {
+											var sir = _n1.a;
+											return A2(author$project$Main$viewShipItRepoPage, model, sir);
+										} else {
+											return elm$html$Html$text('repo not found');
+										}
 									case 'PullRequestsPage':
 										return author$project$Main$viewPullRequestsPage(model);
 									default:
@@ -21652,8 +21973,7 @@ var author$project$Main$viewPage = function (model) {
 									]),
 								sidebarCards)
 							]))
-					])),
-				author$project$Main$viewNavBar(model)
+					]))
 			]));
 };
 var author$project$Main$view = function (model) {
