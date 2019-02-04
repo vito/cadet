@@ -21273,14 +21273,235 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
 					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))));
 };
+var author$project$Main$viewShipItRepo = F2(
+	function (model, sir) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('shipit-repo')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('repo-name')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('repo-name-label')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('octicon octicon-repo')
+										]),
+									_List_Nil),
+									elm$html$Html$text(sir.repo.name)
+								]))
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-commits')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('octicon octicon-git-commit')
+								]),
+							_List_Nil),
+							elm$html$Html$text(
+							elm$core$String$fromInt(sir.comparison.totalCommits) + ' commits since last release')
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-merged-prs')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('octicon octicon-git-pull-request')
+								]),
+							_List_Nil),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.mergedPrs)) + ' merged pull requests')
+						])),
+					elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-closed-issues')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('octicon octicon-issue-closed')
+								]),
+							_List_Nil),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.closedIssues)) + ' closed issues')
+						])),
+					elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metric shipit-metric-open-issues')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('octicon octicon-issue-opened')
+								]),
+							_List_Nil),
+							elm$html$Html$text(
+							elm$core$String$fromInt(
+								elm$core$List$length(sir.openIssues)) + ' open issues')
+						]))
+				]));
+	});
 var author$project$Main$viewShipItPage = function (model) {
+	var selectPRsInComparison = F4(
+		function (comparison, prId, pr, acc) {
+			var _n4 = pr.mergeCommit;
+			if (_n4.$ === 'Nothing') {
+				return acc;
+			} else {
+				var sha = _n4.a.sha;
+				return A2(
+					elm$core$List$any,
+					A2(
+						elm$core$Basics$composeL,
+						elm$core$Basics$eq(sha),
+						function ($) {
+							return $.sha;
+						}),
+					comparison.commits) ? A2(elm$core$List$cons, pr, acc) : acc;
+			}
+		});
+	var selectIssuesInMilestone = F4(
+		function (milestone, issueId, issue, acc) {
+			var _n3 = issue.milestone;
+			if (_n3.$ === 'Nothing') {
+				return acc;
+			} else {
+				var id = _n3.a.id;
+				return _Utils_eq(milestone.id, id) ? A2(elm$core$List$cons, issue, acc) : acc;
+			}
+		});
+	var makeShipItRepo = F3(
+		function (repoId, comparison, acc) {
+			if (!comparison.totalCommits) {
+				return acc;
+			} else {
+				var _n0 = A2(elm$core$Dict$get, repoId, model.data.repos);
+				if (_n0.$ === 'Just') {
+					var repo = _n0.a;
+					var nextMilestone = elm$core$List$head(
+						A2(
+							elm$core$List$sortBy,
+							function ($) {
+								return $.number;
+							},
+							A2(
+								elm$core$List$filter,
+								A2(
+									elm$core$Basics$composeL,
+									elm$core$Basics$eq(author$project$GitHubGraph$MilestoneStateOpen),
+									function ($) {
+										return $.state;
+									}),
+								repo.milestones)));
+					var _n1 = function () {
+						if (nextMilestone.$ === 'Nothing') {
+							return _Utils_Tuple2(_List_Nil, _List_Nil);
+						} else {
+							var nm = nextMilestone.a;
+							return A2(
+								elm$core$List$partition,
+								A2(
+									elm$core$Basics$composeL,
+									elm$core$Basics$eq(author$project$GitHubGraph$IssueStateClosed),
+									function ($) {
+										return $.state;
+									}),
+								A3(
+									elm$core$Dict$foldl,
+									selectIssuesInMilestone(nm),
+									_List_Nil,
+									model.data.issues));
+						}
+					}();
+					var closedIssues = _n1.a;
+					var openIssues = _n1.b;
+					return A2(
+						elm$core$List$cons,
+						{
+							closedIssues: closedIssues,
+							comparison: comparison,
+							mergedPrs: A3(
+								elm$core$Dict$foldl,
+								selectPRsInComparison(comparison),
+								_List_Nil,
+								model.data.prs),
+							nextMilestone: nextMilestone,
+							openIssues: openIssues,
+							repo: repo
+						},
+						acc);
+				} else {
+					return acc;
+				}
+			}
+		});
+	var repos = elm$core$List$reverse(
+		A2(
+			elm$core$List$sortBy,
+			A2(
+				elm$core$Basics$composeL,
+				function ($) {
+					return $.totalCommits;
+				},
+				function ($) {
+					return $.comparison;
+				}),
+			A3(elm$core$Dict$foldl, makeShipItRepo, _List_Nil, model.data.comparisons)));
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
 				elm$html$Html$Attributes$class('shipit')
 			]),
-		_List_Nil);
+		A2(
+			elm$core$List$map,
+			author$project$Main$viewShipItRepo(model),
+			repos));
 };
 var author$project$Main$ApplyLabelOperations = {$: 'ApplyLabelOperations'};
 var author$project$Main$ClearSelectedCards = {$: 'ClearSelectedCards'};

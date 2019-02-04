@@ -1049,94 +1049,6 @@ svg {
   }
 }
 
-.all-milestones {
-  display: flex;
-  flex-direction: row;
-  padding: @card-margin * 2;
-
-  .milestone {
-    flex-shrink: 0;
-    margin-right: @card-margin * 2;
-
-    display: flex;
-    flex-direction: column;
-
-    position: relative;
-
-    .cards {
-      flex-grow: 1;
-      width: @card-width + (@card-margin * 2);
-      background: @gray;
-      border-bottom-left-radius: @card-margin;
-      border-bottom-right-radius: @card-margin;
-    }
-
-    .drop-area {
-      height: auto !important;
-      border-radius: @card-margin;
-      margin: 0;
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      min-height: 0;
-
-      &.over {
-        background: @white-fade-70;
-      }
-    }
-
-    .card {
-      border-color: @gray-600;
-    }
-
-    .milestone-title {
-      flex-grow: 0;
-      flex-shrink: 0;
-      background: @gray-dark;
-      color: @white;
-      padding: @card-margin;
-      font-size: 14px;
-      padding: @card-margin;
-      user-select: none;
-      cursor: default;
-      border-top-left-radius: @card-margin;
-      border-top-right-radius: @card-margin;
-
-      display: flex;
-      flex-direction: row;
-
-      .milestone-title-label {
-        flex-grow: 1;
-
-        .octicon {
-          margin: -2px 5px 0 2px;
-          font-size: 12px;
-        }
-      }
-
-      .milestone-title-controls {
-        color: @white-fade-30;
-
-        .octicon {
-          margin: -2px 2px 0 5px;
-          font-size: 12px;
-
-          &:hover {
-            cursor: pointer;
-            color: @white;
-          }
-        }
-      }
-    }
-
-    &.inbox .milestone-title {
-      background: @gray;
-    }
-  }
-}
-
 .graph-controls {
   position: fixed;
   bottom: @bottom-bar-height;
@@ -1363,13 +1275,13 @@ svg {
   }
 }
 
-.all-pull-requests {
+.all-pull-requests, .shipit {
   display: flex;
   flex-flow: column wrap;
   height: ~"calc(100vh - 40px)";
   align-content: flex-start;
 
-  .repo-pull-requests {
+  .repo-pull-requests, .shipit-repo {
     margin-left: 20px;
     margin-top: 20px;
     border-radius: 10px;
@@ -1427,4 +1339,57 @@ svg {
   0% { -webkit-transform: rotate(10deg); }
   50% { -webkit-transform: rotate(-10deg); }
   100% { -webkit-transform: rotate(10deg); }
+}
+
+.shipit-repo {
+  width: 300px;
+}
+
+.shipit-metric {
+  background: @white;
+  color: @gray;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 7px;
+
+  &:last-child {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+  }
+
+  .octicon {
+    text-align: center;
+    font-size: 20px;
+    margin-right: 7px;
+  }
+
+  &.shipit-metric-commits {
+    .octicon {
+      margin-left: 1px;
+      margin-right: 6px;
+    }
+  }
+
+  &.shipit-metric-merged-prs {
+    .octicon {
+      color: @purple;
+      margin-left: 2px;
+      margin-right: 5px;
+    }
+  }
+
+  &.shipit-metric-closed-issues {
+    .octicon {
+      color: @red;
+    }
+  }
+
+  &.shipit-metric-open-issues {
+    .octicon {
+      color: @green;
+
+      margin-left: 1px;
+      margin-right: 6px;
+    }
+  }
 }

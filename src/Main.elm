@@ -1859,10 +1859,122 @@ viewLabelsPage model =
         (newLabel :: labelRows)
 
 
+type alias ShipItRepo =
+    { repo : GitHubGraph.Repo
+    , nextMilestone : Maybe GitHubGraph.Milestone
+    , comparison : GitHubGraph.V3Comparison
+    , mergedPrs : List GitHubGraph.PullRequest
+    , closedIssues : List GitHubGraph.Issue
+    , openIssues : List GitHubGraph.Issue
+    }
+
+
 viewShipItPage : Model -> Html Msg
 viewShipItPage model =
+    let
+        selectPRsInComparison comparison prId pr acc =
+            case pr.mergeCommit of
+                Nothing ->
+                    acc
+
+                Just { sha } ->
+                    if List.any ((==) sha << .sha) comparison.commits then
+                        pr :: acc
+
+                    else
+                        acc
+
+        selectIssuesInMilestone milestone issueId issue acc =
+            case issue.milestone of
+                Nothing ->
+                    acc
+
+                Just { id } ->
+                    if milestone.id == id then
+                        issue :: acc
+
+                    else
+                        acc
+
+        makeShipItRepo repoId comparison acc =
+            if comparison.totalCommits == 0 then
+                acc
+
+            else
+                case Dict.get repoId model.data.repos of
+                    Just repo ->
+                        let
+                            nextMilestone =
+                                repo.milestones
+                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                    |> List.sortBy .number
+                                    |> List.head
+
+                            ( closedIssues, openIssues ) =
+                                case nextMilestone of
+                                    Nothing ->
+                                        ( [], [] )
+
+                                    Just nm ->
+                                        Dict.foldl (selectIssuesInMilestone nm) [] model.data.issues
+                                            |> List.partition ((==) GitHubGraph.IssueStateClosed << .state)
+                        in
+                        { repo = repo
+                        , nextMilestone = nextMilestone
+                        , comparison = comparison
+                        , mergedPrs =
+                            Dict.foldl (selectPRsInComparison comparison) [] model.data.prs
+                        , openIssues = openIssues
+                        , closedIssues = closedIssues
+                        }
+                            :: acc
+
+                    Nothing ->
+                        acc
+
+        repos =
+            Dict.foldl makeShipItRepo [] model.data.comparisons
+                |> List.sortBy (.totalCommits << .comparison)
+                |> List.reverse
+    in
     Html.div [ HA.class "shipit" ]
-        []
+        (List.map (viewShipItRepo model) repos)
+
+
+viewShipItRepo : Model -> ShipItRepo -> Html Msg
+viewShipItRepo model sir =
+    Html.div [ HA.class "shipit-repo" ]
+        [ Html.div [ HA.class "repo-name" ]
+            [ Html.div [ HA.class "repo-name-label" ]
+                [ Html.span [ HA.class "octicon octicon-repo" ] []
+                , Html.text sir.repo.name
+                ]
+            ]
+        , Html.div [ HA.class "shipit-metric shipit-metric-commits" ]
+            [ Html.span [ HA.class "octicon octicon-git-commit" ] []
+            , Html.text (String.fromInt sir.comparison.totalCommits ++ " commits since last release")
+            ]
+        , Html.div [ HA.class "shipit-metric shipit-metric-merged-prs" ]
+            [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
+            , Html.text (String.fromInt (List.length sir.mergedPrs) ++ " merged pull requests")
+            ]
+        , if List.isEmpty sir.closedIssues then
+            Html.text ""
+
+          else
+            Html.div [ HA.class "shipit-metric shipit-metric-closed-issues" ]
+                [ Html.span [ HA.class "octicon octicon-issue-closed" ] []
+                , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
+                ]
+        , if List.isEmpty sir.openIssues then
+            Html.text ""
+
+          else
+            Html.div [ HA.class "shipit-metric shipit-metric-open-issues" ]
+                [ Html.span [ HA.class "octicon octicon-issue-opened" ] []
+                , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
+                ]
+        ]
 
 
 viewPullRequestsPage : Model -> Html Msg
