@@ -74,6 +74,7 @@ type alias Model =
     , labelSearch : String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
+    , shipItRepoTab : ShipItRepoTab
     }
 
 
@@ -93,12 +94,31 @@ type CardLabelOperation
 
 
 type alias DataView =
-    { cardsByMilestone : Dict String (List Card)
-    , allMilestones : List String
-    , nextMilestoneCards : List Card
-    , reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
+    { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     , prsByRepo : Dict GitHubGraph.ID (List Card)
+    , shipItRepos : Dict GitHubGraph.ID ShipItRepo
     }
+
+
+type alias ShipItRepo =
+    { repo : GitHubGraph.Repo
+    , nextMilestone : Maybe GitHubGraph.Milestone
+    , comparison : GitHubGraph.V3Comparison
+    , mergedPRs : List Card
+    , closedIssues : List Card
+    , openIssues : List Card
+    , undocumentedCards : List Card
+    , documentedCards : List Card
+    , leftUndocumentedCards : List Card
+    , unreleasedCards : List Card
+    }
+
+
+type ShipItRepoTab
+    = UndocumentedTab
+    | DocumentedTab
+    | LeftUndocumentedTab
+    | UnreleasedTab
 
 
 type GraphFilter
@@ -238,6 +258,7 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
+    | SetShipItRepoTab ShipItRepoTab
 
 
 type Page
@@ -246,6 +267,7 @@ type Page
     | ProjectPage String
     | LabelsPage
     | ShipItPage
+    | ShipItRepoPage String
     | PullRequestsPage
     | BouncePage
 
@@ -324,6 +346,7 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
+        , UP.map ShipItRepoPage (UP.s "shipit" </> UP.string)
         , UP.map ShipItPage (UP.s "shipit")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
@@ -374,11 +397,9 @@ init config url key =
             , isPolling = True
             , dataIndex = 0
             , dataView =
-                { cardsByMilestone = Dict.empty
-                , allMilestones = []
-                , nextMilestoneCards = []
-                , reposByLabel = Dict.empty
+                { reposByLabel = Dict.empty
                 , prsByRepo = Dict.empty
+                , shipItRepos = Dict.empty
                 }
             , allCards = Dict.empty
             , allLabels = Dict.empty
@@ -405,6 +426,7 @@ init config url key =
             , labelSearch = ""
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
+            , shipItRepoTab = UndocumentedTab
             }
 
         ( navedModel, navedMsgs ) =
@@ -469,6 +491,9 @@ update msg model =
                                     Just (InProjectFilter name)
 
                                 LabelsPage ->
+                                    Just ExcludeAllFilter
+
+                                ShipItRepoPage _ ->
                                     Just ExcludeAllFilter
 
                                 ShipItPage ->
@@ -1180,6 +1205,9 @@ update msg model =
             in
             ( model, Cmd.batch (adds ++ removals) )
 
+        SetShipItRepoTab tab ->
+            ( { model | shipItRepoTab = tab }, Cmd.none )
+
 
 computeGraphState : Model -> Model
 computeGraphState model =
@@ -1245,65 +1273,21 @@ computeDataView origModel =
                 )
                 Dict.empty
 
-        dataView =
+        origDataView =
             origModel.dataView
 
-        model =
-            if origModel.showLabelOperations then
-                { origModel | dataView = { dataView | reposByLabel = groupRepoLabels origModel.data.repos } }
+        dataView =
+            { origDataView | reposByLabel = groupRepoLabels origModel.data.repos }
 
-            else
-                origModel
+        model =
+            { origModel | dataView = dataView }
     in
     case model.page of
         ShipItPage ->
-            let
-                allMilestones =
-                    Set.toList <|
-                        Dict.foldl
-                            (\_ repo ->
-                                repo.milestones
-                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                                    |> List.map .title
-                                    |> Set.fromList
-                                    |> Set.union
-                            )
-                            Set.empty
-                            model.data.repos
+            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
 
-                cardsByMilestone =
-                    Dict.foldl
-                        (\_ card acc ->
-                            case card.milestone of
-                                Just milestone ->
-                                    Dict.update milestone.title (add card) acc
-
-                                Nothing ->
-                                    acc
-                        )
-                        Dict.empty
-                        model.allCards
-
-                nextMilestoneCards =
-                    Dict.foldl
-                        (\_ card acc ->
-                            if card.milestone == Nothing && isAcceptedPR card then
-                                card :: acc
-
-                            else
-                                acc
-                        )
-                        []
-                        model.allCards
-            in
-            { model
-                | dataView =
-                    { dataView
-                        | cardsByMilestone = cardsByMilestone
-                        , allMilestones = allMilestones
-                        , nextMilestoneCards = nextMilestoneCards
-                    }
-            }
+        ShipItRepoPage _ ->
+            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
 
         PullRequestsPage ->
             let
@@ -1322,16 +1306,116 @@ computeDataView origModel =
             { model | dataView = { dataView | prsByRepo = prsByRepo } }
 
         LabelsPage ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+            model
 
         GlobalGraphPage ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
+            model
 
         ProjectPage _ ->
-            { model | dataView = { dataView | reposByLabel = groupRepoLabels model.data.repos } }
-
-        _ ->
             model
+
+        AllProjectsPage ->
+            model
+
+        BouncePage ->
+            model
+
+
+computeShipItRepos : Model -> Dict String ShipItRepo
+computeShipItRepos model =
+    let
+        selectPRsInComparison comparison prId pr acc =
+            case pr.mergeCommit of
+                Nothing ->
+                    acc
+
+                Just { sha } ->
+                    if List.any ((==) sha << .sha) comparison.commits then
+                        case Dict.get prId model.allCards of
+                            Just prc ->
+                                prc :: acc
+
+                            Nothing ->
+                                acc
+
+                    else
+                        acc
+
+        selectCardsInMilestone milestone cardId card acc =
+            case card.milestone of
+                Nothing ->
+                    acc
+
+                Just { id } ->
+                    if milestone.id == id then
+                        card :: acc
+
+                    else
+                        acc
+
+        makeShipItRepo repoId comparison acc =
+            if comparison.totalCommits == 0 then
+                acc
+
+            else
+                case Dict.get repoId model.data.repos of
+                    Just repo ->
+                        let
+                            nextMilestone =
+                                repo.milestones
+                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                    |> List.sortBy .number
+                                    |> List.head
+
+                            ( closedIssues, openIssues ) =
+                                case nextMilestone of
+                                    Nothing ->
+                                        ( [], [] )
+
+                                    Just nm ->
+                                        Dict.foldl (selectCardsInMilestone nm) [] model.allCards
+                                            |> List.partition ((==) (IssueState GitHubGraph.IssueStateClosed) << .state)
+
+                            mergedPRs =
+                                Dict.foldl (selectPRsInComparison comparison) [] model.data.prs
+
+                            allCards =
+                                openIssues ++ closedIssues ++ mergedPRs
+
+                            categorizeCard card sir =
+                                if hasLabel model "documented" card then
+                                    { sir | documentedCards = card :: sir.documentedCards }
+
+                                else if hasLabel model "left-undocumented" card then
+                                    { sir | leftUndocumentedCards = card :: sir.leftUndocumentedCards }
+
+                                else if hasLabel model "unreleased" card then
+                                    { sir | unreleasedCards = card :: sir.unreleasedCards }
+
+                                else
+                                    { sir | undocumentedCards = card :: sir.undocumentedCards }
+
+                            shipItRepo =
+                                List.foldl categorizeCard
+                                    { repo = repo
+                                    , nextMilestone = nextMilestone
+                                    , comparison = comparison
+                                    , mergedPRs = mergedPRs
+                                    , openIssues = openIssues
+                                    , closedIssues = closedIssues
+                                    , undocumentedCards = []
+                                    , documentedCards = []
+                                    , leftUndocumentedCards = []
+                                    , unreleasedCards = []
+                                    }
+                                    allCards
+                        in
+                        Dict.insert repo.name shipItRepo acc
+
+                    Nothing ->
+                        acc
+    in
+    Dict.foldl makeShipItRepo Dict.empty model.data.comparisons
 
 
 cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
@@ -1444,6 +1528,14 @@ viewPage model =
 
                     ShipItPage ->
                         viewShipItPage model
+
+                    ShipItRepoPage repoName ->
+                        case Dict.get repoName model.dataView.shipItRepos of
+                            Just sir ->
+                                viewShipItRepoPage model sir
+
+                            Nothing ->
+                                Html.text "repo not found"
 
                     PullRequestsPage ->
                         viewPullRequestsPage model
@@ -1859,86 +1951,65 @@ viewLabelsPage model =
         (newLabel :: labelRows)
 
 
-type alias ShipItRepo =
-    { repo : GitHubGraph.Repo
-    , nextMilestone : Maybe GitHubGraph.Milestone
-    , comparison : GitHubGraph.V3Comparison
-    , mergedPrs : List GitHubGraph.PullRequest
-    , closedIssues : List GitHubGraph.Issue
-    , openIssues : List GitHubGraph.Issue
-    }
-
-
 viewShipItPage : Model -> Html Msg
 viewShipItPage model =
     let
-        selectPRsInComparison comparison prId pr acc =
-            case pr.mergeCommit of
-                Nothing ->
-                    acc
-
-                Just { sha } ->
-                    if List.any ((==) sha << .sha) comparison.commits then
-                        pr :: acc
-
-                    else
-                        acc
-
-        selectIssuesInMilestone milestone issueId issue acc =
-            case issue.milestone of
-                Nothing ->
-                    acc
-
-                Just { id } ->
-                    if milestone.id == id then
-                        issue :: acc
-
-                    else
-                        acc
-
-        makeShipItRepo repoId comparison acc =
-            if comparison.totalCommits == 0 then
-                acc
-
-            else
-                case Dict.get repoId model.data.repos of
-                    Just repo ->
-                        let
-                            nextMilestone =
-                                repo.milestones
-                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
-                                    |> List.sortBy .number
-                                    |> List.head
-
-                            ( closedIssues, openIssues ) =
-                                case nextMilestone of
-                                    Nothing ->
-                                        ( [], [] )
-
-                                    Just nm ->
-                                        Dict.foldl (selectIssuesInMilestone nm) [] model.data.issues
-                                            |> List.partition ((==) GitHubGraph.IssueStateClosed << .state)
-                        in
-                        { repo = repo
-                        , nextMilestone = nextMilestone
-                        , comparison = comparison
-                        , mergedPrs =
-                            Dict.foldl (selectPRsInComparison comparison) [] model.data.prs
-                        , openIssues = openIssues
-                        , closedIssues = closedIssues
-                        }
-                            :: acc
-
-                    Nothing ->
-                        acc
-
         repos =
-            Dict.foldl makeShipItRepo [] model.data.comparisons
+            Dict.values model.dataView.shipItRepos
                 |> List.sortBy (.totalCommits << .comparison)
                 |> List.reverse
     in
-    Html.div [ HA.class "shipit" ]
+    Html.div [ HA.class "shipit-page" ]
         (List.map (viewShipItRepo model) repos)
+
+
+viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
+viewShipItRepoPage model sir =
+    Html.div [ HA.class "shipit-repo-page" ]
+        [ Html.div [ HA.class "shipit-header" ]
+            [ Html.div [ HA.class "repo-name-label" ]
+                [ Html.span [ HA.class "octicon octicon-repo" ] []
+                , Html.text sir.repo.owner
+                , Html.text " / "
+                , Html.span [ HA.style "font-weight" "bold" ] [ Html.text sir.repo.name ]
+                ]
+            ]
+        , Html.div [ HA.class "shipit-repo-tabview" ]
+            [ let
+                tabAttrs tab =
+                    [ HA.classList [ ( "shipit-repo-tab", True ), ( "selected", model.shipItRepoTab == tab ) ]
+                    , HE.onClick (SetShipItRepoTab tab)
+                    ]
+
+                tabCount label thing =
+                    Html.text (label ++ " (" ++ String.fromInt (List.length thing) ++ ")")
+              in
+              Html.div [ HA.class "shipit-repo-tabs" ]
+                [ Html.span (tabAttrs UndocumentedTab)
+                    [ tabCount "Undocumented" sir.undocumentedCards ]
+                , Html.span (tabAttrs DocumentedTab)
+                    [ tabCount "Documented" sir.documentedCards ]
+                , Html.span (tabAttrs LeftUndocumentedTab)
+                    [ tabCount "Left Undocumented" sir.leftUndocumentedCards ]
+                , Html.span (tabAttrs UnreleasedTab)
+                    [ tabCount "Unreleased" sir.unreleasedCards ]
+                ]
+            ]
+        , Html.div [ HA.class "shipit-repo-cards" ] <|
+            List.map (viewCard model) <|
+                case model.shipItRepoTab of
+                    UndocumentedTab ->
+                        sir.undocumentedCards
+
+                    DocumentedTab ->
+                        sir.documentedCards
+
+                    LeftUndocumentedTab ->
+                        sir.leftUndocumentedCards
+
+                    UnreleasedTab ->
+                        sir.unreleasedCards
+        ]
 
 
 viewShipItRepo : Model -> ShipItRepo -> Html Msg
@@ -1947,7 +2018,10 @@ viewShipItRepo model sir =
         [ Html.div [ HA.class "repo-name" ]
             [ Html.div [ HA.class "repo-name-label" ]
                 [ Html.span [ HA.class "octicon octicon-repo" ] []
-                , Html.text sir.repo.name
+                , Html.a
+                    [ HA.href ("/shipit/" ++ sir.repo.name)
+                    ]
+                    [ Html.text sir.repo.name ]
                 ]
             ]
         , Html.div [ HA.class "shipit-metric shipit-metric-commits" ]
@@ -1956,7 +2030,7 @@ viewShipItRepo model sir =
             ]
         , Html.div [ HA.class "shipit-metric shipit-metric-merged-prs" ]
             [ Html.span [ HA.class "octicon octicon-git-pull-request" ] []
-            , Html.text (String.fromInt (List.length sir.mergedPrs) ++ " merged pull requests")
+            , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
             ]
         , if List.isEmpty sir.closedIssues then
             Html.text ""
@@ -3280,6 +3354,20 @@ isUntriaged card =
 isMerged : Card -> Bool
 isMerged card =
     card.state == PullRequestState GitHubGraph.PullRequestStateMerged
+
+
+labelNames : Model -> Card -> List String
+labelNames model card =
+    let
+        selectLabel id acc =
+            case Dict.get id model.allLabels of
+                Just l ->
+                    l.name :: acc
+
+                Nothing ->
+                    acc
+    in
+    List.foldl selectLabel [] card.labels
 
 
 hasLabel : Model -> String -> Card -> Bool

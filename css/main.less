@@ -1275,43 +1275,17 @@ svg {
   }
 }
 
-.all-pull-requests, .shipit {
+.all-pull-requests {
   display: flex;
   flex-flow: column wrap;
   height: ~"calc(100vh - 40px)";
   align-content: flex-start;
 
-  .repo-pull-requests, .shipit-repo {
+  .repo-pull-requests {
     margin-left: 20px;
     margin-top: 20px;
     border-radius: 10px;
     background: @gray-500;
-
-    .repo-name {
-      flex-grow: 0;
-      flex-shrink: 0;
-      background: @gray-dark;
-      color: @white;
-      padding: @card-margin;
-      font-size: 14px;
-      padding: @card-margin;
-      user-select: none;
-      cursor: default;
-      border-top-left-radius: @card-margin;
-      border-top-right-radius: @card-margin;
-
-      display: flex;
-      flex-direction: row;
-
-      .repo-name-label {
-        flex-grow: 1;
-
-        .octicon {
-          margin: -2px 5px 0 2px;
-          font-size: 12px;
-        }
-      }
-    }
 
     .card {
       border-color: @gray-600;
@@ -1339,6 +1313,32 @@ svg {
   0% { -webkit-transform: rotate(10deg); }
   50% { -webkit-transform: rotate(-10deg); }
   100% { -webkit-transform: rotate(10deg); }
+}
+
+.repo-name {
+  flex-grow: 0;
+  flex-shrink: 0;
+  background: @gray-dark;
+  color: @white;
+  padding: @card-margin;
+  font-size: 14px;
+  padding: @card-margin;
+  user-select: none;
+  cursor: default;
+  border-top-left-radius: @card-margin;
+  border-top-right-radius: @card-margin;
+
+  display: flex;
+  flex-direction: row;
+
+  .repo-name-label {
+    flex-grow: 1;
+
+    .octicon {
+      margin: -2px 5px 0 2px;
+      font-size: 12px;
+    }
+  }
 }
 
 .shipit-repo {
@@ -1390,6 +1390,67 @@ svg {
 
       margin-left: 1px;
       margin-right: 6px;
+    }
+  }
+}
+
+.shipit-page {
+  margin: 50px;
+}
+
+.shipit-header {
+  background: @black;
+  padding: 12px;
+
+  .repo-name-label {
+    font-size: 24px;
+    color: @white;
+
+    .octicon {
+      margin: 0 8px 0 4px;
+      font-size: 24px;
+    }
+  }
+}
+
+.shipit-repo-page {
+  width: 100%;
+}
+
+.shipit-repo-tabview {
+  display: flex;
+  flex-direction: column;
+  background: @black;
+}
+
+.shipit-repo-tabs {
+  display: flex;
+  flex-direction: row;
+}
+
+.shipit-repo-tab {
+  padding: 7px;
+  background: @gray;
+  font-size: 14px;
+  cursor: pointer;
+  color: @white;
+
+  &.selected {
+    background: @gray-200;
+    color: @gray;
+  }
+}
+
+.shipit-repo-cards {
+  .card {
+    width: auto;
+    border: 0;
+    border-radius: 0;
+    border-bottom: 1px solid #e1e4e8;
+
+    &::before {
+      // hide project status indicator
+      display: none;
     }
   }
 }
