@@ -1545,12 +1545,6 @@ pageClass page =
         ShipItRepoPage _ ->
             "shipit-repo-page"
 
-        GlobalGraphPage ->
-            "contains-graph"
-
-        ProjectPage _ ->
-            "contains-graph"
-
         _ ->
             "normal"
 
