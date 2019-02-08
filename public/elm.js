@@ -11862,21 +11862,27 @@ var author$project$Main$computeColorIsLight = function (hex) {
 		return A3(author$project$Log$debug, 'invalid hex', hex, false);
 	}
 };
-var author$project$Main$hasLabel = F3(
-	function (model, name, card) {
-		var matchingLabels = A2(
-			elm$core$Dict$filter,
-			F2(
-				function (_n0, l) {
-					return _Utils_eq(l.name, name);
-				}),
-			model.allLabels);
+var elm$core$List$member = F2(
+	function (x, xs) {
 		return A2(
 			elm$core$List$any,
 			function (a) {
-				return A2(elm$core$Dict$member, a, matchingLabels);
+				return _Utils_eq(a, x);
 			},
-			card.labels);
+			xs);
+	});
+var author$project$Main$hasLabel = F3(
+	function (model, name, card) {
+		var mlabelId = A2(
+			elm$core$Maybe$andThen,
+			elm$core$Dict$get(card.repo.id),
+			A2(elm$core$Dict$get, name, model.dataView.labelToRepoToId));
+		if (mlabelId.$ === 'Just') {
+			var id = mlabelId.a;
+			return A2(elm$core$List$member, id, card.labels);
+		} else {
+			return false;
+		}
 	});
 var author$project$Main$PullRequestState = function (a) {
 	return {$: 'PullRequestState', a: a};
@@ -15164,15 +15170,6 @@ var author$project$Main$involvesUser = F3(
 				_List_Nil,
 				A2(elm$core$Dict$get, card.id, model.data.actors)));
 	});
-var elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
 var author$project$Main$isInProject = F2(
 	function (name, card) {
 		return A2(
@@ -17816,44 +17813,6 @@ var author$project$Main$update = F2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, label));
 					}
-				case 'PauseCard':
-					var card = msg.a;
-					var _n40 = card.content;
-					if (_n40.$ === 'IssueCardContent') {
-						var issue = _n40.a;
-						return _Utils_Tuple2(
-							model,
-							A3(
-								author$project$Main$addIssueLabels,
-								model,
-								issue,
-								_List_fromArray(
-									['paused'])));
-					} else {
-						var pr = _n40.a;
-						return _Utils_Tuple2(
-							model,
-							A3(
-								author$project$Main$addPullRequestLabels,
-								model,
-								pr,
-								_List_fromArray(
-									['paused'])));
-					}
-				case 'UnpauseCard':
-					var card = msg.a;
-					var _n41 = card.content;
-					if (_n41.$ === 'IssueCardContent') {
-						var issue = _n41.a;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$removeIssueLabel, model, issue, 'paused'));
-					} else {
-						var pr = _n41.a;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$removePullRequestLabel, model, pr, 'paused'));
-					}
 				case 'DataChanged':
 					if (msg.b.$ === 'Ok') {
 						var cb = msg.a;
@@ -18008,25 +17967,25 @@ var author$project$Main$update = F2(
 							return A2(elm$core$Dict$get, a, model.allCards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n42 = A2(
+					var _n40 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n42.a;
-					var removePairs = _n42.b;
+					var addPairs = _n40.a;
+					var removePairs = _n40.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n44 = card.content;
-							if (_n44.$ === 'IssueCardContent') {
-								var issue = _n44.a;
+							var _n42 = card.content;
+							if (_n42.$ === 'IssueCardContent') {
+								var issue = _n42.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n44.a;
+								var pr = _n42.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -18039,13 +17998,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n43 = card.content;
-										if (_n43.$ === 'IssueCardContent') {
-											var issue = _n43.a;
+										var _n41 = card.content;
+										if (_n41.$ === 'IssueCardContent') {
+											var issue = _n41.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n43.a;
+											var pr = _n41.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -18870,9 +18829,10 @@ var author$project$Main$FromColumnCardSource = function (a) {
 var author$project$Main$HighlightNode = function (a) {
 	return {$: 'HighlightNode', a: a};
 };
-var author$project$Main$PauseCard = function (a) {
-	return {$: 'PauseCard', a: a};
-};
+var author$project$Main$LabelCard = F2(
+	function (a, b) {
+		return {$: 'LabelCard', a: a, b: b};
+	});
 var author$project$Main$RefreshIssue = function (a) {
 	return {$: 'RefreshIssue', a: a};
 };
@@ -18882,9 +18842,10 @@ var author$project$Main$RefreshPullRequest = function (a) {
 var author$project$Main$UnhighlightNode = function (a) {
 	return {$: 'UnhighlightNode', a: a};
 };
-var author$project$Main$UnpauseCard = function (a) {
-	return {$: 'UnpauseCard', a: a};
-};
+var author$project$Main$UnlabelCard = F2(
+	function (a, b) {
+		return {$: 'UnlabelCard', a: a, b: b};
+	});
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
@@ -19142,14 +19103,6 @@ var author$project$Main$viewLabel = F2(
 							elm$html$Html$text(name)
 						]))
 				]));
-	});
-var author$project$Main$LabelCard = F2(
-	function (a, b) {
-		return {$: 'LabelCard', a: a, b: b};
-	});
-var author$project$Main$UnlabelCard = F2(
-	function (a, b) {
-		return {$: 'UnlabelCard', a: a, b: b};
 	});
 var author$project$Main$viewSuggestedLabel = F3(
 	function (model, card, name) {
@@ -19428,7 +19381,7 @@ var author$project$Main$viewCard = F2(
 												[
 													elm$html$Html$Attributes$class('octicon unpause octicon-bookmark'),
 													elm$html$Html$Events$onClick(
-													author$project$Main$UnpauseCard(card))
+													A2(author$project$Main$UnlabelCard, card, 'paused'))
 												]),
 											_List_Nil);
 									} else {
@@ -19438,7 +19391,7 @@ var author$project$Main$viewCard = F2(
 												[
 													elm$html$Html$Attributes$class('octicon pause octicon-bookmark'),
 													elm$html$Html$Events$onClick(
-													author$project$Main$PauseCard(card))
+													A2(author$project$Main$LabelCard, card, 'paused'))
 												]),
 											_List_Nil);
 									}

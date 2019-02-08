@@ -249,8 +249,6 @@ type Msg
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | LabelCard Card String
     | UnlabelCard Card String
-    | PauseCard Card
-    | UnpauseCard Card
     | RefreshIssue GitHubGraph.ID
     | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
     | RefreshPullRequest GitHubGraph.ID
@@ -1038,22 +1036,6 @@ update msg model =
 
                 GitHubGraph.PullRequestCardContent pr ->
                     ( model, removePullRequestLabel model pr label )
-
-        PauseCard card ->
-            case card.content of
-                GitHubGraph.IssueCardContent issue ->
-                    ( model, addIssueLabels model issue [ "paused" ] )
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    ( model, addPullRequestLabels model pr [ "paused" ] )
-
-        UnpauseCard card ->
-            case card.content of
-                GitHubGraph.IssueCardContent issue ->
-                    ( model, removeIssueLabel model issue "paused" )
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    ( model, removePullRequestLabel model pr "paused" )
 
         DataChanged cb (Ok ()) ->
             ( model, cb )
@@ -3399,11 +3381,16 @@ labelNames model card =
 hasLabel : Model -> String -> Card -> Bool
 hasLabel model name card =
     let
-        matchingLabels =
-            model.allLabels
-                |> Dict.filter (\_ l -> l.name == name)
+        mlabelId =
+            Dict.get name model.dataView.labelToRepoToId
+                |> Maybe.andThen (Dict.get card.repo.id)
     in
-    List.any (\a -> Dict.member a matchingLabels) card.labels
+    case mlabelId of
+        Just id ->
+            List.member id card.labels
+
+        Nothing ->
+            False
 
 
 hasLabelAndColor : Model -> String -> String -> Card -> Bool
@@ -3565,14 +3552,14 @@ viewCard model card =
                 ( True, True ) ->
                     Html.span
                         [ HA.class "octicon unpause octicon-bookmark"
-                        , HE.onClick (UnpauseCard card)
+                        , HE.onClick (UnlabelCard card "paused")
                         ]
                         []
 
                 ( True, False ) ->
                     Html.span
                         [ HA.class "octicon pause octicon-bookmark"
-                        , HE.onClick (PauseCard card)
+                        , HE.onClick (LabelCard card "paused")
                         ]
                         []
 
