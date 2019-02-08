@@ -106,21 +106,21 @@ type alias ShipItRepo =
     , comparison : GitHubGraph.V3Comparison
     , openPRs : List Card
     , mergedPRs : List Card
-    , closedIssues : List Card
     , openIssues : List Card
-    , undocumentedCards : List Card
+    , closedIssues : List Card
+    , doneCards : List Card
     , documentedCards : List Card
-    , leftUndocumentedCards : List Card
-    , unreleasedCards : List Card
+    , undocumentedCards : List Card
+    , noImpactCards : List Card
     }
 
 
 type ShipItRepoTab
     = ToDoTab
-    | UndocumentedTab
+    | DoneTab
     | DocumentedTab
-    | LeftUndocumentedTab
-    | UnreleasedTab
+    | UndocumentedTab
+    | NoImpactTab
 
 
 type GraphFilter
@@ -384,7 +384,7 @@ init config url key =
             , labelSearch = ""
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
-            , shipItRepoTab = UndocumentedTab
+            , shipItRepoTab = DoneTab
             }
 
         ( navedModel, navedMsgs ) =
@@ -1342,17 +1342,17 @@ computeShipItRepos model =
                                 milestoneCards ++ mergedPRs
 
                             categorizeByDocumentedState card sir =
-                                if hasLabel model "documented" card then
+                                if hasLabel model "release/documented" card then
                                     { sir | documentedCards = card :: sir.documentedCards }
 
-                                else if hasLabel model "left-undocumented" card then
-                                    { sir | leftUndocumentedCards = card :: sir.leftUndocumentedCards }
+                                else if hasLabel model "release/undocumented" card then
+                                    { sir | undocumentedCards = card :: sir.undocumentedCards }
 
-                                else if hasLabel model "unreleased" card then
-                                    { sir | unreleasedCards = card :: sir.unreleasedCards }
+                                else if hasLabel model "release/no-impact" card then
+                                    { sir | noImpactCards = card :: sir.noImpactCards }
 
                                 else
-                                    { sir | undocumentedCards = card :: sir.undocumentedCards }
+                                    { sir | doneCards = card :: sir.doneCards }
 
                             categorizeByCardState card sir =
                                 case card.state of
@@ -1392,10 +1392,10 @@ computeShipItRepos model =
                                     , mergedPRs = []
                                     , openIssues = []
                                     , closedIssues = []
-                                    , undocumentedCards = []
+                                    , doneCards = []
                                     , documentedCards = []
-                                    , leftUndocumentedCards = []
-                                    , unreleasedCards = []
+                                    , undocumentedCards = []
+                                    , noImpactCards = []
                                     }
                                     allCards
                         in
@@ -2008,21 +2008,21 @@ viewShipItRepoPage model sir =
                     [ Html.text "To Do"
                     , tabCount (List.length sir.openIssues + List.length sir.openPRs)
                     ]
-                , Html.span (tabAttrs UndocumentedTab)
+                , Html.span (tabAttrs DoneTab)
                     [ Html.text "Done"
-                    , tabCount (List.length sir.undocumentedCards)
+                    , tabCount (List.length sir.doneCards)
                     ]
                 , Html.span (tabAttrs DocumentedTab)
                     [ Html.text "Documented"
                     , tabCount (List.length sir.documentedCards)
                     ]
-                , Html.span (tabAttrs LeftUndocumentedTab)
+                , Html.span (tabAttrs UndocumentedTab)
                     [ Html.text "Undocumented"
-                    , tabCount (List.length sir.leftUndocumentedCards)
+                    , tabCount (List.length sir.undocumentedCards)
                     ]
-                , Html.span (tabAttrs UnreleasedTab)
-                    [ Html.text "Unreleased"
-                    , tabCount (List.length sir.unreleasedCards)
+                , Html.span (tabAttrs NoImpactTab)
+                    [ Html.text "No Impact"
+                    , tabCount (List.length sir.noImpactCards)
                     ]
                 ]
             ]
@@ -2039,17 +2039,17 @@ viewShipItRepoPage model sir =
                         ToDoTab ->
                             sir.openIssues ++ sir.openPRs
 
-                        UndocumentedTab ->
-                            sir.undocumentedCards
+                        DoneTab ->
+                            sir.doneCards
 
                         DocumentedTab ->
                             sir.documentedCards
 
-                        LeftUndocumentedTab ->
-                            sir.leftUndocumentedCards
+                        UndocumentedTab ->
+                            sir.undocumentedCards
 
-                        UnreleasedTab ->
-                            sir.unreleasedCards
+                        NoImpactTab ->
+                            sir.noImpactCards
             in
             cards
                 |> List.sortBy (.updatedAt >> Time.posixToMillis)

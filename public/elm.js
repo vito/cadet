@@ -7944,12 +7944,12 @@ var author$project$Drag$init = author$project$Drag$NotDragging;
 var author$project$Main$DataFetched = function (a) {
 	return {$: 'DataFetched', a: a};
 };
+var author$project$Main$DoneTab = {$: 'DoneTab'};
 var author$project$Main$GlobalGraphPage = {$: 'GlobalGraphPage'};
 var author$project$Main$ImpactSort = {$: 'ImpactSort'};
 var author$project$Main$MeFetched = function (a) {
 	return {$: 'MeFetched', a: a};
 };
-var author$project$Main$UndocumentedTab = {$: 'UndocumentedTab'};
 var lukewestby$elm_http_builder$HttpBuilder$withTimeout = F2(
 	function (timeout, builder) {
 		return _Utils_update(
@@ -11990,22 +11990,22 @@ var author$project$Main$computeShipItRepos = function (model) {
 						model.data.prs);
 					var categorizeByDocumentedState = F2(
 						function (card, sir) {
-							return A3(author$project$Main$hasLabel, model, 'documented', card) ? _Utils_update(
+							return A3(author$project$Main$hasLabel, model, 'release/documented', card) ? _Utils_update(
 								sir,
 								{
 									documentedCards: A2(elm$core$List$cons, card, sir.documentedCards)
-								}) : (A3(author$project$Main$hasLabel, model, 'left-undocumented', card) ? _Utils_update(
-								sir,
-								{
-									leftUndocumentedCards: A2(elm$core$List$cons, card, sir.leftUndocumentedCards)
-								}) : (A3(author$project$Main$hasLabel, model, 'unreleased', card) ? _Utils_update(
-								sir,
-								{
-									unreleasedCards: A2(elm$core$List$cons, card, sir.unreleasedCards)
-								}) : _Utils_update(
+								}) : (A3(author$project$Main$hasLabel, model, 'release/undocumented', card) ? _Utils_update(
 								sir,
 								{
 									undocumentedCards: A2(elm$core$List$cons, card, sir.undocumentedCards)
+								}) : (A3(author$project$Main$hasLabel, model, 'release/no-impact', card) ? _Utils_update(
+								sir,
+								{
+									noImpactCards: A2(elm$core$List$cons, card, sir.noImpactCards)
+								}) : _Utils_update(
+								sir,
+								{
+									doneCards: A2(elm$core$List$cons, card, sir.doneCards)
 								})));
 						});
 					var categorizeByCardState = F2(
@@ -12058,7 +12058,7 @@ var author$project$Main$computeShipItRepos = function (model) {
 					var shipItRepo = A3(
 						elm$core$List$foldl,
 						categorizeCard,
-						{closedIssues: _List_Nil, comparison: comparison, documentedCards: _List_Nil, leftUndocumentedCards: _List_Nil, mergedPRs: _List_Nil, nextMilestone: nextMilestone, openIssues: _List_Nil, openPRs: _List_Nil, repo: repo, undocumentedCards: _List_Nil, unreleasedCards: _List_Nil},
+						{closedIssues: _List_Nil, comparison: comparison, documentedCards: _List_Nil, doneCards: _List_Nil, mergedPRs: _List_Nil, nextMilestone: nextMilestone, noImpactCards: _List_Nil, openIssues: _List_Nil, openPRs: _List_Nil, repo: repo, undocumentedCards: _List_Nil},
 						allCards);
 					return A3(elm$core$Dict$insert, repo.name, shipItRepo, acc);
 				} else {
@@ -18028,7 +18028,7 @@ var author$project$Main$init = F3(
 			projectDrag: author$project$Drag$init,
 			projectDragRefresh: elm$core$Maybe$Nothing,
 			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
-			shipItRepoTab: author$project$Main$UndocumentedTab,
+			shipItRepoTab: author$project$Main$DoneTab,
 			showLabelFilters: false,
 			showLabelOperations: false
 		};
@@ -21313,12 +21313,12 @@ var author$project$Main$viewShipItPage = function (model) {
 			repos));
 };
 var author$project$Main$DocumentedTab = {$: 'DocumentedTab'};
-var author$project$Main$LeftUndocumentedTab = {$: 'LeftUndocumentedTab'};
+var author$project$Main$NoImpactTab = {$: 'NoImpactTab'};
 var author$project$Main$SetShipItRepoTab = function (a) {
 	return {$: 'SetShipItRepoTab', a: a};
 };
 var author$project$Main$ToDoTab = {$: 'ToDoTab'};
-var author$project$Main$UnreleasedTab = {$: 'UnreleasedTab'};
+var author$project$Main$UndocumentedTab = {$: 'UndocumentedTab'};
 var author$project$Main$viewShipItRepoPage = F2(
 	function (model, sir) {
 		return A2(
@@ -21444,12 +21444,12 @@ var author$project$Main$viewShipItRepoPage = F2(
 											])),
 										A2(
 										elm$html$Html$span,
-										tabAttrs(author$project$Main$UndocumentedTab),
+										tabAttrs(author$project$Main$DoneTab),
 										_List_fromArray(
 											[
 												elm$html$Html$text('Done'),
 												tabCount(
-												elm$core$List$length(sir.undocumentedCards))
+												elm$core$List$length(sir.doneCards))
 											])),
 										A2(
 										elm$html$Html$span,
@@ -21462,21 +21462,21 @@ var author$project$Main$viewShipItRepoPage = F2(
 											])),
 										A2(
 										elm$html$Html$span,
-										tabAttrs(author$project$Main$LeftUndocumentedTab),
+										tabAttrs(author$project$Main$UndocumentedTab),
 										_List_fromArray(
 											[
 												elm$html$Html$text('Undocumented'),
 												tabCount(
-												elm$core$List$length(sir.leftUndocumentedCards))
+												elm$core$List$length(sir.undocumentedCards))
 											])),
 										A2(
 										elm$html$Html$span,
-										tabAttrs(author$project$Main$UnreleasedTab),
+										tabAttrs(author$project$Main$NoImpactTab),
 										_List_fromArray(
 											[
-												elm$html$Html$text('Unreleased'),
+												elm$html$Html$text('No Impact'),
 												tabCount(
-												elm$core$List$length(sir.unreleasedCards))
+												elm$core$List$length(sir.noImpactCards))
 											]))
 									]));
 						}()
@@ -21500,14 +21500,14 @@ var author$project$Main$viewShipItRepoPage = F2(
 							switch (_n1.$) {
 								case 'ToDoTab':
 									return _Utils_ap(sir.openIssues, sir.openPRs);
-								case 'UndocumentedTab':
-									return sir.undocumentedCards;
+								case 'DoneTab':
+									return sir.doneCards;
 								case 'DocumentedTab':
 									return sir.documentedCards;
-								case 'LeftUndocumentedTab':
-									return sir.leftUndocumentedCards;
+								case 'UndocumentedTab':
+									return sir.undocumentedCards;
 								default:
-									return sir.unreleasedCards;
+									return sir.noImpactCards;
 							}
 						}();
 						return A2(
