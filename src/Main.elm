@@ -1834,7 +1834,7 @@ viewNavBar model =
                 [ octicon "list-unordered"
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ octicon "globe"
+                [ octicon "circuit-board"
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
                 [ octicon "git-pull-request"

@@ -20487,7 +20487,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('globe')
+								author$project$Main$octicon('circuit-board')
 							])),
 						A2(
 						elm$html$Html$a,
