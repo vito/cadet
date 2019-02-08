@@ -12566,15 +12566,8 @@ var author$project$Main$cardRadiusBase = F2(
 	function (card, _n0) {
 		var incoming = _n0.incoming;
 		var outgoing = _n0.outgoing;
-		return (15 + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2))) + function () {
-			var _n1 = card.content;
-			if (_n1.$ === 'PullRequestCardContent') {
-				var pr = _n1.a;
-				return A2(elm$core$Basics$min, 50, (pr.additions + pr.deletions) / 50);
-			} else {
-				return 0;
-			}
-		}();
+		return (10 + (6 * elm$core$Basics$floor(
+			A2(elm$core$Basics$logBase, 10, card.number)))) + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2));
 	});
 var elm$core$Basics$pi = _Basics_pi;
 var elm$core$List$repeatHelp = F3(
@@ -12610,6 +12603,7 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 			return 3;
 	}
 };
+var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
 var elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
 var elm$svg$Svg$path = elm$svg$Svg$trustedNode('path');
@@ -14397,7 +14391,8 @@ var author$project$Main$cardLabelArcs = F3(
 						gampleman$elm_visualization$Shape$arc(arc),
 						_List_fromArray(
 							[
-								elm$svg$Svg$Attributes$fill('#' + label.color)
+								elm$svg$Svg$Attributes$fill('#' + label.color),
+								elm$svg$Svg$Attributes$class('label-arc')
 							]));
 				}),
 			labelSegments,
@@ -14436,69 +14431,6 @@ var author$project$Main$cardRadiusWithFlair = F2(
 		return (A2(author$project$Main$cardRadiusWithoutFlair, card, context) + author$project$Main$flairRadiusBase) + highestFlair;
 	});
 var author$project$Main$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
-var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
-var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
-var author$project$Main$prCircle = F3(
-	function (pr, card, context) {
-		var radius = A2(author$project$Main$cardRadiusBase, card, context);
-		var flairs = _List_fromArray(
-			[
-				_Utils_Tuple2('deletions', pr.deletions),
-				_Utils_Tuple2('additions', pr.additions)
-			]);
-		var segments = A2(
-			gampleman$elm_visualization$Shape$pie,
-			{
-				cornerRadius: 0,
-				endAngle: 2 * elm$core$Basics$pi,
-				innerRadius: 0,
-				outerRadius: radius,
-				padAngle: 0,
-				padRadius: 0,
-				sortingFn: F2(
-					function (_n2, _n3) {
-						return elm$core$Basics$EQ;
-					}),
-				startAngle: 0,
-				valueFn: elm$core$Basics$toFloat
-			},
-			A2(elm$core$List$map, elm$core$Tuple$second, flairs));
-		var segment = function (i) {
-			var _n1 = A2(
-				elm$core$List$take,
-				1,
-				A2(elm$core$List$drop, i, segments));
-			if (_n1.b && (!_n1.b.b)) {
-				var s = _n1.a;
-				return s;
-			} else {
-				return A3(
-					author$project$Log$debug,
-					'impossible: empty segments',
-					_Utils_Tuple2(i, segments),
-					author$project$Main$emptyArc);
-			}
-		};
-		return A2(
-			elm$svg$Svg$g,
-			_List_Nil,
-			function (a) {
-				return A2(elm$core$List$indexedMap, a, flairs);
-			}(
-				F2(
-					function (i, _n0) {
-						var classes = _n0.a;
-						var count = _n0.b;
-						var arc = segment(i);
-						return A2(
-							folkertdev$one_true_path_experiment$Path$element,
-							gampleman$elm_visualization$Shape$arc(arc),
-							_List_fromArray(
-								[
-									elm$svg$Svg$Attributes$class('pr-arc ' + classes)
-								]));
-					})));
-	});
 var elm$html$Html$span = _VirtualDom_node('span');
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
@@ -14537,6 +14469,7 @@ var elm$html$Html$Attributes$src = function (url) {
 		_VirtualDom_noJavaScriptOrHtmlUri(url));
 };
 var elm$svg$Svg$foreignObject = elm$svg$Svg$trustedNode('foreignObject');
+var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
 var elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var author$project$Main$reactionFlairArcs = F3(
 	function (reviews, card, context) {
@@ -14562,20 +14495,20 @@ var author$project$Main$reactionFlairArcs = F3(
 		};
 		var radius = A2(author$project$Main$cardRadiusWithoutFlair, card, context);
 		var prSegments = function () {
-			var _n7 = card.content;
-			if (_n7.$ === 'IssueCardContent') {
+			var _n5 = card.content;
+			if (_n5.$ === 'IssueCardContent') {
 				return _List_Nil;
 			} else {
-				var pr = _n7.a;
+				var pr = _n5.a;
 				var statusChecks = function () {
-					var _n10 = A2(
+					var _n8 = A2(
 						elm$core$Maybe$map,
 						function ($) {
 							return $.status;
 						},
 						pr.lastCommit);
-					if ((_n10.$ === 'Just') && (_n10.a.$ === 'Just')) {
-						var contexts = _n10.a.a.contexts;
+					if ((_n8.$ === 'Just') && (_n8.a.$ === 'Just')) {
+						var contexts = _n8.a.a.contexts;
 						return function (a) {
 							return A2(elm$core$List$map, a, contexts);
 						}(
@@ -14592,8 +14525,8 @@ var author$project$Main$reactionFlairArcs = F3(
 														_Utils_Tuple2('octicon', true),
 														_Utils_Tuple2(
 														function () {
-															var _n11 = c.state;
-															switch (_n11.$) {
+															var _n9 = c.state;
+															switch (_n9.$) {
 																case 'StatusStatePending':
 																	return 'octicon-primitive-dot';
 																case 'StatusStateSuccess':
@@ -14611,8 +14544,8 @@ var author$project$Main$reactionFlairArcs = F3(
 											]),
 										_List_Nil),
 									function () {
-										var _n12 = c.state;
-										switch (_n12.$) {
+										var _n10 = c.state;
+										switch (_n10.$) {
 											case 'StatusStatePending':
 												return 'pending';
 											case 'StatusStateSuccess':
@@ -14644,8 +14577,8 @@ var author$project$Main$reactionFlairArcs = F3(
 									]),
 								_List_Nil),
 							function () {
-								var _n9 = r.state;
-								switch (_n9.$) {
+								var _n7 = r.state;
+								switch (_n7.$) {
 									case 'PullRequestReviewStatePending':
 										return 'pending';
 									case 'PullRequestReviewStateApproved':
@@ -14672,8 +14605,8 @@ var author$project$Main$reactionFlairArcs = F3(
 								]),
 							_List_Nil),
 						function () {
-							var _n8 = pr.mergeable;
-							switch (_n8.$) {
+							var _n6 = pr.mergeable;
+							switch (_n6.$) {
 								case 'MergeableStateMergeable':
 									return 'success';
 								case 'MergeableStateConflicting':
@@ -14689,9 +14622,9 @@ var author$project$Main$reactionFlairArcs = F3(
 		var emojiReactions = function (a) {
 			return A2(elm$core$List$map, a, card.reactions);
 		}(
-			function (_n6) {
-				var type_ = _n6.type_;
-				var count = _n6.count;
+			function (_n4) {
+				var type_ = _n4.type_;
+				var count = _n4.count;
 				return _Utils_Tuple3(
 					elm$html$Html$text(
 						reactionTypeEmoji(type_)),
@@ -14702,8 +14635,8 @@ var author$project$Main$reactionFlairArcs = F3(
 			prSegments,
 			A2(
 				elm$core$List$filter,
-				function (_n5) {
-					var count = _n5.c;
+				function (_n3) {
+					var count = _n3.c;
 					return count > 0;
 				},
 				A2(
@@ -14715,20 +14648,7 @@ var author$project$Main$reactionFlairArcs = F3(
 					emojiReactions)));
 		var segments = A2(
 			gampleman$elm_visualization$Shape$pie,
-			{
-				cornerRadius: 3,
-				endAngle: 2 * elm$core$Basics$pi,
-				innerRadius: radius,
-				outerRadius: radius + author$project$Main$flairRadiusBase,
-				padAngle: 3.0e-2,
-				padRadius: 0,
-				sortingFn: F2(
-					function (_n3, _n4) {
-						return elm$core$Basics$EQ;
-					}),
-				startAngle: 0,
-				valueFn: elm$core$Basics$always(1.0)
-			},
+			{cornerRadius: 3, endAngle: 2 * elm$core$Basics$pi, innerRadius: radius, outerRadius: radius + author$project$Main$flairRadiusBase, padAngle: 3.0e-2, padRadius: 0, sortingFn: elm$core$Basics$compare, startAngle: 0, valueFn: elm$core$Basics$identity},
 			A2(
 				elm$core$List$repeat,
 				elm$core$List$length(flairs),
@@ -14874,9 +14794,9 @@ var author$project$Main$viewCardNode = F6(
 			elm$svg$Svg$circle,
 			_List_fromArray(
 				[
-					elm$svg$Svg$Attributes$strokeWidth('2px'),
+					elm$svg$Svg$Attributes$strokeWidth('3px'),
 					elm$svg$Svg$Attributes$r(
-					elm$core$String$fromFloat(radii.base + 4)),
+					elm$core$String$fromFloat(radii.base - 1.5)),
 					author$project$Main$isInFlight(card) ? elm$svg$Svg$Attributes$class('project-status in-flight') : (author$project$Main$isDone(card) ? elm$svg$Svg$Attributes$class('project-status done') : (author$project$Main$isIcebox(card) ? elm$svg$Svg$Attributes$class('project-status icebox') : (author$project$Main$isBacklog(card) ? elm$svg$Svg$Attributes$class('project-status backlog') : elm$svg$Svg$Attributes$class('project-status untriaged'))))
 				]),
 			_List_Nil);
@@ -15001,61 +14921,34 @@ var author$project$Main$cardNode = F3(
 				A2(elm$core$Dict$get, card.id, model.data.reviewers)),
 			card,
 			context);
-		var circle = function () {
-			var _n1 = card.content;
-			if (_n1.$ === 'IssueCardContent') {
-				return A2(
-					elm$svg$Svg$g,
-					_List_Nil,
+		var circle = A2(
+			elm$svg$Svg$g,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$circle,
 					_List_fromArray(
 						[
-							A2(
-							elm$svg$Svg$circle,
-							_List_fromArray(
-								[
-									elm$svg$Svg$Attributes$r(
-									elm$core$String$fromFloat(radii.base)),
-									elm$svg$Svg$Attributes$fill('#fff')
-								]),
-							_List_Nil),
-							A2(
-							elm$svg$Svg$text_,
-							_List_fromArray(
-								[
-									elm$svg$Svg$Attributes$textAnchor('middle'),
-									elm$svg$Svg$Attributes$alignmentBaseline('middle'),
-									elm$svg$Svg$Attributes$class('issue-number')
-								]),
-							_List_fromArray(
-								[
-									elm$svg$Svg$text(
-									elm$core$String$fromInt(card.number))
-								]))
-						]));
-			} else {
-				var pr = _n1.a;
-				return A2(
-					elm$svg$Svg$g,
-					_List_Nil,
+							elm$svg$Svg$Attributes$r(
+							elm$core$String$fromFloat(radii.base)),
+							elm$svg$Svg$Attributes$fill('#fff')
+						]),
+					_List_Nil),
+					A2(
+					elm$svg$Svg$text_,
 					_List_fromArray(
 						[
-							A3(author$project$Main$prCircle, pr, card, context),
-							A2(
-							elm$svg$Svg$text_,
-							_List_fromArray(
-								[
-									elm$svg$Svg$Attributes$textAnchor('middle'),
-									elm$svg$Svg$Attributes$alignmentBaseline('middle'),
-									elm$svg$Svg$Attributes$fill('#fff')
-								]),
-							_List_fromArray(
-								[
-									elm$svg$Svg$text(
-									elm$core$String$fromInt(card.number))
-								]))
-						]));
-			}
-		}();
+							elm$svg$Svg$Attributes$textAnchor('middle'),
+							elm$svg$Svg$Attributes$alignmentBaseline('middle'),
+							elm$svg$Svg$Attributes$class('issue-number')
+						]),
+					_List_fromArray(
+						[
+							elm$svg$Svg$text(
+							'#' + elm$core$String$fromInt(card.number))
+						]))
+				]));
 		return {
 			bounds: function (_n0) {
 				var x = _n0.x;

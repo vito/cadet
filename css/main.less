@@ -1,6 +1,5 @@
 @import "colors.less";
 
-@background: @gray-light;
 @project-bg: @gray;
 @project-column-bg: lighten(@project-bg, 5%);
 @column-bg: transparent;
@@ -21,7 +20,7 @@ body {
   font-size: 12px;
   line-height: 1.2;
   overflow-x: hidden;
-  background: @background;
+  background: @black;
   color: @gray-900;
 }
 
@@ -43,10 +42,6 @@ a {
 
   // convince firefox to make the sub-panes individually scrollable
   min-height: 0;
-
-  &.contains-graph {
-    background: @gray-300;
-  }
 
   .page-content {
     overflow-y: auto;
@@ -90,8 +85,6 @@ a {
   }
 
   &.contains-graph {
-    background: @gray-300;
-
     .page-sidebar.empty {
       @media(min-width: 900px) {
         display: block;
@@ -597,7 +590,6 @@ a {
 
 .icebox-graph {
   position: relative;
-  background: @gray-300;
   flex-grow: 1;
   overflow-y: auto;
 
@@ -790,6 +782,10 @@ svg {
   .graph-edge {
     stroke-width: 4px;
     stroke: @gray-light;
+  }
+
+  .label-arc {
+    display: none;
   }
 
   .flair {

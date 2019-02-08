@@ -2803,15 +2803,10 @@ type alias GraphContext =
 
 cardRadiusBase : Card -> GraphContext -> Float
 cardRadiusBase card { incoming, outgoing } =
-    15
+    -- trust me
+    10
+        + (6 * toFloat (floor (logBase 10 (toFloat card.number))))
         + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
-        + (case card.content of
-            GitHubGraph.PullRequestCardContent pr ->
-                min 50 (toFloat (pr.additions + pr.deletions) / 50)
-
-            _ ->
-                0
-          )
 
 
 cardRadiusWithLabels : Card -> GraphContext -> Float
@@ -2851,34 +2846,20 @@ cardNode model card context =
             cardLabelArcs model.allLabels card context
 
         circle =
-            case card.content of
-                GitHubGraph.IssueCardContent _ ->
-                    Svg.g []
-                        [ Svg.circle
-                            [ SA.r (String.fromFloat radii.base)
-                            , SA.fill "#fff"
-                            ]
-                            []
-                        , Svg.text_
-                            [ SA.textAnchor "middle"
-                            , SA.alignmentBaseline "middle"
-                            , SA.class "issue-number"
-                            ]
-                            [ Svg.text (String.fromInt card.number)
-                            ]
-                        ]
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    Svg.g []
-                        [ prCircle pr card context
-                        , Svg.text_
-                            [ SA.textAnchor "middle"
-                            , SA.alignmentBaseline "middle"
-                            , SA.fill "#fff"
-                            ]
-                            [ Svg.text (String.fromInt card.number)
-                            ]
-                        ]
+            Svg.g []
+                [ Svg.circle
+                    [ SA.r (String.fromFloat radii.base)
+                    , SA.fill "#fff"
+                    ]
+                    []
+                , Svg.text_
+                    [ SA.textAnchor "middle"
+                    , SA.alignmentBaseline "middle"
+                    , SA.class "issue-number"
+                    ]
+                    [ Svg.text ("#" ++ String.fromInt card.number)
+                    ]
+                ]
 
         radii =
             { base = cardRadiusBase card context
@@ -2898,53 +2879,6 @@ cardNode model card context =
             }
     , score = card.score
     }
-
-
-prCircle : GitHubGraph.PullRequest -> Card -> GraphContext -> Svg Msg
-prCircle pr card context =
-    let
-        radius =
-            cardRadiusBase card context
-
-        flairs =
-            [ ( "deletions", pr.deletions )
-            , ( "additions", pr.additions )
-            ]
-
-        segments =
-            Shape.pie
-                { startAngle = 0
-                , endAngle = 2 * pi
-                , padAngle = 0
-                , sortingFn = \_ _ -> EQ
-                , valueFn = toFloat
-                , innerRadius = 0
-                , outerRadius = radius
-                , cornerRadius = 0
-                , padRadius = 0
-                }
-                (List.map Tuple.second flairs)
-
-        segment i =
-            case List.take 1 (List.drop i segments) of
-                [ s ] ->
-                    s
-
-                _ ->
-                    Log.debug "impossible: empty segments"
-                        ( i, segments )
-                        emptyArc
-    in
-    Svg.g [] <|
-        (\a -> List.indexedMap a flairs) <|
-            \i ( classes, count ) ->
-                let
-                    arc =
-                        segment i
-                in
-                Path.element (Shape.arc arc)
-                    [ SA.class ("pr-arc " ++ classes)
-                    ]
 
 
 reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> GraphContext -> List (Svg Msg)
@@ -3090,8 +3024,8 @@ reactionFlairArcs reviews card context =
                 { startAngle = 0
                 , endAngle = 2 * pi
                 , padAngle = 0.03
-                , sortingFn = \_ _ -> EQ
-                , valueFn = always 1.0
+                , sortingFn = Basics.compare
+                , valueFn = identity
                 , innerRadius = radius
                 , outerRadius = radius + flairRadiusBase
                 , cornerRadius = 3
@@ -3165,6 +3099,7 @@ cardLabelArcs allLabels card context =
         (\arc label ->
             Path.element (Shape.arc arc)
                 [ SA.fill ("#" ++ label.color)
+                , SA.class "label-arc"
                 ]
         )
         labelSegments
@@ -3261,8 +3196,8 @@ viewCardNode card radii circle labels { x, y } state =
 
         projectHalo =
             Svg.circle
-                [ SA.strokeWidth "2px"
-                , SA.r (String.fromFloat (radii.base + 4))
+                [ SA.strokeWidth "3px"
+                , SA.r (String.fromFloat (radii.base - 1.5))
                 , if isInFlight card then
                     SA.class "project-status in-flight"
 
