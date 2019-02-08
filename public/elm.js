@@ -19026,7 +19026,8 @@ var author$project$Main$viewCardActor = F2(
 				[
 					elm$html$Html$Attributes$class(
 					'card-actor ' + A2(author$project$Main$activityClass, model.currentTime, createdAt)),
-					elm$html$Html$Attributes$src(avatar + '&s=88'),
+					elm$html$Html$Attributes$src(
+					A2(elm$core$String$contains, '?', avatar) ? (avatar + '&s=88') : (avatar + '?s=88')),
 					elm$html$Html$Attributes$draggable('false')
 				]),
 			_List_Nil);

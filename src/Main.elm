@@ -3842,7 +3842,12 @@ viewCardActor : Model -> Backend.EventActor -> Html Msg
 viewCardActor model { createdAt, avatar } =
     Html.img
         [ HA.class ("card-actor " ++ activityClass model.currentTime createdAt)
-        , HA.src (avatar ++ "&s=88")
+        , HA.src <|
+            if String.contains "?" avatar then
+                avatar ++ "&s=88"
+
+            else
+                avatar ++ "?s=88"
         , HA.draggable "false"
         ]
         []
