@@ -12076,9 +12076,42 @@ var author$project$Main$isPR = function (card) {
 		return false;
 	}
 };
+var elm$core$Dict$singleton = F2(
+	function (key, value) {
+		return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
+	});
 var elm$core$String$toLower = _String_toLower;
 var author$project$Main$computeDataView = function (origModel) {
+	var setRepoLabelId = F3(
+		function (label, repo, mrc) {
+			if (mrc.$ === 'Just') {
+				var rc = mrc.a;
+				return elm$core$Maybe$Just(
+					A3(elm$core$Dict$insert, repo.id, label.id, rc));
+			} else {
+				return elm$core$Maybe$Just(
+					A2(elm$core$Dict$singleton, repo.id, label.id));
+			}
+		});
 	var origDataView = origModel.dataView;
+	var groupLabelsToRepoToId = A2(
+		elm$core$Dict$foldl,
+		F3(
+			function (_n3, repo, lrc) {
+				return A3(
+					elm$core$List$foldl,
+					F2(
+						function (label, lrc2) {
+							return A3(
+								elm$core$Dict$update,
+								label.name,
+								A2(setRepoLabelId, label, repo),
+								lrc2);
+						}),
+					lrc,
+					repo.labels);
+			}),
+		elm$core$Dict$empty);
 	var add = function (x) {
 		return A2(
 			elm$core$Basics$composeL,
@@ -12112,11 +12145,12 @@ var author$project$Main$computeDataView = function (origModel) {
 	var dataView = _Utils_update(
 		origDataView,
 		{
+			labelToRepoToId: groupLabelsToRepoToId(origModel.data.repos),
 			reposByLabel: groupRepoLabels(origModel.data.repos)
 		});
 	var model = _Utils_update(
 		origModel,
-		{dataView: dataView});
+		{dataView: dataView, suggestedLabels: _List_Nil});
 	var _n0 = model.page;
 	switch (_n0.$) {
 		case 'ShipItPage':
@@ -12137,7 +12171,9 @@ var author$project$Main$computeDataView = function (origModel) {
 						dataView,
 						{
 							shipItRepos: author$project$Main$computeShipItRepos(model)
-						})
+						}),
+					suggestedLabels: _List_fromArray(
+						['release/documented', 'release/undocumented', 'release/no-impact'])
 				});
 		case 'PullRequestsPage':
 			var prsByRepo = A3(
@@ -17740,8 +17776,9 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
-				case 'PauseCard':
+				case 'LabelCard':
 					var card = msg.a;
+					var label = msg.b;
 					var _n38 = card.content;
 					if (_n38.$ === 'IssueCardContent') {
 						var issue = _n38.a;
@@ -17752,9 +17789,48 @@ var author$project$Main$update = F2(
 								model,
 								issue,
 								_List_fromArray(
-									['paused'])));
+									[label])));
 					} else {
 						var pr = _n38.a;
+						return _Utils_Tuple2(
+							model,
+							A3(
+								author$project$Main$addPullRequestLabels,
+								model,
+								pr,
+								_List_fromArray(
+									[label])));
+					}
+				case 'UnlabelCard':
+					var card = msg.a;
+					var label = msg.b;
+					var _n39 = card.content;
+					if (_n39.$ === 'IssueCardContent') {
+						var issue = _n39.a;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$removeIssueLabel, model, issue, label));
+					} else {
+						var pr = _n39.a;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$removePullRequestLabel, model, pr, label));
+					}
+				case 'PauseCard':
+					var card = msg.a;
+					var _n40 = card.content;
+					if (_n40.$ === 'IssueCardContent') {
+						var issue = _n40.a;
+						return _Utils_Tuple2(
+							model,
+							A3(
+								author$project$Main$addIssueLabels,
+								model,
+								issue,
+								_List_fromArray(
+									['paused'])));
+					} else {
+						var pr = _n40.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -17766,14 +17842,14 @@ var author$project$Main$update = F2(
 					}
 				case 'UnpauseCard':
 					var card = msg.a;
-					var _n39 = card.content;
-					if (_n39.$ === 'IssueCardContent') {
-						var issue = _n39.a;
+					var _n41 = card.content;
+					if (_n41.$ === 'IssueCardContent') {
+						var issue = _n41.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removeIssueLabel, model, issue, 'paused'));
 					} else {
-						var pr = _n39.a;
+						var pr = _n41.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, 'paused'));
@@ -17932,25 +18008,25 @@ var author$project$Main$update = F2(
 							return A2(elm$core$Dict$get, a, model.allCards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n40 = A2(
+					var _n42 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n40.a;
-					var removePairs = _n40.b;
+					var addPairs = _n42.a;
+					var removePairs = _n42.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n42 = card.content;
-							if (_n42.$ === 'IssueCardContent') {
-								var issue = _n42.a;
+							var _n44 = card.content;
+							if (_n44.$ === 'IssueCardContent') {
+								var issue = _n44.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n42.a;
+								var pr = _n44.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -17963,13 +18039,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n41 = card.content;
-										if (_n41.$ === 'IssueCardContent') {
-											var issue = _n41.a;
+										var _n43 = card.content;
+										if (_n43.$ === 'IssueCardContent') {
+											var issue = _n43.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n41.a;
+											var pr = _n43.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -18009,7 +18085,7 @@ var author$project$Main$init = F3(
 			currentTime: elm$time$Time$millisToPosix(config.initialTime),
 			data: author$project$Backend$emptyData,
 			dataIndex: 0,
-			dataView: {prsByRepo: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty, shipItRepos: elm$core$Dict$empty},
+			dataView: {labelToRepoToId: elm$core$Dict$empty, prsByRepo: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty, shipItRepos: elm$core$Dict$empty},
 			deletingLabels: elm$core$Set$empty,
 			editingLabels: elm$core$Dict$empty,
 			graphFilters: _List_Nil,
@@ -18030,7 +18106,8 @@ var author$project$Main$init = F3(
 			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
 			shipItRepoTab: author$project$Main$DoneTab,
 			showLabelFilters: false,
-			showLabelOperations: false
+			showLabelOperations: false,
+			suggestedLabels: _List_Nil
 		};
 		var _n0 = A2(
 			author$project$Main$update,
@@ -18422,15 +18499,10 @@ var author$project$Main$subscriptions = function (model) {
 			]));
 };
 var author$project$Main$pageClass = function (page) {
-	switch (page.$) {
-		case 'ShipItRepoPage':
-			return 'shipit-repo-page';
-		case 'GlobalGraphPage':
-			return 'contains-graph';
-		case 'ProjectPage':
-			return 'contains-graph';
-		default:
-			return 'normal';
+	if (page.$ === 'ShipItRepoPage') {
+		return 'shipit-repo-page';
+	} else {
+		return 'normal';
 	}
 };
 var author$project$Main$selectStatefulProject = function (project) {
@@ -19071,6 +19143,65 @@ var author$project$Main$viewLabel = F2(
 						]))
 				]));
 	});
+var author$project$Main$LabelCard = F2(
+	function (a, b) {
+		return {$: 'LabelCard', a: a, b: b};
+	});
+var author$project$Main$UnlabelCard = F2(
+	function (a, b) {
+		return {$: 'UnlabelCard', a: a, b: b};
+	});
+var author$project$Main$viewSuggestedLabel = F3(
+	function (model, card, name) {
+		var mlabelId = A2(
+			elm$core$Maybe$andThen,
+			elm$core$Dict$get(card.repo.id),
+			A2(elm$core$Dict$get, name, model.dataView.labelToRepoToId));
+		var mlabel = A2(
+			elm$core$Maybe$andThen,
+			function (id) {
+				return A2(elm$core$Dict$get, id, model.allLabels);
+			},
+			mlabelId);
+		var has = function () {
+			if (mlabelId.$ === 'Just') {
+				var id = mlabelId.a;
+				return A2(elm$core$List$member, id, card.labels);
+			} else {
+				return false;
+			}
+		}();
+		if (mlabel.$ === 'Nothing') {
+			return elm$html$Html$text('');
+		} else {
+			var color = mlabel.a.color;
+			return A2(
+				elm$html$Html$span,
+				_Utils_ap(
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('label suggested'),
+							elm$html$Html$Events$onClick(
+							has ? A2(author$project$Main$UnlabelCard, card, name) : A2(author$project$Main$LabelCard, card, name))
+						]),
+					A2(author$project$Main$labelColorStyles, model, color)),
+				_List_fromArray(
+					[
+						author$project$Main$octicon(
+						has ? 'dash' : 'plus'),
+						A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('label-text')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text(name)
+							]))
+					]));
+		}
+	});
 var elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -19187,10 +19318,15 @@ var author$project$Main$viewCard = F2(
 								[
 									elm$html$Html$Attributes$class('card-labels')
 								]),
-							A2(
-								elm$core$List$map,
-								author$project$Main$viewLabel(model),
-								card.labels)),
+							_Utils_ap(
+								A2(
+									elm$core$List$map,
+									author$project$Main$viewLabel(model),
+									card.labels),
+								A2(
+									elm$core$List$map,
+									A2(author$project$Main$viewSuggestedLabel, model, card),
+									model.suggestedLabels))),
 							A2(
 							elm$html$Html$div,
 							_List_fromArray(

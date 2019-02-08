@@ -72,6 +72,7 @@ type alias Model =
     , newMilestoneName : String
     , showLabelFilters : Bool
     , labelSearch : String
+    , suggestedLabels : List String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
     , shipItRepoTab : ShipItRepoTab
@@ -95,6 +96,7 @@ type CardLabelOperation
 
 type alias DataView =
     { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
+    , labelToRepoToId : Dict String (Dict GitHubGraph.ID GitHubGraph.ID)
     , prsByRepo : Dict GitHubGraph.ID (List Card)
     , shipItRepos : Dict GitHubGraph.ID ShipItRepo
     }
@@ -245,6 +247,8 @@ type Msg
     | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
     | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
+    | LabelCard Card String
+    | UnlabelCard Card String
     | PauseCard Card
     | UnpauseCard Card
     | RefreshIssue GitHubGraph.ID
@@ -356,6 +360,7 @@ init config url key =
             , dataIndex = 0
             , dataView =
                 { reposByLabel = Dict.empty
+                , labelToRepoToId = Dict.empty
                 , prsByRepo = Dict.empty
                 , shipItRepos = Dict.empty
                 }
@@ -382,6 +387,7 @@ init config url key =
             , newMilestoneName = ""
             , showLabelFilters = False
             , labelSearch = ""
+            , suggestedLabels = []
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
             , shipItRepoTab = DoneTab
@@ -1017,6 +1023,22 @@ update msg model =
             Log.debug "failed to refresh repo" err <|
                 ( model, Cmd.none )
 
+        LabelCard card label ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, addIssueLabels model issue [ label ] )
+
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, addPullRequestLabels model pr [ label ] )
+
+        UnlabelCard card label ->
+            case card.content of
+                GitHubGraph.IssueCardContent issue ->
+                    ( model, removeIssueLabel model issue label )
+
+                GitHubGraph.PullRequestCardContent pr ->
+                    ( model, removePullRequestLabel model pr label )
+
         PauseCard card ->
             case card.content of
                 GitHubGraph.IssueCardContent issue ->
@@ -1221,6 +1243,14 @@ computeDataView origModel =
         add x =
             Just << Maybe.withDefault [ x ] << Maybe.map ((::) x)
 
+        setRepoLabelId label repo mrc =
+            case mrc of
+                Just rc ->
+                    Just (Dict.insert repo.id label.id rc)
+
+                Nothing ->
+                    Just (Dict.singleton repo.id label.id)
+
         groupRepoLabels =
             Dict.foldl
                 (\_ repo cbn ->
@@ -1231,21 +1261,39 @@ computeDataView origModel =
                 )
                 Dict.empty
 
+        groupLabelsToRepoToId =
+            Dict.foldl
+                (\_ repo lrc ->
+                    List.foldl
+                        (\label lrc2 ->
+                            Dict.update label.name (setRepoLabelId label repo) lrc2
+                        )
+                        lrc
+                        repo.labels
+                )
+                Dict.empty
+
         origDataView =
             origModel.dataView
 
         dataView =
-            { origDataView | reposByLabel = groupRepoLabels origModel.data.repos }
+            { origDataView
+                | reposByLabel = groupRepoLabels origModel.data.repos
+                , labelToRepoToId = groupLabelsToRepoToId origModel.data.repos
+            }
 
         model =
-            { origModel | dataView = dataView }
+            { origModel | suggestedLabels = [], dataView = dataView }
     in
     case model.page of
         ShipItPage ->
             { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
 
         ShipItRepoPage _ ->
-            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
+            { model
+                | dataView = { dataView | shipItRepos = computeShipItRepos model }
+                , suggestedLabels = [ "release/documented", "release/undocumented", "release/no-impact" ]
+            }
 
         PullRequestsPage ->
             let
@@ -3470,6 +3518,7 @@ viewCard model card =
                 )
             , Html.span [ HA.class "card-labels" ] <|
                 List.map (viewLabel model) card.labels
+                    ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
             , Html.div [ HA.class "card-meta" ]
                 [ Html.a
                     [ HA.href card.url
@@ -3731,6 +3780,53 @@ computeColorIsLight hex =
         _ ->
             Log.debug "invalid hex" hex <|
                 False
+
+
+viewSuggestedLabel : Model -> Card -> String -> Html Msg
+viewSuggestedLabel model card name =
+    let
+        mlabelId =
+            Dict.get name model.dataView.labelToRepoToId
+                |> Maybe.andThen (Dict.get card.repo.id)
+
+        mlabel =
+            mlabelId
+                |> Maybe.andThen (\id -> Dict.get id model.allLabels)
+
+        has =
+            case mlabelId of
+                Just id ->
+                    List.member id card.labels
+
+                Nothing ->
+                    False
+    in
+    case mlabel of
+        Nothing ->
+            Html.text ""
+
+        Just { color } ->
+            Html.span
+                ([ HA.class "label suggested"
+                 , HE.onClick <|
+                    if has then
+                        UnlabelCard card name
+
+                    else
+                        LabelCard card name
+                 ]
+                    ++ labelColorStyles model color
+                )
+                [ octicon
+                    (if has then
+                        "dash"
+
+                     else
+                        "plus"
+                    )
+                , Html.span [ HA.class "label-text" ]
+                    [ Html.text name ]
+                ]
 
 
 viewLabel : Model -> GitHubGraph.ID -> Html Msg
