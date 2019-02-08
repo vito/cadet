@@ -15331,20 +15331,17 @@ var author$project$Main$subGraphs = function (graph) {
 					A2(elm$core$Set$insert, edge.to, set));
 			}),
 		elm$core$Set$empty);
-	var singletons = A3(
+	var singletonGraphs = A3(
 		elm_community$graph$Graph$fold,
 		F2(
 			function (nc, ncs) {
-				return (elm_community$intdict$IntDict$isEmpty(nc.incoming) && elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? A2(elm$core$List$cons, nc, ncs) : ncs;
+				return (elm_community$intdict$IntDict$isEmpty(nc.incoming) && elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? A2(
+					elm$core$List$cons,
+					A2(elm_community$graph$Graph$insert, nc, elm_community$graph$Graph$empty),
+					ncs) : ncs;
 			}),
 		_List_Nil,
 		graph);
-	var singletonGraphs = A2(
-		elm$core$List$map,
-		function (a) {
-			return A2(elm_community$graph$Graph$insert, a, elm_community$graph$Graph$empty);
-		},
-		singletons);
 	var connectedGraphs = A2(
 		elm$core$List$map,
 		A2(
@@ -20613,8 +20610,8 @@ var author$project$Main$viewGraph = F2(
 		var maxX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n5, acc) {
-					var x2 = _n5.x2;
+				function (_n6, acc) {
+					var x2 = _n6.x2;
 					return A2(elm$core$Basics$max, x2, acc);
 				}),
 			0,
@@ -20622,8 +20619,8 @@ var author$project$Main$viewGraph = F2(
 		var maxY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n4, acc) {
-					var y2 = _n4.y2;
+				function (_n5, acc) {
+					var y2 = _n5.y2;
 					return A2(elm$core$Basics$max, y2, acc);
 				}),
 			0,
@@ -20631,8 +20628,8 @@ var author$project$Main$viewGraph = F2(
 		var minX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n3, acc) {
-					var x1 = _n3.x1;
+				function (_n4, acc) {
+					var x1 = _n4.x1;
 					return A2(elm$core$Basics$min, x1, acc);
 				}),
 			999999,
@@ -20641,28 +20638,31 @@ var author$project$Main$viewGraph = F2(
 		var minY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n2, acc) {
-					var y1 = _n2.y1;
+				function (_n3, acc) {
+					var y1 = _n3.y1;
 					return A2(elm$core$Basics$min, y1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var height = maxY - minY;
-		var _n1 = A3(
+		var _n1 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
+		var scaleW = _n1.a;
+		var scaleH = _n1.b;
+		var _n2 = A3(
 			elm_community$graph$Graph$fold,
 			author$project$Main$viewNodeLowerUpper(state),
 			_Utils_Tuple2(_List_Nil, _List_Nil),
 			graph);
-		var flairs = _n1.a;
-		var nodes = _n1.b;
+		var flairs = _n2.a;
+		var nodes = _n2.b;
 		return A2(
 			elm$svg$Svg$svg,
 			_List_fromArray(
 				[
 					elm$svg$Svg$Attributes$width(
-					elm$core$String$fromFloat(width) + 'px'),
+					elm$core$String$fromFloat(scaleW) + 'px'),
 					elm$svg$Svg$Attributes$height(
-					elm$core$String$fromFloat(height) + 'px'),
+					elm$core$String$fromFloat(scaleH) + 'px'),
 					elm$svg$Svg$Attributes$viewBox(
 					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
 				]),

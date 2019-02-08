@@ -2762,6 +2762,13 @@ viewGraph state { graph } =
         height =
             maxY - minY
 
+        ( scaleW, scaleH ) =
+            if width > 980 then
+                ( 980, height / (width / 980) )
+
+            else
+                ( width, height )
+
         links =
             List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph)
 
@@ -2769,8 +2776,8 @@ viewGraph state { graph } =
             Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
     in
     Svg.svg
-        [ SA.width (String.fromFloat width ++ "px")
-        , SA.height (String.fromFloat height ++ "px")
+        [ SA.width (String.fromFloat scaleW ++ "px")
+        , SA.height (String.fromFloat scaleH ++ "px")
         , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
         ]
         [ Svg.g [ SA.class "lower" ] flairs
@@ -3887,20 +3894,17 @@ subEdges =
 subGraphs : Graph n e -> List (Graph n e)
 subGraphs graph =
     let
-        singletons =
+        singletonGraphs =
             Graph.fold
                 (\nc ncs ->
                     if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
-                        nc :: ncs
+                        Graph.insert nc Graph.empty :: ncs
 
                     else
                         ncs
                 )
                 []
                 graph
-
-        singletonGraphs =
-            List.map (\a -> Graph.insert a Graph.empty) singletons
 
         subEdgeNodes =
             List.foldl (\edge set -> Set.insert edge.from (Set.insert edge.to set)) Set.empty
