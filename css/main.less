@@ -1,7 +1,6 @@
 @import "colors.less";
 
 @project-bg: @gray-900;
-@project-column-bg: lighten(@project-bg, 5%);
 @column-bg: transparent;
 
 * {
@@ -64,8 +63,6 @@ a {
     background: @gray-dark;
 
     .card {
-      border-color: @black;
-
       &.anticipated {
         opacity: 0.5;
         box-shadow: none;
@@ -212,7 +209,6 @@ a {
 .card {
   width: @card-width;
   background: @white;
-  border: 1px solid @gray-200;
   border-radius: 3px;
   box-sizing: border-box;
   background: #fff;
@@ -632,23 +628,6 @@ a {
   .project {
     margin-bottom: @card-margin * 4;
   }
-
-  ::-webkit-scrollbar {
-    width: 15px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background: lighten(@project-column-bg, 5%);
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: lighten(@project-column-bg, 25%);
-  }
 }
 
 .project {
@@ -673,16 +652,12 @@ a {
     box-sizing: content-box;
     white-space: nowrap;
     margin-right: @card-margin * 2;
-    background: @project-column-bg;
+    background: @gray-dark;
     border-radius: @card-margin;
 
     &:last-child {
       margin-right: 0;
     }
-  }
-
-  .card {
-    border-color: @project-bg;
   }
 
   .name-column {
@@ -715,7 +690,7 @@ a {
     color: @gray-200;
     font-size: 12px;
     padding: @card-margin;
-    background: @gray-500;
+    background: @gray-dark;
     user-select: none;
     cursor: default;
   }
@@ -773,14 +748,7 @@ a {
 }
 
 .dragging {
-  z-index: 2;
-  opacity: 0.5 !important;
   display: none;
-
-  .card {
-    box-shadow: 0 3px 6px @black-fade-30;
-    border: 1px solid @gray;
-  }
 }
 
 .page-sidebar .dragging {
@@ -1301,10 +1269,10 @@ svg {
     margin-left: 20px;
     margin-top: 20px;
     border-radius: 10px;
-    background: @gray-500;
+    background: @gray-800;
 
     .card {
-      border-color: @gray-600;
+      border-color: @gray-900;
 
       .card-actor:last-child {
         animation: wiggle 0.5s infinite;
