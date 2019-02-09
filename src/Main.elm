@@ -4,6 +4,7 @@ import Backend exposing (Data, Me)
 import Browser
 import Browser.Events
 import Browser.Navigation as Nav
+import Colors
 import Dict exposing (Dict)
 import Drag
 import ForceGraph as FG exposing (ForceGraph)
@@ -18,6 +19,7 @@ import Http
 import IntDict exposing (IntDict)
 import Log
 import Markdown
+import Octicons
 import OrderedSet exposing (OrderedSet)
 import ParseInt
 import Path
@@ -1584,13 +1586,13 @@ viewSidebarControls model =
     let
         viewLabelOperation name color =
             let
-                ( checkClass, clickOperation ) =
+                ( checkClass, icon, clickOperation ) =
                     case Dict.get name model.cardLabelOperations of
                         Just AddLabelOperation ->
-                            ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
+                            ( "checked", Octicons.check octiconOpts, SetLabelOperation name RemoveLabelOperation )
 
                         Just RemoveLabelOperation ->
-                            ( "unhecked octicon", UnsetLabelOperation name )
+                            ( "unhecked", Octicons.plus octiconOpts, UnsetLabelOperation name )
 
                         Nothing ->
                             let
@@ -1598,24 +1600,25 @@ viewSidebarControls model =
                                     List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
                             in
                             if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
-                                ( "checked octicon octicon-check", SetLabelOperation name RemoveLabelOperation )
+                                ( "checked", Octicons.check octiconOpts, SetLabelOperation name RemoveLabelOperation )
 
                             else if List.any (hasLabel model name) cards then
-                                ( "mixed octicon octicon-dash", SetLabelOperation name AddLabelOperation )
+                                ( "mixed", Octicons.dash octiconOpts, SetLabelOperation name AddLabelOperation )
 
                             else
-                                ( "unchecked octicon", SetLabelOperation name AddLabelOperation )
+                                ( "unchecked", Octicons.plus octiconOpts, SetLabelOperation name AddLabelOperation )
             in
             Html.div [ HA.class "label-operation" ]
-                [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ] []
+                [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ]
+                    [ icon ]
                 , Html.span
                     ([ HA.class "label"
                      , HE.onClick (AddFilter (HasLabelFilter name color))
                      ]
                         ++ labelColorStyles model color
                     )
-                    [ octicon "tag"
-                    , Html.text name
+                    [ Html.span [ HA.class "label-text" ]
+                        [ Html.text name ]
                     ]
                 ]
 
@@ -1635,25 +1638,25 @@ viewSidebarControls model =
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
                 , HE.onClick ToggleLabelOperations
                 ]
-                [ octicon "tag"
+                [ Octicons.tag octiconOpts
                 , Html.text "labels"
                 ]
             , Html.span
                 [ HE.onClick ClearSelectedCards
-                , HA.class "octicon octicon-x clear-selected"
+                , HA.class "clear-selected"
                 ]
-                [ Html.text "" ]
+                [ Octicons.x octiconOpts ]
             ]
         , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
             [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
             , Html.div [ HA.class "label-options" ] labelOptions
             , Html.div [ HA.class "buttons" ]
                 [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
-                    [ octicon "x"
+                    [ Octicons.x octiconOpts
                     , Html.text "cancel"
                     ]
                 , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
-                    [ octicon "check"
+                    [ Octicons.check octiconOpts
                     , Html.text "apply"
                     ]
                 ]
@@ -1683,7 +1686,7 @@ viewGraphControls model =
                                      ]
                                         ++ labelColorStyles model color
                                     )
-                                    [ octicon "tag"
+                                    [ Octicons.tag octiconOpts
                                     , Html.text name
                                     ]
 
@@ -1704,7 +1707,7 @@ viewGraphControls model =
                                      ]
                                         ++ labelColorStyles model color
                                     )
-                                    [ octicon "tag"
+                                    [ Octicons.tag octiconOpts
                                     , Html.text name
                                     ]
                                 ]
@@ -1728,7 +1731,7 @@ viewGraphControls model =
                     else
                         AddFilter filter
                 ]
-                [ octicon "inbox"
+                [ Octicons.inbox octiconOpts
                 , Html.text "untriaged"
                 ]
              , let
@@ -1744,7 +1747,7 @@ viewGraphControls model =
                     else
                         AddFilter filter
                 ]
-                [ octicon "issue-opened"
+                [ Octicons.issueOpened octiconOpts
                 , Html.text "issues"
                 ]
              , let
@@ -1760,7 +1763,7 @@ viewGraphControls model =
                     else
                         AddFilter filter
                 ]
-                [ octicon "git-pull-request"
+                [ Octicons.gitPullRequest octiconOpts
                 , Html.text "pull requests"
                 ]
              , case model.me of
@@ -1778,7 +1781,7 @@ viewGraphControls model =
                             else
                                 AddFilter filter
                         ]
-                        [ octicon "comment-discussion"
+                        [ Octicons.commentDiscussion octiconOpts
                         , Html.text "involving me"
                         ]
 
@@ -1794,7 +1797,7 @@ viewGraphControls model =
                     [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelFilters ) ]
                     , HE.onClick ToggleLabelFilters
                     ]
-                    [ octicon "tag"
+                    [ Octicons.tag octiconOpts
                     , Html.text "label"
                     ]
                 ]
@@ -1807,14 +1810,14 @@ viewGraphControls model =
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
                 , HE.onClick (SetGraphSort ImpactSort)
                 ]
-                [ octicon "flame"
+                [ Octicons.flame octiconOpts
                 , Html.text "impact"
                 ]
             , Html.div
                 [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
                 , HE.onClick (SetGraphSort AllActivitySort)
                 ]
-                [ octicon "clock"
+                [ Octicons.clock octiconOpts
                 , Html.text "all activity"
                 ]
             , case model.me of
@@ -1823,7 +1826,7 @@ viewGraphControls model =
                         [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
                         , HE.onClick (SetGraphSort (UserActivitySort user.login))
                         ]
-                        [ octicon "clock"
+                        [ Octicons.clock octiconOpts
                         , Html.text "my activity"
                         ]
 
@@ -1845,7 +1848,7 @@ viewNavBar model =
             [ case model.me of
                 Nothing ->
                     Html.a [ HA.class "button user-info", HA.href "/auth/github" ]
-                        [ Html.span [ HA.class "log-in-icon octicon octicon-sign-in" ] []
+                        [ Html.span [ HA.class "log-in-icon" ] [ Octicons.signIn octiconOpts ]
                         , Html.text "log in"
                         ]
 
@@ -1855,19 +1858,19 @@ viewNavBar model =
                         , Html.text user.login
                         ]
             , Html.a [ HA.class "button", HA.href "/" ]
-                [ octicon "list-unordered"
+                [ Octicons.project octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ octicon "circuit-board"
+                [ Octicons.issueOpened octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
-                [ octicon "git-pull-request"
+                [ Octicons.gitPullRequest octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/shipit" ]
-                [ octicon "squirrel"
+                [ Octicons.milestone octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/labels" ]
-                [ octicon "tag"
+                [ Octicons.tag octiconOpts
                 ]
             ]
         , viewSearch model
@@ -1936,12 +1939,12 @@ viewLabelsPage model =
                     [ Html.div [ HA.class "label-name" ]
                         [ Html.form [ HA.class "label-edit", HE.onSubmit CreateLabel ]
                             [ Html.span
-                                ([ HA.class "label-icon label-color-control octicon octicon-sync"
+                                ([ HA.class "label-icon"
                                  , HE.onClick RandomizeNewLabelColor
                                  ]
                                     ++ labelColorStyles model model.newLabel.color
                                 )
-                                []
+                                [ Octicons.sync octiconOpts ]
                             , Html.input
                                 ([ HE.onInput SetNewLabelName
                                  , HA.value model.newLabel.name
@@ -1956,9 +1959,9 @@ viewLabelsPage model =
                     [ Html.div [ HA.class "label-controls" ]
                         [ Html.span
                             [ HE.onClick CreateLabel
-                            , HA.class "button octicon octicon-plus"
+                            , HA.class "button"
                             ]
-                            []
+                            [ Octicons.plus octiconOpts ]
                         ]
                     ]
                 , Html.div [ HA.class "label-cell" ]
@@ -2001,7 +2004,7 @@ viewShipItRepoPage model sir =
     Html.div [ HA.class "shipit-repo-content" ]
         [ Html.div [ HA.class "shipit-header" ]
             [ Html.div [ HA.class "repo-name-label" ]
-                [ octicon "repo"
+                [ Octicons.repo octiconOpts
                 , Html.a [ HA.href "/shipit" ] [ Html.text sir.repo.owner ]
                 , Html.text " / "
                 , Html.span [ HA.style "font-weight" "bold" ] [ Html.text sir.repo.name ]
@@ -2009,7 +2012,7 @@ viewShipItRepoPage model sir =
             , case sir.nextMilestone of
                 Just nm ->
                     Html.div [ HA.class "repo-milestone-label" ]
-                        [ octicon "milestone"
+                        [ Octicons.milestone octiconOpts
                         , Html.text nm.title
                         ]
 
@@ -2087,35 +2090,35 @@ viewShipItRepo model sir =
     Html.div [ HA.class "shipit-repo" ]
         [ Html.div [ HA.class "repo-name" ]
             [ Html.div [ HA.class "repo-name-label" ]
-                [ octicon "repo"
+                [ Octicons.repo octiconOpts
                 , Html.a
                     [ HA.href ("/shipit/" ++ sir.repo.name)
                     ]
                     [ Html.text sir.repo.name ]
                 ]
             ]
-        , Html.div [ HA.class "shipit-metric shipit-metric-commits" ]
-            [ octicon "git-commit"
+        , Html.div [ HA.class "shipit-metric" ]
+            [ Octicons.gitCommit { octiconOpts | color = Colors.gray }
             , Html.text (String.fromInt sir.comparison.totalCommits ++ " commits since last release")
             ]
-        , Html.div [ HA.class "shipit-metric shipit-metric-merged-prs" ]
-            [ octicon "git-pull-request"
+        , Html.div [ HA.class "shipit-metric" ]
+            [ Octicons.gitPullRequest { octiconOpts | color = Colors.purple }
             , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
             ]
         , if List.isEmpty sir.closedIssues then
             Html.text ""
 
           else
-            Html.div [ HA.class "shipit-metric shipit-metric-closed-issues" ]
-                [ octicon "issue-closed"
+            Html.div [ HA.class "shipit-metric" ]
+                [ Octicons.issueClosed { octiconOpts | color = Colors.red }
                 , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
                 ]
         , if List.isEmpty sir.openIssues then
             Html.text ""
 
           else
-            Html.div [ HA.class "shipit-metric shipit-metric-open-issues" ]
-                [ octicon "issue-opened"
+            Html.div [ HA.class "shipit-metric" ]
+                [ Octicons.issueOpened { octiconOpts | color = Colors.green }
                 , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
                 ]
         ]
@@ -2136,7 +2139,7 @@ viewPullRequestsPage model =
             Html.div [ HA.class "repo-pull-requests" ]
                 [ Html.div [ HA.class "repo-name" ]
                     [ Html.div [ HA.class "repo-name-label" ]
-                        [ octicon "repo"
+                        [ Octicons.repo octiconOpts
                         , Html.text repo.name
                         ]
                     ]
@@ -2201,21 +2204,21 @@ viewLabelRow model label repos =
                         Html.div [ HA.class "label-background" ]
                             [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                 Html.span
-                                    ([ HA.class "label-icon octicon octicon-tag"
+                                    ([ HA.class "label-icon"
                                      , HE.onClick (searchLabel model label.name)
                                      ]
                                         ++ labelColorStyles model label.color
                                     )
-                                    []
+                                    [ Octicons.tag octiconOpts ]
 
                               else
                                 Html.span
-                                    ([ HA.class "label-icon label-color-control octicon octicon-paintcan"
+                                    ([ HA.class "label-icon"
                                      , HE.onClick (SetLabelColor label.color)
                                      ]
                                         ++ labelColorStyles model label.color
                                     )
-                                    []
+                                    [ Octicons.paintcan octiconOpts ]
                             , Html.span
                                 ([ HA.class "label big"
                                  , HE.onClick (searchLabel model label.name)
@@ -2230,12 +2233,12 @@ viewLabelRow model label repos =
                     Just newLabel ->
                         Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel label) ]
                             [ Html.span
-                                ([ HA.class "label-icon label-color-control octicon octicon-sync"
+                                ([ HA.class "label-icon"
                                  , HE.onClick (RandomizeLabelColor label)
                                  ]
                                     ++ labelColorStyles model newLabel.color
                                 )
-                                []
+                                [ Octicons.sync octiconOpts ]
                             , Html.input
                                 ([ HE.onInput (SetLabelName label)
                                  , HA.value newLabel.name
@@ -2249,7 +2252,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts first" ]
                 [ Html.span [ HA.class "count" ]
-                    [ octicon "issue-opened"
+                    [ Octicons.issueOpened octiconOpts
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length issues))
                         ]
@@ -2259,7 +2262,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts" ]
                 [ Html.span [ HA.class "count" ]
-                    [ octicon "git-pull-request"
+                    [ Octicons.gitPullRequest octiconOpts
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length prs))
                         ]
@@ -2269,7 +2272,7 @@ viewLabelRow model label repos =
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts last" ]
                 [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
-                    [ octicon "repo"
+                    [ Octicons.repo octiconOpts
                     , Html.span [ HA.class "count-number" ]
                         [ Html.text (String.fromInt (List.length repos))
                         ]
@@ -2280,35 +2283,35 @@ viewLabelRow model label repos =
             [ Html.div [ HA.class "label-controls" ]
                 [ Html.span
                     [ HE.onClick (MirrorLabel label)
-                    , HA.class "button octicon octicon-mirror"
+                    , HA.class "button"
                     ]
-                    []
+                    [ Octicons.mirror octiconOpts ]
                 , if Dict.member stateKey model.editingLabels then
                     Html.span
                         [ HE.onClick (StopEditingLabel label)
-                        , HA.class "button octicon octicon-x"
+                        , HA.class "button"
                         ]
-                        []
+                        [ Octicons.x octiconOpts ]
 
                   else
                     Html.span
                         [ HE.onClick (StartEditingLabel label)
-                        , HA.class "button octicon octicon-pencil"
+                        , HA.class "button"
                         ]
-                        []
+                        [ Octicons.pencil octiconOpts ]
                 , if Set.member stateKey model.deletingLabels then
                     Html.span
                         [ HE.onClick (StopDeletingLabel label)
-                        , HA.class "button close octicon octicon-x"
+                        , HA.class "button close"
                         ]
-                        []
+                        [ Octicons.x octiconOpts ]
 
                   else
                     Html.span
                         [ HE.onClick (StartDeletingLabel label)
-                        , HA.class "button octicon octicon-trashcan"
+                        , HA.class "button"
                         ]
-                        []
+                        [ Octicons.trashcan octiconOpts ]
                 ]
             , let
                 isDeleting =
@@ -2326,16 +2329,16 @@ viewLabelRow model label repos =
                 [ if isDeleting then
                     Html.span
                         [ HE.onClick (DeleteLabel label)
-                        , HA.class "button delete octicon octicon-check"
+                        , HA.class "button delete"
                         ]
-                        []
+                        [ Octicons.check octiconOpts ]
 
                   else
                     Html.span
                         [ HE.onClick (EditLabel label)
-                        , HA.class "button edit octicon octicon-check"
+                        , HA.class "button edit"
                         ]
-                        []
+                        [ Octicons.check octiconOpts ]
                 ]
             ]
         ]
@@ -2354,15 +2357,11 @@ searchLabel model name =
 labelColorStyles : Model -> String -> List (Html.Attribute Msg)
 labelColorStyles model color =
     [ HA.style "background-color" ("#" ++ color)
-    , HA.style "color" <|
-        if colorIsLight model color then
-            -- GitHub appears to pre-compute a hex code, but this seems to be
-            -- pretty much all it's doing
-            "rgba(0, 0, 0, .8)"
+    , if colorIsLight model color then
+        HA.class "light-label"
 
-        else
-            -- for darker backgrounds they just do white
-            "#fff"
+      else
+        HA.class "dark-label"
     ]
 
 
@@ -2961,30 +2960,23 @@ reactionFlairArcs reviews card context =
                                 Just (Just { contexts }) ->
                                     (\a -> List.map a contexts) <|
                                         \c ->
-                                            ( Html.span
-                                                [ HA.classList
-                                                    [ ( "status-icon", True )
-                                                    , ( "octicon", True )
-                                                    , ( case c.state of
-                                                            GitHubGraph.StatusStatePending ->
-                                                                "octicon-primitive-dot"
+                                            ( Html.span [ HA.class "status-icon" ]
+                                                [ case c.state of
+                                                    GitHubGraph.StatusStatePending ->
+                                                        Octicons.primitiveDot { octiconOpts | color = Colors.yellow }
 
-                                                            GitHubGraph.StatusStateSuccess ->
-                                                                "octicon-check"
+                                                    GitHubGraph.StatusStateSuccess ->
+                                                        Octicons.check { octiconOpts | color = Colors.green }
 
-                                                            GitHubGraph.StatusStateFailure ->
-                                                                "octicon-x"
+                                                    GitHubGraph.StatusStateFailure ->
+                                                        Octicons.x { octiconOpts | color = Colors.red }
 
-                                                            GitHubGraph.StatusStateExpected ->
-                                                                "octicon-question"
+                                                    GitHubGraph.StatusStateExpected ->
+                                                        Octicons.question { octiconOpts | color = Colors.purple }
 
-                                                            GitHubGraph.StatusStateError ->
-                                                                "octicon-alert"
-                                                      , True
-                                                      )
-                                                    ]
+                                                    GitHubGraph.StatusStateError ->
+                                                        Octicons.alert { octiconOpts | color = Colors.orange }
                                                 ]
-                                                []
                                             , case c.state of
                                                 GitHubGraph.StatusStatePending ->
                                                     "pending"
@@ -3030,7 +3022,7 @@ reactionFlairArcs reviews card context =
                                 )
                                 reviews
                     in
-                    ( Html.span [ HA.class "status-icon octicon octicon-git-merge" ] []
+                    ( Html.span [ HA.class "status-icon" ] [ Octicons.gitMerge octiconOpts ]
                     , case pr.mergeable of
                         GitHubGraph.MergeableStateMergeable ->
                             "success"
@@ -3047,7 +3039,7 @@ reactionFlairArcs reviews card context =
         flairs =
             prSegments
                 ++ (List.filter (\( _, _, count ) -> count > 0) <|
-                        (( octicon "comment", "comments", card.commentCount ) :: emojiReactions)
+                        (( Octicons.comment octiconOpts, "comments", card.commentCount ) :: emojiReactions)
                    )
 
         segments =
@@ -3280,9 +3272,8 @@ viewCardEntry model card =
             [ if not anticipated then
                 Html.span
                     [ HE.onClick (DeselectCard card.id)
-                    , HA.class "octicon octicon-x"
                     ]
-                    [ Html.text "" ]
+                    [ Octicons.x octiconOpts ]
 
               else
                 Html.text ""
@@ -3516,16 +3507,7 @@ viewCard model card =
             ]
         , Html.div [ HA.class "card-icons" ]
             ([ Html.span
-                [ HA.classList
-                    [ ( "octicon", True )
-                    , ( "open", isOpen card )
-                    , ( "closed", not (isOpen card) )
-                    , ( "merged", isMerged card )
-                    , ( "octicon-issue-opened", card.state == IssueState GitHubGraph.IssueStateOpen )
-                    , ( "octicon-issue-closed", card.state == IssueState GitHubGraph.IssueStateClosed )
-                    , ( "octicon-git-pull-request", isPR card )
-                    ]
-                , HE.onClick
+                [ HE.onClick
                     (if isPR card then
                         RefreshPullRequest card.id
 
@@ -3533,21 +3515,42 @@ viewCard model card =
                         RefreshIssue card.id
                     )
                 ]
-                []
+                [ if isPR card then
+                    Octicons.gitPullRequest
+                        { octiconOpts
+                            | color =
+                                if isMerged card then
+                                    Colors.purple
+
+                                else if isOpen card then
+                                    Colors.green
+
+                                else
+                                    Colors.red
+                        }
+
+                  else if isOpen card then
+                    Octicons.issueOpened { octiconOpts | color = Colors.green }
+
+                  else
+                    Octicons.issueClosed { octiconOpts | color = Colors.red }
+                ]
              , case ( isInFlight card, isPaused card ) of
                 ( True, True ) ->
                     Html.span
-                        [ HA.class "octicon unpause octicon-bookmark"
+                        [ HA.class "pause-toggle"
                         , HE.onClick (UnlabelCard card "paused")
                         ]
-                        []
+                        [ Octicons.bookmark { octiconOpts | color = Colors.gray300 }
+                        ]
 
                 ( True, False ) ->
                     Html.span
-                        [ HA.class "octicon pause octicon-bookmark"
+                        [ HA.class "pause-toggle"
                         , HE.onClick (LabelCard card "paused")
                         ]
-                        []
+                        [ Octicons.bookmark { octiconOpts | color = Colors.gray600 }
+                        ]
 
                 _ ->
                     Html.text ""
@@ -3563,10 +3566,10 @@ externalIcons card =
         (\{ url } ->
             Html.a
                 [ HA.target "_blank"
-                , HA.class "external-link octicon octicon-link-external"
+                , HA.class "external-link"
                 , HA.href url
                 ]
-                []
+                [ Octicons.linkExternal octiconOpts ]
         )
         card.cards
 
@@ -3584,47 +3587,41 @@ prIcons model card =
                         Just (Just { contexts }) ->
                             (\a -> List.map a contexts) <|
                                 \c ->
-                                    Html.span
-                                        [ HA.classList
-                                            [ ( "status-icon", True )
-                                            , ( "octicon", True )
-                                            , ( case c.state of
-                                                    GitHubGraph.StatusStatePending ->
-                                                        "octicon-primitive-dot"
+                                    let
+                                        color =
+                                            case c.state of
+                                                GitHubGraph.StatusStatePending ->
+                                                    Colors.yellow
 
-                                                    GitHubGraph.StatusStateSuccess ->
-                                                        "octicon-check"
+                                                GitHubGraph.StatusStateSuccess ->
+                                                    Colors.green
 
-                                                    GitHubGraph.StatusStateFailure ->
-                                                        "octicon-x"
+                                                GitHubGraph.StatusStateFailure ->
+                                                    Colors.red
 
-                                                    GitHubGraph.StatusStateExpected ->
-                                                        "octicon-question"
+                                                GitHubGraph.StatusStateExpected ->
+                                                    Colors.purple
 
-                                                    GitHubGraph.StatusStateError ->
-                                                        "octicon-alert"
-                                              , True
-                                              )
-                                            , ( case c.state of
-                                                    GitHubGraph.StatusStatePending ->
-                                                        "pending"
+                                                GitHubGraph.StatusStateError ->
+                                                    Colors.orange
+                                    in
+                                    Html.span [ HA.class "status-icon" ]
+                                        [ case c.state of
+                                            GitHubGraph.StatusStatePending ->
+                                                Octicons.primitiveDot { octiconOpts | color = color }
 
-                                                    GitHubGraph.StatusStateSuccess ->
-                                                        "success"
+                                            GitHubGraph.StatusStateSuccess ->
+                                                Octicons.check { octiconOpts | color = color }
 
-                                                    GitHubGraph.StatusStateFailure ->
-                                                        "failure"
+                                            GitHubGraph.StatusStateFailure ->
+                                                Octicons.x { octiconOpts | color = color }
 
-                                                    GitHubGraph.StatusStateExpected ->
-                                                        "expected"
+                                            GitHubGraph.StatusStateExpected ->
+                                                Octicons.question { octiconOpts | color = color }
 
-                                                    GitHubGraph.StatusStateError ->
-                                                        "error"
-                                              , True
-                                              )
-                                            ]
+                                            GitHubGraph.StatusStateError ->
+                                                Octicons.alert { octiconOpts | color = color }
                                         ]
-                                        []
 
                         _ ->
                             []
@@ -3656,21 +3653,20 @@ prIcons model card =
                             Html.img [ HA.class ("status-actor " ++ reviewClass), HA.src r.author.avatar ] []
                         )
                         reviews
-
-                mergeClass =
-                    case pr.mergeable of
-                        GitHubGraph.MergeableStateMergeable ->
-                            "success"
-
-                        GitHubGraph.MergeableStateConflicting ->
-                            "failure"
-
-                        GitHubGraph.MergeableStateUnknown ->
-                            "pending"
             in
-            Html.span
-                [ HA.class ("status-icon octicon octicon-git-merge " ++ mergeClass) ]
-                []
+            Octicons.gitMerge
+                { octiconOpts
+                    | color =
+                        case pr.mergeable of
+                            GitHubGraph.MergeableStateMergeable ->
+                                Colors.green
+
+                            GitHubGraph.MergeableStateConflicting ->
+                                Colors.red
+
+                            GitHubGraph.MergeableStateUnknown ->
+                                Colors.yellow
+                }
                 :: (statusChecks ++ reviewStates)
 
 
@@ -3687,7 +3683,7 @@ viewNoteCard model col text =
         [ Html.div [ HA.class "card-info card-note" ]
             [ Markdown.toHtml [] text ]
         , Html.div [ HA.class "card-icons" ]
-            [ octicon "book"
+            [ Octicons.book octiconOpts
             ]
         ]
 
@@ -3790,13 +3786,11 @@ viewSuggestedLabel model card name =
                  ]
                     ++ labelColorStyles model color
                 )
-                [ octicon
-                    (if has then
-                        "dash"
+                [ if has then
+                    Octicons.dash { octiconOpts | color = Colors.white }
 
-                     else
-                        "plus"
-                    )
+                  else
+                    Octicons.plus { octiconOpts | color = Colors.white }
                 , Html.span [ HA.class "label-text" ]
                     [ Html.text name ]
                 ]
@@ -4150,6 +4144,6 @@ emptyArc =
     }
 
 
-octicon : String -> Html Msg
-octicon label =
-    Html.span [ HA.class ("octicon octicon-" ++ label) ] []
+octiconOpts : Octicons.Options
+octiconOpts =
+    Octicons.defaultOptions

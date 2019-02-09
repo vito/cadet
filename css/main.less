@@ -1,6 +1,6 @@
 @import "colors.less";
 
-@project-bg: @gray;
+@project-bg: @gray-900;
 @project-column-bg: lighten(@project-bg, 5%);
 @column-bg: transparent;
 
@@ -98,6 +98,10 @@ a {
     flex-direction: row;
   }
 
+  .octicon path {
+    fill: @white;
+  }
+
   .user-info {
     line-height: 40px;
     font-weight: bold;
@@ -105,14 +109,10 @@ a {
     padding: 0 12px;
 
     .log-in-icon {
-      font-size: 20px;
       width: 20px;
       height: 20px;
       border-radius: 3px;
-      vertical-align: middle;
-      display: inline-block;
-      margin-right: 7px;
-      margin-top: -2px;
+      margin-right: 10px;
     }
   }
 }
@@ -138,15 +138,6 @@ a {
     display: flex;
   }
 
-  .octicon {
-    cursor: pointer;
-    color: fade(#fff, 50%);
-
-    &:hover {
-      color: white;
-    }
-  }
-
   input {
     font-size: 14px;
     padding: 0 12px;
@@ -168,11 +159,15 @@ a {
 }
 
 .button {
-  color: @white;
   display: inline-block;
   flex-shrink: 0;
   padding: 12px;
   text-align: center;
+  color: @white;
+
+  .octicon * {
+    fill: @white;
+  }
 
   &:hover {
     background: @gray;
@@ -185,7 +180,6 @@ a {
   justify-content: flex-end;
 
   .card-buttons {
-    color: @white-fade-50;
     margin-left: -@card-margin;
     padding: 4px 2px 4px (@card-margin + 4px);
     flex-grow: 1;
@@ -198,8 +192,14 @@ a {
     .octicon {
       cursor: pointer;
 
+      * {
+        fill: @white-fade-50;
+      }
+
       &:hover {
-        color: @white;
+        * {
+          fill: @white;
+        }
       }
     }
   }
@@ -271,9 +271,6 @@ a {
   .octicon {
     width: 16px;
     height: 16px;
-    font-size: 16px;
-    text-align: center;
-    vertical-align: middle;
   }
 
   .status-actor {
@@ -298,24 +295,17 @@ a {
     margin-right: 0;
   }
 
-  .open { color: @green; }
-  .closed { color: @red; }
-  .merged { color: @purple; }
-
-  .pause, .unpause {
-    color: @gray-300;
+  .pause-toggle {
     cursor: pointer;
-  }
 
-  .unpause, .pause:hover {
-    color: @gray-600;
-  }
+    * {
+      fill: @gray-300;
+    }
 
-  .pending { color: @yellow; }
-  .success { color: @green; }
-  .failure { color: @red; }
-  .expected { color: @purple; }
-  .error { color: @orange; }
+    &:hover * {
+      fill: @gray-600;
+    }
+  }
 }
 
 .card-info {
@@ -331,11 +321,14 @@ a {
     padding: 1px 0; /* eliminate unclickable gap */
 
     .external-link {
-      color: @gray-300;
       margin-left: 10px;
 
-      &:hover {
-        color: @gray-600;
+      * {
+        fill: @gray-300;
+      }
+
+      &:hover * {
+        fill: @gray-600;
       }
     }
 
@@ -385,11 +378,10 @@ a {
 }
 
 .label {
+  font-size: 12px;
   display: inline-block;
   padding: 3px 4px;
-  font-size: 12px;
   line-height: 1;
-  color: #fff;
   border-radius: 2px;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
   vertical-align: text-top;
@@ -399,6 +391,24 @@ a {
 
   .label-text {
     font-weight: 600;
+  }
+}
+
+.dark-label {
+  color: @white;
+
+  .octicon * {
+    fill: @white;
+  }
+}
+
+.light-label {
+  // GitHub appears to pre-compute a hex code, but this seems
+  // to be pretty much all it's doing
+  color: rgba(0, 0, 0, 0.8);
+
+  .octicon * {
+    fill: rgba(0, 0, 0, 0.8);
   }
 }
 
@@ -416,10 +426,15 @@ a {
     .label-text {
       display: initial;
     }
+
+    &.suggested .octicon {
+      margin-right: 3px;
+    }
   }
 
   &.suggested .octicon {
-    font-size: 12px;
+    width: 11px;
+    height: 11px;
 
     &.octicon-plus {
       margin-left: 0.5px;
@@ -792,32 +807,26 @@ svg {
 
     .flair-arc {
       fill: @white;
-
-      &.pending { fill: @yellow; }
-      &.success { fill: @green; }
-      &.failure { fill: @red; }
-      &.expected { fill: @purple; }
-      &.error { fill: @orange; }
     }
 
-    .octicon {
-      font-size: 12px !important;
+    .octicon, .status-actor {
+      width: 12px;
+      height: 12px;
     }
 
     .status-actor {
-      width: 12px;
-      height: 12px;
       border-radius: 3px;
     }
 
-    .status-icon {
-      color: @white;
+    .status-icon .octicon * {
+      fill: @white;
     }
 
-    &.active-today .flair-arc { opacity: 0.7; }
-    &.active-yesterday .flair-arc { opacity: 0.5; }
-    &.active-this-week .flair-arc { opacity: 0.3; }
-    &.active-long-ago .flair-arc { opacity: 0.15; }
+    &.active-today .flair-arc { opacity: 0.8; }
+    &.active-yesterday .flair-arc { opacity: 0.6; }
+    &.active-this-week .flair-arc { opacity: 0.4; }
+    &.active-this-month .flair-arc { opacity: 0.2; }
+    &.active-long-ago .flair-arc { opacity: 0.1; }
   }
 
   .reveal:hover .hidden {
@@ -894,7 +903,7 @@ svg {
   text-align: right;
 
   .label-background {
-    display: inline-block;
+    display: inline-flex;
     padding: 9px;
     border-top-left-radius: 10px;
     border-bottom-left-radius: 10px;
@@ -919,7 +928,7 @@ svg {
 }
 
 .label-edit {
-  display: inline-block;
+  display: inline-flex;
   padding: 9px;
   border-top-left-radius: 10px;
   border-bottom-left-radius: 10px;
@@ -956,7 +965,7 @@ svg {
 .label-icon {
   border-radius: 3px;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
-  padding: 8px 4px 8px 10px;
+  padding: 8px 5px 8px 9px;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   cursor: pointer;
@@ -965,9 +974,13 @@ svg {
 .label-counts {
   font-size: 16px;
   background: @gray-dark;
-  color: @white;
   line-height: 50px;
   padding: 0 10px;
+
+  color: @white;
+  .octicon * {
+    fill: @white;
+  }
 
   .count-number {
     display: inline-block;
@@ -1149,23 +1162,32 @@ svg {
     background: transparent;
     color: @gray;
 
-    &:hover {
-      color: @white;
+    .octicon {
+      * {
+        fill: @gray;
+      }
     }
 
-    &.active {
+    &:hover, &.active {
       color: @white;
+
+      .octicon * {
+        fill: @white;
+      }
     }
   }
 
   .clear-selected {
     float: right;
-    color: @white-fade-50;
     line-height: 26px;
     cursor: pointer;
 
-    &:hover {
-      color: @white;
+    * {
+      fill: @white-fade-50;
+    }
+
+    &:hover * {
+      fill: @white;
     }
   }
 
@@ -1213,27 +1235,26 @@ svg {
     }
 
     .checkbox {
+      margin-top: 1px;
       margin-right: 8px;
       border-radius: 3px;
       background: @white;
-      color: @white;
       width: 16px;
       height: 16px;
-      font-size: 13px;
       display: inline-block;
+
+      .octicon {
+        width: 14px;
+        height: 14px;
+        margin: 1px;
+
+        * {
+          fill: @white;
+        }
+      }
 
       &.checked, &.mixed {
         background: @gray;
-      }
-
-      &.mixed {
-        padding-left: 5px;
-        padding-top: 2px;
-      }
-
-      &.checked {
-        padding-left: 3px;
-        padding-top: 2px;
       }
     }
   }
@@ -1330,14 +1351,20 @@ svg {
     flex-grow: 1;
 
     .octicon {
-      margin: -2px 5px 0 2px;
-      font-size: 12px;
+      margin-right: 5px;
+      width: 14px;
+      height: 14px;
+
+      * {
+        fill: @white;
+      }
     }
   }
 }
 
 .shipit-repo {
   width: 300px;
+  margin-bottom: 20px;
 }
 
 .shipit-metric {
@@ -1353,39 +1380,9 @@ svg {
   }
 
   .octicon {
-    text-align: center;
-    font-size: 20px;
+    width: 20px;
+    height: 20px;
     margin-right: 7px;
-  }
-
-  &.shipit-metric-commits {
-    .octicon {
-      margin-left: 1px;
-      margin-right: 6px;
-    }
-  }
-
-  &.shipit-metric-merged-prs {
-    .octicon {
-      color: @purple;
-      margin-left: 2px;
-      margin-right: 5px;
-    }
-  }
-
-  &.shipit-metric-closed-issues {
-    .octicon {
-      color: @red;
-    }
-  }
-
-  &.shipit-metric-open-issues {
-    .octicon {
-      color: @green;
-
-      margin-left: 1px;
-      margin-right: 6px;
-    }
   }
 }
 
@@ -1403,12 +1400,11 @@ svg {
 
   .octicon {
     margin: 0 7px 0 4px;
-    font-size: inherit;
-  }
+    width: 24px;
+    height: 24px;
 
-  .repo-name-label {
-    .octicon {
-      margin-top: 0px;
+    * {
+      fill: @white;
     }
   }
 
@@ -1416,7 +1412,7 @@ svg {
     margin-left: 20px;
 
     .octicon {
-      margin-top: -6px;
+      margin-top: -5px;
     }
   }
 }

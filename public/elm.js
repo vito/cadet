@@ -14472,8 +14472,146 @@ var author$project$Main$cardRadiusWithFlair = F2(
 			A2(elm$core$List$cons, card.commentCount, reactionCounts));
 		return (A2(author$project$Main$cardRadiusWithoutFlair, card, context) + author$project$Main$flairRadiusBase) + highestFlair;
 	});
+var author$project$Colors$green500 = '#28a745';
+var author$project$Colors$green = author$project$Colors$green500;
+var author$project$Colors$orange500 = '#f66a0a';
+var author$project$Colors$orange = author$project$Colors$orange500;
+var author$project$Colors$purple500 = '#6f42c1';
+var author$project$Colors$purple = author$project$Colors$purple500;
+var author$project$Colors$red500 = '#d73a49';
+var author$project$Colors$red = author$project$Colors$red500;
+var author$project$Colors$yellow500 = '#ffd33d';
+var author$project$Colors$yellow = author$project$Colors$yellow500;
 var author$project$Main$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
+var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
+var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
+var capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
+var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
+var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var elm$svg$Svg$Attributes$style = _VirtualDom_attribute('style');
+var elm$svg$Svg$Attributes$version = _VirtualDom_attribute('version');
+var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var capitalist$elm_octicons$Octicons$Internal$iconSVG = F5(
+	function (viewBox, name, options, attributes, children) {
+		var style = function () {
+			var _n2 = options.style;
+			if (_n2.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var s = _n2.a;
+				return _List_fromArray(
+					[s]);
+			}
+		}();
+		var margin = function () {
+			var _n1 = options.margin;
+			if (_n1.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var m = _n1.a;
+				return _List_fromArray(
+					['margin: ' + m]);
+			}
+		}();
+		var styles = function () {
+			var _n0 = elm$core$List$concat(
+				_List_fromArray(
+					[style, margin]));
+			if (!_n0.b) {
+				return _List_Nil;
+			} else {
+				var lst = _n0;
+				return _List_fromArray(
+					[
+						elm$svg$Svg$Attributes$style(
+						A2(elm$core$String$join, ';', lst))
+					]);
+			}
+		}();
+		return A2(
+			elm$svg$Svg$svg,
+			elm$core$List$concat(
+				_List_fromArray(
+					[
+						_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$version('1.1'),
+							elm$svg$Svg$Attributes$class(
+							A2(elm$core$Maybe$withDefault, 'octicon ' + name, options._class)),
+							elm$svg$Svg$Attributes$width(
+							elm$core$String$fromInt(options.width)),
+							elm$svg$Svg$Attributes$height(
+							elm$core$String$fromInt(options.height)),
+							elm$svg$Svg$Attributes$viewBox(viewBox)
+						]),
+						attributes,
+						styles
+					])),
+			children);
+	});
+var elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
+var capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
+	function (path, viewBox, octiconName, options) {
+		return A5(
+			capitalist$elm_octicons$Octicons$Internal$iconSVG,
+			viewBox,
+			octiconName,
+			options,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$d(path),
+							elm$svg$Svg$Attributes$fillRule(options.fillRule),
+							elm$svg$Svg$Attributes$fill(options.color)
+						]),
+					_List_Nil)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$alert = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$alertPath, '0 0 16 16', 'alert');
+var capitalist$elm_octicons$Octicons$checkPolygon = '12 5 4 13 0 9 1.5 7.5 4 10 10.5 3.5';
+var elm$svg$Svg$polygon = elm$svg$Svg$trustedNode('polygon');
+var elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
+var capitalist$elm_octicons$Octicons$polygonIconWithOptions = F4(
+	function (points, viewBox, octiconName, options) {
+		return A5(
+			capitalist$elm_octicons$Octicons$Internal$iconSVG,
+			viewBox,
+			octiconName,
+			options,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$polygon,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$points(points),
+							elm$svg$Svg$Attributes$fillRule(options.fillRule),
+							elm$svg$Svg$Attributes$fill(options.color)
+						]),
+					_List_Nil)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$check = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$checkPolygon, '0 0 12 16', 'check');
+var capitalist$elm_octicons$Octicons$commentPath = 'M14,1 L2,1 C1.45,1 1,1.45 1,2 L1,10 C1,10.55 1.45,11 2,11 L4,11 L4,14.5 L7.5,11 L14,11 C14.55,11 15,10.55 15,10 L15,2 C15,1.45 14.55,1 14,1 L14,1 Z M14,10 L7,10 L5,12 L5,10 L2,10 L2,2 L14,2 L14,10 L14,10 Z';
+var capitalist$elm_octicons$Octicons$comment = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$commentPath, '0 0 16 16', 'comment');
+var capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
+var capitalist$elm_octicons$Octicons$gitMerge = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
+var capitalist$elm_octicons$Octicons$primitiveDotPath = 'M0,8 C0,5.8 1.8,4 4,4 C6.2,4 8,5.8 8,8 C8,10.2 6.2,12 4,12 C1.8,12 0,10.2 0,8 L0,8 Z';
+var capitalist$elm_octicons$Octicons$primitiveDot = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$primitiveDotPath, '0 0 8 16', 'primitiveDot');
+var capitalist$elm_octicons$Octicons$questionPath = 'M6,10 L8,10 L8,12 L6,12 L6,10 L6,10 Z M10,6.5 C10,8.64 8,9 8,9 L6,9 C6,8.45 6.45,8 7,8 L7.5,8 C7.78,8 8,7.78 8,7.5 L8,6.5 C8,6.22 7.78,6 7.5,6 L6.5,6 C6.22,6 6,6.22 6,6.5 L6,7 L4,7 C4,5.5 5.5,4 7,4 C8.5,4 10,5 10,6.5 L10,6.5 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
+var capitalist$elm_octicons$Octicons$question = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$questionPath, '0 0 14 16', 'question');
+var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
+var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
+var elm$html$Html$img = _VirtualDom_node('img');
 var elm$html$Html$span = _VirtualDom_node('span');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -14482,28 +14620,6 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var author$project$Main$octicon = function (label) {
-	return A2(
-		elm$html$Html$span,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('octicon octicon-' + label)
-			]),
-		_List_Nil);
-};
-var elm$html$Html$img = _VirtualDom_node('img');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$html$Html$Attributes$classList = function (classes) {
-	return elm$html$Html$Attributes$class(
-		A2(
-			elm$core$String$join,
-			' ',
-			A2(
-				elm$core$List$map,
-				elm$core$Tuple$first,
-				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
-};
 var elm$html$Html$Attributes$src = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,
@@ -14560,31 +14676,41 @@ var author$project$Main$reactionFlairArcs = F3(
 										elm$html$Html$span,
 										_List_fromArray(
 											[
-												elm$html$Html$Attributes$classList(
-												_List_fromArray(
-													[
-														_Utils_Tuple2('status-icon', true),
-														_Utils_Tuple2('octicon', true),
-														_Utils_Tuple2(
-														function () {
-															var _n9 = c.state;
-															switch (_n9.$) {
-																case 'StatusStatePending':
-																	return 'octicon-primitive-dot';
-																case 'StatusStateSuccess':
-																	return 'octicon-check';
-																case 'StatusStateFailure':
-																	return 'octicon-x';
-																case 'StatusStateExpected':
-																	return 'octicon-question';
-																default:
-																	return 'octicon-alert';
-															}
-														}(),
-														true)
-													]))
+												elm$html$Html$Attributes$class('status-icon')
 											]),
-										_List_Nil),
+										_List_fromArray(
+											[
+												function () {
+												var _n9 = c.state;
+												switch (_n9.$) {
+													case 'StatusStatePending':
+														return capitalist$elm_octicons$Octicons$primitiveDot(
+															_Utils_update(
+																author$project$Main$octiconOpts,
+																{color: author$project$Colors$yellow}));
+													case 'StatusStateSuccess':
+														return capitalist$elm_octicons$Octicons$check(
+															_Utils_update(
+																author$project$Main$octiconOpts,
+																{color: author$project$Colors$green}));
+													case 'StatusStateFailure':
+														return capitalist$elm_octicons$Octicons$x(
+															_Utils_update(
+																author$project$Main$octiconOpts,
+																{color: author$project$Colors$red}));
+													case 'StatusStateExpected':
+														return capitalist$elm_octicons$Octicons$question(
+															_Utils_update(
+																author$project$Main$octiconOpts,
+																{color: author$project$Colors$purple}));
+													default:
+														return capitalist$elm_octicons$Octicons$alert(
+															_Utils_update(
+																author$project$Main$octiconOpts,
+																{color: author$project$Colors$orange}));
+												}
+											}()
+											])),
 									function () {
 										var _n10 = c.state;
 										switch (_n10.$) {
@@ -14643,9 +14769,12 @@ var author$project$Main$reactionFlairArcs = F3(
 							elm$html$Html$span,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('status-icon octicon octicon-git-merge')
+									elm$html$Html$Attributes$class('status-icon')
 								]),
-							_List_Nil),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$gitMerge(author$project$Main$octiconOpts)
+								])),
 						function () {
 							var _n6 = pr.mergeable;
 							switch (_n6.$) {
@@ -14684,7 +14813,7 @@ var author$project$Main$reactionFlairArcs = F3(
 				A2(
 					elm$core$List$cons,
 					_Utils_Tuple3(
-						author$project$Main$octicon('comment'),
+						capitalist$elm_octicons$Octicons$comment(author$project$Main$octiconOpts),
 						'comments',
 						card.commentCount),
 					emojiReactions)));
@@ -18564,6 +18693,16 @@ var author$project$Drag$onDrop = F2(
 			]);
 	});
 var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$Attributes$classList = function (classes) {
+	return elm$html$Html$Attributes$class(
+		A2(
+			elm$core$String$join,
+			' ',
+			A2(
+				elm$core$List$map,
+				elm$core$Tuple$first,
+				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
+};
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var author$project$Drag$viewDropArea = F4(
@@ -18806,6 +18945,8 @@ var author$project$Drag$draggable = F4(
 var author$project$Main$FromColumnCardSource = function (a) {
 	return {$: 'FromColumnCardSource', a: a};
 };
+var author$project$Colors$gray300 = '#d1d5da';
+var author$project$Colors$gray600 = '#586069';
 var author$project$Main$HighlightNode = function (a) {
 	return {$: 'HighlightNode', a: a};
 };
@@ -18826,6 +18967,8 @@ var author$project$Main$UnlabelCard = F2(
 	function (a, b) {
 		return {$: 'UnlabelCard', a: a, b: b};
 	});
+var capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
+var capitalist$elm_octicons$Octicons$linkExternal = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
@@ -18844,10 +18987,13 @@ var author$project$Main$externalIcons = function (card) {
 				_List_fromArray(
 					[
 						elm$html$Html$Attributes$target('_blank'),
-						elm$html$Html$Attributes$class('external-link octicon octicon-link-external'),
+						elm$html$Html$Attributes$class('external-link'),
 						elm$html$Html$Attributes$href(url)
 					]),
-				_List_Nil);
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$linkExternal(author$project$Main$octiconOpts)
+					]));
 		},
 		card.cards);
 };
@@ -18878,52 +19024,60 @@ var author$project$Main$prIcons = F2(
 						return A2(elm$core$List$map, a, contexts);
 					}(
 						function (c) {
+							var color = function () {
+								var _n5 = c.state;
+								switch (_n5.$) {
+									case 'StatusStatePending':
+										return author$project$Colors$yellow;
+									case 'StatusStateSuccess':
+										return author$project$Colors$green;
+									case 'StatusStateFailure':
+										return author$project$Colors$red;
+									case 'StatusStateExpected':
+										return author$project$Colors$purple;
+									default:
+										return author$project$Colors$orange;
+								}
+							}();
 							return A2(
 								elm$html$Html$span,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('status-icon', true),
-												_Utils_Tuple2('octicon', true),
-												_Utils_Tuple2(
-												function () {
-													var _n4 = c.state;
-													switch (_n4.$) {
-														case 'StatusStatePending':
-															return 'octicon-primitive-dot';
-														case 'StatusStateSuccess':
-															return 'octicon-check';
-														case 'StatusStateFailure':
-															return 'octicon-x';
-														case 'StatusStateExpected':
-															return 'octicon-question';
-														default:
-															return 'octicon-alert';
-													}
-												}(),
-												true),
-												_Utils_Tuple2(
-												function () {
-													var _n5 = c.state;
-													switch (_n5.$) {
-														case 'StatusStatePending':
-															return 'pending';
-														case 'StatusStateSuccess':
-															return 'success';
-														case 'StatusStateFailure':
-															return 'failure';
-														case 'StatusStateExpected':
-															return 'expected';
-														default:
-															return 'error';
-													}
-												}(),
-												true)
-											]))
+										elm$html$Html$Attributes$class('status-icon')
 									]),
-								_List_Nil);
+								_List_fromArray(
+									[
+										function () {
+										var _n4 = c.state;
+										switch (_n4.$) {
+											case 'StatusStatePending':
+												return capitalist$elm_octicons$Octicons$primitiveDot(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: color}));
+											case 'StatusStateSuccess':
+												return capitalist$elm_octicons$Octicons$check(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: color}));
+											case 'StatusStateFailure':
+												return capitalist$elm_octicons$Octicons$x(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: color}));
+											case 'StatusStateExpected':
+												return capitalist$elm_octicons$Octicons$question(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: color}));
+											default:
+												return capitalist$elm_octicons$Octicons$alert(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: color}));
+										}
+									}()
+									]));
 						});
 				} else {
 					return _List_Nil;
@@ -18961,26 +19115,24 @@ var author$project$Main$prIcons = F2(
 						_List_Nil);
 				},
 				reviews);
-			var mergeClass = function () {
-				var _n1 = pr.mergeable;
-				switch (_n1.$) {
-					case 'MergeableStateMergeable':
-						return 'success';
-					case 'MergeableStateConflicting':
-						return 'failure';
-					default:
-						return 'pending';
-				}
-			}();
 			return A2(
 				elm$core$List$cons,
-				A2(
-					elm$html$Html$span,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('status-icon octicon octicon-git-merge ' + mergeClass)
-						]),
-					_List_Nil),
+				capitalist$elm_octicons$Octicons$gitMerge(
+					_Utils_update(
+						author$project$Main$octiconOpts,
+						{
+							color: function () {
+								var _n1 = pr.mergeable;
+								switch (_n1.$) {
+									case 'MergeableStateMergeable':
+										return author$project$Colors$green;
+									case 'MergeableStateConflicting':
+										return author$project$Colors$red;
+									default:
+										return author$project$Colors$yellow;
+								}
+							}()
+						})),
 				_Utils_ap(statusChecks, reviewStates));
 		}
 	});
@@ -19028,10 +19180,7 @@ var author$project$Main$labelColorStyles = F2(
 		return _List_fromArray(
 			[
 				A2(elm$html$Html$Attributes$style, 'background-color', '#' + color),
-				A2(
-				elm$html$Html$Attributes$style,
-				'color',
-				A2(author$project$Main$colorIsLight, model, color) ? 'rgba(0, 0, 0, .8)' : '#fff')
+				A2(author$project$Main$colorIsLight, model, color) ? elm$html$Html$Attributes$class('light-label') : elm$html$Html$Attributes$class('dark-label')
 			]);
 	});
 var author$project$Main$SearchCards = function (a) {
@@ -19085,6 +19234,11 @@ var author$project$Main$viewLabel = F2(
 						]))
 				]));
 	});
+var author$project$Colors$white = '#fff';
+var capitalist$elm_octicons$Octicons$dashPolygon = '0 7 0 9 8 9 8 7';
+var capitalist$elm_octicons$Octicons$dash = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$dashPolygon, '0 0 8 16', 'dash');
+var capitalist$elm_octicons$Octicons$plusPolygon = '12 9 7 9 7 14 5 14 5 9 0 9 0 7 5 7 5 2 7 2 7 7 12 7';
+var capitalist$elm_octicons$Octicons$plus = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$plusPolygon, '0 0 12 16', 'plus');
 var author$project$Main$viewSuggestedLabel = F3(
 	function (model, card, name) {
 		var mlabelId = A2(
@@ -19121,8 +19275,13 @@ var author$project$Main$viewSuggestedLabel = F3(
 					A2(author$project$Main$labelColorStyles, model, color)),
 				_List_fromArray(
 					[
-						author$project$Main$octicon(
-						has ? 'dash' : 'plus'),
+						has ? capitalist$elm_octicons$Octicons$dash(
+						_Utils_update(
+							author$project$Main$octiconOpts,
+							{color: author$project$Colors$white})) : capitalist$elm_octicons$Octicons$plus(
+						_Utils_update(
+							author$project$Main$octiconOpts,
+							{color: author$project$Colors$white})),
 						A2(
 						elm$html$Html$span,
 						_List_fromArray(
@@ -19136,6 +19295,14 @@ var author$project$Main$viewSuggestedLabel = F3(
 					]));
 		}
 	});
+var capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
+var capitalist$elm_octicons$Octicons$bookmark = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
+var capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
+var capitalist$elm_octicons$Octicons$gitPullRequest = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
+var capitalist$elm_octicons$Octicons$issueClosed = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
+var capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
+var capitalist$elm_octicons$Octicons$issueOpened = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
 var elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -19319,37 +19486,24 @@ var author$project$Main$viewCard = F2(
 								elm$html$Html$span,
 								_List_fromArray(
 									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('octicon', true),
-												_Utils_Tuple2(
-												'open',
-												author$project$Main$isOpen(card)),
-												_Utils_Tuple2(
-												'closed',
-												!author$project$Main$isOpen(card)),
-												_Utils_Tuple2(
-												'merged',
-												author$project$Main$isMerged(card)),
-												_Utils_Tuple2(
-												'octicon-issue-opened',
-												_Utils_eq(
-													card.state,
-													author$project$Main$IssueState(author$project$GitHubGraph$IssueStateOpen))),
-												_Utils_Tuple2(
-												'octicon-issue-closed',
-												_Utils_eq(
-													card.state,
-													author$project$Main$IssueState(author$project$GitHubGraph$IssueStateClosed))),
-												_Utils_Tuple2(
-												'octicon-git-pull-request',
-												author$project$Main$isPR(card))
-											])),
 										elm$html$Html$Events$onClick(
 										author$project$Main$isPR(card) ? author$project$Main$RefreshPullRequest(card.id) : author$project$Main$RefreshIssue(card.id))
 									]),
-								_List_Nil),
+								_List_fromArray(
+									[
+										author$project$Main$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
+										_Utils_update(
+											author$project$Main$octiconOpts,
+											{
+												color: author$project$Main$isMerged(card) ? author$project$Colors$purple : (author$project$Main$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
+											})) : (author$project$Main$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
+										_Utils_update(
+											author$project$Main$octiconOpts,
+											{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
+										_Utils_update(
+											author$project$Main$octiconOpts,
+											{color: author$project$Colors$red})))
+									])),
 								function () {
 								var _n2 = _Utils_Tuple2(
 									author$project$Main$isInFlight(card),
@@ -19360,21 +19514,33 @@ var author$project$Main$viewCard = F2(
 											elm$html$Html$span,
 											_List_fromArray(
 												[
-													elm$html$Html$Attributes$class('octicon unpause octicon-bookmark'),
+													elm$html$Html$Attributes$class('pause-toggle'),
 													elm$html$Html$Events$onClick(
 													A2(author$project$Main$UnlabelCard, card, 'paused'))
 												]),
-											_List_Nil);
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$bookmark(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: author$project$Colors$gray300}))
+												]));
 									} else {
 										return A2(
 											elm$html$Html$span,
 											_List_fromArray(
 												[
-													elm$html$Html$Attributes$class('octicon pause octicon-bookmark'),
+													elm$html$Html$Attributes$class('pause-toggle'),
 													elm$html$Html$Events$onClick(
 													A2(author$project$Main$LabelCard, card, 'paused'))
 												]),
-											_List_Nil);
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$bookmark(
+													_Utils_update(
+														author$project$Main$octiconOpts,
+														{color: author$project$Colors$gray600}))
+												]));
 									}
 								} else {
 									return elm$html$Html$text('');
@@ -19384,6 +19550,8 @@ var author$project$Main$viewCard = F2(
 						A2(author$project$Main$prIcons, model, card)))
 				]));
 	});
+var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
+var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
 var elm_explorations$markdown$Markdown$defaultOptions = {
 	defaultHighlighting: elm$core$Maybe$Nothing,
 	githubFlavored: elm$core$Maybe$Just(
@@ -19434,7 +19602,7 @@ var author$project$Main$viewNoteCard = F3(
 						]),
 					_List_fromArray(
 						[
-							author$project$Main$octicon('book')
+							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)
 						]))
 				]));
 	});
@@ -19718,12 +19886,11 @@ var author$project$Main$viewCardEntry = F2(
 							_List_fromArray(
 								[
 									elm$html$Html$Events$onClick(
-									author$project$Main$DeselectCard(card.id)),
-									elm$html$Html$Attributes$class('octicon octicon-x')
+									author$project$Main$DeselectCard(card.id))
 								]),
 							_List_fromArray(
 								[
-									elm$html$Html$text('')
+									capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts)
 								])) : elm$html$Html$text('')
 						]))
 				]));
@@ -19776,6 +19943,20 @@ var author$project$Main$includesLabel = F3(
 			},
 			labelIds);
 	});
+var capitalist$elm_octicons$Octicons$mirrorPath = 'M15.5,4.7 L8.5,0 L1.5,4.7 C1.2,4.89 1,5.15 1,5.5 L1,16 L8.5,12 L16,16 L16,5.5 C16,5.16 15.8,4.89 15.5,4.7 L15.5,4.7 Z M15,14.5 L9,11.25 L9,10 L8,10 L8,11.25 L2,14.5 L2,5.5 L8,1.5 L8,6 L9,6 L9,1.5 L15,5.5 L15,14.5 L15,14.5 Z M6,7 L11,7 L11,5 L14,8 L11,11 L11,9 L6,9 L6,11 L3,8 L6,5 L6,7 L6,7 Z';
+var capitalist$elm_octicons$Octicons$mirror = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$mirrorPath, '0 0 16 16', 'mirror');
+var capitalist$elm_octicons$Octicons$paintcanPath = 'M6,0 C2.69,0 0,2.69 0,6 L0,7 C0,7.55 0.45,8 1,8 L1,13 C1,14.1 3.24,15 6,15 C8.76,15 11,14.1 11,13 L11,8 C11.55,8 12,7.55 12,7 L12,6 C12,2.69 9.31,0 6,0 L6,0 Z M9,10 L9,10.5 C9,10.78 8.78,11 8.5,11 C8.22,11 8,10.78 8,10.5 L8,10 C8,9.72 7.78,9.5 7.5,9.5 C7.22,9.5 7,9.72 7,10 L7,12.5 C7,12.78 6.78,13 6.5,13 C6.22,13 6,12.78 6,12.5 L6,10.5 C6,10.22 5.78,10 5.5,10 C5.22,10 5,10.22 5,10.5 L5,11 C5,11.55 4.55,12 4,12 C3.45,12 3,11.55 3,11 L3,10 C2.45,10 2,9.55 2,9 L2,7.2 C2.91,7.69 4.36,8 6,8 C7.64,8 9.09,7.69 10,7.2 L10,9 C10,9.55 9.55,10 9,10 L9,10 Z M6,7 C4.32,7 2.88,6.59 2.29,6 C2.88,5.41 4.32,5 6,5 C7.68,5 9.12,5.41 9.71,6 C9.12,6.59 7.68,7 6,7 L6,7 Z M6,4 C3.24,4 1,4.89 1,6 L1,6 C1,3.24 3.24,1 6,1 C8.76,1 11,3.24 11,6 C11,4.9 8.76,4 6,4 L6,4 Z';
+var capitalist$elm_octicons$Octicons$paintcan = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$paintcanPath, '0 0 12 16', 'paintcan');
+var capitalist$elm_octicons$Octicons$pencilPath = 'M0,12 L0,15 L3,15 L11,7 L8,4 L0,12 L0,12 Z M3,14 L1,14 L1,12 L2,12 L2,13 L3,13 L3,14 L3,14 Z M13.3,4.7 L12,6 L9,3 L10.3,1.7 C10.69,1.31 11.32,1.31 11.71,1.7 L13.3,3.29 C13.69,3.68 13.69,4.31 13.3,4.7 L13.3,4.7 Z';
+var capitalist$elm_octicons$Octicons$pencil = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$pencilPath, '0 0 14 16', 'pencil');
+var capitalist$elm_octicons$Octicons$repoPath = 'M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z M4,6 L3,6 L3,7 L4,7 L4,6 L4,6 Z M4,4 L3,4 L3,5 L4,5 L4,4 L4,4 Z M4,2 L3,2 L3,3 L4,3 L4,2 L4,2 Z M12,1 L12,13 C12,13.55 11.55,14 11,14 L6,14 L6,16 L4.5,14.5 L3,16 L3,14 L1,14 C0.45,14 0,13.55 0,13 L0,1 C0,0.45 0.45,0 1,0 L11,0 C11.55,0 12,0.45 12,1 L12,1 Z M11,11 L1,11 L1,13 L3,13 L3,12 L6,12 L6,13 L11,13 L11,11 L11,11 Z M11,1 L2,1 L2,10 L11,10 L11,1 L11,1 Z';
+var capitalist$elm_octicons$Octicons$repo = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$repoPath, '0 0 12 16', 'repo');
+var capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
+var capitalist$elm_octicons$Octicons$sync = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
+var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.96,1 L3.5,1 C2.13,1 1,2.13 1,3.5 L1,5.97 C1,6.63 1.27,7.27 1.73,7.74 L7.79,13.8 C8.18,14.19 8.81,14.19 9.2,13.8 L13.79,9.21 C14.18,8.82 14.18,8.19 13.79,7.8 L7.73,1.73 L7.73,1.73 Z M2.38,7.09 C2.07,6.79 1.91,6.39 1.91,5.96 L1.91,3.5 C1.91,2.62 2.63,1.91 3.5,1.91 L5.97,1.91 C6.39,1.91 6.8,2.07 7.1,2.38 L13.24,8.51 L8.51,13.24 L2.38,7.09 L2.38,7.09 Z M3.01,3 L5.01,3 L5.01,5 L3,5 L3,3 L3.01,3 Z';
+var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
+var capitalist$elm_octicons$Octicons$trashcanPath = 'M11,2 L9,2 C9,1.45 8.55,1 8,1 L5,1 C4.45,1 4,1.45 4,2 L2,2 C1.45,2 1,2.45 1,3 L1,4 C1,4.55 1.45,5 2,5 L2,14 C2,14.55 2.45,15 3,15 L10,15 C10.55,15 11,14.55 11,14 L11,5 C11.55,5 12,4.55 12,4 L12,3 C12,2.45 11.55,2 11,2 L11,2 Z M10,14 L3,14 L3,5 L4,5 L4,13 L5,13 L5,5 L6,5 L6,13 L7,13 L7,5 L8,5 L8,13 L9,13 L9,5 L10,5 L10,14 L10,14 Z M11,4 L2,4 L2,3 L11,3 L11,4 L11,4 Z';
+var capitalist$elm_octicons$Octicons$trashcan = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$trashcanPath, '0 0 12 16', 'trashcan');
 var elm$html$Html$form = _VirtualDom_node('form');
 var elm$html$Html$input = _VirtualDom_node('input');
 var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
@@ -19872,22 +20053,28 @@ var author$project$Main$viewLabelRow = F3(
 													_Utils_ap(
 														_List_fromArray(
 															[
-																elm$html$Html$Attributes$class('label-icon octicon octicon-tag'),
+																elm$html$Html$Attributes$class('label-icon'),
 																elm$html$Html$Events$onClick(
 																A2(author$project$Main$searchLabel, model, label.name))
 															]),
 														A2(author$project$Main$labelColorStyles, model, label.color)),
-													_List_Nil) : A2(
+													_List_fromArray(
+														[
+															capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts)
+														])) : A2(
 													elm$html$Html$span,
 													_Utils_ap(
 														_List_fromArray(
 															[
-																elm$html$Html$Attributes$class('label-icon label-color-control octicon octicon-paintcan'),
+																elm$html$Html$Attributes$class('label-icon'),
 																elm$html$Html$Events$onClick(
 																author$project$Main$SetLabelColor(label.color))
 															]),
 														A2(author$project$Main$labelColorStyles, model, label.color)),
-													_List_Nil),
+													_List_fromArray(
+														[
+															capitalist$elm_octicons$Octicons$paintcan(author$project$Main$octiconOpts)
+														])),
 													A2(
 													elm$html$Html$span,
 													_Utils_ap(
@@ -19929,12 +20116,15 @@ var author$project$Main$viewLabelRow = F3(
 													_Utils_ap(
 														_List_fromArray(
 															[
-																elm$html$Html$Attributes$class('label-icon label-color-control octicon octicon-sync'),
+																elm$html$Html$Attributes$class('label-icon'),
 																elm$html$Html$Events$onClick(
 																author$project$Main$RandomizeLabelColor(label))
 															]),
 														A2(author$project$Main$labelColorStyles, model, newLabel.color)),
-													_List_Nil),
+													_List_fromArray(
+														[
+															capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
+														])),
 													A2(
 													elm$html$Html$input,
 													_Utils_ap(
@@ -19975,7 +20165,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('issue-opened'),
+											capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -20015,7 +20205,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('git-pull-request'),
+											capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -20065,7 +20255,7 @@ var author$project$Main$viewLabelRow = F3(
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('repo'),
+											capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 											A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -20103,43 +20293,58 @@ var author$project$Main$viewLabelRow = F3(
 										[
 											elm$html$Html$Events$onClick(
 											author$project$Main$MirrorLabel(label)),
-											elm$html$Html$Attributes$class('button octicon octicon-mirror')
+											elm$html$Html$Attributes$class('button')
 										]),
-									_List_Nil),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$mirror(author$project$Main$octiconOpts)
+										])),
 									A2(elm$core$Dict$member, stateKey, model.editingLabels) ? A2(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
 											elm$html$Html$Events$onClick(
 											author$project$Main$StopEditingLabel(label)),
-											elm$html$Html$Attributes$class('button octicon octicon-x')
+											elm$html$Html$Attributes$class('button')
 										]),
-									_List_Nil) : A2(
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts)
+										])) : A2(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
 											elm$html$Html$Events$onClick(
 											author$project$Main$StartEditingLabel(label)),
-											elm$html$Html$Attributes$class('button octicon octicon-pencil')
+											elm$html$Html$Attributes$class('button')
 										]),
-									_List_Nil),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$pencil(author$project$Main$octiconOpts)
+										])),
 									A2(elm$core$Set$member, stateKey, model.deletingLabels) ? A2(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
 											elm$html$Html$Events$onClick(
 											author$project$Main$StopDeletingLabel(label)),
-											elm$html$Html$Attributes$class('button close octicon octicon-x')
+											elm$html$Html$Attributes$class('button close')
 										]),
-									_List_Nil) : A2(
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts)
+										])) : A2(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
 											elm$html$Html$Events$onClick(
 											author$project$Main$StartDeletingLabel(label)),
-											elm$html$Html$Attributes$class('button octicon octicon-trashcan')
+											elm$html$Html$Attributes$class('button')
 										]),
-									_List_Nil)
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$trashcan(author$project$Main$octiconOpts)
+										]))
 								])),
 							function () {
 							var isEditing = A2(elm$core$Dict$member, stateKey, model.editingLabels);
@@ -20163,17 +20368,23 @@ var author$project$Main$viewLabelRow = F3(
 											[
 												elm$html$Html$Events$onClick(
 												author$project$Main$DeleteLabel(label)),
-												elm$html$Html$Attributes$class('button delete octicon octicon-check')
+												elm$html$Html$Attributes$class('button delete')
 											]),
-										_List_Nil) : A2(
+										_List_fromArray(
+											[
+												capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts)
+											])) : A2(
 										elm$html$Html$span,
 										_List_fromArray(
 											[
 												elm$html$Html$Events$onClick(
 												author$project$Main$EditLabel(label)),
-												elm$html$Html$Attributes$class('button edit octicon octicon-check')
+												elm$html$Html$Attributes$class('button edit')
 											]),
-										_List_Nil)
+										_List_fromArray(
+											[
+												capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts)
+											]))
 									]));
 						}()
 						]))
@@ -20218,11 +20429,14 @@ var author$project$Main$viewLabelsPage = function (model) {
 										_Utils_ap(
 											_List_fromArray(
 												[
-													elm$html$Html$Attributes$class('label-icon label-color-control octicon octicon-sync'),
+													elm$html$Html$Attributes$class('label-icon'),
 													elm$html$Html$Events$onClick(author$project$Main$RandomizeNewLabelColor)
 												]),
 											A2(author$project$Main$labelColorStyles, model, model.newLabel.color)),
-										_List_Nil),
+										_List_fromArray(
+											[
+												capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
+											])),
 										A2(
 										elm$html$Html$input,
 										_Utils_ap(
@@ -20257,9 +20471,12 @@ var author$project$Main$viewLabelsPage = function (model) {
 								_List_fromArray(
 									[
 										elm$html$Html$Events$onClick(author$project$Main$CreateLabel),
-										elm$html$Html$Attributes$class('button octicon octicon-plus')
+										elm$html$Html$Attributes$class('button')
 									]),
-								_List_Nil)
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$plus(author$project$Main$octiconOpts)
+									]))
 							]))
 					])),
 				A2(
@@ -20369,6 +20586,12 @@ var author$project$Main$viewSearch = function (model) {
 					]))
 			]));
 };
+var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
+var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
+var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
+var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
+var capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
+var capitalist$elm_octicons$Octicons$signIn = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$signInPath, '0 0 14 16', 'signIn');
 var author$project$Main$viewNavBar = function (model) {
 	return A2(
 		elm$html$Html$div,
@@ -20402,9 +20625,12 @@ var author$project$Main$viewNavBar = function (model) {
 										elm$html$Html$span,
 										_List_fromArray(
 											[
-												elm$html$Html$Attributes$class('log-in-icon octicon octicon-sign-in')
+												elm$html$Html$Attributes$class('log-in-icon')
 											]),
-										_List_Nil),
+										_List_fromArray(
+											[
+												capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts)
+											])),
 										elm$html$Html$text('log in')
 									]));
 						} else {
@@ -20439,7 +20665,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('list-unordered')
+								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts)
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20450,7 +20676,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('circuit-board')
+								capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts)
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20461,7 +20687,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('git-pull-request')
+								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts)
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20472,7 +20698,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('squirrel')
+								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts)
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20483,7 +20709,7 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('tag')
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts)
 							]))
 					])),
 				author$project$Main$viewSearch(model)
@@ -20576,10 +20802,6 @@ var author$project$Main$viewNodeLowerUpper = F3(
 				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewUpper, pos, state),
 				ns));
 	});
-var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
-var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
 var author$project$Main$viewGraph = F2(
 	function (state, _n0) {
 		var graph = _n0.graph;
@@ -20705,6 +20927,14 @@ var author$project$Main$hasFilter = F2(
 	function (model, filter) {
 		return A2(elm$core$List$member, filter, model.graphFilters);
 	});
+var capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
+var capitalist$elm_octicons$Octicons$clock = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
+var capitalist$elm_octicons$Octicons$commentDiscussionPath = 'M15,1 L6,1 C5.45,1 5,1.45 5,2 L5,4 L1,4 C0.45,4 0,4.45 0,5 L0,11 C0,11.55 0.45,12 1,12 L2,12 L2,15 L5,12 L9,12 C9.55,12 10,11.55 10,11 L10,9 L11,9 L14,12 L14,9 L15,9 C15.55,9 16,8.55 16,8 L16,2 C16,1.45 15.55,1 15,1 L15,1 Z M9,11 L4.5,11 L3,12.5 L3,11 L1,11 L1,5 L5,5 L5,8 C5,8.55 5.45,9 6,9 L9,9 L9,11 L9,11 Z M15,8 L13,8 L13,9.5 L11.5,8 L6,8 L6,2 L15,2 L15,8 L15,8 Z';
+var capitalist$elm_octicons$Octicons$commentDiscussion = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$commentDiscussionPath, '0 0 16 16', 'commentDiscussion');
+var capitalist$elm_octicons$Octicons$flamePath = 'M5.05,0.31 C5.86,2.48 5.46,3.69 4.53,4.62 C3.55,5.67 1.98,6.45 0.9,7.98 C-0.55,10.03 -0.8,14.51 4.43,15.68 C2.23,14.52 1.76,11.16 4.13,9.07 C3.52,11.1 4.66,12.4 6.07,11.93 C7.46,11.46 8.37,12.46 8.34,13.6 C8.32,14.38 8.03,15.04 7.21,15.41 C10.63,14.82 11.99,11.99 11.99,9.85 C11.99,7.01 9.46,6.63 10.74,4.24 C9.22,4.37 8.71,5.37 8.85,6.99 C8.94,8.07 7.83,8.79 6.99,8.32 C6.32,7.91 6.33,7.13 6.93,6.54 C8.18,5.31 8.68,2.45 5.05,0.32 L5.03,0.3 L5.05,0.31 Z';
+var capitalist$elm_octicons$Octicons$flame = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$flamePath, '0 0 12 16', 'flame');
+var capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
+var capitalist$elm_octicons$Octicons$inbox = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
 var author$project$Main$viewGraphControls = function (model) {
 	var labelFilters = A2(
 		elm$core$List$filterMap,
@@ -20725,7 +20955,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							A2(author$project$Main$labelColorStyles, model, color)),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('tag'),
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
 								elm$html$Html$text(name)
 							])));
 			} else {
@@ -20765,7 +20995,7 @@ var author$project$Main$viewGraphControls = function (model) {
 								A2(author$project$Main$labelColorStyles, model, color)),
 							_List_fromArray(
 								[
-									author$project$Main$octicon('tag'),
+									capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
 									elm$html$Html$text(name)
 								]))
 						]))) : elm$core$Maybe$Nothing;
@@ -20816,7 +21046,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('inbox'),
+										capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
 										elm$html$Html$text('untriaged')
 									]));
 						}(),
@@ -20839,7 +21069,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('issue-opened'),
+										capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts),
 										elm$html$Html$text('issues')
 									]));
 						}(),
@@ -20862,7 +21092,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('git-pull-request'),
+										capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
 										elm$html$Html$text('pull requests')
 									]));
 						}(),
@@ -20888,7 +21118,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('comment-discussion'),
+											capitalist$elm_octicons$Octicons$commentDiscussion(author$project$Main$octiconOpts),
 											elm$html$Html$text('involving me')
 										]));
 							} else {
@@ -20946,7 +21176,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('tag'),
+											capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
 											elm$html$Html$text('label')
 										]))
 								]))
@@ -20987,7 +21217,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('flame'),
+								capitalist$elm_octicons$Octicons$flame(author$project$Main$octiconOpts),
 								elm$html$Html$text('impact')
 							])),
 						A2(
@@ -21007,7 +21237,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('clock'),
+								capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
 								elm$html$Html$text('all activity')
 							])),
 						function () {
@@ -21034,7 +21264,7 @@ var author$project$Main$viewGraphControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('clock'),
+										capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
 										elm$html$Html$text('my activity')
 									]));
 						} else {
@@ -21221,7 +21451,7 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('repo'),
+										capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 										elm$html$Html$text(repo.name)
 									]))
 							])),
@@ -21269,6 +21499,10 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
 					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))));
 };
+var author$project$Colors$gray500 = '#6a737d';
+var author$project$Colors$gray = author$project$Colors$gray500;
+var capitalist$elm_octicons$Octicons$gitCommitPath = 'M10.86,7 C10.41,5.28 8.86,4 7,4 C5.14,4 3.59,5.28 3.14,7 L0,7 L0,9 L3.14,9 C3.59,10.72 5.14,12 7,12 C8.86,12 10.41,10.72 10.86,9 L14,9 L14,7 L10.86,7 L10.86,7 Z M7,10.2 C5.78,10.2 4.8,9.22 4.8,8 C4.8,6.78 5.78,5.8 7,5.8 C8.22,5.8 9.2,6.78 9.2,8 C9.2,9.22 8.22,10.2 7,10.2 L7,10.2 Z';
+var capitalist$elm_octicons$Octicons$gitCommit = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitCommitPath, '0 0 14 16', 'gitCommit');
 var author$project$Main$viewShipItRepo = F2(
 	function (model, sir) {
 		return A2(
@@ -21295,7 +21529,7 @@ var author$project$Main$viewShipItRepo = F2(
 								]),
 							_List_fromArray(
 								[
-									author$project$Main$octicon('repo'),
+									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 									A2(
 									elm$html$Html$a,
 									_List_fromArray(
@@ -21312,11 +21546,14 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-metric shipit-metric-commits')
+							elm$html$Html$Attributes$class('shipit-metric')
 						]),
 					_List_fromArray(
 						[
-							author$project$Main$octicon('git-commit'),
+							capitalist$elm_octicons$Octicons$gitCommit(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$gray})),
 							elm$html$Html$text(
 							elm$core$String$fromInt(sir.comparison.totalCommits) + ' commits since last release')
 						])),
@@ -21324,11 +21561,14 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-metric shipit-metric-merged-prs')
+							elm$html$Html$Attributes$class('shipit-metric')
 						]),
 					_List_fromArray(
 						[
-							author$project$Main$octicon('git-pull-request'),
+							capitalist$elm_octicons$Octicons$gitPullRequest(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$purple})),
 							elm$html$Html$text(
 							elm$core$String$fromInt(
 								elm$core$List$length(sir.mergedPRs)) + ' merged pull requests')
@@ -21337,11 +21577,14 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-metric shipit-metric-closed-issues')
+							elm$html$Html$Attributes$class('shipit-metric')
 						]),
 					_List_fromArray(
 						[
-							author$project$Main$octicon('issue-closed'),
+							capitalist$elm_octicons$Octicons$issueClosed(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$red})),
 							elm$html$Html$text(
 							elm$core$String$fromInt(
 								elm$core$List$length(sir.closedIssues)) + ' closed issues')
@@ -21350,11 +21593,14 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-metric shipit-metric-open-issues')
+							elm$html$Html$Attributes$class('shipit-metric')
 						]),
 					_List_fromArray(
 						[
-							author$project$Main$octicon('issue-opened'),
+							capitalist$elm_octicons$Octicons$issueOpened(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$green})),
 							elm$html$Html$text(
 							elm$core$String$fromInt(
 								elm$core$List$length(sir.openIssues)) + ' open issues')
@@ -21418,7 +21664,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 								]),
 							_List_fromArray(
 								[
-									author$project$Main$octicon('repo'),
+									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 									A2(
 									elm$html$Html$a,
 									_List_fromArray(
@@ -21453,7 +21699,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 										]),
 									_List_fromArray(
 										[
-											author$project$Main$octicon('milestone'),
+											capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
 											elm$html$Html$text(nm.title)
 										]));
 							} else {
@@ -21618,13 +21864,15 @@ var author$project$Main$viewSidebarControls = function (model) {
 				if (_n2.$ === 'Just') {
 					if (_n2.a.$ === 'AddLabelOperation') {
 						var _n3 = _n2.a;
-						return _Utils_Tuple2(
-							'checked octicon octicon-check',
+						return _Utils_Tuple3(
+							'checked',
+							capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
 							A2(author$project$Main$SetLabelOperation, name, author$project$Main$RemoveLabelOperation));
 					} else {
 						var _n4 = _n2.a;
-						return _Utils_Tuple2(
-							'unhecked octicon',
+						return _Utils_Tuple3(
+							'unhecked',
+							capitalist$elm_octicons$Octicons$plus(author$project$Main$octiconOpts),
 							author$project$Main$UnsetLabelOperation(name));
 					}
 				} else {
@@ -21637,20 +21885,24 @@ var author$project$Main$viewSidebarControls = function (model) {
 					return ((!elm$core$List$isEmpty(cards)) && A2(
 						elm$core$List$all,
 						A2(author$project$Main$hasLabel, model, name),
-						cards)) ? _Utils_Tuple2(
-						'checked octicon octicon-check',
+						cards)) ? _Utils_Tuple3(
+						'checked',
+						capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
 						A2(author$project$Main$SetLabelOperation, name, author$project$Main$RemoveLabelOperation)) : (A2(
 						elm$core$List$any,
 						A2(author$project$Main$hasLabel, model, name),
-						cards) ? _Utils_Tuple2(
-						'mixed octicon octicon-dash',
-						A2(author$project$Main$SetLabelOperation, name, author$project$Main$AddLabelOperation)) : _Utils_Tuple2(
-						'unchecked octicon',
+						cards) ? _Utils_Tuple3(
+						'mixed',
+						capitalist$elm_octicons$Octicons$dash(author$project$Main$octiconOpts),
+						A2(author$project$Main$SetLabelOperation, name, author$project$Main$AddLabelOperation)) : _Utils_Tuple3(
+						'unchecked',
+						capitalist$elm_octicons$Octicons$plus(author$project$Main$octiconOpts),
 						A2(author$project$Main$SetLabelOperation, name, author$project$Main$AddLabelOperation)));
 				}
 			}();
 			var checkClass = _n1.a;
-			var clickOperation = _n1.b;
+			var icon = _n1.b;
+			var clickOperation = _n1.c;
 			return A2(
 				elm$html$Html$div,
 				_List_fromArray(
@@ -21666,7 +21918,8 @@ var author$project$Main$viewSidebarControls = function (model) {
 								elm$html$Html$Attributes$class('checkbox ' + checkClass),
 								elm$html$Html$Events$onClick(clickOperation)
 							]),
-						_List_Nil),
+						_List_fromArray(
+							[icon])),
 						A2(
 						elm$html$Html$span,
 						_Utils_ap(
@@ -21680,8 +21933,16 @@ var author$project$Main$viewSidebarControls = function (model) {
 							A2(author$project$Main$labelColorStyles, model, color)),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('tag'),
-								elm$html$Html$text(name)
+								A2(
+								elm$html$Html$span,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('label-text')
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text(name)
+									]))
 							]))
 					]));
 		});
@@ -21739,7 +22000,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								author$project$Main$octicon('tag'),
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
 								elm$html$Html$text('labels')
 							])),
 						A2(
@@ -21747,11 +22008,11 @@ var author$project$Main$viewSidebarControls = function (model) {
 						_List_fromArray(
 							[
 								elm$html$Html$Events$onClick(author$project$Main$ClearSelectedCards),
-								elm$html$Html$Attributes$class('octicon octicon-x clear-selected')
+								elm$html$Html$Attributes$class('clear-selected')
 							]),
 						_List_fromArray(
 							[
-								elm$html$Html$text('')
+								capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts)
 							]))
 					])),
 				A2(
@@ -21800,7 +22061,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('x'),
+										capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
 										elm$html$Html$text('cancel')
 									])),
 								A2(
@@ -21812,7 +22073,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$octicon('check'),
+										capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
 										elm$html$Html$text('apply')
 									]))
 							]))
