@@ -2003,7 +2003,7 @@ viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
 viewShipItRepoPage model sir =
     Html.div [ HA.class "shipit-repo-content" ]
         [ Html.div [ HA.class "shipit-header" ]
-            [ Html.div [ HA.class "repo-name-label" ]
+            [ Html.div []
                 [ Octicons.repo octiconOpts
                 , Html.a [ HA.href "/shipit" ] [ Html.text sir.repo.owner ]
                 , Html.text " / "
@@ -2011,7 +2011,7 @@ viewShipItRepoPage model sir =
                 ]
             , case sir.nextMilestone of
                 Just nm ->
-                    Html.div [ HA.class "repo-milestone-label" ]
+                    Html.div [ HA.class "shipit-milestone-label" ]
                         [ Octicons.milestone octiconOpts
                         , Html.text nm.title
                         ]
@@ -2088,14 +2088,12 @@ viewShipItRepoPage model sir =
 viewShipItRepo : Model -> ShipItRepo -> Html Msg
 viewShipItRepo model sir =
     Html.div [ HA.class "shipit-repo" ]
-        [ Html.div [ HA.class "repo-name" ]
-            [ Html.div [ HA.class "repo-name-label" ]
-                [ Octicons.repo octiconOpts
-                , Html.a
-                    [ HA.href ("/shipit/" ++ sir.repo.name)
-                    ]
-                    [ Html.text sir.repo.name ]
+        [ Html.div [ HA.class "column-title" ]
+            [ Octicons.repo octiconOpts
+            , Html.a
+                [ HA.href ("/shipit/" ++ sir.repo.name)
                 ]
+                [ Html.text sir.repo.name ]
             ]
         , Html.div [ HA.class "shipit-metric" ]
             [ Octicons.gitCommit { octiconOpts | color = Colors.gray }
@@ -2137,14 +2135,15 @@ viewPullRequestsPage model =
 
         viewRepoPRs repo prs =
             Html.div [ HA.class "repo-pull-requests" ]
-                [ Html.div [ HA.class "repo-name" ]
-                    [ Html.div [ HA.class "repo-name-label" ]
-                        [ Octicons.repo octiconOpts
-                        , Html.text repo.name
-                        ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.repo octiconOpts
+                    , Html.text repo.name
                     ]
-                , Html.div [ HA.class "cards" ]
-                    (List.map (viewCard model) prs)
+                , prs
+                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                    |> List.reverse
+                    |> List.map (viewCard model)
+                    |> Html.div [ HA.class "cards" ]
                 ]
     in
     Html.div [ HA.class "all-pull-requests" ]
@@ -2395,17 +2394,17 @@ viewProject model { project, backlogs, inFlight, done } =
                     ]
                 ]
             , Html.div [ HA.class "column backlog-column" ]
-                (List.map (\backlog -> viewProjectColumn model project (List.take 3) backlog) backlogs)
+                (List.map (viewProjectColumn model project (List.take 3) (Octicons.book octiconOpts)) backlogs)
             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model project identity inFlight ]
+                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenCards model) done ]
+                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
             ]
         ]
 
 
-viewProjectColumn : Model -> GitHubGraph.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> GitHubGraph.ProjectColumn -> Html Msg
-viewProjectColumn model project mod col =
+viewProjectColumn : Model -> GitHubGraph.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> Html Msg -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn model project mod icon col =
     let
         cards =
             mod <|
@@ -2421,8 +2420,9 @@ viewProjectColumn model project mod col =
             }
     in
     Html.div [ HA.class "project-column" ]
-        [ Html.div [ HA.class "column-name" ]
-            [ Html.a [ HA.href ("/projects/" ++ project.name) ] [ Html.text col.name ]
+        [ Html.div [ HA.class "column-title" ]
+            [ icon
+            , Html.a [ HA.href ("/projects/" ++ project.name) ] [ Html.text col.name ]
             ]
         , if List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
@@ -2498,14 +2498,14 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
             ([ Html.div [ HA.class "column name-column" ]
                 [ Html.h4 [] [ Html.text project.name ] ]
              , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenCards model) done ]
+                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
              , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model project identity inFlight ]
+                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
              ]
                 ++ List.map
                     (\backlog ->
                         Html.div [ HA.class "column backlog-column" ]
-                            [ viewProjectColumn model project identity backlog ]
+                            [ viewProjectColumn model project identity (Octicons.book octiconOpts) backlog ]
                     )
                     backlogs
             )

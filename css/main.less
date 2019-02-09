@@ -686,15 +686,6 @@ a {
   flex-direction: column;
   flex-grow: 1;
 
-  .column-name {
-    color: @gray-200;
-    font-size: 12px;
-    padding: @card-margin;
-    background: @gray-dark;
-    user-select: none;
-    cursor: default;
-  }
-
   &:first-child .column-name {
     border-top-left-radius: @card-margin;
     border-top-right-radius: @card-margin;
@@ -725,7 +716,7 @@ a {
 
     .name-column {
       width: @card-width + (2 * @card-margin);
-      background: @gray-600;
+      background: @gray-dark;
       border-radius: 0;
       text-align: left;
     }
@@ -1269,11 +1260,9 @@ svg {
     margin-left: 20px;
     margin-top: 20px;
     border-radius: 10px;
-    background: @gray-800;
+    background: @gray-dark;
 
     .card {
-      border-color: @gray-900;
-
       .card-actor:last-child {
         animation: wiggle 0.5s infinite;
       }
@@ -1299,9 +1288,7 @@ svg {
   100% { -webkit-transform: rotate(10deg); }
 }
 
-.repo-name {
-  flex-grow: 0;
-  flex-shrink: 0;
+.column-title {
   background: @gray-dark;
   color: @white;
   padding: @card-margin;
@@ -1312,20 +1299,13 @@ svg {
   border-top-left-radius: @card-margin;
   border-top-right-radius: @card-margin;
 
-  display: flex;
-  flex-direction: row;
+  .octicon {
+    margin-right: 5px;
+    width: 14px;
+    height: 14px;
 
-  .repo-name-label {
-    flex-grow: 1;
-
-    .octicon {
-      margin-right: 5px;
-      width: 14px;
-      height: 14px;
-
-      * {
-        fill: @white;
-      }
+    * {
+      fill: @white;
     }
   }
 }
@@ -1376,7 +1356,7 @@ svg {
     }
   }
 
-  .repo-milestone-label {
+  .shipit-milestone-label {
     margin-left: 20px;
 
     .octicon {

@@ -19675,8 +19675,8 @@ var author$project$Main$viewProjectColumnCard = F4(
 		}
 		return A3(author$project$Log$debug, 'impossible?: card has no note or content', ghCard, _List_Nil);
 	});
-var author$project$Main$viewProjectColumn = F4(
-	function (model, project, mod, col) {
+var author$project$Main$viewProjectColumn = F5(
+	function (model, project, mod, icon, col) {
 		var dropCandidate = {
 			msgFunc: author$project$Main$MoveCardAfter,
 			target: {afterId: elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
@@ -19698,10 +19698,11 @@ var author$project$Main$viewProjectColumn = F4(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('column-name')
+							elm$html$Html$Attributes$class('column-title')
 						]),
 					_List_fromArray(
 						[
+							icon,
 							A2(
 							elm$html$Html$a,
 							_List_fromArray(
@@ -19737,6 +19738,8 @@ var author$project$Main$viewProjectColumn = F4(
 							cards)))
 				]));
 	});
+var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
+var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
 var elm$html$Html$h4 = _VirtualDom_node('h4');
 var author$project$Main$viewProject = F2(
 	function (model, _n0) {
@@ -19793,14 +19796,12 @@ var author$project$Main$viewProject = F2(
 								]),
 							A2(
 								elm$core$List$map,
-								function (backlog) {
-									return A4(
-										author$project$Main$viewProjectColumn,
-										model,
-										project,
-										elm$core$List$take(3),
-										backlog);
-								},
+								A4(
+									author$project$Main$viewProjectColumn,
+									model,
+									project,
+									elm$core$List$take(3),
+									capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)),
 								backlogs)),
 							A2(
 							elm$html$Html$div,
@@ -19810,7 +19811,13 @@ var author$project$Main$viewProject = F2(
 								]),
 							_List_fromArray(
 								[
-									A4(author$project$Main$viewProjectColumn, model, project, elm$core$Basics$identity, inFlight)
+									A5(
+									author$project$Main$viewProjectColumn,
+									model,
+									project,
+									elm$core$Basics$identity,
+									capitalist$elm_octicons$Octicons$pulse(author$project$Main$octiconOpts),
+									inFlight)
 								])),
 							A2(
 							elm$html$Html$div,
@@ -19820,11 +19827,12 @@ var author$project$Main$viewProject = F2(
 								]),
 							_List_fromArray(
 								[
-									A4(
+									A5(
 									author$project$Main$viewProjectColumn,
 									model,
 									project,
 									author$project$Main$onlyOpenCards(model),
+									capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
 									done)
 								]))
 						]))
@@ -21344,11 +21352,12 @@ var author$project$Main$viewSingleProject = F2(
 									]),
 								_List_fromArray(
 									[
-										A4(
+										A5(
 										author$project$Main$viewProjectColumn,
 										model,
 										project,
 										author$project$Main$onlyOpenCards(model),
+										capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
 										done)
 									])),
 								A2(
@@ -21359,7 +21368,13 @@ var author$project$Main$viewSingleProject = F2(
 									]),
 								_List_fromArray(
 									[
-										A4(author$project$Main$viewProjectColumn, model, project, elm$core$Basics$identity, inFlight)
+										A5(
+										author$project$Main$viewProjectColumn,
+										model,
+										project,
+										elm$core$Basics$identity,
+										capitalist$elm_octicons$Octicons$pulse(author$project$Main$octiconOpts),
+										inFlight)
 									]))
 							]),
 						A2(
@@ -21373,7 +21388,13 @@ var author$project$Main$viewSingleProject = F2(
 										]),
 									_List_fromArray(
 										[
-											A4(author$project$Main$viewProjectColumn, model, project, elm$core$Basics$identity, backlog)
+											A5(
+											author$project$Main$viewProjectColumn,
+											model,
+											project,
+											elm$core$Basics$identity,
+											capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts),
+											backlog)
 										]));
 							},
 							backlogs))),
@@ -21439,21 +21460,12 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 						elm$html$Html$div,
 						_List_fromArray(
 							[
-								elm$html$Html$Attributes$class('repo-name')
+								elm$html$Html$Attributes$class('column-title')
 							]),
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('repo-name-label')
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
-										elm$html$Html$text(repo.name)
-									]))
+								capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
+								elm$html$Html$text(repo.name)
 							])),
 						A2(
 						elm$html$Html$div,
@@ -21464,7 +21476,16 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 						A2(
 							elm$core$List$map,
 							author$project$Main$viewCard(model),
-							prs))
+							elm$core$List$reverse(
+								A2(
+									elm$core$List$sortBy,
+									A2(
+										elm$core$Basics$composeR,
+										function ($) {
+											return $.updatedAt;
+										},
+										elm$time$Time$posixToMillis),
+									prs))))
 					]));
 		});
 	var getRepo = F3(
@@ -21517,29 +21538,20 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('repo-name')
+							elm$html$Html$Attributes$class('column-title')
 						]),
 					_List_fromArray(
 						[
+							capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 							A2(
-							elm$html$Html$div,
+							elm$html$Html$a,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('repo-name-label')
+									elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
 								]),
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
-									A2(
-									elm$html$Html$a,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(sir.repo.name)
-										]))
+									elm$html$Html$text(sir.repo.name)
 								]))
 						])),
 					A2(
@@ -21658,10 +21670,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 						[
 							A2(
 							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('repo-name-label')
-								]),
+							_List_Nil,
 							_List_fromArray(
 								[
 									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
@@ -21695,7 +21704,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 									elm$html$Html$div,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('repo-milestone-label')
+											elm$html$Html$Attributes$class('shipit-milestone-label')
 										]),
 									_List_fromArray(
 										[
