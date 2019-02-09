@@ -1861,7 +1861,7 @@ viewNavBar model =
                 [ Octicons.project octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ Octicons.issueOpened octiconOpts
+                [ Octicons.circuitBoard octiconOpts
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
                 [ Octicons.gitPullRequest octiconOpts
