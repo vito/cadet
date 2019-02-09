@@ -3225,27 +3225,6 @@ viewCardNode card radii circle labels { x, y } state =
             Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
-        projectHalo =
-            Svg.circle
-                [ SA.strokeWidth "3px"
-                , SA.r (String.fromFloat (radii.base - 1.5))
-                , if isInFlight card then
-                    SA.class "project-status in-flight"
-
-                  else if isDone card then
-                    SA.class "project-status done"
-
-                  else if isIcebox card then
-                    SA.class "project-status icebox"
-
-                  else if isBacklog card then
-                    SA.class "project-status backlog"
-
-                  else
-                    SA.class "project-status untriaged"
-                ]
-                []
-
         scale =
             if isHighlighted then
                 "1.1"
@@ -3279,7 +3258,7 @@ viewCardNode card radii circle labels { x, y } state =
                 SelectCard card.id
             )
         ]
-        (circle :: labels ++ [ projectHalo ])
+        (circle :: labels)
 
 
 viewCardEntry : Model -> Card -> Html Msg

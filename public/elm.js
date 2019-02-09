@@ -14791,9 +14791,6 @@ var elm$core$Set$member = F2(
 		var dict = _n0.a;
 		return A2(elm$core$Dict$member, key, dict);
 	});
-var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
-var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
-var elm$svg$Svg$Attributes$strokeWidth = _VirtualDom_attribute('stroke-width');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -14832,16 +14829,6 @@ var author$project$Main$viewCardNode = F6(
 	function (card, radii, circle, labels, _n0, state) {
 		var x = _n0.x;
 		var y = _n0.y;
-		var projectHalo = A2(
-			elm$svg$Svg$circle,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$strokeWidth('3px'),
-					elm$svg$Svg$Attributes$r(
-					elm$core$String$fromFloat(radii.base - 1.5)),
-					author$project$Main$isInFlight(card) ? elm$svg$Svg$Attributes$class('project-status in-flight') : (author$project$Main$isDone(card) ? elm$svg$Svg$Attributes$class('project-status done') : (author$project$Main$isIcebox(card) ? elm$svg$Svg$Attributes$class('project-status icebox') : (author$project$Main$isBacklog(card) ? elm$svg$Svg$Attributes$class('project-status backlog') : elm$svg$Svg$Attributes$class('project-status untriaged'))))
-				]),
-			_List_Nil);
 		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, state.selectedCards);
 		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
 			state.highlightedNode,
@@ -14861,13 +14848,7 @@ var author$project$Main$viewCardNode = F6(
 					elm$svg$Svg$Events$onClick(
 					isSelected ? author$project$Main$DeselectCard(card.id) : author$project$Main$SelectCard(card.id))
 				]),
-			A2(
-				elm$core$List$cons,
-				circle,
-				_Utils_ap(
-					labels,
-					_List_fromArray(
-						[projectHalo]))));
+			A2(elm$core$List$cons, circle, labels));
 	});
 var author$project$Main$activityClass = F2(
 	function (now, date) {
@@ -14895,7 +14876,9 @@ var author$project$Main$lastActivityIsByUser = F3(
 			return false;
 		}
 	});
+var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
 var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
+var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var author$project$Main$viewCardNodeFlair = F5(
 	function (card, radii, flair, _n0, state) {
 		var x = _n0.x;
