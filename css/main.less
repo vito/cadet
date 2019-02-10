@@ -1089,11 +1089,19 @@ svg {
 
   .octicon {
     margin-right: 5px;
+
+    * {
+      fill: @gray;
+    }
   }
 
   &.active {
     background: @gray-light;
     color: @white;
+
+    .octicon * {
+      fill: @white;
+    }
   }
 
   &:last-child {
