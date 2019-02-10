@@ -4,6 +4,7 @@ import Backend exposing (Data, Me)
 import Browser
 import Browser.Events
 import Browser.Navigation as Nav
+import Card exposing (Card)
 import Colors
 import Dict exposing (Dict)
 import Drag
@@ -23,6 +24,7 @@ import Octicons
 import OrderedSet exposing (OrderedSet)
 import ParseInt
 import Path
+import Project
 import Random
 import Regex exposing (Regex)
 import Set exposing (Set)
@@ -161,43 +163,6 @@ type alias CardNodeState =
     }
 
 
-type alias Card =
-    { id : GitHubGraph.ID
-    , content : GitHubGraph.CardContent
-    , url : String
-    , repo : GitHubGraph.RepoLocation
-    , number : Int
-    , title : String
-    , updatedAt : Time.Posix
-    , author : Maybe GitHubGraph.User
-    , labels : List GitHubGraph.ID
-    , cards : List GitHubGraph.CardLocation
-    , commentCount : Int
-    , reactions : GitHubGraph.Reactions
-    , score : Int
-    , state : CardState
-    , milestone : Maybe GitHubGraph.Milestone
-    , processState : CardProcessState
-    }
-
-
-type alias CardProcessState =
-    { inIceboxColumn : Bool
-    , inInFlightColumn : Bool
-    , inBacklogColumn : Bool
-    , inDoneColumn : Bool
-    , hasEnhancementLabel : Bool
-    , hasBugLabel : Bool
-    , hasWontfixLabel : Bool
-    , hasPausedLabel : Bool
-    }
-
-
-type CardState
-    = IssueState GitHubGraph.IssueState
-    | PullRequestState GitHubGraph.PullRequestState
-
-
 type alias CardDestination =
     { projectId : GitHubGraph.ID
     , columnId : GitHubGraph.ID
@@ -280,15 +245,6 @@ type Page
     | PullRequestsPage
     | PullRequestsRepoPage String
     | BouncePage
-
-
-detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
-detectColumn =
-    { icebox = (==) "Icebox"
-    , backlog = String.startsWith "Backlog"
-    , inFlight = (==) "In Flight"
-    , done = (==) "Done"
-    }
 
 
 main : Program Config Model Msg
@@ -717,7 +673,7 @@ update msg model =
                 cardsByTitle =
                     Dict.foldl
                         (\_ card ->
-                            if isOpen card then
+                            if Card.isOpen card then
                                 Dict.insert (String.toLower card.title) card
 
                             else
@@ -814,10 +770,10 @@ update msg model =
             ( if index > model.dataIndex then
                 let
                     issueCards =
-                        Dict.map (\_ -> issueCard) value.issues
+                        Dict.map (\_ -> Card.fromIssue) value.issues
 
                     prCards =
-                        Dict.map (\_ -> prCard) value.prs
+                        Dict.map (\_ -> Card.fromPR) value.prs
 
                     allCards =
                         Dict.union issueCards prCards
@@ -1065,7 +1021,7 @@ update msg model =
             ( computeDataView
                 { model
                     | milestoneDrag = Drag.complete model.milestoneDrag
-                    , allCards = Dict.insert value.id (issueCard value) model.allCards
+                    , allCards = Dict.insert value.id (Card.fromIssue value) model.allCards
                     , dataIndex = max index model.dataIndex
                 }
             , Cmd.none
@@ -1082,7 +1038,7 @@ update msg model =
             ( computeDataView
                 { model
                     | milestoneDrag = Drag.complete model.milestoneDrag
-                    , allCards = Dict.insert value.id (prCard value) model.allCards
+                    , allCards = Dict.insert value.id (Card.fromPR value) model.allCards
                     , dataIndex = max index model.dataIndex
                 }
             , Cmd.none
@@ -1288,7 +1244,7 @@ computeDataView origModel =
         prsByRepo =
             Dict.foldl
                 (\_ card acc ->
-                    if card.state == PullRequestState GitHubGraph.PullRequestStateOpen then
+                    if Card.isOpenPR card then
                         Dict.update card.repo.name (addCardAndRepo card) acc
 
                     else
@@ -1371,7 +1327,7 @@ computeReleaseRepos model =
                 Just { id } ->
                     -- don't double-count merged PRs - they are collected via the
                     -- comparison
-                    if milestone.id == id && not (isMerged card) then
+                    if milestone.id == id && not (Card.isMerged card) then
                         card :: acc
 
                     else
@@ -1420,19 +1376,19 @@ computeReleaseRepos model =
 
                             categorizeByCardState card sir =
                                 case card.state of
-                                    IssueState GitHubGraph.IssueStateOpen ->
+                                    Card.IssueState GitHubGraph.IssueStateOpen ->
                                         { sir | openIssues = card :: sir.openIssues }
 
-                                    IssueState GitHubGraph.IssueStateClosed ->
+                                    Card.IssueState GitHubGraph.IssueStateClosed ->
                                         { sir | closedIssues = card :: sir.closedIssues }
 
-                                    PullRequestState GitHubGraph.PullRequestStateOpen ->
+                                    Card.PullRequestState GitHubGraph.PullRequestStateOpen ->
                                         { sir | openPRs = card :: sir.openPRs }
 
-                                    PullRequestState GitHubGraph.PullRequestStateMerged ->
+                                    Card.PullRequestState GitHubGraph.PullRequestStateMerged ->
                                         { sir | mergedPRs = card :: sir.mergedPRs }
 
-                                    PullRequestState GitHubGraph.PullRequestStateClosed ->
+                                    Card.PullRequestState GitHubGraph.PullRequestStateClosed ->
                                         -- ignored
                                         sir
 
@@ -1441,7 +1397,7 @@ computeReleaseRepos model =
                                     byState =
                                         categorizeByCardState card sir
                                 in
-                                if isOpen card then
+                                if Card.isOpen card then
                                     byState
 
                                 else
@@ -1469,61 +1425,6 @@ computeReleaseRepos model =
                         acc
     in
     Dict.foldl makeReleaseRepo Dict.empty model.data.comparisons
-
-
-cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
-cardProcessState { cards, labels } =
-    { inIceboxColumn = inColumn detectColumn.icebox cards
-    , inInFlightColumn = inColumn detectColumn.inFlight cards
-    , inBacklogColumn = inColumn detectColumn.backlog cards
-    , inDoneColumn = inColumn detectColumn.done cards
-    , hasEnhancementLabel = List.any ((==) "enhancement" << .name) labels
-    , hasBugLabel = List.any ((==) "bug" << .name) labels
-    , hasWontfixLabel = List.any ((==) "wontfix" << .name) labels
-    , hasPausedLabel = List.any ((==) "paused" << .name) labels
-    }
-
-
-issueCard : GitHubGraph.Issue -> Card
-issueCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
-    { id = id
-    , content = GitHubGraph.IssueCardContent issue
-    , url = url
-    , repo = repo
-    , number = number
-    , title = title
-    , updatedAt = updatedAt
-    , author = author
-    , labels = List.map .id labels
-    , cards = cards
-    , commentCount = commentCount
-    , reactions = reactions
-    , score = GitHubGraph.issueScore issue
-    , state = IssueState state
-    , milestone = milestone
-    , processState = cardProcessState { cards = cards, labels = labels }
-    }
-
-
-prCard : GitHubGraph.PullRequest -> Card
-prCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
-    { id = id
-    , content = GitHubGraph.PullRequestCardContent pr
-    , url = url
-    , repo = repo
-    , number = number
-    , title = title
-    , updatedAt = updatedAt
-    , author = author
-    , labels = List.map .id labels
-    , cards = cards
-    , commentCount = commentCount
-    , reactions = reactions
-    , score = GitHubGraph.pullRequestScore pr
-    , state = PullRequestState state
-    , milestone = milestone
-    , processState = cardProcessState { cards = cards, labels = labels }
-    }
 
 
 view : Model -> Browser.Document Msg
@@ -1941,16 +1842,16 @@ selectStatefulProject project =
             List.filter (match << .name) project.columns
 
         icebox =
-            findColumns detectColumn.icebox
+            findColumns Project.detectColumn.icebox
 
         backlogs =
-            findColumns detectColumn.backlog
+            findColumns Project.detectColumn.backlog
 
         inFlights =
-            findColumns detectColumn.inFlight
+            findColumns Project.detectColumn.inFlight
 
         dones =
-            findColumns detectColumn.done
+            findColumns Project.detectColumn.done
     in
     case ( backlogs, ( icebox, inFlights, dones ) ) of
         ( (_ :: _) as bs, ( [ ib ], [ i ], [ d ] ) ) ->
@@ -2349,8 +2250,8 @@ viewLabelRow model label repos =
         ( prs, issues ) =
             Dict.foldl
                 (\_ c ( ps, is ) ->
-                    if isOpen c && includesLabel model label c.labels then
-                        if isPR c then
+                    if Card.isOpen c && includesLabel model label c.labels then
+                        if Card.isPR c then
                             ( c :: ps, is )
 
                         else
@@ -2539,7 +2440,7 @@ onlyOpenCards model =
                 Just id ->
                     case Dict.get id model.allCards of
                         Just card ->
-                            isOpen card
+                            Card.isOpen card
 
                         Nothing ->
                             False
@@ -2780,7 +2681,7 @@ computeGraph model =
         cardNodeThunks =
             Dict.foldl
                 (\_ card thunks ->
-                    if satisfiesFilters model allFilters card && isOpen card then
+                    if satisfiesFilters model allFilters card && Card.isOpen card then
                         Graph.Node (Hash.hash card.id) (node card) :: thunks
 
                     else
@@ -2868,13 +2769,13 @@ satisfiesFilter model filter card =
             involvesUser model login card
 
         PullRequestsFilter ->
-            isPR card
+            Card.isPR card
 
         IssuesFilter ->
-            not (isPR card)
+            not (Card.isPR card)
 
         UntriagedFilter ->
-            isUntriaged card
+            Card.isUntriaged card
 
 
 graphSizeCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
@@ -3426,16 +3327,16 @@ viewCardNode card radii circle labels { x, y } state =
     in
     Svg.g
         [ SA.transform ("translate(" ++ String.fromFloat x ++ "," ++ String.fromFloat y ++ ") scale(" ++ scale ++ ")")
-        , if isInFlight card then
+        , if Card.isInFlight card then
             SA.class "in-flight"
 
-          else if isDone card then
+          else if Card.isDone card then
             SA.class "done"
 
-          else if isIcebox card then
+          else if Card.isIcebox card then
             SA.class "icebox"
 
-          else if isBacklog card then
+          else if Card.isBacklog card then
             SA.class "backlog"
 
           else
@@ -3511,34 +3412,9 @@ lastActivityIsByUser cardEvents login card =
             False
 
 
-inColumn : (String -> Bool) -> List GitHubGraph.CardLocation -> Bool
-inColumn match =
-    List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column)
-
-
 isAnticipated : Model -> Card -> Bool
 isAnticipated model card =
     Set.member card.id model.anticipatedCards && not (OrderedSet.member card.id model.selectedCards)
-
-
-isPR : Card -> Bool
-isPR card =
-    case card.state of
-        PullRequestState _ ->
-            True
-
-        IssueState _ ->
-            False
-
-
-isUntriaged : Card -> Bool
-isUntriaged card =
-    List.isEmpty card.cards
-
-
-isMerged : Card -> Bool
-isMerged card =
-    card.state == PullRequestState GitHubGraph.PullRequestStateMerged
 
 
 labelNames : Model -> Card -> List String
@@ -3580,77 +3456,19 @@ hasLabelAndColor model name color card =
     List.any (\a -> Dict.member a matchingLabels) card.labels
 
 
-isEnhancement : Card -> Bool
-isEnhancement card =
-    card.processState.hasEnhancementLabel
-
-
-isBug : Card -> Bool
-isBug card =
-    card.processState.hasBugLabel
-
-
-isWontfix : Card -> Bool
-isWontfix card =
-    card.processState.hasWontfixLabel
-
-
-isPaused : Card -> Bool
-isPaused card =
-    card.processState.hasPausedLabel
-
-
-isAcceptedPR : Card -> Bool
-isAcceptedPR card =
-    (isEnhancement card || isBug card) && isMerged card
-
-
-isOpen : Card -> Bool
-isOpen card =
-    case card.state of
-        IssueState GitHubGraph.IssueStateOpen ->
-            True
-
-        PullRequestState GitHubGraph.PullRequestStateOpen ->
-            True
-
-        _ ->
-            False
-
-
-isInFlight : Card -> Bool
-isInFlight card =
-    card.processState.inInFlightColumn
-
-
-isDone : Card -> Bool
-isDone card =
-    card.processState.inDoneColumn
-
-
-isBacklog : Card -> Bool
-isBacklog card =
-    card.processState.inBacklogColumn
-
-
-isIcebox : Card -> Bool
-isIcebox card =
-    card.processState.inIceboxColumn
-
-
 viewCard : Model -> Card -> Html Msg
 viewCard model card =
     Html.div
         [ HA.classList
             [ ( "card", True )
-            , ( "in-flight", isInFlight card )
-            , ( "done", isDone card )
-            , ( "icebox", isIcebox card )
-            , ( "backlog", isBacklog card )
-            , ( "paused", isPaused card )
+            , ( "in-flight", Card.isInFlight card )
+            , ( "done", Card.isDone card )
+            , ( "icebox", Card.isIcebox card )
+            , ( "backlog", Card.isBacklog card )
+            , ( "paused", Card.isPaused card )
             , ( "anticipated", isAnticipated model card )
             , ( "highlighted", model.highlightedCard == Just card.id )
-            , ( activityClass model.currentTime card.updatedAt, isPR card )
+            , ( activityClass model.currentTime card.updatedAt, Card.isPR card )
             , ( "last-activity-is-me"
               , case model.me of
                     Just { user } ->
@@ -3708,34 +3526,34 @@ viewCard model card =
         , Html.div [ HA.class "card-icons" ]
             ([ Html.span
                 [ HE.onClick
-                    (if isPR card then
+                    (if Card.isPR card then
                         RefreshPullRequest card.id
 
                      else
                         RefreshIssue card.id
                     )
                 ]
-                [ if isPR card then
+                [ if Card.isPR card then
                     Octicons.gitPullRequest
                         { octiconOpts
                             | color =
-                                if isMerged card then
+                                if Card.isMerged card then
                                     Colors.purple
 
-                                else if isOpen card then
+                                else if Card.isOpen card then
                                     Colors.green
 
                                 else
                                     Colors.red
                         }
 
-                  else if isOpen card then
+                  else if Card.isOpen card then
                     Octicons.issueOpened { octiconOpts | color = Colors.green }
 
                   else
                     Octicons.issueClosed { octiconOpts | color = Colors.red }
                 ]
-             , case ( isInFlight card, isPaused card ) of
+             , case ( Card.isInFlight card, Card.isPaused card ) of
                 ( _, True ) ->
                     Html.span
                         [ HA.class "pause-toggle"
@@ -3875,9 +3693,9 @@ viewNoteCard model col text =
     Html.div
         [ HA.classList
             [ ( "card", True )
-            , ( "in-flight", detectColumn.inFlight col.name )
-            , ( "done", detectColumn.done col.name )
-            , ( "backlog", detectColumn.backlog col.name )
+            , ( "in-flight", Project.detectColumn.inFlight col.name )
+            , ( "done", Project.detectColumn.done col.name )
+            , ( "backlog", Project.detectColumn.backlog col.name )
             ]
         ]
         [ Html.div [ HA.class "card-info card-note" ]
@@ -4281,13 +4099,13 @@ finishProjectDragRefresh model =
             case content of
                 GitHubGraph.IssueCardContent issue ->
                     { m
-                        | allCards = Dict.insert issue.id (issueCard issue) m.allCards
+                        | allCards = Dict.insert issue.id (Card.fromIssue issue) m.allCards
                         , data = { data | issues = Dict.insert issue.id issue data.issues }
                     }
 
                 GitHubGraph.PullRequestCardContent pr ->
                     { m
-                        | allCards = Dict.insert pr.id (prCard pr) m.allCards
+                        | allCards = Dict.insert pr.id (Card.fromPR pr) m.allCards
                         , data = { data | prs = Dict.insert pr.id pr data.prs }
                     }
     in

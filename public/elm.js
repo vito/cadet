@@ -8017,6 +8017,270 @@ var author$project$Backend$refreshRepo = F2(
 					author$project$Backend$expectJsonWithIndex(author$project$GitHubGraph$decodeRepo),
 					lukewestby$elm_http_builder$HttpBuilder$get('/refresh?repo=' + (repo.owner + ('/' + repo.name))))));
 	});
+var author$project$Card$IssueState = function (a) {
+	return {$: 'IssueState', a: a};
+};
+var elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return elm$core$Maybe$Nothing;
+		}
+	});
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var author$project$Card$inColumn = function (match) {
+	return elm$core$List$any(
+		A2(
+			elm$core$Basics$composeL,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Maybe$withDefault(false),
+				elm$core$Maybe$map(
+					A2(
+						elm$core$Basics$composeL,
+						match,
+						function ($) {
+							return $.name;
+						}))),
+			function ($) {
+				return $.column;
+			}));
+};
+var elm$core$String$startsWith = _String_startsWith;
+var author$project$Project$detectColumn = {
+	backlog: elm$core$String$startsWith('Backlog'),
+	done: elm$core$Basics$eq('Done'),
+	icebox: elm$core$Basics$eq('Icebox'),
+	inFlight: elm$core$Basics$eq('In Flight')
+};
+var author$project$Card$cardProcessState = function (_n0) {
+	var cards = _n0.cards;
+	var labels = _n0.labels;
+	return {
+		hasBugLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('bug'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasEnhancementLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('enhancement'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasPausedLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('paused'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasWontfixLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('wontfix'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		inBacklogColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.backlog, cards),
+		inDoneColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.done, cards),
+		inIceboxColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.icebox, cards),
+		inInFlightColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.inFlight, cards)
+	};
+};
+var author$project$GitHubGraph$IssueCardContent = function (a) {
+	return {$: 'IssueCardContent', a: a};
+};
+var elm$core$List$sum = function (numbers) {
+	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
+};
+var author$project$GitHubGraph$reactionScore = function (reactions) {
+	return elm$core$List$sum(
+		function (a) {
+			return A2(elm$core$List$map, a, reactions);
+		}(
+			function (_n0) {
+				var type_ = _n0.type_;
+				var count = _n0.count;
+				switch (type_.$) {
+					case 'ReactionTypeThumbsUp':
+						return 2 * count;
+					case 'ReactionTypeThumbsDown':
+						return (-2) * count;
+					case 'ReactionTypeLaugh':
+						return count;
+					case 'ReactionTypeConfused':
+						return -count;
+					case 'ReactionTypeHeart':
+						return 3 * count;
+					case 'ReactionTypeHooray':
+						return 3 * count;
+					case 'ReactionTypeRocket':
+						return 3 * count;
+					default:
+						return 2 * count;
+				}
+			}));
+};
+var author$project$GitHubGraph$issueScore = function (_n0) {
+	var reactions = _n0.reactions;
+	var commentCount = _n0.commentCount;
+	return author$project$GitHubGraph$reactionScore(reactions) + (2 * commentCount);
+};
+var author$project$Card$fromIssue = function (issue) {
+	var id = issue.id;
+	var url = issue.url;
+	var repo = issue.repo;
+	var number = issue.number;
+	var title = issue.title;
+	var updatedAt = issue.updatedAt;
+	var author = issue.author;
+	var labels = issue.labels;
+	var cards = issue.cards;
+	var commentCount = issue.commentCount;
+	var reactions = issue.reactions;
+	var state = issue.state;
+	var milestone = issue.milestone;
+	return {
+		author: author,
+		cards: cards,
+		commentCount: commentCount,
+		content: author$project$GitHubGraph$IssueCardContent(issue),
+		id: id,
+		labels: A2(
+			elm$core$List$map,
+			function ($) {
+				return $.id;
+			},
+			labels),
+		milestone: milestone,
+		number: number,
+		processState: author$project$Card$cardProcessState(
+			{cards: cards, labels: labels}),
+		reactions: reactions,
+		repo: repo,
+		score: author$project$GitHubGraph$issueScore(issue),
+		state: author$project$Card$IssueState(state),
+		title: title,
+		updatedAt: updatedAt,
+		url: url
+	};
+};
+var author$project$Card$PullRequestState = function (a) {
+	return {$: 'PullRequestState', a: a};
+};
+var author$project$GitHubGraph$PullRequestCardContent = function (a) {
+	return {$: 'PullRequestCardContent', a: a};
+};
+var author$project$GitHubGraph$pullRequestScore = function (_n0) {
+	var reactions = _n0.reactions;
+	var commentCount = _n0.commentCount;
+	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
+};
+var author$project$Card$fromPR = function (pr) {
+	var id = pr.id;
+	var url = pr.url;
+	var repo = pr.repo;
+	var number = pr.number;
+	var title = pr.title;
+	var updatedAt = pr.updatedAt;
+	var author = pr.author;
+	var labels = pr.labels;
+	var cards = pr.cards;
+	var commentCount = pr.commentCount;
+	var reactions = pr.reactions;
+	var state = pr.state;
+	var milestone = pr.milestone;
+	return {
+		author: author,
+		cards: cards,
+		commentCount: commentCount,
+		content: author$project$GitHubGraph$PullRequestCardContent(pr),
+		id: id,
+		labels: A2(
+			elm$core$List$map,
+			function ($) {
+				return $.id;
+			},
+			labels),
+		milestone: milestone,
+		number: number,
+		processState: author$project$Card$cardProcessState(
+			{cards: cards, labels: labels}),
+		reactions: reactions,
+		repo: repo,
+		score: author$project$GitHubGraph$pullRequestScore(pr),
+		state: author$project$Card$PullRequestState(state),
+		title: title,
+		updatedAt: updatedAt,
+		url: url
+	};
+};
+var author$project$Card$isOpen = function (card) {
+	var _n0 = card.state;
+	_n0$2:
+	while (true) {
+		if (_n0.$ === 'IssueState') {
+			if (_n0.a.$ === 'IssueStateOpen') {
+				var _n1 = _n0.a;
+				return true;
+			} else {
+				break _n0$2;
+			}
+		} else {
+			if (_n0.a.$ === 'PullRequestStateOpen') {
+				var _n2 = _n0.a;
+				return true;
+			} else {
+				break _n0$2;
+			}
+		}
+	}
+	return false;
+};
 var author$project$Drag$complete = function (mode) {
 	return author$project$Drag$NotDragging;
 };
@@ -8105,16 +8369,6 @@ var author$project$ForceGraph$updateContextWithValue = F2(
 					ncnode,
 					{label: value})
 			});
-	});
-var elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return elm$core$Maybe$Nothing;
-		}
 	});
 var elm_community$graph$Graph$Graph = function (a) {
 	return {$: 'Graph', a: a};
@@ -8629,15 +8883,6 @@ var elm$core$Dict$sizeHelp = F2(
 var elm$core$Dict$size = function (dict) {
 	return A2(elm$core$Dict$sizeHelp, 0, dict);
 };
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
 var elm$core$Basics$isNaN = _Basics_isNaN;
 var ianmackenzie$elm_geometry$BoundingBox2d$maxX = function (_n0) {
 	var boundingBox = _n0.a;
@@ -9395,12 +9640,6 @@ var author$project$ForceGraph$tick = function (_n0) {
 		simulation: newState
 	};
 };
-var author$project$GitHubGraph$IssueCardContent = function (a) {
-	return {$: 'IssueCardContent', a: a};
-};
-var author$project$GitHubGraph$PullRequestCardContent = function (a) {
-	return {$: 'PullRequestCardContent', a: a};
-};
 var elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
 var author$project$Hash$updateHash = F2(
 	function (c, h) {
@@ -9506,27 +9745,6 @@ var elm$core$List$filter = F2(
 				}),
 			_List_Nil,
 			list);
-	});
-var elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition = function (a) {
 	return {$: 'VariableDefinition', a: a};
@@ -11864,8 +12082,15 @@ var author$project$Main$computeColorIsLight = function (hex) {
 		return A3(author$project$Log$debug, 'invalid hex', hex, false);
 	}
 };
-var author$project$Main$PullRequestState = function (a) {
-	return {$: 'PullRequestState', a: a};
+var author$project$Card$isOpenPR = function (card) {
+	return _Utils_eq(
+		card.state,
+		author$project$Card$PullRequestState(author$project$GitHubGraph$PullRequestStateOpen));
+};
+var author$project$Card$isMerged = function (card) {
+	return _Utils_eq(
+		card.state,
+		author$project$Card$PullRequestState(author$project$GitHubGraph$PullRequestStateMerged));
 };
 var elm$core$List$member = F2(
 	function (x, xs) {
@@ -11889,33 +12114,6 @@ var author$project$Main$hasLabel = F3(
 			return false;
 		}
 	});
-var author$project$Main$isMerged = function (card) {
-	return _Utils_eq(
-		card.state,
-		author$project$Main$PullRequestState(author$project$GitHubGraph$PullRequestStateMerged));
-};
-var author$project$Main$isOpen = function (card) {
-	var _n0 = card.state;
-	_n0$2:
-	while (true) {
-		if (_n0.$ === 'IssueState') {
-			if (_n0.a.$ === 'IssueStateOpen') {
-				var _n1 = _n0.a;
-				return true;
-			} else {
-				break _n0$2;
-			}
-		} else {
-			if (_n0.a.$ === 'PullRequestStateOpen') {
-				var _n2 = _n0.a;
-				return true;
-			} else {
-				break _n0$2;
-			}
-		}
-	}
-	return false;
-};
 var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$computeReleaseRepos = function (model) {
 	var selectPRsInComparison = F4(
@@ -11953,7 +12151,7 @@ var author$project$Main$computeReleaseRepos = function (model) {
 				return acc;
 			} else {
 				var id = _n8.a.id;
-				return (_Utils_eq(milestone.id, id) && (!author$project$Main$isMerged(card))) ? A2(elm$core$List$cons, card, acc) : acc;
+				return (_Utils_eq(milestone.id, id) && (!author$project$Card$isMerged(card))) ? A2(elm$core$List$cons, card, acc) : acc;
 			}
 		});
 	var makeReleaseRepo = F3(
@@ -12060,7 +12258,7 @@ var author$project$Main$computeReleaseRepos = function (model) {
 					var categorizeCard = F2(
 						function (card, sir) {
 							var byState = A2(categorizeByCardState, card, sir);
-							return author$project$Main$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
+							return author$project$Card$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
 						});
 					var allCards = _Utils_ap(milestoneCards, mergedPRs);
 					var releaseRepo = A3(
@@ -12173,9 +12371,7 @@ var author$project$Main$computeDataView = function (origModel) {
 		elm$core$Dict$foldl,
 		F3(
 			function (_n1, card, acc) {
-				return _Utils_eq(
-					card.state,
-					author$project$Main$PullRequestState(author$project$GitHubGraph$PullRequestStateOpen)) ? A3(
+				return author$project$Card$isOpenPR(card) ? A3(
 					elm$core$Dict$update,
 					card.repo.name,
 					addCardAndRepo(card),
@@ -14918,6 +15114,18 @@ var author$project$Main$reactionFlairArcs = F3(
 							]));
 				}));
 	});
+var author$project$Card$isBacklog = function (card) {
+	return card.processState.inBacklogColumn;
+};
+var author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
+var author$project$Card$isIcebox = function (card) {
+	return card.processState.inIceboxColumn;
+};
+var author$project$Card$isInFlight = function (card) {
+	return card.processState.inInFlightColumn;
+};
 var author$project$Main$AnticipateCardFromNode = function (a) {
 	return {$: 'AnticipateCardFromNode', a: a};
 };
@@ -14929,18 +15137,6 @@ var author$project$Main$SelectCard = function (a) {
 };
 var author$project$Main$UnanticipateCardFromNode = function (a) {
 	return {$: 'UnanticipateCardFromNode', a: a};
-};
-var author$project$Main$isBacklog = function (card) {
-	return card.processState.inBacklogColumn;
-};
-var author$project$Main$isDone = function (card) {
-	return card.processState.inDoneColumn;
-};
-var author$project$Main$isIcebox = function (card) {
-	return card.processState.inIceboxColumn;
-};
-var author$project$Main$isInFlight = function (card) {
-	return card.processState.inInFlightColumn;
 };
 var elm$core$Set$member = F2(
 	function (key, _n0) {
@@ -14996,7 +15192,7 @@ var author$project$Main$viewCardNode = F6(
 				[
 					elm$svg$Svg$Attributes$transform(
 					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
-					author$project$Main$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Main$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Main$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Main$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
+					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
 					elm$svg$Svg$Events$onMouseOver(
 					author$project$Main$AnticipateCardFromNode(card.id)),
 					elm$svg$Svg$Events$onMouseOut(
@@ -15271,6 +15467,17 @@ var author$project$Main$graphUserActivityCompare = F4(
 			latestUserActivity(a.graph),
 			latestUserActivity(b.graph));
 	});
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var author$project$Card$isUntriaged = function (card) {
+	return elm$core$List$isEmpty(card.cards);
+};
 var author$project$Main$hasLabelAndColor = F4(
 	function (model, name, color, card) {
 		var matchingLabels = A2(
@@ -15326,17 +15533,6 @@ var author$project$Main$isInProject = F2(
 					}),
 				card.cards));
 	});
-var author$project$Main$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var author$project$Main$isUntriaged = function (card) {
-	return elm$core$List$isEmpty(card.cards);
-};
 var author$project$Main$satisfiesFilter = F3(
 	function (model, filter, card) {
 		switch (filter.$) {
@@ -15353,11 +15549,11 @@ var author$project$Main$satisfiesFilter = F3(
 				var login = filter.a;
 				return A3(author$project$Main$involvesUser, model, login, card);
 			case 'PullRequestsFilter':
-				return author$project$Main$isPR(card);
+				return author$project$Card$isPR(card);
 			case 'IssuesFilter':
-				return !author$project$Main$isPR(card);
+				return !author$project$Card$isPR(card);
 			default:
-				return author$project$Main$isUntriaged(card);
+				return author$project$Card$isUntriaged(card);
 		}
 	});
 var elm$core$List$all = F2(
@@ -15622,7 +15818,7 @@ var author$project$Main$computeGraph = function (model) {
 		elm$core$Dict$foldl,
 		F3(
 			function (_n0, card, thunks) {
-				return (A3(author$project$Main$satisfiesFilters, model, allFilters, card) && author$project$Main$isOpen(card)) ? A2(
+				return (A3(author$project$Main$satisfiesFilters, model, allFilters, card) && author$project$Card$isOpen(card)) ? A2(
 					elm$core$List$cons,
 					A2(
 						elm_community$graph$Graph$Node,
@@ -15788,199 +15984,6 @@ var author$project$Drag$land = function (model) {
 		return model;
 	}
 };
-var elm$core$List$sum = function (numbers) {
-	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
-};
-var author$project$GitHubGraph$reactionScore = function (reactions) {
-	return elm$core$List$sum(
-		function (a) {
-			return A2(elm$core$List$map, a, reactions);
-		}(
-			function (_n0) {
-				var type_ = _n0.type_;
-				var count = _n0.count;
-				switch (type_.$) {
-					case 'ReactionTypeThumbsUp':
-						return 2 * count;
-					case 'ReactionTypeThumbsDown':
-						return (-2) * count;
-					case 'ReactionTypeLaugh':
-						return count;
-					case 'ReactionTypeConfused':
-						return -count;
-					case 'ReactionTypeHeart':
-						return 3 * count;
-					case 'ReactionTypeHooray':
-						return 3 * count;
-					case 'ReactionTypeRocket':
-						return 3 * count;
-					default:
-						return 2 * count;
-				}
-			}));
-};
-var author$project$GitHubGraph$issueScore = function (_n0) {
-	var reactions = _n0.reactions;
-	var commentCount = _n0.commentCount;
-	return author$project$GitHubGraph$reactionScore(reactions) + (2 * commentCount);
-};
-var author$project$Main$IssueState = function (a) {
-	return {$: 'IssueState', a: a};
-};
-var elm$core$String$startsWith = _String_startsWith;
-var author$project$Main$detectColumn = {
-	backlog: elm$core$String$startsWith('Backlog'),
-	done: elm$core$Basics$eq('Done'),
-	icebox: elm$core$Basics$eq('Icebox'),
-	inFlight: elm$core$Basics$eq('In Flight')
-};
-var author$project$Main$inColumn = function (match) {
-	return elm$core$List$any(
-		A2(
-			elm$core$Basics$composeL,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Maybe$withDefault(false),
-				elm$core$Maybe$map(
-					A2(
-						elm$core$Basics$composeL,
-						match,
-						function ($) {
-							return $.name;
-						}))),
-			function ($) {
-				return $.column;
-			}));
-};
-var author$project$Main$cardProcessState = function (_n0) {
-	var cards = _n0.cards;
-	var labels = _n0.labels;
-	return {
-		hasBugLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('bug'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasEnhancementLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('enhancement'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasPausedLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('paused'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasWontfixLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('wontfix'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		inBacklogColumn: A2(author$project$Main$inColumn, author$project$Main$detectColumn.backlog, cards),
-		inDoneColumn: A2(author$project$Main$inColumn, author$project$Main$detectColumn.done, cards),
-		inIceboxColumn: A2(author$project$Main$inColumn, author$project$Main$detectColumn.icebox, cards),
-		inInFlightColumn: A2(author$project$Main$inColumn, author$project$Main$detectColumn.inFlight, cards)
-	};
-};
-var author$project$Main$issueCard = function (issue) {
-	var id = issue.id;
-	var url = issue.url;
-	var repo = issue.repo;
-	var number = issue.number;
-	var title = issue.title;
-	var updatedAt = issue.updatedAt;
-	var author = issue.author;
-	var labels = issue.labels;
-	var cards = issue.cards;
-	var commentCount = issue.commentCount;
-	var reactions = issue.reactions;
-	var state = issue.state;
-	var milestone = issue.milestone;
-	return {
-		author: author,
-		cards: cards,
-		commentCount: commentCount,
-		content: author$project$GitHubGraph$IssueCardContent(issue),
-		id: id,
-		labels: A2(
-			elm$core$List$map,
-			function ($) {
-				return $.id;
-			},
-			labels),
-		milestone: milestone,
-		number: number,
-		processState: author$project$Main$cardProcessState(
-			{cards: cards, labels: labels}),
-		reactions: reactions,
-		repo: repo,
-		score: author$project$GitHubGraph$issueScore(issue),
-		state: author$project$Main$IssueState(state),
-		title: title,
-		updatedAt: updatedAt,
-		url: url
-	};
-};
-var author$project$GitHubGraph$pullRequestScore = function (_n0) {
-	var reactions = _n0.reactions;
-	var commentCount = _n0.commentCount;
-	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
-};
-var author$project$Main$prCard = function (pr) {
-	var id = pr.id;
-	var url = pr.url;
-	var repo = pr.repo;
-	var number = pr.number;
-	var title = pr.title;
-	var updatedAt = pr.updatedAt;
-	var author = pr.author;
-	var labels = pr.labels;
-	var cards = pr.cards;
-	var commentCount = pr.commentCount;
-	var reactions = pr.reactions;
-	var state = pr.state;
-	var milestone = pr.milestone;
-	return {
-		author: author,
-		cards: cards,
-		commentCount: commentCount,
-		content: author$project$GitHubGraph$PullRequestCardContent(pr),
-		id: id,
-		labels: A2(
-			elm$core$List$map,
-			function ($) {
-				return $.id;
-			},
-			labels),
-		milestone: milestone,
-		number: number,
-		processState: author$project$Main$cardProcessState(
-			{cards: cards, labels: labels}),
-		reactions: reactions,
-		repo: repo,
-		score: author$project$GitHubGraph$pullRequestScore(pr),
-		state: author$project$Main$PullRequestState(state),
-		title: title,
-		updatedAt: updatedAt,
-		url: url
-	};
-};
 var author$project$Main$finishProjectDragRefresh = function (model) {
 	var updateContent = F2(
 		function (content, m) {
@@ -15993,7 +15996,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 						allCards: A3(
 							elm$core$Dict$insert,
 							issue.id,
-							author$project$Main$issueCard(issue),
+							author$project$Card$fromIssue(issue),
 							m.allCards),
 						data: _Utils_update(
 							data,
@@ -16009,7 +16012,7 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 						allCards: A3(
 							elm$core$Dict$insert,
 							pr.id,
-							author$project$Main$prCard(pr),
+							author$project$Card$fromPR(pr),
 							m.allCards),
 						data: _Utils_update(
 							data,
@@ -17393,7 +17396,7 @@ var author$project$Main$update = F2(
 						elm$core$Dict$foldl,
 						F2(
 							function (_n21, card) {
-								return author$project$Main$isOpen(card) ? A2(
+								return author$project$Card$isOpen(card) ? A2(
 									elm$core$Dict$insert,
 									elm$core$String$toLower(card.title),
 									card) : elm$core$Basics$identity;
@@ -17545,13 +17548,13 @@ var author$project$Main$update = F2(
 									var prCards = A2(
 										elm$core$Dict$map,
 										function (_n26) {
-											return author$project$Main$prCard;
+											return author$project$Card$fromPR;
 										},
 										value.prs);
 									var issueCards = A2(
 										elm$core$Dict$map,
 										function (_n25) {
-											return author$project$Main$issueCard;
+											return author$project$Card$fromIssue;
 										},
 										value.issues);
 									var allLabels = A3(
@@ -17999,7 +18002,7 @@ var author$project$Main$update = F2(
 										allCards: A3(
 											elm$core$Dict$insert,
 											value.id,
-											author$project$Main$issueCard(value),
+											author$project$Card$fromIssue(value),
 											model.allCards),
 										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
 										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
@@ -18030,7 +18033,7 @@ var author$project$Main$update = F2(
 										allCards: A3(
 											elm$core$Dict$insert,
 											value.id,
-											author$project$Main$prCard(value),
+											author$project$Card$fromPR(value),
 											model.allCards),
 										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
 										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
@@ -18864,10 +18867,10 @@ var author$project$Main$selectStatefulProject = function (project) {
 				}),
 			project.columns);
 	};
-	var icebox = findColumns(author$project$Main$detectColumn.icebox);
-	var inFlights = findColumns(author$project$Main$detectColumn.inFlight);
-	var dones = findColumns(author$project$Main$detectColumn.done);
-	var backlogs = findColumns(author$project$Main$detectColumn.backlog);
+	var icebox = findColumns(author$project$Project$detectColumn.icebox);
+	var inFlights = findColumns(author$project$Project$detectColumn.inFlight);
+	var dones = findColumns(author$project$Project$detectColumn.done);
+	var backlogs = findColumns(author$project$Project$detectColumn.backlog);
 	var _n0 = _Utils_Tuple2(
 		backlogs,
 		_Utils_Tuple3(icebox, inFlights, dones));
@@ -18897,7 +18900,7 @@ var author$project$Main$onlyOpenCards = function (model) {
 				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
 				if (_n2.$ === 'Just') {
 					var card = _n2.a;
-					return author$project$Main$isOpen(card);
+					return author$project$Card$isOpen(card);
 				} else {
 					return false;
 				}
@@ -19773,7 +19776,7 @@ var author$project$Main$viewLabelRow = F3(
 				function (_n1, c, _n2) {
 					var ps = _n2.a;
 					var is = _n2.b;
-					return (author$project$Main$isOpen(c) && A3(author$project$Main$includesLabel, model, label, c.labels)) ? (author$project$Main$isPR(c) ? _Utils_Tuple2(
+					return (author$project$Card$isOpen(c) && A3(author$project$Main$includesLabel, model, label, c.labels)) ? (author$project$Card$isPR(c) ? _Utils_Tuple2(
 						A2(elm$core$List$cons, c, ps),
 						is) : _Utils_Tuple2(
 						ps,
@@ -20585,6 +20588,9 @@ var author$project$Drag$draggable = F4(
 var author$project$Main$FromColumnCardSource = function (a) {
 	return {$: 'FromColumnCardSource', a: a};
 };
+var author$project$Card$isPaused = function (card) {
+	return card.processState.hasPausedLabel;
+};
 var author$project$Colors$gray300 = '#d1d5da';
 var author$project$Colors$gray600 = '#586069';
 var author$project$Main$HighlightNode = function (a) {
@@ -20634,9 +20640,6 @@ var author$project$Main$isAnticipated = F2(
 	function (model, card) {
 		return A2(elm$core$Set$member, card.id, model.anticipatedCards) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, model.selectedCards));
 	});
-var author$project$Main$isPaused = function (card) {
-	return card.processState.hasPausedLabel;
-};
 var author$project$Main$prIcons = F2(
 	function (model, card) {
 		var _n0 = card.content;
@@ -20921,19 +20924,19 @@ var author$project$Main$viewCard = F2(
 							_Utils_Tuple2('card', true),
 							_Utils_Tuple2(
 							'in-flight',
-							author$project$Main$isInFlight(card)),
+							author$project$Card$isInFlight(card)),
 							_Utils_Tuple2(
 							'done',
-							author$project$Main$isDone(card)),
+							author$project$Card$isDone(card)),
 							_Utils_Tuple2(
 							'icebox',
-							author$project$Main$isIcebox(card)),
+							author$project$Card$isIcebox(card)),
 							_Utils_Tuple2(
 							'backlog',
-							author$project$Main$isBacklog(card)),
+							author$project$Card$isBacklog(card)),
 							_Utils_Tuple2(
 							'paused',
-							author$project$Main$isPaused(card)),
+							author$project$Card$isPaused(card)),
 							_Utils_Tuple2(
 							'anticipated',
 							A2(author$project$Main$isAnticipated, model, card)),
@@ -20944,7 +20947,7 @@ var author$project$Main$viewCard = F2(
 								elm$core$Maybe$Just(card.id))),
 							_Utils_Tuple2(
 							A2(author$project$Main$activityClass, model.currentTime, card.updatedAt),
-							author$project$Main$isPR(card)),
+							author$project$Card$isPR(card)),
 							_Utils_Tuple2(
 							'last-activity-is-me',
 							function () {
@@ -21081,16 +21084,16 @@ var author$project$Main$viewCard = F2(
 								_List_fromArray(
 									[
 										elm$html$Html$Events$onClick(
-										author$project$Main$isPR(card) ? author$project$Main$RefreshPullRequest(card.id) : author$project$Main$RefreshIssue(card.id))
+										author$project$Card$isPR(card) ? author$project$Main$RefreshPullRequest(card.id) : author$project$Main$RefreshIssue(card.id))
 									]),
 								_List_fromArray(
 									[
-										author$project$Main$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
+										author$project$Card$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
 										_Utils_update(
 											author$project$Main$octiconOpts,
 											{
-												color: author$project$Main$isMerged(card) ? author$project$Colors$purple : (author$project$Main$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
-											})) : (author$project$Main$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
+												color: author$project$Card$isMerged(card) ? author$project$Colors$purple : (author$project$Card$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
+											})) : (author$project$Card$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
 										_Utils_update(
 											author$project$Main$octiconOpts,
 											{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
@@ -21100,8 +21103,8 @@ var author$project$Main$viewCard = F2(
 									])),
 								function () {
 								var _n2 = _Utils_Tuple2(
-									author$project$Main$isInFlight(card),
-									author$project$Main$isPaused(card));
+									author$project$Card$isInFlight(card),
+									author$project$Card$isPaused(card));
 								if (_n2.b) {
 									return A2(
 										elm$html$Html$span,
@@ -21165,13 +21168,13 @@ var author$project$Main$viewNoteCard = F3(
 							_Utils_Tuple2('card', true),
 							_Utils_Tuple2(
 							'in-flight',
-							author$project$Main$detectColumn.inFlight(col.name)),
+							author$project$Project$detectColumn.inFlight(col.name)),
 							_Utils_Tuple2(
 							'done',
-							author$project$Main$detectColumn.done(col.name)),
+							author$project$Project$detectColumn.done(col.name)),
 							_Utils_Tuple2(
 							'backlog',
-							author$project$Main$detectColumn.backlog(col.name))
+							author$project$Project$detectColumn.backlog(col.name))
 						]))
 				]),
 			_List_fromArray(
