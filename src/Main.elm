@@ -2090,32 +2090,39 @@ viewShipItRepo model sir =
             [ Octicons.repo octiconOpts
             , Html.text sir.repo.name
             ]
-        , Html.div [ HA.class "shipit-metrics" ]
-            [ Html.div [ HA.class "shipit-metric" ]
-                [ Octicons.gitCommit { octiconOpts | color = Colors.gray }
-                , Html.span [ HA.class "count" ] [ Html.text (String.fromInt sir.comparison.totalCommits) ]
-                , Html.text " commits since last release"
-                ]
-            , Html.div [ HA.class "shipit-metric" ]
-                [ Octicons.gitPullRequest { octiconOpts | color = Colors.purple }
-                , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
-                ]
+        , Html.div [ HA.class "metrics" ]
+            [ viewMetric
+                (Octicons.gitCommit { octiconOpts | color = Colors.gray })
+                sir.comparison.totalCommits
+                "commits"
+                "commit"
+                "since last release"
+            , viewMetric
+                (Octicons.gitPullRequest { octiconOpts | color = Colors.purple })
+                (List.length sir.mergedPRs)
+                "merged PRs"
+                "merged PRs"
+                "since last release"
             , if List.isEmpty sir.closedIssues then
                 Html.text ""
 
               else
-                Html.div [ HA.class "shipit-metric" ]
-                    [ Octicons.issueClosed { octiconOpts | color = Colors.red }
-                    , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
-                    ]
+                viewMetric
+                    (Octicons.check { octiconOpts | color = Colors.green })
+                    (List.length sir.closedIssues)
+                    "closed issues"
+                    "closed issue"
+                    "in current milestone"
             , if List.isEmpty sir.openIssues then
                 Html.text ""
 
               else
-                Html.div [ HA.class "shipit-metric" ]
-                    [ Octicons.issueOpened { octiconOpts | color = Colors.green }
-                    , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
-                    ]
+                viewMetric
+                    (Octicons.issueOpened { octiconOpts | color = Colors.yellow })
+                    (List.length sir.openIssues)
+                    "open issues"
+                    "open issue"
+                    "in current milestone"
             ]
         ]
 
@@ -2379,12 +2386,55 @@ onlyOpenCards model =
                     False
 
 
+viewMetric : Html Msg -> Int -> String -> String -> String -> Html Msg
+viewMetric icon count plural singular description =
+    Html.div [ HA.class "metric" ]
+        [ icon
+        , Html.span [ HA.class "count" ] [ Html.text (String.fromInt count) ]
+        , Html.text " "
+        , Html.text <|
+            if count == 1 then
+                singular
+
+            else
+                plural
+        , Html.text " "
+        , Html.text description
+        ]
+
+
 viewProject : Model -> ProjectState -> Html Msg
 viewProject model { project, backlogs, inFlight, done } =
+    let
+        cardCount column =
+            Dict.get column.id model.data.columnCards
+                |> Maybe.map List.length
+                |> Maybe.withDefault 0
+    in
     Html.div [ HA.class "project-box" ]
         [ Html.a [ HA.class "column-title", HA.href ("/projects/" ++ project.name) ]
             [ Octicons.project octiconOpts
             , Html.text project.name
+            ]
+        , Html.div [ HA.class "metrics" ]
+            [ viewMetric
+                (Octicons.book { octiconOpts | color = Colors.gray })
+                (List.sum (List.map cardCount backlogs))
+                "stories"
+                "story"
+                "scheduled"
+            , viewMetric
+                (Octicons.pulse { octiconOpts | color = Colors.yellow })
+                (cardCount inFlight)
+                "stories"
+                "story"
+                "in-flight"
+            , viewMetric
+                (Octicons.check { octiconOpts | color = Colors.green })
+                (cardCount inFlight)
+                "stories"
+                "story"
+                "done"
             ]
         ]
 

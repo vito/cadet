@@ -18610,10 +18610,45 @@ var author$project$Main$selectStatefulProject = function (project) {
 		return elm$core$Maybe$Nothing;
 	}
 };
+var author$project$Colors$gray500 = '#6a737d';
+var author$project$Colors$gray = author$project$Colors$gray500;
+var elm$html$Html$div = _VirtualDom_node('div');
+var author$project$Main$viewMetric = F5(
+	function (icon, count, plural, singular, description) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('metric')
+				]),
+			_List_fromArray(
+				[
+					icon,
+					A2(
+					elm$html$Html$span,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('count')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text(
+							elm$core$String$fromInt(count))
+						])),
+					elm$html$Html$text(' '),
+					elm$html$Html$text(
+					(count === 1) ? singular : plural),
+					elm$html$Html$text(' '),
+					elm$html$Html$text(description)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
+var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
 var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
 var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
+var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
+var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
 var elm$html$Html$a = _VirtualDom_node('a');
-var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,
@@ -18626,6 +18661,15 @@ var author$project$Main$viewProject = F2(
 		var backlogs = _n0.backlogs;
 		var inFlight = _n0.inFlight;
 		var done = _n0.done;
+		var cardCount = function (column) {
+			return A2(
+				elm$core$Maybe$withDefault,
+				0,
+				A2(
+					elm$core$Maybe$map,
+					elm$core$List$length,
+					A2(elm$core$Dict$get, column.id, model.data.columnCards)));
+		};
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -18645,6 +18689,46 @@ var author$project$Main$viewProject = F2(
 						[
 							capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
 							elm$html$Html$text(project.name)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('metrics')
+						]),
+					_List_fromArray(
+						[
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$book(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$gray})),
+							elm$core$List$sum(
+								A2(elm$core$List$map, cardCount, backlogs)),
+							'stories',
+							'story',
+							'scheduled'),
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$pulse(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$yellow})),
+							cardCount(inFlight),
+							'stories',
+							'story',
+							'in-flight'),
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$check(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$green})),
+							cardCount(inFlight),
+							'stories',
+							'story',
+							'done')
 						]))
 				]));
 	});
@@ -20417,8 +20501,6 @@ var author$project$Main$onlyOpenCards = function (model) {
 var author$project$Main$FromColumnCardSource = function (a) {
 	return {$: 'FromColumnCardSource', a: a};
 };
-var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
-var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
 var elm_explorations$markdown$Markdown$defaultOptions = {
 	defaultHighlighting: elm$core$Maybe$Nothing,
 	githubFlavored: elm$core$Maybe$Just(
@@ -21186,8 +21268,6 @@ var author$project$Main$viewSpatialGraph = function (model) {
 					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
 				model.cardGraphs)));
 };
-var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
-var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
 var author$project$Main$viewSingleProject = F2(
 	function (model, _n0) {
 		var project = _n0.project;
@@ -21399,8 +21479,6 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
 					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))));
 };
-var author$project$Colors$gray500 = '#6a737d';
-var author$project$Colors$gray = author$project$Colors$gray500;
 var capitalist$elm_octicons$Octicons$gitCommitPath = 'M10.86,7 C10.41,5.28 8.86,4 7,4 C5.14,4 3.59,5.28 3.14,7 L0,7 L0,9 L3.14,9 C3.59,10.72 5.14,12 7,12 C8.86,12 10.41,10.72 10.86,9 L14,9 L14,7 L10.86,7 L10.86,7 Z M7,10.2 C5.78,10.2 4.8,9.22 4.8,8 C4.8,6.78 5.78,5.8 7,5.8 C8.22,5.8 9.2,6.78 9.2,8 C9.2,9.22 8.22,10.2 7,10.2 L7,10.2 Z';
 var capitalist$elm_octicons$Octicons$gitCommit = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitCommitPath, '0 0 14 16', 'gitCommit');
 var author$project$Main$viewShipItRepo = F2(
@@ -21429,83 +21507,50 @@ var author$project$Main$viewShipItRepo = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-metrics')
+							elm$html$Html$Attributes$class('metrics')
 						]),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('shipit-metric')
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$gitCommit(
-									_Utils_update(
-										author$project$Main$octiconOpts,
-										{color: author$project$Colors$gray})),
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('count')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(
-											elm$core$String$fromInt(sir.comparison.totalCommits))
-										])),
-									elm$html$Html$text(' commits since last release')
-								])),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('shipit-metric')
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$gitPullRequest(
-									_Utils_update(
-										author$project$Main$octiconOpts,
-										{color: author$project$Colors$purple})),
-									elm$html$Html$text(
-									elm$core$String$fromInt(
-										elm$core$List$length(sir.mergedPRs)) + ' merged pull requests')
-								])),
-							elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('shipit-metric')
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$issueClosed(
-									_Utils_update(
-										author$project$Main$octiconOpts,
-										{color: author$project$Colors$red})),
-									elm$html$Html$text(
-									elm$core$String$fromInt(
-										elm$core$List$length(sir.closedIssues)) + ' closed issues')
-								])),
-							elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('shipit-metric')
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$issueOpened(
-									_Utils_update(
-										author$project$Main$octiconOpts,
-										{color: author$project$Colors$green})),
-									elm$html$Html$text(
-									elm$core$String$fromInt(
-										elm$core$List$length(sir.openIssues)) + ' open issues')
-								]))
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$gitCommit(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$gray})),
+							sir.comparison.totalCommits,
+							'commits',
+							'commit',
+							'since last release'),
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$gitPullRequest(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$purple})),
+							elm$core$List$length(sir.mergedPRs),
+							'merged PRs',
+							'merged PRs',
+							'since last release'),
+							elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$check(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$green})),
+							elm$core$List$length(sir.closedIssues),
+							'closed issues',
+							'closed issue',
+							'in current milestone'),
+							elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$issueOpened(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$yellow})),
+							elm$core$List$length(sir.openIssues),
+							'open issues',
+							'open issue',
+							'in current milestone')
 						]))
 				]));
 	});
