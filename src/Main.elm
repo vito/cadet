@@ -2436,7 +2436,7 @@ viewProject model { project, backlogs, inFlight, done } =
     let
         cardCount column =
             Dict.get column.id model.data.columnCards
-                |> Maybe.map List.length
+                |> Maybe.map (List.length << onlyOpenCards model)
                 |> Maybe.withDefault 0
     in
     Html.div [ HA.class "metrics-item" ]
@@ -2459,7 +2459,7 @@ viewProject model { project, backlogs, inFlight, done } =
                 "in-flight"
             , viewMetric
                 (Octicons.check { octiconOpts | color = Colors.green })
-                (cardCount inFlight)
+                (cardCount done)
                 "stories"
                 "story"
                 "done"
