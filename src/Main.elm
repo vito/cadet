@@ -3602,7 +3602,7 @@ viewCard model card =
                     Octicons.issueClosed { octiconOpts | color = Colors.red }
                 ]
              , case ( isInFlight card, isPaused card ) of
-                ( True, True ) ->
+                ( _, True ) ->
                     Html.span
                         [ HA.class "pause-toggle"
                         , HE.onClick (UnlabelCard card "paused")
