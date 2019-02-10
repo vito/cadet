@@ -702,6 +702,7 @@ code {
 
   .spatial-graph {
     flex-shrink: 0;
+    padding: 40px 20px;
   }
 }
 
@@ -709,7 +710,6 @@ code {
   text-align: center;
   position: relative;
   overflow-y: auto;
-  padding: 30px;
 }
 
 .dragging {
@@ -1256,7 +1256,7 @@ svg {
   }
 }
 
-.pull-requests-page {
+.pull-request-columns {
   display: flex;
   flex-flow: row wrap;
   align-content: flex-start;
@@ -1307,7 +1307,7 @@ svg {
   }
 }
 
-.shipit-page, .projects-page, .labels-page, .pull-requests-page {
+.shipit-page, .projects-page, .labels-page, .pull-requests-page, .global-graph-page {
   width: 980px;
   margin: 0 auto;
   padding: 40px 0;
@@ -1342,7 +1342,7 @@ svg {
   }
 }
 
-.shipit-header {
+.page-header {
   background: @black;
   padding-bottom: 25px;
   display: flex;
@@ -1359,13 +1359,13 @@ svg {
       fill: @white;
     }
   }
+}
 
-  .shipit-milestone-label {
-    margin-left: 20px;
+.shipit-milestone-label {
+  margin-left: 20px;
 
-    .octicon {
-      margin-top: -5px;
-    }
+  .octicon {
+    margin-top: -5px;
   }
 }
 

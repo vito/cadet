@@ -1532,7 +1532,7 @@ viewPage model =
                         viewAllProjectsPage model
 
                     GlobalGraphPage ->
-                        viewSpatialGraph model
+                        viewGlobalGraphPage model
 
                     ProjectPage id ->
                         viewProjectPage model id
@@ -1665,6 +1665,17 @@ viewSidebarControls model =
                     ]
                 ]
             ]
+        ]
+
+
+viewGlobalGraphPage : Model -> Html Msg
+viewGlobalGraphPage model =
+    Html.div [ HA.class "global-graph-page" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.circuitBoard octiconOpts
+            , Html.text "Issue Graph"
+            ]
+        , viewSpatialGraph model
         ]
 
 
@@ -1934,7 +1945,13 @@ viewAllProjectsPage model =
             List.filterMap selectStatefulProject (Dict.values model.data.projects)
     in
     Html.div [ HA.class "projects-page" ]
-        (List.map (viewProject model) statefulProjects)
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.project octiconOpts
+            , Html.text "Projects"
+            ]
+        , Html.div [ HA.class "projects-list" ]
+            (List.map (viewProject model) statefulProjects)
+        ]
 
 
 viewLabelsPage : Model -> Html Msg
@@ -1979,7 +1996,11 @@ viewLabelsPage model =
                     viewLabelRow model { name = name, color = color } repos
     in
     Html.div [ HA.class "labels-page" ]
-        [ newLabel
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.tag octiconOpts
+            , Html.text "Labels"
+            ]
+        , newLabel
         , Html.div [ HA.class "labels-table" ]
             labelRows
         ]
@@ -1994,13 +2015,19 @@ viewShipItPage model =
                 |> List.reverse
     in
     Html.div [ HA.class "shipit-page" ]
-        (List.map (viewShipItRepo model) repos)
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.milestone octiconOpts
+            , Html.text "Releases"
+            ]
+        , Html.div [ HA.class "shipit-repos" ]
+            (List.map (viewShipItRepo model) repos)
+        ]
 
 
 viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
 viewShipItRepoPage model sir =
     Html.div [ HA.class "shipit-repo-content" ]
-        [ Html.div [ HA.class "shipit-header" ]
+        [ Html.div [ HA.class "page-header" ]
             [ Html.div []
                 [ Octicons.repo octiconOpts
                 , Html.a [ HA.href "/shipit" ] [ Html.text sir.repo.owner ]
@@ -2152,11 +2179,16 @@ viewPullRequestsPage model =
                 ]
     in
     Html.div [ HA.class "pull-requests-page" ]
-        (Dict.foldl getRepo [] model.dataView.prsByRepo
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.gitPullRequest octiconOpts
+            , Html.text "Pull Requests"
+            ]
+        , Dict.foldl getRepo [] model.dataView.prsByRepo
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
             |> List.map (\( a, b ) -> viewRepoPRs a b)
-        )
+            |> Html.div [ HA.class "pull-request-columns" ]
+        ]
 
 
 matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool

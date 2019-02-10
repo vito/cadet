@@ -18743,10 +18743,30 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 			[
 				elm$html$Html$Attributes$class('projects-page')
 			]),
-		A2(
-			elm$core$List$map,
-			author$project$Main$viewProject(model),
-			statefulProjects));
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+						elm$html$Html$text('Projects')
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('projects-list')
+					]),
+				A2(
+					elm$core$List$map,
+					author$project$Main$viewProject(model),
+					statefulProjects))
+			]));
 };
 var author$project$Drag$End = {$: 'End'};
 var author$project$Drag$Start = F2(
@@ -19531,6 +19551,647 @@ var author$project$Main$viewCardEntry = F2(
 						]))
 				]));
 	});
+var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
+var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
+var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
+var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
+var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
+var author$project$Main$linkPath = F2(
+	function (graph, edge) {
+		var target = function () {
+			var _n1 = A2(
+				elm$core$Maybe$map,
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.node;
+					},
+					function ($) {
+						return $.label;
+					}),
+				A2(elm_community$graph$Graph$get, edge.to, graph));
+			if (_n1.$ === 'Just') {
+				var x = _n1.a.x;
+				var y = _n1.a.y;
+				return {x: x, y: y};
+			} else {
+				return {x: 0, y: 0};
+			}
+		}();
+		var source = function () {
+			var _n0 = A2(
+				elm$core$Maybe$map,
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.node;
+					},
+					function ($) {
+						return $.label;
+					}),
+				A2(elm_community$graph$Graph$get, edge.from, graph));
+			if (_n0.$ === 'Just') {
+				var x = _n0.a.x;
+				var y = _n0.a.y;
+				return {x: x, y: y};
+			} else {
+				return {x: 0, y: 0};
+			}
+		}();
+		return A2(
+			elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					elm$svg$Svg$Attributes$class('graph-edge'),
+					elm$svg$Svg$Attributes$x1(
+					elm$core$String$fromFloat(source.x)),
+					elm$svg$Svg$Attributes$y1(
+					elm$core$String$fromFloat(source.y)),
+					elm$svg$Svg$Attributes$x2(
+					elm$core$String$fromFloat(target.x)),
+					elm$svg$Svg$Attributes$y2(
+					elm$core$String$fromFloat(target.y))
+				]),
+			_List_Nil);
+	});
+var author$project$Main$nodeBounds = function (nc) {
+	var y = nc.node.label.y;
+	var x = nc.node.label.x;
+	return nc.node.label.value.bounds(
+		{x: x, y: y});
+};
+var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
+var elm$svg$Svg$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
+var author$project$Main$viewNodeLowerUpper = F3(
+	function (state, _n0, _n1) {
+		var node = _n0.node;
+		var fs = _n1.a;
+		var ns = _n1.b;
+		var pos = {x: node.label.x, y: node.label.y};
+		return _Utils_Tuple2(
+			A2(
+				elm$core$List$cons,
+				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewLower, pos, state),
+				fs),
+			A2(
+				elm$core$List$cons,
+				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewUpper, pos, state),
+				ns));
+	});
+var author$project$Main$viewGraph = F2(
+	function (state, _n0) {
+		var graph = _n0.graph;
+		var padding = 10;
+		var nodeContexts = A3(elm_community$graph$Graph$fold, elm$core$List$cons, _List_Nil, graph);
+		var links = A2(
+			elm$core$List$map,
+			A2(elm$svg$Svg$Lazy$lazy2, author$project$Main$linkPath, graph),
+			elm_community$graph$Graph$edges(graph));
+		var bounds = A2(elm$core$List$map, author$project$Main$nodeBounds, nodeContexts);
+		var maxX = A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n6, acc) {
+					var x2 = _n6.x2;
+					return A2(elm$core$Basics$max, x2, acc);
+				}),
+			0,
+			bounds) + padding;
+		var maxY = A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n5, acc) {
+					var y2 = _n5.y2;
+					return A2(elm$core$Basics$max, y2, acc);
+				}),
+			0,
+			bounds) + padding;
+		var minX = A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n4, acc) {
+					var x1 = _n4.x1;
+					return A2(elm$core$Basics$min, x1, acc);
+				}),
+			999999,
+			bounds) - padding;
+		var width = maxX - minX;
+		var minY = A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n3, acc) {
+					var y1 = _n3.y1;
+					return A2(elm$core$Basics$min, y1, acc);
+				}),
+			999999,
+			bounds) - padding;
+		var height = maxY - minY;
+		var _n1 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
+		var scaleW = _n1.a;
+		var scaleH = _n1.b;
+		var _n2 = A3(
+			elm_community$graph$Graph$fold,
+			author$project$Main$viewNodeLowerUpper(state),
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			graph);
+		var flairs = _n2.a;
+		var nodes = _n2.b;
+		return A2(
+			elm$svg$Svg$svg,
+			_List_fromArray(
+				[
+					elm$svg$Svg$Attributes$width(
+					elm$core$String$fromFloat(scaleW) + 'px'),
+					elm$svg$Svg$Attributes$height(
+					elm$core$String$fromFloat(scaleH) + 'px'),
+					elm$svg$Svg$Attributes$viewBox(
+					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$class('lower')
+						]),
+					flairs),
+					A2(
+					elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$class('links')
+						]),
+					links),
+					A2(
+					elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$class('upper')
+						]),
+					nodes)
+				]));
+	});
+var author$project$Main$AddFilter = function (a) {
+	return {$: 'AddFilter', a: a};
+};
+var author$project$Main$AllActivitySort = {$: 'AllActivitySort'};
+var author$project$Main$HasLabelFilter = F2(
+	function (a, b) {
+		return {$: 'HasLabelFilter', a: a, b: b};
+	});
+var author$project$Main$InvolvesUserFilter = function (a) {
+	return {$: 'InvolvesUserFilter', a: a};
+};
+var author$project$Main$IssuesFilter = {$: 'IssuesFilter'};
+var author$project$Main$PullRequestsFilter = {$: 'PullRequestsFilter'};
+var author$project$Main$RemoveFilter = function (a) {
+	return {$: 'RemoveFilter', a: a};
+};
+var author$project$Main$SetGraphSort = function (a) {
+	return {$: 'SetGraphSort', a: a};
+};
+var author$project$Main$SetLabelSearch = function (a) {
+	return {$: 'SetLabelSearch', a: a};
+};
+var author$project$Main$ToggleLabelFilters = {$: 'ToggleLabelFilters'};
+var author$project$Main$UntriagedFilter = {$: 'UntriagedFilter'};
+var author$project$Main$UserActivitySort = function (a) {
+	return {$: 'UserActivitySort', a: a};
+};
+var author$project$Main$hasFilter = F2(
+	function (model, filter) {
+		return A2(elm$core$List$member, filter, model.graphFilters);
+	});
+var capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
+var capitalist$elm_octicons$Octicons$clock = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
+var capitalist$elm_octicons$Octicons$commentDiscussionPath = 'M15,1 L6,1 C5.45,1 5,1.45 5,2 L5,4 L1,4 C0.45,4 0,4.45 0,5 L0,11 C0,11.55 0.45,12 1,12 L2,12 L2,15 L5,12 L9,12 C9.55,12 10,11.55 10,11 L10,9 L11,9 L14,12 L14,9 L15,9 C15.55,9 16,8.55 16,8 L16,2 C16,1.45 15.55,1 15,1 L15,1 Z M9,11 L4.5,11 L3,12.5 L3,11 L1,11 L1,5 L5,5 L5,8 C5,8.55 5.45,9 6,9 L9,9 L9,11 L9,11 Z M15,8 L13,8 L13,9.5 L11.5,8 L6,8 L6,2 L15,2 L15,8 L15,8 Z';
+var capitalist$elm_octicons$Octicons$commentDiscussion = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$commentDiscussionPath, '0 0 16 16', 'commentDiscussion');
+var capitalist$elm_octicons$Octicons$flamePath = 'M5.05,0.31 C5.86,2.48 5.46,3.69 4.53,4.62 C3.55,5.67 1.98,6.45 0.9,7.98 C-0.55,10.03 -0.8,14.51 4.43,15.68 C2.23,14.52 1.76,11.16 4.13,9.07 C3.52,11.1 4.66,12.4 6.07,11.93 C7.46,11.46 8.37,12.46 8.34,13.6 C8.32,14.38 8.03,15.04 7.21,15.41 C10.63,14.82 11.99,11.99 11.99,9.85 C11.99,7.01 9.46,6.63 10.74,4.24 C9.22,4.37 8.71,5.37 8.85,6.99 C8.94,8.07 7.83,8.79 6.99,8.32 C6.32,7.91 6.33,7.13 6.93,6.54 C8.18,5.31 8.68,2.45 5.05,0.32 L5.03,0.3 L5.05,0.31 Z';
+var capitalist$elm_octicons$Octicons$flame = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$flamePath, '0 0 12 16', 'flame');
+var capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
+var capitalist$elm_octicons$Octicons$inbox = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
+var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.96,1 L3.5,1 C2.13,1 1,2.13 1,3.5 L1,5.97 C1,6.63 1.27,7.27 1.73,7.74 L7.79,13.8 C8.18,14.19 8.81,14.19 9.2,13.8 L13.79,9.21 C14.18,8.82 14.18,8.19 13.79,7.8 L7.73,1.73 L7.73,1.73 Z M2.38,7.09 C2.07,6.79 1.91,6.39 1.91,5.96 L1.91,3.5 C1.91,2.62 2.63,1.91 3.5,1.91 L5.97,1.91 C6.39,1.91 6.8,2.07 7.1,2.38 L13.24,8.51 L8.51,13.24 L2.38,7.09 L2.38,7.09 Z M3.01,3 L5.01,3 L5.01,5 L3,5 L3,3 L3.01,3 Z';
+var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
+var elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
+	});
+var elm$html$Html$Events$targetValue = A2(
+	elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	elm$json$Json$Decode$string);
+var elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysStop,
+			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
+};
+var author$project$Main$viewGraphControls = function (model) {
+	var labelFilters = A2(
+		elm$core$List$filterMap,
+		function (filter) {
+			if (filter.$ === 'HasLabelFilter') {
+				var name = filter.a;
+				var color = filter.b;
+				return elm$core$Maybe$Just(
+					A2(
+						elm$html$Html$div,
+						_Utils_ap(
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('control-setting'),
+									elm$html$Html$Events$onClick(
+									author$project$Main$RemoveFilter(filter))
+								]),
+							A2(author$project$Main$labelColorStyles, model, color)),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+								elm$html$Html$text(name)
+							])));
+			} else {
+				return elm$core$Maybe$Nothing;
+			}
+		},
+		model.graphFilters);
+	var allLabelFilters = function (a) {
+		return A2(
+			elm$core$List$filterMap,
+			a,
+			elm$core$Dict$toList(model.dataView.reposByLabel));
+	}(
+		function (_n2) {
+			var _n3 = _n2.a;
+			var name = _n3.a;
+			var color = _n3.b;
+			return A2(elm$core$String$contains, model.labelSearch, name) ? elm$core$Maybe$Just(
+				A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('label-filter')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_Utils_ap(
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('label'),
+										elm$html$Html$Events$onClick(
+										author$project$Main$AddFilter(
+											A2(author$project$Main$HasLabelFilter, name, color)))
+									]),
+								A2(author$project$Main$labelColorStyles, model, color)),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+									elm$html$Html$text(name)
+								]))
+						]))) : elm$core$Maybe$Nothing;
+		});
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('graph-controls')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('control-group')
+					]),
+				_Utils_ap(
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('controls-label')
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text('filter:')
+								])),
+							function () {
+							var filter = author$project$Main$UntriagedFilter;
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('control-setting', true),
+												_Utils_Tuple2(
+												'active',
+												A2(author$project$Main$hasFilter, model, filter))
+											])),
+										elm$html$Html$Events$onClick(
+										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
+									]),
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
+										elm$html$Html$text('untriaged')
+									]));
+						}(),
+							function () {
+							var filter = author$project$Main$IssuesFilter;
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('control-setting', true),
+												_Utils_Tuple2(
+												'active',
+												A2(author$project$Main$hasFilter, model, filter))
+											])),
+										elm$html$Html$Events$onClick(
+										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
+									]),
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts),
+										elm$html$Html$text('issues')
+									]));
+						}(),
+							function () {
+							var filter = author$project$Main$PullRequestsFilter;
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('control-setting', true),
+												_Utils_Tuple2(
+												'active',
+												A2(author$project$Main$hasFilter, model, filter))
+											])),
+										elm$html$Html$Events$onClick(
+										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
+									]),
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+										elm$html$Html$text('pull requests')
+									]));
+						}(),
+							function () {
+							var _n0 = model.me;
+							if (_n0.$ === 'Just') {
+								var user = _n0.a.user;
+								var filter = author$project$Main$InvolvesUserFilter(user.login);
+								return A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('control-setting', true),
+													_Utils_Tuple2(
+													'active',
+													A2(author$project$Main$hasFilter, model, filter))
+												])),
+											elm$html$Html$Events$onClick(
+											A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
+										]),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$commentDiscussion(author$project$Main$octiconOpts),
+											elm$html$Html$text('involving me')
+										]));
+							} else {
+								return elm$html$Html$text('');
+							}
+						}(),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('label-selection')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('label-filters', true),
+													_Utils_Tuple2('visible', model.showLabelFilters)
+												]))
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$div,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('label-options')
+												]),
+											allLabelFilters),
+											A2(
+											elm$html$Html$input,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$type_('text'),
+													elm$html$Html$Events$onInput(author$project$Main$SetLabelSearch)
+												]),
+											_List_Nil)
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$classList(
+											_List_fromArray(
+												[
+													_Utils_Tuple2('control-setting', true),
+													_Utils_Tuple2('active', model.showLabelFilters)
+												])),
+											elm$html$Html$Events$onClick(author$project$Main$ToggleLabelFilters)
+										]),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+											elm$html$Html$text('label')
+										]))
+								]))
+						]),
+					labelFilters)),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('control-group')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('controls-label')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text('sort:')
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('control-setting', true),
+										_Utils_Tuple2(
+										'active',
+										_Utils_eq(model.graphSort, author$project$Main$ImpactSort))
+									])),
+								elm$html$Html$Events$onClick(
+								author$project$Main$SetGraphSort(author$project$Main$ImpactSort))
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$flame(author$project$Main$octiconOpts),
+								elm$html$Html$text('impact')
+							])),
+						A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('control-setting', true),
+										_Utils_Tuple2(
+										'active',
+										_Utils_eq(model.graphSort, author$project$Main$AllActivitySort))
+									])),
+								elm$html$Html$Events$onClick(
+								author$project$Main$SetGraphSort(author$project$Main$AllActivitySort))
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
+								elm$html$Html$text('all activity')
+							])),
+						function () {
+						var _n1 = model.me;
+						if (_n1.$ === 'Just') {
+							var user = _n1.a.user;
+							return A2(
+								elm$html$Html$div,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('control-setting', true),
+												_Utils_Tuple2(
+												'active',
+												_Utils_eq(
+													model.graphSort,
+													author$project$Main$UserActivitySort(user.login)))
+											])),
+										elm$html$Html$Events$onClick(
+										author$project$Main$SetGraphSort(
+											author$project$Main$UserActivitySort(user.login)))
+									]),
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
+										elm$html$Html$text('my activity')
+									]));
+						} else {
+							return elm$html$Html$text('');
+						}
+					}()
+					]))
+			]));
+};
+var elm$html$Html$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
+var author$project$Main$viewSpatialGraph = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('spatial-graph')
+			]),
+		A2(
+			elm$core$List$cons,
+			author$project$Main$viewGraphControls(model),
+			A2(
+				elm$core$List$map,
+				F2(
+					function (f, _n0) {
+						var a = _n0.a;
+						var b = _n0.b;
+						return A2(f, a, b);
+					})(
+					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
+				model.cardGraphs)));
+};
+var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4 C4.55,4 5,4.45 5,5 C5,5.55 4.55,6 4,6 C3.45,6 3,5.55 3,5 L3,5 Z M11,5 C11,4.45 10.55,4 10,4 C9.45,4 9,4.45 9,5 C9,5.55 9.45,6 10,6 C10.55,6 11,5.55 11,5 L11,5 Z M11,11 C11,10.45 10.55,10 10,10 C9.45,10 9,10.45 9,11 C9,11.55 9.45,12 10,12 C10.55,12 11,11.55 11,11 L11,11 Z M13,1 L5,1 L5,3.17 C5.36,3.36 5.64,3.64 5.83,4 L8.17,4 C8.59,3.22 9.5,2.72 10.51,2.95 C11.26,3.14 11.87,3.75 12.04,4.5 C12.35,5.88 11.32,7.09 9.99,7.09 C9.19,7.09 8.51,6.65 8.16,6 L5.83,6 C5.41,6.8 4.5,7.28 3.49,7.03 C2.76,6.86 2.15,6.25 1.97,5.51 C1.72,4.49 2.2,3.59 3,3.17 L3,1 L1,1 C0.45,1 0,1.45 0,2 L0,14 C0,14.55 0.45,15 1,15 L6,10 L8.17,10 C8.59,9.22 9.5,8.72 10.51,8.95 C11.26,9.14 11.87,9.75 12.04,10.5 C12.35,11.88 11.32,13.09 9.99,13.09 C9.19,13.09 8.51,12.65 8.16,12 L6.99,12 L4,15 L13,15 C13.55,15 14,14.55 14,14 L14,2 C14,1.45 13.55,1 13,1 L13,1 Z';
+var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
+var author$project$Main$viewGlobalGraphPage = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('global-graph-page')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
+						elm$html$Html$text('Issue Graph')
+					])),
+				author$project$Main$viewSpatialGraph(model)
+			]));
+};
 var author$project$Main$CreateLabel = {$: 'CreateLabel'};
 var author$project$Main$RandomizeNewLabelColor = {$: 'RandomizeNewLabelColor'};
 var author$project$Main$SetNewLabelName = function (a) {
@@ -19589,45 +20250,11 @@ var capitalist$elm_octicons$Octicons$repoPath = 'M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z
 var capitalist$elm_octicons$Octicons$repo = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$repoPath, '0 0 12 16', 'repo');
 var capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
 var capitalist$elm_octicons$Octicons$sync = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
-var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.96,1 L3.5,1 C2.13,1 1,2.13 1,3.5 L1,5.97 C1,6.63 1.27,7.27 1.73,7.74 L7.79,13.8 C8.18,14.19 8.81,14.19 9.2,13.8 L13.79,9.21 C14.18,8.82 14.18,8.19 13.79,7.8 L7.73,1.73 L7.73,1.73 Z M2.38,7.09 C2.07,6.79 1.91,6.39 1.91,5.96 L1.91,3.5 C1.91,2.62 2.63,1.91 3.5,1.91 L5.97,1.91 C6.39,1.91 6.8,2.07 7.1,2.38 L13.24,8.51 L8.51,13.24 L2.38,7.09 L2.38,7.09 Z M3.01,3 L5.01,3 L5.01,5 L3,5 L3,3 L3.01,3 Z';
-var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
 var capitalist$elm_octicons$Octicons$trashcanPath = 'M11,2 L9,2 C9,1.45 8.55,1 8,1 L5,1 C4.45,1 4,1.45 4,2 L2,2 C1.45,2 1,2.45 1,3 L1,4 C1,4.55 1.45,5 2,5 L2,14 C2,14.55 2.45,15 3,15 L10,15 C10.55,15 11,14.55 11,14 L11,5 C11.55,5 12,4.55 12,4 L12,3 C12,2.45 11.55,2 11,2 L11,2 Z M10,14 L3,14 L3,5 L4,5 L4,13 L5,13 L5,5 L6,5 L6,13 L7,13 L7,5 L8,5 L8,13 L9,13 L9,5 L10,5 L10,14 L10,14 Z M11,4 L2,4 L2,3 L11,3 L11,4 L11,4 Z';
 var capitalist$elm_octicons$Octicons$trashcan = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$trashcanPath, '0 0 12 16', 'trashcan');
 var elm$html$Html$form = _VirtualDom_node('form');
-var elm$html$Html$input = _VirtualDom_node('input');
 var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
-var elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
-	});
-var elm$html$Html$Events$targetValue = A2(
-	elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	elm$json$Json$Decode$string);
-var elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			elm$json$Json$Decode$map,
-			elm$html$Html$Events$alwaysStop,
-			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
-};
 var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
@@ -20161,6 +20788,17 @@ var author$project$Main$viewLabelsPage = function (model) {
 			]),
 		_List_fromArray(
 			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+						elm$html$Html$text('Labels')
+					])),
 				newLabel,
 				A2(
 				elm$html$Html$div,
@@ -20173,7 +20811,6 @@ var author$project$Main$viewLabelsPage = function (model) {
 };
 var author$project$Main$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
 var author$project$Main$viewSearch = function (model) {
 	return A2(
 		elm$html$Html$div,
@@ -20204,8 +20841,6 @@ var author$project$Main$viewSearch = function (model) {
 					]))
 			]));
 };
-var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4 C4.55,4 5,4.45 5,5 C5,5.55 4.55,6 4,6 C3.45,6 3,5.55 3,5 L3,5 Z M11,5 C11,4.45 10.55,4 10,4 C9.45,4 9,4.45 9,5 C9,5.55 9.45,6 10,6 C10.55,6 11,5.55 11,5 L11,5 Z M11,11 C11,10.45 10.55,10 10,10 C9.45,10 9,10.45 9,11 C9,11.55 9.45,12 10,12 C10.55,12 11,11.55 11,11 L11,11 Z M13,1 L5,1 L5,3.17 C5.36,3.36 5.64,3.64 5.83,4 L8.17,4 C8.59,3.22 9.5,2.72 10.51,2.95 C11.26,3.14 11.87,3.75 12.04,4.5 C12.35,5.88 11.32,7.09 9.99,7.09 C9.19,7.09 8.51,6.65 8.16,6 L5.83,6 C5.41,6.8 4.5,7.28 3.49,7.03 C2.76,6.86 2.15,6.25 1.97,5.51 C1.72,4.49 2.2,3.59 3,3.17 L3,1 L1,1 C0.45,1 0,1.45 0,2 L0,14 C0,14.55 0.45,15 1,15 L6,10 L8.17,10 C8.59,9.22 9.5,8.72 10.51,8.95 C11.26,9.14 11.87,9.75 12.04,10.5 C12.35,11.88 11.32,13.09 9.99,13.09 C9.19,13.09 8.51,12.65 8.16,12 L6.99,12 L4,15 L13,15 C13.55,15 14,14.55 14,14 L14,2 C14,1.45 13.55,1 13,1 L13,1 Z';
-var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
 var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
 var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
 var capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
@@ -20687,587 +21322,6 @@ var author$project$Main$viewProjectColumn = F5(
 							cards)))
 				]));
 	});
-var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
-var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
-var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
-var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
-var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = F2(
-	function (graph, edge) {
-		var target = function () {
-			var _n1 = A2(
-				elm$core$Maybe$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.node;
-					},
-					function ($) {
-						return $.label;
-					}),
-				A2(elm_community$graph$Graph$get, edge.to, graph));
-			if (_n1.$ === 'Just') {
-				var x = _n1.a.x;
-				var y = _n1.a.y;
-				return {x: x, y: y};
-			} else {
-				return {x: 0, y: 0};
-			}
-		}();
-		var source = function () {
-			var _n0 = A2(
-				elm$core$Maybe$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.node;
-					},
-					function ($) {
-						return $.label;
-					}),
-				A2(elm_community$graph$Graph$get, edge.from, graph));
-			if (_n0.$ === 'Just') {
-				var x = _n0.a.x;
-				var y = _n0.a.y;
-				return {x: x, y: y};
-			} else {
-				return {x: 0, y: 0};
-			}
-		}();
-		return A2(
-			elm$svg$Svg$line,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$class('graph-edge'),
-					elm$svg$Svg$Attributes$x1(
-					elm$core$String$fromFloat(source.x)),
-					elm$svg$Svg$Attributes$y1(
-					elm$core$String$fromFloat(source.y)),
-					elm$svg$Svg$Attributes$x2(
-					elm$core$String$fromFloat(target.x)),
-					elm$svg$Svg$Attributes$y2(
-					elm$core$String$fromFloat(target.y))
-				]),
-			_List_Nil);
-	});
-var author$project$Main$nodeBounds = function (nc) {
-	var y = nc.node.label.y;
-	var x = nc.node.label.x;
-	return nc.node.label.value.bounds(
-		{x: x, y: y});
-};
-var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
-var elm$svg$Svg$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
-var author$project$Main$viewNodeLowerUpper = F3(
-	function (state, _n0, _n1) {
-		var node = _n0.node;
-		var fs = _n1.a;
-		var ns = _n1.b;
-		var pos = {x: node.label.x, y: node.label.y};
-		return _Utils_Tuple2(
-			A2(
-				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewLower, pos, state),
-				fs),
-			A2(
-				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewUpper, pos, state),
-				ns));
-	});
-var author$project$Main$viewGraph = F2(
-	function (state, _n0) {
-		var graph = _n0.graph;
-		var padding = 10;
-		var nodeContexts = A3(elm_community$graph$Graph$fold, elm$core$List$cons, _List_Nil, graph);
-		var links = A2(
-			elm$core$List$map,
-			A2(elm$svg$Svg$Lazy$lazy2, author$project$Main$linkPath, graph),
-			elm_community$graph$Graph$edges(graph));
-		var bounds = A2(elm$core$List$map, author$project$Main$nodeBounds, nodeContexts);
-		var maxX = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n6, acc) {
-					var x2 = _n6.x2;
-					return A2(elm$core$Basics$max, x2, acc);
-				}),
-			0,
-			bounds) + padding;
-		var maxY = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n5, acc) {
-					var y2 = _n5.y2;
-					return A2(elm$core$Basics$max, y2, acc);
-				}),
-			0,
-			bounds) + padding;
-		var minX = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n4, acc) {
-					var x1 = _n4.x1;
-					return A2(elm$core$Basics$min, x1, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var width = maxX - minX;
-		var minY = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n3, acc) {
-					var y1 = _n3.y1;
-					return A2(elm$core$Basics$min, y1, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var height = maxY - minY;
-		var _n1 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
-		var scaleW = _n1.a;
-		var scaleH = _n1.b;
-		var _n2 = A3(
-			elm_community$graph$Graph$fold,
-			author$project$Main$viewNodeLowerUpper(state),
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			graph);
-		var flairs = _n2.a;
-		var nodes = _n2.b;
-		return A2(
-			elm$svg$Svg$svg,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$width(
-					elm$core$String$fromFloat(scaleW) + 'px'),
-					elm$svg$Svg$Attributes$height(
-					elm$core$String$fromFloat(scaleH) + 'px'),
-					elm$svg$Svg$Attributes$viewBox(
-					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('lower')
-						]),
-					flairs),
-					A2(
-					elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('links')
-						]),
-					links),
-					A2(
-					elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('upper')
-						]),
-					nodes)
-				]));
-	});
-var author$project$Main$AddFilter = function (a) {
-	return {$: 'AddFilter', a: a};
-};
-var author$project$Main$AllActivitySort = {$: 'AllActivitySort'};
-var author$project$Main$HasLabelFilter = F2(
-	function (a, b) {
-		return {$: 'HasLabelFilter', a: a, b: b};
-	});
-var author$project$Main$InvolvesUserFilter = function (a) {
-	return {$: 'InvolvesUserFilter', a: a};
-};
-var author$project$Main$IssuesFilter = {$: 'IssuesFilter'};
-var author$project$Main$PullRequestsFilter = {$: 'PullRequestsFilter'};
-var author$project$Main$RemoveFilter = function (a) {
-	return {$: 'RemoveFilter', a: a};
-};
-var author$project$Main$SetGraphSort = function (a) {
-	return {$: 'SetGraphSort', a: a};
-};
-var author$project$Main$SetLabelSearch = function (a) {
-	return {$: 'SetLabelSearch', a: a};
-};
-var author$project$Main$ToggleLabelFilters = {$: 'ToggleLabelFilters'};
-var author$project$Main$UntriagedFilter = {$: 'UntriagedFilter'};
-var author$project$Main$UserActivitySort = function (a) {
-	return {$: 'UserActivitySort', a: a};
-};
-var author$project$Main$hasFilter = F2(
-	function (model, filter) {
-		return A2(elm$core$List$member, filter, model.graphFilters);
-	});
-var capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
-var capitalist$elm_octicons$Octicons$clock = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
-var capitalist$elm_octicons$Octicons$commentDiscussionPath = 'M15,1 L6,1 C5.45,1 5,1.45 5,2 L5,4 L1,4 C0.45,4 0,4.45 0,5 L0,11 C0,11.55 0.45,12 1,12 L2,12 L2,15 L5,12 L9,12 C9.55,12 10,11.55 10,11 L10,9 L11,9 L14,12 L14,9 L15,9 C15.55,9 16,8.55 16,8 L16,2 C16,1.45 15.55,1 15,1 L15,1 Z M9,11 L4.5,11 L3,12.5 L3,11 L1,11 L1,5 L5,5 L5,8 C5,8.55 5.45,9 6,9 L9,9 L9,11 L9,11 Z M15,8 L13,8 L13,9.5 L11.5,8 L6,8 L6,2 L15,2 L15,8 L15,8 Z';
-var capitalist$elm_octicons$Octicons$commentDiscussion = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$commentDiscussionPath, '0 0 16 16', 'commentDiscussion');
-var capitalist$elm_octicons$Octicons$flamePath = 'M5.05,0.31 C5.86,2.48 5.46,3.69 4.53,4.62 C3.55,5.67 1.98,6.45 0.9,7.98 C-0.55,10.03 -0.8,14.51 4.43,15.68 C2.23,14.52 1.76,11.16 4.13,9.07 C3.52,11.1 4.66,12.4 6.07,11.93 C7.46,11.46 8.37,12.46 8.34,13.6 C8.32,14.38 8.03,15.04 7.21,15.41 C10.63,14.82 11.99,11.99 11.99,9.85 C11.99,7.01 9.46,6.63 10.74,4.24 C9.22,4.37 8.71,5.37 8.85,6.99 C8.94,8.07 7.83,8.79 6.99,8.32 C6.32,7.91 6.33,7.13 6.93,6.54 C8.18,5.31 8.68,2.45 5.05,0.32 L5.03,0.3 L5.05,0.31 Z';
-var capitalist$elm_octicons$Octicons$flame = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$flamePath, '0 0 12 16', 'flame');
-var capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
-var capitalist$elm_octicons$Octicons$inbox = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
-var author$project$Main$viewGraphControls = function (model) {
-	var labelFilters = A2(
-		elm$core$List$filterMap,
-		function (filter) {
-			if (filter.$ === 'HasLabelFilter') {
-				var name = filter.a;
-				var color = filter.b;
-				return elm$core$Maybe$Just(
-					A2(
-						elm$html$Html$div,
-						_Utils_ap(
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('control-setting'),
-									elm$html$Html$Events$onClick(
-									author$project$Main$RemoveFilter(filter))
-								]),
-							A2(author$project$Main$labelColorStyles, model, color)),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-								elm$html$Html$text(name)
-							])));
-			} else {
-				return elm$core$Maybe$Nothing;
-			}
-		},
-		model.graphFilters);
-	var allLabelFilters = function (a) {
-		return A2(
-			elm$core$List$filterMap,
-			a,
-			elm$core$Dict$toList(model.dataView.reposByLabel));
-	}(
-		function (_n2) {
-			var _n3 = _n2.a;
-			var name = _n3.a;
-			var color = _n3.b;
-			return A2(elm$core$String$contains, model.labelSearch, name) ? elm$core$Maybe$Just(
-				A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('label-filter')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$div,
-							_Utils_ap(
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('label'),
-										elm$html$Html$Events$onClick(
-										author$project$Main$AddFilter(
-											A2(author$project$Main$HasLabelFilter, name, color)))
-									]),
-								A2(author$project$Main$labelColorStyles, model, color)),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-									elm$html$Html$text(name)
-								]))
-						]))) : elm$core$Maybe$Nothing;
-		});
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('graph-controls')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('control-group')
-					]),
-				_Utils_ap(
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('controls-label')
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text('filter:')
-								])),
-							function () {
-							var filter = author$project$Main$UntriagedFilter;
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('control-setting', true),
-												_Utils_Tuple2(
-												'active',
-												A2(author$project$Main$hasFilter, model, filter))
-											])),
-										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
-										elm$html$Html$text('untriaged')
-									]));
-						}(),
-							function () {
-							var filter = author$project$Main$IssuesFilter;
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('control-setting', true),
-												_Utils_Tuple2(
-												'active',
-												A2(author$project$Main$hasFilter, model, filter))
-											])),
-										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts),
-										elm$html$Html$text('issues')
-									]));
-						}(),
-							function () {
-							var filter = author$project$Main$PullRequestsFilter;
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('control-setting', true),
-												_Utils_Tuple2(
-												'active',
-												A2(author$project$Main$hasFilter, model, filter))
-											])),
-										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
-										elm$html$Html$text('pull requests')
-									]));
-						}(),
-							function () {
-							var _n0 = model.me;
-							if (_n0.$ === 'Just') {
-								var user = _n0.a.user;
-								var filter = author$project$Main$InvolvesUserFilter(user.login);
-								return A2(
-									elm$html$Html$div,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$classList(
-											_List_fromArray(
-												[
-													_Utils_Tuple2('control-setting', true),
-													_Utils_Tuple2(
-													'active',
-													A2(author$project$Main$hasFilter, model, filter))
-												])),
-											elm$html$Html$Events$onClick(
-											A2(author$project$Main$hasFilter, model, filter) ? author$project$Main$RemoveFilter(filter) : author$project$Main$AddFilter(filter))
-										]),
-									_List_fromArray(
-										[
-											capitalist$elm_octicons$Octicons$commentDiscussion(author$project$Main$octiconOpts),
-											elm$html$Html$text('involving me')
-										]));
-							} else {
-								return elm$html$Html$text('');
-							}
-						}(),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('label-selection')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$div,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$classList(
-											_List_fromArray(
-												[
-													_Utils_Tuple2('label-filters', true),
-													_Utils_Tuple2('visible', model.showLabelFilters)
-												]))
-										]),
-									_List_fromArray(
-										[
-											A2(
-											elm$html$Html$div,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('label-options')
-												]),
-											allLabelFilters),
-											A2(
-											elm$html$Html$input,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$type_('text'),
-													elm$html$Html$Events$onInput(author$project$Main$SetLabelSearch)
-												]),
-											_List_Nil)
-										])),
-									A2(
-									elm$html$Html$div,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$classList(
-											_List_fromArray(
-												[
-													_Utils_Tuple2('control-setting', true),
-													_Utils_Tuple2('active', model.showLabelFilters)
-												])),
-											elm$html$Html$Events$onClick(author$project$Main$ToggleLabelFilters)
-										]),
-									_List_fromArray(
-										[
-											capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-											elm$html$Html$text('label')
-										]))
-								]))
-						]),
-					labelFilters)),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('control-group')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$span,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('controls-label')
-							]),
-						_List_fromArray(
-							[
-								elm$html$Html$text('sort:')
-							])),
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('control-setting', true),
-										_Utils_Tuple2(
-										'active',
-										_Utils_eq(model.graphSort, author$project$Main$ImpactSort))
-									])),
-								elm$html$Html$Events$onClick(
-								author$project$Main$SetGraphSort(author$project$Main$ImpactSort))
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$flame(author$project$Main$octiconOpts),
-								elm$html$Html$text('impact')
-							])),
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('control-setting', true),
-										_Utils_Tuple2(
-										'active',
-										_Utils_eq(model.graphSort, author$project$Main$AllActivitySort))
-									])),
-								elm$html$Html$Events$onClick(
-								author$project$Main$SetGraphSort(author$project$Main$AllActivitySort))
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
-								elm$html$Html$text('all activity')
-							])),
-						function () {
-						var _n1 = model.me;
-						if (_n1.$ === 'Just') {
-							var user = _n1.a.user;
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('control-setting', true),
-												_Utils_Tuple2(
-												'active',
-												_Utils_eq(
-													model.graphSort,
-													author$project$Main$UserActivitySort(user.login)))
-											])),
-										elm$html$Html$Events$onClick(
-										author$project$Main$SetGraphSort(
-											author$project$Main$UserActivitySort(user.login)))
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
-										elm$html$Html$text('my activity')
-									]));
-						} else {
-							return elm$html$Html$text('');
-						}
-					}()
-					]))
-			]));
-};
-var elm$html$Html$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
-var author$project$Main$viewSpatialGraph = function (model) {
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('spatial-graph')
-			]),
-		A2(
-			elm$core$List$cons,
-			author$project$Main$viewGraphControls(model),
-			A2(
-				elm$core$List$map,
-				F2(
-					function (f, _n0) {
-						var a = _n0.a;
-						var b = _n0.b;
-						return A2(f, a, b);
-					})(
-					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
-				model.cardGraphs)));
-};
 var author$project$Main$viewSingleProject = F2(
 	function (model, _n0) {
 		var project = _n0.project;
@@ -21466,18 +21520,38 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 			[
 				elm$html$Html$Attributes$class('pull-requests-page')
 			]),
-		A2(
-			elm$core$List$map,
-			function (_n0) {
-				var a = _n0.a;
-				var b = _n0.b;
-				return A2(viewRepoPRs, a, b);
-			},
-			elm$core$List$reverse(
+		_List_fromArray(
+			[
 				A2(
-					elm$core$List$sortBy,
-					A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
-					A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))));
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+						elm$html$Html$text('Pull Requests')
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('pull-request-columns')
+					]),
+				A2(
+					elm$core$List$map,
+					function (_n0) {
+						var a = _n0.a;
+						var b = _n0.b;
+						return A2(viewRepoPRs, a, b);
+					},
+					elm$core$List$reverse(
+						A2(
+							elm$core$List$sortBy,
+							A2(elm$core$Basics$composeR, elm$core$Tuple$second, elm$core$List$length),
+							A3(elm$core$Dict$foldl, getRepo, _List_Nil, model.dataView.prsByRepo)))))
+			]));
 };
 var capitalist$elm_octicons$Octicons$gitCommitPath = 'M10.86,7 C10.41,5.28 8.86,4 7,4 C5.14,4 3.59,5.28 3.14,7 L0,7 L0,9 L3.14,9 C3.59,10.72 5.14,12 7,12 C8.86,12 10.41,10.72 10.86,9 L14,9 L14,7 L10.86,7 L10.86,7 Z M7,10.2 C5.78,10.2 4.8,9.22 4.8,8 C4.8,6.78 5.78,5.8 7,5.8 C8.22,5.8 9.2,6.78 9.2,8 C9.2,9.22 8.22,10.2 7,10.2 L7,10.2 Z';
 var capitalist$elm_octicons$Octicons$gitCommit = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitCommitPath, '0 0 14 16', 'gitCommit');
@@ -21573,10 +21647,30 @@ var author$project$Main$viewShipItPage = function (model) {
 			[
 				elm$html$Html$Attributes$class('shipit-page')
 			]),
-		A2(
-			elm$core$List$map,
-			author$project$Main$viewShipItRepo(model),
-			repos));
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+						elm$html$Html$text('Releases')
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('shipit-repos')
+					]),
+				A2(
+					elm$core$List$map,
+					author$project$Main$viewShipItRepo(model),
+					repos))
+			]));
 };
 var author$project$Main$DocumentedTab = {$: 'DocumentedTab'};
 var author$project$Main$NoImpactTab = {$: 'NoImpactTab'};
@@ -21599,7 +21693,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-header')
+							elm$html$Html$Attributes$class('page-header')
 						]),
 					_List_fromArray(
 						[
@@ -22087,7 +22181,7 @@ var author$project$Main$viewPage = function (model) {
 									case 'AllProjectsPage':
 										return author$project$Main$viewAllProjectsPage(model);
 									case 'GlobalGraphPage':
-										return author$project$Main$viewSpatialGraph(model);
+										return author$project$Main$viewGlobalGraphPage(model);
 									case 'ProjectPage':
 										var id = _n0.a;
 										return A2(author$project$Main$viewProjectPage, model, id);
