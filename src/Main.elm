@@ -1526,8 +1526,8 @@ viewPage model =
             GlobalGraphPage ->
                 viewGlobalGraphPage model
 
-            ProjectPage id ->
-                viewProjectPage model id
+            ProjectPage name ->
+                viewProjectPage model name
 
             LabelsPage ->
                 viewLabelsPage model
@@ -2081,23 +2081,25 @@ viewTabbedCards model currentTab setTab tabs =
                     |> List.head
                     |> Maybe.map (\( tab, _, _ ) -> tab)
 
-            mselected =
+            selected =
                 tabs
                     |> List.filter (\( tab, _, _ ) -> currentTab model == tab)
-                    |> List.head
+
+            firstTabClass =
+                HA.classList [ ( "first-tab", mfirst == Just (currentTab model) ) ]
           in
-          case ( mfirst, mselected ) of
-            ( Just firstTab, Just ( _, _, cards ) ) ->
-                cards
-                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                    |> List.reverse
-                    |> List.map (viewCard model)
-                    |> Html.div
-                        [ HA.classList
-                            [ ( "tab-cards", True )
-                            , ( "first-tab", currentTab model == firstTab )
-                            ]
-                        ]
+          case selected of
+            ( _, _, cards ) :: _ ->
+                if List.isEmpty cards then
+                    Html.div [ HA.class "no-tab-cards", firstTabClass ]
+                        [ Html.text "no cards" ]
+
+                else
+                    cards
+                        |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                        |> List.reverse
+                        |> List.map (viewCard model)
+                        |> Html.div [ HA.class "tab-cards", firstTabClass ]
 
             _ ->
                 Html.text ""

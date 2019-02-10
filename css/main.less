@@ -1446,6 +1446,20 @@ svg {
   }
 }
 
-.tab-cards.first-tab .card:first-child {
+.no-tab-cards {
+  background: @white;
+  text-align: center;
+  color: @gray-light;
+  font-size: 14px;
+  padding: 50px 0;
+
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+.tab-cards.first-tab .card:first-child,
+.no-tab-cards.first-tab {
   border-top-left-radius: 0;
 }
