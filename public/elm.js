@@ -6624,9 +6624,9 @@ var author$project$GitHubGraph$decodeIssue = A2(
 														elm_community$json_extra$Json$Decode$Extra$andMap,
 														A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 														elm$json$Json$Decode$succeed(author$project$GitHubGraph$Issue)))))))))))))));
-var author$project$GitHubGraph$Project = F5(
-	function (id, url, name, number, columns) {
-		return {columns: columns, id: id, name: name, number: number, url: url};
+var author$project$GitHubGraph$Project = F6(
+	function (id, url, name, number, body, columns) {
+		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
 	});
 var author$project$GitHubGraph$decodeProject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -6636,17 +6636,20 @@ var author$project$GitHubGraph$decodeProject = A2(
 		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeProjectColumn)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+		A2(elm$json$Json$Decode$field, 'body', elm$json$Json$Decode$string),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+			A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+				A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-					elm$json$Json$Decode$succeed(author$project$GitHubGraph$Project))))));
+					A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Project)))))));
 var author$project$GitHubGraph$PullRequest = function (id) {
 	return function (url) {
 		return function (createdAt) {
@@ -18607,212 +18610,61 @@ var author$project$Main$selectStatefulProject = function (project) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var author$project$Main$onlyOpenCards = function (model) {
-	return elm$core$List$filter(
-		function (_n0) {
-			var contentId = _n0.contentId;
-			if (contentId.$ === 'Just') {
-				var id = contentId.a;
-				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
-				if (_n2.$ === 'Just') {
-					var card = _n2.a;
-					return author$project$Main$isOpen(card);
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		});
-};
-var author$project$Drag$hasNeverLeft = function (model) {
-	if (model.$ === 'Dragging') {
-		var neverLeft = model.a.neverLeft;
-		return neverLeft;
-	} else {
-		return false;
-	}
-};
-var author$project$Drag$End = {$: 'End'};
-var author$project$Drag$Over = function (a) {
-	return {$: 'Over', a: a};
-};
-var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
-	return {$: 'MayPreventDefault', a: a};
-};
-var elm$html$Html$Events$preventDefaultOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
-	});
-var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var author$project$Drag$onDrop = F2(
-	function (candidate, f) {
-		return _List_fromArray(
-			[
-				A2(
-				elm$html$Html$Events$on,
-				'dragenter',
-				elm$json$Json$Decode$succeed(
-					f(
-						author$project$Drag$Over(
-							elm$core$Maybe$Just(candidate))))),
-				A2(
-				elm$html$Html$Events$on,
-				'dragleave',
-				elm$json$Json$Decode$succeed(
-					f(
-						author$project$Drag$Over(elm$core$Maybe$Nothing)))),
-				A2(
-				elm$html$Html$Events$preventDefaultOn,
-				'dragover',
-				elm$json$Json$Decode$succeed(
-					_Utils_Tuple2(
-						f(
-							author$project$Drag$Over(
-								elm$core$Maybe$Just(candidate))),
-						true))),
-				A2(
-				elm$html$Html$Events$stopPropagationOn,
-				'drop',
-				elm$json$Json$Decode$succeed(
-					_Utils_Tuple2(
-						f(author$project$Drag$End),
-						true)))
-			]);
-	});
+var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
+var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
+var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$Attributes$classList = function (classes) {
-	return elm$html$Html$Attributes$class(
-		A2(
-			elm$core$String$join,
-			' ',
-			A2(
-				elm$core$List$map,
-				elm$core$Tuple$first,
-				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
+var elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
 };
-var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
-var author$project$Drag$viewDropArea = F4(
-	function (model, wrap, candidate, ownSource) {
-		var isOver = function () {
-			switch (model.$) {
-				case 'NotDragging':
-					return false;
-				case 'Dragging':
-					var state = model.a;
-					var _n5 = state.dropCandidate;
-					if (_n5.$ === 'Just') {
-						var target = _n5.a.target;
-						return _Utils_eq(target, candidate.target);
-					} else {
-						return state.neverLeft && _Utils_eq(
-							elm$core$Maybe$Just(state.source),
-							ownSource);
-					}
-				case 'Dropping':
-					var target = model.a.target;
-					var landed = model.a.landed;
-					return _Utils_eq(target, candidate.target) && (!landed);
-				default:
-					var target = model.a.target;
-					var landed = model.a.landed;
-					return _Utils_eq(target, candidate.target) && (!landed);
-			}
-		}();
-		var isActive = function () {
-			if (model.$ === 'Dragging') {
-				return true;
-			} else {
-				return false;
-			}
-		}();
-		var droppedElement = function () {
-			if (model.$ === 'Dropped') {
-				var start = model.a.start;
-				return isOver ? start.element : elm$html$Html$text('');
-			} else {
-				return elm$html$Html$text('');
-			}
-		}();
-		var dragEvents = isActive ? A2(author$project$Drag$onDrop, candidate, wrap) : _List_Nil;
+var author$project$Main$viewProject = F2(
+	function (model, _n0) {
+		var project = _n0.project;
+		var backlogs = _n0.backlogs;
+		var inFlight = _n0.inFlight;
+		var done = _n0.done;
 		return A2(
 			elm$html$Html$div,
-			_Utils_ap(
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2('drop-area', true),
-								_Utils_Tuple2('active', isActive),
-								_Utils_Tuple2(
-								'never-left',
-								author$project$Drag$hasNeverLeft(model)),
-								_Utils_Tuple2('over', isOver)
-							]))
-					]),
-				_Utils_ap(
-					dragEvents,
-					A2(
-						elm$core$List$map,
-						function (_n0) {
-							var x = _n0.a;
-							var y = _n0.b;
-							return A2(elm$html$Html$Attributes$style, x, y);
-						},
-						function () {
-							switch (model.$) {
-								case 'NotDragging':
-									return _List_Nil;
-								case 'Dragging':
-									var start = model.a.start;
-									return isOver ? _List_fromArray(
-										[
-											_Utils_Tuple2(
-											'min-height',
-											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
-										]) : _List_Nil;
-								case 'Dropping':
-									var start = model.a.start;
-									return isOver ? _List_fromArray(
-										[
-											_Utils_Tuple2(
-											'min-height',
-											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
-										]) : _List_Nil;
-								default:
-									var start = model.a.start;
-									return isOver ? _List_fromArray(
-										[
-											_Utils_Tuple2(
-											'min-height',
-											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
-										]) : _List_Nil;
-							}
-						}()))),
 			_List_fromArray(
-				[droppedElement]));
+				[
+					elm$html$Html$Attributes$class('project-box')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$a,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('column-title'),
+							elm$html$Html$Attributes$href('/projects/' + project.name)
+						]),
+					_List_fromArray(
+						[
+							capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+							elm$html$Html$text(project.name)
+						]))
+				]));
 	});
-var author$project$Main$MoveCardAfter = F2(
-	function (a, b) {
-		return {$: 'MoveCardAfter', a: a, b: b};
-	});
-var author$project$Main$ProjectDrag = function (a) {
-	return {$: 'ProjectDrag', a: a};
+var author$project$Main$viewAllProjectsPage = function (model) {
+	var statefulProjects = A2(
+		elm$core$List$filterMap,
+		author$project$Main$selectStatefulProject,
+		elm$core$Dict$values(model.data.projects));
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('projects-page')
+			]),
+		A2(
+			elm$core$List$map,
+			author$project$Main$viewProject(model),
+			statefulProjects));
 };
+var author$project$Drag$End = {$: 'End'};
 var author$project$Drag$Start = F2(
 	function (a, b) {
 		return {$: 'Start', a: a, b: b};
@@ -18906,6 +18758,16 @@ var elm$virtual_dom$VirtualDom$attribute = F2(
 			_VirtualDom_noJavaScriptOrHtmlUri(value));
 	});
 var elm$html$Html$Attributes$attribute = elm$virtual_dom$VirtualDom$attribute;
+var elm$html$Html$Attributes$classList = function (classes) {
+	return elm$html$Html$Attributes$class(
+		A2(
+			elm$core$String$join,
+			' ',
+			A2(
+				elm$core$List$map,
+				elm$core$Tuple$first,
+				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
+};
 var elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
 var author$project$Drag$draggable = F4(
 	function (model, wrap, source, view) {
@@ -18942,9 +18804,16 @@ var author$project$Drag$draggable = F4(
 			_List_fromArray(
 				[view]));
 	});
-var author$project$Main$FromColumnCardSource = function (a) {
-	return {$: 'FromColumnCardSource', a: a};
+var author$project$Main$NewContentCardSource = function (a) {
+	return {$: 'NewContentCardSource', a: a};
 };
+var author$project$Main$ProjectDrag = function (a) {
+	return {$: 'ProjectDrag', a: a};
+};
+var author$project$Main$isAnticipated = F2(
+	function (model, card) {
+		return A2(elm$core$Set$member, card.id, model.anticipatedCards) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, model.selectedCards));
+	});
 var author$project$Colors$gray300 = '#d1d5da';
 var author$project$Colors$gray600 = '#586069';
 var author$project$Main$HighlightNode = function (a) {
@@ -18969,13 +18838,6 @@ var author$project$Main$UnlabelCard = F2(
 	});
 var capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
 var capitalist$elm_octicons$Octicons$linkExternal = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
-var elm$html$Html$a = _VirtualDom_node('a');
-var elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
 var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
 var author$project$Main$externalIcons = function (card) {
 	return A2(
@@ -18997,10 +18859,6 @@ var author$project$Main$externalIcons = function (card) {
 		},
 		card.cards);
 };
-var author$project$Main$isAnticipated = F2(
-	function (model, card) {
-		return A2(elm$core$Set$member, card.id, model.anticipatedCards) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, model.selectedCards));
-	});
 var author$project$Main$isPaused = function (card) {
 	return card.processState.hasPausedLabel;
 };
@@ -19175,6 +19033,8 @@ var author$project$Main$colorIsLight = F2(
 				A3(author$project$Log$debug, 'color lightness cache miss', hex, hex));
 		}
 	});
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var author$project$Main$labelColorStyles = F2(
 	function (model, color) {
 		return _List_fromArray(
@@ -19550,322 +19410,6 @@ var author$project$Main$viewCard = F2(
 						A2(author$project$Main$prIcons, model, card)))
 				]));
 	});
-var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
-var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
-var elm_explorations$markdown$Markdown$defaultOptions = {
-	defaultHighlighting: elm$core$Maybe$Nothing,
-	githubFlavored: elm$core$Maybe$Just(
-		{breaks: false, tables: false}),
-	sanitize: true,
-	smartypants: false
-};
-var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
-var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
-var author$project$Main$viewNoteCard = F3(
-	function (model, col, text) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$classList(
-					_List_fromArray(
-						[
-							_Utils_Tuple2('card', true),
-							_Utils_Tuple2(
-							'in-flight',
-							author$project$Main$detectColumn.inFlight(col.name)),
-							_Utils_Tuple2(
-							'done',
-							author$project$Main$detectColumn.done(col.name)),
-							_Utils_Tuple2(
-							'backlog',
-							author$project$Main$detectColumn.backlog(col.name))
-						]))
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-info card-note')
-						]),
-					_List_fromArray(
-						[
-							A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text)
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-icons')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)
-						]))
-				]));
-	});
-var author$project$Main$viewProjectColumnCard = F4(
-	function (model, project, col, ghCard) {
-		var dropCandidate = {
-			msgFunc: author$project$Main$MoveCardAfter,
-			target: {
-				afterId: elm$core$Maybe$Just(ghCard.id),
-				columnId: col.id,
-				projectId: project.id
-			}
-		};
-		var dragId = author$project$Main$FromColumnCardSource(
-			{cardId: ghCard.id, columnId: col.id});
-		var _n0 = _Utils_Tuple2(ghCard.note, ghCard.contentId);
-		_n0$2:
-		while (true) {
-			if (_n0.a.$ === 'Just') {
-				if (_n0.b.$ === 'Nothing') {
-					var n = _n0.a.a;
-					var _n1 = _n0.b;
-					return _List_fromArray(
-						[
-							A4(
-							author$project$Drag$draggable,
-							model.projectDrag,
-							author$project$Main$ProjectDrag,
-							dragId,
-							A3(author$project$Main$viewNoteCard, model, col, n)),
-							A4(
-							author$project$Drag$viewDropArea,
-							model.projectDrag,
-							author$project$Main$ProjectDrag,
-							dropCandidate,
-							elm$core$Maybe$Just(dragId))
-						]);
-				} else {
-					break _n0$2;
-				}
-			} else {
-				if (_n0.b.$ === 'Just') {
-					var _n2 = _n0.a;
-					var contentId = _n0.b.a;
-					var _n3 = A2(elm$core$Dict$get, contentId, model.allCards);
-					if (_n3.$ === 'Just') {
-						var card = _n3.a;
-						return _List_fromArray(
-							[
-								A4(
-								author$project$Drag$draggable,
-								model.projectDrag,
-								author$project$Main$ProjectDrag,
-								dragId,
-								A2(author$project$Main$viewCard, model, card)),
-								A4(
-								author$project$Drag$viewDropArea,
-								model.projectDrag,
-								author$project$Main$ProjectDrag,
-								dropCandidate,
-								elm$core$Maybe$Just(dragId))
-							]);
-					} else {
-						return A3(author$project$Log$debug, 'impossible: content has no card', contentId, _List_Nil);
-					}
-				} else {
-					break _n0$2;
-				}
-			}
-		}
-		return A3(author$project$Log$debug, 'impossible?: card has no note or content', ghCard, _List_Nil);
-	});
-var author$project$Main$viewProjectColumn = F5(
-	function (model, project, mod, icon, col) {
-		var dropCandidate = {
-			msgFunc: author$project$Main$MoveCardAfter,
-			target: {afterId: elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
-		};
-		var cards = mod(
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, col.id, model.data.columnCards)));
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('project-column')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('column-title')
-						]),
-					_List_fromArray(
-						[
-							icon,
-							A2(
-							elm$html$Html$a,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$href('/projects/' + project.name)
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text(col.name)
-								]))
-						])),
-					elm$core$List$isEmpty(cards) ? A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('no-cards')
-						]),
-					_List_fromArray(
-						[
-							A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
-						])) : A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('cards')
-						]),
-					A2(
-						elm$core$List$cons,
-						A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
-						A2(
-							elm$core$List$concatMap,
-							A3(author$project$Main$viewProjectColumnCard, model, project, col),
-							cards)))
-				]));
-	});
-var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
-var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
-var elm$html$Html$h4 = _VirtualDom_node('h4');
-var author$project$Main$viewProject = F2(
-	function (model, _n0) {
-		var project = _n0.project;
-		var backlogs = _n0.backlogs;
-		var inFlight = _n0.inFlight;
-		var done = _n0.done;
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('project')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('project-columns')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('column name-column')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$h4,
-									_List_Nil,
-									_List_fromArray(
-										[
-											A2(
-											elm$html$Html$a,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$href('/projects/' + project.name)
-												]),
-											_List_fromArray(
-												[
-													elm$html$Html$text(project.name)
-												]))
-										]))
-								])),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('column backlog-column')
-								]),
-							A2(
-								elm$core$List$map,
-								A4(
-									author$project$Main$viewProjectColumn,
-									model,
-									project,
-									elm$core$List$take(3),
-									capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)),
-								backlogs)),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('column in-flight-column')
-								]),
-							_List_fromArray(
-								[
-									A5(
-									author$project$Main$viewProjectColumn,
-									model,
-									project,
-									elm$core$Basics$identity,
-									capitalist$elm_octicons$Octicons$pulse(author$project$Main$octiconOpts),
-									inFlight)
-								])),
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('column done-column')
-								]),
-							_List_fromArray(
-								[
-									A5(
-									author$project$Main$viewProjectColumn,
-									model,
-									project,
-									author$project$Main$onlyOpenCards(model),
-									capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
-									done)
-								]))
-						]))
-				]));
-	});
-var author$project$Main$viewAllProjectsPage = function (model) {
-	var statefulProjects = A2(
-		elm$core$List$filterMap,
-		author$project$Main$selectStatefulProject,
-		elm$core$Dict$values(model.data.projects));
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('project-table')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('projects')
-					]),
-				A2(
-					elm$core$List$map,
-					author$project$Main$viewProject(model),
-					statefulProjects))
-			]));
-};
-var author$project$Main$NewContentCardSource = function (a) {
-	return {$: 'NewContentCardSource', a: a};
-};
 var author$project$Main$viewCardEntry = F2(
 	function (model, card) {
 		var dragSource = author$project$Main$NewContentCardSource(
@@ -19972,6 +19516,16 @@ var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('va
 var elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
 };
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
 var elm$json$Json$Decode$at = F2(
 	function (fields, decoder) {
 		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
@@ -19993,6 +19547,16 @@ var elm$html$Html$Events$onInput = function (tagger) {
 var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
 	return _Utils_Tuple2(msg, true);
 };
+var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 'MayPreventDefault', a: a};
+};
+var elm$html$Html$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
 var elm$html$Html$Events$onSubmit = function (msg) {
 	return A2(
 		elm$html$Html$Events$preventDefaultOn,
@@ -20403,7 +19967,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('label-row')
+				elm$html$Html$Attributes$class('new-label')
 			]),
 		_List_fromArray(
 			[
@@ -20486,54 +20050,6 @@ var author$project$Main$viewLabelsPage = function (model) {
 										capitalist$elm_octicons$Octicons$plus(author$project$Main$octiconOpts)
 									]))
 							]))
-					])),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('label-cell')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('label-counts first')
-							]),
-						_List_Nil)
-					])),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('label-cell')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('label-counts')
-							]),
-						_List_Nil)
-					])),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('label-cell')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('label-counts last')
-							]),
-						_List_Nil)
 					]))
 			]));
 	var labelRows = function (a) {
@@ -20557,9 +20073,19 @@ var author$project$Main$viewLabelsPage = function (model) {
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('all-labels')
+				elm$html$Html$Attributes$class('labels-page')
 			]),
-		A2(elm$core$List$cons, newLabel, labelRows));
+		_List_fromArray(
+			[
+				newLabel,
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('labels-table')
+					]),
+				labelRows)
+			]));
 };
 var author$project$Main$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
@@ -20598,8 +20124,6 @@ var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4
 var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
 var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
 var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
-var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
-var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
 var capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
 var capitalist$elm_octicons$Octicons$signIn = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$signInPath, '0 0 14 16', 'signIn');
 var author$project$Main$viewNavBar = function (model) {
@@ -20619,53 +20143,6 @@ var author$project$Main$viewNavBar = function (model) {
 					]),
 				_List_fromArray(
 					[
-						function () {
-						var _n0 = model.me;
-						if (_n0.$ === 'Nothing') {
-							return A2(
-								elm$html$Html$a,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('button user-info'),
-										elm$html$Html$Attributes$href('/auth/github')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('log-in-icon')
-											]),
-										_List_fromArray(
-											[
-												capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts)
-											])),
-										elm$html$Html$text('log in')
-									]));
-						} else {
-							var user = _n0.a.user;
-							return A2(
-								elm$html$Html$a,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('button user-info'),
-										elm$html$Html$Attributes$href(user.url)
-									]),
-								_List_fromArray(
-									[
-										A2(
-										elm$html$Html$img,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('user-avatar'),
-												elm$html$Html$Attributes$src(user.avatar)
-											]),
-										_List_Nil),
-										elm$html$Html$text(user.login)
-									]));
-						}
-					}(),
 						A2(
 						elm$html$Html$a,
 						_List_fromArray(
@@ -20675,29 +20152,8 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts)
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/graph')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts)
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/pull-requests')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts)
+								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+								elm$html$Html$text('Projects')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20708,7 +20164,32 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts)
+								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+								elm$html$Html$text('Release')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/pull-requests')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+								elm$html$Html$text('PRs')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/graph')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
+								elm$html$Html$text('Issues')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -20719,12 +20200,411 @@ var author$project$Main$viewNavBar = function (model) {
 							]),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts)
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+								elm$html$Html$text('Labels')
 							]))
 					])),
+				function () {
+				var _n0 = model.me;
+				if (_n0.$ === 'Nothing') {
+					return A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('user-info'),
+								elm$html$Html$Attributes$href('/auth/github')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts),
+								elm$html$Html$text('Sign In')
+							]));
+				} else {
+					var user = _n0.a.user;
+					return A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('user-info'),
+								elm$html$Html$Attributes$href(user.url)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$img,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('user-avatar'),
+										elm$html$Html$Attributes$src(user.avatar)
+									]),
+								_List_Nil),
+								elm$html$Html$text(user.login)
+							]));
+				}
+			}(),
 				author$project$Main$viewSearch(model)
 			]));
 };
+var author$project$Drag$hasNeverLeft = function (model) {
+	if (model.$ === 'Dragging') {
+		var neverLeft = model.a.neverLeft;
+		return neverLeft;
+	} else {
+		return false;
+	}
+};
+var author$project$Drag$Over = function (a) {
+	return {$: 'Over', a: a};
+};
+var author$project$Drag$onDrop = F2(
+	function (candidate, f) {
+		return _List_fromArray(
+			[
+				A2(
+				elm$html$Html$Events$on,
+				'dragenter',
+				elm$json$Json$Decode$succeed(
+					f(
+						author$project$Drag$Over(
+							elm$core$Maybe$Just(candidate))))),
+				A2(
+				elm$html$Html$Events$on,
+				'dragleave',
+				elm$json$Json$Decode$succeed(
+					f(
+						author$project$Drag$Over(elm$core$Maybe$Nothing)))),
+				A2(
+				elm$html$Html$Events$preventDefaultOn,
+				'dragover',
+				elm$json$Json$Decode$succeed(
+					_Utils_Tuple2(
+						f(
+							author$project$Drag$Over(
+								elm$core$Maybe$Just(candidate))),
+						true))),
+				A2(
+				elm$html$Html$Events$stopPropagationOn,
+				'drop',
+				elm$json$Json$Decode$succeed(
+					_Utils_Tuple2(
+						f(author$project$Drag$End),
+						true)))
+			]);
+	});
+var author$project$Drag$viewDropArea = F4(
+	function (model, wrap, candidate, ownSource) {
+		var isOver = function () {
+			switch (model.$) {
+				case 'NotDragging':
+					return false;
+				case 'Dragging':
+					var state = model.a;
+					var _n5 = state.dropCandidate;
+					if (_n5.$ === 'Just') {
+						var target = _n5.a.target;
+						return _Utils_eq(target, candidate.target);
+					} else {
+						return state.neverLeft && _Utils_eq(
+							elm$core$Maybe$Just(state.source),
+							ownSource);
+					}
+				case 'Dropping':
+					var target = model.a.target;
+					var landed = model.a.landed;
+					return _Utils_eq(target, candidate.target) && (!landed);
+				default:
+					var target = model.a.target;
+					var landed = model.a.landed;
+					return _Utils_eq(target, candidate.target) && (!landed);
+			}
+		}();
+		var isActive = function () {
+			if (model.$ === 'Dragging') {
+				return true;
+			} else {
+				return false;
+			}
+		}();
+		var droppedElement = function () {
+			if (model.$ === 'Dropped') {
+				var start = model.a.start;
+				return isOver ? start.element : elm$html$Html$text('');
+			} else {
+				return elm$html$Html$text('');
+			}
+		}();
+		var dragEvents = isActive ? A2(author$project$Drag$onDrop, candidate, wrap) : _List_Nil;
+		return A2(
+			elm$html$Html$div,
+			_Utils_ap(
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2('drop-area', true),
+								_Utils_Tuple2('active', isActive),
+								_Utils_Tuple2(
+								'never-left',
+								author$project$Drag$hasNeverLeft(model)),
+								_Utils_Tuple2('over', isOver)
+							]))
+					]),
+				_Utils_ap(
+					dragEvents,
+					A2(
+						elm$core$List$map,
+						function (_n0) {
+							var x = _n0.a;
+							var y = _n0.b;
+							return A2(elm$html$Html$Attributes$style, x, y);
+						},
+						function () {
+							switch (model.$) {
+								case 'NotDragging':
+									return _List_Nil;
+								case 'Dragging':
+									var start = model.a.start;
+									return isOver ? _List_fromArray(
+										[
+											_Utils_Tuple2(
+											'min-height',
+											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
+										]) : _List_Nil;
+								case 'Dropping':
+									var start = model.a.start;
+									return isOver ? _List_fromArray(
+										[
+											_Utils_Tuple2(
+											'min-height',
+											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
+										]) : _List_Nil;
+								default:
+									var start = model.a.start;
+									return isOver ? _List_fromArray(
+										[
+											_Utils_Tuple2(
+											'min-height',
+											elm$core$String$fromFloat(start.elementBounds.height) + 'px')
+										]) : _List_Nil;
+							}
+						}()))),
+			_List_fromArray(
+				[droppedElement]));
+	});
+var author$project$Main$MoveCardAfter = F2(
+	function (a, b) {
+		return {$: 'MoveCardAfter', a: a, b: b};
+	});
+var author$project$Main$onlyOpenCards = function (model) {
+	return elm$core$List$filter(
+		function (_n0) {
+			var contentId = _n0.contentId;
+			if (contentId.$ === 'Just') {
+				var id = contentId.a;
+				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
+				if (_n2.$ === 'Just') {
+					var card = _n2.a;
+					return author$project$Main$isOpen(card);
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		});
+};
+var author$project$Main$FromColumnCardSource = function (a) {
+	return {$: 'FromColumnCardSource', a: a};
+};
+var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
+var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
+var elm_explorations$markdown$Markdown$defaultOptions = {
+	defaultHighlighting: elm$core$Maybe$Nothing,
+	githubFlavored: elm$core$Maybe$Just(
+		{breaks: false, tables: false}),
+	sanitize: true,
+	smartypants: false
+};
+var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
+var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
+var author$project$Main$viewNoteCard = F3(
+	function (model, col, text) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('card', true),
+							_Utils_Tuple2(
+							'in-flight',
+							author$project$Main$detectColumn.inFlight(col.name)),
+							_Utils_Tuple2(
+							'done',
+							author$project$Main$detectColumn.done(col.name)),
+							_Utils_Tuple2(
+							'backlog',
+							author$project$Main$detectColumn.backlog(col.name))
+						]))
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card-info card-note')
+						]),
+					_List_fromArray(
+						[
+							A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card-icons')
+						]),
+					_List_fromArray(
+						[
+							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)
+						]))
+				]));
+	});
+var author$project$Main$viewProjectColumnCard = F4(
+	function (model, project, col, ghCard) {
+		var dropCandidate = {
+			msgFunc: author$project$Main$MoveCardAfter,
+			target: {
+				afterId: elm$core$Maybe$Just(ghCard.id),
+				columnId: col.id,
+				projectId: project.id
+			}
+		};
+		var dragId = author$project$Main$FromColumnCardSource(
+			{cardId: ghCard.id, columnId: col.id});
+		var _n0 = _Utils_Tuple2(ghCard.note, ghCard.contentId);
+		_n0$2:
+		while (true) {
+			if (_n0.a.$ === 'Just') {
+				if (_n0.b.$ === 'Nothing') {
+					var n = _n0.a.a;
+					var _n1 = _n0.b;
+					return _List_fromArray(
+						[
+							A4(
+							author$project$Drag$draggable,
+							model.projectDrag,
+							author$project$Main$ProjectDrag,
+							dragId,
+							A3(author$project$Main$viewNoteCard, model, col, n)),
+							A4(
+							author$project$Drag$viewDropArea,
+							model.projectDrag,
+							author$project$Main$ProjectDrag,
+							dropCandidate,
+							elm$core$Maybe$Just(dragId))
+						]);
+				} else {
+					break _n0$2;
+				}
+			} else {
+				if (_n0.b.$ === 'Just') {
+					var _n2 = _n0.a;
+					var contentId = _n0.b.a;
+					var _n3 = A2(elm$core$Dict$get, contentId, model.allCards);
+					if (_n3.$ === 'Just') {
+						var card = _n3.a;
+						return _List_fromArray(
+							[
+								A4(
+								author$project$Drag$draggable,
+								model.projectDrag,
+								author$project$Main$ProjectDrag,
+								dragId,
+								A2(author$project$Main$viewCard, model, card)),
+								A4(
+								author$project$Drag$viewDropArea,
+								model.projectDrag,
+								author$project$Main$ProjectDrag,
+								dropCandidate,
+								elm$core$Maybe$Just(dragId))
+							]);
+					} else {
+						return A3(author$project$Log$debug, 'impossible: content has no card', contentId, _List_Nil);
+					}
+				} else {
+					break _n0$2;
+				}
+			}
+		}
+		return A3(author$project$Log$debug, 'impossible?: card has no note or content', ghCard, _List_Nil);
+	});
+var author$project$Main$viewProjectColumn = F5(
+	function (model, project, mod, icon, col) {
+		var dropCandidate = {
+			msgFunc: author$project$Main$MoveCardAfter,
+			target: {afterId: elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
+		};
+		var cards = mod(
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(elm$core$Dict$get, col.id, model.data.columnCards)));
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('project-column')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('column-title')
+						]),
+					_List_fromArray(
+						[
+							icon,
+							A2(
+							elm$html$Html$a,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$href('/projects/' + project.name)
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text(col.name)
+								]))
+						])),
+					elm$core$List$isEmpty(cards) ? A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('no-cards')
+						]),
+					_List_fromArray(
+						[
+							A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
+						])) : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('cards')
+						]),
+					A2(
+						elm$core$List$cons,
+						A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
+						A2(
+							elm$core$List$concatMap,
+							A3(author$project$Main$viewProjectColumnCard, model, project, col),
+							cards)))
+				]));
+	});
 var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
 var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
@@ -21306,6 +21186,10 @@ var author$project$Main$viewSpatialGraph = function (model) {
 					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
 				model.cardGraphs)));
 };
+var capitalist$elm_octicons$Octicons$beakerPath = 'M14.3797254,14.59 L10.9997254,7 L10.9997254,3 L11.9997254,3 L11.9997254,2 L2.99972539,2 L2.99972539,3 L3.99972539,3 L3.99972539,7 L0.62972539,14.59 C0.32972539,15.25 0.81972539,16 1.53972539,16 L13.4797254,16 C14.1997254,16 14.6797254,15.25 14.3897254,14.59 L14.3797254,14.59 Z M3.74972539,10 L4.99972539,7 L4.99972539,3 L9.99972539,3 L9.99972539,7 L11.2497254,10 L3.74972539,10 L3.74972539,10 Z M7.99972539,8 L8.99972539,8 L8.99972539,9 L7.99972539,9 L7.99972539,8 L7.99972539,8 Z M6.99972539,7 L5.99972539,7 L5.99972539,6 L6.99972539,6 L6.99972539,7 L6.99972539,7 Z M6.99972539,4 L7.99972539,4 L7.99972539,5 L6.99972539,5 L6.99972539,4 L6.99972539,4 Z M6.99972539,1 L5.99972539,1 L5.99972539,0 L6.99972539,0 L6.99972539,1 L6.99972539,1 Z';
+var capitalist$elm_octicons$Octicons$beaker = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$beakerPath, '0 0 16 16', 'beaker');
+var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
+var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
 var author$project$Main$viewSingleProject = F2(
 	function (model, _n0) {
 		var project = _n0.project;
@@ -21325,27 +21209,39 @@ var author$project$Main$viewSingleProject = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
+							elm$html$Html$Attributes$class('icebox-graph')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('column-title')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$beaker(author$project$Main$octiconOpts),
+									elm$html$Html$text('Icebox')
+								])),
+							author$project$Main$viewSpatialGraph(model),
+							function () {
+							var dropCandidate = {
+								msgFunc: author$project$Main$MoveCardAfter,
+								target: {afterId: elm$core$Maybe$Nothing, columnId: icebox.id, projectId: project.id}
+							};
+							return A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing);
+						}()
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
 							elm$html$Html$Attributes$class('project-columns')
 						]),
 					_Utils_ap(
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('column name-column')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										elm$html$Html$h4,
-										_List_Nil,
-										_List_fromArray(
-											[
-												elm$html$Html$text(project.name)
-											]))
-									])),
 								A2(
 								elm$html$Html$div,
 								_List_fromArray(
@@ -21399,24 +21295,7 @@ var author$project$Main$viewSingleProject = F2(
 											backlog)
 										]));
 							},
-							backlogs))),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('icebox-graph')
-						]),
-					_List_fromArray(
-						[
-							author$project$Main$viewSpatialGraph(model),
-							function () {
-							var dropCandidate = {
-								msgFunc: author$project$Main$MoveCardAfter,
-								target: {afterId: elm$core$Maybe$Nothing, columnId: icebox.id, projectId: project.id}
-							};
-							return A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing);
-						}()
-						]))
+							backlogs)))
 				]));
 	});
 var author$project$Main$viewProjectPage = F2(
@@ -21507,7 +21386,7 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('all-pull-requests')
+				elm$html$Html$Attributes$class('pull-requests-page')
 			]),
 		A2(
 			elm$core$List$map,
@@ -21537,87 +21416,98 @@ var author$project$Main$viewShipItRepo = F2(
 			_List_fromArray(
 				[
 					A2(
-					elm$html$Html$div,
+					elm$html$Html$a,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('column-title')
+							elm$html$Html$Attributes$class('column-title'),
+							elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
 						]),
 					_List_fromArray(
 						[
 							capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
+							elm$html$Html$text(sir.repo.name)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('shipit-metrics')
+						]),
+					_List_fromArray(
+						[
 							A2(
-							elm$html$Html$a,
+							elm$html$Html$div,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
+									elm$html$Html$Attributes$class('shipit-metric')
 								]),
 							_List_fromArray(
 								[
-									elm$html$Html$text(sir.repo.name)
+									capitalist$elm_octicons$Octicons$gitCommit(
+									_Utils_update(
+										author$project$Main$octiconOpts,
+										{color: author$project$Colors$gray})),
+									A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('count')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(
+											elm$core$String$fromInt(sir.comparison.totalCommits))
+										])),
+									elm$html$Html$text(' commits since last release')
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('shipit-metric')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$gitPullRequest(
+									_Utils_update(
+										author$project$Main$octiconOpts,
+										{color: author$project$Colors$purple})),
+									elm$html$Html$text(
+									elm$core$String$fromInt(
+										elm$core$List$length(sir.mergedPRs)) + ' merged pull requests')
+								])),
+							elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('shipit-metric')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$issueClosed(
+									_Utils_update(
+										author$project$Main$octiconOpts,
+										{color: author$project$Colors$red})),
+									elm$html$Html$text(
+									elm$core$String$fromInt(
+										elm$core$List$length(sir.closedIssues)) + ' closed issues')
+								])),
+							elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('shipit-metric')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$issueOpened(
+									_Utils_update(
+										author$project$Main$octiconOpts,
+										{color: author$project$Colors$green})),
+									elm$html$Html$text(
+									elm$core$String$fromInt(
+										elm$core$List$length(sir.openIssues)) + ' open issues')
 								]))
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('shipit-metric')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$gitCommit(
-							_Utils_update(
-								author$project$Main$octiconOpts,
-								{color: author$project$Colors$gray})),
-							elm$html$Html$text(
-							elm$core$String$fromInt(sir.comparison.totalCommits) + ' commits since last release')
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('shipit-metric')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$gitPullRequest(
-							_Utils_update(
-								author$project$Main$octiconOpts,
-								{color: author$project$Colors$purple})),
-							elm$html$Html$text(
-							elm$core$String$fromInt(
-								elm$core$List$length(sir.mergedPRs)) + ' merged pull requests')
-						])),
-					elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('shipit-metric')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$issueClosed(
-							_Utils_update(
-								author$project$Main$octiconOpts,
-								{color: author$project$Colors$red})),
-							elm$html$Html$text(
-							elm$core$String$fromInt(
-								elm$core$List$length(sir.closedIssues)) + ' closed issues')
-						])),
-					elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('shipit-metric')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$issueOpened(
-							_Utils_update(
-								author$project$Main$octiconOpts,
-								{color: author$project$Colors$green})),
-							elm$html$Html$text(
-							elm$core$String$fromInt(
-								elm$core$List$length(sir.openIssues)) + ' open issues')
 						]))
 				]));
 	});

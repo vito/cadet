@@ -27,6 +27,26 @@ a {
   color: inherit;
 }
 
+p {
+  margin-bottom: 1em;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+ol, ul {
+  padding-left: 2em;
+}
+
+code {
+  background: fade(@white, 5%);
+  border-radius: 3px;
+  font-size: 85%;
+  margin: 0;
+  padding: .2em .4em;
+}
+
 .cadet {
   display: flex;
   flex-direction: column;
@@ -52,7 +72,7 @@ a {
   .page-sidebar {
     overflow-y: auto;
     flex-shrink: 0;
-    width: 300px + (2 * @card-margin) + (31px - @card-margin);
+    width: @card-width + (2 * @card-margin) + (31px - @card-margin);
 
     display: none;
 
@@ -91,6 +111,8 @@ a {
   justify-content: space-between;
 
   .nav {
+    flex-grow: 1;
+
     display: flex;
     flex-direction: row;
   }
@@ -99,17 +121,40 @@ a {
     fill: @white;
   }
 
-  .user-info {
-    line-height: 40px;
-    font-weight: bold;
-    font-size: 16px;
-    padding: 0 12px;
+  .button {
+    font-size: 14px;
+    color: @white;
 
-    .log-in-icon {
+    .octicon {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+
+      * {
+        fill: @gray-300;
+      }
+    }
+
+    &:hover, &:hover .octicon * {
+      color: @gray-light;
+      fill: @gray-light;
+    }
+  }
+
+  .user-info {
+    font-weight: 600;
+    font-size: 16px;
+    color: @gray-100;
+    padding: 12px;
+
+    .octicon {
       width: 20px;
       height: 20px;
-      border-radius: 3px;
       margin-right: 10px;
+
+      * {
+        fill: @white;
+      }
     }
   }
 }
@@ -142,7 +187,7 @@ a {
     background: fade(#fff, 20%);
     border: 0;
     color: @white;
-    width: 300px + (2 * @card-margin) + (31px - @card-margin);
+    width: @card-width + (2 * @card-margin) + (31px - @card-margin);
 
     &::placeholder {
       color: @white;
@@ -164,10 +209,6 @@ a {
 
   .octicon * {
     fill: @white;
-  }
-
-  &:hover {
-    background: @gray;
   }
 }
 
@@ -347,18 +388,6 @@ a {
 
 .card-note {
   font-size: 16px;
-
-  p {
-    margin-bottom: 1em;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  ol, ul {
-    margin-left: 1em;
-  }
 }
 
 .octicon {
@@ -477,14 +506,6 @@ a {
 
 @card-width: 300px;
 @card-margin: 8px;
-
-.column {
-  flex-shrink: 0;
-  width: @card-width + (2 * @card-margin);
-
-  display: flex;
-  flex-direction: column;
-}
 
 .cards {
   display: flex;
@@ -620,76 +641,29 @@ a {
   }
 }
 
-.project-table {
-  padding: @card-margin * 2;
-}
-
-.projects {
-  .project {
-    margin-bottom: @card-margin * 4;
-  }
-}
-
-.project {
-  h4 {
-    color: white;
-    font-weight: bold;
-    font-size: 16px;
-    margin: @card-margin;
-  }
-}
-
 .name-column {
-  width: 100px + (@card-margin * 2);
+  width: 33%;
+  flex-shrink: 0;
+  padding: 30px;
   text-align: right;
+}
+
+.body-column {
+  color: @white;
+  padding: 30px;
+  font-size: 16px;
+  line-height: 24px;
 }
 
 .project-columns {
   display: flex;
   flex-direction: row;
-
-  .column {
-    box-sizing: content-box;
-    white-space: nowrap;
-    margin-right: @card-margin * 2;
-    background: @gray-dark;
-    border-radius: @card-margin;
-
-    &:last-child {
-      margin-right: 0;
-    }
-  }
-
-  .name-column {
-    background: transparent;
-    margin-right: @card-margin;
-  }
-
-  .backlog-column {
-    .draggable {
-      opacity: 0.5;
-
-      // XXX: these are awkward because the drop area is a sibling
-      &:nth-child(2) {
-        opacity: 1;
-      }
-
-      &:nth-child(4) {
-        opacity: 0.75;
-      }
-    }
-  }
 }
 
 .project-column {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-
-  &:first-child .column-name {
-    border-top-left-radius: @card-margin;
-    border-top-right-radius: @card-margin;
-  }
 }
 
 .project.single {
@@ -700,7 +674,7 @@ a {
 
   .project-columns {
     flex-direction: column;
-    background: @gray;
+    background: @black;
     flex-grow: 0;
     flex-shrink: 0;
     overflow-y: auto;
@@ -830,9 +804,9 @@ svg {
   }
 }
 
-.all-labels {
-  margin: 50px;
+.labels-table {
   display: table;
+  width: 980px;
 }
 
 .label-row {
@@ -847,26 +821,27 @@ svg {
   position: relative;
   z-index: 3;
   white-space: nowrap;
+
+  &:first-child {
+    width: 50%;
+  }
 }
+
+@drawer-cell-width: 150px;
 
 .drawer-cell {
   position: relative;
   z-index: 2;
-}
-
-.label-name, .label-counts, .label-controls {
-  margin-bottom: 10px;
+  width: @drawer-cell-width;
 }
 
 .label-name {
-  text-align: right;
+  text-align: left;
+  background: @white;
 
   .label-background {
     display: inline-flex;
     padding: 9px;
-    border-top-left-radius: 10px;
-    border-bottom-left-radius: 10px;
-    background: @white;
   }
 
   .label {
@@ -889,9 +864,6 @@ svg {
 .label-edit {
   display: inline-flex;
   padding: 9px;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-  background: @white;
 
   .button {
     color: @gray;
@@ -918,6 +890,26 @@ svg {
     border: 0;
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
+  }
+}
+
+.label-row:first-child {
+  .label-name {
+    border-top-left-radius: 10px;
+  }
+
+  .label-controls {
+    border-top-right-radius: 10px;
+  }
+}
+
+.label-row:last-child {
+  .label-name {
+    border-bottom-left-radius: 10px;
+  }
+
+  .label-controls {
+    border-bottom-right-radius: 10px;
   }
 }
 
@@ -962,11 +954,17 @@ svg {
   }
 }
 
+.new-label {
+  margin-bottom: 10px;
+
+  .label-name, .label-controls {
+    background: transparent;
+  }
+}
+
 .label-controls {
   background: @gray;
   display: inline-block;
-  border-top-right-radius: 10px;
-  border-bottom-right-radius: 10px;
   position: relative;
   z-index: 3;
 
@@ -987,14 +985,14 @@ svg {
   border-bottom-right-radius: 10px;
   padding-left: 10px;
   position: absolute;
-  left: -100%;
+  left: 80px;
+  margin-left: -10px;
   z-index: 2;
   transition: all 0.2s ease-in-out;
   display: inline-block;
 
   &.active {
-    left: 100%;
-    margin-left: -10px;
+    left: @drawer-cell-width;
   }
 
   .button {
@@ -1250,7 +1248,7 @@ svg {
   }
 }
 
-.all-pull-requests {
+.pull-requests-page {
   display: flex;
   flex-flow: column wrap;
   height: ~"calc(100vh - 40px)";
@@ -1259,8 +1257,6 @@ svg {
   .repo-pull-requests {
     margin-left: 20px;
     margin-top: 20px;
-    border-radius: 10px;
-    background: @gray-dark;
 
     .card {
       .card-actor:last-child {
@@ -1289,20 +1285,16 @@ svg {
 }
 
 .column-title {
-  background: @gray-dark;
   color: @white;
-  padding: @card-margin;
-  font-size: 14px;
-  padding: @card-margin;
+  display: block;
+  font-size: 16px;
   user-select: none;
-  cursor: default;
-  border-top-left-radius: @card-margin;
-  border-top-right-radius: @card-margin;
+  border-bottom: 3px solid @gray-dark;
 
   .octicon {
-    margin-right: 5px;
-    width: 14px;
-    height: 14px;
+    width: 20px;
+    height: 20px;
+    margin: 10px;
 
     * {
       fill: @white;
@@ -1310,32 +1302,39 @@ svg {
   }
 }
 
-.shipit-repo {
-  width: 300px;
-  margin-bottom: 20px;
+.shipit-page, .projects-page, .labels-page {
+  width: 980px;
+  margin: 0 auto;
+  padding: 40px 0;
 }
 
-.shipit-metric {
-  background: @white;
-  color: @gray;
-  font-size: 16px;
-  font-weight: bold;
-  padding: 7px;
 
-  &:last-child {
-    border-bottom-left-radius: 10px;
-    border-bottom-right-radius: 10px;
+.shipit-repo, .project-box {
+  margin-bottom: 50px;
+
+  .column-title:hover {
+    color: @gray-light;
+
+    .octicon * {
+      fill: @gray-light;
+    }
+  }
+}
+
+
+.shipit-metric {
+  color: @white;
+  font-size: 16px;
+
+  .count {
+    font-weight: 600;
   }
 
   .octicon {
+    margin: 10px;
     width: 20px;
     height: 20px;
-    margin-right: 7px;
   }
-}
-
-.shipit-page {
-  margin: 50px;
 }
 
 .shipit-header {

@@ -1845,34 +1845,39 @@ viewNavBar : Model -> Html Msg
 viewNavBar model =
     Html.div [ HA.class "nav-bar" ]
         [ Html.div [ HA.class "nav" ]
-            [ case model.me of
-                Nothing ->
-                    Html.a [ HA.class "button user-info", HA.href "/auth/github" ]
-                        [ Html.span [ HA.class "log-in-icon" ] [ Octicons.signIn octiconOpts ]
-                        , Html.text "log in"
-                        ]
-
-                Just { user } ->
-                    Html.a [ HA.class "button user-info", HA.href user.url ]
-                        [ Html.img [ HA.class "user-avatar", HA.src user.avatar ] []
-                        , Html.text user.login
-                        ]
-            , Html.a [ HA.class "button", HA.href "/" ]
+            [ Html.a [ HA.class "button", HA.href "/" ]
                 [ Octicons.project octiconOpts
-                ]
-            , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ Octicons.circuitBoard octiconOpts
-                ]
-            , Html.a [ HA.class "button", HA.href "/pull-requests" ]
-                [ Octicons.gitPullRequest octiconOpts
+                , Html.text "Projects"
                 ]
             , Html.a [ HA.class "button", HA.href "/shipit" ]
                 [ Octicons.milestone octiconOpts
+                , Html.text "Release"
+                ]
+            , Html.a [ HA.class "button", HA.href "/pull-requests" ]
+                [ Octicons.gitPullRequest octiconOpts
+                , Html.text "PRs"
+                ]
+            , Html.a [ HA.class "button", HA.href "/graph" ]
+                [ Octicons.circuitBoard octiconOpts
+                , Html.text "Issues"
                 ]
             , Html.a [ HA.class "button", HA.href "/labels" ]
                 [ Octicons.tag octiconOpts
+                , Html.text "Labels"
                 ]
             ]
+        , case model.me of
+            Nothing ->
+                Html.a [ HA.class "user-info", HA.href "/auth/github" ]
+                    [ Octicons.signIn octiconOpts
+                    , Html.text "Sign In"
+                    ]
+
+            Just { user } ->
+                Html.a [ HA.class "user-info", HA.href user.url ]
+                    [ Html.img [ HA.class "user-avatar", HA.src user.avatar ] []
+                    , Html.text user.login
+                    ]
         , viewSearch model
         ]
 
@@ -1924,17 +1929,15 @@ viewAllProjectsPage model =
         statefulProjects =
             List.filterMap selectStatefulProject (Dict.values model.data.projects)
     in
-    Html.div [ HA.class "project-table" ]
-        [ Html.div [ HA.class "projects" ]
-            (List.map (viewProject model) statefulProjects)
-        ]
+    Html.div [ HA.class "projects-page" ]
+        (List.map (viewProject model) statefulProjects)
 
 
 viewLabelsPage : Model -> Html Msg
 viewLabelsPage model =
     let
         newLabel =
-            Html.div [ HA.class "label-row" ]
+            Html.div [ HA.class "new-label" ]
                 [ Html.div [ HA.class "label-cell" ]
                     [ Html.div [ HA.class "label-name" ]
                         [ Html.form [ HA.class "label-edit", HE.onSubmit CreateLabel ]
@@ -1964,18 +1967,6 @@ viewLabelsPage model =
                             [ Octicons.plus octiconOpts ]
                         ]
                     ]
-                , Html.div [ HA.class "label-cell" ]
-                    [ Html.div [ HA.class "label-counts first" ]
-                        []
-                    ]
-                , Html.div [ HA.class "label-cell" ]
-                    [ Html.div [ HA.class "label-counts" ]
-                        []
-                    ]
-                , Html.div [ HA.class "label-cell" ]
-                    [ Html.div [ HA.class "label-counts last" ]
-                        []
-                    ]
                 ]
 
         labelRows =
@@ -1983,8 +1974,11 @@ viewLabelsPage model =
                 \( ( name, color ), repos ) ->
                     viewLabelRow model { name = name, color = color } repos
     in
-    Html.div [ HA.class "all-labels" ]
-        (newLabel :: labelRows)
+    Html.div [ HA.class "labels-page" ]
+        [ newLabel
+        , Html.div [ HA.class "labels-table" ]
+            labelRows
+        ]
 
 
 viewShipItPage : Model -> Html Msg
@@ -2088,37 +2082,37 @@ viewShipItRepoPage model sir =
 viewShipItRepo : Model -> ShipItRepo -> Html Msg
 viewShipItRepo model sir =
     Html.div [ HA.class "shipit-repo" ]
-        [ Html.div [ HA.class "column-title" ]
+        [ Html.a [ HA.class "column-title", HA.href ("/shipit/" ++ sir.repo.name) ]
             [ Octicons.repo octiconOpts
-            , Html.a
-                [ HA.href ("/shipit/" ++ sir.repo.name)
+            , Html.text sir.repo.name
+            ]
+        , Html.div [ HA.class "shipit-metrics" ]
+            [ Html.div [ HA.class "shipit-metric" ]
+                [ Octicons.gitCommit { octiconOpts | color = Colors.gray }
+                , Html.span [ HA.class "count" ] [ Html.text (String.fromInt sir.comparison.totalCommits) ]
+                , Html.text " commits since last release"
                 ]
-                [ Html.text sir.repo.name ]
-            ]
-        , Html.div [ HA.class "shipit-metric" ]
-            [ Octicons.gitCommit { octiconOpts | color = Colors.gray }
-            , Html.text (String.fromInt sir.comparison.totalCommits ++ " commits since last release")
-            ]
-        , Html.div [ HA.class "shipit-metric" ]
-            [ Octicons.gitPullRequest { octiconOpts | color = Colors.purple }
-            , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
-            ]
-        , if List.isEmpty sir.closedIssues then
-            Html.text ""
+            , Html.div [ HA.class "shipit-metric" ]
+                [ Octicons.gitPullRequest { octiconOpts | color = Colors.purple }
+                , Html.text (String.fromInt (List.length sir.mergedPRs) ++ " merged pull requests")
+                ]
+            , if List.isEmpty sir.closedIssues then
+                Html.text ""
 
-          else
-            Html.div [ HA.class "shipit-metric" ]
-                [ Octicons.issueClosed { octiconOpts | color = Colors.red }
-                , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
-                ]
-        , if List.isEmpty sir.openIssues then
-            Html.text ""
+              else
+                Html.div [ HA.class "shipit-metric" ]
+                    [ Octicons.issueClosed { octiconOpts | color = Colors.red }
+                    , Html.text (String.fromInt (List.length sir.closedIssues) ++ " closed issues")
+                    ]
+            , if List.isEmpty sir.openIssues then
+                Html.text ""
 
-          else
-            Html.div [ HA.class "shipit-metric" ]
-                [ Octicons.issueOpened { octiconOpts | color = Colors.green }
-                , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
-                ]
+              else
+                Html.div [ HA.class "shipit-metric" ]
+                    [ Octicons.issueOpened { octiconOpts | color = Colors.green }
+                    , Html.text (String.fromInt (List.length sir.openIssues) ++ " open issues")
+                    ]
+            ]
         ]
 
 
@@ -2146,7 +2140,7 @@ viewPullRequestsPage model =
                     |> Html.div [ HA.class "cards" ]
                 ]
     in
-    Html.div [ HA.class "all-pull-requests" ]
+    Html.div [ HA.class "pull-requests-page" ]
         (Dict.foldl getRepo [] model.dataView.prsByRepo
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
@@ -2383,22 +2377,10 @@ onlyOpenCards model =
 
 viewProject : Model -> ProjectState -> Html Msg
 viewProject model { project, backlogs, inFlight, done } =
-    Html.div [ HA.class "project" ]
-        [ Html.div [ HA.class "project-columns" ]
-            [ Html.div [ HA.class "column name-column" ]
-                [ Html.h4 []
-                    [ Html.a
-                        [ HA.href ("/projects/" ++ project.name)
-                        ]
-                        [ Html.text project.name ]
-                    ]
-                ]
-            , Html.div [ HA.class "column backlog-column" ]
-                (List.map (viewProjectColumn model project (List.take 3) (Octicons.book octiconOpts)) backlogs)
-            , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
-            , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
+    Html.div [ HA.class "project-box" ]
+        [ Html.a [ HA.class "column-title", HA.href ("/projects/" ++ project.name) ]
+            [ Octicons.project octiconOpts
+            , Html.text project.name
             ]
         ]
 
@@ -2494,23 +2476,12 @@ viewProjectPage model name =
 viewSingleProject : Model -> ProjectState -> Html Msg
 viewSingleProject model { project, icebox, backlogs, inFlight, done } =
     Html.div [ HA.class "project single" ]
-        [ Html.div [ HA.class "project-columns" ]
-            ([ Html.div [ HA.class "column name-column" ]
-                [ Html.h4 [] [ Html.text project.name ] ]
-             , Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
-             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
-             ]
-                ++ List.map
-                    (\backlog ->
-                        Html.div [ HA.class "column backlog-column" ]
-                            [ viewProjectColumn model project identity (Octicons.book octiconOpts) backlog ]
-                    )
-                    backlogs
-            )
-        , Html.div [ HA.class "icebox-graph" ]
-            [ viewSpatialGraph model
+        [ Html.div [ HA.class "icebox-graph" ]
+            [ Html.div [ HA.class "column-title" ]
+                [ Octicons.beaker octiconOpts
+                , Html.text "Icebox"
+                ]
+            , viewSpatialGraph model
             , let
                 dropCandidate =
                     { msgFunc = MoveCardAfter
@@ -2523,6 +2494,19 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
               in
               Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
             ]
+        , Html.div [ HA.class "project-columns" ]
+            ([ Html.div [ HA.class "column done-column" ]
+                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
+             , Html.div [ HA.class "column in-flight-column" ]
+                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
+             ]
+                ++ List.map
+                    (\backlog ->
+                        Html.div [ HA.class "column backlog-column" ]
+                            [ viewProjectColumn model project identity (Octicons.book octiconOpts) backlog ]
+                    )
+                    backlogs
+            )
         ]
 
 

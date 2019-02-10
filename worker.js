@@ -3784,6 +3784,9 @@ var author$project$GitHubGraph$encodeProject = function (record) {
 				'number',
 				elm$json$Json$Encode$int(record.number)),
 				_Utils_Tuple2(
+				'body',
+				elm$json$Json$Encode$string(record.body)),
+				_Utils_Tuple2(
 				'columns',
 				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeProjectColumn, record.columns))
 			]));
@@ -9064,9 +9067,9 @@ var author$project$Main$fetchPRTimelineAndReviews = F2(
 				},
 				fetchTimeline));
 	});
-var author$project$GitHubGraph$Project = F5(
-	function (id, url, name, number, columns) {
-		return {columns: columns, id: id, name: name, number: number, url: url};
+var author$project$GitHubGraph$Project = F6(
+	function (id, url, name, number, body, columns) {
+		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
 	});
 var author$project$GitHubGraph$projectObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -9087,17 +9090,20 @@ var author$project$GitHubGraph$projectObject = A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$columnObject)))),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'body', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Project))))));
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Project)))))));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
 	return {$: 'ListValue', a: a};
 };

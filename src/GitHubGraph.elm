@@ -337,6 +337,7 @@ type alias Project =
     , url : String
     , name : String
     , number : Int
+    , body : String
     , columns : List ProjectColumn
     }
 
@@ -964,6 +965,7 @@ projectObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "number" [] GB.int)
+        |> GB.with (GB.field "body" [] GB.string)
         |> GB.with (GB.field "columns" [ ( "first", GA.int 50 ) ] (GB.extract (GB.field "nodes" [] (GB.list columnObject))))
 
 
@@ -1757,6 +1759,7 @@ decodeProject =
         |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "name" JD.string)
         |> andMap (JD.field "number" JD.int)
+        |> andMap (JD.field "body" JD.string)
         |> andMap (JD.field "columns" <| JD.list decodeProjectColumn)
 
 
@@ -2176,6 +2179,7 @@ encodeProject record =
         , ( "url", JE.string record.url )
         , ( "name", JE.string record.name )
         , ( "number", JE.int record.number )
+        , ( "body", JE.string record.body )
         , ( "columns", JE.list encodeProjectColumn record.columns )
         ]
 
