@@ -18836,6 +18836,24 @@ var author$project$Main$selectStatefulProject = function (project) {
 };
 var author$project$Colors$gray500 = '#6a737d';
 var author$project$Colors$gray = author$project$Colors$gray500;
+var author$project$Main$onlyOpenCards = function (model) {
+	return elm$core$List$filter(
+		function (_n0) {
+			var contentId = _n0.contentId;
+			if (contentId.$ === 'Just') {
+				var id = contentId.a;
+				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
+				if (_n2.$ === 'Just') {
+					var card = _n2.a;
+					return author$project$Main$isOpen(card);
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		});
+};
 var author$project$Main$viewMetric = F5(
 	function (icon, count, plural, singular, description) {
 		return A2(
@@ -18881,7 +18899,10 @@ var author$project$Main$viewProject = F2(
 				0,
 				A2(
 					elm$core$Maybe$map,
-					elm$core$List$length,
+					A2(
+						elm$core$Basics$composeL,
+						elm$core$List$length,
+						author$project$Main$onlyOpenCards(model)),
 					A2(elm$core$Dict$get, column.id, model.data.columnCards)));
 		};
 		return A2(
@@ -18939,7 +18960,7 @@ var author$project$Main$viewProject = F2(
 								_Utils_update(
 									author$project$Main$octiconOpts,
 									{color: author$project$Colors$green})),
-							cardCount(inFlight),
+							cardCount(done),
 							'stories',
 							'story',
 							'done')
@@ -20380,24 +20401,6 @@ var author$project$Main$MoveCardAfter = F2(
 var author$project$Main$ProjectDrag = function (a) {
 	return {$: 'ProjectDrag', a: a};
 };
-var author$project$Main$onlyOpenCards = function (model) {
-	return elm$core$List$filter(
-		function (_n0) {
-			var contentId = _n0.contentId;
-			if (contentId.$ === 'Just') {
-				var id = contentId.a;
-				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
-				if (_n2.$ === 'Just') {
-					var card = _n2.a;
-					return author$project$Main$isOpen(card);
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		});
-};
 var author$project$Drag$Start = F2(
 	function (a, b) {
 		return {$: 'Start', a: a, b: b};
@@ -21047,24 +21050,24 @@ var author$project$Main$viewCard = F2(
 								var _n2 = _Utils_Tuple2(
 									author$project$Main$isInFlight(card),
 									author$project$Main$isPaused(card));
-								if (_n2.a) {
-									if (_n2.b) {
-										return A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('pause-toggle'),
-													elm$html$Html$Events$onClick(
-													A2(author$project$Main$UnlabelCard, card, 'paused'))
-												]),
-											_List_fromArray(
-												[
-													capitalist$elm_octicons$Octicons$bookmark(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: author$project$Colors$gray300}))
-												]));
-									} else {
+								if (_n2.b) {
+									return A2(
+										elm$html$Html$span,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('pause-toggle'),
+												elm$html$Html$Events$onClick(
+												A2(author$project$Main$UnlabelCard, card, 'paused'))
+											]),
+										_List_fromArray(
+											[
+												capitalist$elm_octicons$Octicons$bookmark(
+												_Utils_update(
+													author$project$Main$octiconOpts,
+													{color: author$project$Colors$gray300}))
+											]));
+								} else {
+									if (_n2.a) {
 										return A2(
 											elm$html$Html$span,
 											_List_fromArray(
@@ -21080,9 +21083,9 @@ var author$project$Main$viewCard = F2(
 														author$project$Main$octiconOpts,
 														{color: author$project$Colors$gray600}))
 												]));
+									} else {
+										return elm$html$Html$text('');
 									}
-								} else {
-									return elm$html$Html$text('');
 								}
 							}()
 							]),
@@ -21240,16 +21243,7 @@ var author$project$Main$viewProjectColumn = F5(
 					_List_fromArray(
 						[
 							icon,
-							A2(
-							elm$html$Html$a,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$href('/projects/' + project.name)
-								]),
-							_List_fromArray(
-								[
-									elm$html$Html$text(col.name)
-								]))
+							elm$html$Html$text(col.name)
 						])),
 					elm$core$List$isEmpty(cards) ? A2(
 					elm$html$Html$div,
@@ -21698,16 +21692,15 @@ var author$project$Main$viewTabbedCards = F4(
 							tabs));
 				}(),
 					function () {
-					var mselected = elm$core$List$head(
-						A2(
-							elm$core$List$filter,
-							function (_n4) {
-								var tab = _n4.a;
-								return _Utils_eq(
-									currentTab(model),
-									tab);
-							},
-							tabs));
+					var selected = A2(
+						elm$core$List$filter,
+						function (_n4) {
+							var tab = _n4.a;
+							return _Utils_eq(
+								currentTab(model),
+								tab);
+						},
+						tabs);
 					var mfirst = A2(
 						elm$core$Maybe$map,
 						function (_n3) {
@@ -21715,25 +21708,35 @@ var author$project$Main$viewTabbedCards = F4(
 							return tab;
 						},
 						elm$core$List$head(tabs));
-					var _n1 = _Utils_Tuple2(mfirst, mselected);
-					if ((_n1.a.$ === 'Just') && (_n1.b.$ === 'Just')) {
-						var firstTab = _n1.a.a;
-						var _n2 = _n1.b.a;
+					var firstTabClass = elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'first-tab',
+								_Utils_eq(
+									mfirst,
+									elm$core$Maybe$Just(
+										currentTab(model))))
+							]));
+					if (selected.b) {
+						var _n2 = selected.a;
 						var cards = _n2.c;
-						return A2(
+						return elm$core$List$isEmpty(cards) ? A2(
 							elm$html$Html$div,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$classList(
-									_List_fromArray(
-										[
-											_Utils_Tuple2('tab-cards', true),
-											_Utils_Tuple2(
-											'first-tab',
-											_Utils_eq(
-												currentTab(model),
-												firstTab))
-										]))
+									elm$html$Html$Attributes$class('no-tab-cards'),
+									firstTabClass
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text('no cards')
+								])) : A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('tab-cards'),
+									firstTabClass
 								]),
 							A2(
 								elm$core$List$map,
@@ -21857,8 +21860,8 @@ var author$project$Main$viewPage = function (model) {
 					case 'GlobalGraphPage':
 						return author$project$Main$viewGlobalGraphPage(model);
 					case 'ProjectPage':
-						var id = _n0.a;
-						return A2(author$project$Main$viewProjectPage, model, id);
+						var name = _n0.a;
+						return A2(author$project$Main$viewProjectPage, model, name);
 					case 'LabelsPage':
 						return author$project$Main$viewLabelsPage(model);
 					case 'ReleasePage':
