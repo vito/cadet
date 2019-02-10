@@ -77,7 +77,7 @@ type alias Model =
     , suggestedLabels : List String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
-    , shipItRepoTab : ShipItRepoTab
+    , releaseRepoTab : ReleaseRepoTab
     }
 
 
@@ -100,11 +100,11 @@ type alias DataView =
     { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     , labelToRepoToId : Dict String (Dict GitHubGraph.ID GitHubGraph.ID)
     , prsByRepo : Dict GitHubGraph.ID (List Card)
-    , shipItRepos : Dict GitHubGraph.ID ShipItRepo
+    , releaseRepos : Dict GitHubGraph.ID ReleaseRepo
     }
 
 
-type alias ShipItRepo =
+type alias ReleaseRepo =
     { repo : GitHubGraph.Repo
     , nextMilestone : Maybe GitHubGraph.Milestone
     , comparison : GitHubGraph.V3Comparison
@@ -119,7 +119,7 @@ type alias ShipItRepo =
     }
 
 
-type ShipItRepoTab
+type ReleaseRepoTab
     = ToDoTab
     | DoneTab
     | DocumentedTab
@@ -265,7 +265,7 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
-    | SetShipItRepoTab ShipItRepoTab
+    | SetReleaseRepoTab ReleaseRepoTab
 
 
 type Page
@@ -273,8 +273,8 @@ type Page
     | GlobalGraphPage
     | ProjectPage String
     | LabelsPage
-    | ShipItPage
-    | ShipItRepoPage String
+    | ReleasePage
+    | ReleaseRepoPage String
     | PullRequestsPage
     | BouncePage
 
@@ -308,8 +308,8 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
-        , UP.map ShipItRepoPage (UP.s "shipit" </> UP.string)
-        , UP.map ShipItPage (UP.s "shipit")
+        , UP.map ReleaseRepoPage (UP.s "release" </> UP.string)
+        , UP.map ReleasePage (UP.s "release")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
@@ -362,7 +362,7 @@ init config url key =
                 { reposByLabel = Dict.empty
                 , labelToRepoToId = Dict.empty
                 , prsByRepo = Dict.empty
-                , shipItRepos = Dict.empty
+                , releaseRepos = Dict.empty
                 }
             , allCards = Dict.empty
             , allLabels = Dict.empty
@@ -390,7 +390,7 @@ init config url key =
             , suggestedLabels = []
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
-            , shipItRepoTab = DoneTab
+            , releaseRepoTab = ToDoTab
             }
 
         ( navedModel, navedMsgs ) =
@@ -457,10 +457,10 @@ update msg model =
                                 LabelsPage ->
                                     Just ExcludeAllFilter
 
-                                ShipItRepoPage _ ->
+                                ReleaseRepoPage _ ->
                                     Just ExcludeAllFilter
 
-                                ShipItPage ->
+                                ReleasePage ->
                                     Just ExcludeAllFilter
 
                                 PullRequestsPage ->
@@ -1173,8 +1173,8 @@ update msg model =
             in
             ( model, Cmd.batch (adds ++ removals) )
 
-        SetShipItRepoTab tab ->
-            ( { model | shipItRepoTab = tab }, Cmd.none )
+        SetReleaseRepoTab tab ->
+            ( { model | releaseRepoTab = tab }, Cmd.none )
 
 
 computeGraphState : Model -> Model
@@ -1274,12 +1274,12 @@ computeDataView origModel =
             { origModel | suggestedLabels = [], dataView = dataView }
     in
     case model.page of
-        ShipItPage ->
-            { model | dataView = { dataView | shipItRepos = computeShipItRepos model } }
+        ReleasePage ->
+            { model | dataView = { dataView | releaseRepos = computeReleaseRepos model } }
 
-        ShipItRepoPage _ ->
+        ReleaseRepoPage _ ->
             { model
-                | dataView = { dataView | shipItRepos = computeShipItRepos model }
+                | dataView = { dataView | releaseRepos = computeReleaseRepos model }
                 , suggestedLabels = [ "release/documented", "release/undocumented", "release/no-impact" ]
             }
 
@@ -1315,8 +1315,8 @@ computeDataView origModel =
             model
 
 
-computeShipItRepos : Model -> Dict String ShipItRepo
-computeShipItRepos model =
+computeReleaseRepos : Model -> Dict String ReleaseRepo
+computeReleaseRepos model =
     let
         selectPRsInComparison comparison prId pr acc =
             case pr.mergeCommit of
@@ -1349,7 +1349,7 @@ computeShipItRepos model =
                     else
                         acc
 
-        makeShipItRepo repoId comparison acc =
+        makeReleaseRepo repoId comparison acc =
             if comparison.totalCommits == 0 then
                 acc
 
@@ -1419,7 +1419,7 @@ computeShipItRepos model =
                                 else
                                     categorizeByDocumentedState card byState
 
-                            shipItRepo =
+                            releaseRepo =
                                 List.foldl categorizeCard
                                     { repo = repo
                                     , nextMilestone = nextMilestone
@@ -1435,12 +1435,12 @@ computeShipItRepos model =
                                     }
                                     allCards
                         in
-                        Dict.insert repo.name shipItRepo acc
+                        Dict.insert repo.name releaseRepo acc
 
                     Nothing ->
                         acc
     in
-    Dict.foldl makeShipItRepo Dict.empty model.data.comparisons
+    Dict.foldl makeReleaseRepo Dict.empty model.data.comparisons
 
 
 cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> CardProcessState
@@ -1532,13 +1532,13 @@ viewPage model =
             LabelsPage ->
                 viewLabelsPage model
 
-            ShipItPage ->
-                viewShipItPage model
+            ReleasePage ->
+                viewReleasePage model
 
-            ShipItRepoPage repoName ->
-                case Dict.get repoName model.dataView.shipItRepos of
+            ReleaseRepoPage repoName ->
+                case Dict.get repoName model.dataView.releaseRepos of
                     Just sir ->
-                        viewShipItRepoPage model sir
+                        viewReleaseRepoPage model sir
 
                     Nothing ->
                         Html.text "repo not found"
@@ -1856,7 +1856,7 @@ viewNavBar model =
                 [ Octicons.project octiconOpts
                 , Html.text "Projects"
                 ]
-            , Html.a [ HA.class "button", HA.href "/shipit" ]
+            , Html.a [ HA.class "button", HA.href "/release" ]
                 [ Octicons.milestone octiconOpts
                 , Html.text "Release"
                 ]
@@ -1998,11 +1998,11 @@ viewLabelsPage model =
         ]
 
 
-viewShipItPage : Model -> Html Msg
-viewShipItPage model =
+viewReleasePage : Model -> Html Msg
+viewReleasePage model =
     let
         repos =
-            Dict.values model.dataView.shipItRepos
+            Dict.values model.dataView.releaseRepos
                 |> List.sortBy (.totalCommits << .comparison)
                 |> List.reverse
     in
@@ -2011,24 +2011,24 @@ viewShipItPage model =
             [ Octicons.milestone octiconOpts
             , Html.text "Releases"
             ]
-        , Html.div [ HA.class "shipit-repos" ]
-            (List.map (viewShipItRepo model) repos)
+        , Html.div [ HA.class "release-repos" ]
+            (List.map (viewReleaseRepo model) repos)
         ]
 
 
-viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
-viewShipItRepoPage model sir =
+viewReleaseRepoPage : Model -> ReleaseRepo -> Html Msg
+viewReleaseRepoPage model sir =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Html.div []
                 [ Octicons.repo octiconOpts
-                , Html.a [ HA.href "/shipit" ] [ Html.text sir.repo.owner ]
+                , Html.a [ HA.href "/release" ] [ Html.text sir.repo.owner ]
                 , Html.text " / "
                 , Html.span [ HA.style "font-weight" "bold" ] [ Html.text sir.repo.name ]
                 ]
             , case sir.nextMilestone of
                 Just nm ->
-                    Html.div [ HA.class "shipit-milestone-label" ]
+                    Html.div [ HA.class "release-milestone-label" ]
                         [ Octicons.milestone octiconOpts
                         , Html.text nm.title
                         ]
@@ -2036,76 +2036,78 @@ viewShipItRepoPage model sir =
                 Nothing ->
                     Html.text ""
             ]
-        , Html.div [ HA.class "shipit-repo-tabview" ]
-            [ let
-                tabAttrs tab =
-                    [ HA.classList [ ( "shipit-repo-tab", True ), ( "selected", model.shipItRepoTab == tab ) ]
-                    , HE.onClick (SetShipItRepoTab tab)
-                    ]
-
-                tabCount count =
-                    Html.span [ HA.class "counter" ]
-                        [ Html.text (String.fromInt count) ]
-              in
-              Html.div [ HA.class "shipit-repo-tabs" ]
-                [ Html.span (tabAttrs ToDoTab)
-                    [ Html.text "To Do"
-                    , tabCount (List.length sir.openIssues + List.length sir.openPRs)
-                    ]
-                , Html.span (tabAttrs DoneTab)
-                    [ Html.text "Done"
-                    , tabCount (List.length sir.doneCards)
-                    ]
-                , Html.span (tabAttrs DocumentedTab)
-                    [ Html.text "Documented"
-                    , tabCount (List.length sir.documentedCards)
-                    ]
-                , Html.span (tabAttrs UndocumentedTab)
-                    [ Html.text "Undocumented"
-                    , tabCount (List.length sir.undocumentedCards)
-                    ]
-                , Html.span (tabAttrs NoImpactTab)
-                    [ Html.text "No Impact"
-                    , tabCount (List.length sir.noImpactCards)
-                    ]
-                ]
+        , viewTabbedCards model
+            .releaseRepoTab
+            SetReleaseRepoTab
+            [ ( ToDoTab, "To Do", sir.openIssues ++ sir.openPRs )
+            , ( DoneTab, "Done", sir.doneCards )
+            , ( DocumentedTab, "Documented", sir.documentedCards )
+            , ( UndocumentedTab, "Undocumented", sir.undocumentedCards )
+            , ( NoImpactTab, "No Impact", sir.noImpactCards )
             ]
-        , Html.div
-            [ HA.classList
-                [ ( "shipit-repo-cards", True )
-                , ( "first-tab", model.shipItRepoTab == ToDoTab )
-                ]
-            ]
-          <|
-            let
-                cards =
-                    case model.shipItRepoTab of
-                        ToDoTab ->
-                            sir.openIssues ++ sir.openPRs
-
-                        DoneTab ->
-                            sir.doneCards
-
-                        DocumentedTab ->
-                            sir.documentedCards
-
-                        UndocumentedTab ->
-                            sir.undocumentedCards
-
-                        NoImpactTab ->
-                            sir.noImpactCards
-            in
-            cards
-                |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                |> List.reverse
-                |> List.map (viewCard model)
         ]
 
 
-viewShipItRepo : Model -> ShipItRepo -> Html Msg
-viewShipItRepo model sir =
+viewTabbedCards :
+    Model
+    -> (Model -> tab)
+    -> (tab -> Msg)
+    -> List ( tab, String, List Card )
+    -> Html Msg
+viewTabbedCards model currentTab setTab tabs =
+    Html.div [ HA.class "tabbed-cards" ]
+        [ let
+            tabAttrs tab =
+                [ HA.classList [ ( "tab", True ), ( "selected", currentTab model == tab ) ]
+                , HE.onClick (setTab tab)
+                ]
+
+            tabCount count =
+                Html.span [ HA.class "counter" ]
+                    [ Html.text (String.fromInt count) ]
+          in
+          Html.div [ HA.class "tab-row" ] <|
+            List.map
+                (\( tab, title, cards ) ->
+                    Html.span (tabAttrs tab)
+                        [ Html.text title
+                        , tabCount (List.length cards)
+                        ]
+                )
+                tabs
+        , let
+            mfirst =
+                tabs
+                    |> List.head
+                    |> Maybe.map (\( tab, _, _ ) -> tab)
+
+            mselected =
+                tabs
+                    |> List.filter (\( tab, _, _ ) -> currentTab model == tab)
+                    |> List.head
+          in
+          case ( mfirst, mselected ) of
+            ( Just firstTab, Just ( _, _, cards ) ) ->
+                cards
+                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                    |> List.reverse
+                    |> List.map (viewCard model)
+                    |> Html.div
+                        [ HA.classList
+                            [ ( "tab-cards", True )
+                            , ( "first-tab", currentTab model == firstTab )
+                            ]
+                        ]
+
+            _ ->
+                Html.text ""
+        ]
+
+
+viewReleaseRepo : Model -> ReleaseRepo -> Html Msg
+viewReleaseRepo model sir =
     Html.div [ HA.class "metrics-item" ]
-        [ Html.a [ HA.class "column-title", HA.href ("/shipit/" ++ sir.repo.name) ]
+        [ Html.a [ HA.class "column-title", HA.href ("/release/" ++ sir.repo.name) ]
             [ Octicons.repo octiconOpts
             , Html.text sir.repo.name
             ]

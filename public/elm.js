@@ -7947,12 +7947,12 @@ var author$project$Drag$init = author$project$Drag$NotDragging;
 var author$project$Main$DataFetched = function (a) {
 	return {$: 'DataFetched', a: a};
 };
-var author$project$Main$DoneTab = {$: 'DoneTab'};
 var author$project$Main$GlobalGraphPage = {$: 'GlobalGraphPage'};
 var author$project$Main$ImpactSort = {$: 'ImpactSort'};
 var author$project$Main$MeFetched = function (a) {
 	return {$: 'MeFetched', a: a};
 };
+var author$project$Main$ToDoTab = {$: 'ToDoTab'};
 var lukewestby$elm_http_builder$HttpBuilder$withTimeout = F2(
 	function (timeout, builder) {
 		return _Utils_update(
@@ -11918,7 +11918,7 @@ var author$project$Main$isOpen = function (card) {
 	return false;
 };
 var elm$core$List$sortBy = _List_sortBy;
-var author$project$Main$computeShipItRepos = function (model) {
+var author$project$Main$computeReleaseRepos = function (model) {
 	var selectPRsInComparison = F4(
 		function (comparison, prId, pr, acc) {
 			var _n9 = pr.mergeCommit;
@@ -11957,7 +11957,7 @@ var author$project$Main$computeShipItRepos = function (model) {
 				return (_Utils_eq(milestone.id, id) && (!author$project$Main$isMerged(card))) ? A2(elm$core$List$cons, card, acc) : acc;
 			}
 		});
-	var makeShipItRepo = F3(
+	var makeReleaseRepo = F3(
 		function (repoId, comparison, acc) {
 			if (!comparison.totalCommits) {
 				return acc;
@@ -12064,18 +12064,18 @@ var author$project$Main$computeShipItRepos = function (model) {
 							return author$project$Main$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
 						});
 					var allCards = _Utils_ap(milestoneCards, mergedPRs);
-					var shipItRepo = A3(
+					var releaseRepo = A3(
 						elm$core$List$foldl,
 						categorizeCard,
 						{closedIssues: _List_Nil, comparison: comparison, documentedCards: _List_Nil, doneCards: _List_Nil, mergedPRs: _List_Nil, nextMilestone: nextMilestone, noImpactCards: _List_Nil, openIssues: _List_Nil, openPRs: _List_Nil, repo: repo, undocumentedCards: _List_Nil},
 						allCards);
-					return A3(elm$core$Dict$insert, repo.name, shipItRepo, acc);
+					return A3(elm$core$Dict$insert, repo.name, releaseRepo, acc);
 				} else {
 					return acc;
 				}
 			}
 		});
-	return A3(elm$core$Dict$foldl, makeShipItRepo, elm$core$Dict$empty, model.data.comparisons);
+	return A3(elm$core$Dict$foldl, makeReleaseRepo, elm$core$Dict$empty, model.data.comparisons);
 };
 var author$project$Main$isPR = function (card) {
 	var _n0 = card.state;
@@ -12162,24 +12162,24 @@ var author$project$Main$computeDataView = function (origModel) {
 		{dataView: dataView, suggestedLabels: _List_Nil});
 	var _n0 = model.page;
 	switch (_n0.$) {
-		case 'ShipItPage':
+		case 'ReleasePage':
 			return _Utils_update(
 				model,
 				{
 					dataView: _Utils_update(
 						dataView,
 						{
-							shipItRepos: author$project$Main$computeShipItRepos(model)
+							releaseRepos: author$project$Main$computeReleaseRepos(model)
 						})
 				});
-		case 'ShipItRepoPage':
+		case 'ReleaseRepoPage':
 			return _Utils_update(
 				model,
 				{
 					dataView: _Utils_update(
 						dataView,
 						{
-							shipItRepos: author$project$Main$computeShipItRepos(model)
+							releaseRepos: author$project$Main$computeReleaseRepos(model)
 						}),
 					suggestedLabels: _List_fromArray(
 						['release/documented', 'release/undocumented', 'release/no-impact'])
@@ -16355,9 +16355,9 @@ var author$project$Main$ProjectPage = function (a) {
 	return {$: 'ProjectPage', a: a};
 };
 var author$project$Main$PullRequestsPage = {$: 'PullRequestsPage'};
-var author$project$Main$ShipItPage = {$: 'ShipItPage'};
-var author$project$Main$ShipItRepoPage = function (a) {
-	return {$: 'ShipItRepoPage', a: a};
+var author$project$Main$ReleasePage = {$: 'ReleasePage'};
+var author$project$Main$ReleaseRepoPage = function (a) {
+	return {$: 'ReleaseRepoPage', a: a};
 };
 var elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
@@ -16517,15 +16517,15 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			elm$url$Url$Parser$s('labels')),
 			A2(
 			elm$url$Url$Parser$map,
-			author$project$Main$ShipItRepoPage,
+			author$project$Main$ReleaseRepoPage,
 			A2(
 				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('shipit'),
+				elm$url$Url$Parser$s('release'),
 				elm$url$Url$Parser$string)),
 			A2(
 			elm$url$Url$Parser$map,
-			author$project$Main$ShipItPage,
-			elm$url$Url$Parser$s('shipit')),
+			author$project$Main$ReleasePage,
+			elm$url$Url$Parser$s('release')),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$PullRequestsPage,
@@ -16993,9 +16993,9 @@ var author$project$Main$update = F2(
 											author$project$Main$InProjectFilter(name));
 									case 'LabelsPage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'ShipItRepoPage':
+									case 'ReleaseRepoPage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'ShipItPage':
+									case 'ReleasePage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
 									case 'PullRequestsPage':
 										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
@@ -18136,7 +18136,7 @@ var author$project$Main$update = F2(
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
-							{shipItRepoTab: tab}),
+							{releaseRepoTab: tab}),
 						elm$core$Platform$Cmd$none);
 			}
 		}
@@ -18156,7 +18156,7 @@ var author$project$Main$init = F3(
 			currentTime: elm$time$Time$millisToPosix(config.initialTime),
 			data: author$project$Backend$emptyData,
 			dataIndex: 0,
-			dataView: {labelToRepoToId: elm$core$Dict$empty, prsByRepo: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty, shipItRepos: elm$core$Dict$empty},
+			dataView: {labelToRepoToId: elm$core$Dict$empty, prsByRepo: elm$core$Dict$empty, releaseRepos: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty},
 			deletingLabels: elm$core$Set$empty,
 			editingLabels: elm$core$Dict$empty,
 			graphFilters: _List_Nil,
@@ -18174,8 +18174,8 @@ var author$project$Main$init = F3(
 			page: author$project$Main$GlobalGraphPage,
 			projectDrag: author$project$Drag$init,
 			projectDragRefresh: elm$core$Maybe$Nothing,
+			releaseRepoTab: author$project$Main$ToDoTab,
 			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
-			shipItRepoTab: author$project$Main$DoneTab,
 			showLabelFilters: false,
 			showLabelOperations: false,
 			suggestedLabels: _List_Nil
@@ -18715,7 +18715,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/shipit')
+								elm$html$Html$Attributes$href('/release')
 							]),
 						_List_fromArray(
 							[
@@ -21508,7 +21508,7 @@ var author$project$Main$viewPullRequestsPage = function (model) {
 };
 var capitalist$elm_octicons$Octicons$gitCommitPath = 'M10.86,7 C10.41,5.28 8.86,4 7,4 C5.14,4 3.59,5.28 3.14,7 L0,7 L0,9 L3.14,9 C3.59,10.72 5.14,12 7,12 C8.86,12 10.41,10.72 10.86,9 L14,9 L14,7 L10.86,7 L10.86,7 Z M7,10.2 C5.78,10.2 4.8,9.22 4.8,8 C4.8,6.78 5.78,5.8 7,5.8 C8.22,5.8 9.2,6.78 9.2,8 C9.2,9.22 8.22,10.2 7,10.2 L7,10.2 Z';
 var capitalist$elm_octicons$Octicons$gitCommit = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitCommitPath, '0 0 14 16', 'gitCommit');
-var author$project$Main$viewShipItRepo = F2(
+var author$project$Main$viewReleaseRepo = F2(
 	function (model, sir) {
 		return A2(
 			elm$html$Html$div,
@@ -21523,7 +21523,7 @@ var author$project$Main$viewShipItRepo = F2(
 					_List_fromArray(
 						[
 							elm$html$Html$Attributes$class('column-title'),
-							elm$html$Html$Attributes$href('/shipit/' + sir.repo.name)
+							elm$html$Html$Attributes$href('/release/' + sir.repo.name)
 						]),
 					_List_fromArray(
 						[
@@ -21581,7 +21581,7 @@ var author$project$Main$viewShipItRepo = F2(
 						]))
 				]));
 	});
-var author$project$Main$viewShipItPage = function (model) {
+var author$project$Main$viewReleasePage = function (model) {
 	var repos = elm$core$List$reverse(
 		A2(
 			elm$core$List$sortBy,
@@ -21593,7 +21593,7 @@ var author$project$Main$viewShipItPage = function (model) {
 				function ($) {
 					return $.comparison;
 				}),
-			elm$core$Dict$values(model.dataView.shipItRepos)));
+			elm$core$Dict$values(model.dataView.releaseRepos)));
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
@@ -21617,22 +21617,144 @@ var author$project$Main$viewShipItPage = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$class('shipit-repos')
+						elm$html$Html$Attributes$class('release-repos')
 					]),
 				A2(
 					elm$core$List$map,
-					author$project$Main$viewShipItRepo(model),
+					author$project$Main$viewReleaseRepo(model),
 					repos))
 			]));
 };
 var author$project$Main$DocumentedTab = {$: 'DocumentedTab'};
+var author$project$Main$DoneTab = {$: 'DoneTab'};
 var author$project$Main$NoImpactTab = {$: 'NoImpactTab'};
-var author$project$Main$SetShipItRepoTab = function (a) {
-	return {$: 'SetShipItRepoTab', a: a};
+var author$project$Main$SetReleaseRepoTab = function (a) {
+	return {$: 'SetReleaseRepoTab', a: a};
 };
-var author$project$Main$ToDoTab = {$: 'ToDoTab'};
 var author$project$Main$UndocumentedTab = {$: 'UndocumentedTab'};
-var author$project$Main$viewShipItRepoPage = F2(
+var author$project$Main$viewTabbedCards = F4(
+	function (model, currentTab, setTab, tabs) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('tabbed-cards')
+				]),
+			_List_fromArray(
+				[
+					function () {
+					var tabCount = function (count) {
+						return A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('counter')
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text(
+									elm$core$String$fromInt(count))
+								]));
+					};
+					var tabAttrs = function (tab) {
+						return _List_fromArray(
+							[
+								elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('tab', true),
+										_Utils_Tuple2(
+										'selected',
+										_Utils_eq(
+											currentTab(model),
+											tab))
+									])),
+								elm$html$Html$Events$onClick(
+								setTab(tab))
+							]);
+					};
+					return A2(
+						elm$html$Html$div,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('tab-row')
+							]),
+						A2(
+							elm$core$List$map,
+							function (_n0) {
+								var tab = _n0.a;
+								var title = _n0.b;
+								var cards = _n0.c;
+								return A2(
+									elm$html$Html$span,
+									tabAttrs(tab),
+									_List_fromArray(
+										[
+											elm$html$Html$text(title),
+											tabCount(
+											elm$core$List$length(cards))
+										]));
+							},
+							tabs));
+				}(),
+					function () {
+					var mselected = elm$core$List$head(
+						A2(
+							elm$core$List$filter,
+							function (_n4) {
+								var tab = _n4.a;
+								return _Utils_eq(
+									currentTab(model),
+									tab);
+							},
+							tabs));
+					var mfirst = A2(
+						elm$core$Maybe$map,
+						function (_n3) {
+							var tab = _n3.a;
+							return tab;
+						},
+						elm$core$List$head(tabs));
+					var _n1 = _Utils_Tuple2(mfirst, mselected);
+					if ((_n1.a.$ === 'Just') && (_n1.b.$ === 'Just')) {
+						var firstTab = _n1.a.a;
+						var _n2 = _n1.b.a;
+						var cards = _n2.c;
+						return A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$classList(
+									_List_fromArray(
+										[
+											_Utils_Tuple2('tab-cards', true),
+											_Utils_Tuple2(
+											'first-tab',
+											_Utils_eq(
+												currentTab(model),
+												firstTab))
+										]))
+								]),
+							A2(
+								elm$core$List$map,
+								author$project$Main$viewCard(model),
+								elm$core$List$reverse(
+									A2(
+										elm$core$List$sortBy,
+										A2(
+											elm$core$Basics$composeR,
+											function ($) {
+												return $.updatedAt;
+											},
+											elm$time$Time$posixToMillis),
+										cards))));
+					} else {
+						return elm$html$Html$text('');
+					}
+				}()
+				]));
+	});
+var author$project$Main$viewReleaseRepoPage = F2(
 	function (model, sir) {
 		return A2(
 			elm$html$Html$div,
@@ -21660,7 +21782,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 									elm$html$Html$a,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$href('/shipit')
+											elm$html$Html$Attributes$href('/release')
 										]),
 									_List_fromArray(
 										[
@@ -21686,7 +21808,7 @@ var author$project$Main$viewShipItRepoPage = F2(
 									elm$html$Html$div,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('shipit-milestone-label')
+											elm$html$Html$Attributes$class('release-milestone-label')
 										]),
 									_List_fromArray(
 										[
@@ -21698,142 +21820,24 @@ var author$project$Main$viewShipItRepoPage = F2(
 							}
 						}()
 						])),
-					A2(
-					elm$html$Html$div,
+					A4(
+					author$project$Main$viewTabbedCards,
+					model,
+					function ($) {
+						return $.releaseRepoTab;
+					},
+					author$project$Main$SetReleaseRepoTab,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('shipit-repo-tabview')
-						]),
-					_List_fromArray(
-						[
-							function () {
-							var tabCount = function (count) {
-								return A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('counter')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(
-											elm$core$String$fromInt(count))
-										]));
-							};
-							var tabAttrs = function (tab) {
-								return _List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('shipit-repo-tab', true),
-												_Utils_Tuple2(
-												'selected',
-												_Utils_eq(model.shipItRepoTab, tab))
-											])),
-										elm$html$Html$Events$onClick(
-										author$project$Main$SetShipItRepoTab(tab))
-									]);
-							};
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('shipit-repo-tabs')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										elm$html$Html$span,
-										tabAttrs(author$project$Main$ToDoTab),
-										_List_fromArray(
-											[
-												elm$html$Html$text('To Do'),
-												tabCount(
-												elm$core$List$length(sir.openIssues) + elm$core$List$length(sir.openPRs))
-											])),
-										A2(
-										elm$html$Html$span,
-										tabAttrs(author$project$Main$DoneTab),
-										_List_fromArray(
-											[
-												elm$html$Html$text('Done'),
-												tabCount(
-												elm$core$List$length(sir.doneCards))
-											])),
-										A2(
-										elm$html$Html$span,
-										tabAttrs(author$project$Main$DocumentedTab),
-										_List_fromArray(
-											[
-												elm$html$Html$text('Documented'),
-												tabCount(
-												elm$core$List$length(sir.documentedCards))
-											])),
-										A2(
-										elm$html$Html$span,
-										tabAttrs(author$project$Main$UndocumentedTab),
-										_List_fromArray(
-											[
-												elm$html$Html$text('Undocumented'),
-												tabCount(
-												elm$core$List$length(sir.undocumentedCards))
-											])),
-										A2(
-										elm$html$Html$span,
-										tabAttrs(author$project$Main$NoImpactTab),
-										_List_fromArray(
-											[
-												elm$html$Html$text('No Impact'),
-												tabCount(
-												elm$core$List$length(sir.noImpactCards))
-											]))
-									]));
-						}()
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$classList(
-							_List_fromArray(
-								[
-									_Utils_Tuple2('shipit-repo-cards', true),
-									_Utils_Tuple2(
-									'first-tab',
-									_Utils_eq(model.shipItRepoTab, author$project$Main$ToDoTab))
-								]))
-						]),
-					function () {
-						var cards = function () {
-							var _n1 = model.shipItRepoTab;
-							switch (_n1.$) {
-								case 'ToDoTab':
-									return _Utils_ap(sir.openIssues, sir.openPRs);
-								case 'DoneTab':
-									return sir.doneCards;
-								case 'DocumentedTab':
-									return sir.documentedCards;
-								case 'UndocumentedTab':
-									return sir.undocumentedCards;
-								default:
-									return sir.noImpactCards;
-							}
-						}();
-						return A2(
-							elm$core$List$map,
-							author$project$Main$viewCard(model),
-							elm$core$List$reverse(
-								A2(
-									elm$core$List$sortBy,
-									A2(
-										elm$core$Basics$composeR,
-										function ($) {
-											return $.updatedAt;
-										},
-										elm$time$Time$posixToMillis),
-									cards)));
-					}())
+							_Utils_Tuple3(
+							author$project$Main$ToDoTab,
+							'To Do',
+							_Utils_ap(sir.openIssues, sir.openPRs)),
+							_Utils_Tuple3(author$project$Main$DoneTab, 'Done', sir.doneCards),
+							_Utils_Tuple3(author$project$Main$DocumentedTab, 'Documented', sir.documentedCards),
+							_Utils_Tuple3(author$project$Main$UndocumentedTab, 'Undocumented', sir.undocumentedCards),
+							_Utils_Tuple3(author$project$Main$NoImpactTab, 'No Impact', sir.noImpactCards)
+						]))
 				]));
 	});
 var author$project$Main$viewPage = function (model) {
@@ -21857,14 +21861,14 @@ var author$project$Main$viewPage = function (model) {
 						return A2(author$project$Main$viewProjectPage, model, id);
 					case 'LabelsPage':
 						return author$project$Main$viewLabelsPage(model);
-					case 'ShipItPage':
-						return author$project$Main$viewShipItPage(model);
-					case 'ShipItRepoPage':
+					case 'ReleasePage':
+						return author$project$Main$viewReleasePage(model);
+					case 'ReleaseRepoPage':
 						var repoName = _n0.a;
-						var _n1 = A2(elm$core$Dict$get, repoName, model.dataView.shipItRepos);
+						var _n1 = A2(elm$core$Dict$get, repoName, model.dataView.releaseRepos);
 						if (_n1.$ === 'Just') {
 							var sir = _n1.a;
-							return A2(author$project$Main$viewShipItRepoPage, model, sir);
+							return A2(author$project$Main$viewReleaseRepoPage, model, sir);
 						} else {
 							return elm$html$Html$text('repo not found');
 						}
