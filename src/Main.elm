@@ -2009,7 +2009,7 @@ viewReleasePage model =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.milestone octiconOpts
-            , Html.text "Releases"
+            , Html.text "Release"
             ]
         , Html.div [ HA.class "release-repos" ]
             (List.map (viewReleaseRepo model) repos)

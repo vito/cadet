@@ -21611,7 +21611,7 @@ var author$project$Main$viewReleasePage = function (model) {
 				_List_fromArray(
 					[
 						capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
-						elm$html$Html$text('Releases')
+						elm$html$Html$text('Release')
 					])),
 				A2(
 				elm$html$Html$div,
