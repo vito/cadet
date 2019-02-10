@@ -17349,10 +17349,10 @@ var author$project$Main$update = F2(
 						elm$core$Dict$foldl,
 						F2(
 							function (_n21, card) {
-								return A2(
+								return author$project$Main$isOpen(card) ? A2(
 									elm$core$Dict$insert,
 									elm$core$String$toLower(card.title),
-									card);
+									card) : elm$core$Basics$identity;
 							}),
 						elm$core$Dict$empty,
 						model.allCards);
@@ -20189,7 +20189,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
-								elm$html$Html$text('Issues')
+								elm$html$Html$text('Graph')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -21186,8 +21186,6 @@ var author$project$Main$viewSpatialGraph = function (model) {
 					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
 				model.cardGraphs)));
 };
-var capitalist$elm_octicons$Octicons$beakerPath = 'M14.3797254,14.59 L10.9997254,7 L10.9997254,3 L11.9997254,3 L11.9997254,2 L2.99972539,2 L2.99972539,3 L3.99972539,3 L3.99972539,7 L0.62972539,14.59 C0.32972539,15.25 0.81972539,16 1.53972539,16 L13.4797254,16 C14.1997254,16 14.6797254,15.25 14.3897254,14.59 L14.3797254,14.59 Z M3.74972539,10 L4.99972539,7 L4.99972539,3 L9.99972539,3 L9.99972539,7 L11.2497254,10 L3.74972539,10 L3.74972539,10 Z M7.99972539,8 L8.99972539,8 L8.99972539,9 L7.99972539,9 L7.99972539,8 L7.99972539,8 Z M6.99972539,7 L5.99972539,7 L5.99972539,6 L6.99972539,6 L6.99972539,7 L6.99972539,7 Z M6.99972539,4 L7.99972539,4 L7.99972539,5 L6.99972539,5 L6.99972539,4 L6.99972539,4 Z M6.99972539,1 L5.99972539,1 L5.99972539,0 L6.99972539,0 L6.99972539,1 L6.99972539,1 Z';
-var capitalist$elm_octicons$Octicons$beaker = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$beakerPath, '0 0 16 16', 'beaker');
 var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
 var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
 var author$project$Main$viewSingleProject = F2(
@@ -21221,8 +21219,8 @@ var author$project$Main$viewSingleProject = F2(
 								]),
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$beaker(author$project$Main$octiconOpts),
-									elm$html$Html$text('Icebox')
+									capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
+									elm$html$Html$text(project.name + ' Graph')
 								])),
 							author$project$Main$viewSpatialGraph(model),
 							function () {

@@ -709,7 +709,11 @@ update msg model =
                 cardsByTitle =
                     Dict.foldl
                         (\_ card ->
-                            Dict.insert (String.toLower card.title) card
+                            if isOpen card then
+                                Dict.insert (String.toLower card.title) card
+
+                            else
+                                identity
                         )
                         Dict.empty
                         model.allCards
@@ -1859,7 +1863,7 @@ viewNavBar model =
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
                 [ Octicons.circuitBoard octiconOpts
-                , Html.text "Issues"
+                , Html.text "Graph"
                 ]
             , Html.a [ HA.class "button", HA.href "/labels" ]
                 [ Octicons.tag octiconOpts
@@ -2478,8 +2482,8 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
     Html.div [ HA.class "project single" ]
         [ Html.div [ HA.class "icebox-graph" ]
             [ Html.div [ HA.class "column-title" ]
-                [ Octicons.beaker octiconOpts
-                , Html.text "Icebox"
+                [ Octicons.circuitBoard octiconOpts
+                , Html.text (project.name ++ " Graph")
                 ]
             , viewSpatialGraph model
             , let
