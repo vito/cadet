@@ -2056,15 +2056,15 @@ viewReleaseRepoPage : Model -> ReleaseRepo -> Html Msg
 viewReleaseRepoPage model sir =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
-            [ Html.div []
-                [ Octicons.repo octiconOpts
-                , Html.a [ HA.href "/release" ] [ Html.text sir.repo.owner ]
-                , Html.text " / "
-                , Html.span [ HA.style "font-weight" "bold" ] [ Html.text sir.repo.name ]
+            [ Html.a [ HA.href "/release" ]
+                [ Octicons.milestone octiconOpts
+                , Html.text "Release"
                 ]
+            , Octicons.repo octiconOpts
+            , Html.text sir.repo.name
             , case sir.nextMilestone of
                 Just nm ->
-                    Html.div [ HA.class "release-milestone-label" ]
+                    Html.span [ HA.class "release-next-milestone" ]
                         [ Octicons.milestone octiconOpts
                         , Html.text nm.title
                         ]
@@ -2139,6 +2139,15 @@ viewReleaseRepo model sir =
         [ Html.a [ HA.class "column-title", HA.href ("/release/" ++ sir.repo.name) ]
             [ Octicons.repo octiconOpts
             , Html.text sir.repo.name
+            , case sir.nextMilestone of
+                Just nm ->
+                    Html.span []
+                        [ Octicons.milestone octiconOpts
+                        , Html.text nm.title
+                        ]
+
+                Nothing ->
+                    Html.text ""
             ]
         , Html.div [ HA.class "metrics" ]
             [ viewMetric
@@ -2290,10 +2299,12 @@ viewRepoPullRequestsPage model repo prCards =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Html.div []
-                [ Octicons.repo octiconOpts
-                , Html.a [ HA.href "/release" ] [ Html.text repo.owner ]
-                , Html.text " / "
-                , Html.span [ HA.style "font-weight" "bold" ] [ Html.text repo.name ]
+                [ Html.a [ HA.href "/pull-requests" ]
+                    [ Octicons.gitPullRequest octiconOpts
+                    , Html.text "Pull Requests"
+                    ]
+                , Octicons.repo octiconOpts
+                , Html.text repo.name
                 ]
             ]
         , Html.div [ HA.class "repo-pull-requests" ]

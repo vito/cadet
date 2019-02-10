@@ -21562,7 +21562,23 @@ var author$project$Main$viewReleaseRepo = F2(
 					_List_fromArray(
 						[
 							capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
-							elm$html$Html$text(sir.repo.name)
+							elm$html$Html$text(sir.repo.name),
+							function () {
+							var _n0 = sir.nextMilestone;
+							if (_n0.$ === 'Just') {
+								var nm = _n0.a;
+								return A2(
+									elm$html$Html$span,
+									_List_Nil,
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+											elm$html$Html$text(nm.title)
+										]));
+							} else {
+								return elm$html$Html$text('');
+							}
+						}()
 						])),
 					A2(
 					elm$html$Html$div,
@@ -21797,42 +21813,27 @@ var author$project$Main$viewReleaseRepoPage = F2(
 					_List_fromArray(
 						[
 							A2(
-							elm$html$Html$div,
-							_List_Nil,
+							elm$html$Html$a,
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
-									A2(
-									elm$html$Html$a,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$href('/release')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(sir.repo.owner)
-										])),
-									elm$html$Html$text(' / '),
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											A2(elm$html$Html$Attributes$style, 'font-weight', 'bold')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(sir.repo.name)
-										]))
+									elm$html$Html$Attributes$href('/release')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+									elm$html$Html$text('Release')
 								])),
+							capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
+							elm$html$Html$text(sir.repo.name),
 							function () {
 							var _n0 = sir.nextMilestone;
 							if (_n0.$ === 'Just') {
 								var nm = _n0.a;
 								return A2(
-									elm$html$Html$div,
+									elm$html$Html$span,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('release-milestone-label')
+											elm$html$Html$Attributes$class('release-next-milestone')
 										]),
 									_List_fromArray(
 										[
@@ -21980,28 +21981,19 @@ var author$project$Main$viewRepoPullRequestsPage = F3(
 							_List_Nil,
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
 									A2(
 									elm$html$Html$a,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$href('/release')
+											elm$html$Html$Attributes$href('/pull-requests')
 										]),
 									_List_fromArray(
 										[
-											elm$html$Html$text(repo.owner)
+											capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+											elm$html$Html$text('Pull Requests')
 										])),
-									elm$html$Html$text(' / '),
-									A2(
-									elm$html$Html$span,
-									_List_fromArray(
-										[
-											A2(elm$html$Html$Attributes$style, 'font-weight', 'bold')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(repo.name)
-										]))
+									capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
+									elm$html$Html$text(repo.name)
 								]))
 						])),
 					A2(

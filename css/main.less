@@ -1305,7 +1305,7 @@ svg {
   }
 }
 
-a.column-title:hover {
+a.column-title:hover, .page-header a:hover {
   color: @gray-light;
 
   .octicon * {
@@ -1341,8 +1341,6 @@ a.column-title:hover {
 .page-header {
   background: @black;
   padding-bottom: 25px;
-  display: flex;
-  flex-direction: row;
   font-size: 24px;
   color: @white;
 
@@ -1351,17 +1349,14 @@ a.column-title:hover {
     width: 24px;
     height: 24px;
 
+    margin-left: 20px;
+    &:first-child {
+      margin-left: 7px;
+    }
+
     * {
       fill: @white;
     }
-  }
-}
-
-.shipit-milestone-label {
-  margin-left: 20px;
-
-  .octicon {
-    margin-top: -5px;
   }
 }
 
@@ -1461,4 +1456,19 @@ a.column-title:hover {
 .tab-cards.first-tab .card:first-child,
 .no-tab-cards.first-tab {
   border-top-left-radius: 0;
+}
+
+.release-next-milestone {
+  color: @gray-light;
+  margin-left: 10px;
+  font-size: 16px;
+
+  .octicon {
+    width: 16px;
+    height: 16px;
+
+    * {
+      fill: @gray-light;
+    }
+  }
 }
