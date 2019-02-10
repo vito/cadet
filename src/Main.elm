@@ -1501,12 +1501,58 @@ prCard ({ id, url, repo, number, title, updatedAt, author, labels, cards, commen
 view : Model -> Browser.Document Msg
 view model =
     { title = "Cadet"
-    , body = [ viewPage model ]
+    , body = [ viewCadet model ]
     }
+
+
+viewCadet : Model -> Html Msg
+viewCadet model =
+    Html.div [ HA.class "cadet" ]
+        [ viewNavBar model
+        , Html.div [ HA.class "side-by-side" ]
+            [ viewPage model
+            , viewSidebar model
+            ]
+        ]
 
 
 viewPage : Model -> Html Msg
 viewPage model =
+    Html.div [ HA.class "main-content" ]
+        [ case model.page of
+            AllProjectsPage ->
+                viewAllProjectsPage model
+
+            GlobalGraphPage ->
+                viewGlobalGraphPage model
+
+            ProjectPage id ->
+                viewProjectPage model id
+
+            LabelsPage ->
+                viewLabelsPage model
+
+            ShipItPage ->
+                viewShipItPage model
+
+            ShipItRepoPage repoName ->
+                case Dict.get repoName model.dataView.shipItRepos of
+                    Just sir ->
+                        viewShipItRepoPage model sir
+
+                    Nothing ->
+                        Html.text "repo not found"
+
+            PullRequestsPage ->
+                viewPullRequestsPage model
+
+            BouncePage ->
+                Html.text "you shouldn't see this"
+        ]
+
+
+viewSidebar : Model -> Html Msg
+viewSidebar model =
     let
         anticipatedCards =
             List.map (viewCardEntry model) <|
@@ -1520,69 +1566,15 @@ viewPage model =
         sidebarCards =
             anticipatedCards ++ List.reverse selectedCards
     in
-    Html.div [ HA.class "cadet" ]
-        [ viewNavBar model
-        , Html.div
-            [ HA.class "main-page"
-            , HA.class (pageClass model.page)
-            ]
-            [ Html.div [ HA.class "page-content" ]
-                [ case model.page of
-                    AllProjectsPage ->
-                        viewAllProjectsPage model
+    Html.div [ HA.class "main-sidebar" ]
+        [ viewSidebarControls model
+        , if List.isEmpty sidebarCards then
+            Html.div [ HA.class "no-cards" ]
+                [ Html.text "no cards selected" ]
 
-                    GlobalGraphPage ->
-                        viewGlobalGraphPage model
-
-                    ProjectPage id ->
-                        viewProjectPage model id
-
-                    LabelsPage ->
-                        viewLabelsPage model
-
-                    ShipItPage ->
-                        viewShipItPage model
-
-                    ShipItRepoPage repoName ->
-                        case Dict.get repoName model.dataView.shipItRepos of
-                            Just sir ->
-                                viewShipItRepoPage model sir
-
-                            Nothing ->
-                                Html.text "repo not found"
-
-                    PullRequestsPage ->
-                        viewPullRequestsPage model
-
-                    BouncePage ->
-                        Html.text "you shouldn't see this"
-                ]
-            , Html.div
-                [ HA.classList
-                    [ ( "page-sidebar", True )
-                    , ( "empty", List.isEmpty sidebarCards )
-                    ]
-                ]
-                [ viewSidebarControls model
-                , if List.isEmpty sidebarCards then
-                    Html.div [ HA.class "no-cards" ]
-                        [ Html.text "no cards selected" ]
-
-                  else
-                    Html.div [ HA.class "cards" ] sidebarCards
-                ]
-            ]
+          else
+            Html.div [ HA.class "cards" ] sidebarCards
         ]
-
-
-pageClass : Page -> String
-pageClass page =
-    case page of
-        ShipItRepoPage _ ->
-            "shipit-repo-page"
-
-        _ ->
-            "normal"
 
 
 viewSidebarControls : Model -> Html Msg
@@ -1670,7 +1662,7 @@ viewSidebarControls model =
 
 viewGlobalGraphPage : Model -> Html Msg
 viewGlobalGraphPage model =
-    Html.div [ HA.class "global-graph-page" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.circuitBoard octiconOpts
             , Html.text "Issue Graph"
@@ -1944,7 +1936,7 @@ viewAllProjectsPage model =
         statefulProjects =
             List.filterMap selectStatefulProject (Dict.values model.data.projects)
     in
-    Html.div [ HA.class "projects-page" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.project octiconOpts
             , Html.text "Projects"
@@ -1995,7 +1987,7 @@ viewLabelsPage model =
                 \( ( name, color ), repos ) ->
                     viewLabelRow model { name = name, color = color } repos
     in
-    Html.div [ HA.class "labels-page" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.tag octiconOpts
             , Html.text "Labels"
@@ -2014,7 +2006,7 @@ viewShipItPage model =
                 |> List.sortBy (.totalCommits << .comparison)
                 |> List.reverse
     in
-    Html.div [ HA.class "shipit-page" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.milestone octiconOpts
             , Html.text "Releases"
@@ -2026,7 +2018,7 @@ viewShipItPage model =
 
 viewShipItRepoPage : Model -> ShipItRepo -> Html Msg
 viewShipItRepoPage model sir =
-    Html.div [ HA.class "shipit-repo-content" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Html.div []
                 [ Octicons.repo octiconOpts
@@ -2112,7 +2104,7 @@ viewShipItRepoPage model sir =
 
 viewShipItRepo : Model -> ShipItRepo -> Html Msg
 viewShipItRepo model sir =
-    Html.div [ HA.class "shipit-repo" ]
+    Html.div [ HA.class "metrics-item" ]
         [ Html.a [ HA.class "column-title", HA.href ("/shipit/" ++ sir.repo.name) ]
             [ Octicons.repo octiconOpts
             , Html.text sir.repo.name
@@ -2178,7 +2170,7 @@ viewPullRequestsPage model =
                     |> Html.div [ HA.class "cards" ]
                 ]
     in
-    Html.div [ HA.class "pull-requests-page" ]
+    Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.gitPullRequest octiconOpts
             , Html.text "Pull Requests"
@@ -2443,7 +2435,7 @@ viewProject model { project, backlogs, inFlight, done } =
                 |> Maybe.map List.length
                 |> Maybe.withDefault 0
     in
-    Html.div [ HA.class "project-box" ]
+    Html.div [ HA.class "metrics-item" ]
         [ Html.a [ HA.class "column-title", HA.href ("/projects/" ++ project.name) ]
             [ Octicons.project octiconOpts
             , Html.text project.name

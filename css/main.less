@@ -53,7 +53,7 @@ code {
   height: 100%;
 }
 
-.main-page {
+.side-by-side {
   flex-grow: 1;
 
   display: flex;
@@ -61,40 +61,40 @@ code {
 
   // convince firefox to make the sub-panes individually scrollable
   min-height: 0;
+}
 
-  .page-content {
-    overflow-y: auto;
-    flex-grow: 1;
-    position: relative;
-    display: flex;
+.main-content {
+  overflow-y: auto;
+  flex-grow: 1;
+  position: relative;
+  display: flex;
+}
+
+.main-sidebar {
+  overflow-y: auto;
+  flex-shrink: 0;
+  width: @card-width + (2 * @card-margin) + (31px - @card-margin);
+
+  display: none;
+
+  @media(min-width: 900px) {
+    display: block;
   }
 
-  .page-sidebar {
-    overflow-y: auto;
-    flex-shrink: 0;
-    width: @card-width + (2 * @card-margin) + (31px - @card-margin);
+  background: @gray-dark;
 
-    display: none;
-
-    @media(min-width: 900px) {
-      display: block;
+  .card {
+    &.anticipated {
+      opacity: 0.5;
+      box-shadow: none;
     }
+  }
 
-    background: @gray-dark;
-
-    .card {
-      &.anticipated {
-        opacity: 0.5;
-        box-shadow: none;
-      }
-    }
-
-    .no-cards {
-      text-align: center;
-      color: @gray-light;
-      font-size: 14px;
-      padding: @card-margin;
-    }
+  .no-cards {
+    text-align: center;
+    color: @gray-light;
+    font-size: 14px;
+    padding: @card-margin;
   }
 }
 
@@ -1307,14 +1307,13 @@ svg {
   }
 }
 
-.shipit-page, .projects-page, .labels-page, .pull-requests-page, .global-graph-page {
+.page-content {
   width: 980px;
   margin: 0 auto;
   padding: 40px 0;
 }
 
-
-.shipit-repo, .project-box {
+.metrics-item {
   margin-bottom: 50px;
 
   .column-title:hover {
@@ -1325,7 +1324,6 @@ svg {
     }
   }
 }
-
 
 .metric {
   color: @white;
@@ -1367,16 +1365,6 @@ svg {
   .octicon {
     margin-top: -5px;
   }
-}
-
-.shipit-repo-page {
-  background: @black;
-}
-
-.shipit-repo-content {
-  width: 980px;
-  margin: 0 auto;
-  padding: 40px 0;
 }
 
 .shipit-repo-tabview {
