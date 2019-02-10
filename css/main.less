@@ -1258,13 +1258,11 @@ svg {
 
 .pull-requests-page {
   display: flex;
-  flex-flow: column wrap;
-  height: ~"calc(100vh - 40px)";
+  flex-flow: row wrap;
   align-content: flex-start;
 
   .repo-pull-requests {
-    margin-left: 20px;
-    margin-top: 20px;
+    margin: 0 5px;
 
     .card {
       .card-actor:last-child {
@@ -1310,7 +1308,7 @@ svg {
   }
 }
 
-.shipit-page, .projects-page, .labels-page {
+.shipit-page, .projects-page, .labels-page, .pull-requests-page {
   width: 980px;
   margin: 0 auto;
   padding: 40px 0;
