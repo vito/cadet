@@ -77,7 +77,8 @@ type alias Model =
     , suggestedLabels : List String
     , showLabelOperations : Bool
     , cardLabelOperations : Dict String CardLabelOperation
-    , releaseRepoTab : ReleaseRepoTab
+    , releaseRepoTab : Int
+    , repoPullRequestsTab : Int
     }
 
 
@@ -99,7 +100,7 @@ type CardLabelOperation
 type alias DataView =
     { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
     , labelToRepoToId : Dict String (Dict GitHubGraph.ID GitHubGraph.ID)
-    , prsByRepo : Dict GitHubGraph.ID (List Card)
+    , prsByRepo : Dict String ( GitHubGraph.RepoLocation, List Card )
     , releaseRepos : Dict GitHubGraph.ID ReleaseRepo
     }
 
@@ -265,7 +266,8 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
-    | SetReleaseRepoTab ReleaseRepoTab
+    | SetReleaseRepoTab Int
+    | SetRepoPullRequestsTab Int
 
 
 type Page
@@ -276,6 +278,7 @@ type Page
     | ReleasePage
     | ReleaseRepoPage String
     | PullRequestsPage
+    | PullRequestsRepoPage String
     | BouncePage
 
 
@@ -311,6 +314,7 @@ routeParser =
         , UP.map ReleaseRepoPage (UP.s "release" </> UP.string)
         , UP.map ReleasePage (UP.s "release")
         , UP.map PullRequestsPage (UP.s "pull-requests")
+        , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string)
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -390,7 +394,8 @@ init config url key =
             , suggestedLabels = []
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
-            , releaseRepoTab = ToDoTab
+            , releaseRepoTab = 0
+            , repoPullRequestsTab = 0
             }
 
         ( navedModel, navedMsgs ) =
@@ -464,6 +469,9 @@ update msg model =
                                     Just ExcludeAllFilter
 
                                 PullRequestsPage ->
+                                    Just ExcludeAllFilter
+
+                                PullRequestsRepoPage _ ->
                                     Just ExcludeAllFilter
 
                                 BouncePage ->
@@ -1176,6 +1184,9 @@ update msg model =
         SetReleaseRepoTab tab ->
             ( { model | releaseRepoTab = tab }, Cmd.none )
 
+        SetRepoPullRequestsTab tab ->
+            ( { model | repoPullRequestsTab = tab }, Cmd.none )
+
 
 computeGraphState : Model -> Model
 computeGraphState model =
@@ -1228,8 +1239,23 @@ computeGraphState model =
 computeDataView : Model -> Model
 computeDataView origModel =
     let
-        add x =
-            Just << Maybe.withDefault [ x ] << Maybe.map ((::) x)
+        addToList card entry =
+            case entry of
+                Nothing ->
+                    Just [ card ]
+
+                Just cards ->
+                    Just (card :: cards)
+
+        groupRepoLabels =
+            Dict.foldl
+                (\_ repo cbn ->
+                    List.foldl
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addToList repo))
+                        cbn
+                        repo.labels
+                )
+                Dict.empty
 
         setRepoLabelId label repo mrc =
             case mrc of
@@ -1238,16 +1264,6 @@ computeDataView origModel =
 
                 Nothing ->
                     Just (Dict.singleton repo.id label.id)
-
-        groupRepoLabels =
-            Dict.foldl
-                (\_ repo cbn ->
-                    List.foldl
-                        (\label -> Dict.update ( label.name, String.toLower label.color ) (add repo))
-                        cbn
-                        repo.labels
-                )
-                Dict.empty
 
         groupLabelsToRepoToId =
             Dict.foldl
@@ -1258,6 +1274,25 @@ computeDataView origModel =
                         )
                         lrc
                         repo.labels
+                )
+                Dict.empty
+
+        addCardAndRepo card entry =
+            case entry of
+                Nothing ->
+                    Just ( card.repo, [ card ] )
+
+                Just ( repo, cards ) ->
+                    Just ( repo, card :: cards )
+
+        prsByRepo =
+            Dict.foldl
+                (\_ card acc ->
+                    if card.state == PullRequestState GitHubGraph.PullRequestStateOpen then
+                        Dict.update card.repo.name (addCardAndRepo card) acc
+
+                    else
+                        acc
                 )
                 Dict.empty
 
@@ -1284,20 +1319,13 @@ computeDataView origModel =
             }
 
         PullRequestsPage ->
-            let
-                prsByRepo =
-                    Dict.foldl
-                        (\_ card acc ->
-                            if isOpen card && isPR card then
-                                Dict.update card.repo.id (add card) acc
+            { model | dataView = { dataView | prsByRepo = prsByRepo model.allCards } }
 
-                            else
-                                acc
-                        )
-                        Dict.empty
-                        model.allCards
-            in
-            { model | dataView = { dataView | prsByRepo = prsByRepo } }
+        PullRequestsRepoPage _ ->
+            { model
+                | dataView = { dataView | prsByRepo = prsByRepo model.allCards }
+                , suggestedLabels = [ "needs-test" ]
+            }
 
         LabelsPage ->
             model
@@ -1545,6 +1573,14 @@ viewPage model =
 
             PullRequestsPage ->
                 viewPullRequestsPage model
+
+            PullRequestsRepoPage repoName ->
+                case Dict.get repoName model.dataView.prsByRepo of
+                    Just ( repo, cards ) ->
+                        viewRepoPullRequestsPage model repo cards
+
+                    Nothing ->
+                        Html.text "repo not found"
 
             BouncePage ->
                 Html.text "you shouldn't see this"
@@ -2039,20 +2075,20 @@ viewReleaseRepoPage model sir =
         , viewTabbedCards model
             .releaseRepoTab
             SetReleaseRepoTab
-            [ ( ToDoTab, "To Do", sir.openIssues ++ sir.openPRs )
-            , ( DoneTab, "Done", sir.doneCards )
-            , ( DocumentedTab, "Documented", sir.documentedCards )
-            , ( UndocumentedTab, "Undocumented", sir.undocumentedCards )
-            , ( NoImpactTab, "No Impact", sir.noImpactCards )
+            [ ( "To Do", sir.openIssues ++ sir.openPRs )
+            , ( "Done", sir.doneCards )
+            , ( "Documented", sir.documentedCards )
+            , ( "Undocumented", sir.undocumentedCards )
+            , ( "No Impact", sir.noImpactCards )
             ]
         ]
 
 
 viewTabbedCards :
     Model
-    -> (Model -> tab)
-    -> (tab -> Msg)
-    -> List ( tab, String, List Card )
+    -> (Model -> Int)
+    -> (Int -> Msg)
+    -> List ( String, List Card )
     -> Html Msg
 viewTabbedCards model currentTab setTab tabs =
     Html.div [ HA.class "tabbed-cards" ]
@@ -2067,29 +2103,20 @@ viewTabbedCards model currentTab setTab tabs =
                     [ Html.text (String.fromInt count) ]
           in
           Html.div [ HA.class "tab-row" ] <|
-            List.map
-                (\( tab, title, cards ) ->
-                    Html.span (tabAttrs tab)
+            List.indexedMap
+                (\idx ( title, cards ) ->
+                    Html.span (tabAttrs idx)
                         [ Html.text title
                         , tabCount (List.length cards)
                         ]
                 )
                 tabs
         , let
-            mfirst =
-                tabs
-                    |> List.head
-                    |> Maybe.map (\( tab, _, _ ) -> tab)
-
-            selected =
-                tabs
-                    |> List.filter (\( tab, _, _ ) -> currentTab model == tab)
-
             firstTabClass =
-                HA.classList [ ( "first-tab", mfirst == Just (currentTab model) ) ]
+                HA.classList [ ( "first-tab", currentTab model == 0 ) ]
           in
-          case selected of
-            ( _, _, cards ) :: _ ->
+          case List.drop (currentTab model) tabs of
+            ( _, cards ) :: _ ->
                 if List.isEmpty cards then
                     Html.div [ HA.class "no-tab-cards", firstTabClass ]
                         [ Html.text "no cards" ]
@@ -2153,17 +2180,9 @@ viewReleaseRepo model sir =
 viewPullRequestsPage : Model -> Html Msg
 viewPullRequestsPage model =
     let
-        getRepo repoId prs acc =
-            case Dict.get repoId model.data.repos of
-                Just repo ->
-                    ( repo, prs ) :: acc
-
-                Nothing ->
-                    acc
-
         viewRepoPRs repo prs =
             Html.div [ HA.class "repo-pull-requests" ]
-                [ Html.div [ HA.class "column-title" ]
+                [ Html.a [ HA.class "column-title", HA.href ("/pull-requests/" ++ repo.name) ]
                     [ Octicons.repo octiconOpts
                     , Html.text repo.name
                     ]
@@ -2179,11 +2198,115 @@ viewPullRequestsPage model =
             [ Octicons.gitPullRequest octiconOpts
             , Html.text "Pull Requests"
             ]
-        , Dict.foldl getRepo [] model.dataView.prsByRepo
+        , Dict.values model.dataView.prsByRepo
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
             |> List.map (\( a, b ) -> viewRepoPRs a b)
             |> Html.div [ HA.class "pull-request-columns" ]
+        ]
+
+
+type alias CategorizedRepoPRs =
+    { inbox : List Card
+    , failedChecks : List Card
+    , needsTest : List Card
+    , mergeConflict : List Card
+    , changesRequested : List Card
+    }
+
+
+failedChecks : Card -> Bool
+failedChecks card =
+    case card.content of
+        GitHubGraph.PullRequestCardContent { lastCommit } ->
+            case lastCommit |> Maybe.andThen .status of
+                Just { contexts } ->
+                    List.any ((==) GitHubGraph.StatusStateFailure << .state) contexts
+
+                Nothing ->
+                    False
+
+        _ ->
+            False
+
+
+changesRequested : Model -> Card -> Bool
+changesRequested model card =
+    case Dict.get card.id model.data.reviewers of
+        Just reviews ->
+            List.any ((==) GitHubGraph.PullRequestReviewStateChangesRequested << .state) reviews
+
+        _ ->
+            False
+
+
+hasMergeConflict : Card -> Bool
+hasMergeConflict card =
+    case card.content of
+        GitHubGraph.PullRequestCardContent { mergeable } ->
+            case mergeable of
+                GitHubGraph.MergeableStateMergeable ->
+                    False
+
+                GitHubGraph.MergeableStateConflicting ->
+                    True
+
+                GitHubGraph.MergeableStateUnknown ->
+                    False
+
+        _ ->
+            False
+
+
+viewRepoPullRequestsPage : Model -> GitHubGraph.RepoLocation -> List Card -> Html Msg
+viewRepoPullRequestsPage model repo prCards =
+    let
+        categorizeCard card cat =
+            if hasLabel model "needs-test" card then
+                { cat | needsTest = card :: cat.needsTest }
+
+            else if changesRequested model card then
+                { cat | changesRequested = card :: cat.changesRequested }
+
+            else if failedChecks card then
+                { cat | failedChecks = card :: cat.failedChecks }
+
+            else if hasMergeConflict card then
+                { cat | mergeConflict = card :: cat.mergeConflict }
+
+            else
+                { cat | inbox = card :: cat.inbox }
+
+        categorized =
+            List.foldl categorizeCard
+                { inbox = []
+                , failedChecks = []
+                , needsTest = []
+                , mergeConflict = []
+                , changesRequested = []
+                }
+                prCards
+    in
+    Html.div [ HA.class "page-content" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Html.div []
+                [ Octicons.repo octiconOpts
+                , Html.a [ HA.href "/release" ] [ Html.text repo.owner ]
+                , Html.text " / "
+                , Html.span [ HA.style "font-weight" "bold" ] [ Html.text repo.name ]
+                ]
+            ]
+        , Html.div [ HA.class "repo-pull-requests" ]
+            [ viewTabbedCards model
+                .repoPullRequestsTab
+                SetRepoPullRequestsTab
+                [ ( "Inbox", categorized.inbox )
+                , ( "Failed Checks", categorized.failedChecks )
+                , ( "Merge Conflict", categorized.mergeConflict )
+                , ( "Needs Tests", categorized.needsTest )
+                , ( "Changes Requested", categorized.changesRequested )
+                ]
+            ]
         ]
 
 

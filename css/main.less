@@ -1261,26 +1261,24 @@ svg {
   flex-flow: row wrap;
   align-content: flex-start;
   justify-content: space-between;
+}
 
-  .repo-pull-requests {
-    .card {
-      .card-actor:last-child {
-        animation: wiggle 0.5s infinite;
-      }
+.repo-pull-requests .card {
+  .card-actor:last-child {
+    animation: wiggle 0.5s infinite;
+  }
 
-      &.last-activity-is-me {
-        .card-actor:last-child {
-          animation: none;
-        }
-      }
-
-      &.active-today { opacity: 1; }
-      &.active-yesterday { opacity: 1; }
-      &.active-this-week { opacity: 0.75; }
-      &.active-this-month { opacity: 0.5; }
-      &.active-long-ago { opacity: 0.25; }
+  &.last-activity-is-me {
+    .card-actor:last-child {
+      animation: none;
     }
   }
+
+  &.active-today { opacity: 1; }
+  &.active-yesterday { opacity: 1; }
+  &.active-this-week { opacity: 0.75; }
+  &.active-this-month { opacity: 0.5; }
+  &.active-long-ago { opacity: 0.25; }
 }
 
 @keyframes wiggle {
@@ -1307,6 +1305,14 @@ svg {
   }
 }
 
+a.column-title:hover {
+  color: @gray-light;
+
+  .octicon * {
+    fill: @gray-light;
+  }
+}
+
 .page-content {
   width: 980px;
   margin: 0 auto;
@@ -1315,14 +1321,6 @@ svg {
 
 .metrics-item {
   margin-bottom: 50px;
-
-  .column-title:hover {
-    color: @gray-light;
-
-    .octicon * {
-      fill: @gray-light;
-    }
-  }
 }
 
 .metric {
@@ -1422,7 +1420,7 @@ svg {
     width: auto;
     border: 0;
     border-radius: 0;
-    border-bottom: 1px solid #e1e4e8;
+    border-top: 1px solid @gray-200;
 
     &::before {
       // hide project status indicator
@@ -1434,6 +1432,7 @@ svg {
     }
 
     &:first-child {
+      border-top: 0;
       border-top-left-radius: 3px;
       border-top-right-radius: 3px;
     }
