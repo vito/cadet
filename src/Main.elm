@@ -2486,7 +2486,7 @@ viewProjectColumn model project mod icon col =
     Html.div [ HA.class "project-column" ]
         [ Html.div [ HA.class "column-title" ]
             [ icon
-            , Html.a [ HA.href ("/projects/" ++ project.name) ] [ Html.text col.name ]
+            , Html.text col.name
             ]
         , if List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
