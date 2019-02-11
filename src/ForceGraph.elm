@@ -1,7 +1,11 @@
-module ForceGraph exposing (ForceGraph, ForceNode, fromGraph, isCompleted, member, tick, update)
+module ForceGraph exposing (ForceGraph, ForceNode, decode, encode, fromGraph, isCompleted, member, tick, update)
 
 import Force
 import Graph exposing (Graph)
+import IntDict exposing (IntDict)
+import Json.Decode as JD
+import Json.Decode.Extra as JDE exposing (andMap)
+import Json.Encode as JE
 import Random
 
 
@@ -59,7 +63,7 @@ fromGraph g =
             Force.iterations iterations <|
                 Force.simulation forces
     in
-    computeSimulation { graph = graph, simulation = newSimulation }
+    { graph = graph, simulation = newSimulation }
 
 
 member : Graph.NodeId -> ForceGraph n -> Bool
@@ -155,6 +159,91 @@ tick { graph, simulation } =
 isCompleted : ForceGraph n -> Bool
 isCompleted =
     .simulation >> Force.isCompleted
+
+
+encode : (n -> JE.Value) -> ForceGraph n -> JE.Value
+encode encoder { graph } =
+    let
+        encodeNode nc =
+            JE.object
+                [ ( "id", JE.int nc.node.id )
+                , ( "incoming", encodeIntDict nc.incoming )
+                , ( "outgoing", encodeIntDict nc.outgoing )
+                , ( "value", encoder nc.node.label.value )
+                , ( "x", JE.float nc.node.label.x )
+                , ( "y", JE.float nc.node.label.y )
+                , ( "size", JE.float nc.node.label.size )
+                ]
+
+        nodes =
+            Graph.fold (\n ns -> encodeNode n :: ns) [] graph
+    in
+    JE.list identity nodes
+
+
+encodeIntDict : IntDict () -> JE.Value
+encodeIntDict =
+    JE.list JE.int << IntDict.keys
+
+
+decodeIntDict : JD.Decoder (IntDict ())
+decodeIntDict =
+    JD.map (IntDict.fromList << List.map (\i -> ( i, () ))) <|
+        JD.list JD.int
+
+
+type alias DecodedNode n =
+    { id : Int
+    , incoming : IntDict ()
+    , outgoing : IntDict ()
+    , value : n
+    , x : Float
+    , y : Float
+    , size : Float
+    }
+
+
+decode : JD.Decoder n -> JD.Decoder (ForceGraph n)
+decode decoder =
+    let
+        decodeNode =
+            JD.succeed DecodedNode
+                |> andMap (JD.field "id" JD.int)
+                |> andMap (JD.field "incoming" decodeIntDict)
+                |> andMap (JD.field "outgoing" decodeIntDict)
+                |> andMap (JD.field "value" decoder)
+                |> andMap (JD.field "x" JD.float)
+                |> andMap (JD.field "y" JD.float)
+                |> andMap (JD.field "size" JD.float)
+
+        addGraphNode n g =
+            let
+                nc =
+                    { node =
+                        { id = n.id
+                        , label =
+                            { id = n.id
+                            , x = n.x
+                            , y = n.y
+                            , vx = 0.0
+                            , vy = 0.0
+                            , size = n.size
+                            , value = n.value
+                            }
+                        }
+                    , incoming = n.incoming
+                    , outgoing = n.outgoing
+                    }
+            in
+            Graph.insert nc g
+
+        toGraph nodes =
+            { graph = List.foldl addGraphNode Graph.empty nodes
+            , simulation = Force.simulation []
+            }
+    in
+    JD.list decodeNode
+        |> JD.map toGraph
 
 
 updateGraphWithList : Graph (ForceNode n) () -> List (ForceNode n) -> Graph (ForceNode n) ()

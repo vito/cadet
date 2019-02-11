@@ -7952,6 +7952,527 @@ var author$project$Main$ImpactSort = {$: 'ImpactSort'};
 var author$project$Main$MeFetched = function (a) {
 	return {$: 'MeFetched', a: a};
 };
+var author$project$ForceGraph$DecodedNode = F7(
+	function (id, incoming, outgoing, value, x, y, size) {
+		return {id: id, incoming: incoming, outgoing: outgoing, size: size, value: value, x: x, y: y};
+	});
+var elm_community$intdict$IntDict$Empty = {$: 'Empty'};
+var elm_community$intdict$IntDict$empty = elm_community$intdict$IntDict$Empty;
+var elm_community$intdict$IntDict$Inner = function (a) {
+	return {$: 'Inner', a: a};
+};
+var elm_community$intdict$IntDict$size = function (dict) {
+	switch (dict.$) {
+		case 'Empty':
+			return 0;
+		case 'Leaf':
+			return 1;
+		default:
+			var i = dict.a;
+			return i.size;
+	}
+};
+var elm_community$intdict$IntDict$inner = F3(
+	function (p, l, r) {
+		var _n0 = _Utils_Tuple2(l, r);
+		if (_n0.a.$ === 'Empty') {
+			var _n1 = _n0.a;
+			return r;
+		} else {
+			if (_n0.b.$ === 'Empty') {
+				var _n2 = _n0.b;
+				return l;
+			} else {
+				return elm_community$intdict$IntDict$Inner(
+					{
+						left: l,
+						prefix: p,
+						right: r,
+						size: elm_community$intdict$IntDict$size(l) + elm_community$intdict$IntDict$size(r)
+					});
+			}
+		}
+	});
+var elm$core$Bitwise$and = _Bitwise_and;
+var elm$core$Bitwise$xor = _Bitwise_xor;
+var elm$core$Bitwise$complement = _Bitwise_complement;
+var elm$core$Bitwise$or = _Bitwise_or;
+var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
+var elm_community$intdict$IntDict$highestBitSet = function (n) {
+	var shiftOr = F2(
+		function (i, shift) {
+			return i | (i >>> shift);
+		});
+	var n1 = A2(shiftOr, n, 1);
+	var n2 = A2(shiftOr, n1, 2);
+	var n3 = A2(shiftOr, n2, 4);
+	var n4 = A2(shiftOr, n3, 8);
+	var n5 = A2(shiftOr, n4, 16);
+	return n5 & (~(n5 >>> 1));
+};
+var elm_community$intdict$IntDict$signBit = elm_community$intdict$IntDict$highestBitSet(-1);
+var elm_community$intdict$IntDict$isBranchingBitSet = function (p) {
+	return A2(
+		elm$core$Basics$composeR,
+		elm$core$Bitwise$xor(elm_community$intdict$IntDict$signBit),
+		A2(
+			elm$core$Basics$composeR,
+			elm$core$Bitwise$and(p.branchingBit),
+			elm$core$Basics$neq(0)));
+};
+var elm_community$intdict$IntDict$higherBitMask = function (branchingBit) {
+	return branchingBit ^ (~(branchingBit - 1));
+};
+var elm_community$intdict$IntDict$lcp = F2(
+	function (x, y) {
+		var branchingBit = elm_community$intdict$IntDict$highestBitSet(x ^ y);
+		var mask = elm_community$intdict$IntDict$higherBitMask(branchingBit);
+		var prefixBits = x & mask;
+		return {branchingBit: branchingBit, prefixBits: prefixBits};
+	});
+var elm_community$intdict$IntDict$Leaf = function (a) {
+	return {$: 'Leaf', a: a};
+};
+var elm_community$intdict$IntDict$leaf = F2(
+	function (k, v) {
+		return elm_community$intdict$IntDict$Leaf(
+			{key: k, value: v});
+	});
+var elm_community$intdict$IntDict$prefixMatches = F2(
+	function (p, n) {
+		return _Utils_eq(
+			n & elm_community$intdict$IntDict$higherBitMask(p.branchingBit),
+			p.prefixBits);
+	});
+var elm_community$intdict$IntDict$update = F3(
+	function (key, alter, dict) {
+		var join = F2(
+			function (_n2, _n3) {
+				var k1 = _n2.a;
+				var l = _n2.b;
+				var k2 = _n3.a;
+				var r = _n3.b;
+				var prefix = A2(elm_community$intdict$IntDict$lcp, k1, k2);
+				return A2(elm_community$intdict$IntDict$isBranchingBitSet, prefix, k2) ? A3(elm_community$intdict$IntDict$inner, prefix, l, r) : A3(elm_community$intdict$IntDict$inner, prefix, r, l);
+			});
+		var alteredNode = function (mv) {
+			var _n1 = alter(mv);
+			if (_n1.$ === 'Just') {
+				var v = _n1.a;
+				return A2(elm_community$intdict$IntDict$leaf, key, v);
+			} else {
+				return elm_community$intdict$IntDict$empty;
+			}
+		};
+		switch (dict.$) {
+			case 'Empty':
+				return alteredNode(elm$core$Maybe$Nothing);
+			case 'Leaf':
+				var l = dict.a;
+				return _Utils_eq(l.key, key) ? alteredNode(
+					elm$core$Maybe$Just(l.value)) : A2(
+					join,
+					_Utils_Tuple2(
+						key,
+						alteredNode(elm$core$Maybe$Nothing)),
+					_Utils_Tuple2(l.key, dict));
+			default:
+				var i = dict.a;
+				return A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key) ? (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key) ? A3(
+					elm_community$intdict$IntDict$inner,
+					i.prefix,
+					i.left,
+					A3(elm_community$intdict$IntDict$update, key, alter, i.right)) : A3(
+					elm_community$intdict$IntDict$inner,
+					i.prefix,
+					A3(elm_community$intdict$IntDict$update, key, alter, i.left),
+					i.right)) : A2(
+					join,
+					_Utils_Tuple2(
+						key,
+						alteredNode(elm$core$Maybe$Nothing)),
+					_Utils_Tuple2(i.prefix.prefixBits, dict));
+		}
+	});
+var elm_community$intdict$IntDict$insert = F3(
+	function (key, value, dict) {
+		return A3(
+			elm_community$intdict$IntDict$update,
+			key,
+			elm$core$Basics$always(
+				elm$core$Maybe$Just(value)),
+			dict);
+	});
+var elm_community$intdict$IntDict$fromList = function (pairs) {
+	return A3(
+		elm$core$List$foldl,
+		function (_n0) {
+			var a = _n0.a;
+			var b = _n0.b;
+			return A2(elm_community$intdict$IntDict$insert, a, b);
+		},
+		elm_community$intdict$IntDict$empty,
+		pairs);
+};
+var author$project$ForceGraph$decodeIntDict = A2(
+	elm$json$Json$Decode$map,
+	A2(
+		elm$core$Basics$composeL,
+		elm_community$intdict$IntDict$fromList,
+		elm$core$List$map(
+			function (i) {
+				return _Utils_Tuple2(i, _Utils_Tuple0);
+			})),
+	elm$json$Json$Decode$list(elm$json$Json$Decode$int));
+var elm$json$Json$Decode$float = _Json_decodeFloat;
+var elm_community$graph$Graph$Graph = function (a) {
+	return {$: 'Graph', a: a};
+};
+var elm_community$graph$Graph$empty = elm_community$graph$Graph$Graph(elm_community$intdict$IntDict$empty);
+var elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return elm$core$Maybe$Nothing;
+		}
+	});
+var elm_community$intdict$IntDict$foldl = F3(
+	function (f, acc, dict) {
+		foldl:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return acc;
+				case 'Leaf':
+					var l = dict.a;
+					return A3(f, l.key, l.value, acc);
+				default:
+					var i = dict.a;
+					var $temp$f = f,
+						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.left),
+						$temp$dict = i.right;
+					f = $temp$f;
+					acc = $temp$acc;
+					dict = $temp$dict;
+					continue foldl;
+			}
+		}
+	});
+var elm_community$graph$Graph$applyEdgeDiff = F3(
+	function (nodeId, diff, graphRep) {
+		var updateOutgoingEdge = F2(
+			function (upd, node) {
+				return _Utils_update(
+					node,
+					{
+						outgoing: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.outgoing)
+					});
+			});
+		var updateIncomingEdge = F2(
+			function (upd, node) {
+				return _Utils_update(
+					node,
+					{
+						incoming: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.incoming)
+					});
+			});
+		var flippedFoldl = F3(
+			function (f, dict, acc) {
+				return A3(elm_community$intdict$IntDict$foldl, f, acc, dict);
+			});
+		var edgeUpdateToMaybe = function (edgeUpdate) {
+			if (edgeUpdate.$ === 'Insert') {
+				var lbl = edgeUpdate.a;
+				return elm$core$Maybe$Just(lbl);
+			} else {
+				return elm$core$Maybe$Nothing;
+			}
+		};
+		var updateAdjacency = F3(
+			function (updateEdge, updatedId, edgeUpdate) {
+				var updateLbl = updateEdge(
+					elm$core$Basics$always(
+						edgeUpdateToMaybe(edgeUpdate)));
+				return A2(
+					elm_community$intdict$IntDict$update,
+					updatedId,
+					elm$core$Maybe$map(updateLbl));
+			});
+		return A3(
+			flippedFoldl,
+			updateAdjacency(updateOutgoingEdge),
+			diff.outgoing,
+			A3(
+				flippedFoldl,
+				updateAdjacency(updateIncomingEdge),
+				diff.incoming,
+				graphRep));
+	});
+var elm_community$graph$Graph$Insert = function (a) {
+	return {$: 'Insert', a: a};
+};
+var elm_community$graph$Graph$Remove = function (a) {
+	return {$: 'Remove', a: a};
+};
+var elm_community$graph$Graph$crashHack = function (msg) {
+	crashHack:
+	while (true) {
+		var $temp$msg = msg;
+		msg = $temp$msg;
+		continue crashHack;
+	}
+};
+var elm_community$graph$Graph$emptyDiff = {incoming: elm_community$intdict$IntDict$empty, outgoing: elm_community$intdict$IntDict$empty};
+var elm_community$graph$Graph$computeEdgeDiff = F2(
+	function (old, _new) {
+		var collectUpdates = F3(
+			function (edgeUpdate, updatedId, label) {
+				var replaceUpdate = function (old_) {
+					var _n5 = _Utils_Tuple2(
+						old_,
+						edgeUpdate(label));
+					if (_n5.a.$ === 'Just') {
+						if (_n5.a.a.$ === 'Remove') {
+							if (_n5.b.$ === 'Insert') {
+								var oldLbl = _n5.a.a.a;
+								var newLbl = _n5.b.a;
+								return _Utils_eq(oldLbl, newLbl) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(
+									elm_community$graph$Graph$Insert(newLbl));
+							} else {
+								return elm_community$graph$Graph$crashHack('Graph.computeEdgeDiff: Collected two removals for the same edge. This is an error in the implementation of Graph and you should file a bug report!');
+							}
+						} else {
+							return elm_community$graph$Graph$crashHack('Graph.computeEdgeDiff: Collected inserts before removals. This is an error in the implementation of Graph and you should file a bug report!');
+						}
+					} else {
+						var _n6 = _n5.a;
+						var eu = _n5.b;
+						return elm$core$Maybe$Just(eu);
+					}
+				};
+				return A2(elm_community$intdict$IntDict$update, updatedId, replaceUpdate);
+			});
+		var collect = F3(
+			function (edgeUpdate, adj, updates) {
+				return A3(
+					elm_community$intdict$IntDict$foldl,
+					collectUpdates(edgeUpdate),
+					updates,
+					adj);
+			});
+		var _n0 = _Utils_Tuple2(old, _new);
+		if (_n0.a.$ === 'Nothing') {
+			if (_n0.b.$ === 'Nothing') {
+				var _n1 = _n0.a;
+				var _n2 = _n0.b;
+				return elm_community$graph$Graph$emptyDiff;
+			} else {
+				var _n4 = _n0.a;
+				var ins = _n0.b.a;
+				return {
+					incoming: A3(collect, elm_community$graph$Graph$Insert, ins.outgoing, elm_community$intdict$IntDict$empty),
+					outgoing: A3(collect, elm_community$graph$Graph$Insert, ins.incoming, elm_community$intdict$IntDict$empty)
+				};
+			}
+		} else {
+			if (_n0.b.$ === 'Nothing') {
+				var rem = _n0.a.a;
+				var _n3 = _n0.b;
+				return {
+					incoming: A3(collect, elm_community$graph$Graph$Remove, rem.outgoing, elm_community$intdict$IntDict$empty),
+					outgoing: A3(collect, elm_community$graph$Graph$Remove, rem.incoming, elm_community$intdict$IntDict$empty)
+				};
+			} else {
+				var rem = _n0.a.a;
+				var ins = _n0.b.a;
+				return _Utils_eq(rem, ins) ? elm_community$graph$Graph$emptyDiff : {
+					incoming: A3(
+						collect,
+						elm_community$graph$Graph$Insert,
+						ins.outgoing,
+						A3(collect, elm_community$graph$Graph$Remove, rem.outgoing, elm_community$intdict$IntDict$empty)),
+					outgoing: A3(
+						collect,
+						elm_community$graph$Graph$Insert,
+						ins.incoming,
+						A3(collect, elm_community$graph$Graph$Remove, rem.incoming, elm_community$intdict$IntDict$empty))
+				};
+			}
+		}
+	});
+var elm_community$graph$Graph$unGraph = function (graph) {
+	var rep = graph.a;
+	return rep;
+};
+var elm_community$intdict$IntDict$filter = F2(
+	function (predicate, dict) {
+		var add = F3(
+			function (k, v, d) {
+				return A2(predicate, k, v) ? A3(elm_community$intdict$IntDict$insert, k, v, d) : d;
+			});
+		return A3(elm_community$intdict$IntDict$foldl, add, elm_community$intdict$IntDict$empty, dict);
+	});
+var elm_community$intdict$IntDict$get = F2(
+	function (key, dict) {
+		get:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return elm$core$Maybe$Nothing;
+				case 'Leaf':
+					var l = dict.a;
+					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
+				default:
+					var i = dict.a;
+					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
+						return elm$core$Maybe$Nothing;
+					} else {
+						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
+							var $temp$key = key,
+								$temp$dict = i.right;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						} else {
+							var $temp$key = key,
+								$temp$dict = i.left;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						}
+					}
+			}
+		}
+	});
+var elm_community$intdict$IntDict$member = F2(
+	function (key, dict) {
+		var _n0 = A2(elm_community$intdict$IntDict$get, key, dict);
+		if (_n0.$ === 'Just') {
+			return true;
+		} else {
+			return false;
+		}
+	});
+var elm_community$graph$Graph$update = F2(
+	function (nodeId, updater) {
+		var wrappedUpdater = function (rep) {
+			var old = A2(elm_community$intdict$IntDict$get, nodeId, rep);
+			var filterInvalidEdges = function (ctx) {
+				return elm_community$intdict$IntDict$filter(
+					F2(
+						function (id, _n0) {
+							return _Utils_eq(id, ctx.node.id) || A2(elm_community$intdict$IntDict$member, id, rep);
+						}));
+			};
+			var cleanUpEdges = function (ctx) {
+				return _Utils_update(
+					ctx,
+					{
+						incoming: A2(filterInvalidEdges, ctx, ctx.incoming),
+						outgoing: A2(filterInvalidEdges, ctx, ctx.outgoing)
+					});
+			};
+			var _new = A2(
+				elm$core$Maybe$map,
+				cleanUpEdges,
+				updater(old));
+			var diff = A2(elm_community$graph$Graph$computeEdgeDiff, old, _new);
+			return A3(
+				elm_community$intdict$IntDict$update,
+				nodeId,
+				elm$core$Basics$always(_new),
+				A3(elm_community$graph$Graph$applyEdgeDiff, nodeId, diff, rep));
+		};
+		return A2(
+			elm$core$Basics$composeR,
+			elm_community$graph$Graph$unGraph,
+			A2(elm$core$Basics$composeR, wrappedUpdater, elm_community$graph$Graph$Graph));
+	});
+var elm_community$graph$Graph$insert = F2(
+	function (nodeContext, graph) {
+		return A3(
+			elm_community$graph$Graph$update,
+			nodeContext.node.id,
+			elm$core$Basics$always(
+				elm$core$Maybe$Just(nodeContext)),
+			graph);
+	});
+var elm$core$Basics$pow = _Basics_pow;
+var gampleman$elm_visualization$Force$State = function (a) {
+	return {$: 'State', a: a};
+};
+var gampleman$elm_visualization$Force$simulation = function (forces) {
+	return gampleman$elm_visualization$Force$State(
+		{
+			alpha: 1.0,
+			alphaDecay: 1 - A2(elm$core$Basics$pow, 1.0e-3, 1 / 300),
+			alphaTarget: 0.0,
+			forces: forces,
+			minAlpha: 1.0e-3,
+			velocityDecay: 0.6
+		});
+};
+var author$project$ForceGraph$decode = function (decoder) {
+	var decodeNode = A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'size', elm$json$Json$Decode$float),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'y', elm$json$Json$Decode$float),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'x', elm$json$Json$Decode$float),
+				A2(
+					elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(elm$json$Json$Decode$field, 'value', decoder),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'outgoing', author$project$ForceGraph$decodeIntDict),
+						A2(
+							elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2(elm$json$Json$Decode$field, 'incoming', author$project$ForceGraph$decodeIntDict),
+							A2(
+								elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$int),
+								elm$json$Json$Decode$succeed(author$project$ForceGraph$DecodedNode))))))));
+	var addGraphNode = F2(
+		function (n, g) {
+			var nc = {
+				incoming: n.incoming,
+				node: {
+					id: n.id,
+					label: {id: n.id, size: n.size, value: n.value, vx: 0.0, vy: 0.0, x: n.x, y: n.y}
+				},
+				outgoing: n.outgoing
+			};
+			return A2(elm_community$graph$Graph$insert, nc, g);
+		});
+	var toGraph = function (nodes) {
+		return {
+			graph: A3(elm$core$List$foldl, addGraphNode, elm_community$graph$Graph$empty, nodes),
+			simulation: gampleman$elm_visualization$Force$simulation(_List_Nil)
+		};
+	};
+	return A2(
+		elm$json$Json$Decode$map,
+		toGraph,
+		elm$json$Json$Decode$list(decodeNode));
+};
+var author$project$Backend$fetchGraphs = function (f) {
+	return A2(
+		elm$core$Task$attempt,
+		f,
+		lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				author$project$Backend$expectJsonWithIndex(
+					elm$json$Json$Decode$list(
+						author$project$ForceGraph$decode(elm$json$Json$Decode$string))),
+				lukewestby$elm_http_builder$HttpBuilder$get('/graphs'))));
+};
 var lukewestby$elm_http_builder$HttpBuilder$withTimeout = F2(
 	function (timeout, builder) {
 		return _Utils_update(
@@ -8039,16 +8560,6 @@ var elm$core$List$any = F2(
 					continue any;
 				}
 			}
-		}
-	});
-var elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return elm$core$Maybe$Nothing;
 		}
 	});
 var elm$core$Maybe$withDefault = F2(
@@ -8347,1299 +8858,6 @@ var author$project$Drag$update = F2(
 				return model;
 		}
 	});
-var gampleman$elm_visualization$Force$isCompleted = function (_n0) {
-	var alpha = _n0.a.alpha;
-	var minAlpha = _n0.a.minAlpha;
-	return _Utils_cmp(alpha, minAlpha) < 1;
-};
-var author$project$ForceGraph$isCompleted = A2(
-	elm$core$Basics$composeR,
-	function ($) {
-		return $.simulation;
-	},
-	gampleman$elm_visualization$Force$isCompleted);
-var author$project$ForceGraph$updateContextWithValue = F2(
-	function (nc, value) {
-		var ncnode = nc.node;
-		var label = ncnode.label;
-		return _Utils_update(
-			nc,
-			{
-				node: _Utils_update(
-					ncnode,
-					{label: value})
-			});
-	});
-var elm_community$graph$Graph$Graph = function (a) {
-	return {$: 'Graph', a: a};
-};
-var elm_community$intdict$IntDict$foldl = F3(
-	function (f, acc, dict) {
-		foldl:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return acc;
-				case 'Leaf':
-					var l = dict.a;
-					return A3(f, l.key, l.value, acc);
-				default:
-					var i = dict.a;
-					var $temp$f = f,
-						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.left),
-						$temp$dict = i.right;
-					f = $temp$f;
-					acc = $temp$acc;
-					dict = $temp$dict;
-					continue foldl;
-			}
-		}
-	});
-var elm_community$intdict$IntDict$Empty = {$: 'Empty'};
-var elm_community$intdict$IntDict$empty = elm_community$intdict$IntDict$Empty;
-var elm_community$intdict$IntDict$Inner = function (a) {
-	return {$: 'Inner', a: a};
-};
-var elm_community$intdict$IntDict$size = function (dict) {
-	switch (dict.$) {
-		case 'Empty':
-			return 0;
-		case 'Leaf':
-			return 1;
-		default:
-			var i = dict.a;
-			return i.size;
-	}
-};
-var elm_community$intdict$IntDict$inner = F3(
-	function (p, l, r) {
-		var _n0 = _Utils_Tuple2(l, r);
-		if (_n0.a.$ === 'Empty') {
-			var _n1 = _n0.a;
-			return r;
-		} else {
-			if (_n0.b.$ === 'Empty') {
-				var _n2 = _n0.b;
-				return l;
-			} else {
-				return elm_community$intdict$IntDict$Inner(
-					{
-						left: l,
-						prefix: p,
-						right: r,
-						size: elm_community$intdict$IntDict$size(l) + elm_community$intdict$IntDict$size(r)
-					});
-			}
-		}
-	});
-var elm$core$Bitwise$and = _Bitwise_and;
-var elm$core$Bitwise$xor = _Bitwise_xor;
-var elm$core$Bitwise$complement = _Bitwise_complement;
-var elm$core$Bitwise$or = _Bitwise_or;
-var elm$core$Bitwise$shiftRightZfBy = _Bitwise_shiftRightZfBy;
-var elm_community$intdict$IntDict$highestBitSet = function (n) {
-	var shiftOr = F2(
-		function (i, shift) {
-			return i | (i >>> shift);
-		});
-	var n1 = A2(shiftOr, n, 1);
-	var n2 = A2(shiftOr, n1, 2);
-	var n3 = A2(shiftOr, n2, 4);
-	var n4 = A2(shiftOr, n3, 8);
-	var n5 = A2(shiftOr, n4, 16);
-	return n5 & (~(n5 >>> 1));
-};
-var elm_community$intdict$IntDict$signBit = elm_community$intdict$IntDict$highestBitSet(-1);
-var elm_community$intdict$IntDict$isBranchingBitSet = function (p) {
-	return A2(
-		elm$core$Basics$composeR,
-		elm$core$Bitwise$xor(elm_community$intdict$IntDict$signBit),
-		A2(
-			elm$core$Basics$composeR,
-			elm$core$Bitwise$and(p.branchingBit),
-			elm$core$Basics$neq(0)));
-};
-var elm_community$intdict$IntDict$higherBitMask = function (branchingBit) {
-	return branchingBit ^ (~(branchingBit - 1));
-};
-var elm_community$intdict$IntDict$lcp = F2(
-	function (x, y) {
-		var branchingBit = elm_community$intdict$IntDict$highestBitSet(x ^ y);
-		var mask = elm_community$intdict$IntDict$higherBitMask(branchingBit);
-		var prefixBits = x & mask;
-		return {branchingBit: branchingBit, prefixBits: prefixBits};
-	});
-var elm_community$intdict$IntDict$Leaf = function (a) {
-	return {$: 'Leaf', a: a};
-};
-var elm_community$intdict$IntDict$leaf = F2(
-	function (k, v) {
-		return elm_community$intdict$IntDict$Leaf(
-			{key: k, value: v});
-	});
-var elm_community$intdict$IntDict$prefixMatches = F2(
-	function (p, n) {
-		return _Utils_eq(
-			n & elm_community$intdict$IntDict$higherBitMask(p.branchingBit),
-			p.prefixBits);
-	});
-var elm_community$intdict$IntDict$update = F3(
-	function (key, alter, dict) {
-		var join = F2(
-			function (_n2, _n3) {
-				var k1 = _n2.a;
-				var l = _n2.b;
-				var k2 = _n3.a;
-				var r = _n3.b;
-				var prefix = A2(elm_community$intdict$IntDict$lcp, k1, k2);
-				return A2(elm_community$intdict$IntDict$isBranchingBitSet, prefix, k2) ? A3(elm_community$intdict$IntDict$inner, prefix, l, r) : A3(elm_community$intdict$IntDict$inner, prefix, r, l);
-			});
-		var alteredNode = function (mv) {
-			var _n1 = alter(mv);
-			if (_n1.$ === 'Just') {
-				var v = _n1.a;
-				return A2(elm_community$intdict$IntDict$leaf, key, v);
-			} else {
-				return elm_community$intdict$IntDict$empty;
-			}
-		};
-		switch (dict.$) {
-			case 'Empty':
-				return alteredNode(elm$core$Maybe$Nothing);
-			case 'Leaf':
-				var l = dict.a;
-				return _Utils_eq(l.key, key) ? alteredNode(
-					elm$core$Maybe$Just(l.value)) : A2(
-					join,
-					_Utils_Tuple2(
-						key,
-						alteredNode(elm$core$Maybe$Nothing)),
-					_Utils_Tuple2(l.key, dict));
-			default:
-				var i = dict.a;
-				return A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key) ? (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key) ? A3(
-					elm_community$intdict$IntDict$inner,
-					i.prefix,
-					i.left,
-					A3(elm_community$intdict$IntDict$update, key, alter, i.right)) : A3(
-					elm_community$intdict$IntDict$inner,
-					i.prefix,
-					A3(elm_community$intdict$IntDict$update, key, alter, i.left),
-					i.right)) : A2(
-					join,
-					_Utils_Tuple2(
-						key,
-						alteredNode(elm$core$Maybe$Nothing)),
-					_Utils_Tuple2(i.prefix.prefixBits, dict));
-		}
-	});
-var elm_community$graph$Graph$applyEdgeDiff = F3(
-	function (nodeId, diff, graphRep) {
-		var updateOutgoingEdge = F2(
-			function (upd, node) {
-				return _Utils_update(
-					node,
-					{
-						outgoing: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.outgoing)
-					});
-			});
-		var updateIncomingEdge = F2(
-			function (upd, node) {
-				return _Utils_update(
-					node,
-					{
-						incoming: A3(elm_community$intdict$IntDict$update, nodeId, upd, node.incoming)
-					});
-			});
-		var flippedFoldl = F3(
-			function (f, dict, acc) {
-				return A3(elm_community$intdict$IntDict$foldl, f, acc, dict);
-			});
-		var edgeUpdateToMaybe = function (edgeUpdate) {
-			if (edgeUpdate.$ === 'Insert') {
-				var lbl = edgeUpdate.a;
-				return elm$core$Maybe$Just(lbl);
-			} else {
-				return elm$core$Maybe$Nothing;
-			}
-		};
-		var updateAdjacency = F3(
-			function (updateEdge, updatedId, edgeUpdate) {
-				var updateLbl = updateEdge(
-					elm$core$Basics$always(
-						edgeUpdateToMaybe(edgeUpdate)));
-				return A2(
-					elm_community$intdict$IntDict$update,
-					updatedId,
-					elm$core$Maybe$map(updateLbl));
-			});
-		return A3(
-			flippedFoldl,
-			updateAdjacency(updateOutgoingEdge),
-			diff.outgoing,
-			A3(
-				flippedFoldl,
-				updateAdjacency(updateIncomingEdge),
-				diff.incoming,
-				graphRep));
-	});
-var elm_community$graph$Graph$Insert = function (a) {
-	return {$: 'Insert', a: a};
-};
-var elm_community$graph$Graph$Remove = function (a) {
-	return {$: 'Remove', a: a};
-};
-var elm_community$graph$Graph$crashHack = function (msg) {
-	crashHack:
-	while (true) {
-		var $temp$msg = msg;
-		msg = $temp$msg;
-		continue crashHack;
-	}
-};
-var elm_community$graph$Graph$emptyDiff = {incoming: elm_community$intdict$IntDict$empty, outgoing: elm_community$intdict$IntDict$empty};
-var elm_community$graph$Graph$computeEdgeDiff = F2(
-	function (old, _new) {
-		var collectUpdates = F3(
-			function (edgeUpdate, updatedId, label) {
-				var replaceUpdate = function (old_) {
-					var _n5 = _Utils_Tuple2(
-						old_,
-						edgeUpdate(label));
-					if (_n5.a.$ === 'Just') {
-						if (_n5.a.a.$ === 'Remove') {
-							if (_n5.b.$ === 'Insert') {
-								var oldLbl = _n5.a.a.a;
-								var newLbl = _n5.b.a;
-								return _Utils_eq(oldLbl, newLbl) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(
-									elm_community$graph$Graph$Insert(newLbl));
-							} else {
-								return elm_community$graph$Graph$crashHack('Graph.computeEdgeDiff: Collected two removals for the same edge. This is an error in the implementation of Graph and you should file a bug report!');
-							}
-						} else {
-							return elm_community$graph$Graph$crashHack('Graph.computeEdgeDiff: Collected inserts before removals. This is an error in the implementation of Graph and you should file a bug report!');
-						}
-					} else {
-						var _n6 = _n5.a;
-						var eu = _n5.b;
-						return elm$core$Maybe$Just(eu);
-					}
-				};
-				return A2(elm_community$intdict$IntDict$update, updatedId, replaceUpdate);
-			});
-		var collect = F3(
-			function (edgeUpdate, adj, updates) {
-				return A3(
-					elm_community$intdict$IntDict$foldl,
-					collectUpdates(edgeUpdate),
-					updates,
-					adj);
-			});
-		var _n0 = _Utils_Tuple2(old, _new);
-		if (_n0.a.$ === 'Nothing') {
-			if (_n0.b.$ === 'Nothing') {
-				var _n1 = _n0.a;
-				var _n2 = _n0.b;
-				return elm_community$graph$Graph$emptyDiff;
-			} else {
-				var _n4 = _n0.a;
-				var ins = _n0.b.a;
-				return {
-					incoming: A3(collect, elm_community$graph$Graph$Insert, ins.outgoing, elm_community$intdict$IntDict$empty),
-					outgoing: A3(collect, elm_community$graph$Graph$Insert, ins.incoming, elm_community$intdict$IntDict$empty)
-				};
-			}
-		} else {
-			if (_n0.b.$ === 'Nothing') {
-				var rem = _n0.a.a;
-				var _n3 = _n0.b;
-				return {
-					incoming: A3(collect, elm_community$graph$Graph$Remove, rem.outgoing, elm_community$intdict$IntDict$empty),
-					outgoing: A3(collect, elm_community$graph$Graph$Remove, rem.incoming, elm_community$intdict$IntDict$empty)
-				};
-			} else {
-				var rem = _n0.a.a;
-				var ins = _n0.b.a;
-				return _Utils_eq(rem, ins) ? elm_community$graph$Graph$emptyDiff : {
-					incoming: A3(
-						collect,
-						elm_community$graph$Graph$Insert,
-						ins.outgoing,
-						A3(collect, elm_community$graph$Graph$Remove, rem.outgoing, elm_community$intdict$IntDict$empty)),
-					outgoing: A3(
-						collect,
-						elm_community$graph$Graph$Insert,
-						ins.incoming,
-						A3(collect, elm_community$graph$Graph$Remove, rem.incoming, elm_community$intdict$IntDict$empty))
-				};
-			}
-		}
-	});
-var elm_community$graph$Graph$unGraph = function (graph) {
-	var rep = graph.a;
-	return rep;
-};
-var elm_community$intdict$IntDict$insert = F3(
-	function (key, value, dict) {
-		return A3(
-			elm_community$intdict$IntDict$update,
-			key,
-			elm$core$Basics$always(
-				elm$core$Maybe$Just(value)),
-			dict);
-	});
-var elm_community$intdict$IntDict$filter = F2(
-	function (predicate, dict) {
-		var add = F3(
-			function (k, v, d) {
-				return A2(predicate, k, v) ? A3(elm_community$intdict$IntDict$insert, k, v, d) : d;
-			});
-		return A3(elm_community$intdict$IntDict$foldl, add, elm_community$intdict$IntDict$empty, dict);
-	});
-var elm_community$intdict$IntDict$get = F2(
-	function (key, dict) {
-		get:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return elm$core$Maybe$Nothing;
-				case 'Leaf':
-					var l = dict.a;
-					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
-				default:
-					var i = dict.a;
-					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
-						return elm$core$Maybe$Nothing;
-					} else {
-						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
-							var $temp$key = key,
-								$temp$dict = i.right;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						} else {
-							var $temp$key = key,
-								$temp$dict = i.left;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						}
-					}
-			}
-		}
-	});
-var elm_community$intdict$IntDict$member = F2(
-	function (key, dict) {
-		var _n0 = A2(elm_community$intdict$IntDict$get, key, dict);
-		if (_n0.$ === 'Just') {
-			return true;
-		} else {
-			return false;
-		}
-	});
-var elm_community$graph$Graph$update = F2(
-	function (nodeId, updater) {
-		var wrappedUpdater = function (rep) {
-			var old = A2(elm_community$intdict$IntDict$get, nodeId, rep);
-			var filterInvalidEdges = function (ctx) {
-				return elm_community$intdict$IntDict$filter(
-					F2(
-						function (id, _n0) {
-							return _Utils_eq(id, ctx.node.id) || A2(elm_community$intdict$IntDict$member, id, rep);
-						}));
-			};
-			var cleanUpEdges = function (ctx) {
-				return _Utils_update(
-					ctx,
-					{
-						incoming: A2(filterInvalidEdges, ctx, ctx.incoming),
-						outgoing: A2(filterInvalidEdges, ctx, ctx.outgoing)
-					});
-			};
-			var _new = A2(
-				elm$core$Maybe$map,
-				cleanUpEdges,
-				updater(old));
-			var diff = A2(elm_community$graph$Graph$computeEdgeDiff, old, _new);
-			return A3(
-				elm_community$intdict$IntDict$update,
-				nodeId,
-				elm$core$Basics$always(_new),
-				A3(elm_community$graph$Graph$applyEdgeDiff, nodeId, diff, rep));
-		};
-		return A2(
-			elm$core$Basics$composeR,
-			elm_community$graph$Graph$unGraph,
-			A2(elm$core$Basics$composeR, wrappedUpdater, elm_community$graph$Graph$Graph));
-	});
-var author$project$ForceGraph$updateGraphWithList = function () {
-	var graphUpdater = function (value) {
-		return elm$core$Maybe$map(
-			function (ctx) {
-				return A2(author$project$ForceGraph$updateContextWithValue, ctx, value);
-			});
-	};
-	return elm$core$List$foldr(
-		function (ncnode) {
-			return A2(
-				elm_community$graph$Graph$update,
-				ncnode.id,
-				graphUpdater(ncnode));
-		});
-}();
-var elm_community$intdict$IntDict$foldr = F3(
-	function (f, acc, dict) {
-		foldr:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return acc;
-				case 'Leaf':
-					var l = dict.a;
-					return A3(f, l.key, l.value, acc);
-				default:
-					var i = dict.a;
-					var $temp$f = f,
-						$temp$acc = A3(elm_community$intdict$IntDict$foldr, f, acc, i.right),
-						$temp$dict = i.left;
-					f = $temp$f;
-					acc = $temp$acc;
-					dict = $temp$dict;
-					continue foldr;
-			}
-		}
-	});
-var elm_community$intdict$IntDict$values = function (dict) {
-	return A3(
-		elm_community$intdict$IntDict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2(elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
-var elm_community$graph$Graph$nodes = A2(
-	elm$core$Basics$composeR,
-	elm_community$graph$Graph$unGraph,
-	A2(
-		elm$core$Basics$composeR,
-		elm_community$intdict$IntDict$values,
-		elm$core$List$map(
-			function ($) {
-				return $.node;
-			})));
-var elm$core$Dict$values = function (dict) {
-	return A3(
-		elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2(elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
-var gampleman$elm_visualization$Force$State = function (a) {
-	return {$: 'State', a: a};
-};
-var elm$core$Basics$pow = _Basics_pow;
-var elm$core$Basics$sqrt = _Basics_sqrt;
-var elm$core$Dict$map = F2(
-	function (func, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			return A5(
-				elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				A2(func, key, value),
-				A2(elm$core$Dict$map, func, left),
-				A2(elm$core$Dict$map, func, right));
-		}
-	});
-var elm$core$Dict$sizeHelp = F2(
-	function (n, dict) {
-		sizeHelp:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return n;
-			} else {
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$n = A2(elm$core$Dict$sizeHelp, n + 1, right),
-					$temp$dict = left;
-				n = $temp$n;
-				dict = $temp$dict;
-				continue sizeHelp;
-			}
-		}
-	});
-var elm$core$Dict$size = function (dict) {
-	return A2(elm$core$Dict$sizeHelp, 0, dict);
-};
-var elm$core$Basics$isNaN = _Basics_isNaN;
-var ianmackenzie$elm_geometry$BoundingBox2d$maxX = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.maxX;
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$maxY = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.maxY;
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$minX = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.minX;
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$minY = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.minY;
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$dimensions = function (boundingBox) {
-	return _Utils_Tuple2(
-		ianmackenzie$elm_geometry$BoundingBox2d$maxX(boundingBox) - ianmackenzie$elm_geometry$BoundingBox2d$minX(boundingBox),
-		ianmackenzie$elm_geometry$BoundingBox2d$maxY(boundingBox) - ianmackenzie$elm_geometry$BoundingBox2d$minY(boundingBox));
-};
-var ianmackenzie$elm_geometry$Bootstrap$Point2d$coordinates = function (_n0) {
-	var coordinates_ = _n0.a;
-	return coordinates_;
-};
-var ianmackenzie$elm_geometry$Geometry$Types$Vector2d = function (a) {
-	return {$: 'Vector2d', a: a};
-};
-var ianmackenzie$elm_geometry$Vector2d$fromComponents = ianmackenzie$elm_geometry$Geometry$Types$Vector2d;
-var ianmackenzie$elm_geometry$Vector2d$from = F2(
-	function (firstPoint, secondPoint) {
-		var _n0 = ianmackenzie$elm_geometry$Bootstrap$Point2d$coordinates(secondPoint);
-		var x2 = _n0.a;
-		var y2 = _n0.b;
-		var _n1 = ianmackenzie$elm_geometry$Bootstrap$Point2d$coordinates(firstPoint);
-		var x1 = _n1.a;
-		var y1 = _n1.b;
-		return ianmackenzie$elm_geometry$Vector2d$fromComponents(
-			_Utils_Tuple2(x2 - x1, y2 - y1));
-	});
-var ianmackenzie$elm_geometry$Vector2d$components = function (_n0) {
-	var components_ = _n0.a;
-	return components_;
-};
-var ianmackenzie$elm_geometry$Vector2d$squaredLength = function (vector) {
-	var _n0 = ianmackenzie$elm_geometry$Vector2d$components(vector);
-	var x = _n0.a;
-	var y = _n0.b;
-	return (x * x) + (y * y);
-};
-var ianmackenzie$elm_geometry$Point2d$squaredDistanceFrom = F2(
-	function (firstPoint, secondPoint) {
-		return ianmackenzie$elm_geometry$Vector2d$squaredLength(
-			A2(ianmackenzie$elm_geometry$Vector2d$from, firstPoint, secondPoint));
-	});
-var ianmackenzie$elm_geometry$Point2d$distanceFrom = F2(
-	function (firstPoint, secondPoint) {
-		return elm$core$Basics$sqrt(
-			A2(ianmackenzie$elm_geometry$Point2d$squaredDistanceFrom, firstPoint, secondPoint));
-	});
-var ianmackenzie$elm_geometry$Vector2d$scaleBy = F2(
-	function (scale, vector) {
-		var _n0 = ianmackenzie$elm_geometry$Vector2d$components(vector);
-		var x = _n0.a;
-		var y = _n0.b;
-		return ianmackenzie$elm_geometry$Vector2d$fromComponents(
-			_Utils_Tuple2(x * scale, y * scale));
-	});
-var ianmackenzie$elm_geometry$Vector2d$sum = F2(
-	function (firstVector, secondVector) {
-		var _n0 = ianmackenzie$elm_geometry$Vector2d$components(secondVector);
-		var x2 = _n0.a;
-		var y2 = _n0.b;
-		var _n1 = ianmackenzie$elm_geometry$Vector2d$components(firstVector);
-		var x1 = _n1.a;
-		var y1 = _n1.b;
-		return ianmackenzie$elm_geometry$Vector2d$fromComponents(
-			_Utils_Tuple2(x1 + x2, y1 + y2));
-	});
-var ianmackenzie$elm_geometry$Vector2d$zero = ianmackenzie$elm_geometry$Vector2d$fromComponents(
-	_Utils_Tuple2(0, 0));
-var gampleman$elm_visualization$Force$ManyBody$applyForce = F4(
-	function (alpha, theta, qtree, vertex) {
-		var isFarAway = function (treePart) {
-			var distance = A2(ianmackenzie$elm_geometry$Point2d$distanceFrom, vertex.position, treePart.aggregate.position);
-			var _n2 = ianmackenzie$elm_geometry$BoundingBox2d$dimensions(treePart.boundingBox);
-			var width = _n2.a;
-			return _Utils_cmp(width / distance, theta) < 0;
-		};
-		var calculateVelocity = F2(
-			function (target, source) {
-				var delta = A2(ianmackenzie$elm_geometry$Vector2d$from, target.position, source.position);
-				var weight = (source.strength * alpha) / ianmackenzie$elm_geometry$Vector2d$squaredLength(delta);
-				return elm$core$Basics$isNaN(weight) ? ianmackenzie$elm_geometry$Vector2d$zero : A2(ianmackenzie$elm_geometry$Vector2d$scaleBy, weight, delta);
-			});
-		var useAggregate = function (treePart) {
-			return A2(calculateVelocity, vertex, treePart.aggregate);
-		};
-		switch (qtree.$) {
-			case 'Empty':
-				return ianmackenzie$elm_geometry$Vector2d$zero;
-			case 'Leaf':
-				var leaf = qtree.a;
-				if (isFarAway(leaf)) {
-					return useAggregate(leaf);
-				} else {
-					var applyForceFromPoint = F2(
-						function (point, accum) {
-							return _Utils_eq(point.key, vertex.key) ? accum : A2(
-								ianmackenzie$elm_geometry$Vector2d$sum,
-								A2(calculateVelocity, vertex, point),
-								accum);
-						});
-					var _n1 = leaf.children;
-					var first = _n1.a;
-					var rest = _n1.b;
-					return A3(
-						elm$core$List$foldl,
-						applyForceFromPoint,
-						ianmackenzie$elm_geometry$Vector2d$zero,
-						A2(elm$core$List$cons, first, rest));
-				}
-			default:
-				var node = qtree.a;
-				if (isFarAway(node)) {
-					return useAggregate(node);
-				} else {
-					var helper = function (tree) {
-						return A4(gampleman$elm_visualization$Force$ManyBody$applyForce, alpha, theta, tree, vertex);
-					};
-					return A2(
-						ianmackenzie$elm_geometry$Vector2d$sum,
-						helper(node.sw),
-						A2(
-							ianmackenzie$elm_geometry$Vector2d$sum,
-							helper(node.se),
-							A2(
-								ianmackenzie$elm_geometry$Vector2d$sum,
-								helper(node.ne),
-								helper(node.nw))));
-				}
-		}
-	});
-var ianmackenzie$elm_geometry$Point2d$coordinates = function (_n0) {
-	var coordinates_ = _n0.a;
-	return coordinates_;
-};
-var ianmackenzie$elm_geometry$Geometry$Types$Point2d = function (a) {
-	return {$: 'Point2d', a: a};
-};
-var ianmackenzie$elm_geometry$Point2d$fromCoordinates = ianmackenzie$elm_geometry$Geometry$Types$Point2d;
-var gampleman$elm_visualization$Force$ManyBody$constructSuperPoint = F2(
-	function (first, rest) {
-		var initialStrength = first.strength;
-		var initialPoint = ianmackenzie$elm_geometry$Point2d$coordinates(first.position);
-		var folder = F2(
-			function (point, _n3) {
-				var _n4 = _n3.a;
-				var accumX = _n4.a;
-				var accumY = _n4.b;
-				var strength = _n3.b;
-				var size = _n3.c;
-				var _n2 = ianmackenzie$elm_geometry$Point2d$coordinates(point.position);
-				var x = _n2.a;
-				var y = _n2.b;
-				return _Utils_Tuple3(
-					_Utils_Tuple2(accumX + x, accumY + y),
-					strength + point.strength,
-					size + 1);
-			});
-		var _n0 = A3(
-			elm$core$List$foldl,
-			folder,
-			_Utils_Tuple3(initialPoint, initialStrength, 1),
-			rest);
-		var _n1 = _n0.a;
-		var totalX = _n1.a;
-		var totalY = _n1.b;
-		var totalStrength = _n0.b;
-		var totalSize = _n0.c;
-		return {
-			position: ianmackenzie$elm_geometry$Point2d$fromCoordinates(
-				_Utils_Tuple2(totalX / totalSize, totalY / totalSize)),
-			strength: totalStrength
-		};
-	});
-var gampleman$elm_visualization$Force$ManyBody$config = {
-	combineAggregates: gampleman$elm_visualization$Force$ManyBody$constructSuperPoint,
-	combineVertices: gampleman$elm_visualization$Force$ManyBody$constructSuperPoint,
-	toPoint: function ($) {
-		return $.position;
-	}
-};
-var gampleman$elm_visualization$Force$QuadTree$Empty = {$: 'Empty'};
-var gampleman$elm_visualization$Force$QuadTree$empty = gampleman$elm_visualization$Force$QuadTree$Empty;
-var elm$core$Basics$ge = _Utils_ge;
-var gampleman$elm_visualization$Force$QuadTree$Leaf = function (a) {
-	return {$: 'Leaf', a: a};
-};
-var gampleman$elm_visualization$Force$QuadTree$Node = function (a) {
-	return {$: 'Node', a: a};
-};
-var gampleman$elm_visualization$Force$QuadTree$NE = {$: 'NE'};
-var gampleman$elm_visualization$Force$QuadTree$NW = {$: 'NW'};
-var gampleman$elm_visualization$Force$QuadTree$SE = {$: 'SE'};
-var gampleman$elm_visualization$Force$QuadTree$SW = {$: 'SW'};
-var ianmackenzie$elm_geometry$BoundingBox2d$midX = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.minX + (0.5 * (boundingBox.maxX - boundingBox.minX));
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$midY = function (_n0) {
-	var boundingBox = _n0.a;
-	return boundingBox.minY + (0.5 * (boundingBox.maxY - boundingBox.minY));
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$centerPoint = function (boundingBox) {
-	return ianmackenzie$elm_geometry$Point2d$fromCoordinates(
-		_Utils_Tuple2(
-			ianmackenzie$elm_geometry$BoundingBox2d$midX(boundingBox),
-			ianmackenzie$elm_geometry$BoundingBox2d$midY(boundingBox)));
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$centroid = function (boundingBox) {
-	return ianmackenzie$elm_geometry$BoundingBox2d$centerPoint(boundingBox);
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$extrema = function (_n0) {
-	var extrema_ = _n0.a;
-	return extrema_;
-};
-var gampleman$elm_visualization$Force$QuadTree$quadrant = F2(
-	function (boundingBox, point) {
-		var _n0 = ianmackenzie$elm_geometry$Point2d$coordinates(point);
-		var x = _n0.a;
-		var y = _n0.b;
-		var _n1 = ianmackenzie$elm_geometry$Point2d$coordinates(
-			ianmackenzie$elm_geometry$BoundingBox2d$centroid(boundingBox));
-		var midX = _n1.a;
-		var midY = _n1.b;
-		var _n2 = ianmackenzie$elm_geometry$BoundingBox2d$extrema(boundingBox);
-		var minX = _n2.minX;
-		var minY = _n2.minY;
-		var maxX = _n2.maxX;
-		var maxY = _n2.maxY;
-		return (_Utils_cmp(y, midY) > -1) ? ((_Utils_cmp(x, midX) > -1) ? gampleman$elm_visualization$Force$QuadTree$NE : gampleman$elm_visualization$Force$QuadTree$NW) : ((_Utils_cmp(x, midX) > -1) ? gampleman$elm_visualization$Force$QuadTree$SE : gampleman$elm_visualization$Force$QuadTree$SW);
-	});
-var elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
-var ianmackenzie$elm_geometry$Geometry$Types$BoundingBox2d = function (a) {
-	return {$: 'BoundingBox2d', a: a};
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema = function (extrema_) {
-	return ((_Utils_cmp(extrema_.minX, extrema_.maxX) < 1) && (_Utils_cmp(extrema_.minY, extrema_.maxY) < 1)) ? ianmackenzie$elm_geometry$Geometry$Types$BoundingBox2d(extrema_) : ianmackenzie$elm_geometry$Geometry$Types$BoundingBox2d(
-		{
-			maxX: A2(elm$core$Basics$max, extrema_.minX, extrema_.maxX),
-			maxY: A2(elm$core$Basics$max, extrema_.minY, extrema_.maxY),
-			minX: A2(elm$core$Basics$min, extrema_.minX, extrema_.maxX),
-			minY: A2(elm$core$Basics$min, extrema_.minY, extrema_.maxY)
-		});
-};
-var ianmackenzie$elm_geometry$BoundingBox2d$singleton = function (point) {
-	var _n0 = ianmackenzie$elm_geometry$Point2d$coordinates(point);
-	var x = _n0.a;
-	var y = _n0.b;
-	return ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-		{maxX: x, maxY: y, minX: x, minY: y});
-};
-var gampleman$elm_visualization$Force$QuadTree$singleton = F2(
-	function (toPoint, vertex) {
-		return gampleman$elm_visualization$Force$QuadTree$Leaf(
-			{
-				aggregate: _Utils_Tuple0,
-				boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$singleton(
-					toPoint(vertex)),
-				children: _Utils_Tuple2(vertex, _List_Nil)
-			});
-	});
-var ianmackenzie$elm_geometry$BoundingBox2d$contains = F2(
-	function (point, boundingBox) {
-		var _n0 = ianmackenzie$elm_geometry$Point2d$coordinates(point);
-		var x = _n0.a;
-		var y = _n0.b;
-		return ((_Utils_cmp(
-			ianmackenzie$elm_geometry$BoundingBox2d$minX(boundingBox),
-			x) < 1) && (_Utils_cmp(
-			x,
-			ianmackenzie$elm_geometry$BoundingBox2d$maxX(boundingBox)) < 1)) && ((_Utils_cmp(
-			ianmackenzie$elm_geometry$BoundingBox2d$minY(boundingBox),
-			y) < 1) && (_Utils_cmp(
-			y,
-			ianmackenzie$elm_geometry$BoundingBox2d$maxY(boundingBox)) < 1));
-	});
-var ianmackenzie$elm_geometry$BoundingBox2d$hull = F2(
-	function (firstBox, secondBox) {
-		return ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-			{
-				maxX: A2(
-					elm$core$Basics$max,
-					ianmackenzie$elm_geometry$BoundingBox2d$maxX(firstBox),
-					ianmackenzie$elm_geometry$BoundingBox2d$maxX(secondBox)),
-				maxY: A2(
-					elm$core$Basics$max,
-					ianmackenzie$elm_geometry$BoundingBox2d$maxY(firstBox),
-					ianmackenzie$elm_geometry$BoundingBox2d$maxY(secondBox)),
-				minX: A2(
-					elm$core$Basics$min,
-					ianmackenzie$elm_geometry$BoundingBox2d$minX(firstBox),
-					ianmackenzie$elm_geometry$BoundingBox2d$minX(secondBox)),
-				minY: A2(
-					elm$core$Basics$min,
-					ianmackenzie$elm_geometry$BoundingBox2d$minY(firstBox),
-					ianmackenzie$elm_geometry$BoundingBox2d$minY(secondBox))
-			});
-	});
-var gampleman$elm_visualization$Force$QuadTree$insertBy = F3(
-	function (toPoint, vertex, qtree) {
-		switch (qtree.$) {
-			case 'Empty':
-				return gampleman$elm_visualization$Force$QuadTree$Leaf(
-					{
-						aggregate: _Utils_Tuple0,
-						boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$singleton(
-							toPoint(vertex)),
-						children: _Utils_Tuple2(vertex, _List_Nil)
-					});
-			case 'Leaf':
-				var leaf = qtree.a;
-				var maxSize = 32;
-				var _n1 = leaf.children;
-				var first = _n1.a;
-				var rest = _n1.b;
-				var newSize = 2 + elm$core$List$length(rest);
-				if (_Utils_cmp(newSize, maxSize) > -1) {
-					var initial = gampleman$elm_visualization$Force$QuadTree$Node(
-						{
-							aggregate: _Utils_Tuple0,
-							boundingBox: A2(
-								ianmackenzie$elm_geometry$BoundingBox2d$hull,
-								leaf.boundingBox,
-								ianmackenzie$elm_geometry$BoundingBox2d$singleton(
-									toPoint(vertex))),
-							ne: gampleman$elm_visualization$Force$QuadTree$Empty,
-							nw: gampleman$elm_visualization$Force$QuadTree$Empty,
-							se: gampleman$elm_visualization$Force$QuadTree$Empty,
-							sw: gampleman$elm_visualization$Force$QuadTree$Empty
-						});
-					return A3(
-						elm$core$List$foldl,
-						gampleman$elm_visualization$Force$QuadTree$insertBy(toPoint),
-						initial,
-						A2(elm$core$List$cons, first, rest));
-				} else {
-					return gampleman$elm_visualization$Force$QuadTree$Leaf(
-						{
-							aggregate: _Utils_Tuple0,
-							boundingBox: A2(
-								ianmackenzie$elm_geometry$BoundingBox2d$hull,
-								leaf.boundingBox,
-								ianmackenzie$elm_geometry$BoundingBox2d$singleton(
-									toPoint(vertex))),
-							children: _Utils_Tuple2(
-								vertex,
-								A2(elm$core$List$cons, first, rest))
-						});
-				}
-			default:
-				var node = qtree.a;
-				var point = toPoint(vertex);
-				if (A2(ianmackenzie$elm_geometry$BoundingBox2d$contains, point, node.boundingBox)) {
-					var _n2 = A2(gampleman$elm_visualization$Force$QuadTree$quadrant, node.boundingBox, point);
-					switch (_n2.$) {
-						case 'NE':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								_Utils_update(
-									node,
-									{
-										ne: A3(gampleman$elm_visualization$Force$QuadTree$insertBy, toPoint, vertex, node.ne)
-									}));
-						case 'SE':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								_Utils_update(
-									node,
-									{
-										se: A3(gampleman$elm_visualization$Force$QuadTree$insertBy, toPoint, vertex, node.se)
-									}));
-						case 'NW':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								_Utils_update(
-									node,
-									{
-										nw: A3(gampleman$elm_visualization$Force$QuadTree$insertBy, toPoint, vertex, node.nw)
-									}));
-						default:
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								_Utils_update(
-									node,
-									{
-										sw: A3(gampleman$elm_visualization$Force$QuadTree$insertBy, toPoint, vertex, node.sw)
-									}));
-					}
-				} else {
-					var _n3 = ianmackenzie$elm_geometry$BoundingBox2d$extrema(node.boundingBox);
-					var minX = _n3.minX;
-					var minY = _n3.minY;
-					var maxX = _n3.maxX;
-					var maxY = _n3.maxY;
-					var _n4 = ianmackenzie$elm_geometry$BoundingBox2d$dimensions(node.boundingBox);
-					var width = _n4.a;
-					var height = _n4.b;
-					var _n5 = A2(gampleman$elm_visualization$Force$QuadTree$quadrant, node.boundingBox, point);
-					switch (_n5.$) {
-						case 'NE':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								{
-									aggregate: _Utils_Tuple0,
-									boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-										{maxX: maxX + width, maxY: maxY + height, minX: minX, minY: minY}),
-									ne: A2(gampleman$elm_visualization$Force$QuadTree$singleton, toPoint, vertex),
-									nw: gampleman$elm_visualization$Force$QuadTree$Empty,
-									se: gampleman$elm_visualization$Force$QuadTree$Empty,
-									sw: qtree
-								});
-						case 'SE':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								{
-									aggregate: _Utils_Tuple0,
-									boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-										{maxX: maxX + width, maxY: maxY, minX: minX, minY: minY - height}),
-									ne: gampleman$elm_visualization$Force$QuadTree$Empty,
-									nw: qtree,
-									se: A2(gampleman$elm_visualization$Force$QuadTree$singleton, toPoint, vertex),
-									sw: gampleman$elm_visualization$Force$QuadTree$Empty
-								});
-						case 'NW':
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								{
-									aggregate: _Utils_Tuple0,
-									boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-										{maxX: maxX, maxY: maxY + height, minX: minX - width, minY: minY}),
-									ne: gampleman$elm_visualization$Force$QuadTree$Empty,
-									nw: A2(gampleman$elm_visualization$Force$QuadTree$singleton, toPoint, vertex),
-									se: qtree,
-									sw: gampleman$elm_visualization$Force$QuadTree$Empty
-								});
-						default:
-							return gampleman$elm_visualization$Force$QuadTree$Node(
-								{
-									aggregate: _Utils_Tuple0,
-									boundingBox: ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
-										{maxX: maxX, maxY: maxY, minX: minX - width, minY: minY - height}),
-									ne: qtree,
-									nw: gampleman$elm_visualization$Force$QuadTree$Empty,
-									se: gampleman$elm_visualization$Force$QuadTree$Empty,
-									sw: A2(gampleman$elm_visualization$Force$QuadTree$singleton, toPoint, vertex)
-								});
-					}
-				}
-		}
-	});
-var gampleman$elm_visualization$Force$QuadTree$fromList = function (toPoint) {
-	return A2(
-		elm$core$List$foldl,
-		gampleman$elm_visualization$Force$QuadTree$insertBy(toPoint),
-		gampleman$elm_visualization$Force$QuadTree$empty);
-};
-var elm$core$List$maybeCons = F3(
-	function (f, mx, xs) {
-		var _n0 = f(mx);
-		if (_n0.$ === 'Just') {
-			var x = _n0.a;
-			return A2(elm$core$List$cons, x, xs);
-		} else {
-			return xs;
-		}
-	});
-var elm$core$List$filterMap = F2(
-	function (f, xs) {
-		return A3(
-			elm$core$List$foldr,
-			elm$core$List$maybeCons(f),
-			_List_Nil,
-			xs);
-	});
-var gampleman$elm_visualization$Force$QuadTree$getAggregate = function (qtree) {
-	switch (qtree.$) {
-		case 'Empty':
-			return elm$core$Maybe$Nothing;
-		case 'Leaf':
-			var aggregate = qtree.a.aggregate;
-			return elm$core$Maybe$Just(aggregate);
-		default:
-			var aggregate = qtree.a.aggregate;
-			return elm$core$Maybe$Just(aggregate);
-	}
-};
-var gampleman$elm_visualization$Force$QuadTree$performAggregate = F2(
-	function (config, vanillaQuadTree) {
-		var combineAggregates = config.combineAggregates;
-		var combineVertices = config.combineVertices;
-		switch (vanillaQuadTree.$) {
-			case 'Empty':
-				return gampleman$elm_visualization$Force$QuadTree$Empty;
-			case 'Leaf':
-				var leaf = vanillaQuadTree.a;
-				var _n1 = leaf.children;
-				var first = _n1.a;
-				var rest = _n1.b;
-				return gampleman$elm_visualization$Force$QuadTree$Leaf(
-					{
-						aggregate: A2(combineVertices, first, rest),
-						boundingBox: leaf.boundingBox,
-						children: _Utils_Tuple2(first, rest)
-					});
-			default:
-				var node = vanillaQuadTree.a;
-				var newSw = A2(gampleman$elm_visualization$Force$QuadTree$performAggregate, config, node.sw);
-				var newSe = A2(gampleman$elm_visualization$Force$QuadTree$performAggregate, config, node.se);
-				var newNw = A2(gampleman$elm_visualization$Force$QuadTree$performAggregate, config, node.nw);
-				var newNe = A2(gampleman$elm_visualization$Force$QuadTree$performAggregate, config, node.ne);
-				var subresults = A2(
-					elm$core$List$filterMap,
-					gampleman$elm_visualization$Force$QuadTree$getAggregate,
-					_List_fromArray(
-						[newNw, newSw, newNe, newSe]));
-				if (!subresults.b) {
-					return gampleman$elm_visualization$Force$QuadTree$Empty;
-				} else {
-					var x = subresults.a;
-					var xs = subresults.b;
-					return gampleman$elm_visualization$Force$QuadTree$Node(
-						{
-							aggregate: A2(combineAggregates, x, xs),
-							boundingBox: node.boundingBox,
-							ne: newNe,
-							nw: newNw,
-							se: newSe,
-							sw: newSw
-						});
-				}
-		}
-	});
-var gampleman$elm_visualization$Force$ManyBody$manyBody = F3(
-	function (alpha, theta, vertices) {
-		var withAggregates = A2(
-			gampleman$elm_visualization$Force$QuadTree$performAggregate,
-			gampleman$elm_visualization$Force$ManyBody$config,
-			A2(
-				gampleman$elm_visualization$Force$QuadTree$fromList,
-				function ($) {
-					return $.position;
-				},
-				vertices));
-		var updateVertex = function (vertex) {
-			return _Utils_update(
-				vertex,
-				{
-					velocity: A2(
-						ianmackenzie$elm_geometry$Vector2d$sum,
-						vertex.velocity,
-						A4(gampleman$elm_visualization$Force$ManyBody$applyForce, alpha, theta, withAggregates, vertex))
-				});
-		};
-		return A2(elm$core$List$map, updateVertex, vertices);
-	});
-var gampleman$elm_visualization$Force$ManyBody$wrapper = F4(
-	function (alpha, theta, strengths, points) {
-		var vertices = A2(
-			elm$core$List$map,
-			function (_n2) {
-				var key = _n2.a;
-				var point = _n2.b;
-				var x = point.x;
-				var y = point.y;
-				var strength = A2(
-					elm$core$Maybe$withDefault,
-					0,
-					A2(elm$core$Dict$get, key, strengths));
-				return {
-					key: key,
-					position: ianmackenzie$elm_geometry$Point2d$fromCoordinates(
-						_Utils_Tuple2(x, y)),
-					strength: strength,
-					velocity: ianmackenzie$elm_geometry$Vector2d$zero
-				};
-			},
-			elm$core$Dict$toList(points));
-		var updater = F2(
-			function (newVertex, maybePoint) {
-				if (maybePoint.$ === 'Nothing') {
-					return elm$core$Maybe$Nothing;
-				} else {
-					var point = maybePoint.a;
-					var _n1 = ianmackenzie$elm_geometry$Vector2d$components(newVertex.velocity);
-					var dvx = _n1.a;
-					var dvy = _n1.b;
-					return elm$core$Maybe$Just(
-						_Utils_update(
-							point,
-							{vx: point.vx + dvx, vy: point.vy + dvy}));
-				}
-			});
-		var newVertices = A3(gampleman$elm_visualization$Force$ManyBody$manyBody, alpha, theta, vertices);
-		var folder = F2(
-			function (newVertex, pointsDict) {
-				return A3(
-					elm$core$Dict$update,
-					newVertex.key,
-					updater(newVertex),
-					pointsDict);
-			});
-		return A3(elm$core$List$foldl, folder, points, newVertices);
-	});
-var gampleman$elm_visualization$Force$applyForce = F3(
-	function (alpha, force, entities) {
-		switch (force.$) {
-			case 'Center':
-				var x = force.a;
-				var y = force.b;
-				var n = elm$core$Dict$size(entities);
-				var _n1 = A3(
-					elm$core$Dict$foldr,
-					F3(
-						function (_n2, ent, _n3) {
-							var sx0 = _n3.a;
-							var sy0 = _n3.b;
-							return _Utils_Tuple2(sx0 + ent.x, sy0 + ent.y);
-						}),
-					_Utils_Tuple2(0, 0),
-					entities);
-				var sumx = _n1.a;
-				var sumy = _n1.b;
-				var sx = (sumx / n) - x;
-				var sy = (sumy / n) - y;
-				return A2(
-					elm$core$Dict$map,
-					F2(
-						function (_n4, ent) {
-							return _Utils_update(
-								ent,
-								{x: ent.x - sx, y: ent.y - sy});
-						}),
-					entities);
-			case 'Collision':
-				var _float = force.a;
-				var collisionParamidDict = force.b;
-				return entities;
-			case 'Links':
-				var iters = force.a;
-				var lnks = force.b;
-				return A3(
-					elm$core$List$foldl,
-					F2(
-						function (_n5, ents) {
-							var source = _n5.source;
-							var target = _n5.target;
-							var distance = _n5.distance;
-							var strength = _n5.strength;
-							var bias = _n5.bias;
-							var _n6 = _Utils_Tuple2(
-								A2(elm$core$Dict$get, source, ents),
-								A2(elm$core$Dict$get, target, ents));
-							if ((_n6.a.$ === 'Just') && (_n6.b.$ === 'Just')) {
-								var sourceNode = _n6.a.a;
-								var targetNode = _n6.b.a;
-								var y = ((targetNode.y + targetNode.vy) - sourceNode.y) - sourceNode.vy;
-								var x = ((targetNode.x + targetNode.vx) - sourceNode.x) - sourceNode.vx;
-								var d = elm$core$Basics$sqrt(
-									A2(elm$core$Basics$pow, x, 2) + A2(elm$core$Basics$pow, y, 2));
-								var l = (((d - distance) / d) * alpha) * strength;
-								return A3(
-									elm$core$Dict$update,
-									source,
-									elm$core$Maybe$map(
-										function (tn) {
-											return _Utils_update(
-												tn,
-												{vx: tn.vx + ((x * l) * (1 - bias)), vy: tn.vy + ((y * l) * (1 - bias))});
-										}),
-									A3(
-										elm$core$Dict$update,
-										target,
-										elm$core$Maybe$map(
-											function (sn) {
-												return _Utils_update(
-													sn,
-													{vx: sn.vx - ((x * l) * bias), vy: sn.vy - ((y * l) * bias)});
-											}),
-										ents));
-							} else {
-								var otherwise = _n6;
-								return ents;
-							}
-						}),
-					entities,
-					lnks);
-			case 'ManyBody':
-				var theta = force.a;
-				var entityStrengths = force.b;
-				return A4(gampleman$elm_visualization$Force$ManyBody$wrapper, alpha, theta, entityStrengths, entities);
-			case 'X':
-				var directionalParamidDict = force.a;
-				return entities;
-			default:
-				var directionalParamidDict = force.a;
-				return entities;
-		}
-	});
-var gampleman$elm_visualization$Force$tick = F2(
-	function (_n0, nodes) {
-		var state = _n0.a;
-		var updateEntity = function (ent) {
-			return _Utils_update(
-				ent,
-				{vx: ent.vx * state.velocityDecay, vy: ent.vy * state.velocityDecay, x: ent.x + (ent.vx * state.velocityDecay), y: ent.y + (ent.vy * state.velocityDecay)});
-		};
-		var dictNodes = A3(
-			elm$core$List$foldl,
-			function (node) {
-				return A2(elm$core$Dict$insert, node.id, node);
-			},
-			elm$core$Dict$empty,
-			nodes);
-		var alpha = state.alpha + ((state.alphaTarget - state.alpha) * state.alphaDecay);
-		var newNodes = A3(
-			elm$core$List$foldl,
-			gampleman$elm_visualization$Force$applyForce(alpha),
-			dictNodes,
-			state.forces);
-		return _Utils_Tuple2(
-			gampleman$elm_visualization$Force$State(
-				_Utils_update(
-					state,
-					{alpha: alpha})),
-			A2(
-				elm$core$List$map,
-				updateEntity,
-				elm$core$Dict$values(newNodes)));
-	});
-var author$project$ForceGraph$tick = function (_n0) {
-	var graph = _n0.graph;
-	var simulation = _n0.simulation;
-	var _n1 = A2(
-		gampleman$elm_visualization$Force$tick,
-		simulation,
-		A2(
-			elm$core$List$map,
-			function ($) {
-				return $.label;
-			},
-			elm_community$graph$Graph$nodes(graph)));
-	var newState = _n1.a;
-	var list = _n1.b;
-	return {
-		graph: A2(author$project$ForceGraph$updateGraphWithList, graph, list),
-		simulation: newState
-	};
-};
 var elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
 var author$project$Hash$updateHash = F2(
 	function (c, h) {
@@ -9668,6 +8886,9 @@ var author$project$Main$CardDropTargetRefreshed = function (a) {
 	return {$: 'CardDropTargetRefreshed', a: a};
 };
 var author$project$Main$ExcludeAllFilter = {$: 'ExcludeAllFilter'};
+var author$project$Main$GraphsFetched = function (a) {
+	return {$: 'GraphsFetched', a: a};
+};
 var author$project$Main$InProjectFilter = function (a) {
 	return {$: 'InProjectFilter', a: a};
 };
@@ -10239,6 +9460,24 @@ var author$project$GitHubGraph$milestoneObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Milestone))))));
+var elm$core$List$maybeCons = F3(
+	function (f, mx, xs) {
+		var _n0 = f(mx);
+		if (_n0.$ === 'Just') {
+			var x = _n0.a;
+			return A2(elm$core$List$cons, x, xs);
+		} else {
+			return xs;
+		}
+	});
+var elm$core$List$filterMap = F2(
+	function (f, xs) {
+		return A3(
+			elm$core$List$foldr,
+			elm$core$List$maybeCons(f),
+			_List_Nil,
+			xs);
+	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType = function (a) {
 	return {$: 'ListType', a: a};
 };
@@ -12436,389 +11675,6 @@ var author$project$Main$computeDataView = function (origModel) {
 			return model;
 	}
 };
-var author$project$ForceGraph$computeSimulation = function (fg) {
-	computeSimulation:
-	while (true) {
-		if (author$project$ForceGraph$isCompleted(fg)) {
-			return fg;
-		} else {
-			var $temp$fg = author$project$ForceGraph$tick(fg);
-			fg = $temp$fg;
-			continue computeSimulation;
-		}
-	}
-};
-var elm$core$Basics$abs = function (n) {
-	return (n < 0) ? (-n) : n;
-};
-var elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var elm$random$Random$next = function (_n0) {
-	var state0 = _n0.a;
-	var incr = _n0.b;
-	return A2(elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
-var elm$random$Random$peel = function (_n0) {
-	var state = _n0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var elm$random$Random$float = F2(
-	function (a, b) {
-		return elm$random$Random$Generator(
-			function (seed0) {
-				var seed1 = elm$random$Random$next(seed0);
-				var range = elm$core$Basics$abs(b - a);
-				var n1 = elm$random$Random$peel(seed1);
-				var n0 = elm$random$Random$peel(seed0);
-				var lo = (134217727 & n1) * 1.0;
-				var hi = (67108863 & n0) * 1.0;
-				var val = ((hi * 1.34217728e8) + lo) / 9.007199254740992e15;
-				var scaled = (val * range) + a;
-				return _Utils_Tuple2(
-					scaled,
-					elm$random$Random$next(seed1));
-			});
-	});
-var elm$random$Random$initialSeed = function (x) {
-	var _n0 = elm$random$Random$next(
-		A2(elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _n0.a;
-	var incr = _n0.b;
-	var state2 = (state1 + x) >>> 0;
-	return elm$random$Random$next(
-		A2(elm$random$Random$Seed, state2, incr));
-};
-var elm$random$Random$step = F2(
-	function (_n0, seed) {
-		var generator = _n0.a;
-		return generator(seed);
-	});
-var author$project$ForceGraph$node = function (nc) {
-	var ncnode = nc.node;
-	var canvas = 500;
-	var _n0 = A2(
-		elm$random$Random$step,
-		A2(elm$random$Random$float, 0, canvas),
-		elm$random$Random$initialSeed(ncnode.id));
-	var x = _n0.a;
-	var s2 = _n0.b;
-	var _n1 = A2(
-		elm$random$Random$step,
-		A2(elm$random$Random$float, 0, canvas),
-		s2);
-	var y = _n1.a;
-	var s3 = _n1.b;
-	return {
-		incoming: nc.incoming,
-		node: {
-			id: ncnode.id,
-			label: {id: ncnode.id, size: ncnode.label.size, value: ncnode.label.value, vx: 0.0, vy: 0.0, x: x, y: y}
-		},
-		outgoing: nc.outgoing
-	};
-};
-var elm_community$graph$Graph$edges = function (graph) {
-	var flippedFoldl = F3(
-		function (f, dict, list) {
-			return A3(elm_community$intdict$IntDict$foldl, f, list, dict);
-		});
-	var prependEdges = F2(
-		function (node1, ctx) {
-			return A2(
-				flippedFoldl,
-				F2(
-					function (node2, e) {
-						return elm$core$List$cons(
-							{from: node1, label: e, to: node2});
-					}),
-				ctx.outgoing);
-		});
-	return A3(
-		flippedFoldl,
-		prependEdges,
-		elm_community$graph$Graph$unGraph(graph),
-		_List_Nil);
-};
-var elm_community$graph$Graph$get = function (nodeId) {
-	return A2(
-		elm$core$Basics$composeR,
-		elm_community$graph$Graph$unGraph,
-		elm_community$intdict$IntDict$get(nodeId));
-};
-var elm_community$graph$Graph$empty = elm_community$graph$Graph$Graph(elm_community$intdict$IntDict$empty);
-var elm_community$intdict$IntDict$findMax = function (dict) {
-	findMax:
-	while (true) {
-		switch (dict.$) {
-			case 'Empty':
-				return elm$core$Maybe$Nothing;
-			case 'Leaf':
-				var l = dict.a;
-				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.key, l.value));
-			default:
-				var i = dict.a;
-				var $temp$dict = i.right;
-				dict = $temp$dict;
-				continue findMax;
-		}
-	}
-};
-var elm_community$intdict$IntDict$findMin = function (dict) {
-	findMin:
-	while (true) {
-		switch (dict.$) {
-			case 'Empty':
-				return elm$core$Maybe$Nothing;
-			case 'Leaf':
-				var l = dict.a;
-				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.key, l.value));
-			default:
-				var i = dict.a;
-				var $temp$dict = i.left;
-				dict = $temp$dict;
-				continue findMin;
-		}
-	}
-};
-var elm_community$graph$Graph$nodeIdRange = function (graph) {
-	return A2(
-		elm$core$Maybe$andThen,
-		function (_n0) {
-			var min = _n0.a;
-			return A2(
-				elm$core$Maybe$andThen,
-				function (_n1) {
-					var max = _n1.a;
-					return elm$core$Maybe$Just(
-						_Utils_Tuple2(min, max));
-				},
-				elm_community$intdict$IntDict$findMax(
-					elm_community$graph$Graph$unGraph(graph)));
-		},
-		elm_community$intdict$IntDict$findMin(
-			elm_community$graph$Graph$unGraph(graph)));
-};
-var elm_community$graph$Graph$remove = F2(
-	function (nodeId, graph) {
-		return A3(
-			elm_community$graph$Graph$update,
-			nodeId,
-			elm$core$Basics$always(elm$core$Maybe$Nothing),
-			graph);
-	});
-var elm_community$graph$Graph$fold = F3(
-	function (f, acc, graph) {
-		var go = F2(
-			function (acc1, graph1) {
-				go:
-				while (true) {
-					var maybeContext = A2(
-						elm$core$Maybe$andThen,
-						function (id) {
-							return A2(elm_community$graph$Graph$get, id, graph);
-						},
-						A2(
-							elm$core$Maybe$map,
-							elm$core$Tuple$first,
-							elm_community$graph$Graph$nodeIdRange(graph1)));
-					if (maybeContext.$ === 'Just') {
-						var ctx = maybeContext.a;
-						var $temp$acc1 = A2(f, ctx, acc1),
-							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.node.id, graph1);
-						acc1 = $temp$acc1;
-						graph1 = $temp$graph1;
-						continue go;
-					} else {
-						return acc1;
-					}
-				}
-			});
-		return A2(go, acc, graph);
-	});
-var elm_community$graph$Graph$insert = F2(
-	function (nodeContext, graph) {
-		return A3(
-			elm_community$graph$Graph$update,
-			nodeContext.node.id,
-			elm$core$Basics$always(
-				elm$core$Maybe$Just(nodeContext)),
-			graph);
-	});
-var elm_community$graph$Graph$mapContexts = function (f) {
-	return A2(
-		elm_community$graph$Graph$fold,
-		function (ctx) {
-			return elm_community$graph$Graph$insert(
-				f(ctx));
-		},
-		elm_community$graph$Graph$empty);
-};
-var elm_community$graph$Graph$size = A2(elm$core$Basics$composeR, elm_community$graph$Graph$unGraph, elm_community$intdict$IntDict$size);
-var gampleman$elm_visualization$Force$Links = F2(
-	function (a, b) {
-		return {$: 'Links', a: a, b: b};
-	});
-var gampleman$elm_visualization$Force$customLinks = F2(
-	function (iters, list) {
-		var counts = A3(
-			elm$core$List$foldr,
-			F2(
-				function (_n1, d) {
-					var source = _n1.source;
-					var target = _n1.target;
-					return A3(
-						elm$core$Dict$update,
-						target,
-						A2(
-							elm$core$Basics$composeL,
-							A2(
-								elm$core$Basics$composeL,
-								elm$core$Maybe$Just,
-								elm$core$Maybe$withDefault(1)),
-							elm$core$Maybe$map(
-								elm$core$Basics$add(1))),
-						A3(
-							elm$core$Dict$update,
-							source,
-							A2(
-								elm$core$Basics$composeL,
-								A2(
-									elm$core$Basics$composeL,
-									elm$core$Maybe$Just,
-									elm$core$Maybe$withDefault(1)),
-								elm$core$Maybe$map(
-									elm$core$Basics$add(1))),
-							d));
-				}),
-			elm$core$Dict$empty,
-			list);
-		var count = function (key) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				A2(elm$core$Dict$get, key, counts));
-		};
-		return A2(
-			gampleman$elm_visualization$Force$Links,
-			iters,
-			A2(
-				elm$core$List$map,
-				function (_n0) {
-					var source = _n0.source;
-					var target = _n0.target;
-					var distance = _n0.distance;
-					var strength = _n0.strength;
-					return {
-						bias: count(source) / (count(source) + count(target)),
-						distance: distance,
-						source: source,
-						strength: A2(
-							elm$core$Maybe$withDefault,
-							1 / A2(
-								elm$core$Basics$min,
-								count(source),
-								count(target)),
-							strength),
-						target: target
-					};
-				},
-				list));
-	});
-var gampleman$elm_visualization$Force$iterations = F2(
-	function (iters, _n0) {
-		var config = _n0.a;
-		return gampleman$elm_visualization$Force$State(
-			_Utils_update(
-				config,
-				{
-					alphaDecay: 1 - A2(elm$core$Basics$pow, config.minAlpha, 1 / iters)
-				}));
-	});
-var gampleman$elm_visualization$Force$ManyBody = F2(
-	function (a, b) {
-		return {$: 'ManyBody', a: a, b: b};
-	});
-var gampleman$elm_visualization$Force$customManyBody = function (theta) {
-	return A2(
-		elm$core$Basics$composeR,
-		elm$core$Dict$fromList,
-		gampleman$elm_visualization$Force$ManyBody(theta));
-};
-var gampleman$elm_visualization$Force$manyBodyStrength = function (strength) {
-	return A2(
-		elm$core$Basics$composeL,
-		gampleman$elm_visualization$Force$customManyBody(0.9),
-		elm$core$List$map(
-			function (key) {
-				return _Utils_Tuple2(key, strength);
-			}));
-};
-var gampleman$elm_visualization$Force$simulation = function (forces) {
-	return gampleman$elm_visualization$Force$State(
-		{
-			alpha: 1.0,
-			alphaDecay: 1 - A2(elm$core$Basics$pow, 1.0e-3, 1 / 300),
-			alphaTarget: 0.0,
-			forces: forces,
-			minAlpha: 1.0e-3,
-			velocityDecay: 0.6
-		});
-};
-var author$project$ForceGraph$fromGraph = function (g) {
-	var graph = A2(elm_community$graph$Graph$mapContexts, author$project$ForceGraph$node, g);
-	var link = function (_n1) {
-		var from = _n1.from;
-		var to = _n1.to;
-		var distance = function () {
-			var _n0 = _Utils_Tuple2(
-				A2(elm_community$graph$Graph$get, from, graph),
-				A2(elm_community$graph$Graph$get, to, graph));
-			if ((_n0.a.$ === 'Just') && (_n0.b.$ === 'Just')) {
-				var fnc = _n0.a.a;
-				var tnc = _n0.b.a;
-				return 20 + elm$core$Basics$ceiling(tnc.node.label.size + fnc.node.label.size);
-			} else {
-				return 0;
-			}
-		}();
-		return {distance: distance, source: from, strength: elm$core$Maybe$Nothing, target: to};
-	};
-	var size = elm_community$graph$Graph$size(graph);
-	var iterations = (size === 1) ? 1 : ((size < 5) ? 50 : (size * 10));
-	var forces = _List_fromArray(
-		[
-			A2(
-			gampleman$elm_visualization$Force$customLinks,
-			1,
-			A2(
-				elm$core$List$map,
-				link,
-				elm_community$graph$Graph$edges(graph))),
-			A2(
-			gampleman$elm_visualization$Force$manyBodyStrength,
-			-200,
-			A2(
-				elm$core$List$map,
-				function ($) {
-					return $.id;
-				},
-				elm_community$graph$Graph$nodes(graph)))
-		]);
-	var newSimulation = A2(
-		gampleman$elm_visualization$Force$iterations,
-		iterations,
-		gampleman$elm_visualization$Force$simulation(forces));
-	return author$project$ForceGraph$computeSimulation(
-		{graph: graph, simulation: newSimulation});
-};
 var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	function (a, b) {
 		return {$: 'OrderedSet', a: a, b: b};
@@ -12827,12 +11683,183 @@ var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$Or
 var author$project$Main$baseGraphState = function (model) {
 	return {anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: elm$core$Maybe$Nothing, me: model.me, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
 };
+var elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(
+			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm_community$intdict$IntDict$foldr = F3(
+	function (f, acc, dict) {
+		foldr:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return acc;
+				case 'Leaf':
+					var l = dict.a;
+					return A3(f, l.key, l.value, acc);
+				default:
+					var i = dict.a;
+					var $temp$f = f,
+						$temp$acc = A3(elm_community$intdict$IntDict$foldr, f, acc, i.right),
+						$temp$dict = i.left;
+					f = $temp$f;
+					acc = $temp$acc;
+					dict = $temp$dict;
+					continue foldr;
+			}
+		}
+	});
+var elm_community$intdict$IntDict$values = function (dict) {
+	return A3(
+		elm_community$intdict$IntDict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2(elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var elm_community$graph$Graph$nodes = A2(
+	elm$core$Basics$composeR,
+	elm_community$graph$Graph$unGraph,
+	A2(
+		elm$core$Basics$composeR,
+		elm_community$intdict$IntDict$values,
+		elm$core$List$map(
+			function ($) {
+				return $.node;
+			})));
+var author$project$Main$graphAllActivityCompare = F3(
+	function (model, a, b) {
+		var latestActivity = function (g) {
+			return A2(
+				elm$core$Maybe$withDefault,
+				0,
+				elm$core$List$maximum(
+					A2(
+						elm$core$List$map,
+						function (n) {
+							return elm$time$Time$posixToMillis(
+								A2(
+									elm$core$Maybe$withDefault,
+									n.label.value.card.updatedAt,
+									elm$core$List$head(
+										A2(
+											elm$core$List$map,
+											function ($) {
+												return $.createdAt;
+											},
+											elm$core$List$reverse(
+												A2(
+													elm$core$Maybe$withDefault,
+													_List_Nil,
+													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
+						},
+						elm_community$graph$Graph$nodes(g))));
+		};
+		return A2(
+			elm$core$Basics$compare,
+			latestActivity(a.graph),
+			latestActivity(b.graph));
+	});
+var elm_community$graph$Graph$size = A2(elm$core$Basics$composeR, elm_community$graph$Graph$unGraph, elm_community$intdict$IntDict$size);
+var author$project$Main$graphSizeCompare = F2(
+	function (a, b) {
+		var _n0 = A2(
+			elm$core$Basics$compare,
+			elm_community$graph$Graph$size(a.graph),
+			elm_community$graph$Graph$size(b.graph));
+		if (_n0.$ === 'EQ') {
+			var graphScore = A2(
+				elm$core$Basics$composeL,
+				A2(
+					elm$core$Basics$composeL,
+					A2(elm$core$List$foldl, elm$core$Basics$add, 0),
+					elm$core$List$map(
+						A2(
+							elm$core$Basics$composeR,
+							function ($) {
+								return $.label;
+							},
+							A2(
+								elm$core$Basics$composeR,
+								function ($) {
+									return $.value;
+								},
+								function ($) {
+									return $.score;
+								})))),
+				elm_community$graph$Graph$nodes);
+			return A2(
+				elm$core$Basics$compare,
+				graphScore(a.graph),
+				graphScore(b.graph));
+		} else {
+			var x = _n0;
+			return x;
+		}
+	});
+var author$project$Main$graphUserActivityCompare = F4(
+	function (model, login, a, b) {
+		var latestUserActivity = function (g) {
+			return A2(
+				elm$core$Maybe$withDefault,
+				0,
+				elm$core$List$maximum(
+					A2(
+						elm$core$List$map,
+						function (n) {
+							return A2(
+								elm$core$Maybe$withDefault,
+								0,
+								elm$core$List$head(
+									A2(
+										elm$core$List$map,
+										A2(
+											elm$core$Basics$composeR,
+											function ($) {
+												return $.createdAt;
+											},
+											elm$time$Time$posixToMillis),
+										A2(
+											elm$core$List$filter,
+											A2(
+												elm$core$Basics$composeR,
+												function ($) {
+													return $.user;
+												},
+												A2(
+													elm$core$Basics$composeR,
+													elm$core$Maybe$map(
+														function ($) {
+															return $.login;
+														}),
+													elm$core$Basics$eq(
+														elm$core$Maybe$Just(login)))),
+											elm$core$List$reverse(
+												A2(
+													elm$core$Maybe$withDefault,
+													_List_Nil,
+													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
+						},
+						elm_community$graph$Graph$nodes(g))));
+		};
+		return A2(
+			elm$core$Basics$compare,
+			latestUserActivity(a.graph),
+			latestUserActivity(b.graph));
+	});
 var author$project$Main$cardRadiusBase = F2(
 	function (card, _n0) {
 		var incoming = _n0.incoming;
 		var outgoing = _n0.outgoing;
-		return (10 + (6 * elm$core$Basics$floor(
-			A2(elm$core$Basics$logBase, 10, card.number)))) + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2));
+		return 20 + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2));
 	});
 var elm$core$Basics$pi = _Basics_pi;
 var elm$core$List$repeatHelp = F3(
@@ -13290,6 +12317,9 @@ var folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces = function (a) {
 };
 var folkertdev$svg_path_lowlevel$Path$LowLevel$decimalPlaces = folkertdev$svg_path_lowlevel$Path$LowLevel$DecimalPlaces;
 var folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig = {floatFormatter: elm$core$String$fromFloat};
+var elm$core$Basics$abs = function (n) {
+	return (n < 0) ? (-n) : n;
+};
 var folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo = F2(
 	function (n, value) {
 		if (!n) {
@@ -13644,7 +12674,12 @@ var folkertdev$one_true_path_experiment$Path$element = F2(
 var elm$core$Basics$acos = _Basics_acos;
 var elm$core$Basics$atan2 = _Basics_atan2;
 var elm$core$Basics$cos = _Basics_cos;
+var elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
+	});
 var elm$core$Basics$sin = _Basics_sin;
+var elm$core$Basics$sqrt = _Basics_sqrt;
 var folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) {
 	return {$: 'MoveTo', a: a};
 };
@@ -13824,6 +12859,7 @@ var folkertdev$one_true_path_experiment$SubPath$with = F2(
 				moveto: moveto
 			});
 	});
+var elm$core$Basics$ge = _Utils_ge;
 var folkertdev$one_true_path_experiment$LowLevel$Command$arcTo = folkertdev$one_true_path_experiment$LowLevel$Command$EllipticalArc;
 var folkertdev$svg_path_lowlevel$Path$LowLevel$LargestArc = {$: 'LargestArc'};
 var folkertdev$one_true_path_experiment$LowLevel$Command$largestArc = folkertdev$svg_path_lowlevel$Path$LowLevel$LargestArc;
@@ -14163,6 +13199,14 @@ var folkertdev$one_true_path_experiment$SubPath$mapCoordinateInstructions = F2(
 				f(coordinate))
 		};
 	});
+var ianmackenzie$elm_geometry$Vector2d$components = function (_n0) {
+	var components_ = _n0.a;
+	return components_;
+};
+var ianmackenzie$elm_geometry$Geometry$Types$Vector2d = function (a) {
+	return {$: 'Vector2d', a: a};
+};
+var ianmackenzie$elm_geometry$Vector2d$fromComponents = ianmackenzie$elm_geometry$Geometry$Types$Vector2d;
 var ianmackenzie$elm_geometry$Vector2d$difference = F2(
 	function (firstVector, secondVector) {
 		var _n0 = ianmackenzie$elm_geometry$Vector2d$components(secondVector);
@@ -14173,6 +13217,17 @@ var ianmackenzie$elm_geometry$Vector2d$difference = F2(
 		var y1 = _n1.b;
 		return ianmackenzie$elm_geometry$Vector2d$fromComponents(
 			_Utils_Tuple2(x1 - x2, y1 - y2));
+	});
+var ianmackenzie$elm_geometry$Vector2d$sum = F2(
+	function (firstVector, secondVector) {
+		var _n0 = ianmackenzie$elm_geometry$Vector2d$components(secondVector);
+		var x2 = _n0.a;
+		var y2 = _n0.b;
+		var _n1 = ianmackenzie$elm_geometry$Vector2d$components(firstVector);
+		var x1 = _n1.a;
+		var y1 = _n1.b;
+		return ianmackenzie$elm_geometry$Vector2d$fromComponents(
+			_Utils_Tuple2(x1 + x2, y1 + y2));
 	});
 var folkertdev$one_true_path_experiment$SubPath$continue = function () {
 	var helper = F2(
@@ -14537,6 +13592,16 @@ var elm$core$Array$get = F2(
 			A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, tail)) : elm$core$Maybe$Just(
 			A3(elm$core$Array$getHelp, startShift, index, tree)));
 	});
+var elm$core$Dict$values = function (dict) {
+	return A3(
+		elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2(elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
 var elm$core$List$sortWith = _List_sortWith;
 var elm$core$Tuple$pair = F2(
 	function (a, b) {
@@ -15338,500 +14403,162 @@ var author$project$Main$cardNode = F3(
 			viewUpper: A4(author$project$Main$viewCardNode, card, radii, circle, labelArcs)
 		};
 	});
-var elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(
-			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$Main$graphAllActivityCompare = F3(
-	function (model, a, b) {
-		var latestActivity = function (g) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				elm$core$List$maximum(
-					A2(
-						elm$core$List$map,
-						function (n) {
-							return elm$time$Time$posixToMillis(
-								A2(
-									elm$core$Maybe$withDefault,
-									n.label.value.card.updatedAt,
-									elm$core$List$head(
-										A2(
-											elm$core$List$map,
-											function ($) {
-												return $.createdAt;
-											},
-											elm$core$List$reverse(
-												A2(
-													elm$core$Maybe$withDefault,
-													_List_Nil,
-													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
-						},
-						elm_community$graph$Graph$nodes(g))));
-		};
-		return A2(
-			elm$core$Basics$compare,
-			latestActivity(a.graph),
-			latestActivity(b.graph));
-	});
-var author$project$Main$graphSizeCompare = F2(
-	function (a, b) {
-		var _n0 = A2(
-			elm$core$Basics$compare,
-			elm_community$graph$Graph$size(a.graph),
-			elm_community$graph$Graph$size(b.graph));
-		if (_n0.$ === 'EQ') {
-			var graphScore = A2(
-				elm$core$Basics$composeL,
-				A2(
-					elm$core$Basics$composeL,
-					A2(elm$core$List$foldl, elm$core$Basics$add, 0),
-					elm$core$List$map(
-						A2(
-							elm$core$Basics$composeR,
-							function ($) {
-								return $.label;
-							},
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.value;
-								},
-								function ($) {
-									return $.score;
-								})))),
-				elm_community$graph$Graph$nodes);
-			return A2(
-				elm$core$Basics$compare,
-				graphScore(a.graph),
-				graphScore(b.graph));
-		} else {
-			var x = _n0;
-			return x;
-		}
-	});
-var author$project$Main$graphUserActivityCompare = F4(
-	function (model, login, a, b) {
-		var latestUserActivity = function (g) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				elm$core$List$maximum(
-					A2(
-						elm$core$List$map,
-						function (n) {
-							return A2(
-								elm$core$Maybe$withDefault,
-								0,
-								elm$core$List$head(
-									A2(
-										elm$core$List$map,
-										A2(
-											elm$core$Basics$composeR,
-											function ($) {
-												return $.createdAt;
-											},
-											elm$time$Time$posixToMillis),
-										A2(
-											elm$core$List$filter,
-											A2(
-												elm$core$Basics$composeR,
-												function ($) {
-													return $.user;
-												},
-												A2(
-													elm$core$Basics$composeR,
-													elm$core$Maybe$map(
-														function ($) {
-															return $.login;
-														}),
-													elm$core$Basics$eq(
-														elm$core$Maybe$Just(login)))),
-											elm$core$List$reverse(
-												A2(
-													elm$core$Maybe$withDefault,
-													_List_Nil,
-													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
-						},
-						elm_community$graph$Graph$nodes(g))));
-		};
-		return A2(
-			elm$core$Basics$compare,
-			latestUserActivity(a.graph),
-			latestUserActivity(b.graph));
-	});
-var author$project$Card$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var author$project$Card$isUntriaged = function (card) {
-	return elm$core$List$isEmpty(card.cards);
-};
-var author$project$Main$hasLabelAndColor = F4(
-	function (model, name, color, card) {
-		var matchingLabels = A2(
-			elm$core$Dict$filter,
-			F2(
-				function (_n0, l) {
-					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
-				}),
-			model.allLabels);
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return A2(elm$core$Dict$member, a, matchingLabels);
+var author$project$Main$toCardNode = F3(
+	function (model, card, nc) {
+		return {
+			incoming: nc.incoming,
+			node: {
+				id: nc.node.id,
+				label: {
+					id: nc.node.label.id,
+					size: nc.node.label.size,
+					value: A3(
+						author$project$Main$cardNode,
+						model,
+						card,
+						{incoming: nc.incoming, outgoing: nc.outgoing}),
+					vx: nc.node.label.vx,
+					vy: nc.node.label.vy,
+					x: nc.node.label.x,
+					y: nc.node.label.y
+				}
 			},
-			card.labels);
+			outgoing: nc.outgoing
+		};
 	});
-var author$project$Main$involvesUser = F3(
-	function (model, login, card) {
-		return A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeR,
-				function ($) {
-					return $.user;
-				},
-				A2(
-					elm$core$Basics$composeR,
-					elm$core$Maybe$map(
-						function ($) {
-							return $.login;
-						}),
-					elm$core$Basics$eq(
-						elm$core$Maybe$Just(login)))),
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, card.id, model.data.actors)));
-	});
-var author$project$Main$isInProject = F2(
-	function (name, card) {
-		return A2(
-			elm$core$List$member,
-			name,
-			A2(
-				elm$core$List$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.project;
-					},
-					function ($) {
-						return $.name;
-					}),
-				card.cards));
-	});
-var author$project$Main$satisfiesFilter = F3(
-	function (model, filter, card) {
-		switch (filter.$) {
-			case 'ExcludeAllFilter':
-				return false;
-			case 'InProjectFilter':
-				var name = filter.a;
-				return A2(author$project$Main$isInProject, name, card);
-			case 'HasLabelFilter':
-				var label = filter.a;
-				var color = filter.b;
-				return A4(author$project$Main$hasLabelAndColor, model, label, color, card);
-			case 'InvolvesUserFilter':
-				var login = filter.a;
-				return A3(author$project$Main$involvesUser, model, login, card);
-			case 'PullRequestsFilter':
-				return author$project$Card$isPR(card);
-			case 'IssuesFilter':
-				return !author$project$Card$isPR(card);
+var elm_community$graph$Graph$get = function (nodeId) {
+	return A2(
+		elm$core$Basics$composeR,
+		elm_community$graph$Graph$unGraph,
+		elm_community$intdict$IntDict$get(nodeId));
+};
+var elm_community$intdict$IntDict$findMax = function (dict) {
+	findMax:
+	while (true) {
+		switch (dict.$) {
+			case 'Empty':
+				return elm$core$Maybe$Nothing;
+			case 'Leaf':
+				var l = dict.a;
+				return elm$core$Maybe$Just(
+					_Utils_Tuple2(l.key, l.value));
 			default:
-				return author$project$Card$isUntriaged(card);
+				var i = dict.a;
+				var $temp$dict = i.right;
+				dict = $temp$dict;
+				continue findMax;
 		}
-	});
-var elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			elm$core$List$any,
-			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
-			list);
-	});
-var author$project$Main$satisfiesFilters = F3(
-	function (model, filters, card) {
-		return A2(
-			elm$core$List$all,
-			function (a) {
-				return A3(author$project$Main$satisfiesFilter, model, a, card);
-			},
-			filters);
-	});
-var elm$core$List$partition = F2(
-	function (pred, list) {
-		var step = F2(
-			function (x, _n0) {
-				var trues = _n0.a;
-				var falses = _n0.b;
-				return pred(x) ? _Utils_Tuple2(
-					A2(elm$core$List$cons, x, trues),
-					falses) : _Utils_Tuple2(
-					trues,
-					A2(elm$core$List$cons, x, falses));
-			});
+	}
+};
+var elm_community$intdict$IntDict$findMin = function (dict) {
+	findMin:
+	while (true) {
+		switch (dict.$) {
+			case 'Empty':
+				return elm$core$Maybe$Nothing;
+			case 'Leaf':
+				var l = dict.a;
+				return elm$core$Maybe$Just(
+					_Utils_Tuple2(l.key, l.value));
+			default:
+				var i = dict.a;
+				var $temp$dict = i.left;
+				dict = $temp$dict;
+				continue findMin;
+		}
+	}
+};
+var elm_community$graph$Graph$nodeIdRange = function (graph) {
+	return A2(
+		elm$core$Maybe$andThen,
+		function (_n0) {
+			var min = _n0.a;
+			return A2(
+				elm$core$Maybe$andThen,
+				function (_n1) {
+					var max = _n1.a;
+					return elm$core$Maybe$Just(
+						_Utils_Tuple2(min, max));
+				},
+				elm_community$intdict$IntDict$findMax(
+					elm_community$graph$Graph$unGraph(graph)));
+		},
+		elm_community$intdict$IntDict$findMin(
+			elm_community$graph$Graph$unGraph(graph)));
+};
+var elm_community$graph$Graph$remove = F2(
+	function (nodeId, graph) {
 		return A3(
-			elm$core$List$foldr,
-			step,
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			list);
+			elm_community$graph$Graph$update,
+			nodeId,
+			elm$core$Basics$always(elm$core$Maybe$Nothing),
+			graph);
 	});
-var author$project$Main$subEdges = function () {
-	var edgesRelated = function (edge) {
-		return elm$core$List$any(
-			function (_n3) {
-				var from = _n3.from;
-				var to = _n3.to;
-				return _Utils_eq(from, edge.from) || (_Utils_eq(from, edge.to) || (_Utils_eq(to, edge.from) || _Utils_eq(to, edge.to)));
-			});
-	};
-	var go = F2(
-		function (acc, edges) {
-			go:
-			while (true) {
-				if (!edges.b) {
-					return acc;
-				} else {
-					var edge = edges.a;
-					var rest = edges.b;
-					var _n1 = A2(
-						elm$core$List$partition,
-						edgesRelated(edge),
-						acc);
-					var connected = _n1.a;
-					var disconnected = _n1.b;
-					if (!connected.b) {
-						var $temp$acc = A2(
-							elm$core$List$cons,
-							_List_fromArray(
-								[edge]),
-							acc),
-							$temp$edges = rest;
-						acc = $temp$acc;
-						edges = $temp$edges;
+var elm_community$graph$Graph$fold = F3(
+	function (f, acc, graph) {
+		var go = F2(
+			function (acc1, graph1) {
+				go:
+				while (true) {
+					var maybeContext = A2(
+						elm$core$Maybe$andThen,
+						function (id) {
+							return A2(elm_community$graph$Graph$get, id, graph);
+						},
+						A2(
+							elm$core$Maybe$map,
+							elm$core$Tuple$first,
+							elm_community$graph$Graph$nodeIdRange(graph1)));
+					if (maybeContext.$ === 'Just') {
+						var ctx = maybeContext.a;
+						var $temp$acc1 = A2(f, ctx, acc1),
+							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.node.id, graph1);
+						acc1 = $temp$acc1;
+						graph1 = $temp$graph1;
 						continue go;
 					} else {
-						var $temp$acc = A2(
-							elm$core$List$cons,
-							A2(
-								elm$core$List$cons,
-								edge,
-								elm$core$List$concat(connected)),
-							disconnected),
-							$temp$edges = rest;
-						acc = $temp$acc;
-						edges = $temp$edges;
-						continue go;
+						return acc1;
 					}
 				}
-			}
-		});
-	return go(_List_Nil);
-}();
-var elm_community$graph$Graph$inducedSubgraph = F2(
-	function (nodeIds_, graph) {
-		var insertContextById = F2(
-			function (nodeId, acc) {
-				var _n0 = A2(elm_community$graph$Graph$get, nodeId, graph);
-				if (_n0.$ === 'Just') {
-					var ctx = _n0.a;
-					return A2(elm_community$graph$Graph$insert, ctx, acc);
-				} else {
-					return acc;
-				}
 			});
-		return A3(elm$core$List$foldl, insertContextById, elm_community$graph$Graph$empty, nodeIds_);
-	});
-var elm_community$intdict$IntDict$isEmpty = function (dict) {
-	if (dict.$ === 'Empty') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var author$project$Main$subGraphs = function (graph) {
-	var subEdgeNodes = A2(
-		elm$core$List$foldl,
-		F2(
-			function (edge, set) {
-				return A2(
-					elm$core$Set$insert,
-					edge.from,
-					A2(elm$core$Set$insert, edge.to, set));
-			}),
-		elm$core$Set$empty);
-	var singletonGraphs = A3(
-		elm_community$graph$Graph$fold,
-		F2(
-			function (nc, ncs) {
-				return (elm_community$intdict$IntDict$isEmpty(nc.incoming) && elm_community$intdict$IntDict$isEmpty(nc.outgoing)) ? A2(
-					elm$core$List$cons,
-					A2(elm_community$graph$Graph$insert, nc, elm_community$graph$Graph$empty),
-					ncs) : ncs;
-			}),
-		_List_Nil,
-		graph);
-	var connectedGraphs = A2(
-		elm$core$List$map,
-		A2(
-			elm$core$Basics$composeL,
-			A2(
-				elm$core$Basics$composeL,
-				function (a) {
-					return A2(elm_community$graph$Graph$inducedSubgraph, a, graph);
-				},
-				elm$core$Set$toList),
-			subEdgeNodes),
-		author$project$Main$subEdges(
-			elm_community$graph$Graph$edges(graph)));
-	return _Utils_ap(connectedGraphs, singletonGraphs);
-};
-var elm_community$graph$Graph$Node = F2(
-	function (id, label) {
-		return {id: id, label: label};
-	});
-var elm_community$graph$Graph$NodeContext = F3(
-	function (node, incoming, outgoing) {
-		return {incoming: incoming, node: node, outgoing: outgoing};
-	});
-var elm_community$graph$Graph$fromNodesAndEdges = F2(
-	function (nodes_, edges_) {
-		var nodeRep = A3(
-			elm$core$List$foldl,
-			function (n) {
-				return A2(
-					elm_community$intdict$IntDict$insert,
-					n.id,
-					A3(elm_community$graph$Graph$NodeContext, n, elm_community$intdict$IntDict$empty, elm_community$intdict$IntDict$empty));
-			},
-			elm_community$intdict$IntDict$empty,
-			nodes_);
-		var addEdge = F2(
-			function (edge, rep) {
-				var updateOutgoing = function (ctx) {
-					return _Utils_update(
-						ctx,
-						{
-							outgoing: A3(elm_community$intdict$IntDict$insert, edge.to, edge.label, ctx.outgoing)
-						});
-				};
-				var updateIncoming = function (ctx) {
-					return _Utils_update(
-						ctx,
-						{
-							incoming: A3(elm_community$intdict$IntDict$insert, edge.from, edge.label, ctx.incoming)
-						});
-				};
-				return A3(
-					elm_community$intdict$IntDict$update,
-					edge.to,
-					elm$core$Maybe$map(updateIncoming),
-					A3(
-						elm_community$intdict$IntDict$update,
-						edge.from,
-						elm$core$Maybe$map(updateOutgoing),
-						rep));
-			});
-		var addEdgeIfValid = F2(
-			function (edge, rep) {
-				return (A2(elm_community$intdict$IntDict$member, edge.from, rep) && A2(elm_community$intdict$IntDict$member, edge.to, rep)) ? A2(addEdge, edge, rep) : rep;
-			});
-		return elm_community$graph$Graph$Graph(
-			A3(elm$core$List$foldl, addEdgeIfValid, nodeRep, edges_));
+		return A2(go, acc, graph);
 	});
 var author$project$Main$computeGraph = function (model) {
 	var sortFunc = function () {
-		var _n2 = model.graphSort;
-		switch (_n2.$) {
+		var _n1 = model.graphSort;
+		switch (_n1.$) {
 			case 'ImpactSort':
 				return author$project$Main$graphSizeCompare;
 			case 'UserActivitySort':
-				var login = _n2.a;
+				var login = _n1.a;
 				return A2(author$project$Main$graphUserActivityCompare, model, login);
 			default:
 				return author$project$Main$graphAllActivityCompare(model);
 		}
 	}();
-	var node = F2(
-		function (card, context) {
-			return {
-				size: A2(author$project$Main$cardRadiusBase, card, context),
-				value: A3(author$project$Main$cardNode, model, card, context)
-			};
-		});
-	var cardEdges = A3(
-		elm$core$Dict$foldl,
-		F3(
-			function (idStr, sourceIds, refs) {
-				var id = author$project$Hash$hash(idStr);
-				return _Utils_ap(
-					A2(
-						elm$core$List$map,
-						function (sourceId) {
-							return {
-								from: author$project$Hash$hash(sourceId),
-								label: _Utils_Tuple0,
-								to: id
-							};
-						},
-						sourceIds),
-					refs);
-			}),
-		_List_Nil,
-		model.data.references);
 	var baseState = author$project$Main$baseGraphState(model);
-	var applyWithContext = function (nc) {
-		return {
-			incoming: nc.incoming,
-			node: {
-				id: nc.node.id,
-				label: nc.node.label(
-					{incoming: nc.incoming, outgoing: nc.outgoing})
-			},
-			outgoing: nc.outgoing
-		};
-	};
-	var allFilters = function () {
-		var _n1 = model.baseGraphFilter;
-		if (_n1.$ === 'Just') {
-			var f = _n1.a;
-			return A2(elm$core$List$cons, f, model.graphFilters);
-		} else {
-			return model.graphFilters;
-		}
-	}();
-	var cardNodeThunks = A3(
-		elm$core$Dict$foldl,
-		F3(
-			function (_n0, card, thunks) {
-				return (A3(author$project$Main$satisfiesFilters, model, allFilters, card) && author$project$Card$isOpen(card)) ? A2(
-					elm$core$List$cons,
-					A2(
-						elm_community$graph$Graph$Node,
-						author$project$Hash$hash(card.id),
-						node(card)),
-					thunks) : thunks;
-			}),
-		_List_Nil,
-		model.allCards);
-	var graph = A2(
-		elm_community$graph$Graph$mapContexts,
-		applyWithContext,
-		A2(elm_community$graph$Graph$fromNodesAndEdges, cardNodeThunks, cardEdges));
+	var addNode = F2(
+		function (nc, acc) {
+			var _n0 = A2(elm$core$Dict$get, nc.node.label.value, model.allCards);
+			if (_n0.$ === 'Just') {
+				var card = _n0.a;
+				return A2(
+					elm_community$graph$Graph$insert,
+					A3(author$project$Main$toCardNode, model, card, nc),
+					acc);
+			} else {
+				return A3(author$project$Log$debug, 'card not found', nc.node.label.value, acc);
+			}
+		});
+	var graphs = A2(
+		elm$core$List$map,
+		function (fg) {
+			return {
+				graph: A3(elm_community$graph$Graph$fold, addNode, elm_community$graph$Graph$empty, fg.graph),
+				simulation: fg.simulation
+			};
+		},
+		model.graphs);
 	return _Utils_update(
 		model,
 		{
@@ -15841,13 +14568,7 @@ var author$project$Main$computeGraph = function (model) {
 					return _Utils_Tuple2(baseState, g);
 				},
 				elm$core$List$reverse(
-					A2(
-						elm$core$List$sortWith,
-						sortFunc,
-						A2(
-							elm$core$List$map,
-							author$project$ForceGraph$fromGraph,
-							author$project$Main$subGraphs(graph)))))
+					A2(elm$core$List$sortWith, sortFunc, graphs)))
 		});
 };
 var elm$core$Dict$isEmpty = function (dict) {
@@ -16224,6 +14945,32 @@ var elm$core$String$padLeft = F3(
 				elm$core$String$fromChar(_char)),
 			string);
 	});
+var elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var elm$random$Random$next = function (_n0) {
+	var state0 = _n0.a;
+	var incr = _n0.b;
+	return A2(elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var elm$random$Random$initialSeed = function (x) {
+	var _n0 = elm$random$Random$next(
+		A2(elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _n0.a;
+	var incr = _n0.b;
+	var state2 = (state1 + x) >>> 0;
+	return elm$random$Random$next(
+		A2(elm$random$Random$Seed, state2, incr));
+};
+var elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var elm$random$Random$peel = function (_n0) {
+	var state = _n0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
 var elm$random$Random$int = F2(
 	function (a, b) {
 		return elm$random$Random$Generator(
@@ -16255,6 +15002,11 @@ var elm$random$Random$int = F2(
 					return accountForBias(seed0);
 				}
 			});
+	});
+var elm$random$Random$step = F2(
+	function (_n0, seed) {
+		var generator = _n0.a;
+		return generator(seed);
 	});
 var elm$core$Char$fromCode = _Char_fromCode;
 var fredcy$elm_parseint$ParseInt$charFromInt = function (i) {
@@ -16766,9 +15518,53 @@ var elm$url$Url$fromString = function (str) {
 };
 var elm$browser$Browser$Navigation$load = _Browser_load;
 var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var elm$core$Dict$map = F2(
+	function (func, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			return A5(
+				elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				A2(func, key, value),
+				A2(elm$core$Dict$map, func, left),
+				A2(elm$core$Dict$map, func, right));
+		}
+	});
 var elm$core$Dict$union = F2(
 	function (t1, t2) {
 		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
+	});
+var elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			elm$core$List$any,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
+			list);
+	});
+var elm$core$List$partition = F2(
+	function (pred, list) {
+		var step = F2(
+			function (x, _n0) {
+				var trues = _n0.a;
+				var falses = _n0.b;
+				return pred(x) ? _Utils_Tuple2(
+					A2(elm$core$List$cons, x, trues),
+					falses) : _Utils_Tuple2(
+					trues,
+					A2(elm$core$List$cons, x, falses));
+			});
+		return A3(
+			elm$core$List$foldr,
+			step,
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			list);
 	});
 var elm$core$Set$foldr = F3(
 	function (func, initialState, _n0) {
@@ -17051,33 +15847,15 @@ var author$project$Main$update = F2(
 								}
 							}();
 							return _Utils_Tuple2(
-								author$project$Main$computeGraph(
-									author$project$Main$computeDataView(
-										_Utils_update(
-											model,
-											{baseGraphFilter: baseGraphFilter, page: page}))),
+								author$project$Main$computeDataView(
+									_Utils_update(
+										model,
+										{baseGraphFilter: baseGraphFilter, page: page})),
 								elm$core$Platform$Cmd$none);
 						}
 					} else {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					}
-				case 'Tick':
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								cardGraphs: A2(
-									elm$core$List$map,
-									function (_n5) {
-										var s = _n5.a;
-										var g = _n5.b;
-										return author$project$ForceGraph$isCompleted(g) ? _Utils_Tuple2(s, g) : _Utils_Tuple2(
-											s,
-											author$project$ForceGraph$tick(g));
-									},
-									model.cardGraphs)
-							}),
-						elm$core$Platform$Cmd$none);
 				case 'SetCurrentTime':
 					var date = msg.a;
 					return _Utils_Tuple2(
@@ -17144,9 +15922,9 @@ var author$project$Main$update = F2(
 					if (msg.b.$ === 'Ok') {
 						var col = msg.a;
 						var content = msg.b.a.content;
-						var _n9 = model.projectDrag;
-						if (_n9.$ === 'Dropped') {
-							var drag = _n9.a;
+						var _n8 = model.projectDrag;
+						if (_n8.$ === 'Dropped') {
+							var drag = _n8.a;
 							var wrapValue = F2(
 								function (f, indexed) {
 									return _Utils_update(
@@ -17156,15 +15934,15 @@ var author$project$Main$update = F2(
 										});
 								});
 							var msourceId = function () {
-								var _n13 = drag.source;
-								if (_n13.$ === 'FromColumnCardSource') {
-									var cs = _n13.a;
+								var _n12 = drag.source;
+								if (_n12.$ === 'FromColumnCardSource') {
+									var cs = _n12.a;
 									return _Utils_eq(cs.columnId, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.columnId);
 								} else {
 									return elm$core$Maybe$Nothing;
 								}
 							}();
-							var _n10 = function () {
+							var _n9 = function () {
 								if (content.$ === 'Just') {
 									if (content.a.$ === 'IssueCardContent') {
 										var issue = content.a.a;
@@ -17205,8 +15983,8 @@ var author$project$Main$update = F2(
 									return _Utils_Tuple2(elm$core$Maybe$Nothing, elm$core$Platform$Cmd$none);
 								}
 							}();
-							var mcontentId = _n10.a;
-							var refreshContent = _n10.b;
+							var mcontentId = _n9.a;
+							var refreshContent = _n9.b;
 							if (msourceId.$ === 'Just') {
 								var sourceId = msourceId.a;
 								return _Utils_Tuple2(
@@ -17268,11 +16046,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n14 = model.projectDragRefresh;
-						if (_n14.$ === 'Nothing') {
+						var _n13 = model.projectDragRefresh;
+						if (_n13.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n14.a;
+							var pdr = _n13.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17300,11 +16078,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n15 = model.projectDragRefresh;
-						if (_n15.$ === 'Nothing') {
+						var _n14 = model.projectDragRefresh;
+						if (_n14.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n15.a;
+							var pdr = _n14.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17332,11 +16110,11 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
-						var _n16 = model.projectDragRefresh;
-						if (_n16.$ === 'Nothing') {
+						var _n15 = model.projectDragRefresh;
+						if (_n15.$ === 'Nothing') {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						} else {
-							var pdr = _n16.a;
+							var pdr = _n15.a;
 							return _Utils_Tuple2(
 								author$project$Main$finishProjectDragRefresh(
 									_Utils_update(
@@ -17395,7 +16173,7 @@ var author$project$Main$update = F2(
 					var cardsByTitle = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n21, card) {
+							function (_n20, card) {
 								return author$project$Card$isOpen(card) ? A2(
 									elm$core$Dict$insert,
 									elm$core$String$toLower(card.title),
@@ -17403,12 +16181,12 @@ var author$project$Main$update = F2(
 							}),
 						elm$core$Dict$empty,
 						model.allCards);
-					var _n17 = A2(
+					var _n16 = A2(
 						elm$core$List$partition,
 						elm$core$String$contains(':'),
 						tokens);
-					var filterTokens = _n17.a;
-					var rest = _n17.b;
+					var filterTokens = _n16.a;
+					var rest = _n16.b;
 					var filters = A2(
 						elm$core$List$map,
 						elm$core$String$split(':'),
@@ -17422,8 +16200,8 @@ var author$project$Main$update = F2(
 							}(
 								function (filter) {
 									if (((filter.b && (filter.a === 'label')) && filter.b.b) && (!filter.b.b.b)) {
-										var _n20 = filter.b;
-										var name = _n20.a;
+										var _n19 = filter.b;
+										var name = _n19.a;
 										return A3(author$project$Main$hasLabel, model, name, card);
 									} else {
 										return false;
@@ -17433,7 +16211,7 @@ var author$project$Main$update = F2(
 					var foundCards = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n18, card) {
+							function (_n17, card) {
 								return elm$core$Set$insert(card.id);
 							}),
 						elm$core$Set$empty,
@@ -17538,6 +16316,38 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
+				case 'RefreshGraphs':
+					var t = msg.a;
+					return A3(
+						author$project$Log$debug,
+						'refreshing graphs',
+						t,
+						_Utils_Tuple2(
+							model,
+							author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched)));
+				case 'GraphsFetched':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						var computed = author$project$Main$computeGraph(
+							_Utils_update(
+								model,
+								{graphs: value}));
+						return A3(
+							author$project$Log$debug,
+							'graphs fetched',
+							elm$core$List$length(computed.cardGraphs),
+							_Utils_Tuple2(
+								author$project$Main$computeGraphState(computed),
+								elm$core$Platform$Cmd$none));
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching graph',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
 				case 'DataFetched':
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;
@@ -17547,20 +16357,20 @@ var author$project$Main$update = F2(
 								if (_Utils_cmp(index, model.dataIndex) > 0) {
 									var prCards = A2(
 										elm$core$Dict$map,
-										function (_n26) {
+										function (_n25) {
 											return author$project$Card$fromPR;
 										},
 										value.prs);
 									var issueCards = A2(
 										elm$core$Dict$map,
-										function (_n25) {
+										function (_n24) {
 											return author$project$Card$fromIssue;
 										},
 										value.issues);
 									var allLabels = A3(
 										elm$core$Dict$foldl,
 										F3(
-											function (_n24, r, ls) {
+											function (_n23, r, ls) {
 												return A3(
 													elm$core$List$foldl,
 													function (l) {
@@ -17574,8 +16384,8 @@ var author$project$Main$update = F2(
 									var colorLightnessCache = A3(
 										elm$core$Dict$foldl,
 										F3(
-											function (_n22, _n23, cache) {
-												var color = _n23.color;
+											function (_n21, _n22, cache) {
+												var color = _n22.color;
 												return A3(
 													elm$core$Dict$insert,
 													color,
@@ -17585,12 +16395,10 @@ var author$project$Main$update = F2(
 										elm$core$Dict$empty,
 										allLabels);
 									var allCards = A2(elm$core$Dict$union, issueCards, prCards);
-									return author$project$Main$computeGraphState(
-										author$project$Main$computeGraph(
-											author$project$Main$computeDataView(
-												_Utils_update(
-													model,
-													{allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}))));
+									return author$project$Main$computeDataView(
+										_Utils_update(
+											model,
+											{allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}));
 								} else {
 									return A3(
 										author$project$Log$debug,
@@ -17599,7 +16407,12 @@ var author$project$Main$update = F2(
 										model);
 								}
 							}(),
-							author$project$Backend$pollData(author$project$Main$DataFetched));
+							elm$core$Platform$Cmd$batch(
+								_List_fromArray(
+									[
+										author$project$Backend$pollData(author$project$Main$DataFetched),
+										_Utils_eq(model.page, author$project$Main$GlobalGraphPage) ? author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched) : elm$core$Platform$Cmd$none
+									])));
 					} else {
 						var err = msg.a.a;
 						return A3(
@@ -17617,8 +16430,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n27, r, acc) {
-								var _n28 = A2(
+							function (_n26, r, acc) {
+								var _n27 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -17627,13 +16440,13 @@ var author$project$Main$update = F2(
 											return $.name;
 										}),
 									r.labels);
-								if (!_n28.b) {
+								if (!_n27.b) {
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _n28.a;
+									var label = _n27.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Main$updateLabel, model, r, label, newLabel),
@@ -17674,15 +16487,15 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n29, r, acc) {
-								var _n30 = A2(
+							function (_n28, r, acc) {
+								var _n29 = A2(
 									elm$core$List$filter,
 									author$project$Main$matchesLabel(label),
 									r.labels);
-								if (!_n30.b) {
+								if (!_n29.b) {
 									return acc;
 								} else {
-									var repoLabel = _n30.a;
+									var repoLabel = _n29.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$deleteLabel, model, r, repoLabel),
@@ -17755,7 +16568,7 @@ var author$project$Main$update = F2(
 								editingLabels: A2(
 									elm$core$Dict$map,
 									F2(
-										function (_n31, label) {
+										function (_n30, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -17769,14 +16582,14 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _n32 = A2(
+					var _n31 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_n32.$ === 'Nothing') {
+					if (_n31.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n32.a;
+						var newLabel = _n31.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -17791,24 +16604,24 @@ var author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _n33 = A2(
+					var _n32 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_n33.$ === 'Nothing') {
+					if (_n32.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n33.a;
+						var newLabel = _n32.a;
 						var cmds = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n34, r, acc) {
-									var _n35 = A2(
+								function (_n33, r, acc) {
+									var _n34 = A2(
 										elm$core$List$filter,
 										author$project$Main$matchesLabel(oldLabel),
 										r.labels);
-									if (_n35.b) {
-										var repoLabel = _n35.a;
+									if (_n34.b) {
+										var repoLabel = _n34.a;
 										return A2(
 											elm$core$List$cons,
 											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
@@ -17899,8 +16712,8 @@ var author$project$Main$update = F2(
 						var colorLightnessCache = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n36, _n37, cache) {
-									var color = _n37.color;
+								function (_n35, _n36, cache) {
+									var color = _n36.color;
 									return A3(
 										elm$core$Dict$insert,
 										color,
@@ -17935,9 +16748,9 @@ var author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n38 = card.content;
-					if (_n38.$ === 'IssueCardContent') {
-						var issue = _n38.a;
+					var _n37 = card.content;
+					if (_n37.$ === 'IssueCardContent') {
+						var issue = _n37.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -17947,7 +16760,7 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _n38.a;
+						var pr = _n37.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -17960,14 +16773,14 @@ var author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n39 = card.content;
-					if (_n39.$ === 'IssueCardContent') {
-						var issue = _n39.a;
+					var _n38 = card.content;
+					if (_n38.$ === 'IssueCardContent') {
+						var issue = _n38.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _n39.a;
+						var pr = _n38.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, label));
@@ -18126,25 +16939,25 @@ var author$project$Main$update = F2(
 							return A2(elm$core$Dict$get, a, model.allCards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n40 = A2(
+					var _n39 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n40.a;
-					var removePairs = _n40.b;
+					var addPairs = _n39.a;
+					var removePairs = _n39.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n42 = card.content;
-							if (_n42.$ === 'IssueCardContent') {
-								var issue = _n42.a;
+							var _n41 = card.content;
+							if (_n41.$ === 'IssueCardContent') {
+								var issue = _n41.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n42.a;
+								var pr = _n41.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -18157,13 +16970,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n41 = card.content;
-										if (_n41.$ === 'IssueCardContent') {
-											var issue = _n41.a;
+										var _n40 = card.content;
+										if (_n40.$ === 'IssueCardContent') {
+											var issue = _n40.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n41.a;
+											var pr = _n40.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -18215,6 +17028,7 @@ var author$project$Main$init = F3(
 			editingLabels: elm$core$Dict$empty,
 			graphFilters: _List_Nil,
 			graphSort: author$project$Main$ImpactSort,
+			graphs: _List_Nil,
 			highlightedCard: elm$core$Maybe$Nothing,
 			highlightedNode: elm$core$Maybe$Nothing,
 			isPolling: true,
@@ -18255,136 +17069,7 @@ var author$project$Main$RetryPolling = {$: 'RetryPolling'};
 var author$project$Main$SetCurrentTime = function (a) {
 	return {$: 'SetCurrentTime', a: a};
 };
-var author$project$Main$Tick = function (a) {
-	return {$: 'Tick', a: a};
-};
-var elm$browser$Browser$AnimationManager$Time = function (a) {
-	return {$: 'Time', a: a};
-};
-var elm$browser$Browser$AnimationManager$State = F3(
-	function (subs, request, oldTime) {
-		return {oldTime: oldTime, request: request, subs: subs};
-	});
-var elm$browser$Browser$AnimationManager$init = elm$core$Task$succeed(
-	A3(elm$browser$Browser$AnimationManager$State, _List_Nil, elm$core$Maybe$Nothing, 0));
-var elm$browser$Browser$AnimationManager$now = _Browser_now(_Utils_Tuple0);
-var elm$browser$Browser$AnimationManager$rAF = _Browser_rAF(_Utils_Tuple0);
-var elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var elm$core$Process$kill = _Scheduler_kill;
-var elm$core$Process$spawn = _Scheduler_spawn;
-var elm$browser$Browser$AnimationManager$onEffects = F3(
-	function (router, subs, _n0) {
-		var request = _n0.request;
-		var oldTime = _n0.oldTime;
-		var _n1 = _Utils_Tuple2(request, subs);
-		if (_n1.a.$ === 'Nothing') {
-			if (!_n1.b.b) {
-				var _n2 = _n1.a;
-				return elm$browser$Browser$AnimationManager$init;
-			} else {
-				var _n4 = _n1.a;
-				return A2(
-					elm$core$Task$andThen,
-					function (pid) {
-						return A2(
-							elm$core$Task$andThen,
-							function (time) {
-								return elm$core$Task$succeed(
-									A3(
-										elm$browser$Browser$AnimationManager$State,
-										subs,
-										elm$core$Maybe$Just(pid),
-										time));
-							},
-							elm$browser$Browser$AnimationManager$now);
-					},
-					elm$core$Process$spawn(
-						A2(
-							elm$core$Task$andThen,
-							elm$core$Platform$sendToSelf(router),
-							elm$browser$Browser$AnimationManager$rAF)));
-			}
-		} else {
-			if (!_n1.b.b) {
-				var pid = _n1.a.a;
-				return A2(
-					elm$core$Task$andThen,
-					function (_n3) {
-						return elm$browser$Browser$AnimationManager$init;
-					},
-					elm$core$Process$kill(pid));
-			} else {
-				return elm$core$Task$succeed(
-					A3(elm$browser$Browser$AnimationManager$State, subs, request, oldTime));
-			}
-		}
-	});
-var elm$browser$Browser$AnimationManager$onSelfMsg = F3(
-	function (router, newTime, _n0) {
-		var subs = _n0.subs;
-		var oldTime = _n0.oldTime;
-		var send = function (sub) {
-			if (sub.$ === 'Time') {
-				var tagger = sub.a;
-				return A2(
-					elm$core$Platform$sendToApp,
-					router,
-					tagger(
-						elm$time$Time$millisToPosix(newTime)));
-			} else {
-				var tagger = sub.a;
-				return A2(
-					elm$core$Platform$sendToApp,
-					router,
-					tagger(newTime - oldTime));
-			}
-		};
-		return A2(
-			elm$core$Task$andThen,
-			function (pid) {
-				return A2(
-					elm$core$Task$andThen,
-					function (_n1) {
-						return elm$core$Task$succeed(
-							A3(
-								elm$browser$Browser$AnimationManager$State,
-								subs,
-								elm$core$Maybe$Just(pid),
-								newTime));
-					},
-					elm$core$Task$sequence(
-						A2(elm$core$List$map, send, subs)));
-			},
-			elm$core$Process$spawn(
-				A2(
-					elm$core$Task$andThen,
-					elm$core$Platform$sendToSelf(router),
-					elm$browser$Browser$AnimationManager$rAF)));
-	});
-var elm$browser$Browser$AnimationManager$Delta = function (a) {
-	return {$: 'Delta', a: a};
-};
-var elm$browser$Browser$AnimationManager$subMap = F2(
-	function (func, sub) {
-		if (sub.$ === 'Time') {
-			var tagger = sub.a;
-			return elm$browser$Browser$AnimationManager$Time(
-				A2(elm$core$Basics$composeL, func, tagger));
-		} else {
-			var tagger = sub.a;
-			return elm$browser$Browser$AnimationManager$Delta(
-				A2(elm$core$Basics$composeL, func, tagger));
-		}
-	});
-_Platform_effectManagers['Browser.AnimationManager'] = _Platform_createManager(elm$browser$Browser$AnimationManager$init, elm$browser$Browser$AnimationManager$onEffects, elm$browser$Browser$AnimationManager$onSelfMsg, 0, elm$browser$Browser$AnimationManager$subMap);
-var elm$browser$Browser$AnimationManager$subscription = _Platform_leaf('Browser.AnimationManager');
-var elm$browser$Browser$AnimationManager$onAnimationFrame = function (tagger) {
-	return elm$browser$Browser$AnimationManager$subscription(
-		elm$browser$Browser$AnimationManager$Time(tagger));
-};
-var elm$browser$Browser$Events$onAnimationFrame = elm$browser$Browser$AnimationManager$onAnimationFrame;
 var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var elm$time$Time$Every = F2(
 	function (a, b) {
 		return {$: 'Every', a: a, b: b};
@@ -18456,6 +17141,7 @@ var elm$core$Dict$merge = F6(
 			intermediateResult,
 			leftovers);
 	});
+var elm$core$Process$kill = _Scheduler_kill;
 var elm$time$Time$addMySub = F2(
 	function (_n0, state) {
 		var interval = _n0.a;
@@ -18477,6 +17163,8 @@ var elm$time$Time$addMySub = F2(
 				state);
 		}
 	});
+var elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var elm$core$Process$spawn = _Scheduler_spawn;
 var elm$time$Time$setInterval = _Time_setInterval;
 var elm$time$Time$spawnHelp = F3(
 	function (router, intervals, processes) {
@@ -18617,11 +17305,7 @@ var author$project$Main$subscriptions = function (model) {
 				A2(
 				elm$time$Time$every,
 				5 * 1000,
-				elm$core$Basics$always(author$project$Main$RetryPolling)),
-				A2(
-				elm$core$List$all,
-				A2(elm$core$Basics$composeR, elm$core$Tuple$second, author$project$ForceGraph$isCompleted),
-				model.cardGraphs) ? elm$core$Platform$Sub$none : elm$browser$Browser$Events$onAnimationFrame(author$project$Main$Tick)
+				elm$core$Basics$always(author$project$Main$RetryPolling))
 			]));
 };
 var author$project$Main$SearchCards = function (a) {
@@ -19145,6 +17829,28 @@ var author$project$Main$viewNodeLowerUpper = F3(
 				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewUpper, pos, state),
 				ns));
 	});
+var elm_community$graph$Graph$edges = function (graph) {
+	var flippedFoldl = F3(
+		function (f, dict, list) {
+			return A3(elm_community$intdict$IntDict$foldl, f, list, dict);
+		});
+	var prependEdges = F2(
+		function (node1, ctx) {
+			return A2(
+				flippedFoldl,
+				F2(
+					function (node2, e) {
+						return elm$core$List$cons(
+							{from: node1, label: e, to: node2});
+					}),
+				ctx.outgoing);
+		});
+	return A3(
+		flippedFoldl,
+		prependEdges,
+		elm_community$graph$Graph$unGraph(graph),
+		_List_Nil);
+};
 var author$project$Main$viewGraph = F2(
 	function (state, _n0) {
 		var graph = _n0.graph;
@@ -19203,7 +17909,7 @@ var author$project$Main$viewGraph = F2(
 			graph);
 		var flairs = _n2.a;
 		var nodes = _n2.b;
-		return A2(
+		return elm$core$List$isEmpty(nodes) ? elm$html$Html$text('empty?') : A2(
 			elm$svg$Svg$svg,
 			_List_fromArray(
 				[
@@ -19277,8 +17983,7 @@ var author$project$Main$colorIsLight = F2(
 			var res = _n0.a;
 			return res;
 		} else {
-			return author$project$Main$computeColorIsLight(
-				A3(author$project$Log$debug, 'color lightness cache miss', hex, hex));
+			return false;
 		}
 	});
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
@@ -19676,7 +18381,11 @@ var author$project$Main$viewSpatialGraph = function (model) {
 						return A2(f, a, b);
 					})(
 					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
-				model.cardGraphs)));
+				A3(
+					author$project$Log$debug,
+					'rendering graphs',
+					elm$core$List$length(model.cardGraphs),
+					model.cardGraphs))));
 };
 var author$project$Main$viewGlobalGraphPage = function (model) {
 	return A2(
@@ -19705,6 +18414,14 @@ var author$project$Main$CreateLabel = {$: 'CreateLabel'};
 var author$project$Main$RandomizeNewLabelColor = {$: 'RandomizeNewLabelColor'};
 var author$project$Main$SetNewLabelName = function (a) {
 	return {$: 'SetNewLabelName', a: a};
+};
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
 };
 var author$project$Main$DeleteLabel = function (a) {
 	return {$: 'DeleteLabel', a: a};
@@ -20464,7 +19181,6 @@ var author$project$Drag$StartState = F2(
 	function (elementBounds, element) {
 		return {element: element, elementBounds: elementBounds};
 	});
-var elm$json$Json$Decode$float = _Json_decodeFloat;
 var debois$elm_dom$DOM$offsetHeight = A2(elm$json$Json$Decode$field, 'offsetHeight', elm$json$Json$Decode$float);
 var debois$elm_dom$DOM$offsetWidth = A2(elm$json$Json$Decode$field, 'offsetWidth', elm$json$Json$Decode$float);
 var debois$elm_dom$DOM$offsetLeft = A2(elm$json$Json$Decode$field, 'offsetLeft', elm$json$Json$Decode$float);

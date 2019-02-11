@@ -1,12 +1,19 @@
 port module Main exposing (main)
 
 import Backend
+import Card exposing (Card)
 import Dict exposing (Dict)
+import ForceGraph exposing (ForceGraph)
 import GitHubGraph
+import Graph exposing (Graph)
+import Hash
+import IntDict exposing (IntDict)
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
+import Json.Encode as JE
 import Log
 import Platform
+import Set
 import Task
 import Time
 
@@ -47,7 +54,13 @@ port setReviewers : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
 
 
+port setGraphs : JD.Value -> Cmd msg
+
+
 port refresh : (( String, GitHubGraph.ID ) -> msg) -> Sub msg
+
+
+port refreshGraph : (( List GitHubGraph.ID, List ( GitHubGraph.ID, List GitHubGraph.ID ) ) -> msg) -> Sub msg
 
 
 port hook : (( String, JD.Value ) -> msg) -> Sub msg
@@ -88,6 +101,7 @@ type Msg
     | PopQueue
     | RetryQueue
     | RefreshRequested String GitHubGraph.ID
+    | GraphRefreshRequested (List GitHubGraph.ID) (List ( GitHubGraph.ID, List GitHubGraph.ID ))
     | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
     | RepositoryFetched (Result GitHubGraph.Error GitHubGraph.Repo)
@@ -128,6 +142,7 @@ subscriptions model =
           else
             Time.every (60 * 60 * 1000) (always Refresh)
         , refresh (\( a, b ) -> RefreshRequested a b)
+        , refreshGraph (\( a, b ) -> GraphRefreshRequested a b)
         , hook (\( a, b ) -> HookReceived a b)
         ]
 
@@ -161,6 +176,16 @@ update msg model =
                       }
                     , Cmd.none
                     )
+
+        GraphRefreshRequested cardIds references ->
+            let
+                graphs =
+                    computeGraph cardIds references
+            in
+            Log.debug "computed graphs" (List.length graphs) <|
+                ( model
+                , setGraphs (JE.list (ForceGraph.encode JE.string) graphs)
+                )
 
         RefreshRequested "columnCards" colId ->
             ( model, fetchCards model colId )
@@ -725,3 +750,115 @@ maybeOr ma mb =
 
         Nothing ->
             mb
+
+
+type alias NodeEdges =
+    { incoming : IntDict ()
+    , outgoing : IntDict ()
+    }
+
+
+cardRadiusBase : NodeEdges -> Float
+cardRadiusBase { incoming, outgoing } =
+    20
+        + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+
+
+computeGraph : List GitHubGraph.ID -> List ( GitHubGraph.ID, List GitHubGraph.ID ) -> List (ForceGraph GitHubGraph.ID)
+computeGraph cardIds references =
+    let
+        cardEdges =
+            List.foldl
+                (\( idStr, sourceIds ) refs ->
+                    let
+                        id =
+                            Hash.hash idStr
+                    in
+                    List.map
+                        (\sourceId ->
+                            { from = Hash.hash sourceId
+                            , to = id
+                            , label = ()
+                            }
+                        )
+                        sourceIds
+                        ++ refs
+                )
+                []
+                references
+
+        node cardId context =
+            { value = cardId
+            , size = cardRadiusBase context
+            }
+
+        cardNodeThunks =
+            List.map (\cardId -> Graph.Node (Hash.hash cardId) (node cardId)) cardIds
+
+        applyWithContext nc =
+            { node = { id = nc.node.id, label = nc.node.label { incoming = nc.incoming, outgoing = nc.outgoing } }
+            , incoming = nc.incoming
+            , outgoing = nc.outgoing
+            }
+
+        graph =
+            Graph.mapContexts applyWithContext <|
+                Graph.fromNodesAndEdges
+                    cardNodeThunks
+                    cardEdges
+    in
+    subGraphs graph
+        |> List.map ForceGraph.fromGraph
+
+
+subGraphs : Graph n e -> List (Graph n e)
+subGraphs graph =
+    let
+        singletonGraphs =
+            Graph.fold
+                (\nc ncs ->
+                    if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
+                        Graph.insert nc Graph.empty :: ncs
+
+                    else
+                        ncs
+                )
+                []
+                graph
+
+        subEdgeNodes =
+            List.foldl (\edge set -> Set.insert edge.from (Set.insert edge.to set)) Set.empty
+
+        connectedGraphs =
+            graph
+                |> Graph.edges
+                |> subEdges
+                |> List.map ((\a -> Graph.inducedSubgraph a graph) << Set.toList << subEdgeNodes)
+    in
+    connectedGraphs ++ singletonGraphs
+
+
+subEdges : List (Graph.Edge e) -> List (List (Graph.Edge e))
+subEdges =
+    let
+        edgesRelated edge =
+            List.any (\{ from, to } -> from == edge.from || from == edge.to || to == edge.from || to == edge.to)
+
+        go acc edges =
+            case edges of
+                [] ->
+                    acc
+
+                edge :: rest ->
+                    let
+                        ( connected, disconnected ) =
+                            List.partition (edgesRelated edge) acc
+                    in
+                    case connected of
+                        [] ->
+                            go ([ edge ] :: acc) rest
+
+                        _ ->
+                            go ((edge :: List.concat connected) :: disconnected) rest
+    in
+    go []

@@ -8,6 +8,7 @@ module Backend exposing
     , emptyData
     , encodeEventActor
     , fetchData
+    , fetchGraphs
     , fetchMe
     , pollData
     , refreshCards
@@ -17,6 +18,7 @@ module Backend exposing
     )
 
 import Dict exposing (Dict)
+import ForceGraph exposing (ForceGraph)
 import GitHubGraph
 import Http
 import HttpBuilder
@@ -109,6 +111,14 @@ fetchData : (Result Http.Error (Indexed Data) -> msg) -> Cmd msg
 fetchData f =
     HttpBuilder.get "/data"
         |> HttpBuilder.withExpect (expectJsonWithIndex decodeData)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+fetchGraphs : (Result Http.Error (Indexed (List (ForceGraph GitHubGraph.ID))) -> msg) -> Cmd msg
+fetchGraphs f =
+    HttpBuilder.get "/graphs"
+        |> HttpBuilder.withExpect (expectJsonWithIndex (JD.list <| ForceGraph.decode JD.string))
         |> HttpBuilder.toTask
         |> Task.attempt f
 

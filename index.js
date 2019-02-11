@@ -24,8 +24,10 @@ const worker = elmApp.Elm.Main.init({
 const app = express()
 const port = process.env.PORT || 8000;
 
-// mononically increasing number for every update made to the data
+
+// mononically increasing numbers for every update made to the data
 var dataIndex = 1;
+var graphIndex = 0;
 
 const data = {
   // repos by id
@@ -55,6 +57,9 @@ const data = {
   // cards by column id
   columnCards: {}
 }
+
+// list of graphs for all issues
+var graphs = []
 
 // map from data set to object id to client requests waiting on it
 var refreshing = {}
@@ -112,6 +117,12 @@ function popPoll() {
 
 setInterval(popPoll, 30 * 1000);
 
+worker.ports.setGraphs.subscribe(function(gs) {
+  console.log("got graphs", gs.length);
+  graphs = gs;
+  graphIndex++;
+});
+
 worker.ports.setRepos.subscribe(function(repos) {
   for (var i = 0; i < repos.length; i++) {
     var repo = repos[i];
@@ -153,13 +164,39 @@ worker.ports.setIssues.subscribe(function(issues) {
   }
 
   popPoll();
+
 });
+
+var needsRefresh = true;
+
+setInterval(function() {
+  if (!needsRefresh) {
+    console.log("not refreshing graph");
+    return;
+  }
+
+  console.log("refreshing graph");
+  needsRefresh = false;
+
+  var references = [];
+  for (var i in data.references) {
+    references.push([i, data.references[i]]);
+  }
+
+  worker.ports.refreshGraph.send([Object.keys(data.issues), references]);
+}, 1 * 1000);
+
+function refreshGraph() {
+  needsRefresh = true;
+}
 
 worker.ports.setIssue.subscribe(function(issue) {
   data.issues[issue.id] = issue;
   dataIndex++;
   popRefresh("issue", issue.id, issue);
   popPoll();
+
+  refreshGraph();
 });
 
 worker.ports.setPullRequests.subscribe(function(prs) {
@@ -171,6 +208,8 @@ worker.ports.setPullRequests.subscribe(function(prs) {
   }
 
   popPoll();
+
+  refreshGraph();
 });
 
 worker.ports.setPullRequest.subscribe(function(pr) {
@@ -178,6 +217,8 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   dataIndex++;
   popRefresh("pr", pr.id, pr);
   popPoll();
+
+  refreshGraph();
 });
 
 worker.ports.setComparison.subscribe(function(args) {
@@ -194,6 +235,8 @@ worker.ports.setReferences.subscribe(function(args) {
   data.references[id] = val;
   dataIndex++;
   popPoll();
+
+  refreshGraph();
 });
 
 worker.ports.setActors.subscribe(function(args) {
@@ -255,6 +298,8 @@ worker.ports.setCards.subscribe(function(args) {
   dataIndex++;
   popRefresh("columnCards", id, newColumnCards);
   popPoll();
+
+  refreshGraph();
 });
 
 app.use(compression())
@@ -329,6 +374,11 @@ app.get('/me', (req, res) => {
 app.get('/data', (req, res) => {
   res.set('X-Data-Index', dataIndex.toString());
   res.send(JSON.stringify(data))
+})
+
+app.get('/graphs', (req, res) => {
+  res.set('X-Data-Index', dataIndex.toString());
+  res.send(JSON.stringify(graphs))
 })
 
 app.get('/refresh', (req, res) => {

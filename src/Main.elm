@@ -54,6 +54,7 @@ type alias Model =
     , projectDragRefresh : Maybe ProjectDragRefresh
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
+    , graphs : List (ForceGraph GitHubGraph.ID)
     , isPolling : Bool
     , dataIndex : Int
     , dataView : DataView
@@ -178,7 +179,6 @@ type CardSource
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url
-    | Tick Time.Posix
     | RetryPolling
     | SetCurrentTime Time.Posix
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
@@ -191,6 +191,8 @@ type Msg
     | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
+    | RefreshGraphs Time.Posix
+    | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
     | HighlightNode GitHubGraph.ID
@@ -316,6 +318,7 @@ init config url key =
             , page = GlobalGraphPage
             , me = Nothing
             , data = Backend.emptyData
+            , graphs = []
             , isPolling = True
             , dataIndex = 0
             , dataView =
@@ -371,11 +374,6 @@ subscriptions model =
     Sub.batch
         [ Time.every (60 * 60 * 1000) SetCurrentTime
         , Time.every (5 * 1000) (always RetryPolling)
-        , if List.all (Tuple.second >> FG.isCompleted) model.cardGraphs then
-            Sub.none
-
-          else
-            Browser.Events.onAnimationFrame Tick
         ]
 
 
@@ -433,34 +431,17 @@ update msg model =
                                 BouncePage ->
                                     Nothing
                     in
-                    ( computeGraph <|
-                        computeDataView
-                            { model
-                                | page = page
-                                , baseGraphFilter = baseGraphFilter
-                            }
+                    ( computeDataView
+                        { model
+                            | page = page
+                            , baseGraphFilter = baseGraphFilter
+                        }
                     , Cmd.none
                     )
 
                 Nothing ->
                     -- 404 would be nice
                     ( model, Cmd.none )
-
-        Tick _ ->
-            ( { model
-                | cardGraphs =
-                    List.map
-                        (\( s, g ) ->
-                            if FG.isCompleted g then
-                                ( s, g )
-
-                            else
-                                ( s, FG.tick g )
-                        )
-                        model.cardGraphs
-              }
-            , Cmd.none
-            )
 
         SetCurrentTime date ->
             ( computeGraphState { model | currentTime = date }, Cmd.none )
@@ -766,6 +747,22 @@ update msg model =
             Log.debug "error fetching self" err <|
                 ( model, Cmd.none )
 
+        RefreshGraphs t ->
+            Log.debug "refreshing graphs" t <|
+                ( model, Backend.fetchGraphs GraphsFetched )
+
+        GraphsFetched (Ok { index, value }) ->
+            let
+                computed =
+                    computeGraph { model | graphs = value }
+            in
+            Log.debug "graphs fetched" (List.length computed.cardGraphs) <|
+                ( computeGraphState computed, Cmd.none )
+
+        GraphsFetched (Err err) ->
+            Log.debug "error fetching graph" err <|
+                ( model, Cmd.none )
+
         DataFetched (Ok { index, value }) ->
             ( if index > model.dataIndex then
                 let
@@ -789,21 +786,26 @@ update msg model =
                             Dict.empty
                             allLabels
                 in
-                computeGraphState <|
-                    computeGraph <|
-                        computeDataView <|
-                            { model
-                                | data = value
-                                , dataIndex = index
-                                , allCards = allCards
-                                , allLabels = allLabels
-                                , colorLightnessCache = colorLightnessCache
-                            }
+                computeDataView <|
+                    { model
+                        | data = value
+                        , dataIndex = index
+                        , allCards = allCards
+                        , allLabels = allLabels
+                        , colorLightnessCache = colorLightnessCache
+                    }
 
               else
                 Log.debug "ignoring stale index" ( index, model.dataIndex ) <|
                     model
-            , Backend.pollData DataFetched
+            , Cmd.batch
+                [ Backend.pollData DataFetched
+                , if model.page == GlobalGraphPage then
+                    Backend.fetchGraphs GraphsFetched
+
+                  else
+                    Cmd.none
+                ]
             )
 
         DataFetched (Err err) ->
@@ -1612,7 +1614,7 @@ viewSpatialGraph : Model -> Html Msg
 viewSpatialGraph model =
     Html.div [ HA.class "spatial-graph" ] <|
         viewGraphControls model
-            :: List.map ((\f ( a, b ) -> f a b) <| Html.Lazy.lazy2 viewGraph) model.cardGraphs
+            :: List.map ((\f ( a, b ) -> f a b) <| Html.Lazy.lazy2 viewGraph) (Log.debug "rendering graphs" (List.length model.cardGraphs) model.cardGraphs)
 
 
 viewGraphControls : Model -> Html Msg
@@ -2642,8 +2644,65 @@ viewSearch model =
         ]
 
 
+toCardNode : Model -> Card -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) () -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) ()
+toCardNode model card nc =
+    { node =
+        { id = nc.node.id
+        , label =
+            { x = nc.node.label.x
+            , y = nc.node.label.y
+            , vx = nc.node.label.vx
+            , vy = nc.node.label.vy
+            , id = nc.node.label.id
+            , value = cardNode model card { incoming = nc.incoming, outgoing = nc.outgoing }
+            , size = nc.node.label.size
+            }
+        }
+    , incoming = nc.incoming
+    , outgoing = nc.outgoing
+    }
+
+
 computeGraph : Model -> Model
 computeGraph model =
+    let
+        addNode nc acc =
+            case Dict.get nc.node.label.value model.allCards of
+                Just card ->
+                    Graph.insert (toCardNode model card nc) acc
+
+                Nothing ->
+                    Log.debug "card not found" nc.node.label.value <|
+                        acc
+
+        graphs =
+            List.map (\fg -> { graph = Graph.fold addNode Graph.empty fg.graph, simulation = fg.simulation }) model.graphs
+
+        sortFunc =
+            case model.graphSort of
+                ImpactSort ->
+                    graphSizeCompare
+
+                UserActivitySort login ->
+                    graphUserActivityCompare model login
+
+                AllActivitySort ->
+                    graphAllActivityCompare model
+
+        baseState =
+            baseGraphState model
+    in
+    { model
+        | cardGraphs =
+            graphs
+                |> List.sortWith sortFunc
+                |> List.reverse
+                |> List.map (\g -> ( baseState, g ))
+    }
+
+
+computeGraphOld : Model -> Model
+computeGraphOld model =
     let
         cardEdges =
             Dict.foldl
@@ -2875,15 +2934,19 @@ viewGraph state { graph } =
         ( flairs, nodes ) =
             Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
     in
-    Svg.svg
-        [ SA.width (String.fromFloat scaleW ++ "px")
-        , SA.height (String.fromFloat scaleH ++ "px")
-        , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
-        ]
-        [ Svg.g [ SA.class "lower" ] flairs
-        , Svg.g [ SA.class "links" ] links
-        , Svg.g [ SA.class "upper" ] nodes
-        ]
+    if List.isEmpty nodes then
+        Html.text "empty?"
+
+    else
+        Svg.svg
+            [ SA.width (String.fromFloat scaleW ++ "px")
+            , SA.height (String.fromFloat scaleH ++ "px")
+            , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
+            ]
+            [ Svg.g [ SA.class "lower" ] flairs
+            , Svg.g [ SA.class "links" ] links
+            , Svg.g [ SA.class "upper" ] nodes
+            ]
 
 
 viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
@@ -2934,9 +2997,7 @@ type alias GraphContext =
 
 cardRadiusBase : Card -> GraphContext -> Float
 cardRadiusBase card { incoming, outgoing } =
-    -- trust me
-    10
-        + (6 * toFloat (floor (logBase 10 (toFloat card.number))))
+    20
         + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
 
 
@@ -3741,7 +3802,8 @@ colorIsLight model hex =
             res
 
         Nothing ->
-            computeColorIsLight (Log.debug "color lightness cache miss" hex hex)
+            -- computeColorIsLight hex
+            False
 
 
 computeColorIsLight : String -> Bool
