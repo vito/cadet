@@ -745,7 +745,7 @@ update msg model =
                         Dict.union issueCards prCards
 
                     allLabels =
-                        Dict.foldl (\_ r ls -> List.foldl (\l -> Dict.insert l.id l) ls r.labels) Dict.empty value.repos
+                        Dict.foldl (\_ r -> loadLabels r.labels) Dict.empty value.repos
 
                     colorLightnessCache =
                         Dict.foldl
@@ -946,7 +946,7 @@ update msg model =
                     model.data
 
                 allLabels =
-                    List.foldl (\l -> Dict.insert l.id l) model.allLabels value.labels
+                    loadLabels value.labels model.allLabels
 
                 colorLightnessCache =
                     Dict.foldl
@@ -3738,8 +3738,8 @@ colorIsLight model hex =
             res
 
         Nothing ->
-            -- computeColorIsLight hex
-            False
+            Log.debug "color lightness cache miss" hex <|
+                computeColorIsLight hex
 
 
 computeColorIsLight : String -> Bool
@@ -3852,71 +3852,6 @@ viewCardActor model { createdAt, avatar } =
 isOrgMember : Maybe (List GitHubGraph.User) -> GitHubGraph.User -> Bool
 isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
-
-
-subEdges : List (Graph.Edge e) -> List (List (Graph.Edge e))
-subEdges =
-    let
-        edgesRelated edge =
-            List.any (\{ from, to } -> from == edge.from || from == edge.to || to == edge.from || to == edge.to)
-
-        go acc edges =
-            case edges of
-                [] ->
-                    acc
-
-                edge :: rest ->
-                    let
-                        ( connected, disconnected ) =
-                            List.partition (edgesRelated edge) acc
-                    in
-                    case connected of
-                        [] ->
-                            go ([ edge ] :: acc) rest
-
-                        _ ->
-                            go ((edge :: List.concat connected) :: disconnected) rest
-    in
-    go []
-
-
-subGraphs : Graph n e -> List (Graph n e)
-subGraphs graph =
-    let
-        singletonGraphs =
-            Graph.fold
-                (\nc ncs ->
-                    if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
-                        Graph.insert nc Graph.empty :: ncs
-
-                    else
-                        ncs
-                )
-                []
-                graph
-
-        subEdgeNodes =
-            List.foldl (\edge set -> Set.insert edge.from (Set.insert edge.to set)) Set.empty
-
-        connectedGraphs =
-            graph
-                |> Graph.edges
-                |> subEdges
-                |> List.map ((\a -> Graph.inducedSubgraph a graph) << Set.toList << subEdgeNodes)
-    in
-    connectedGraphs ++ singletonGraphs
-
-
-nodeBounds : Graph.NodeContext (FG.ForceNode (Node a)) () -> NodeBounds
-nodeBounds nc =
-    let
-        x =
-            nc.node.label.x
-
-        y =
-            nc.node.label.y
-    in
-    nc.node.label.value.bounds { x = x, y = y }
 
 
 moveCard : Model -> CardDestination -> GitHubGraph.ID -> Cmd Msg
@@ -4161,3 +4096,8 @@ emptyArc =
 octiconOpts : Octicons.Options
 octiconOpts =
     Octicons.defaultOptions
+
+
+loadLabels : List GitHubGraph.Label -> Dict GitHubGraph.ID GitHubGraph.Label -> Dict GitHubGraph.ID GitHubGraph.Label
+loadLabels labels all =
+    List.foldl (\l -> Dict.insert l.id { l | color = String.toLower l.color }) all labels
