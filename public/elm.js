@@ -8885,7 +8885,6 @@ var author$project$Main$CardDropSourceRefreshed = function (a) {
 var author$project$Main$CardDropTargetRefreshed = function (a) {
 	return {$: 'CardDropTargetRefreshed', a: a};
 };
-var author$project$Main$ExcludeAllFilter = {$: 'ExcludeAllFilter'};
 var author$project$Main$GraphsFetched = function (a) {
 	return {$: 'GraphsFetched', a: a};
 };
@@ -15945,35 +15944,31 @@ var author$project$Main$update = F2(
 									elm$url$Url$toString(url)));
 						} else {
 							var page = _n2.a;
-							var baseGraphFilter = function () {
+							var paged = _Utils_update(
+								model,
+								{page: page});
+							var graphed = function () {
 								switch (page.$) {
-									case 'AllProjectsPage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
 									case 'GlobalGraphPage':
-										return elm$core$Maybe$Nothing;
+										return author$project$Main$computeGraph(
+											_Utils_update(
+												paged,
+												{baseGraphFilter: elm$core$Maybe$Nothing}));
 									case 'ProjectPage':
 										var name = page.a;
-										return elm$core$Maybe$Just(
-											author$project$Main$InProjectFilter(name));
-									case 'LabelsPage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'ReleaseRepoPage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'ReleasePage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'PullRequestsPage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
-									case 'PullRequestsRepoPage':
-										return elm$core$Maybe$Just(author$project$Main$ExcludeAllFilter);
+										return author$project$Main$computeGraph(
+											_Utils_update(
+												paged,
+												{
+													baseGraphFilter: elm$core$Maybe$Just(
+														author$project$Main$InProjectFilter(name))
+												}));
 									default:
-										return elm$core$Maybe$Nothing;
+										return paged;
 								}
 							}();
 							return _Utils_Tuple2(
-								author$project$Main$computeDataView(
-									_Utils_update(
-										model,
-										{baseGraphFilter: baseGraphFilter, page: page})),
+								author$project$Main$computeDataView(graphed),
 								elm$core$Platform$Cmd$none);
 						}
 					} else {

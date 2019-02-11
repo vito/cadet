@@ -401,40 +401,21 @@ update msg model =
 
                 Just page ->
                     let
-                        baseGraphFilter =
-                            case page of
-                                AllProjectsPage ->
-                                    Just ExcludeAllFilter
+                        paged =
+                            { model | page = page }
 
+                        graphed =
+                            case page of
                                 GlobalGraphPage ->
-                                    Nothing
+                                    computeGraph { paged | baseGraphFilter = Nothing }
 
                                 ProjectPage name ->
-                                    Just (InProjectFilter name)
+                                    computeGraph { paged | baseGraphFilter = Just (InProjectFilter name) }
 
-                                LabelsPage ->
-                                    Just ExcludeAllFilter
-
-                                ReleaseRepoPage _ ->
-                                    Just ExcludeAllFilter
-
-                                ReleasePage ->
-                                    Just ExcludeAllFilter
-
-                                PullRequestsPage ->
-                                    Just ExcludeAllFilter
-
-                                PullRequestsRepoPage _ ->
-                                    Just ExcludeAllFilter
-
-                                BouncePage ->
-                                    Nothing
+                                _ ->
+                                    paged
                     in
-                    ( computeDataView
-                        { model
-                            | page = page
-                            , baseGraphFilter = baseGraphFilter
-                        }
+                    ( computeDataView graphed
                     , Cmd.none
                     )
 
