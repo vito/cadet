@@ -104,13 +104,14 @@ type Msg
     | GraphRefreshRequested (List GitHubGraph.ID) (List ( GitHubGraph.ID, List GitHubGraph.ID ))
     | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
-    | RepositoryFetched (Result GitHubGraph.Error GitHubGraph.Repo)
+    | RepositoryFetched (GitHubGraph.Repo -> Msg) (Result GitHubGraph.Error GitHubGraph.Repo)
     | ProjectsFetched (List GitHubGraph.Project -> Msg) (Result GitHubGraph.Error (List GitHubGraph.Project))
     | FetchCards (List GitHubGraph.Project)
     | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
     | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
     | IssueFetched (Result GitHubGraph.Error GitHubGraph.Issue)
     | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
+    | FetchComparison GitHubGraph.Repo
     | ComparisonFetched GitHubGraph.Repo (Result GitHubGraph.Error GitHubGraph.V3Comparison)
     | PullRequestFetched (Result GitHubGraph.Error GitHubGraph.PullRequest)
     | IssueTimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
@@ -193,7 +194,7 @@ update msg model =
         RefreshRequested "repo" ownerAndName ->
             case String.split "/" ownerAndName of
                 owner :: name :: _ ->
-                    ( model, fetchRepo model { owner = owner, name = name } )
+                    ( model, fetchRepo model (always Noop) { owner = owner, name = name } )
 
                 _ ->
                     ( model, Cmd.none )
@@ -210,7 +211,7 @@ update msg model =
 
         HookReceived "label" payload ->
             Log.debug "label hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo payload model, Cmd.none )
+                ( decodeAndFetchRepo (always Noop) payload model, Cmd.none )
 
         HookReceived "issues" payload ->
             Log.debug "issue hook received; refreshing issue and timeline" () <|
@@ -234,7 +235,7 @@ update msg model =
 
         HookReceived "milestone" payload ->
             Log.debug "milestone hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo payload model, Cmd.none )
+                ( decodeAndFetchRepo (always Noop) payload model, Cmd.none )
 
         HookReceived "project" payload ->
             Log.debug "project hook received; refreshing projects" () <|
@@ -261,9 +262,17 @@ update msg model =
                         , Cmd.none
                         )
 
+        HookReceived "push" payload ->
+            Log.debug "push hook received; refreshing repo" () <|
+                ( decodeAndFetchRepo FetchComparison payload model, Cmd.none )
+
+        HookReceived "release" payload ->
+            Log.debug "release hook received; refreshing repo" () <|
+                ( decodeAndFetchRepo FetchComparison payload model, Cmd.none )
+
         HookReceived "repository" payload ->
             Log.debug "repository hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo payload model, Cmd.none )
+                ( decodeAndFetchRepo (always Noop) payload model, Cmd.none )
 
         HookReceived "status" payload ->
             Log.debug "status hook received; refreshing associated pr" () <|
@@ -293,12 +302,16 @@ update msg model =
             Log.debug "failed to fetch repos" err <|
                 backOff model (fetchRepos model)
 
-        RepositoryFetched (Ok repo) ->
+        RepositoryFetched nextMsg (Ok repo) ->
             Log.debug "repository fetched" repo.name <|
-                ( model, setRepo (GitHubGraph.encodeRepo repo) )
+                let
+                    ( next, cmd ) =
+                        update (nextMsg repo) model
+                in
+                ( next, Cmd.batch [ cmd, setRepo (GitHubGraph.encodeRepo repo) ] )
 
-        RepositoryFetched (Err err) ->
-            Log.debug "failed to fetch repos" err <|
+        RepositoryFetched nextMsg (Err err) ->
+            Log.debug "failed to fetch repo" err <|
                 ( model, Cmd.none )
 
         ProjectsFetched nextMsg (Ok projects) ->
@@ -309,7 +322,8 @@ update msg model =
                 in
                 ( next
                 , Cmd.batch
-                    [ setProjects (List.map GitHubGraph.encodeProject projects)
+                    [ cmd
+                    , setProjects (List.map GitHubGraph.encodeProject projects)
                     ]
                 )
 
@@ -381,6 +395,9 @@ update msg model =
                 ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
                 , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
                 )
+
+        FetchComparison repo ->
+            ( { model | loadQueue = fetchComparison model repo :: model.loadQueue }, Cmd.none )
 
         ComparisonFetched repo (Err err) ->
             Log.debug "failed to fetch comparison" ( repo.url, err ) <|
@@ -603,17 +620,17 @@ fetchPullRequest model id =
         |> Task.attempt PullRequestFetched
 
 
-fetchRepo : Model -> GitHubGraph.RepoSelector -> Cmd Msg
-fetchRepo model sel =
+fetchRepo : Model -> (GitHubGraph.Repo -> Msg) -> GitHubGraph.RepoSelector -> Cmd Msg
+fetchRepo model nextMsg sel =
     GitHubGraph.fetchRepo model.githubToken sel
-        |> Task.attempt RepositoryFetched
+        |> Task.attempt (RepositoryFetched nextMsg)
 
 
-decodeAndFetchRepo : JD.Value -> Model -> Model
-decodeAndFetchRepo payload model =
+decodeAndFetchRepo : (GitHubGraph.Repo -> Msg) -> JD.Value -> Model -> Model
+decodeAndFetchRepo nextMsg payload model =
     case JD.decodeValue decodeRepoSelector payload of
         Ok sel ->
-            { model | loadQueue = fetchRepo model sel :: model.loadQueue }
+            { model | loadQueue = fetchRepo model nextMsg sel :: model.loadQueue }
 
         Err err ->
             Log.debug "failed to decode repo" ( err, payload ) <|

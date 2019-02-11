@@ -4844,6 +4844,9 @@ var author$project$Log$debug = F3(
 var author$project$Main$FetchCards = function (a) {
 	return {$: 'FetchCards', a: a};
 };
+var author$project$Main$FetchComparison = function (a) {
+	return {$: 'FetchComparison', a: a};
+};
 var author$project$Main$Noop = {$: 'Noop'};
 var elm$core$Platform$Cmd$batch = _Platform_batch;
 var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
@@ -9949,18 +9952,19 @@ var author$project$GitHubGraph$fetchRepo = F2(
 			author$project$GitHubGraph$authedOptions(token),
 			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, repo, author$project$GitHubGraph$repoQuery));
 	});
-var author$project$Main$RepositoryFetched = function (a) {
-	return {$: 'RepositoryFetched', a: a};
-};
-var author$project$Main$fetchRepo = F2(
-	function (model, sel) {
+var author$project$Main$RepositoryFetched = F2(
+	function (a, b) {
+		return {$: 'RepositoryFetched', a: a, b: b};
+	});
+var author$project$Main$fetchRepo = F3(
+	function (model, nextMsg, sel) {
 		return A2(
 			elm$core$Task$attempt,
-			author$project$Main$RepositoryFetched,
+			author$project$Main$RepositoryFetched(nextMsg),
 			A2(author$project$GitHubGraph$fetchRepo, model.githubToken, sel));
 	});
-var author$project$Main$decodeAndFetchRepo = F2(
-	function (payload, model) {
+var author$project$Main$decodeAndFetchRepo = F3(
+	function (nextMsg, payload, model) {
 		var _n0 = A2(elm$json$Json$Decode$decodeValue, author$project$Main$decodeRepoSelector, payload);
 		if (_n0.$ === 'Ok') {
 			var sel = _n0.a;
@@ -9969,7 +9973,7 @@ var author$project$Main$decodeAndFetchRepo = F2(
 				{
 					loadQueue: A2(
 						elm$core$List$cons,
-						A2(author$project$Main$fetchRepo, model, sel),
+						A3(author$project$Main$fetchRepo, model, nextMsg, sel),
 						model.loadQueue)
 				});
 		} else {
@@ -11690,9 +11694,10 @@ var author$project$Main$update = F2(
 							var name = _n3.a;
 							return _Utils_Tuple2(
 								model,
-								A2(
+								A3(
 									author$project$Main$fetchRepo,
 									model,
+									elm$core$Basics$always(author$project$Main$Noop),
 									{name: name, owner: owner}));
 						} else {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
@@ -11725,7 +11730,11 @@ var author$project$Main$update = F2(
 							'label hook received; refreshing repo',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A2(author$project$Main$decodeAndFetchRepo, payload, model),
+								A3(
+									author$project$Main$decodeAndFetchRepo,
+									elm$core$Basics$always(author$project$Main$Noop),
+									payload,
+									model),
 								elm$core$Platform$Cmd$none));
 					case 'issues':
 						var payload = msg.b;
@@ -11779,7 +11788,11 @@ var author$project$Main$update = F2(
 							'milestone hook received; refreshing repo',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A2(author$project$Main$decodeAndFetchRepo, payload, model),
+								A3(
+									author$project$Main$decodeAndFetchRepo,
+									elm$core$Basics$always(author$project$Main$Noop),
+									payload,
+									model),
 								elm$core$Platform$Cmd$none));
 					case 'project':
 						var payload = msg.b;
@@ -11871,6 +11884,24 @@ var author$project$Main$update = F2(
 										elm$core$Platform$Cmd$none);
 								}
 							}());
+					case 'push':
+						var payload = msg.b;
+						return A3(
+							author$project$Log$debug,
+							'push hook received; refreshing repo',
+							_Utils_Tuple0,
+							_Utils_Tuple2(
+								A3(author$project$Main$decodeAndFetchRepo, author$project$Main$FetchComparison, payload, model),
+								elm$core$Platform$Cmd$none));
+					case 'release':
+						var payload = msg.b;
+						return A3(
+							author$project$Log$debug,
+							'release hook received; refreshing repo',
+							_Utils_Tuple0,
+							_Utils_Tuple2(
+								A3(author$project$Main$decodeAndFetchRepo, author$project$Main$FetchComparison, payload, model),
+								elm$core$Platform$Cmd$none));
 					case 'repository':
 						var payload = msg.b;
 						return A3(
@@ -11878,7 +11909,11 @@ var author$project$Main$update = F2(
 							'repository hook received; refreshing repo',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A2(author$project$Main$decodeAndFetchRepo, payload, model),
+								A3(
+									author$project$Main$decodeAndFetchRepo,
+									elm$core$Basics$always(author$project$Main$Noop),
+									payload,
+									model),
 								elm$core$Platform$Cmd$none));
 					case 'status':
 						var payload = msg.b;
@@ -11951,21 +11986,36 @@ var author$project$Main$update = F2(
 							author$project$Main$fetchRepos(model)));
 				}
 			case 'RepositoryFetched':
-				if (msg.a.$ === 'Ok') {
-					var repo = msg.a.a;
+				if (msg.b.$ === 'Ok') {
+					var nextMsg = msg.a;
+					var repo = msg.b.a;
 					return A3(
 						author$project$Log$debug,
 						'repository fetched',
 						repo.name,
-						_Utils_Tuple2(
-							model,
-							author$project$Main$setRepo(
-								author$project$GitHubGraph$encodeRepo(repo))));
+						function () {
+							var _n5 = A2(
+								author$project$Main$update,
+								nextMsg(repo),
+								model);
+							var next = _n5.a;
+							var cmd = _n5.b;
+							return _Utils_Tuple2(
+								next,
+								elm$core$Platform$Cmd$batch(
+									_List_fromArray(
+										[
+											cmd,
+											author$project$Main$setRepo(
+											author$project$GitHubGraph$encodeRepo(repo))
+										])));
+						}());
 				} else {
-					var err = msg.a.a;
+					var nextMsg = msg.a;
+					var err = msg.b.a;
 					return A3(
 						author$project$Log$debug,
-						'failed to fetch repos',
+						'failed to fetch repo',
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
@@ -11983,19 +12033,20 @@ var author$project$Main$update = F2(
 							},
 							projects),
 						function () {
-							var _n5 = A2(
+							var _n6 = A2(
 								author$project$Main$update,
 								nextMsg(projects),
 								_Utils_update(
 									model,
 									{projects: projects}));
-							var next = _n5.a;
-							var cmd = _n5.b;
+							var next = _n6.a;
+							var cmd = _n6.b;
 							return _Utils_Tuple2(
 								next,
 								elm$core$Platform$Cmd$batch(
 									_List_fromArray(
 										[
+											cmd,
 											author$project$Main$setProjects(
 											A2(elm$core$List$map, author$project$GitHubGraph$encodeProject, projects))
 										])));
@@ -12134,6 +12185,18 @@ var author$project$Main$update = F2(
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
+			case 'FetchComparison':
+				var repo = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							loadQueue: A2(
+								elm$core$List$cons,
+								A2(author$project$Main$fetchComparison, model, repo),
+								model.loadQueue)
+						}),
+					elm$core$Platform$Cmd$none);
 			case 'ComparisonFetched':
 				if (msg.b.$ === 'Err') {
 					var repo = msg.a;
@@ -12185,9 +12248,9 @@ var author$project$Main$update = F2(
 					var commitPRs = A3(
 						elm$core$List$foldl,
 						function (pr) {
-							var _n6 = pr.lastCommit;
-							if (_n6.$ === 'Just') {
-								var sha = _n6.a.sha;
+							var _n7 = pr.lastCommit;
+							if (_n7.$ === 'Just') {
+								var sha = _n7.a.sha;
 								return A2(elm$core$Dict$insert, sha, pr.id);
 							} else {
 								return elm$core$Basics$identity;
@@ -12232,9 +12295,9 @@ var author$project$Main$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _n7 = pr.lastCommit;
-										if (_n7.$ === 'Just') {
-											var sha = _n7.a.sha;
+										var _n8 = pr.lastCommit;
+										if (_n8.$ === 'Just') {
+											var sha = _n8.a.sha;
 											return A3(elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12301,9 +12364,9 @@ var author$project$Main$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _n9 = msg.b.a;
-					var timeline = _n9.a;
-					var reviews = _n9.b;
+					var _n10 = msg.b.a;
+					var timeline = _n10.a;
+					var reviews = _n10.b;
 					var reviewers = A2(
 						elm$core$List$map,
 						author$project$GitHubGraph$encodePullRequestReview,
@@ -12311,8 +12374,8 @@ var author$project$Main$update = F2(
 							A3(
 								elm$core$List$foldl,
 								function (r) {
-									var _n11 = r.state;
-									switch (_n11.$) {
+									var _n12 = r.state;
+									switch (_n12.$) {
 										case 'PullRequestReviewStatePending':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
