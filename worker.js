@@ -12774,7 +12774,7 @@ var author$project$Main$subscriptions = function (model) {
 			[
 				A2(
 				elm$time$Time$every,
-				500,
+				100,
 				elm$core$Basics$always(author$project$Main$PopQueue)),
 				A2(
 				elm$time$Time$every,
