@@ -11660,7 +11660,7 @@ var author$project$Main$update = F2(
 							model,
 							{
 								failedQueue: _List_Nil,
-								loadQueue: _Utils_ap(model.failedQueue, model.loadQueue)
+								loadQueue: _Utils_ap(model.loadQueue, model.failedQueue)
 							}),
 						elm$core$Platform$Cmd$none));
 			case 'GraphRefreshRequested':
@@ -12170,10 +12170,12 @@ var author$project$Main$update = F2(
 							_Utils_update(
 								model,
 								{
-									loadQueue: A2(
-										elm$core$List$cons,
-										A2(author$project$Main$fetchIssueTimeline, model, issue.id),
-										model.loadQueue)
+									loadQueue: _Utils_ap(
+										model.loadQueue,
+										_List_fromArray(
+											[
+												A2(author$project$Main$fetchIssueTimeline, model, issue.id)
+											]))
 								}),
 							author$project$Main$setIssue(
 								author$project$GitHubGraph$encodeIssue(issue))));
@@ -12303,10 +12305,12 @@ var author$project$Main$update = F2(
 											return model.commitPRs;
 										}
 									}(),
-									loadQueue: A2(
-										elm$core$List$cons,
-										A2(author$project$Main$fetchPRTimelineAndReviews, model, pr.id),
-										model.loadQueue)
+									loadQueue: _Utils_ap(
+										model.loadQueue,
+										_List_fromArray(
+											[
+												A2(author$project$Main$fetchPRTimelineAndReviews, model, pr.id)
+											]))
 								}),
 							author$project$Main$setPullRequest(
 								author$project$GitHubGraph$encodePullRequest(pr))));

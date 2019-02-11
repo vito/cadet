@@ -173,7 +173,7 @@ update msg model =
                 Log.debug "retrying failed fetches" (List.length model.failedQueue) <|
                     ( { model
                         | failedQueue = []
-                        , loadQueue = model.failedQueue ++ model.loadQueue
+                        , loadQueue = model.loadQueue ++ model.failedQueue
                       }
                     , Cmd.none
                     )
@@ -362,7 +362,7 @@ update msg model =
 
         IssueFetched (Ok issue) ->
             Log.debug "issue fetched" issue.url <|
-                ( { model | loadQueue = fetchIssueTimeline model issue.id :: model.loadQueue }
+                ( { model | loadQueue = model.loadQueue ++ [ fetchIssueTimeline model issue.id ] }
                 , setIssue (GitHubGraph.encodeIssue issue)
                 )
 
@@ -423,7 +423,7 @@ update msg model =
 
                             Nothing ->
                                 model.commitPRs
-                    , loadQueue = fetchPRTimelineAndReviews model pr.id :: model.loadQueue
+                    , loadQueue = model.loadQueue ++ [ fetchPRTimelineAndReviews model pr.id ]
                   }
                 , setPullRequest (GitHubGraph.encodePullRequest pr)
                 )
