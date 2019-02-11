@@ -11855,6 +11855,111 @@ var author$project$Main$graphUserActivityCompare = F4(
 			latestUserActivity(a.graph),
 			latestUserActivity(b.graph));
 	});
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var author$project$Card$isUntriaged = function (card) {
+	return elm$core$List$isEmpty(card.cards);
+};
+var author$project$Main$hasLabelAndColor = F4(
+	function (model, name, color, card) {
+		var matchingLabels = A2(
+			elm$core$Dict$filter,
+			F2(
+				function (_n0, l) {
+					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
+				}),
+			model.allLabels);
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return A2(elm$core$Dict$member, a, matchingLabels);
+			},
+			card.labels);
+	});
+var author$project$Main$involvesUser = F3(
+	function (model, login, card) {
+		return A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeR,
+				function ($) {
+					return $.user;
+				},
+				A2(
+					elm$core$Basics$composeR,
+					elm$core$Maybe$map(
+						function ($) {
+							return $.login;
+						}),
+					elm$core$Basics$eq(
+						elm$core$Maybe$Just(login)))),
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(elm$core$Dict$get, card.id, model.data.actors)));
+	});
+var author$project$Main$isInProject = F2(
+	function (name, card) {
+		return A2(
+			elm$core$List$member,
+			name,
+			A2(
+				elm$core$List$map,
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.project;
+					},
+					function ($) {
+						return $.name;
+					}),
+				card.cards));
+	});
+var author$project$Main$satisfiesFilter = F3(
+	function (model, filter, card) {
+		switch (filter.$) {
+			case 'ExcludeAllFilter':
+				return false;
+			case 'InProjectFilter':
+				var name = filter.a;
+				return A2(author$project$Main$isInProject, name, card);
+			case 'HasLabelFilter':
+				var label = filter.a;
+				var color = filter.b;
+				return A4(author$project$Main$hasLabelAndColor, model, label, color, card);
+			case 'InvolvesUserFilter':
+				var login = filter.a;
+				return A3(author$project$Main$involvesUser, model, login, card);
+			case 'PullRequestsFilter':
+				return author$project$Card$isPR(card);
+			case 'IssuesFilter':
+				return !author$project$Card$isPR(card);
+			default:
+				return author$project$Card$isUntriaged(card);
+		}
+	});
+var elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			elm$core$List$any,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
+			list);
+	});
+var author$project$Main$satisfiesFilters = F3(
+	function (model, filters, card) {
+		return A2(
+			elm$core$List$all,
+			function (a) {
+				return A3(author$project$Main$satisfiesFilter, model, a, card);
+			},
+			filters);
+	});
 var author$project$Main$cardRadiusBase = F2(
 	function (card, _n0) {
 		var incoming = _n0.incoming;
@@ -14525,18 +14630,40 @@ var elm_community$graph$Graph$fold = F3(
 	});
 var author$project$Main$computeGraph = function (model) {
 	var sortFunc = function () {
-		var _n1 = model.graphSort;
-		switch (_n1.$) {
+		var _n3 = model.graphSort;
+		switch (_n3.$) {
 			case 'ImpactSort':
 				return author$project$Main$graphSizeCompare;
 			case 'UserActivitySort':
-				var login = _n1.a;
+				var login = _n3.a;
 				return A2(author$project$Main$graphUserActivityCompare, model, login);
 			default:
 				return author$project$Main$graphAllActivityCompare(model);
 		}
 	}();
 	var baseState = author$project$Main$baseGraphState(model);
+	var allFilters = function () {
+		var _n2 = model.baseGraphFilter;
+		if (_n2.$ === 'Just') {
+			var f = _n2.a;
+			return A2(elm$core$List$cons, f, model.graphFilters);
+		} else {
+			return model.graphFilters;
+		}
+	}();
+	var filterFunc = A2(
+		elm$core$Basics$composeR,
+		function ($) {
+			return $.graph;
+		},
+		A2(
+			elm_community$graph$Graph$fold,
+			F2(
+				function (_n1, matches) {
+					var node = _n1.node;
+					return matches || A3(author$project$Main$satisfiesFilters, model, allFilters, node.label.value.card);
+				}),
+			false));
 	var addNode = F2(
 		function (nc, acc) {
 			var _n0 = A2(elm$core$Dict$get, nc.node.label.value, model.allCards);
@@ -14568,7 +14695,10 @@ var author$project$Main$computeGraph = function (model) {
 					return _Utils_Tuple2(baseState, g);
 				},
 				elm$core$List$reverse(
-					A2(elm$core$List$sortWith, sortFunc, graphs)))
+					A2(
+						elm$core$List$sortWith,
+						sortFunc,
+						A2(elm$core$List$filter, filterFunc, graphs))))
 		});
 };
 var elm$core$Dict$isEmpty = function (dict) {
@@ -15540,13 +15670,6 @@ var elm$core$Dict$map = F2(
 var elm$core$Dict$union = F2(
 	function (t1, t2) {
 		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
-	});
-var elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			elm$core$List$any,
-			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
-			list);
 	});
 var elm$core$List$partition = F2(
 	function (pred, list) {
@@ -18405,14 +18528,6 @@ var author$project$Main$CreateLabel = {$: 'CreateLabel'};
 var author$project$Main$RandomizeNewLabelColor = {$: 'RandomizeNewLabelColor'};
 var author$project$Main$SetNewLabelName = function (a) {
 	return {$: 'SetNewLabelName', a: a};
-};
-var author$project$Card$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
 };
 var author$project$Main$DeleteLabel = function (a) {
 	return {$: 'DeleteLabel', a: a};

@@ -2673,6 +2673,22 @@ computeGraph model =
         graphs =
             List.map (\fg -> { graph = Graph.fold addNode Graph.empty fg.graph, simulation = fg.simulation }) model.graphs
 
+        allFilters =
+            case model.baseGraphFilter of
+                Just f ->
+                    f :: model.graphFilters
+
+                Nothing ->
+                    model.graphFilters
+
+        filterFunc =
+            .graph
+                >> Graph.fold
+                    (\{ node } matches ->
+                        matches || satisfiesFilters model allFilters node.label.value.card
+                    )
+                    False
+
         sortFunc =
             case model.graphSort of
                 ImpactSort ->
@@ -2690,6 +2706,7 @@ computeGraph model =
     { model
         | cardGraphs =
             graphs
+                |> List.filter filterFunc
                 |> List.sortWith sortFunc
                 |> List.reverse
                 |> List.map (\g -> ( baseState, g ))
