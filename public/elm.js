@@ -11518,7 +11518,7 @@ var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	});
 var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
 var author$project$Main$baseGraphState = function (model) {
-	return {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.data.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+	return {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.data.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
 };
 var elm$core$List$maximum = function (list) {
 	if (list.b) {
@@ -11863,68 +11863,6 @@ var author$project$Main$satisfiesFilters = F3(
 			filters);
 	});
 var elm$core$List$sortWith = _List_sortWith;
-var author$project$Main$sortAndFilterGraphs = function (model) {
-	var sortFunc = function () {
-		var _n3 = model.graphSort;
-		switch (_n3.$) {
-			case 'ImpactSort':
-				return author$project$Main$graphImpactCompare(model);
-			case 'UserActivitySort':
-				var login = _n3.a;
-				return A2(author$project$Main$graphUserActivityCompare, model, login);
-			default:
-				return author$project$Main$graphAllActivityCompare(model);
-		}
-	}();
-	var baseState = author$project$Main$baseGraphState(model);
-	var allFilters = function () {
-		var _n2 = model.baseGraphFilter;
-		if (_n2.$ === 'Just') {
-			var f = _n2.a;
-			return A2(elm$core$List$cons, f, model.graphFilters);
-		} else {
-			return model.graphFilters;
-		}
-	}();
-	var filterFunc = A2(
-		elm$core$Basics$composeR,
-		function ($) {
-			return $.graph;
-		},
-		A2(
-			elm_community$graph$Graph$fold,
-			F2(
-				function (_n0, matches) {
-					var node = _n0.node;
-					if (matches) {
-						return matches;
-					} else {
-						var _n1 = A2(elm$core$Dict$get, node.label.value, model.allCards);
-						if (_n1.$ === 'Just') {
-							var card = _n1.a;
-							return A3(author$project$Main$satisfiesFilters, model, allFilters, card);
-						} else {
-							return matches;
-						}
-					}
-				}),
-			false));
-	var graphs = elm$core$List$reverse(
-		A2(
-			elm$core$List$sortWith,
-			sortFunc,
-			A2(elm$core$List$filter, filterFunc, model.graphs)));
-	return _Utils_update(
-		model,
-		{
-			cardGraphs: A2(
-				elm$core$List$map,
-				function (g) {
-					return _Utils_Tuple2(baseState, g);
-				},
-				graphs)
-		});
-};
 var elm$core$Dict$isEmpty = function (dict) {
 	if (dict.$ === 'RBEmpty_elm_builtin') {
 		return true;
@@ -11935,6 +11873,68 @@ var elm$core$Dict$isEmpty = function (dict) {
 var elm$core$Set$isEmpty = function (_n0) {
 	var dict = _n0.a;
 	return elm$core$Dict$isEmpty(dict);
+};
+var author$project$Main$sortAndFilterGraphs = function (model) {
+	var sortFunc = F2(
+		function (_n4, _n5) {
+			var a = _n4.b;
+			var b = _n5.b;
+			var _n3 = model.graphSort;
+			switch (_n3.$) {
+				case 'ImpactSort':
+					return A3(author$project$Main$graphImpactCompare, model, a, b);
+				case 'UserActivitySort':
+					var login = _n3.a;
+					return A4(author$project$Main$graphUserActivityCompare, model, login, a, b);
+				default:
+					return A3(author$project$Main$graphAllActivityCompare, model, a, b);
+			}
+		});
+	var baseState = author$project$Main$baseGraphState(model);
+	var allFilters = function () {
+		var _n2 = model.baseGraphFilter;
+		if (_n2.$ === 'Just') {
+			var f = _n2.a;
+			return A2(elm$core$List$cons, f, model.graphFilters);
+		} else {
+			return model.graphFilters;
+		}
+	}();
+	var filteredGraphs = A3(
+		elm$core$List$foldl,
+		F2(
+			function (fg, fgs) {
+				var matching = A3(
+					elm_community$graph$Graph$fold,
+					F2(
+						function (_n0, matches) {
+							var node = _n0.node;
+							var _n1 = A2(elm$core$Dict$get, node.label.value, model.allCards);
+							if (_n1.$ === 'Just') {
+								var card = _n1.a;
+								return A3(author$project$Main$satisfiesFilters, model, allFilters, card) ? A2(elm$core$Set$insert, card.id, matches) : matches;
+							} else {
+								return matches;
+							}
+						}),
+					elm$core$Set$empty,
+					fg.graph);
+				return elm$core$Set$isEmpty(matching) ? fgs : A2(
+					elm$core$List$cons,
+					_Utils_Tuple2(
+						_Utils_update(
+							baseState,
+							{filteredCards: matching}),
+						fg),
+					fgs);
+			}),
+		_List_Nil,
+		model.graphs);
+	var graphs = elm$core$List$reverse(
+		A2(elm$core$List$sortWith, sortFunc, filteredGraphs));
+	return _Utils_update(
+		model,
+		{cardGraphs: graphs});
 };
 var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
 	return _Utils_eq(oset, y0hy0h$ordered_containers$OrderedSet$empty);
@@ -11954,7 +11954,7 @@ var y0hy0h$ordered_containers$OrderedSet$member = F2(
 		return A2(elm$core$Dict$member, key, dict);
 	});
 var author$project$Main$updateGraphStates = function (model) {
-	var newState = {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
+	var newState = {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
 	var affectedByState = function (_n2) {
 		var graph = _n2.graph;
 		return A3(
@@ -11982,9 +11982,24 @@ var author$project$Main$updateGraphStates = function (model) {
 				function (_n0) {
 					var s = _n0.a;
 					var g = _n0.b;
-					return affectedByState(g) ? _Utils_Tuple2(newState, g) : (A2(author$project$Main$isBaseGraphState, model, s) ? _Utils_Tuple2(s, g) : _Utils_Tuple2(
-						author$project$Main$baseGraphState(model),
-						g));
+					if (affectedByState(g)) {
+						return _Utils_Tuple2(
+							_Utils_update(
+								newState,
+								{filteredCards: s.filteredCards}),
+							g);
+					} else {
+						if (A2(author$project$Main$isBaseGraphState, model, s)) {
+							return _Utils_Tuple2(s, g);
+						} else {
+							var base = author$project$Main$baseGraphState(model);
+							return _Utils_Tuple2(
+								_Utils_update(
+									base,
+									{filteredCards: s.filteredCards}),
+								g);
+						}
+					}
 				},
 				model.cardGraphs)
 		});
@@ -12573,6 +12588,23 @@ var author$project$Main$labelKey = function (label) {
 		label.name,
 		elm$core$String$toLower(label.color));
 };
+var author$project$Main$loadLabels = F2(
+	function (labels, all) {
+		return A3(
+			elm$core$List$foldl,
+			function (l) {
+				return A2(
+					elm$core$Dict$insert,
+					l.id,
+					_Utils_update(
+						l,
+						{
+							color: elm$core$String$toLower(l.color)
+						}));
+			},
+			all,
+			labels);
+	});
 var author$project$Main$matchesLabel = F2(
 	function (sl, l) {
 		return _Utils_eq(l.name, sl.name) && _Utils_eq(
@@ -13866,15 +13898,9 @@ var author$project$Main$update = F2(
 										value.issues);
 									var allLabels = A3(
 										elm$core$Dict$foldl,
-										F3(
-											function (_n23, r, ls) {
-												return A3(
-													elm$core$List$foldl,
-													function (l) {
-														return A2(elm$core$Dict$insert, l.id, l);
-													},
-													ls,
-													r.labels);
+										F2(
+											function (_n23, r) {
+												return author$project$Main$loadLabels(r.labels);
 											}),
 										elm$core$Dict$empty,
 										value.repos);
@@ -14223,13 +14249,7 @@ var author$project$Main$update = F2(
 						var index = msg.a.a.index;
 						var value = msg.a.a.value;
 						var data = model.data;
-						var allLabels = A3(
-							elm$core$List$foldl,
-							function (l) {
-								return A2(elm$core$Dict$insert, l.id, l);
-							},
-							model.allLabels,
-							value.labels);
+						var allLabels = A2(author$project$Main$loadLabels, value.labels, model.allLabels);
 						var colorLightnessCache = A3(
 							elm$core$Dict$foldl,
 							F3(
@@ -15430,15 +15450,19 @@ var author$project$Main$graphId = function (_n0) {
 		'',
 		graph);
 };
+var author$project$Main$isFilteredOut = F2(
+	function (state, id) {
+		return (!elm$core$Set$isEmpty(state.filteredCards)) && (!A2(elm$core$Set$member, id, state.filteredCards));
+	});
 var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
 var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = F2(
-	function (graph, edge) {
-		var target = function () {
-			var _n1 = A2(
+var author$project$Main$linkPath = F3(
+	function (state, graph, edge) {
+		var getEnd = function (end) {
+			var _n2 = A2(
 				elm$core$Maybe$map,
 				A2(
 					elm$core$Basics$composeR,
@@ -15448,40 +15472,32 @@ var author$project$Main$linkPath = F2(
 					function ($) {
 						return $.label;
 					}),
-				A2(elm_community$graph$Graph$get, edge.to, graph));
-			if (_n1.$ === 'Just') {
-				var x = _n1.a.x;
-				var y = _n1.a.y;
-				return {x: x, y: y};
+				A2(elm_community$graph$Graph$get, end, graph));
+			if (_n2.$ === 'Just') {
+				var x = _n2.a.x;
+				var y = _n2.a.y;
+				var value = _n2.a.value;
+				return _Utils_Tuple2(
+					{x: x, y: y},
+					A2(author$project$Main$isFilteredOut, state, value));
 			} else {
-				return {x: 0, y: 0};
+				return _Utils_Tuple2(
+					{x: 0, y: 0},
+					false);
 			}
-		}();
-		var source = function () {
-			var _n0 = A2(
-				elm$core$Maybe$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.node;
-					},
-					function ($) {
-						return $.label;
-					}),
-				A2(elm_community$graph$Graph$get, edge.from, graph));
-			if (_n0.$ === 'Just') {
-				var x = _n0.a.x;
-				var y = _n0.a.y;
-				return {x: x, y: y};
-			} else {
-				return {x: 0, y: 0};
-			}
-		}();
+		};
+		var _n0 = getEnd(edge.to);
+		var target = _n0.a;
+		var targetIsFilteredOut = _n0.b;
+		var _n1 = getEnd(edge.from);
+		var source = _n1.a;
+		var sourceIsFilteredOut = _n1.b;
 		return A2(
 			elm$svg$Svg$line,
 			_List_fromArray(
 				[
 					elm$svg$Svg$Attributes$class('graph-edge'),
+					(sourceIsFilteredOut || targetIsFilteredOut) ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
 					elm$svg$Svg$Attributes$x1(
 					elm$core$String$fromFloat(source.x)),
 					elm$svg$Svg$Attributes$y1(
@@ -17424,7 +17440,8 @@ var author$project$Main$viewCardNode = F6(
 		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
 			state.highlightedNode,
 			elm$core$Maybe$Just(card.id));
-		var scale = isHighlighted ? '1.1' : '1';
+		var isFiltered = A2(author$project$Main$isFilteredOut, state, card.id);
+		var scale = isHighlighted ? '1.1' : (isFiltered ? '0.5' : '1');
 		return A2(
 			elm$svg$Svg$g,
 			_List_fromArray(
@@ -17432,6 +17449,7 @@ var author$project$Main$viewCardNode = F6(
 					elm$svg$Svg$Attributes$transform(
 					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
 					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
+					isFiltered ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
 					elm$svg$Svg$Events$onMouseOver(
 					author$project$Main$AnticipateCardFromNode(card.id)),
 					elm$svg$Svg$Events$onMouseOut(
@@ -17800,12 +17818,14 @@ var author$project$Main$viewCardNodeFlair = F5(
 		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
 			state.highlightedNode,
 			elm$core$Maybe$Just(card.id));
-		var scale = isHighlighted ? '1.1' : '1';
+		var isFiltered = A2(author$project$Main$isFilteredOut, state, card.id);
+		var scale = isHighlighted ? '1.1' : (isFiltered ? '0.5' : '1');
 		var classes = _Utils_ap(
 			_List_fromArray(
 				[
 					'flair',
-					A2(author$project$Main$activityClass, state.currentTime, card.updatedAt)
+					A2(author$project$Main$activityClass, state.currentTime, card.updatedAt),
+					isFiltered ? 'filtered-out' : 'filtered-in'
 				]),
 			function () {
 				var _n1 = state.me;
@@ -17901,8 +17921,6 @@ var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
 			_VirtualDom_noScript(tag));
 	});
 var elm$svg$Svg$Keyed$node = elm$virtual_dom$VirtualDom$keyedNodeNS('http://www.w3.org/2000/svg');
-var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
-var elm$svg$Svg$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
 var elm_community$graph$Graph$edges = function (graph) {
 	var flippedFoldl = F3(
 		function (f, dict, list) {
@@ -17931,7 +17949,7 @@ var author$project$Main$viewGraph = F2(
 		var padding = 10;
 		var links = A2(
 			elm$core$List$map,
-			A2(elm$svg$Svg$Lazy$lazy2, author$project$Main$linkPath, graph),
+			A2(author$project$Main$linkPath, state, graph),
 			elm_community$graph$Graph$edges(graph));
 		var _n1 = A3(
 			elm_community$graph$Graph$fold,
@@ -17944,8 +17962,8 @@ var author$project$Main$viewGraph = F2(
 		var maxX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n6, acc) {
-					var x2 = _n6.x2;
+				function (_n5, acc) {
+					var x2 = _n5.x2;
 					return A2(elm$core$Basics$max, x2, acc);
 				}),
 			0,
@@ -17953,8 +17971,8 @@ var author$project$Main$viewGraph = F2(
 		var maxY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n5, acc) {
-					var y2 = _n5.y2;
+				function (_n4, acc) {
+					var y2 = _n4.y2;
 					return A2(elm$core$Basics$max, y2, acc);
 				}),
 			0,
@@ -17962,8 +17980,8 @@ var author$project$Main$viewGraph = F2(
 		var minX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n4, acc) {
-					var x1 = _n4.x1;
+				function (_n3, acc) {
+					var x1 = _n3.x1;
 					return A2(elm$core$Basics$min, x1, acc);
 				}),
 			999999,
@@ -17972,29 +17990,33 @@ var author$project$Main$viewGraph = F2(
 		var minY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n3, acc) {
-					var y1 = _n3.y1;
+				function (_n2, acc) {
+					var y1 = _n2.y1;
 					return A2(elm$core$Basics$min, y1, acc);
 				}),
 			999999,
 			bounds) - padding;
 		var height = maxY - minY;
-		var _n2 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
-		var scaleW = _n2.a;
-		var scaleH = _n2.b;
 		return A2(
 			elm$svg$Svg$svg,
 			_List_fromArray(
 				[
 					elm$svg$Svg$Attributes$width(
-					elm$core$String$fromFloat(scaleW) + 'px'),
-					elm$svg$Svg$Attributes$height(
-					elm$core$String$fromFloat(scaleH) + 'px'),
+					elm$core$String$fromFloat(width) + 'px'),
+					elm$svg$Svg$Attributes$style('max-width: 95%'),
+					elm$svg$Svg$Attributes$height('auto'),
 					elm$svg$Svg$Attributes$viewBox(
 					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
 				]),
 			_List_fromArray(
 				[
+					A2(
+					elm$svg$Svg$g,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$class('links')
+						]),
+					links),
 					A3(
 					elm$svg$Svg$Keyed$node,
 					'g',
@@ -18003,13 +18025,6 @@ var author$project$Main$viewGraph = F2(
 							elm$svg$Svg$Attributes$class('lower')
 						]),
 					flairs),
-					A2(
-					elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('links')
-						]),
-					links),
 					A3(
 					elm$svg$Svg$Keyed$node,
 					'g',
@@ -18058,7 +18073,11 @@ var author$project$Main$colorIsLight = F2(
 			var res = _n0.a;
 			return res;
 		} else {
-			return false;
+			return A3(
+				author$project$Log$debug,
+				'color lightness cache miss',
+				hex,
+				author$project$Main$computeColorIsLight(hex));
 		}
 	});
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
@@ -18441,6 +18460,7 @@ var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 		_VirtualDom_noScript(tag));
 };
 var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
+var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
 var elm$html$Html$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
 var author$project$Main$viewSpatialGraph = function (model) {
 	return A2(
@@ -18476,7 +18496,7 @@ var author$project$Main$viewGlobalGraphPage = function (model) {
 		elm$html$Html$div,
 		_List_fromArray(
 			[
-				elm$html$Html$Attributes$class('page-content')
+				elm$html$Html$Attributes$class('all-issues-graph')
 			]),
 		_List_fromArray(
 			[
@@ -18484,7 +18504,7 @@ var author$project$Main$viewGlobalGraphPage = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$class('page-header')
+						elm$html$Html$Attributes$class('column-title')
 					]),
 				_List_fromArray(
 					[

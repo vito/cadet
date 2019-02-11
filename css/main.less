@@ -696,7 +696,6 @@ code {
 
   .spatial-graph {
     flex-shrink: 0;
-    padding: 40px 20px;
   }
 }
 
@@ -704,6 +703,7 @@ code {
   text-align: center;
   position: relative;
   overflow-y: auto;
+  padding: 40px 20px;
 }
 
 .dragging {
@@ -725,6 +725,28 @@ svg {
   .graph-edge {
     stroke-width: 4px;
     stroke: @gray-light;
+  }
+
+  .filtered-out {
+    &.flair {
+      opacity: 0.2;
+    }
+
+    &.graph-edge {
+      stroke: @gray-dark;
+    }
+
+    circle {
+      fill: @gray-700;
+    }
+
+    .issue-number {
+      fill: @white;
+    }
+
+    .label-arc {
+      display: none;
+    }
   }
 
   .flair {

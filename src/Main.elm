@@ -162,6 +162,7 @@ type alias CardNodeState =
     , currentTime : Time.Posix
     , selectedCards : OrderedSet GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
+    , filteredCards : Set GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
     , me : Maybe Me
     , dataIndex : Int
@@ -1132,6 +1133,7 @@ updateGraphStates model =
             , reviewers = model.data.reviewers
             , currentTime = model.currentTime
             , selectedCards = model.selectedCards
+            , filteredCards = Set.empty
             , anticipatedCards = model.anticipatedCards
             , highlightedNode = model.highlightedNode
             , me = model.me
@@ -1162,13 +1164,17 @@ updateGraphStates model =
             List.map
                 (\( s, g ) ->
                     if affectedByState g then
-                        ( newState, g )
+                        ( { newState | filteredCards = s.filteredCards }, g )
 
                     else if isBaseGraphState model s then
                         ( s, g )
 
                     else
-                        ( baseGraphState model, g )
+                        let
+                            base =
+                                baseGraphState model
+                        in
+                        ( { base | filteredCards = s.filteredCards }, g )
                 )
                 model.cardGraphs
     }
@@ -1581,8 +1587,8 @@ viewSidebarControls model =
 
 viewGlobalGraphPage : Model -> Html Msg
 viewGlobalGraphPage model =
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
+    Html.div [ HA.class "all-issues-graph" ]
+        [ Html.div [ HA.class "column-title" ]
             [ Octicons.circuitBoard octiconOpts
             , Html.text "Issue Graph"
             ]
@@ -2643,44 +2649,56 @@ sortAndFilterGraphs model =
                 Nothing ->
                     model.graphFilters
 
-        filterFunc =
-            .graph
-                >> Graph.fold
-                    (\{ node } matches ->
-                        if matches then
-                            matches
-
-                        else
-                            case Dict.get node.label.value model.allCards of
-                                Just card ->
-                                    satisfiesFilters model allFilters card
-
-                                Nothing ->
-                                    matches
-                    )
-                    False
-
-        sortFunc =
-            case model.graphSort of
-                ImpactSort ->
-                    graphImpactCompare model
-
-                UserActivitySort login ->
-                    graphUserActivityCompare model login
-
-                AllActivitySort ->
-                    graphAllActivityCompare model
-
-        graphs =
-            model.graphs
-                |> List.filter filterFunc
-                |> List.sortWith sortFunc
-                |> List.reverse
-
         baseState =
             baseGraphState model
+
+        filteredGraphs =
+            List.foldl
+                (\fg fgs ->
+                    let
+                        matching =
+                            Graph.fold
+                                (\{ node } matches ->
+                                    case Dict.get node.label.value model.allCards of
+                                        Just card ->
+                                            if satisfiesFilters model allFilters card then
+                                                Set.insert card.id matches
+
+                                            else
+                                                matches
+
+                                        Nothing ->
+                                            matches
+                                )
+                                Set.empty
+                                fg.graph
+                    in
+                    if Set.isEmpty matching then
+                        fgs
+
+                    else
+                        ( { baseState | filteredCards = matching }, fg ) :: fgs
+                )
+                []
+                model.graphs
+
+        sortFunc ( _, a ) ( _, b ) =
+            case model.graphSort of
+                ImpactSort ->
+                    graphImpactCompare model a b
+
+                UserActivitySort login ->
+                    graphUserActivityCompare model login a b
+
+                AllActivitySort ->
+                    graphAllActivityCompare model a b
+
+        graphs =
+            filteredGraphs
+                |> List.sortWith sortFunc
+                |> List.reverse
     in
-    { model | cardGraphs = List.map (\g -> ( baseState, g )) graphs }
+    { model | cardGraphs = graphs }
 
 
 baseGraphState : Model -> CardNodeState
@@ -2694,6 +2712,7 @@ baseGraphState model =
     , cardEvents = model.data.actors
     , selectedCards = OrderedSet.empty
     , anticipatedCards = Set.empty
+    , filteredCards = Set.empty
     , highlightedNode = Nothing
     }
 
@@ -2844,28 +2863,26 @@ viewGraph state { graph } =
         height =
             maxY - minY
 
-        ( scaleW, scaleH ) =
-            if width > 980 then
-                ( 980, height / (width / 980) )
-
-            else
-                ( width, height )
-
         links =
-            List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph)
+            List.map (linkPath state graph) (Graph.edges graph)
     in
     Svg.svg
-        [ SA.width (String.fromFloat scaleW ++ "px")
-        , SA.height (String.fromFloat scaleH ++ "px")
+        [ SA.width (String.fromFloat width ++ "px")
+        , SA.style "max-width: 95%"
+        , SA.height "auto"
         , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
         ]
-        [ Svg.Keyed.node "g" [ SA.class "lower" ] flairs
-        , Svg.g [ SA.class "links" ] links
+        [ Svg.g [ SA.class "links" ] links
+        , Svg.Keyed.node "g" [ SA.class "lower" ] flairs
         , Svg.Keyed.node "g" [ SA.class "upper" ] nodes
         ]
 
 
-viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) () -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds ) -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
+viewNodeLowerUpper :
+    CardNodeState
+    -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) ()
+    -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
+    -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
 viewNodeLowerUpper state { node, incoming, outgoing } ( fs, ns, bs ) =
     case Dict.get node.label.value state.allCards of
         Just card ->
@@ -2941,27 +2958,35 @@ viewCardCircle card context pos state =
     viewCardNode card radii circle labelArcs pos state
 
 
-linkPath : Graph (FG.ForceNode n) () -> Graph.Edge () -> Svg Msg
-linkPath graph edge =
+isFilteredOut : CardNodeState -> GitHubGraph.ID -> Bool
+isFilteredOut state id =
+    not (Set.isEmpty state.filteredCards) && not (Set.member id state.filteredCards)
+
+
+linkPath : CardNodeState -> Graph (FG.ForceNode GitHubGraph.ID) () -> Graph.Edge () -> Svg Msg
+linkPath state graph edge =
     let
-        source =
-            case Maybe.map (.node >> .label) (Graph.get edge.from graph) of
-                Just { x, y } ->
-                    { x = x, y = y }
+        getEnd end =
+            case Maybe.map (.node >> .label) (Graph.get end graph) of
+                Just { x, y, value } ->
+                    ( { x = x, y = y }, isFilteredOut state value )
 
                 Nothing ->
-                    { x = 0, y = 0 }
+                    ( { x = 0, y = 0 }, False )
 
-        target =
-            case Maybe.map (.node >> .label) (Graph.get edge.to graph) of
-                Just { x, y } ->
-                    { x = x, y = y }
+        ( source, sourceIsFilteredOut ) =
+            getEnd edge.from
 
-                Nothing ->
-                    { x = 0, y = 0 }
+        ( target, targetIsFilteredOut ) =
+            getEnd edge.to
     in
     Svg.line
         [ SA.class "graph-edge"
+        , if sourceIsFilteredOut || targetIsFilteredOut then
+            SA.class "filtered-out"
+
+          else
+            SA.class "filtered-in"
         , SA.x1 (String.fromFloat source.x)
         , SA.y1 (String.fromFloat source.y)
         , SA.x2 (String.fromFloat target.x)
@@ -3234,9 +3259,15 @@ viewCardNodeFlair card radii flair { x, y } state =
             Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
+        isFiltered =
+            isFilteredOut state card.id
+
         scale =
             if isHighlighted then
                 "1.1"
+
+            else if isFiltered then
+                "0.5"
 
             else
                 "1"
@@ -3260,7 +3291,14 @@ viewCardNodeFlair card radii flair { x, y } state =
                 Svg.text ""
 
         classes =
-            [ "flair", activityClass state.currentTime card.updatedAt ]
+            [ "flair"
+            , activityClass state.currentTime card.updatedAt
+            , if isFiltered then
+                "filtered-out"
+
+              else
+                "filtered-in"
+            ]
                 ++ (case state.me of
                         Nothing ->
                             []
@@ -3315,9 +3353,15 @@ viewCardNode card radii circle labels { x, y } state =
             Set.member card.id state.anticipatedCards
                 || (state.highlightedNode == Just card.id)
 
+        isFiltered =
+            isFilteredOut state card.id
+
         scale =
             if isHighlighted then
                 "1.1"
+
+            else if isFiltered then
+                "0.5"
 
             else
                 "1"
@@ -3338,6 +3382,11 @@ viewCardNode card radii circle labels { x, y } state =
 
           else
             SA.class "untriaged"
+        , if isFiltered then
+            SA.class "filtered-out"
+
+          else
+            SA.class "filtered-in"
         , SE.onMouseOver (AnticipateCardFromNode card.id)
         , SE.onMouseOut (UnanticipateCardFromNode card.id)
         , SE.onClick
