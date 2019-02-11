@@ -136,7 +136,7 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every 100 (always PopQueue)
-        , Time.every (60 * 1000) (always RetryQueue)
+        , Time.every (5 * 60 * 1000) (always RetryQueue)
         , if model.noRefresh then
             Sub.none
 

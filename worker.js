@@ -12782,7 +12782,7 @@ var author$project$Main$subscriptions = function (model) {
 				elm$core$Basics$always(author$project$Main$PopQueue)),
 				A2(
 				elm$time$Time$every,
-				60 * 1000,
+				(5 * 60) * 1000,
 				elm$core$Basics$always(author$project$Main$RetryQueue)),
 				model.noRefresh ? elm$core$Platform$Sub$none : A2(
 				elm$time$Time$every,
