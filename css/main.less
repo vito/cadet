@@ -734,6 +734,12 @@ svg {
 
     .flair-arc {
       fill: @white;
+
+      &.pending { fill: @yellow; }
+      &.success { fill: @green; }
+      &.failure { fill: @red; }
+      &.expected { fill: @purple; }
+      &.error { fill: @orange; }
     }
 
     .octicon, .status-actor {
@@ -762,14 +768,6 @@ svg {
 
   .issue-number {
     fill: @gray;
-  }
-
-  .pr-arc.additions {
-    fill: @green;
-  }
-
-  .pr-arc.deletions {
-    fill: @red;
   }
 
   .anticipated-circle {
