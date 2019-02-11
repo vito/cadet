@@ -134,7 +134,7 @@ init { githubToken, githubOrg, skipTimeline, noRefresh } =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every 100 (always PopQueue)
+        [ Time.every 500 (always PopQueue)
         , Time.every (60 * 1000) (always RetryQueue)
         , if model.noRefresh then
             Sub.none
