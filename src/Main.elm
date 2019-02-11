@@ -15,6 +15,7 @@ import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
+import Html.Keyed
 import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
@@ -32,6 +33,7 @@ import Shape
 import Svg exposing (Svg)
 import Svg.Attributes as SA
 import Svg.Events as SE
+import Svg.Keyed
 import Svg.Lazy
 import Task
 import Time
@@ -69,7 +71,7 @@ type alias Model =
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
-    , cardGraphs : List ( CardNodeState, ForceGraph (Node CardNodeState) )
+    , cardGraphs : List ( CardNodeState, ForceGraph GitHubGraph.ID )
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
@@ -154,7 +156,10 @@ type alias SharedLabel =
 
 
 type alias CardNodeState =
-    { currentTime : Time.Posix
+    { allCards : Dict GitHubGraph.ID Card
+    , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
+    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+    , currentTime : Time.Posix
     , selectedCards : OrderedSet GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
@@ -407,10 +412,10 @@ update msg model =
                         graphed =
                             case page of
                                 GlobalGraphPage ->
-                                    computeGraph { paged | baseGraphFilter = Nothing }
+                                    { paged | baseGraphFilter = Nothing }
 
                                 ProjectPage name ->
-                                    computeGraph { paged | baseGraphFilter = Just (InProjectFilter name) }
+                                    { paged | baseGraphFilter = Just (InProjectFilter name) }
 
                                 _ ->
                                     paged
@@ -424,7 +429,7 @@ update msg model =
                     ( model, Cmd.none )
 
         SetCurrentTime date ->
-            ( computeGraphState { model | currentTime = date }, Cmd.none )
+            ( updateGraphStates { model | currentTime = date }, Cmd.none )
 
         ProjectDrag subMsg ->
             let
@@ -664,7 +669,7 @@ update msg model =
                     Dict.filter cardMatch cardsByTitle
                         |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
             in
-            ( computeGraphState
+            ( updateGraphStates
                 { model
                     | cardSearch = str
                     , anticipatedCards = foundCards
@@ -673,7 +678,7 @@ update msg model =
             )
 
         SelectAnticipatedCards ->
-            ( computeGraphState
+            ( updateGraphStates
                 { model
                     | anticipatedCards = Set.empty
                     , selectedCards = Set.foldr OrderedSet.insert model.selectedCards model.anticipatedCards
@@ -682,28 +687,28 @@ update msg model =
             )
 
         SelectCard id ->
-            ( computeGraphState { model | selectedCards = OrderedSet.insert id model.selectedCards }
+            ( updateGraphStates { model | selectedCards = OrderedSet.insert id model.selectedCards }
             , Cmd.none
             )
 
         ClearSelectedCards ->
-            ( computeGraphState { model | selectedCards = OrderedSet.empty }
+            ( updateGraphStates { model | selectedCards = OrderedSet.empty }
             , Cmd.none
             )
 
         DeselectCard id ->
-            ( computeGraphState { model | selectedCards = OrderedSet.remove id model.selectedCards }
+            ( updateGraphStates { model | selectedCards = OrderedSet.remove id model.selectedCards }
             , Cmd.none
             )
 
         HighlightNode id ->
-            ( computeGraphState { model | highlightedNode = Just id }, Cmd.none )
+            ( updateGraphStates { model | highlightedNode = Just id }, Cmd.none )
 
         UnhighlightNode id ->
-            ( computeGraphState { model | highlightedNode = Nothing }, Cmd.none )
+            ( updateGraphStates { model | highlightedNode = Nothing }, Cmd.none )
 
         AnticipateCardFromNode id ->
-            ( computeGraphState
+            ( updateGraphStates
                 { model
                     | anticipatedCards = Set.insert id model.anticipatedCards
                     , highlightedCard = Just id
@@ -712,7 +717,7 @@ update msg model =
             )
 
         UnanticipateCardFromNode id ->
-            ( computeGraphState
+            ( updateGraphStates
                 { model
                     | anticipatedCards = Set.remove id model.anticipatedCards
                     , highlightedCard = Nothing
@@ -721,22 +726,10 @@ update msg model =
             )
 
         MeFetched (Ok me) ->
-            ( computeGraphState { model | me = me }, Cmd.none )
+            ( updateGraphStates { model | me = me }, Cmd.none )
 
         MeFetched (Err err) ->
             Log.debug "error fetching self" err <|
-                ( model, Cmd.none )
-
-        GraphsFetched (Ok { index, value }) ->
-            let
-                computed =
-                    computeGraph { model | graphs = value }
-            in
-            Log.debug "graphs fetched" (List.length computed.cardGraphs) <|
-                ( computeGraphState computed, Cmd.none )
-
-        GraphsFetched (Err err) ->
-            Log.debug "error fetching graph" err <|
                 ( model, Cmd.none )
 
         DataFetched (Ok { index, value }) ->
@@ -776,7 +769,7 @@ update msg model =
                     model
             , Cmd.batch
                 [ Backend.pollData DataFetched
-                , if model.page == GlobalGraphPage then
+                , if index > model.dataIndex then
                     Backend.fetchGraphs GraphsFetched
 
                   else
@@ -787,6 +780,14 @@ update msg model =
         DataFetched (Err err) ->
             Log.debug "error fetching data" err <|
                 ( { model | isPolling = False }, Cmd.none )
+
+        GraphsFetched (Ok { index, value }) ->
+            Log.debug "graphs fetched" ( index, List.length value ) <|
+                ( computeDataView { model | graphs = value }, Cmd.none )
+
+        GraphsFetched (Err err) ->
+            Log.debug "error fetching graphs" err <|
+                ( model, Cmd.none )
 
         MirrorLabel newLabel ->
             let
@@ -1027,19 +1028,19 @@ update msg model =
                 ( model, Cmd.none )
 
         AddFilter filter ->
-            ( computeGraph <|
+            ( sortAndFilterGraphs <|
                 { model | graphFilters = filter :: model.graphFilters }
             , Cmd.none
             )
 
         RemoveFilter filter ->
-            ( computeGraph <|
+            ( sortAndFilterGraphs <|
                 { model | graphFilters = List.filter ((/=) filter) model.graphFilters }
             , Cmd.none
             )
 
         SetGraphSort sort ->
-            ( computeGraph { model | graphSort = sort }, Cmd.none )
+            ( sortAndFilterGraphs { model | graphSort = sort }, Cmd.none )
 
         ToggleLabelFilters ->
             ( { model | showLabelFilters = not model.showLabelFilters }, Cmd.none )
@@ -1122,11 +1123,14 @@ update msg model =
             ( { model | repoPullRequestsTab = tab }, Cmd.none )
 
 
-computeGraphState : Model -> Model
-computeGraphState model =
+updateGraphStates : Model -> Model
+updateGraphStates model =
     let
         newState =
-            { currentTime = model.currentTime
+            { allCards = model.allCards
+            , allLabels = model.allLabels
+            , reviewers = model.data.reviewers
+            , currentTime = model.currentTime
             , selectedCards = model.selectedCards
             , anticipatedCards = model.anticipatedCards
             , highlightedNode = model.highlightedNode
@@ -1144,7 +1148,7 @@ computeGraphState model =
                     else
                         let
                             id =
-                                node.label.value.card.id
+                                node.label.value
                         in
                         OrderedSet.member id newState.selectedCards
                             || Set.member id newState.anticipatedCards
@@ -1265,10 +1269,10 @@ computeDataView origModel =
             model
 
         GlobalGraphPage ->
-            model
+            updateGraphStates (sortAndFilterGraphs model)
 
         ProjectPage _ ->
-            model
+            updateGraphStates (sortAndFilterGraphs model)
 
         AllProjectsPage ->
             model
@@ -1588,9 +1592,17 @@ viewGlobalGraphPage model =
 
 viewSpatialGraph : Model -> Html Msg
 viewSpatialGraph model =
-    Html.div [ HA.class "spatial-graph" ] <|
-        viewGraphControls model
-            :: List.map ((\f ( a, b ) -> f a b) <| Html.Lazy.lazy2 viewGraph) (Log.debug "rendering graphs" (List.length model.cardGraphs) model.cardGraphs)
+    Html.div [ HA.class "spatial-graph" ]
+        [ viewGraphControls model
+        , Html.Keyed.node "div" [ HA.class "graphs" ] <|
+            List.map (\( state, graph ) -> ( graphId graph, Html.Lazy.lazy2 viewGraph state graph ))
+                model.cardGraphs
+        ]
+
+
+graphId : ForceGraph GitHubGraph.ID -> String
+graphId { graph } =
+    Graph.fold (\{ node } acc -> min node.label.value acc) "" graph
 
 
 viewGraphControls : Model -> Html Msg
@@ -2620,40 +2632,9 @@ viewSearch model =
         ]
 
 
-toCardNode : Model -> Card -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) () -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) ()
-toCardNode model card nc =
-    { node =
-        { id = nc.node.id
-        , label =
-            { x = nc.node.label.x
-            , y = nc.node.label.y
-            , vx = nc.node.label.vx
-            , vy = nc.node.label.vy
-            , id = nc.node.label.id
-            , value = cardNode model card { incoming = nc.incoming, outgoing = nc.outgoing }
-            , size = nc.node.label.size
-            }
-        }
-    , incoming = nc.incoming
-    , outgoing = nc.outgoing
-    }
-
-
-computeGraph : Model -> Model
-computeGraph model =
+sortAndFilterGraphs : Model -> Model
+sortAndFilterGraphs model =
     let
-        addNode nc acc =
-            case Dict.get nc.node.label.value model.allCards of
-                Just card ->
-                    Graph.insert (toCardNode model card nc) acc
-
-                Nothing ->
-                    Log.debug "card not found" nc.node.label.value <|
-                        acc
-
-        graphs =
-            List.map (\fg -> { graph = Graph.fold addNode Graph.empty fg.graph, simulation = fg.simulation }) model.graphs
-
         allFilters =
             case model.baseGraphFilter of
                 Just f ->
@@ -2666,14 +2647,23 @@ computeGraph model =
             .graph
                 >> Graph.fold
                     (\{ node } matches ->
-                        matches || satisfiesFilters model allFilters node.label.value.card
+                        if matches then
+                            matches
+
+                        else
+                            case Dict.get node.label.value model.allCards of
+                                Just card ->
+                                    satisfiesFilters model allFilters card
+
+                                Nothing ->
+                                    matches
                     )
                     False
 
         sortFunc =
             case model.graphSort of
                 ImpactSort ->
-                    graphSizeCompare
+                    graphImpactCompare model
 
                 UserActivitySort login ->
                     graphUserActivityCompare model login
@@ -2681,106 +2671,24 @@ computeGraph model =
                 AllActivitySort ->
                     graphAllActivityCompare model
 
-        baseState =
-            baseGraphState model
-    in
-    { model
-        | cardGraphs =
-            graphs
+        graphs =
+            model.graphs
                 |> List.filter filterFunc
                 |> List.sortWith sortFunc
                 |> List.reverse
-                |> List.map (\g -> ( baseState, g ))
-    }
-
-
-computeGraphOld : Model -> Model
-computeGraphOld model =
-    let
-        cardEdges =
-            Dict.foldl
-                (\idStr sourceIds refs ->
-                    let
-                        id =
-                            Hash.hash idStr
-                    in
-                    List.map
-                        (\sourceId ->
-                            { from = Hash.hash sourceId
-                            , to = id
-                            , label = ()
-                            }
-                        )
-                        sourceIds
-                        ++ refs
-                )
-                []
-                model.data.references
-
-        allFilters =
-            case model.baseGraphFilter of
-                Just f ->
-                    f :: model.graphFilters
-
-                Nothing ->
-                    model.graphFilters
-
-        node card context =
-            { value = cardNode model card context
-            , size = cardRadiusBase card context
-            }
-
-        cardNodeThunks =
-            Dict.foldl
-                (\_ card thunks ->
-                    if satisfiesFilters model allFilters card && Card.isOpen card then
-                        Graph.Node (Hash.hash card.id) (node card) :: thunks
-
-                    else
-                        thunks
-                )
-                []
-                model.allCards
-
-        applyWithContext nc =
-            { node = { id = nc.node.id, label = nc.node.label { incoming = nc.incoming, outgoing = nc.outgoing } }
-            , incoming = nc.incoming
-            , outgoing = nc.outgoing
-            }
-
-        graph =
-            Graph.mapContexts applyWithContext <|
-                Graph.fromNodesAndEdges
-                    cardNodeThunks
-                    cardEdges
-
-        sortFunc =
-            case model.graphSort of
-                ImpactSort ->
-                    graphSizeCompare
-
-                UserActivitySort login ->
-                    graphUserActivityCompare model login
-
-                AllActivitySort ->
-                    graphAllActivityCompare model
 
         baseState =
             baseGraphState model
     in
-    { model
-        | cardGraphs =
-            subGraphs graph
-                |> List.map FG.fromGraph
-                |> List.sortWith sortFunc
-                |> List.reverse
-                |> List.map (\g -> ( baseState, g ))
-    }
+    { model | cardGraphs = List.map (\g -> ( baseState, g )) graphs }
 
 
 baseGraphState : Model -> CardNodeState
 baseGraphState model =
-    { currentTime = model.currentTime
+    { allCards = model.allCards
+    , allLabels = model.allLabels
+    , reviewers = model.data.reviewers
+    , currentTime = model.currentTime
     , me = model.me
     , dataIndex = model.dataIndex
     , cardEvents = model.data.actors
@@ -2830,13 +2738,22 @@ satisfiesFilter model filter card =
             Card.isUntriaged card
 
 
-graphSizeCompare : ForceGraph (Node a) -> ForceGraph (Node a) -> Order
-graphSizeCompare a b =
+graphImpactCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
+graphImpactCompare model a b =
     case compare (Graph.size a.graph) (Graph.size b.graph) of
         EQ ->
             let
                 graphScore =
-                    List.foldl (+) 0 << List.map (.label >> .value >> .score) << Graph.nodes
+                    Graph.fold
+                        (\{ node } sum ->
+                            case Dict.get node.label.value model.allCards of
+                                Just { score } ->
+                                    score + sum
+
+                                Nothing ->
+                                    sum
+                        )
+                        0
             in
             compare (graphScore a.graph) (graphScore b.graph)
 
@@ -2844,54 +2761,67 @@ graphSizeCompare a b =
             x
 
 
-graphUserActivityCompare : Model -> String -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphUserActivityCompare : Model -> String -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
 graphUserActivityCompare model login a b =
     let
-        latestUserActivity g =
-            Graph.nodes g
-                |> List.map
-                    (\n ->
-                        Maybe.withDefault [] (Dict.get n.label.value.card.id model.data.actors)
-                            |> List.reverse
-                            |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
-                            |> List.map (.createdAt >> Time.posixToMillis)
-                            |> List.head
-                            |> Maybe.withDefault 0
-                    )
-                |> List.maximum
-                |> Maybe.withDefault 0
+        latestUserActivity =
+            Graph.fold
+                (\{ node } latest ->
+                    let
+                        mlatest =
+                            Maybe.withDefault [] (Dict.get node.label.value model.data.actors)
+                                |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
+                                |> List.map (.createdAt >> Time.posixToMillis)
+                                |> List.maximum
+                    in
+                    case mlatest of
+                        Nothing ->
+                            latest
+
+                        Just activity ->
+                            max activity latest
+                )
+                0
     in
     compare (latestUserActivity a.graph) (latestUserActivity b.graph)
 
 
-graphAllActivityCompare : Model -> ForceGraph (Node a) -> ForceGraph (Node a) -> Order
+graphAllActivityCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
 graphAllActivityCompare model a b =
     let
-        latestActivity g =
-            Graph.nodes g
-                |> List.map
-                    (\n ->
-                        Maybe.withDefault [] (Dict.get n.label.value.card.id model.data.actors)
-                            |> List.reverse
-                            |> List.map .createdAt
-                            |> List.head
-                            |> Maybe.withDefault n.label.value.card.updatedAt
-                            |> Time.posixToMillis
-                    )
-                |> List.maximum
-                |> Maybe.withDefault 0
+        latestActivity =
+            Graph.fold
+                (\{ node } latest ->
+                    let
+                        mlatest =
+                            Maybe.withDefault [] (Dict.get node.label.value model.data.actors)
+                                |> List.map (.createdAt >> Time.posixToMillis)
+                                |> List.maximum
+
+                        mupdated =
+                            Dict.get node.label.value model.allCards
+                                |> Maybe.map (.updatedAt >> Time.posixToMillis)
+                    in
+                    case ( mlatest, mupdated ) of
+                        ( Just activity, _ ) ->
+                            max activity latest
+
+                        ( Nothing, Just updated ) ->
+                            max updated latest
+
+                        ( Nothing, Nothing ) ->
+                            latest
+                )
+                0
     in
     compare (latestActivity a.graph) (latestActivity b.graph)
 
 
-viewGraph : CardNodeState -> ForceGraph (Node CardNodeState) -> Html Msg
+viewGraph : CardNodeState -> ForceGraph GitHubGraph.ID -> Html Msg
 viewGraph state { graph } =
     let
-        nodeContexts =
-            Graph.fold (::) [] graph
-
-        bounds =
-            List.map nodeBounds nodeContexts
+        ( flairs, nodes, bounds ) =
+            Graph.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
 
         padding =
             10
@@ -2923,34 +2853,92 @@ viewGraph state { graph } =
 
         links =
             List.map (Svg.Lazy.lazy2 linkPath graph) (Graph.edges graph)
-
-        ( flairs, nodes ) =
-            Graph.fold (viewNodeLowerUpper state) ( [], [] ) graph
     in
-    if List.isEmpty nodes then
-        Html.text "empty?"
-
-    else
-        Svg.svg
-            [ SA.width (String.fromFloat scaleW ++ "px")
-            , SA.height (String.fromFloat scaleH ++ "px")
-            , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
-            ]
-            [ Svg.g [ SA.class "lower" ] flairs
-            , Svg.g [ SA.class "links" ] links
-            , Svg.g [ SA.class "upper" ] nodes
-            ]
+    Svg.svg
+        [ SA.width (String.fromFloat scaleW ++ "px")
+        , SA.height (String.fromFloat scaleH ++ "px")
+        , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
+        ]
+        [ Svg.Keyed.node "g" [ SA.class "lower" ] flairs
+        , Svg.g [ SA.class "links" ] links
+        , Svg.Keyed.node "g" [ SA.class "upper" ] nodes
+        ]
 
 
-viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode (Node CardNodeState)) () -> ( List (Svg Msg), List (Svg Msg) ) -> ( List (Svg Msg), List (Svg Msg) )
-viewNodeLowerUpper state { node } ( fs, ns ) =
+viewNodeLowerUpper : CardNodeState -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) () -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds ) -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
+viewNodeLowerUpper state { node, incoming, outgoing } ( fs, ns, bs ) =
+    case Dict.get node.label.value state.allCards of
+        Just card ->
+            let
+                context =
+                    { incoming = incoming, outgoing = outgoing }
+
+                pos =
+                    { x = node.label.x, y = node.label.y }
+
+                radiiWithFlair =
+                    cardRadiusWithFlair card context
+
+                bounds =
+                    { x1 = node.label.x - radiiWithFlair
+                    , y1 = node.label.y - radiiWithFlair
+                    , x2 = node.label.x + radiiWithFlair
+                    , y2 = node.label.y + radiiWithFlair
+                    }
+            in
+            ( ( node.label.value, Svg.Lazy.lazy4 viewCardFlair card context pos state ) :: fs
+            , ( node.label.value, Svg.Lazy.lazy4 viewCardCircle card context pos state ) :: ns
+            , bounds :: bs
+            )
+
+        Nothing ->
+            ( fs, ns, bs )
+
+
+viewCardFlair : Card -> GraphContext -> Position -> CardNodeState -> Svg Msg
+viewCardFlair card context pos state =
     let
-        pos =
-            { x = node.label.x, y = node.label.y }
+        flairArcs =
+            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id state.reviewers) card context
+
+        radii =
+            { base = cardRadiusBase card context
+            , withoutFlair = cardRadiusWithoutFlair card context
+            , withFlair = cardRadiusWithFlair card context
+            }
     in
-    ( Svg.Lazy.lazy2 node.label.value.viewLower pos state :: fs
-    , Svg.Lazy.lazy2 node.label.value.viewUpper pos state :: ns
-    )
+    viewCardNodeFlair card radii flairArcs pos state
+
+
+viewCardCircle : Card -> GraphContext -> Position -> CardNodeState -> Svg Msg
+viewCardCircle card context pos state =
+    let
+        labelArcs =
+            cardLabelArcs state.allLabels card context
+
+        radii =
+            { base = cardRadiusBase card context
+            , withoutFlair = cardRadiusWithoutFlair card context
+            , withFlair = cardRadiusWithFlair card context
+            }
+
+        circle =
+            Svg.g []
+                [ Svg.circle
+                    [ SA.r (String.fromFloat radii.base)
+                    , SA.fill "#fff"
+                    ]
+                    []
+                , Svg.text_
+                    [ SA.textAnchor "middle"
+                    , SA.alignmentBaseline "middle"
+                    , SA.class "issue-number"
+                    ]
+                    [ Svg.text ("#" ++ String.fromInt card.number)
+                    ]
+                ]
+    in
+    viewCardNode card radii circle labelArcs pos state
 
 
 linkPath : Graph (FG.ForceNode n) () -> Graph.Edge () -> Svg Msg
@@ -3019,51 +3007,6 @@ cardRadiusWithFlair card context =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
     cardRadiusWithoutFlair card context + flairRadiusBase + toFloat highestFlair
-
-
-cardNode : Model -> Card -> GraphContext -> Node CardNodeState
-cardNode model card context =
-    let
-        flairArcs =
-            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id model.data.reviewers) card context
-
-        labelArcs =
-            cardLabelArcs model.allLabels card context
-
-        circle =
-            Svg.g []
-                [ Svg.circle
-                    [ SA.r (String.fromFloat radii.base)
-                    , SA.fill "#fff"
-                    ]
-                    []
-                , Svg.text_
-                    [ SA.textAnchor "middle"
-                    , SA.alignmentBaseline "middle"
-                    , SA.class "issue-number"
-                    ]
-                    [ Svg.text ("#" ++ String.fromInt card.number)
-                    ]
-                ]
-
-        radii =
-            { base = cardRadiusBase card context
-            , withoutFlair = cardRadiusWithoutFlair card context
-            , withFlair = cardRadiusWithFlair card context
-            }
-    in
-    { card = card
-    , viewLower = viewCardNodeFlair card radii flairArcs
-    , viewUpper = viewCardNode card radii circle labelArcs
-    , bounds =
-        \{ x, y } ->
-            { x1 = x - radii.withFlair
-            , y1 = y - radii.withFlair
-            , x2 = x + radii.withFlair
-            , y2 = y + radii.withFlair
-            }
-    , score = card.score
-    }
 
 
 reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> GraphContext -> List (Svg Msg)
@@ -4175,13 +4118,11 @@ finishProjectDragRefresh model =
                         |> updateContent c
                         |> updateColumn sid scs
                         |> updateColumn tid tcs
-                        |> computeGraph
 
                 ( ( Just _, Just c, Nothing ), ( Nothing, Just tid, Just tcs ) ) ->
                     { model | projectDrag = Drag.complete model.projectDrag }
                         |> updateContent c
                         |> updateColumn tid tcs
-                        |> computeGraph
 
                 ( ( Just _, Just c, Just _ ), ( _, Just tid, Just tcs ) ) ->
                     { model | projectDrag = Drag.land model.projectDrag }

@@ -11512,6 +11512,483 @@ var author$project$Main$computeReleaseRepos = function (model) {
 		});
 	return A3(elm$core$Dict$foldl, makeReleaseRepo, elm$core$Dict$empty, model.data.comparisons);
 };
+var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
+	function (a, b) {
+		return {$: 'OrderedSet', a: a, b: b};
+	});
+var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
+var author$project$Main$baseGraphState = function (model) {
+	return {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.data.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+};
+var elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(
+			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var elm_community$graph$Graph$get = function (nodeId) {
+	return A2(
+		elm$core$Basics$composeR,
+		elm_community$graph$Graph$unGraph,
+		elm_community$intdict$IntDict$get(nodeId));
+};
+var elm_community$intdict$IntDict$findMax = function (dict) {
+	findMax:
+	while (true) {
+		switch (dict.$) {
+			case 'Empty':
+				return elm$core$Maybe$Nothing;
+			case 'Leaf':
+				var l = dict.a;
+				return elm$core$Maybe$Just(
+					_Utils_Tuple2(l.key, l.value));
+			default:
+				var i = dict.a;
+				var $temp$dict = i.right;
+				dict = $temp$dict;
+				continue findMax;
+		}
+	}
+};
+var elm_community$intdict$IntDict$findMin = function (dict) {
+	findMin:
+	while (true) {
+		switch (dict.$) {
+			case 'Empty':
+				return elm$core$Maybe$Nothing;
+			case 'Leaf':
+				var l = dict.a;
+				return elm$core$Maybe$Just(
+					_Utils_Tuple2(l.key, l.value));
+			default:
+				var i = dict.a;
+				var $temp$dict = i.left;
+				dict = $temp$dict;
+				continue findMin;
+		}
+	}
+};
+var elm_community$graph$Graph$nodeIdRange = function (graph) {
+	return A2(
+		elm$core$Maybe$andThen,
+		function (_n0) {
+			var min = _n0.a;
+			return A2(
+				elm$core$Maybe$andThen,
+				function (_n1) {
+					var max = _n1.a;
+					return elm$core$Maybe$Just(
+						_Utils_Tuple2(min, max));
+				},
+				elm_community$intdict$IntDict$findMax(
+					elm_community$graph$Graph$unGraph(graph)));
+		},
+		elm_community$intdict$IntDict$findMin(
+			elm_community$graph$Graph$unGraph(graph)));
+};
+var elm_community$graph$Graph$remove = F2(
+	function (nodeId, graph) {
+		return A3(
+			elm_community$graph$Graph$update,
+			nodeId,
+			elm$core$Basics$always(elm$core$Maybe$Nothing),
+			graph);
+	});
+var elm_community$graph$Graph$fold = F3(
+	function (f, acc, graph) {
+		var go = F2(
+			function (acc1, graph1) {
+				go:
+				while (true) {
+					var maybeContext = A2(
+						elm$core$Maybe$andThen,
+						function (id) {
+							return A2(elm_community$graph$Graph$get, id, graph);
+						},
+						A2(
+							elm$core$Maybe$map,
+							elm$core$Tuple$first,
+							elm_community$graph$Graph$nodeIdRange(graph1)));
+					if (maybeContext.$ === 'Just') {
+						var ctx = maybeContext.a;
+						var $temp$acc1 = A2(f, ctx, acc1),
+							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.node.id, graph1);
+						acc1 = $temp$acc1;
+						graph1 = $temp$graph1;
+						continue go;
+					} else {
+						return acc1;
+					}
+				}
+			});
+		return A2(go, acc, graph);
+	});
+var author$project$Main$graphAllActivityCompare = F3(
+	function (model, a, b) {
+		var latestActivity = A2(
+			elm_community$graph$Graph$fold,
+			F2(
+				function (_n0, latest) {
+					var node = _n0.node;
+					var mupdated = A2(
+						elm$core$Maybe$map,
+						A2(
+							elm$core$Basics$composeR,
+							function ($) {
+								return $.updatedAt;
+							},
+							elm$time$Time$posixToMillis),
+						A2(elm$core$Dict$get, node.label.value, model.allCards));
+					var mlatest = elm$core$List$maximum(
+						A2(
+							elm$core$List$map,
+							A2(
+								elm$core$Basics$composeR,
+								function ($) {
+									return $.createdAt;
+								},
+								elm$time$Time$posixToMillis),
+							A2(
+								elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2(elm$core$Dict$get, node.label.value, model.data.actors))));
+					var _n1 = _Utils_Tuple2(mlatest, mupdated);
+					if (_n1.a.$ === 'Just') {
+						var activity = _n1.a.a;
+						return A2(elm$core$Basics$max, activity, latest);
+					} else {
+						if (_n1.b.$ === 'Just') {
+							var _n2 = _n1.a;
+							var updated = _n1.b.a;
+							return A2(elm$core$Basics$max, updated, latest);
+						} else {
+							var _n3 = _n1.a;
+							var _n4 = _n1.b;
+							return latest;
+						}
+					}
+				}),
+			0);
+		return A2(
+			elm$core$Basics$compare,
+			latestActivity(a.graph),
+			latestActivity(b.graph));
+	});
+var elm_community$graph$Graph$size = A2(elm$core$Basics$composeR, elm_community$graph$Graph$unGraph, elm_community$intdict$IntDict$size);
+var author$project$Main$graphImpactCompare = F3(
+	function (model, a, b) {
+		var _n0 = A2(
+			elm$core$Basics$compare,
+			elm_community$graph$Graph$size(a.graph),
+			elm_community$graph$Graph$size(b.graph));
+		if (_n0.$ === 'EQ') {
+			var graphScore = A2(
+				elm_community$graph$Graph$fold,
+				F2(
+					function (_n1, sum) {
+						var node = _n1.node;
+						var _n2 = A2(elm$core$Dict$get, node.label.value, model.allCards);
+						if (_n2.$ === 'Just') {
+							var score = _n2.a.score;
+							return score + sum;
+						} else {
+							return sum;
+						}
+					}),
+				0);
+			return A2(
+				elm$core$Basics$compare,
+				graphScore(a.graph),
+				graphScore(b.graph));
+		} else {
+			var x = _n0;
+			return x;
+		}
+	});
+var author$project$Main$graphUserActivityCompare = F4(
+	function (model, login, a, b) {
+		var latestUserActivity = A2(
+			elm_community$graph$Graph$fold,
+			F2(
+				function (_n0, latest) {
+					var node = _n0.node;
+					var mlatest = elm$core$List$maximum(
+						A2(
+							elm$core$List$map,
+							A2(
+								elm$core$Basics$composeR,
+								function ($) {
+									return $.createdAt;
+								},
+								elm$time$Time$posixToMillis),
+							A2(
+								elm$core$List$filter,
+								A2(
+									elm$core$Basics$composeR,
+									function ($) {
+										return $.user;
+									},
+									A2(
+										elm$core$Basics$composeR,
+										elm$core$Maybe$map(
+											function ($) {
+												return $.login;
+											}),
+										elm$core$Basics$eq(
+											elm$core$Maybe$Just(login)))),
+								A2(
+									elm$core$Maybe$withDefault,
+									_List_Nil,
+									A2(elm$core$Dict$get, node.label.value, model.data.actors)))));
+					if (mlatest.$ === 'Nothing') {
+						return latest;
+					} else {
+						var activity = mlatest.a;
+						return A2(elm$core$Basics$max, activity, latest);
+					}
+				}),
+			0);
+		return A2(
+			elm$core$Basics$compare,
+			latestUserActivity(a.graph),
+			latestUserActivity(b.graph));
+	});
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var author$project$Card$isUntriaged = function (card) {
+	return elm$core$List$isEmpty(card.cards);
+};
+var author$project$Main$hasLabelAndColor = F4(
+	function (model, name, color, card) {
+		var matchingLabels = A2(
+			elm$core$Dict$filter,
+			F2(
+				function (_n0, l) {
+					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
+				}),
+			model.allLabels);
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return A2(elm$core$Dict$member, a, matchingLabels);
+			},
+			card.labels);
+	});
+var author$project$Main$involvesUser = F3(
+	function (model, login, card) {
+		return A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeR,
+				function ($) {
+					return $.user;
+				},
+				A2(
+					elm$core$Basics$composeR,
+					elm$core$Maybe$map(
+						function ($) {
+							return $.login;
+						}),
+					elm$core$Basics$eq(
+						elm$core$Maybe$Just(login)))),
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(elm$core$Dict$get, card.id, model.data.actors)));
+	});
+var author$project$Main$isInProject = F2(
+	function (name, card) {
+		return A2(
+			elm$core$List$member,
+			name,
+			A2(
+				elm$core$List$map,
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.project;
+					},
+					function ($) {
+						return $.name;
+					}),
+				card.cards));
+	});
+var author$project$Main$satisfiesFilter = F3(
+	function (model, filter, card) {
+		switch (filter.$) {
+			case 'ExcludeAllFilter':
+				return false;
+			case 'InProjectFilter':
+				var name = filter.a;
+				return A2(author$project$Main$isInProject, name, card);
+			case 'HasLabelFilter':
+				var label = filter.a;
+				var color = filter.b;
+				return A4(author$project$Main$hasLabelAndColor, model, label, color, card);
+			case 'InvolvesUserFilter':
+				var login = filter.a;
+				return A3(author$project$Main$involvesUser, model, login, card);
+			case 'PullRequestsFilter':
+				return author$project$Card$isPR(card);
+			case 'IssuesFilter':
+				return !author$project$Card$isPR(card);
+			default:
+				return author$project$Card$isUntriaged(card);
+		}
+	});
+var elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			elm$core$List$any,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
+			list);
+	});
+var author$project$Main$satisfiesFilters = F3(
+	function (model, filters, card) {
+		return A2(
+			elm$core$List$all,
+			function (a) {
+				return A3(author$project$Main$satisfiesFilter, model, a, card);
+			},
+			filters);
+	});
+var elm$core$List$sortWith = _List_sortWith;
+var author$project$Main$sortAndFilterGraphs = function (model) {
+	var sortFunc = function () {
+		var _n3 = model.graphSort;
+		switch (_n3.$) {
+			case 'ImpactSort':
+				return author$project$Main$graphImpactCompare(model);
+			case 'UserActivitySort':
+				var login = _n3.a;
+				return A2(author$project$Main$graphUserActivityCompare, model, login);
+			default:
+				return author$project$Main$graphAllActivityCompare(model);
+		}
+	}();
+	var baseState = author$project$Main$baseGraphState(model);
+	var allFilters = function () {
+		var _n2 = model.baseGraphFilter;
+		if (_n2.$ === 'Just') {
+			var f = _n2.a;
+			return A2(elm$core$List$cons, f, model.graphFilters);
+		} else {
+			return model.graphFilters;
+		}
+	}();
+	var filterFunc = A2(
+		elm$core$Basics$composeR,
+		function ($) {
+			return $.graph;
+		},
+		A2(
+			elm_community$graph$Graph$fold,
+			F2(
+				function (_n0, matches) {
+					var node = _n0.node;
+					if (matches) {
+						return matches;
+					} else {
+						var _n1 = A2(elm$core$Dict$get, node.label.value, model.allCards);
+						if (_n1.$ === 'Just') {
+							var card = _n1.a;
+							return A3(author$project$Main$satisfiesFilters, model, allFilters, card);
+						} else {
+							return matches;
+						}
+					}
+				}),
+			false));
+	var graphs = elm$core$List$reverse(
+		A2(
+			elm$core$List$sortWith,
+			sortFunc,
+			A2(elm$core$List$filter, filterFunc, model.graphs)));
+	return _Utils_update(
+		model,
+		{
+			cardGraphs: A2(
+				elm$core$List$map,
+				function (g) {
+					return _Utils_Tuple2(baseState, g);
+				},
+				graphs)
+		});
+};
+var elm$core$Dict$isEmpty = function (dict) {
+	if (dict.$ === 'RBEmpty_elm_builtin') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var elm$core$Set$isEmpty = function (_n0) {
+	var dict = _n0.a;
+	return elm$core$Dict$isEmpty(dict);
+};
+var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
+	return _Utils_eq(oset, y0hy0h$ordered_containers$OrderedSet$empty);
+};
+var author$project$Main$isBaseGraphState = F2(
+	function (model, state) {
+		return _Utils_eq(state.currentTime, model.currentTime) && (_Utils_eq(state.me, model.me) && (_Utils_eq(state.dataIndex, model.dataIndex) && (elm$core$Set$isEmpty(state.anticipatedCards) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.selectedCards) && _Utils_eq(state.highlightedNode, elm$core$Maybe$Nothing)))));
+	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var y0hy0h$ordered_containers$OrderedSet$member = F2(
+	function (key, _n0) {
+		var dict = _n0.b;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var author$project$Main$updateGraphStates = function (model) {
+	var newState = {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
+	var affectedByState = function (_n2) {
+		var graph = _n2.graph;
+		return A3(
+			elm_community$graph$Graph$fold,
+			F2(
+				function (_n1, affected) {
+					var node = _n1.node;
+					if (affected) {
+						return true;
+					} else {
+						var id = node.label.value;
+						return A2(y0hy0h$ordered_containers$OrderedSet$member, id, newState.selectedCards) || (A2(elm$core$Set$member, id, newState.anticipatedCards) || _Utils_eq(
+							newState.highlightedNode,
+							elm$core$Maybe$Just(id)));
+					}
+				}),
+			false,
+			graph);
+	};
+	return _Utils_update(
+		model,
+		{
+			cardGraphs: A2(
+				elm$core$List$map,
+				function (_n0) {
+					var s = _n0.a;
+					var g = _n0.b;
+					return affectedByState(g) ? _Utils_Tuple2(newState, g) : (A2(author$project$Main$isBaseGraphState, model, s) ? _Utils_Tuple2(s, g) : _Utils_Tuple2(
+						author$project$Main$baseGraphState(model),
+						g));
+				},
+				model.cardGraphs)
+		});
+};
 var elm$core$Dict$singleton = F2(
 	function (key, value) {
 		return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
@@ -11665,58 +12142,3235 @@ var author$project$Main$computeDataView = function (origModel) {
 		case 'LabelsPage':
 			return model;
 		case 'GlobalGraphPage':
-			return model;
+			return author$project$Main$updateGraphStates(
+				author$project$Main$sortAndFilterGraphs(model));
 		case 'ProjectPage':
-			return model;
+			return author$project$Main$updateGraphStates(
+				author$project$Main$sortAndFilterGraphs(model));
 		case 'AllProjectsPage':
 			return model;
 		default:
 			return model;
 	}
 };
-var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
-	function (a, b) {
-		return {$: 'OrderedSet', a: a, b: b};
+var author$project$GitHubGraph$encodeLabelPatch = F2(
+	function (name, color) {
+		return elm$json$Json$Encode$object(
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'name',
+					elm$json$Json$Encode$string(name)),
+					_Utils_Tuple2(
+					'color',
+					elm$json$Json$Encode$string(color))
+				]));
 	});
-var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
-var author$project$Main$baseGraphState = function (model) {
-	return {anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: elm$core$Maybe$Nothing, me: model.me, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+var author$project$GitHubGraph$createRepoLabel = F4(
+	function (token, repo, name, color) {
+		return A2(
+			elm$core$Task$mapError,
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
+					A2(
+						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						author$project$GitHubGraph$auth(token),
+						lukewestby$elm_http_builder$HttpBuilder$post('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + '/labels'))))))));
+	});
+var author$project$Main$LabelChanged = F2(
+	function (a, b) {
+		return {$: 'LabelChanged', a: a, b: b};
+	});
+var author$project$Main$createLabel = F3(
+	function (model, repo, label) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$LabelChanged(repo),
+				A4(author$project$GitHubGraph$createRepoLabel, token, repo, label.name, label.color));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var lukewestby$elm_http_builder$HttpBuilder$delete = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('DELETE');
+var author$project$GitHubGraph$deleteRepoLabel = F3(
+	function (token, repo, name) {
+		return A2(
+			elm$core$Task$mapError,
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					author$project$GitHubGraph$auth(token),
+					lukewestby$elm_http_builder$HttpBuilder$delete('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + name))))))));
+	});
+var author$project$Main$deleteLabel = F3(
+	function (model, repo, label) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$LabelChanged(repo),
+				A3(author$project$GitHubGraph$deleteRepoLabel, token, repo, label.name));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var author$project$Drag$land = function (model) {
+	if (model.$ === 'Dropped') {
+		var state = model.a;
+		return author$project$Drag$Dropped(
+			_Utils_update(
+				state,
+				{landed: true}));
+	} else {
+		return model;
+	}
 };
-var elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(
-			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
+var author$project$Main$finishProjectDragRefresh = function (model) {
+	var updateContent = F2(
+		function (content, m) {
+			var data = m.data;
+			if (content.$ === 'IssueCardContent') {
+				var issue = content.a;
+				return _Utils_update(
+					m,
+					{
+						allCards: A3(
+							elm$core$Dict$insert,
+							issue.id,
+							author$project$Card$fromIssue(issue),
+							m.allCards),
+						data: _Utils_update(
+							data,
+							{
+								issues: A3(elm$core$Dict$insert, issue.id, issue, data.issues)
+							})
+					});
+			} else {
+				var pr = content.a;
+				return _Utils_update(
+					m,
+					{
+						allCards: A3(
+							elm$core$Dict$insert,
+							pr.id,
+							author$project$Card$fromPR(pr),
+							m.allCards),
+						data: _Utils_update(
+							data,
+							{
+								prs: A3(elm$core$Dict$insert, pr.id, pr, data.prs)
+							})
+					});
+			}
+		});
+	var updateColumn = F3(
+		function (id, cards, m) {
+			var data = m.data;
+			return _Utils_update(
+				m,
+				{
+					data: _Utils_update(
+						data,
+						{
+							columnCards: A3(elm$core$Dict$insert, id, cards, data.columnCards)
+						})
+				});
+		});
+	var _n0 = model.projectDragRefresh;
+	if (_n0.$ === 'Nothing') {
+		return model;
+	} else {
+		var pdr = _n0.a;
+		var _n1 = _Utils_Tuple2(
+			_Utils_Tuple3(pdr.contentId, pdr.content, pdr.sourceId),
+			_Utils_Tuple3(pdr.sourceCards, pdr.targetId, pdr.targetCards));
+		_n1$6:
+		while (true) {
+			if (_n1.a.a.$ === 'Just') {
+				if (_n1.a.b.$ === 'Just') {
+					if (_n1.a.c.$ === 'Nothing') {
+						if (((_n1.b.a.$ === 'Nothing') && (_n1.b.b.$ === 'Just')) && (_n1.b.c.$ === 'Just')) {
+							var _n4 = _n1.a;
+							var c = _n4.b.a;
+							var _n5 = _n4.c;
+							var _n6 = _n1.b;
+							var _n7 = _n6.a;
+							var tid = _n6.b.a;
+							var tcs = _n6.c.a;
+							return A3(
+								updateColumn,
+								tid,
+								tcs,
+								A2(
+									updateContent,
+									c,
+									_Utils_update(
+										model,
+										{
+											projectDrag: author$project$Drag$complete(model.projectDrag)
+										})));
+						} else {
+							break _n1$6;
+						}
+					} else {
+						if ((_n1.b.b.$ === 'Just') && (_n1.b.c.$ === 'Just')) {
+							if (_n1.b.a.$ === 'Just') {
+								var _n2 = _n1.a;
+								var c = _n2.b.a;
+								var sid = _n2.c.a;
+								var _n3 = _n1.b;
+								var scs = _n3.a.a;
+								var tid = _n3.b.a;
+								var tcs = _n3.c.a;
+								return A3(
+									updateColumn,
+									tid,
+									tcs,
+									A3(
+										updateColumn,
+										sid,
+										scs,
+										A2(
+											updateContent,
+											c,
+											_Utils_update(
+												model,
+												{
+													projectDrag: author$project$Drag$complete(model.projectDrag)
+												}))));
+							} else {
+								var _n8 = _n1.a;
+								var c = _n8.b.a;
+								var _n9 = _n1.b;
+								var tid = _n9.b.a;
+								var tcs = _n9.c.a;
+								return A3(
+									updateColumn,
+									tid,
+									tcs,
+									A2(
+										updateContent,
+										c,
+										_Utils_update(
+											model,
+											{
+												projectDrag: author$project$Drag$land(model.projectDrag)
+											})));
+							}
+						} else {
+							break _n1$6;
+						}
+					}
+				} else {
+					break _n1$6;
+				}
+			} else {
+				if (_n1.a.b.$ === 'Nothing') {
+					if (_n1.a.c.$ === 'Nothing') {
+						if (((_n1.b.a.$ === 'Nothing') && (_n1.b.b.$ === 'Just')) && (_n1.b.c.$ === 'Just')) {
+							var _n14 = _n1.a;
+							var _n15 = _n14.a;
+							var _n16 = _n14.b;
+							var _n17 = _n14.c;
+							var _n18 = _n1.b;
+							var _n19 = _n18.a;
+							var tid = _n18.b.a;
+							var tcs = _n18.c.a;
+							return A3(
+								updateColumn,
+								tid,
+								tcs,
+								_Utils_update(
+									model,
+									{
+										projectDrag: author$project$Drag$complete(model.projectDrag)
+									}));
+						} else {
+							break _n1$6;
+						}
+					} else {
+						if ((_n1.b.b.$ === 'Just') && (_n1.b.c.$ === 'Just')) {
+							if (_n1.b.a.$ === 'Just') {
+								var _n10 = _n1.a;
+								var _n11 = _n10.a;
+								var _n12 = _n10.b;
+								var sid = _n10.c.a;
+								var _n13 = _n1.b;
+								var scs = _n13.a.a;
+								var tid = _n13.b.a;
+								var tcs = _n13.c.a;
+								return A3(
+									updateColumn,
+									tid,
+									tcs,
+									A3(
+										updateColumn,
+										sid,
+										scs,
+										_Utils_update(
+											model,
+											{
+												projectDrag: author$project$Drag$complete(model.projectDrag)
+											})));
+							} else {
+								var _n20 = _n1.a;
+								var _n21 = _n20.a;
+								var _n22 = _n20.b;
+								var _n23 = _n1.b;
+								var tid = _n23.b.a;
+								var tcs = _n23.c.a;
+								return A3(
+									updateColumn,
+									tid,
+									tcs,
+									_Utils_update(
+										model,
+										{
+											projectDrag: author$project$Drag$land(model.projectDrag)
+										}));
+							}
+						} else {
+							break _n1$6;
+						}
+					}
+				} else {
+					break _n1$6;
+				}
+			}
+		}
+		return model;
+	}
+};
+var elm$core$String$cons = _String_cons;
+var elm$core$String$fromChar = function (_char) {
+	return A2(elm$core$String$cons, _char, '');
+};
+var elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
+var elm$core$String$repeatHelp = F3(
+	function (n, chunk, result) {
+		return (n <= 0) ? result : A3(
+			elm$core$String$repeatHelp,
+			n >> 1,
+			_Utils_ap(chunk, chunk),
+			(!(n & 1)) ? result : _Utils_ap(result, chunk));
+	});
+var elm$core$String$repeat = F2(
+	function (n, chunk) {
+		return A3(elm$core$String$repeatHelp, n, chunk, '');
+	});
+var elm$core$String$padLeft = F3(
+	function (n, _char, string) {
+		return _Utils_ap(
+			A2(
+				elm$core$String$repeat,
+				n - elm$core$String$length(string),
+				elm$core$String$fromChar(_char)),
+			string);
+	});
+var elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var elm$random$Random$next = function (_n0) {
+	var state0 = _n0.a;
+	var incr = _n0.b;
+	return A2(elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var elm$random$Random$initialSeed = function (x) {
+	var _n0 = elm$random$Random$next(
+		A2(elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _n0.a;
+	var incr = _n0.b;
+	var state2 = (state1 + x) >>> 0;
+	return elm$random$Random$next(
+		A2(elm$random$Random$Seed, state2, incr));
+};
+var elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var elm$random$Random$peel = function (_n0) {
+	var state = _n0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var elm$random$Random$int = F2(
+	function (a, b) {
+		return elm$random$Random$Generator(
+			function (seed0) {
+				var _n0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _n0.a;
+				var hi = _n0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & elm$random$Random$peel(seed0)) >>> 0) + lo,
+						elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = elm$random$Random$peel(seed);
+							var seedN = elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var elm$random$Random$step = F2(
+	function (_n0, seed) {
+		var generator = _n0.a;
+		return generator(seed);
+	});
+var elm$core$Char$fromCode = _Char_fromCode;
+var fredcy$elm_parseint$ParseInt$charFromInt = function (i) {
+	return (i < 10) ? elm$core$Char$fromCode(
+		i + elm$core$Char$toCode(
+			_Utils_chr('0'))) : ((i < 36) ? elm$core$Char$fromCode(
+		(i - 10) + elm$core$Char$toCode(
+			_Utils_chr('A'))) : _Utils_chr('?'));
+};
+var fredcy$elm_parseint$ParseInt$toRadixUnsafe = F2(
+	function (radix, i) {
+		return (_Utils_cmp(i, radix) < 0) ? elm$core$String$fromChar(
+			fredcy$elm_parseint$ParseInt$charFromInt(i)) : _Utils_ap(
+			A2(fredcy$elm_parseint$ParseInt$toRadixUnsafe, radix, (i / radix) | 0),
+			elm$core$String$fromChar(
+				fredcy$elm_parseint$ParseInt$charFromInt(
+					A2(elm$core$Basics$modBy, radix, i))));
+	});
+var fredcy$elm_parseint$ParseInt$toHex = fredcy$elm_parseint$ParseInt$toRadixUnsafe(16);
+var author$project$Main$generateColor = function (seed) {
+	var _n0 = A2(
+		elm$random$Random$step,
+		A2(elm$random$Random$int, 0, 16777215),
+		elm$random$Random$initialSeed(seed));
+	var randomColor = _n0.a;
+	return A3(
+		elm$core$String$padLeft,
+		6,
+		_Utils_chr('0'),
+		fredcy$elm_parseint$ParseInt$toHex(randomColor));
+};
+var author$project$Main$labelKey = function (label) {
+	return _Utils_Tuple2(
+		label.name,
+		elm$core$String$toLower(label.color));
+};
+var author$project$Main$matchesLabel = F2(
+	function (sl, l) {
+		return _Utils_eq(l.name, sl.name) && _Utils_eq(
+			elm$core$String$toLower(l.color),
+			elm$core$String$toLower(sl.color));
+	});
+var author$project$Main$moveCard = F3(
+	function (model, _n0, cardId) {
+		var columnId = _n0.columnId;
+		var afterId = _n0.afterId;
+		var _n1 = model.me;
+		if (_n1.$ === 'Just') {
+			var token = _n1.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$CardMoved(columnId),
+				A4(author$project$GitHubGraph$moveCardAfter, token, columnId, cardId, afterId));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return elm$core$Maybe$Just(v);
 	} else {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var elm_community$intdict$IntDict$foldr = F3(
-	function (f, acc, dict) {
-		foldr:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return acc;
-				case 'Leaf':
-					var l = dict.a;
-					return A3(f, l.key, l.value, acc);
-				default:
-					var i = dict.a;
-					var $temp$f = f,
-						$temp$acc = A3(elm_community$intdict$IntDict$foldr, f, acc, i.right),
-						$temp$dict = i.left;
-					f = $temp$f;
-					acc = $temp$acc;
-					dict = $temp$dict;
-					continue foldr;
+var author$project$Main$randomizeColor = function (label) {
+	var currentColor = A2(
+		elm$core$Maybe$withDefault,
+		0,
+		elm$core$Result$toMaybe(
+			fredcy$elm_parseint$ParseInt$parseIntHex(label.color)));
+	var randomHex = author$project$Main$generateColor(currentColor);
+	return _Utils_update(
+		label,
+		{color: randomHex});
+};
+var author$project$GitHubGraph$removeIssueLabel = F3(
+	function (token, issue, name) {
+		return A2(
+			elm$core$Task$mapError,
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					author$project$GitHubGraph$auth(token),
+					lukewestby$elm_http_builder$HttpBuilder$delete(
+						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
+	});
+var author$project$Main$removeIssueLabel = F3(
+	function (model, issue, label) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$DataChanged(
+					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$IssueRefreshed)),
+				A3(author$project$GitHubGraph$removeIssueLabel, token, issue, label));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var author$project$GitHubGraph$removePullRequestLabel = F3(
+	function (token, issue, name) {
+		return A2(
+			elm$core$Task$mapError,
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+					author$project$GitHubGraph$auth(token),
+					lukewestby$elm_http_builder$HttpBuilder$delete(
+						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
+	});
+var author$project$Main$removePullRequestLabel = F3(
+	function (model, pr, label) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$DataChanged(
+					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$PullRequestRefreshed)),
+				A3(author$project$GitHubGraph$removePullRequestLabel, token, pr, label));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
+var author$project$Main$BouncePage = {$: 'BouncePage'};
+var author$project$Main$LabelsPage = {$: 'LabelsPage'};
+var author$project$Main$ProjectPage = function (a) {
+	return {$: 'ProjectPage', a: a};
+};
+var author$project$Main$PullRequestsPage = {$: 'PullRequestsPage'};
+var author$project$Main$PullRequestsRepoPage = function (a) {
+	return {$: 'PullRequestsRepoPage', a: a};
+};
+var author$project$Main$ReleasePage = {$: 'ReleasePage'};
+var author$project$Main$ReleaseRepoPage = function (a) {
+	return {$: 'ReleaseRepoPage', a: a};
+};
+var elm$url$Url$Parser$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
+	});
+var elm$url$Url$Parser$mapState = F2(
+	function (func, _n0) {
+		var visited = _n0.visited;
+		var unvisited = _n0.unvisited;
+		var params = _n0.params;
+		var frag = _n0.frag;
+		var value = _n0.value;
+		return A5(
+			elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var elm$url$Url$Parser$map = F2(
+	function (subValue, _n0) {
+		var parseArg = _n0.a;
+		return elm$url$Url$Parser$Parser(
+			function (_n1) {
+				var visited = _n1.visited;
+				var unvisited = _n1.unvisited;
+				var params = _n1.params;
+				var frag = _n1.frag;
+				var value = _n1.value;
+				return A2(
+					elm$core$List$map,
+					elm$url$Url$Parser$mapState(value),
+					parseArg(
+						A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+			});
+	});
+var elm$core$List$concatMap = F2(
+	function (f, list) {
+		return elm$core$List$concat(
+			A2(elm$core$List$map, f, list));
+	});
+var elm$url$Url$Parser$oneOf = function (parsers) {
+	return elm$url$Url$Parser$Parser(
+		function (state) {
+			return A2(
+				elm$core$List$concatMap,
+				function (_n0) {
+					var parser = _n0.a;
+					return parser(state);
+				},
+				parsers);
+		});
+};
+var elm$url$Url$Parser$s = function (str) {
+	return elm$url$Url$Parser$Parser(
+		function (_n0) {
+			var visited = _n0.visited;
+			var unvisited = _n0.unvisited;
+			var params = _n0.params;
+			var frag = _n0.frag;
+			var value = _n0.value;
+			if (!unvisited.b) {
+				return _List_Nil;
+			} else {
+				var next = unvisited.a;
+				var rest = unvisited.b;
+				return _Utils_eq(next, str) ? _List_fromArray(
+					[
+						A5(
+						elm$url$Url$Parser$State,
+						A2(elm$core$List$cons, next, visited),
+						rest,
+						params,
+						frag,
+						value)
+					]) : _List_Nil;
+			}
+		});
+};
+var elm$url$Url$Parser$slash = F2(
+	function (_n0, _n1) {
+		var parseBefore = _n0.a;
+		var parseAfter = _n1.a;
+		return elm$url$Url$Parser$Parser(
+			function (state) {
+				return A2(
+					elm$core$List$concatMap,
+					parseAfter,
+					parseBefore(state));
+			});
+	});
+var elm$url$Url$Parser$custom = F2(
+	function (tipe, stringToSomething) {
+		return elm$url$Url$Parser$Parser(
+			function (_n0) {
+				var visited = _n0.visited;
+				var unvisited = _n0.unvisited;
+				var params = _n0.params;
+				var frag = _n0.frag;
+				var value = _n0.value;
+				if (!unvisited.b) {
+					return _List_Nil;
+				} else {
+					var next = unvisited.a;
+					var rest = unvisited.b;
+					var _n2 = stringToSomething(next);
+					if (_n2.$ === 'Just') {
+						var nextValue = _n2.a;
+						return _List_fromArray(
+							[
+								A5(
+								elm$url$Url$Parser$State,
+								A2(elm$core$List$cons, next, visited),
+								rest,
+								params,
+								frag,
+								value(nextValue))
+							]);
+					} else {
+						return _List_Nil;
+					}
+				}
+			});
+	});
+var elm$url$Url$Parser$string = A2(elm$url$Url$Parser$custom, 'STRING', elm$core$Maybe$Just);
+var elm$url$Url$Parser$top = elm$url$Url$Parser$Parser(
+	function (state) {
+		return _List_fromArray(
+			[state]);
+	});
+var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(elm$url$Url$Parser$map, author$project$Main$AllProjectsPage, elm$url$Url$Parser$top),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$AllProjectsPage,
+			elm$url$Url$Parser$s('projects')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$ProjectPage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('projects'),
+				elm$url$Url$Parser$string)),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$GlobalGraphPage,
+			elm$url$Url$Parser$s('graph')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$LabelsPage,
+			elm$url$Url$Parser$s('labels')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$ReleaseRepoPage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('release'),
+				elm$url$Url$Parser$string)),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$ReleasePage,
+			elm$url$Url$Parser$s('release')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$PullRequestsPage,
+			elm$url$Url$Parser$s('pull-requests')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$PullRequestsRepoPage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('pull-requests'),
+				elm$url$Url$Parser$string)),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			A2(
+				elm$url$Url$Parser$slash,
+				elm$url$Url$Parser$s('auth'),
+				elm$url$Url$Parser$s('github'))),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			elm$url$Url$Parser$s('auth')),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$BouncePage,
+			elm$url$Url$Parser$s('logout'))
+		]));
+var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
+var author$project$GitHubGraph$updateRepoLabel = F5(
+	function (token, repo, label, name, color) {
+		return A2(
+			elm$core$Task$mapError,
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				A2(
+					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
+					A2(
+						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
+						author$project$GitHubGraph$auth(token),
+						lukewestby$elm_http_builder$HttpBuilder$patch('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + label.name)))))))));
+	});
+var author$project$Main$updateLabel = F4(
+	function (model, repo, label1, label2) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$LabelChanged(repo),
+				A5(author$project$GitHubGraph$updateRepoLabel, token, repo, label1, label2.name, label2.color));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
+	});
+var elm$browser$Browser$External = function (a) {
+	return {$: 'External', a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 'Internal', a: a};
+};
+var elm$browser$Browser$Dom$NotFound = function (a) {
+	return {$: 'NotFound', a: a};
+};
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0.a;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$perform = F2(
+	function (toMessage, task) {
+		return elm$core$Task$command(
+			elm$core$Task$Perform(
+				A2(elm$core$Task$map, toMessage, task)));
+	});
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 'Normal':
+			return 0;
+		case 'MayStopPropagation':
+			return 1;
+		case 'MayPreventDefault':
+			return 2;
+		default:
+			return 3;
+	}
+};
+var elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			elm$core$String$slice,
+			n,
+			elm$core$String$length(string),
+			string);
+	});
+var elm$url$Url$Http = {$: 'Http'};
+var elm$url$Url$Https = {$: 'Https'};
+var elm$core$String$indexes = _String_indexes;
+var elm$core$String$left = F2(
+	function (n, string) {
+		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
+	});
+var elm$url$Url$Url = F6(
+	function (protocol, host, port_, path, query, fragment) {
+		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
+	});
+var elm$url$Url$chompBeforePath = F5(
+	function (protocol, path, params, frag, str) {
+		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, ':', str);
+			if (!_n0.b) {
+				return elm$core$Maybe$Just(
+					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
+			} else {
+				if (!_n0.b.b) {
+					var i = _n0.a;
+					var _n1 = elm$core$String$toInt(
+						A2(elm$core$String$dropLeft, i + 1, str));
+					if (_n1.$ === 'Nothing') {
+						return elm$core$Maybe$Nothing;
+					} else {
+						var port_ = _n1;
+						return elm$core$Maybe$Just(
+							A6(
+								elm$url$Url$Url,
+								protocol,
+								A2(elm$core$String$left, i, str),
+								port_,
+								path,
+								params,
+								frag));
+					}
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
 			}
 		}
 	});
-var elm_community$intdict$IntDict$values = function (dict) {
+var elm$url$Url$chompBeforeQuery = F4(
+	function (protocol, params, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '/', str);
+			if (!_n0.b) {
+				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
+			} else {
+				var i = _n0.a;
+				return A5(
+					elm$url$Url$chompBeforePath,
+					protocol,
+					A2(elm$core$String$dropLeft, i, str),
+					params,
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompBeforeFragment = F3(
+	function (protocol, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '?', str);
+			if (!_n0.b) {
+				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
+			} else {
+				var i = _n0.a;
+				return A4(
+					elm$url$Url$chompBeforeQuery,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompAfterProtocol = F2(
+	function (protocol, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '#', str);
+			if (!_n0.b) {
+				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
+			} else {
+				var i = _n0.a;
+				return A3(
+					elm$url$Url$chompBeforeFragment,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$fromString = function (str) {
+	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		elm$url$Url$Http,
+		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		elm$url$Url$Https,
+		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
+};
+var elm$browser$Browser$Navigation$load = _Browser_load;
+var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var elm$core$Dict$map = F2(
+	function (func, dict) {
+		if (dict.$ === 'RBEmpty_elm_builtin') {
+			return elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			return A5(
+				elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				A2(func, key, value),
+				A2(elm$core$Dict$map, func, left),
+				A2(elm$core$Dict$map, func, right));
+		}
+	});
+var elm$core$Dict$union = F2(
+	function (t1, t2) {
+		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
+	});
+var elm$core$List$partition = F2(
+	function (pred, list) {
+		var step = F2(
+			function (x, _n0) {
+				var trues = _n0.a;
+				var falses = _n0.b;
+				return pred(x) ? _Utils_Tuple2(
+					A2(elm$core$List$cons, x, trues),
+					falses) : _Utils_Tuple2(
+					trues,
+					A2(elm$core$List$cons, x, falses));
+			});
+		return A3(
+			elm$core$List$foldr,
+			step,
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			list);
+	});
+var elm$core$Set$foldr = F3(
+	function (func, initialState, _n0) {
+		var dict = _n0.a;
+		return A3(
+			elm$core$Dict$foldr,
+			F3(
+				function (key, _n1, state) {
+					return A2(func, key, state);
+				}),
+			initialState,
+			dict);
+	});
+var elm$core$Set$remove = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return elm$core$Set$Set_elm_builtin(
+			A2(elm$core$Dict$remove, key, dict));
+	});
+var elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 'Nothing') {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + elm$core$String$fromInt(port_));
+		}
+	});
+var elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 'Nothing') {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _n0 = url.protocol;
+		if (_n0.$ === 'Http') {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
 	return A3(
-		elm_community$intdict$IntDict$foldr,
+		elm$url$Url$addPrefixed,
+		'#',
+		url.fragment,
+		A3(
+			elm$url$Url$addPrefixed,
+			'?',
+			url.query,
+			_Utils_ap(
+				A2(
+					elm$url$Url$addPort,
+					url.port_,
+					_Utils_ap(http, url.host)),
+				url.path)));
+};
+var elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _n1 = state.unvisited;
+			if (!_n1.b) {
+				return elm$core$Maybe$Just(state.value);
+			} else {
+				if ((_n1.a === '') && (!_n1.b.b)) {
+					return elm$core$Maybe$Just(state.value);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
+	}
+};
+var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
+	} else {
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				elm$core$List$cons,
+				segment,
+				elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
+	}
+};
+var elm$url$Url$Parser$preparePath = function (path) {
+	var _n0 = A2(elm$core$String$split, '/', path);
+	if (_n0.b && (_n0.a === '')) {
+		var segments = _n0.b;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _n0;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var elm$url$Url$percentDecode = _Url_percentDecode;
+var elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 'Nothing') {
+			return elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return elm$core$Maybe$Just(
+				A2(elm$core$List$cons, value, list));
+		}
+	});
+var elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _n0 = A2(elm$core$String$split, '=', segment);
+		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
+			var rawKey = _n0.a;
+			var _n1 = _n0.b;
+			var rawValue = _n1.a;
+			var _n2 = elm$url$Url$percentDecode(rawKey);
+			if (_n2.$ === 'Nothing') {
+				return dict;
+			} else {
+				var key = _n2.a;
+				var _n3 = elm$url$Url$percentDecode(rawValue);
+				if (_n3.$ === 'Nothing') {
+					return dict;
+				} else {
+					var value = _n3.a;
+					return A3(
+						elm$core$Dict$update,
+						key,
+						elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 'Nothing') {
+		return elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			elm$core$List$foldr,
+			elm$url$Url$Parser$addParam,
+			elm$core$Dict$empty,
+			A2(elm$core$String$split, '&', qry));
+	}
+};
+var elm$url$Url$Parser$parse = F2(
+	function (_n0, url) {
+		var parser = _n0.a;
+		return elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					elm$url$Url$Parser$State,
+					_List_Nil,
+					elm$url$Url$Parser$preparePath(url.path),
+					elm$url$Url$Parser$prepareQuery(url.query),
+					url.fragment,
+					elm$core$Basics$identity)));
+	});
+var y0hy0h$ordered_containers$OrderedSet$insert = F2(
+	function (key, _n0) {
+		var list = _n0.a;
+		var dict = _n0.b;
+		var _n1 = A2(elm$core$Dict$get, key, dict);
+		if (_n1.$ === 'Just') {
+			return A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, list, dict);
+		} else {
+			return A2(
+				y0hy0h$ordered_containers$OrderedSet$OrderedSet,
+				_Utils_ap(
+					list,
+					_List_fromArray(
+						[key])),
+				A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
+		}
+	});
+var y0hy0h$ordered_containers$OrderedSet$remove = F2(
+	function (key, _n0) {
+		var list = _n0.a;
+		var dict = _n0.b;
+		var _n1 = A2(elm$core$Dict$get, key, dict);
+		if (_n1.$ === 'Just') {
+			return A2(
+				y0hy0h$ordered_containers$OrderedSet$OrderedSet,
+				A2(
+					elm$core$List$filter,
+					function (k) {
+						return !_Utils_eq(k, key);
+					},
+					list),
+				A2(elm$core$Dict$remove, key, dict));
+		} else {
+			return A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, list, dict);
+		}
+	});
+var y0hy0h$ordered_containers$OrderedSet$toList = function (_n0) {
+	var list = _n0.a;
+	return list;
+};
+var author$project$Main$update = F2(
+	function (msg, model) {
+		update:
+		while (true) {
+			switch (msg.$) {
+				case 'RetryPolling':
+					return model.isPolling ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{isPolling: true}),
+						author$project$Backend$fetchData(author$project$Main$DataFetched));
+				case 'LinkClicked':
+					var urlRequest = msg.a;
+					if (urlRequest.$ === 'Internal') {
+						var url = urlRequest.a;
+						return _Utils_Tuple2(
+							model,
+							A2(
+								elm$browser$Browser$Navigation$pushUrl,
+								model.key,
+								elm$url$Url$toString(url)));
+					} else {
+						var href = urlRequest.a;
+						return _Utils_Tuple2(
+							model,
+							elm$browser$Browser$Navigation$load(href));
+					}
+				case 'UrlChanged':
+					var url = msg.a;
+					var _n2 = A2(elm$url$Url$Parser$parse, author$project$Main$routeParser, url);
+					if (_n2.$ === 'Just') {
+						if (_n2.a.$ === 'BouncePage') {
+							var _n3 = _n2.a;
+							return _Utils_Tuple2(
+								model,
+								elm$browser$Browser$Navigation$load(
+									elm$url$Url$toString(url)));
+						} else {
+							var page = _n2.a;
+							var paged = _Utils_update(
+								model,
+								{page: page});
+							var graphed = function () {
+								switch (page.$) {
+									case 'GlobalGraphPage':
+										return _Utils_update(
+											paged,
+											{baseGraphFilter: elm$core$Maybe$Nothing});
+									case 'ProjectPage':
+										var name = page.a;
+										return _Utils_update(
+											paged,
+											{
+												baseGraphFilter: elm$core$Maybe$Just(
+													author$project$Main$InProjectFilter(name))
+											});
+									default:
+										return paged;
+								}
+							}();
+							return _Utils_Tuple2(
+								author$project$Main$computeDataView(graphed),
+								elm$core$Platform$Cmd$none);
+						}
+					} else {
+						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					}
+				case 'SetCurrentTime':
+					var date = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{currentTime: date})),
+						elm$core$Platform$Cmd$none);
+				case 'ProjectDrag':
+					var subMsg = msg.a;
+					var dragModel = A2(author$project$Drag$update, subMsg, model.projectDrag);
+					var newModel = _Utils_update(
+						model,
+						{projectDrag: dragModel});
+					if (dragModel.$ === 'Dropping') {
+						var state = dragModel.a;
+						var $temp$msg = state.msg,
+							$temp$model = _Utils_update(
+							newModel,
+							{
+								projectDrag: author$project$Drag$drop(newModel.projectDrag)
+							});
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					} else {
+						return _Utils_Tuple2(newModel, elm$core$Platform$Cmd$none);
+					}
+				case 'MilestoneDrag':
+					var subMsg = msg.a;
+					var dragModel = A2(author$project$Drag$update, subMsg, model.milestoneDrag);
+					var newModel = _Utils_update(
+						model,
+						{milestoneDrag: dragModel});
+					if (dragModel.$ === 'Dropping') {
+						var state = dragModel.a;
+						var $temp$msg = state.msg,
+							$temp$model = _Utils_update(
+							newModel,
+							{
+								projectDrag: author$project$Drag$drop(newModel.projectDrag)
+							});
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					} else {
+						return _Utils_Tuple2(newModel, elm$core$Platform$Cmd$none);
+					}
+				case 'MoveCardAfter':
+					var source = msg.a;
+					var dest = msg.b;
+					if (source.$ === 'FromColumnCardSource') {
+						var cardId = source.a.cardId;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$moveCard, model, dest, cardId));
+					} else {
+						var contentId = source.a.contentId;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$addCard, model, dest, contentId));
+					}
+				case 'CardMoved':
+					if (msg.b.$ === 'Ok') {
+						var col = msg.a;
+						var content = msg.b.a.content;
+						var _n8 = model.projectDrag;
+						if (_n8.$ === 'Dropped') {
+							var drag = _n8.a;
+							var wrapValue = F2(
+								function (f, indexed) {
+									return _Utils_update(
+										indexed,
+										{
+											value: f(indexed.value)
+										});
+								});
+							var msourceId = function () {
+								var _n12 = drag.source;
+								if (_n12.$ === 'FromColumnCardSource') {
+									var cs = _n12.a;
+									return _Utils_eq(cs.columnId, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.columnId);
+								} else {
+									return elm$core$Maybe$Nothing;
+								}
+							}();
+							var _n9 = function () {
+								if (content.$ === 'Just') {
+									if (content.a.$ === 'IssueCardContent') {
+										var issue = content.a.a;
+										return _Utils_Tuple2(
+											elm$core$Maybe$Just(issue.id),
+											A2(
+												author$project$Backend$refreshIssue,
+												issue.id,
+												A2(
+													elm$core$Basics$composeL,
+													author$project$Main$CardDropContentRefreshed,
+													elm$core$Result$map(
+														function (x) {
+															return {
+																index: x.index,
+																value: author$project$GitHubGraph$IssueCardContent(x.value)
+															};
+														}))));
+									} else {
+										var pr = content.a.a;
+										return _Utils_Tuple2(
+											elm$core$Maybe$Just(pr.id),
+											A2(
+												author$project$Backend$refreshPR,
+												pr.id,
+												A2(
+													elm$core$Basics$composeL,
+													author$project$Main$CardDropContentRefreshed,
+													elm$core$Result$map(
+														function (x) {
+															return {
+																index: x.index,
+																value: author$project$GitHubGraph$PullRequestCardContent(x.value)
+															};
+														}))));
+									}
+								} else {
+									return _Utils_Tuple2(elm$core$Maybe$Nothing, elm$core$Platform$Cmd$none);
+								}
+							}();
+							var mcontentId = _n9.a;
+							var refreshContent = _n9.b;
+							if (msourceId.$ === 'Just') {
+								var sourceId = msourceId.a;
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											projectDragRefresh: elm$core$Maybe$Just(
+												{
+													content: elm$core$Maybe$Nothing,
+													contentId: mcontentId,
+													sourceCards: elm$core$Maybe$Nothing,
+													sourceId: elm$core$Maybe$Just(sourceId),
+													targetCards: elm$core$Maybe$Nothing,
+													targetId: elm$core$Maybe$Just(col)
+												})
+										}),
+									elm$core$Platform$Cmd$batch(
+										_List_fromArray(
+											[
+												refreshContent,
+												A2(author$project$Backend$refreshCards, sourceId, author$project$Main$CardDropSourceRefreshed),
+												A2(author$project$Backend$refreshCards, col, author$project$Main$CardDropTargetRefreshed)
+											])));
+							} else {
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											projectDragRefresh: elm$core$Maybe$Just(
+												{
+													content: elm$core$Maybe$Nothing,
+													contentId: mcontentId,
+													sourceCards: elm$core$Maybe$Nothing,
+													sourceId: elm$core$Maybe$Nothing,
+													targetCards: elm$core$Maybe$Nothing,
+													targetId: elm$core$Maybe$Just(col)
+												})
+										}),
+									elm$core$Platform$Cmd$batch(
+										_List_fromArray(
+											[
+												refreshContent,
+												A2(author$project$Backend$refreshCards, col, author$project$Main$CardDropTargetRefreshed)
+											])));
+							}
+						} else {
+							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+						}
+					} else {
+						var col = msg.a;
+						var err = msg.b.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to move card',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'CardDropContentRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						var _n13 = model.projectDragRefresh;
+						if (_n13.$ === 'Nothing') {
+							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+						} else {
+							var pdr = _n13.a;
+							return _Utils_Tuple2(
+								author$project$Main$finishProjectDragRefresh(
+									_Utils_update(
+										model,
+										{
+											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
+											projectDragRefresh: elm$core$Maybe$Just(
+												_Utils_update(
+													pdr,
+													{
+														content: elm$core$Maybe$Just(value)
+													}))
+										})),
+								elm$core$Platform$Cmd$none);
+						}
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh card',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'CardDropSourceRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						var _n14 = model.projectDragRefresh;
+						if (_n14.$ === 'Nothing') {
+							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+						} else {
+							var pdr = _n14.a;
+							return _Utils_Tuple2(
+								author$project$Main$finishProjectDragRefresh(
+									_Utils_update(
+										model,
+										{
+											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
+											projectDragRefresh: elm$core$Maybe$Just(
+												_Utils_update(
+													pdr,
+													{
+														sourceCards: elm$core$Maybe$Just(value)
+													}))
+										})),
+								elm$core$Platform$Cmd$none);
+						}
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh card',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'CardDropTargetRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						var _n15 = model.projectDragRefresh;
+						if (_n15.$ === 'Nothing') {
+							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+						} else {
+							var pdr = _n15.a;
+							return _Utils_Tuple2(
+								author$project$Main$finishProjectDragRefresh(
+									_Utils_update(
+										model,
+										{
+											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
+											projectDragRefresh: elm$core$Maybe$Just(
+												_Utils_update(
+													pdr,
+													{
+														targetCards: elm$core$Maybe$Just(value)
+													}))
+										})),
+								elm$core$Platform$Cmd$none);
+						}
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh card',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'CardsRefreshed':
+					if (msg.b.$ === 'Ok') {
+						var col = msg.a;
+						var index = msg.b.a.index;
+						var value = msg.b.a.value;
+						var data = model.data;
+						var newData = _Utils_update(
+							data,
+							{
+								columnCards: A3(elm$core$Dict$insert, col, value, data.columnCards)
+							});
+						return _Utils_Tuple2(
+							author$project$Main$computeDataView(
+								_Utils_update(
+									model,
+									{
+										data: newData,
+										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex)
+									})),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var col = msg.a;
+						var err = msg.b.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh cards',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'SearchCards':
+					var str = msg.a;
+					var tokens = A2(elm$core$String$split, ' ', str);
+					var cardsByTitle = A3(
+						elm$core$Dict$foldl,
+						F2(
+							function (_n20, card) {
+								return author$project$Card$isOpen(card) ? A2(
+									elm$core$Dict$insert,
+									elm$core$String$toLower(card.title),
+									card) : elm$core$Basics$identity;
+							}),
+						elm$core$Dict$empty,
+						model.allCards);
+					var _n16 = A2(
+						elm$core$List$partition,
+						elm$core$String$contains(':'),
+						tokens);
+					var filterTokens = _n16.a;
+					var rest = _n16.b;
+					var filters = A2(
+						elm$core$List$map,
+						elm$core$String$split(':'),
+						filterTokens);
+					var query = elm$core$String$toLower(
+						A2(elm$core$String$join, ' ', rest));
+					var cardMatch = F2(
+						function (title, card) {
+							return ((elm$core$String$length(query) < 2) && elm$core$List$isEmpty(filters)) ? false : (A2(elm$core$String$contains, query, title) ? function (a) {
+								return A2(elm$core$List$all, a, filters);
+							}(
+								function (filter) {
+									if (((filter.b && (filter.a === 'label')) && filter.b.b) && (!filter.b.b.b)) {
+										var _n19 = filter.b;
+										var name = _n19.a;
+										return A3(author$project$Main$hasLabel, model, name, card);
+									} else {
+										return false;
+									}
+								}) : false);
+						});
+					var foundCards = A3(
+						elm$core$Dict$foldl,
+						F2(
+							function (_n17, card) {
+								return elm$core$Set$insert(card.id);
+							}),
+						elm$core$Set$empty,
+						A2(elm$core$Dict$filter, cardMatch, cardsByTitle));
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{anticipatedCards: foundCards, cardSearch: str})),
+						elm$core$Platform$Cmd$none);
+				case 'SelectAnticipatedCards':
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									anticipatedCards: elm$core$Set$empty,
+									selectedCards: A3(elm$core$Set$foldr, y0hy0h$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'SelectCard':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									selectedCards: A2(y0hy0h$ordered_containers$OrderedSet$insert, id, model.selectedCards)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'ClearSelectedCards':
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{selectedCards: y0hy0h$ordered_containers$OrderedSet$empty})),
+						elm$core$Platform$Cmd$none);
+				case 'DeselectCard':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									selectedCards: A2(y0hy0h$ordered_containers$OrderedSet$remove, id, model.selectedCards)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'HighlightNode':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									highlightedNode: elm$core$Maybe$Just(id)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'UnhighlightNode':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{highlightedNode: elm$core$Maybe$Nothing})),
+						elm$core$Platform$Cmd$none);
+				case 'AnticipateCardFromNode':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									anticipatedCards: A2(elm$core$Set$insert, id, model.anticipatedCards),
+									highlightedCard: elm$core$Maybe$Just(id)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'UnanticipateCardFromNode':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$updateGraphStates(
+							_Utils_update(
+								model,
+								{
+									anticipatedCards: A2(elm$core$Set$remove, id, model.anticipatedCards),
+									highlightedCard: elm$core$Maybe$Nothing
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'MeFetched':
+					if (msg.a.$ === 'Ok') {
+						var me = msg.a.a;
+						return _Utils_Tuple2(
+							author$project$Main$updateGraphStates(
+								_Utils_update(
+									model,
+									{me: me})),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching self',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'DataFetched':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						return _Utils_Tuple2(
+							function () {
+								if (_Utils_cmp(index, model.dataIndex) > 0) {
+									var prCards = A2(
+										elm$core$Dict$map,
+										function (_n25) {
+											return author$project$Card$fromPR;
+										},
+										value.prs);
+									var issueCards = A2(
+										elm$core$Dict$map,
+										function (_n24) {
+											return author$project$Card$fromIssue;
+										},
+										value.issues);
+									var allLabels = A3(
+										elm$core$Dict$foldl,
+										F3(
+											function (_n23, r, ls) {
+												return A3(
+													elm$core$List$foldl,
+													function (l) {
+														return A2(elm$core$Dict$insert, l.id, l);
+													},
+													ls,
+													r.labels);
+											}),
+										elm$core$Dict$empty,
+										value.repos);
+									var colorLightnessCache = A3(
+										elm$core$Dict$foldl,
+										F3(
+											function (_n21, _n22, cache) {
+												var color = _n22.color;
+												return A3(
+													elm$core$Dict$insert,
+													color,
+													author$project$Main$computeColorIsLight(color),
+													cache);
+											}),
+										elm$core$Dict$empty,
+										allLabels);
+									var allCards = A2(elm$core$Dict$union, issueCards, prCards);
+									return author$project$Main$computeDataView(
+										_Utils_update(
+											model,
+											{allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}));
+								} else {
+									return A3(
+										author$project$Log$debug,
+										'ignoring stale index',
+										_Utils_Tuple2(index, model.dataIndex),
+										model);
+								}
+							}(),
+							elm$core$Platform$Cmd$batch(
+								_List_fromArray(
+									[
+										author$project$Backend$pollData(author$project$Main$DataFetched),
+										(_Utils_cmp(index, model.dataIndex) > 0) ? author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched) : elm$core$Platform$Cmd$none
+									])));
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching data',
+							err,
+							_Utils_Tuple2(
+								_Utils_update(
+									model,
+									{isPolling: false}),
+								elm$core$Platform$Cmd$none));
+					}
+				case 'GraphsFetched':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						return A3(
+							author$project$Log$debug,
+							'graphs fetched',
+							_Utils_Tuple2(
+								index,
+								elm$core$List$length(value)),
+							_Utils_Tuple2(
+								author$project$Main$computeDataView(
+									_Utils_update(
+										model,
+										{graphs: value})),
+								elm$core$Platform$Cmd$none));
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching graphs',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'MirrorLabel':
+					var newLabel = msg.a;
+					var cmds = A3(
+						elm$core$Dict$foldl,
+						F3(
+							function (_n26, r, acc) {
+								var _n27 = A2(
+									elm$core$List$filter,
+									A2(
+										elm$core$Basics$composeL,
+										elm$core$Basics$eq(newLabel.name),
+										function ($) {
+											return $.name;
+										}),
+									r.labels);
+								if (!_n27.b) {
+									return A2(
+										elm$core$List$cons,
+										A3(author$project$Main$createLabel, model, r, newLabel),
+										acc);
+								} else {
+									var label = _n27.a;
+									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
+										elm$core$List$cons,
+										A4(author$project$Main$updateLabel, model, r, label, newLabel),
+										acc);
+								}
+							}),
+						_List_Nil,
+						model.data.repos);
+					return _Utils_Tuple2(
+						model,
+						elm$core$Platform$Cmd$batch(cmds));
+				case 'StartDeletingLabel':
+					var label = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								deletingLabels: A2(
+									elm$core$Set$insert,
+									author$project$Main$labelKey(label),
+									model.deletingLabels)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'StopDeletingLabel':
+					var label = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								deletingLabels: A2(
+									elm$core$Set$remove,
+									author$project$Main$labelKey(label),
+									model.deletingLabels)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'DeleteLabel':
+					var label = msg.a;
+					var cmds = A3(
+						elm$core$Dict$foldl,
+						F3(
+							function (_n28, r, acc) {
+								var _n29 = A2(
+									elm$core$List$filter,
+									author$project$Main$matchesLabel(label),
+									r.labels);
+								if (!_n29.b) {
+									return acc;
+								} else {
+									var repoLabel = _n29.a;
+									return A2(
+										elm$core$List$cons,
+										A3(author$project$Main$deleteLabel, model, r, repoLabel),
+										acc);
+								}
+							}),
+						_List_Nil,
+						model.data.repos);
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								deletingLabels: A2(
+									elm$core$Set$remove,
+									author$project$Main$labelKey(label),
+									model.deletingLabels)
+							}),
+						elm$core$Platform$Cmd$batch(cmds));
+				case 'StartEditingLabel':
+					var label = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								editingLabels: A3(
+									elm$core$Dict$insert,
+									author$project$Main$labelKey(label),
+									label,
+									model.editingLabels)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'StopEditingLabel':
+					var label = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								editingLabels: A2(
+									elm$core$Dict$remove,
+									author$project$Main$labelKey(label),
+									model.editingLabels)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'SetLabelName':
+					var label = msg.a;
+					var newName = msg.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								editingLabels: A3(
+									elm$core$Dict$update,
+									author$project$Main$labelKey(label),
+									elm$core$Maybe$map(
+										function (newLabel) {
+											return _Utils_update(
+												newLabel,
+												{name: newName});
+										}),
+									model.editingLabels)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'SetLabelColor':
+					var newColor = msg.a;
+					var newLabel = model.newLabel;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								editingLabels: A2(
+									elm$core$Dict$map,
+									F2(
+										function (_n30, label) {
+											return _Utils_update(
+												label,
+												{color: newColor});
+										}),
+									model.editingLabels),
+								newLabel: elm$core$String$isEmpty(newLabel.name) ? newLabel : _Utils_update(
+									newLabel,
+									{color: newColor}),
+								newLabelColored: !elm$core$String$isEmpty(newLabel.name)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'RandomizeLabelColor':
+					var label = msg.a;
+					var _n31 = A2(
+						elm$core$Dict$get,
+						author$project$Main$labelKey(label),
+						model.editingLabels);
+					if (_n31.$ === 'Nothing') {
+						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					} else {
+						var newLabel = _n31.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									editingLabels: A3(
+										elm$core$Dict$insert,
+										author$project$Main$labelKey(label),
+										author$project$Main$randomizeColor(newLabel),
+										model.editingLabels)
+								}),
+							elm$core$Platform$Cmd$none);
+					}
+				case 'EditLabel':
+					var oldLabel = msg.a;
+					var _n32 = A2(
+						elm$core$Dict$get,
+						author$project$Main$labelKey(oldLabel),
+						model.editingLabels);
+					if (_n32.$ === 'Nothing') {
+						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					} else {
+						var newLabel = _n32.a;
+						var cmds = A3(
+							elm$core$Dict$foldl,
+							F3(
+								function (_n33, r, acc) {
+									var _n34 = A2(
+										elm$core$List$filter,
+										author$project$Main$matchesLabel(oldLabel),
+										r.labels);
+									if (_n34.b) {
+										var repoLabel = _n34.a;
+										return A2(
+											elm$core$List$cons,
+											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
+											acc);
+									} else {
+										return acc;
+									}
+								}),
+							_List_Nil,
+							model.data.repos);
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									editingLabels: A2(
+										elm$core$Dict$remove,
+										author$project$Main$labelKey(oldLabel),
+										model.editingLabels)
+								}),
+							elm$core$Platform$Cmd$batch(cmds));
+					}
+				case 'CreateLabel':
+					if (model.newLabel.name === '') {
+						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					} else {
+						var $temp$msg = author$project$Main$MirrorLabel(model.newLabel),
+							$temp$model = _Utils_update(
+							model,
+							{
+								newLabel: {color: 'ffffff', name: ''},
+								newLabelColored: false
+							});
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					}
+				case 'RandomizeNewLabelColor':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								newLabel: author$project$Main$randomizeColor(model.newLabel),
+								newLabelColored: true
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'SetNewLabelName':
+					var name = msg.a;
+					var newLabel = model.newLabel;
+					var newColor = model.newLabelColored ? model.newLabel.color : author$project$Main$generateColor(
+						author$project$Hash$hash(name));
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								newLabel: _Utils_update(
+									newLabel,
+									{color: newColor, name: name})
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'LabelChanged':
+					if (msg.b.$ === 'Ok') {
+						var repo = msg.a;
+						var repoSel = {name: repo.name, owner: repo.owner};
+						return _Utils_Tuple2(
+							model,
+							A2(author$project$Backend$refreshRepo, repoSel, author$project$Main$RepoRefreshed));
+					} else {
+						var repo = msg.a;
+						var err = msg.b.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to modify labels',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'RepoRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						var data = model.data;
+						var allLabels = A3(
+							elm$core$List$foldl,
+							function (l) {
+								return A2(elm$core$Dict$insert, l.id, l);
+							},
+							model.allLabels,
+							value.labels);
+						var colorLightnessCache = A3(
+							elm$core$Dict$foldl,
+							F3(
+								function (_n35, _n36, cache) {
+									var color = _n36.color;
+									return A3(
+										elm$core$Dict$insert,
+										color,
+										author$project$Main$computeColorIsLight(color),
+										cache);
+								}),
+							elm$core$Dict$empty,
+							allLabels);
+						return _Utils_Tuple2(
+							author$project$Main$computeDataView(
+								_Utils_update(
+									model,
+									{
+										allLabels: allLabels,
+										colorLightnessCache: colorLightnessCache,
+										data: _Utils_update(
+											data,
+											{
+												repos: A3(elm$core$Dict$insert, value.id, value, data.repos)
+											}),
+										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex)
+									})),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh repo',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'LabelCard':
+					var card = msg.a;
+					var label = msg.b;
+					var _n37 = card.content;
+					if (_n37.$ === 'IssueCardContent') {
+						var issue = _n37.a;
+						return _Utils_Tuple2(
+							model,
+							A3(
+								author$project$Main$addIssueLabels,
+								model,
+								issue,
+								_List_fromArray(
+									[label])));
+					} else {
+						var pr = _n37.a;
+						return _Utils_Tuple2(
+							model,
+							A3(
+								author$project$Main$addPullRequestLabels,
+								model,
+								pr,
+								_List_fromArray(
+									[label])));
+					}
+				case 'UnlabelCard':
+					var card = msg.a;
+					var label = msg.b;
+					var _n38 = card.content;
+					if (_n38.$ === 'IssueCardContent') {
+						var issue = _n38.a;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$removeIssueLabel, model, issue, label));
+					} else {
+						var pr = _n38.a;
+						return _Utils_Tuple2(
+							model,
+							A3(author$project$Main$removePullRequestLabel, model, pr, label));
+					}
+				case 'DataChanged':
+					if (msg.b.$ === 'Ok') {
+						var cb = msg.a;
+						return _Utils_Tuple2(model, cb);
+					} else {
+						var cb = msg.a;
+						var err = msg.b.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to change data',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'RefreshIssue':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						model,
+						A2(author$project$Backend$refreshIssue, id, author$project$Main$IssueRefreshed));
+				case 'IssueRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						return _Utils_Tuple2(
+							author$project$Main$computeDataView(
+								_Utils_update(
+									model,
+									{
+										allCards: A3(
+											elm$core$Dict$insert,
+											value.id,
+											author$project$Card$fromIssue(value),
+											model.allCards),
+										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
+										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
+									})),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh issue',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'RefreshPullRequest':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						model,
+						A2(author$project$Backend$refreshPR, id, author$project$Main$PullRequestRefreshed));
+				case 'PullRequestRefreshed':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						return _Utils_Tuple2(
+							author$project$Main$computeDataView(
+								_Utils_update(
+									model,
+									{
+										allCards: A3(
+											elm$core$Dict$insert,
+											value.id,
+											author$project$Card$fromPR(value),
+											model.allCards),
+										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
+										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
+									})),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'failed to refresh pr',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'AddFilter':
+					var filter = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$sortAndFilterGraphs(
+							_Utils_update(
+								model,
+								{
+									graphFilters: A2(elm$core$List$cons, filter, model.graphFilters)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'RemoveFilter':
+					var filter = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$sortAndFilterGraphs(
+							_Utils_update(
+								model,
+								{
+									graphFilters: A2(
+										elm$core$List$filter,
+										elm$core$Basics$neq(filter),
+										model.graphFilters)
+								})),
+						elm$core$Platform$Cmd$none);
+				case 'SetGraphSort':
+					var sort = msg.a;
+					return _Utils_Tuple2(
+						author$project$Main$sortAndFilterGraphs(
+							_Utils_update(
+								model,
+								{graphSort: sort})),
+						elm$core$Platform$Cmd$none);
+				case 'ToggleLabelFilters':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{showLabelFilters: !model.showLabelFilters}),
+						elm$core$Platform$Cmd$none);
+				case 'SetLabelSearch':
+					var string = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{labelSearch: string}),
+						elm$core$Platform$Cmd$none);
+				case 'ToggleLabelOperations':
+					return _Utils_Tuple2(
+						model.showLabelOperations ? _Utils_update(
+							model,
+							{cardLabelOperations: elm$core$Dict$empty, labelSearch: '', showLabelOperations: false}) : author$project$Main$computeDataView(
+							_Utils_update(
+								model,
+								{showLabelOperations: true})),
+						elm$core$Platform$Cmd$none);
+				case 'SetLabelOperation':
+					var name = msg.a;
+					var op = msg.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								cardLabelOperations: A3(elm$core$Dict$insert, name, op, model.cardLabelOperations)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'UnsetLabelOperation':
+					var name = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								cardLabelOperations: A2(elm$core$Dict$remove, name, model.cardLabelOperations)
+							}),
+						elm$core$Platform$Cmd$none);
+				case 'ApplyLabelOperations':
+					var cards = A2(
+						elm$core$List$filterMap,
+						function (a) {
+							return A2(elm$core$Dict$get, a, model.allCards);
+						},
+						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
+					var _n39 = A2(
+						elm$core$List$partition,
+						A2(
+							elm$core$Basics$composeL,
+							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
+							elm$core$Tuple$second),
+						elm$core$Dict$toList(model.cardLabelOperations));
+					var addPairs = _n39.a;
+					var removePairs = _n39.b;
+					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
+					var adds = A2(
+						elm$core$List$map,
+						function (card) {
+							var _n41 = card.content;
+							if (_n41.$ === 'IssueCardContent') {
+								var issue = _n41.a;
+								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
+							} else {
+								var pr = _n41.a;
+								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
+							}
+						},
+						cards);
+					var labelsToRemove = A2(elm$core$List$map, elm$core$Tuple$first, removePairs);
+					var removals = A2(
+						elm$core$List$concatMap,
+						function (name) {
+							return A2(
+								elm$core$List$filterMap,
+								function (card) {
+									if (A3(author$project$Main$hasLabel, model, name, card)) {
+										var _n40 = card.content;
+										if (_n40.$ === 'IssueCardContent') {
+											var issue = _n40.a;
+											return elm$core$Maybe$Just(
+												A3(author$project$Main$removeIssueLabel, model, issue, name));
+										} else {
+											var pr = _n40.a;
+											return elm$core$Maybe$Just(
+												A3(author$project$Main$removePullRequestLabel, model, pr, name));
+										}
+									} else {
+										return elm$core$Maybe$Nothing;
+									}
+								},
+								cards);
+						},
+						labelsToRemove);
+					return _Utils_Tuple2(
+						model,
+						elm$core$Platform$Cmd$batch(
+							_Utils_ap(adds, removals)));
+				case 'SetReleaseRepoTab':
+					var tab = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{releaseRepoTab: tab}),
+						elm$core$Platform$Cmd$none);
+				default:
+					var tab = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{repoPullRequestsTab: tab}),
+						elm$core$Platform$Cmd$none);
+			}
+		}
+	});
+var author$project$Main$init = F3(
+	function (config, url, key) {
+		var model = {
+			allCards: elm$core$Dict$empty,
+			allLabels: elm$core$Dict$empty,
+			anticipatedCards: elm$core$Set$empty,
+			baseGraphFilter: elm$core$Maybe$Nothing,
+			cardGraphs: _List_Nil,
+			cardLabelOperations: elm$core$Dict$empty,
+			cardSearch: '',
+			colorLightnessCache: elm$core$Dict$empty,
+			config: config,
+			currentTime: elm$time$Time$millisToPosix(config.initialTime),
+			data: author$project$Backend$emptyData,
+			dataIndex: 0,
+			dataView: {labelToRepoToId: elm$core$Dict$empty, prsByRepo: elm$core$Dict$empty, releaseRepos: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty},
+			deletingLabels: elm$core$Set$empty,
+			editingLabels: elm$core$Dict$empty,
+			graphFilters: _List_Nil,
+			graphSort: author$project$Main$ImpactSort,
+			graphs: _List_Nil,
+			highlightedCard: elm$core$Maybe$Nothing,
+			highlightedNode: elm$core$Maybe$Nothing,
+			isPolling: true,
+			key: key,
+			labelSearch: '',
+			me: elm$core$Maybe$Nothing,
+			milestoneDrag: author$project$Drag$init,
+			newLabel: {color: 'ffffff', name: ''},
+			newLabelColored: false,
+			newMilestoneName: '',
+			page: author$project$Main$GlobalGraphPage,
+			projectDrag: author$project$Drag$init,
+			projectDragRefresh: elm$core$Maybe$Nothing,
+			releaseRepoTab: 0,
+			repoPullRequestsTab: 0,
+			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
+			showLabelFilters: false,
+			showLabelOperations: false,
+			suggestedLabels: _List_Nil
+		};
+		var _n0 = A2(
+			author$project$Main$update,
+			author$project$Main$UrlChanged(url),
+			model);
+		var navedModel = _n0.a;
+		var navedMsgs = _n0.b;
+		return _Utils_Tuple2(
+			navedModel,
+			elm$core$Platform$Cmd$batch(
+				_List_fromArray(
+					[
+						author$project$Backend$fetchData(author$project$Main$DataFetched),
+						author$project$Backend$fetchMe(author$project$Main$MeFetched),
+						navedMsgs
+					])));
+	});
+var author$project$Main$RetryPolling = {$: 'RetryPolling'};
+var author$project$Main$SetCurrentTime = function (a) {
+	return {$: 'SetCurrentTime', a: a};
+};
+var elm$core$Platform$Sub$batch = _Platform_batch;
+var elm$time$Time$Every = F2(
+	function (a, b) {
+		return {$: 'Every', a: a, b: b};
+	});
+var elm$time$Time$State = F2(
+	function (taggers, processes) {
+		return {processes: processes, taggers: taggers};
+	});
+var elm$time$Time$init = elm$core$Task$succeed(
+	A2(elm$time$Time$State, elm$core$Dict$empty, elm$core$Dict$empty));
+var elm$core$Dict$merge = F6(
+	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
+		var stepState = F3(
+			function (rKey, rValue, _n0) {
+				stepState:
+				while (true) {
+					var list = _n0.a;
+					var result = _n0.b;
+					if (!list.b) {
+						return _Utils_Tuple2(
+							list,
+							A3(rightStep, rKey, rValue, result));
+					} else {
+						var _n2 = list.a;
+						var lKey = _n2.a;
+						var lValue = _n2.b;
+						var rest = list.b;
+						if (_Utils_cmp(lKey, rKey) < 0) {
+							var $temp$rKey = rKey,
+								$temp$rValue = rValue,
+								$temp$_n0 = _Utils_Tuple2(
+								rest,
+								A3(leftStep, lKey, lValue, result));
+							rKey = $temp$rKey;
+							rValue = $temp$rValue;
+							_n0 = $temp$_n0;
+							continue stepState;
+						} else {
+							if (_Utils_cmp(lKey, rKey) > 0) {
+								return _Utils_Tuple2(
+									list,
+									A3(rightStep, rKey, rValue, result));
+							} else {
+								return _Utils_Tuple2(
+									rest,
+									A4(bothStep, lKey, lValue, rValue, result));
+							}
+						}
+					}
+				}
+			});
+		var _n3 = A3(
+			elm$core$Dict$foldl,
+			stepState,
+			_Utils_Tuple2(
+				elm$core$Dict$toList(leftDict),
+				initialResult),
+			rightDict);
+		var leftovers = _n3.a;
+		var intermediateResult = _n3.b;
+		return A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n4, result) {
+					var k = _n4.a;
+					var v = _n4.b;
+					return A3(leftStep, k, v, result);
+				}),
+			intermediateResult,
+			leftovers);
+	});
+var elm$core$Process$kill = _Scheduler_kill;
+var elm$time$Time$addMySub = F2(
+	function (_n0, state) {
+		var interval = _n0.a;
+		var tagger = _n0.b;
+		var _n1 = A2(elm$core$Dict$get, interval, state);
+		if (_n1.$ === 'Nothing') {
+			return A3(
+				elm$core$Dict$insert,
+				interval,
+				_List_fromArray(
+					[tagger]),
+				state);
+		} else {
+			var taggers = _n1.a;
+			return A3(
+				elm$core$Dict$insert,
+				interval,
+				A2(elm$core$List$cons, tagger, taggers),
+				state);
+		}
+	});
+var elm$core$Platform$sendToSelf = _Platform_sendToSelf;
+var elm$core$Process$spawn = _Scheduler_spawn;
+var elm$time$Time$setInterval = _Time_setInterval;
+var elm$time$Time$spawnHelp = F3(
+	function (router, intervals, processes) {
+		if (!intervals.b) {
+			return elm$core$Task$succeed(processes);
+		} else {
+			var interval = intervals.a;
+			var rest = intervals.b;
+			var spawnTimer = elm$core$Process$spawn(
+				A2(
+					elm$time$Time$setInterval,
+					interval,
+					A2(elm$core$Platform$sendToSelf, router, interval)));
+			var spawnRest = function (id) {
+				return A3(
+					elm$time$Time$spawnHelp,
+					router,
+					rest,
+					A3(elm$core$Dict$insert, interval, id, processes));
+			};
+			return A2(elm$core$Task$andThen, spawnRest, spawnTimer);
+		}
+	});
+var elm$time$Time$onEffects = F3(
+	function (router, subs, _n0) {
+		var processes = _n0.processes;
+		var rightStep = F3(
+			function (_n6, id, _n7) {
+				var spawns = _n7.a;
+				var existing = _n7.b;
+				var kills = _n7.c;
+				return _Utils_Tuple3(
+					spawns,
+					existing,
+					A2(
+						elm$core$Task$andThen,
+						function (_n5) {
+							return kills;
+						},
+						elm$core$Process$kill(id)));
+			});
+		var newTaggers = A3(elm$core$List$foldl, elm$time$Time$addMySub, elm$core$Dict$empty, subs);
+		var leftStep = F3(
+			function (interval, taggers, _n4) {
+				var spawns = _n4.a;
+				var existing = _n4.b;
+				var kills = _n4.c;
+				return _Utils_Tuple3(
+					A2(elm$core$List$cons, interval, spawns),
+					existing,
+					kills);
+			});
+		var bothStep = F4(
+			function (interval, taggers, id, _n3) {
+				var spawns = _n3.a;
+				var existing = _n3.b;
+				var kills = _n3.c;
+				return _Utils_Tuple3(
+					spawns,
+					A3(elm$core$Dict$insert, interval, id, existing),
+					kills);
+			});
+		var _n1 = A6(
+			elm$core$Dict$merge,
+			leftStep,
+			bothStep,
+			rightStep,
+			newTaggers,
+			processes,
+			_Utils_Tuple3(
+				_List_Nil,
+				elm$core$Dict$empty,
+				elm$core$Task$succeed(_Utils_Tuple0)));
+		var spawnList = _n1.a;
+		var existingDict = _n1.b;
+		var killTask = _n1.c;
+		return A2(
+			elm$core$Task$andThen,
+			function (newProcesses) {
+				return elm$core$Task$succeed(
+					A2(elm$time$Time$State, newTaggers, newProcesses));
+			},
+			A2(
+				elm$core$Task$andThen,
+				function (_n2) {
+					return A3(elm$time$Time$spawnHelp, router, spawnList, existingDict);
+				},
+				killTask));
+	});
+var elm$time$Time$onSelfMsg = F3(
+	function (router, interval, state) {
+		var _n0 = A2(elm$core$Dict$get, interval, state.taggers);
+		if (_n0.$ === 'Nothing') {
+			return elm$core$Task$succeed(state);
+		} else {
+			var taggers = _n0.a;
+			var tellTaggers = function (time) {
+				return elm$core$Task$sequence(
+					A2(
+						elm$core$List$map,
+						function (tagger) {
+							return A2(
+								elm$core$Platform$sendToApp,
+								router,
+								tagger(time));
+						},
+						taggers));
+			};
+			return A2(
+				elm$core$Task$andThen,
+				function (_n1) {
+					return elm$core$Task$succeed(state);
+				},
+				A2(elm$core$Task$andThen, tellTaggers, elm$time$Time$now));
+		}
+	});
+var elm$time$Time$subMap = F2(
+	function (f, _n0) {
+		var interval = _n0.a;
+		var tagger = _n0.b;
+		return A2(
+			elm$time$Time$Every,
+			interval,
+			A2(elm$core$Basics$composeL, f, tagger));
+	});
+_Platform_effectManagers['Time'] = _Platform_createManager(elm$time$Time$init, elm$time$Time$onEffects, elm$time$Time$onSelfMsg, 0, elm$time$Time$subMap);
+var elm$time$Time$subscription = _Platform_leaf('Time');
+var elm$time$Time$every = F2(
+	function (interval, tagger) {
+		return elm$time$Time$subscription(
+			A2(elm$time$Time$Every, interval, tagger));
+	});
+var author$project$Main$subscriptions = function (model) {
+	return elm$core$Platform$Sub$batch(
+		_List_fromArray(
+			[
+				A2(elm$time$Time$every, (60 * 60) * 1000, author$project$Main$SetCurrentTime),
+				A2(
+				elm$time$Time$every,
+				5 * 1000,
+				elm$core$Basics$always(author$project$Main$RetryPolling))
+			]));
+};
+var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
+var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
+var author$project$Main$SearchCards = function (a) {
+	return {$: 'SearchCards', a: a};
+};
+var author$project$Main$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
+var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$form = _VirtualDom_node('form');
+var elm$html$Html$input = _VirtualDom_node('input');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
+var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
+var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
+var elm$html$Html$Events$alwaysStop = function (x) {
+	return _Utils_Tuple2(x, true);
+};
+var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
+	return {$: 'MayStopPropagation', a: a};
+};
+var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var elm$html$Html$Events$stopPropagationOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
+	});
+var elm$json$Json$Decode$at = F2(
+	function (fields, decoder) {
+		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
+	});
+var elm$html$Html$Events$targetValue = A2(
+	elm$json$Json$Decode$at,
+	_List_fromArray(
+		['target', 'value']),
+	elm$json$Json$Decode$string);
+var elm$html$Html$Events$onInput = function (tagger) {
+	return A2(
+		elm$html$Html$Events$stopPropagationOn,
+		'input',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysStop,
+			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
+};
+var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
+	return _Utils_Tuple2(msg, true);
+};
+var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
+	return {$: 'MayPreventDefault', a: a};
+};
+var elm$html$Html$Events$preventDefaultOn = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
+	});
+var elm$html$Html$Events$onSubmit = function (msg) {
+	return A2(
+		elm$html$Html$Events$preventDefaultOn,
+		'submit',
+		A2(
+			elm$json$Json$Decode$map,
+			elm$html$Html$Events$alwaysPreventDefault,
+			elm$json$Json$Decode$succeed(msg)));
+};
+var author$project$Main$viewSearch = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('card-search')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$form,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onSubmit(author$project$Main$SelectAnticipatedCards)
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$input,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$type_('search'),
+								elm$html$Html$Attributes$placeholder('search cards'),
+								elm$html$Html$Attributes$value(model.cardSearch),
+								elm$html$Html$Events$onInput(author$project$Main$SearchCards)
+							]),
+						_List_Nil)
+					]))
+			]));
+};
+var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4 C4.55,4 5,4.45 5,5 C5,5.55 4.55,6 4,6 C3.45,6 3,5.55 3,5 L3,5 Z M11,5 C11,4.45 10.55,4 10,4 C9.45,4 9,4.45 9,5 C9,5.55 9.45,6 10,6 C10.55,6 11,5.55 11,5 L11,5 Z M11,11 C11,10.45 10.55,10 10,10 C9.45,10 9,10.45 9,11 C9,11.55 9.45,12 10,12 C10.55,12 11,11.55 11,11 L11,11 Z M13,1 L5,1 L5,3.17 C5.36,3.36 5.64,3.64 5.83,4 L8.17,4 C8.59,3.22 9.5,2.72 10.51,2.95 C11.26,3.14 11.87,3.75 12.04,4.5 C12.35,5.88 11.32,7.09 9.99,7.09 C9.19,7.09 8.51,6.65 8.16,6 L5.83,6 C5.41,6.8 4.5,7.28 3.49,7.03 C2.76,6.86 2.15,6.25 1.97,5.51 C1.72,4.49 2.2,3.59 3,3.17 L3,1 L1,1 C0.45,1 0,1.45 0,2 L0,14 C0,14.55 0.45,15 1,15 L6,10 L8.17,10 C8.59,9.22 9.5,8.72 10.51,8.95 C11.26,9.14 11.87,9.75 12.04,10.5 C12.35,11.88 11.32,13.09 9.99,13.09 C9.19,13.09 8.51,12.65 8.16,12 L6.99,12 L4,15 L13,15 C13.55,15 14,14.55 14,14 L14,2 C14,1.45 13.55,1 13,1 L13,1 Z';
+var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
+var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var elm$svg$Svg$Attributes$style = _VirtualDom_attribute('style');
+var elm$svg$Svg$Attributes$version = _VirtualDom_attribute('version');
+var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var capitalist$elm_octicons$Octicons$Internal$iconSVG = F5(
+	function (viewBox, name, options, attributes, children) {
+		var style = function () {
+			var _n2 = options.style;
+			if (_n2.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var s = _n2.a;
+				return _List_fromArray(
+					[s]);
+			}
+		}();
+		var margin = function () {
+			var _n1 = options.margin;
+			if (_n1.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var m = _n1.a;
+				return _List_fromArray(
+					['margin: ' + m]);
+			}
+		}();
+		var styles = function () {
+			var _n0 = elm$core$List$concat(
+				_List_fromArray(
+					[style, margin]));
+			if (!_n0.b) {
+				return _List_Nil;
+			} else {
+				var lst = _n0;
+				return _List_fromArray(
+					[
+						elm$svg$Svg$Attributes$style(
+						A2(elm$core$String$join, ';', lst))
+					]);
+			}
+		}();
+		return A2(
+			elm$svg$Svg$svg,
+			elm$core$List$concat(
+				_List_fromArray(
+					[
+						_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$version('1.1'),
+							elm$svg$Svg$Attributes$class(
+							A2(elm$core$Maybe$withDefault, 'octicon ' + name, options._class)),
+							elm$svg$Svg$Attributes$width(
+							elm$core$String$fromInt(options.width)),
+							elm$svg$Svg$Attributes$height(
+							elm$core$String$fromInt(options.height)),
+							elm$svg$Svg$Attributes$viewBox(viewBox)
+						]),
+						attributes,
+						styles
+					])),
+			children);
+	});
+var elm$svg$Svg$path = elm$svg$Svg$trustedNode('path');
+var elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
+var capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
+	function (path, viewBox, octiconName, options) {
+		return A5(
+			capitalist$elm_octicons$Octicons$Internal$iconSVG,
+			viewBox,
+			octiconName,
+			options,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$d(path),
+							elm$svg$Svg$Attributes$fillRule(options.fillRule),
+							elm$svg$Svg$Attributes$fill(options.color)
+						]),
+					_List_Nil)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
+var capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
+var capitalist$elm_octicons$Octicons$gitPullRequest = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
+var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
+var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
+var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
+var capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
+var capitalist$elm_octicons$Octicons$signIn = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$signInPath, '0 0 14 16', 'signIn');
+var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.96,1 L3.5,1 C2.13,1 1,2.13 1,3.5 L1,5.97 C1,6.63 1.27,7.27 1.73,7.74 L7.79,13.8 C8.18,14.19 8.81,14.19 9.2,13.8 L13.79,9.21 C14.18,8.82 14.18,8.19 13.79,7.8 L7.73,1.73 L7.73,1.73 Z M2.38,7.09 C2.07,6.79 1.91,6.39 1.91,5.96 L1.91,3.5 C1.91,2.62 2.63,1.91 3.5,1.91 L5.97,1.91 C6.39,1.91 6.8,2.07 7.1,2.38 L13.24,8.51 L8.51,13.24 L2.38,7.09 L2.38,7.09 Z M3.01,3 L5.01,3 L5.01,5 L3,5 L3,3 L3.01,3 Z';
+var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
+var elm$html$Html$a = _VirtualDom_node('a');
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$html$Html$Attributes$href = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'href',
+		_VirtualDom_noJavaScriptUri(url));
+};
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var author$project$Main$viewNavBar = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('nav-bar')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('nav')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+								elm$html$Html$text('Projects')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/release')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+								elm$html$Html$text('Release')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/pull-requests')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+								elm$html$Html$text('PRs')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/graph')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
+								elm$html$Html$text('Graph')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/labels')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+								elm$html$Html$text('Labels')
+							]))
+					])),
+				function () {
+				var _n0 = model.me;
+				if (_n0.$ === 'Nothing') {
+					return A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('user-info'),
+								elm$html$Html$Attributes$href('/auth/github')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts),
+								elm$html$Html$text('Sign In')
+							]));
+				} else {
+					var user = _n0.a.user;
+					return A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('user-info'),
+								elm$html$Html$Attributes$href(user.url)
+							]),
+						_List_fromArray(
+							[
+								A2(
+								elm$html$Html$img,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('user-avatar'),
+										elm$html$Html$Attributes$src(user.avatar)
+									]),
+								_List_Nil),
+								elm$html$Html$text(user.login)
+							]));
+				}
+			}(),
+				author$project$Main$viewSearch(model)
+			]));
+};
+var author$project$Main$selectStatefulProject = function (project) {
+	var findColumns = function (match) {
+		return A2(
+			elm$core$List$filter,
+			A2(
+				elm$core$Basics$composeL,
+				match,
+				function ($) {
+					return $.name;
+				}),
+			project.columns);
+	};
+	var icebox = findColumns(author$project$Project$detectColumn.icebox);
+	var inFlights = findColumns(author$project$Project$detectColumn.inFlight);
+	var dones = findColumns(author$project$Project$detectColumn.done);
+	var backlogs = findColumns(author$project$Project$detectColumn.backlog);
+	var _n0 = _Utils_Tuple2(
+		backlogs,
+		_Utils_Tuple3(icebox, inFlights, dones));
+	if ((((((_n0.a.b && _n0.b.a.b) && (!_n0.b.a.b.b)) && _n0.b.b.b) && (!_n0.b.b.b.b)) && _n0.b.c.b) && (!_n0.b.c.b.b)) {
+		var bs = _n0.a;
+		var _n1 = _n0.b;
+		var _n2 = _n1.a;
+		var ib = _n2.a;
+		var _n3 = _n1.b;
+		var i = _n3.a;
+		var _n4 = _n1.c;
+		var d = _n4.a;
+		return elm$core$Maybe$Just(
+			{backlogs: bs, done: d, icebox: ib, inFlight: i, project: project});
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var author$project$Colors$gray500 = '#6a737d';
+var author$project$Colors$gray = author$project$Colors$gray500;
+var author$project$Colors$green500 = '#28a745';
+var author$project$Colors$green = author$project$Colors$green500;
+var author$project$Colors$yellow500 = '#ffd33d';
+var author$project$Colors$yellow = author$project$Colors$yellow500;
+var author$project$Main$onlyOpenCards = function (model) {
+	return elm$core$List$filter(
+		function (_n0) {
+			var contentId = _n0.contentId;
+			if (contentId.$ === 'Just') {
+				var id = contentId.a;
+				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
+				if (_n2.$ === 'Just') {
+					var card = _n2.a;
+					return author$project$Card$isOpen(card);
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		});
+};
+var elm$html$Html$span = _VirtualDom_node('span');
+var author$project$Main$viewMetric = F5(
+	function (icon, count, plural, singular, description) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('metric')
+				]),
+			_List_fromArray(
+				[
+					icon,
+					A2(
+					elm$html$Html$span,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('count')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text(
+							elm$core$String$fromInt(count))
+						])),
+					elm$html$Html$text(' '),
+					elm$html$Html$text(
+					(count === 1) ? singular : plural),
+					elm$html$Html$text(' '),
+					elm$html$Html$text(description)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
+var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
+var capitalist$elm_octicons$Octicons$checkPolygon = '12 5 4 13 0 9 1.5 7.5 4 10 10.5 3.5';
+var elm$svg$Svg$polygon = elm$svg$Svg$trustedNode('polygon');
+var elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
+var capitalist$elm_octicons$Octicons$polygonIconWithOptions = F4(
+	function (points, viewBox, octiconName, options) {
+		return A5(
+			capitalist$elm_octicons$Octicons$Internal$iconSVG,
+			viewBox,
+			octiconName,
+			options,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$polygon,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$points(points),
+							elm$svg$Svg$Attributes$fillRule(options.fillRule),
+							elm$svg$Svg$Attributes$fill(options.color)
+						]),
+					_List_Nil)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$check = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$checkPolygon, '0 0 12 16', 'check');
+var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
+var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
+var author$project$Main$viewProject = F2(
+	function (model, _n0) {
+		var project = _n0.project;
+		var backlogs = _n0.backlogs;
+		var inFlight = _n0.inFlight;
+		var done = _n0.done;
+		var cardCount = function (column) {
+			return A2(
+				elm$core$Maybe$withDefault,
+				0,
+				A2(
+					elm$core$Maybe$map,
+					A2(
+						elm$core$Basics$composeL,
+						elm$core$List$length,
+						author$project$Main$onlyOpenCards(model)),
+					A2(elm$core$Dict$get, column.id, model.data.columnCards)));
+		};
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('metrics-item')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$a,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('column-title'),
+							elm$html$Html$Attributes$href('/projects/' + project.name)
+						]),
+					_List_fromArray(
+						[
+							capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+							elm$html$Html$text(project.name)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('metrics')
+						]),
+					_List_fromArray(
+						[
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$book(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$gray})),
+							elm$core$List$sum(
+								A2(elm$core$List$map, cardCount, backlogs)),
+							'stories',
+							'story',
+							'scheduled'),
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$pulse(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$yellow})),
+							cardCount(inFlight),
+							'stories',
+							'story',
+							'in-flight'),
+							A5(
+							author$project$Main$viewMetric,
+							capitalist$elm_octicons$Octicons$check(
+								_Utils_update(
+									author$project$Main$octiconOpts,
+									{color: author$project$Colors$green})),
+							cardCount(done),
+							'stories',
+							'story',
+							'done')
+						]))
+				]));
+	});
+var elm$core$Dict$values = function (dict) {
+	return A3(
+		elm$core$Dict$foldr,
 		F3(
 			function (key, value, valueList) {
 				return A2(elm$core$List$cons, value, valueList);
@@ -11724,246 +15378,153 @@ var elm_community$intdict$IntDict$values = function (dict) {
 		_List_Nil,
 		dict);
 };
-var elm_community$graph$Graph$nodes = A2(
-	elm$core$Basics$composeR,
-	elm_community$graph$Graph$unGraph,
-	A2(
-		elm$core$Basics$composeR,
-		elm_community$intdict$IntDict$values,
-		elm$core$List$map(
-			function ($) {
-				return $.node;
-			})));
-var author$project$Main$graphAllActivityCompare = F3(
-	function (model, a, b) {
-		var latestActivity = function (g) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				elm$core$List$maximum(
-					A2(
-						elm$core$List$map,
-						function (n) {
-							return elm$time$Time$posixToMillis(
-								A2(
-									elm$core$Maybe$withDefault,
-									n.label.value.card.updatedAt,
-									elm$core$List$head(
-										A2(
-											elm$core$List$map,
-											function ($) {
-												return $.createdAt;
-											},
-											elm$core$List$reverse(
-												A2(
-													elm$core$Maybe$withDefault,
-													_List_Nil,
-													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
-						},
-						elm_community$graph$Graph$nodes(g))));
-		};
-		return A2(
-			elm$core$Basics$compare,
-			latestActivity(a.graph),
-			latestActivity(b.graph));
-	});
-var elm_community$graph$Graph$size = A2(elm$core$Basics$composeR, elm_community$graph$Graph$unGraph, elm_community$intdict$IntDict$size);
-var author$project$Main$graphSizeCompare = F2(
-	function (a, b) {
-		var _n0 = A2(
-			elm$core$Basics$compare,
-			elm_community$graph$Graph$size(a.graph),
-			elm_community$graph$Graph$size(b.graph));
-		if (_n0.$ === 'EQ') {
-			var graphScore = A2(
-				elm$core$Basics$composeL,
+var author$project$Main$viewAllProjectsPage = function (model) {
+	var statefulProjects = A2(
+		elm$core$List$filterMap,
+		author$project$Main$selectStatefulProject,
+		elm$core$Dict$values(model.data.projects));
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('page-content')
+			]),
+		_List_fromArray(
+			[
 				A2(
-					elm$core$Basics$composeL,
-					A2(elm$core$List$foldl, elm$core$Basics$add, 0),
-					elm$core$List$map(
-						A2(
-							elm$core$Basics$composeR,
-							function ($) {
-								return $.label;
-							},
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.value;
-								},
-								function ($) {
-									return $.score;
-								})))),
-				elm_community$graph$Graph$nodes);
-			return A2(
-				elm$core$Basics$compare,
-				graphScore(a.graph),
-				graphScore(b.graph));
-		} else {
-			var x = _n0;
-			return x;
-		}
-	});
-var author$project$Main$graphUserActivityCompare = F4(
-	function (model, login, a, b) {
-		var latestUserActivity = function (g) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				elm$core$List$maximum(
-					A2(
-						elm$core$List$map,
-						function (n) {
-							return A2(
-								elm$core$Maybe$withDefault,
-								0,
-								elm$core$List$head(
-									A2(
-										elm$core$List$map,
-										A2(
-											elm$core$Basics$composeR,
-											function ($) {
-												return $.createdAt;
-											},
-											elm$time$Time$posixToMillis),
-										A2(
-											elm$core$List$filter,
-											A2(
-												elm$core$Basics$composeR,
-												function ($) {
-													return $.user;
-												},
-												A2(
-													elm$core$Basics$composeR,
-													elm$core$Maybe$map(
-														function ($) {
-															return $.login;
-														}),
-													elm$core$Basics$eq(
-														elm$core$Maybe$Just(login)))),
-											elm$core$List$reverse(
-												A2(
-													elm$core$Maybe$withDefault,
-													_List_Nil,
-													A2(elm$core$Dict$get, n.label.value.card.id, model.data.actors)))))));
-						},
-						elm_community$graph$Graph$nodes(g))));
-		};
-		return A2(
-			elm$core$Basics$compare,
-			latestUserActivity(a.graph),
-			latestUserActivity(b.graph));
-	});
-var author$project$Card$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var author$project$Card$isUntriaged = function (card) {
-	return elm$core$List$isEmpty(card.cards);
-};
-var author$project$Main$hasLabelAndColor = F4(
-	function (model, name, color, card) {
-		var matchingLabels = A2(
-			elm$core$Dict$filter,
-			F2(
-				function (_n0, l) {
-					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
-				}),
-			model.allLabels);
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return A2(elm$core$Dict$member, a, matchingLabels);
-			},
-			card.labels);
-	});
-var author$project$Main$involvesUser = F3(
-	function (model, login, card) {
-		return A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeR,
-				function ($) {
-					return $.user;
-				},
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+						elm$html$Html$text('Projects')
+					])),
 				A2(
-					elm$core$Basics$composeR,
-					elm$core$Maybe$map(
-						function ($) {
-							return $.login;
-						}),
-					elm$core$Basics$eq(
-						elm$core$Maybe$Just(login)))),
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, card.id, model.data.actors)));
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('projects-list')
+					]),
+				A2(
+					elm$core$List$map,
+					author$project$Main$viewProject(model),
+					statefulProjects))
+			]));
+};
+var elm$core$Basics$min = F2(
+	function (x, y) {
+		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
-var author$project$Main$isInProject = F2(
-	function (name, card) {
-		return A2(
-			elm$core$List$member,
-			name,
-			A2(
-				elm$core$List$map,
+var author$project$Main$graphId = function (_n0) {
+	var graph = _n0.graph;
+	return A3(
+		elm_community$graph$Graph$fold,
+		F2(
+			function (_n1, acc) {
+				var node = _n1.node;
+				return A2(elm$core$Basics$min, node.label.value, acc);
+			}),
+		'',
+		graph);
+};
+var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
+var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
+var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
+var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
+var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
+var author$project$Main$linkPath = F2(
+	function (graph, edge) {
+		var target = function () {
+			var _n1 = A2(
+				elm$core$Maybe$map,
 				A2(
 					elm$core$Basics$composeR,
 					function ($) {
-						return $.project;
+						return $.node;
 					},
 					function ($) {
-						return $.name;
+						return $.label;
 					}),
-				card.cards));
-	});
-var author$project$Main$satisfiesFilter = F3(
-	function (model, filter, card) {
-		switch (filter.$) {
-			case 'ExcludeAllFilter':
-				return false;
-			case 'InProjectFilter':
-				var name = filter.a;
-				return A2(author$project$Main$isInProject, name, card);
-			case 'HasLabelFilter':
-				var label = filter.a;
-				var color = filter.b;
-				return A4(author$project$Main$hasLabelAndColor, model, label, color, card);
-			case 'InvolvesUserFilter':
-				var login = filter.a;
-				return A3(author$project$Main$involvesUser, model, login, card);
-			case 'PullRequestsFilter':
-				return author$project$Card$isPR(card);
-			case 'IssuesFilter':
-				return !author$project$Card$isPR(card);
-			default:
-				return author$project$Card$isUntriaged(card);
-		}
-	});
-var elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			elm$core$List$any,
-			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
-			list);
-	});
-var author$project$Main$satisfiesFilters = F3(
-	function (model, filters, card) {
+				A2(elm_community$graph$Graph$get, edge.to, graph));
+			if (_n1.$ === 'Just') {
+				var x = _n1.a.x;
+				var y = _n1.a.y;
+				return {x: x, y: y};
+			} else {
+				return {x: 0, y: 0};
+			}
+		}();
+		var source = function () {
+			var _n0 = A2(
+				elm$core$Maybe$map,
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.node;
+					},
+					function ($) {
+						return $.label;
+					}),
+				A2(elm_community$graph$Graph$get, edge.from, graph));
+			if (_n0.$ === 'Just') {
+				var x = _n0.a.x;
+				var y = _n0.a.y;
+				return {x: x, y: y};
+			} else {
+				return {x: 0, y: 0};
+			}
+		}();
 		return A2(
-			elm$core$List$all,
-			function (a) {
-				return A3(author$project$Main$satisfiesFilter, model, a, card);
-			},
-			filters);
+			elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					elm$svg$Svg$Attributes$class('graph-edge'),
+					elm$svg$Svg$Attributes$x1(
+					elm$core$String$fromFloat(source.x)),
+					elm$svg$Svg$Attributes$y1(
+					elm$core$String$fromFloat(source.y)),
+					elm$svg$Svg$Attributes$x2(
+					elm$core$String$fromFloat(target.x)),
+					elm$svg$Svg$Attributes$y2(
+					elm$core$String$fromFloat(target.y))
+				]),
+			_List_Nil);
 	});
 var author$project$Main$cardRadiusBase = F2(
 	function (card, _n0) {
 		var incoming = _n0.incoming;
 		var outgoing = _n0.outgoing;
 		return 20 + ((elm_community$intdict$IntDict$size(incoming) / 2) + (elm_community$intdict$IntDict$size(outgoing) * 2));
+	});
+var author$project$Main$cardRadiusWithLabels = F2(
+	function (card, context) {
+		return A2(author$project$Main$cardRadiusBase, card, context) + 3;
+	});
+var author$project$Main$cardRadiusWithoutFlair = F2(
+	function (card, context) {
+		return A2(author$project$Main$cardRadiusWithLabels, card, context);
+	});
+var author$project$Main$flairRadiusBase = 20;
+var author$project$Main$cardRadiusWithFlair = F2(
+	function (card, context) {
+		var reactionCounts = A2(
+			elm$core$List$map,
+			function ($) {
+				return $.count;
+			},
+			card.reactions);
+		var highestFlair = A3(
+			elm$core$List$foldl,
+			F2(
+				function (num, acc) {
+					return A2(elm$core$Basics$max, num, acc);
+				}),
+			0,
+			A2(elm$core$List$cons, card.commentCount, reactionCounts));
+		return (A2(author$project$Main$cardRadiusWithoutFlair, card, context) + author$project$Main$flairRadiusBase) + highestFlair;
 	});
 var elm$core$Basics$pi = _Basics_pi;
 var elm$core$List$repeatHelp = F3(
@@ -11987,23 +15548,6 @@ var elm$core$List$repeat = F2(
 	function (n, value) {
 		return A3(elm$core$List$repeatHelp, _List_Nil, n, value);
 	});
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 'Normal':
-			return 0;
-		case 'MayStopPropagation':
-			return 1;
-		case 'MayPreventDefault':
-			return 2;
-		default:
-			return 3;
-	}
-};
-var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
-var elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var elm$svg$Svg$path = elm$svg$Svg$trustedNode('path');
-var elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
 var elm$core$List$singleton = function (value) {
 	return _List_fromArray(
 		[value]);
@@ -12490,10 +16034,6 @@ var folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty = function (command) {
 };
 var elm$core$Char$toLower = _Char_toLower;
 var elm$core$Char$toUpper = _Char_toUpper;
-var elm$core$String$cons = _String_cons;
-var elm$core$String$fromChar = function (_char) {
-	return A2(elm$core$String$cons, _char, '');
-};
 var folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter = F2(
 	function (mode, character) {
 		if (mode.$ === 'Absolute') {
@@ -12778,10 +16318,6 @@ var folkertdev$one_true_path_experiment$Path$element = F2(
 var elm$core$Basics$acos = _Basics_acos;
 var elm$core$Basics$atan2 = _Basics_atan2;
 var elm$core$Basics$cos = _Basics_cos;
-var elm$core$Basics$min = F2(
-	function (x, y) {
-		return (_Utils_cmp(x, y) < 0) ? x : y;
-	});
 var elm$core$Basics$sin = _Basics_sin;
 var elm$core$Basics$sqrt = _Basics_sqrt;
 var folkertdev$one_true_path_experiment$LowLevel$Command$MoveTo = function (a) {
@@ -13696,17 +17232,6 @@ var elm$core$Array$get = F2(
 			A2(elm$core$Elm$JsArray$unsafeGet, elm$core$Array$bitMask & index, tail)) : elm$core$Maybe$Just(
 			A3(elm$core$Array$getHelp, startShift, index, tree)));
 	});
-var elm$core$Dict$values = function (dict) {
-	return A3(
-		elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2(elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
-var elm$core$List$sortWith = _List_sortWith;
 var elm$core$Tuple$pair = F2(
 	function (a, b) {
 		return _Utils_Tuple2(a, b);
@@ -13837,159 +17362,138 @@ var author$project$Main$cardLabelArcs = F3(
 				},
 				card.labels));
 	});
-var author$project$Main$cardRadiusWithLabels = F2(
-	function (card, context) {
-		return A2(author$project$Main$cardRadiusBase, card, context) + 3;
+var author$project$Card$isBacklog = function (card) {
+	return card.processState.inBacklogColumn;
+};
+var author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
+var author$project$Card$isIcebox = function (card) {
+	return card.processState.inIceboxColumn;
+};
+var author$project$Card$isInFlight = function (card) {
+	return card.processState.inInFlightColumn;
+};
+var author$project$Main$AnticipateCardFromNode = function (a) {
+	return {$: 'AnticipateCardFromNode', a: a};
+};
+var author$project$Main$DeselectCard = function (a) {
+	return {$: 'DeselectCard', a: a};
+};
+var author$project$Main$SelectCard = function (a) {
+	return {$: 'SelectCard', a: a};
+};
+var author$project$Main$UnanticipateCardFromNode = function (a) {
+	return {$: 'UnanticipateCardFromNode', a: a};
+};
+var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
+var elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
 	});
-var author$project$Main$cardRadiusWithoutFlair = F2(
-	function (card, context) {
-		return A2(author$project$Main$cardRadiusWithLabels, card, context);
+var elm$svg$Svg$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var elm$svg$Svg$Events$onMouseOut = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'mouseout',
+		elm$json$Json$Decode$succeed(msg));
+};
+var elm$svg$Svg$Events$onMouseOver = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'mouseover',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Main$viewCardNode = F6(
+	function (card, radii, circle, labels, _n0, state) {
+		var x = _n0.x;
+		var y = _n0.y;
+		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, state.selectedCards);
+		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
+			state.highlightedNode,
+			elm$core$Maybe$Just(card.id));
+		var scale = isHighlighted ? '1.1' : '1';
+		return A2(
+			elm$svg$Svg$g,
+			_List_fromArray(
+				[
+					elm$svg$Svg$Attributes$transform(
+					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
+					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
+					elm$svg$Svg$Events$onMouseOver(
+					author$project$Main$AnticipateCardFromNode(card.id)),
+					elm$svg$Svg$Events$onMouseOut(
+					author$project$Main$UnanticipateCardFromNode(card.id)),
+					elm$svg$Svg$Events$onClick(
+					isSelected ? author$project$Main$DeselectCard(card.id) : author$project$Main$SelectCard(card.id))
+				]),
+			A2(elm$core$List$cons, circle, labels));
 	});
-var author$project$Main$flairRadiusBase = 20;
-var author$project$Main$cardRadiusWithFlair = F2(
-	function (card, context) {
-		var reactionCounts = A2(
-			elm$core$List$map,
-			function ($) {
-				return $.count;
-			},
-			card.reactions);
-		var highestFlair = A3(
-			elm$core$List$foldl,
-			F2(
-				function (num, acc) {
-					return A2(elm$core$Basics$max, num, acc);
-				}),
-			0,
-			A2(elm$core$List$cons, card.commentCount, reactionCounts));
-		return (A2(author$project$Main$cardRadiusWithoutFlair, card, context) + author$project$Main$flairRadiusBase) + highestFlair;
+var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
+var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
+var elm$svg$Svg$text_ = elm$svg$Svg$trustedNode('text');
+var elm$svg$Svg$Attributes$alignmentBaseline = _VirtualDom_attribute('alignment-baseline');
+var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
+var elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
+var author$project$Main$viewCardCircle = F4(
+	function (card, context, pos, state) {
+		var radii = {
+			base: A2(author$project$Main$cardRadiusBase, card, context),
+			withFlair: A2(author$project$Main$cardRadiusWithFlair, card, context),
+			withoutFlair: A2(author$project$Main$cardRadiusWithoutFlair, card, context)
+		};
+		var labelArcs = A3(author$project$Main$cardLabelArcs, state.allLabels, card, context);
+		var circle = A2(
+			elm$svg$Svg$g,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$circle,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$r(
+							elm$core$String$fromFloat(radii.base)),
+							elm$svg$Svg$Attributes$fill('#fff')
+						]),
+					_List_Nil),
+					A2(
+					elm$svg$Svg$text_,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$textAnchor('middle'),
+							elm$svg$Svg$Attributes$alignmentBaseline('middle'),
+							elm$svg$Svg$Attributes$class('issue-number')
+						]),
+					_List_fromArray(
+						[
+							elm$svg$Svg$text(
+							'#' + elm$core$String$fromInt(card.number))
+						]))
+				]));
+		return A6(author$project$Main$viewCardNode, card, radii, circle, labelArcs, pos, state);
 	});
-var author$project$Colors$green500 = '#28a745';
-var author$project$Colors$green = author$project$Colors$green500;
 var author$project$Colors$orange500 = '#f66a0a';
 var author$project$Colors$orange = author$project$Colors$orange500;
 var author$project$Colors$purple500 = '#6f42c1';
 var author$project$Colors$purple = author$project$Colors$purple500;
 var author$project$Colors$red500 = '#d73a49';
 var author$project$Colors$red = author$project$Colors$red500;
-var author$project$Colors$yellow500 = '#ffd33d';
-var author$project$Colors$yellow = author$project$Colors$yellow500;
 var author$project$Main$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
-var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
-var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
 var capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
-var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
-var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var elm$svg$Svg$Attributes$style = _VirtualDom_attribute('style');
-var elm$svg$Svg$Attributes$version = _VirtualDom_attribute('version');
-var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
-var capitalist$elm_octicons$Octicons$Internal$iconSVG = F5(
-	function (viewBox, name, options, attributes, children) {
-		var style = function () {
-			var _n2 = options.style;
-			if (_n2.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var s = _n2.a;
-				return _List_fromArray(
-					[s]);
-			}
-		}();
-		var margin = function () {
-			var _n1 = options.margin;
-			if (_n1.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var m = _n1.a;
-				return _List_fromArray(
-					['margin: ' + m]);
-			}
-		}();
-		var styles = function () {
-			var _n0 = elm$core$List$concat(
-				_List_fromArray(
-					[style, margin]));
-			if (!_n0.b) {
-				return _List_Nil;
-			} else {
-				var lst = _n0;
-				return _List_fromArray(
-					[
-						elm$svg$Svg$Attributes$style(
-						A2(elm$core$String$join, ';', lst))
-					]);
-			}
-		}();
-		return A2(
-			elm$svg$Svg$svg,
-			elm$core$List$concat(
-				_List_fromArray(
-					[
-						_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$version('1.1'),
-							elm$svg$Svg$Attributes$class(
-							A2(elm$core$Maybe$withDefault, 'octicon ' + name, options._class)),
-							elm$svg$Svg$Attributes$width(
-							elm$core$String$fromInt(options.width)),
-							elm$svg$Svg$Attributes$height(
-							elm$core$String$fromInt(options.height)),
-							elm$svg$Svg$Attributes$viewBox(viewBox)
-						]),
-						attributes,
-						styles
-					])),
-			children);
-	});
-var elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
-var capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
-	function (path, viewBox, octiconName, options) {
-		return A5(
-			capitalist$elm_octicons$Octicons$Internal$iconSVG,
-			viewBox,
-			octiconName,
-			options,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$path,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$d(path),
-							elm$svg$Svg$Attributes$fillRule(options.fillRule),
-							elm$svg$Svg$Attributes$fill(options.color)
-						]),
-					_List_Nil)
-				]));
-	});
 var capitalist$elm_octicons$Octicons$alert = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$alertPath, '0 0 16 16', 'alert');
-var capitalist$elm_octicons$Octicons$checkPolygon = '12 5 4 13 0 9 1.5 7.5 4 10 10.5 3.5';
-var elm$svg$Svg$polygon = elm$svg$Svg$trustedNode('polygon');
-var elm$svg$Svg$Attributes$points = _VirtualDom_attribute('points');
-var capitalist$elm_octicons$Octicons$polygonIconWithOptions = F4(
-	function (points, viewBox, octiconName, options) {
-		return A5(
-			capitalist$elm_octicons$Octicons$Internal$iconSVG,
-			viewBox,
-			octiconName,
-			options,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$polygon,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$points(points),
-							elm$svg$Svg$Attributes$fillRule(options.fillRule),
-							elm$svg$Svg$Attributes$fill(options.color)
-						]),
-					_List_Nil)
-				]));
-	});
-var capitalist$elm_octicons$Octicons$check = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$checkPolygon, '0 0 12 16', 'check');
 var capitalist$elm_octicons$Octicons$commentPath = 'M14,1 L2,1 C1.45,1 1,1.45 1,2 L1,10 C1,10.55 1.45,11 2,11 L4,11 L4,14.5 L7.5,11 L14,11 C14.55,11 15,10.55 15,10 L15,2 C15,1.45 14.55,1 14,1 L14,1 Z M14,10 L7,10 L5,12 L5,10 L2,10 L2,2 L14,2 L14,10 L14,10 Z';
 var capitalist$elm_octicons$Octicons$comment = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$commentPath, '0 0 16 16', 'comment');
 var capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
@@ -14000,27 +17504,7 @@ var capitalist$elm_octicons$Octicons$questionPath = 'M6,10 L8,10 L8,12 L6,12 L6,
 var capitalist$elm_octicons$Octicons$question = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$questionPath, '0 0 14 16', 'question');
 var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
 var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
-var elm$html$Html$img = _VirtualDom_node('img');
-var elm$html$Html$span = _VirtualDom_node('span');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
 var elm$svg$Svg$foreignObject = elm$svg$Svg$trustedNode('foreignObject');
-var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
-var elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var author$project$Main$reactionFlairArcs = F3(
 	function (reviews, card, context) {
 		var reactionTypeEmoji = function (type_) {
@@ -14283,94 +17767,6 @@ var author$project$Main$reactionFlairArcs = F3(
 							]));
 				}));
 	});
-var author$project$Card$isBacklog = function (card) {
-	return card.processState.inBacklogColumn;
-};
-var author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
-};
-var author$project$Card$isIcebox = function (card) {
-	return card.processState.inIceboxColumn;
-};
-var author$project$Card$isInFlight = function (card) {
-	return card.processState.inInFlightColumn;
-};
-var author$project$Main$AnticipateCardFromNode = function (a) {
-	return {$: 'AnticipateCardFromNode', a: a};
-};
-var author$project$Main$DeselectCard = function (a) {
-	return {$: 'DeselectCard', a: a};
-};
-var author$project$Main$SelectCard = function (a) {
-	return {$: 'SelectCard', a: a};
-};
-var author$project$Main$UnanticipateCardFromNode = function (a) {
-	return {$: 'UnanticipateCardFromNode', a: a};
-};
-var elm$core$Set$member = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return A2(elm$core$Dict$member, key, dict);
-	});
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var elm$svg$Svg$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
-var elm$svg$Svg$Events$onMouseOut = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'mouseout',
-		elm$json$Json$Decode$succeed(msg));
-};
-var elm$svg$Svg$Events$onMouseOver = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'mouseover',
-		elm$json$Json$Decode$succeed(msg));
-};
-var y0hy0h$ordered_containers$OrderedSet$member = F2(
-	function (key, _n0) {
-		var dict = _n0.b;
-		return A2(elm$core$Dict$member, key, dict);
-	});
-var author$project$Main$viewCardNode = F6(
-	function (card, radii, circle, labels, _n0, state) {
-		var x = _n0.x;
-		var y = _n0.y;
-		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, state.selectedCards);
-		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
-			state.highlightedNode,
-			elm$core$Maybe$Just(card.id));
-		var scale = isHighlighted ? '1.1' : '1';
-		return A2(
-			elm$svg$Svg$g,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$transform(
-					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
-					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
-					elm$svg$Svg$Events$onMouseOver(
-					author$project$Main$AnticipateCardFromNode(card.id)),
-					elm$svg$Svg$Events$onMouseOut(
-					author$project$Main$UnanticipateCardFromNode(card.id)),
-					elm$svg$Svg$Events$onClick(
-					isSelected ? author$project$Main$DeselectCard(card.id) : author$project$Main$SelectCard(card.id))
-				]),
-			A2(elm$core$List$cons, circle, labels));
-	});
 var author$project$Main$activityClass = F2(
 	function (now, date) {
 		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
@@ -14397,9 +17793,6 @@ var author$project$Main$lastActivityIsByUser = F3(
 			return false;
 		}
 	});
-var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
-var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
-var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var author$project$Main$viewCardNodeFlair = F5(
 	function (card, radii, flair, _n0, state) {
 		var x = _n0.x;
@@ -14448,3496 +17841,68 @@ var author$project$Main$viewCardNodeFlair = F5(
 				_List_fromArray(
 					[anticipatedHalo])));
 	});
-var elm$svg$Svg$text_ = elm$svg$Svg$trustedNode('text');
-var elm$svg$Svg$Attributes$alignmentBaseline = _VirtualDom_attribute('alignment-baseline');
-var elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
-var author$project$Main$cardNode = F3(
-	function (model, card, context) {
+var author$project$Main$viewCardFlair = F4(
+	function (card, context, pos, state) {
 		var radii = {
 			base: A2(author$project$Main$cardRadiusBase, card, context),
 			withFlair: A2(author$project$Main$cardRadiusWithFlair, card, context),
 			withoutFlair: A2(author$project$Main$cardRadiusWithoutFlair, card, context)
 		};
-		var labelArcs = A3(author$project$Main$cardLabelArcs, model.allLabels, card, context);
 		var flairArcs = A3(
 			author$project$Main$reactionFlairArcs,
 			A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
-				A2(elm$core$Dict$get, card.id, model.data.reviewers)),
+				A2(elm$core$Dict$get, card.id, state.reviewers)),
 			card,
 			context);
-		var circle = A2(
-			elm$svg$Svg$g,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$circle,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$r(
-							elm$core$String$fromFloat(radii.base)),
-							elm$svg$Svg$Attributes$fill('#fff')
-						]),
-					_List_Nil),
-					A2(
-					elm$svg$Svg$text_,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$textAnchor('middle'),
-							elm$svg$Svg$Attributes$alignmentBaseline('middle'),
-							elm$svg$Svg$Attributes$class('issue-number')
-						]),
-					_List_fromArray(
-						[
-							elm$svg$Svg$text(
-							'#' + elm$core$String$fromInt(card.number))
-						]))
-				]));
-		return {
-			bounds: function (_n0) {
-				var x = _n0.x;
-				var y = _n0.y;
-				return {x1: x - radii.withFlair, x2: x + radii.withFlair, y1: y - radii.withFlair, y2: y + radii.withFlair};
-			},
-			card: card,
-			score: card.score,
-			viewLower: A3(author$project$Main$viewCardNodeFlair, card, radii, flairArcs),
-			viewUpper: A4(author$project$Main$viewCardNode, card, radii, circle, labelArcs)
-		};
+		return A5(author$project$Main$viewCardNodeFlair, card, radii, flairArcs, pos, state);
 	});
-var author$project$Main$toCardNode = F3(
-	function (model, card, nc) {
-		return {
-			incoming: nc.incoming,
-			node: {
-				id: nc.node.id,
-				label: {
-					id: nc.node.label.id,
-					size: nc.node.label.size,
-					value: A3(
-						author$project$Main$cardNode,
-						model,
-						card,
-						{incoming: nc.incoming, outgoing: nc.outgoing}),
-					vx: nc.node.label.vx,
-					vy: nc.node.label.vy,
-					x: nc.node.label.x,
-					y: nc.node.label.y
-				}
-			},
-			outgoing: nc.outgoing
-		};
-	});
-var elm_community$graph$Graph$get = function (nodeId) {
-	return A2(
-		elm$core$Basics$composeR,
-		elm_community$graph$Graph$unGraph,
-		elm_community$intdict$IntDict$get(nodeId));
-};
-var elm_community$intdict$IntDict$findMax = function (dict) {
-	findMax:
-	while (true) {
-		switch (dict.$) {
-			case 'Empty':
-				return elm$core$Maybe$Nothing;
-			case 'Leaf':
-				var l = dict.a;
-				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.key, l.value));
-			default:
-				var i = dict.a;
-				var $temp$dict = i.right;
-				dict = $temp$dict;
-				continue findMax;
-		}
-	}
-};
-var elm_community$intdict$IntDict$findMin = function (dict) {
-	findMin:
-	while (true) {
-		switch (dict.$) {
-			case 'Empty':
-				return elm$core$Maybe$Nothing;
-			case 'Leaf':
-				var l = dict.a;
-				return elm$core$Maybe$Just(
-					_Utils_Tuple2(l.key, l.value));
-			default:
-				var i = dict.a;
-				var $temp$dict = i.left;
-				dict = $temp$dict;
-				continue findMin;
-		}
-	}
-};
-var elm_community$graph$Graph$nodeIdRange = function (graph) {
-	return A2(
-		elm$core$Maybe$andThen,
-		function (_n0) {
-			var min = _n0.a;
-			return A2(
-				elm$core$Maybe$andThen,
-				function (_n1) {
-					var max = _n1.a;
-					return elm$core$Maybe$Just(
-						_Utils_Tuple2(min, max));
-				},
-				elm_community$intdict$IntDict$findMax(
-					elm_community$graph$Graph$unGraph(graph)));
-		},
-		elm_community$intdict$IntDict$findMin(
-			elm_community$graph$Graph$unGraph(graph)));
-};
-var elm_community$graph$Graph$remove = F2(
-	function (nodeId, graph) {
-		return A3(
-			elm_community$graph$Graph$update,
-			nodeId,
-			elm$core$Basics$always(elm$core$Maybe$Nothing),
-			graph);
-	});
-var elm_community$graph$Graph$fold = F3(
-	function (f, acc, graph) {
-		var go = F2(
-			function (acc1, graph1) {
-				go:
-				while (true) {
-					var maybeContext = A2(
-						elm$core$Maybe$andThen,
-						function (id) {
-							return A2(elm_community$graph$Graph$get, id, graph);
-						},
-						A2(
-							elm$core$Maybe$map,
-							elm$core$Tuple$first,
-							elm_community$graph$Graph$nodeIdRange(graph1)));
-					if (maybeContext.$ === 'Just') {
-						var ctx = maybeContext.a;
-						var $temp$acc1 = A2(f, ctx, acc1),
-							$temp$graph1 = A2(elm_community$graph$Graph$remove, ctx.node.id, graph1);
-						acc1 = $temp$acc1;
-						graph1 = $temp$graph1;
-						continue go;
-					} else {
-						return acc1;
-					}
-				}
-			});
-		return A2(go, acc, graph);
-	});
-var author$project$Main$computeGraph = function (model) {
-	var sortFunc = function () {
-		var _n3 = model.graphSort;
-		switch (_n3.$) {
-			case 'ImpactSort':
-				return author$project$Main$graphSizeCompare;
-			case 'UserActivitySort':
-				var login = _n3.a;
-				return A2(author$project$Main$graphUserActivityCompare, model, login);
-			default:
-				return author$project$Main$graphAllActivityCompare(model);
-		}
-	}();
-	var baseState = author$project$Main$baseGraphState(model);
-	var allFilters = function () {
-		var _n2 = model.baseGraphFilter;
-		if (_n2.$ === 'Just') {
-			var f = _n2.a;
-			return A2(elm$core$List$cons, f, model.graphFilters);
-		} else {
-			return model.graphFilters;
-		}
-	}();
-	var filterFunc = A2(
-		elm$core$Basics$composeR,
-		function ($) {
-			return $.graph;
-		},
-		A2(
-			elm_community$graph$Graph$fold,
-			F2(
-				function (_n1, matches) {
-					var node = _n1.node;
-					return matches || A3(author$project$Main$satisfiesFilters, model, allFilters, node.label.value.card);
-				}),
-			false));
-	var addNode = F2(
-		function (nc, acc) {
-			var _n0 = A2(elm$core$Dict$get, nc.node.label.value, model.allCards);
-			if (_n0.$ === 'Just') {
-				var card = _n0.a;
-				return A2(
-					elm_community$graph$Graph$insert,
-					A3(author$project$Main$toCardNode, model, card, nc),
-					acc);
-			} else {
-				return A3(author$project$Log$debug, 'card not found', nc.node.label.value, acc);
-			}
-		});
-	var graphs = A2(
-		elm$core$List$map,
-		function (fg) {
-			return {
-				graph: A3(elm_community$graph$Graph$fold, addNode, elm_community$graph$Graph$empty, fg.graph),
-				simulation: fg.simulation
-			};
-		},
-		model.graphs);
-	return _Utils_update(
-		model,
-		{
-			cardGraphs: A2(
-				elm$core$List$map,
-				function (g) {
-					return _Utils_Tuple2(baseState, g);
-				},
-				elm$core$List$reverse(
-					A2(
-						elm$core$List$sortWith,
-						sortFunc,
-						A2(elm$core$List$filter, filterFunc, graphs))))
-		});
-};
-var elm$core$Dict$isEmpty = function (dict) {
-	if (dict.$ === 'RBEmpty_elm_builtin') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var elm$core$Set$isEmpty = function (_n0) {
-	var dict = _n0.a;
-	return elm$core$Dict$isEmpty(dict);
-};
-var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
-	return _Utils_eq(oset, y0hy0h$ordered_containers$OrderedSet$empty);
-};
-var author$project$Main$isBaseGraphState = F2(
-	function (model, state) {
-		return _Utils_eq(state.currentTime, model.currentTime) && (_Utils_eq(state.me, model.me) && (_Utils_eq(state.dataIndex, model.dataIndex) && (elm$core$Set$isEmpty(state.anticipatedCards) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.selectedCards) && _Utils_eq(state.highlightedNode, elm$core$Maybe$Nothing)))));
-	});
-var author$project$Main$computeGraphState = function (model) {
-	var newState = {anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, highlightedNode: model.highlightedNode, me: model.me, selectedCards: model.selectedCards};
-	var affectedByState = function (_n2) {
-		var graph = _n2.graph;
-		return A3(
-			elm_community$graph$Graph$fold,
-			F2(
-				function (_n1, affected) {
-					var node = _n1.node;
-					if (affected) {
-						return true;
-					} else {
-						var id = node.label.value.card.id;
-						return A2(y0hy0h$ordered_containers$OrderedSet$member, id, newState.selectedCards) || (A2(elm$core$Set$member, id, newState.anticipatedCards) || _Utils_eq(
-							newState.highlightedNode,
-							elm$core$Maybe$Just(id)));
-					}
-				}),
-			false,
-			graph);
-	};
-	return _Utils_update(
-		model,
-		{
-			cardGraphs: A2(
-				elm$core$List$map,
-				function (_n0) {
-					var s = _n0.a;
-					var g = _n0.b;
-					return affectedByState(g) ? _Utils_Tuple2(newState, g) : (A2(author$project$Main$isBaseGraphState, model, s) ? _Utils_Tuple2(s, g) : _Utils_Tuple2(
-						author$project$Main$baseGraphState(model),
-						g));
-				},
-				model.cardGraphs)
-		});
-};
-var author$project$GitHubGraph$encodeLabelPatch = F2(
-	function (name, color) {
-		return elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'name',
-					elm$json$Json$Encode$string(name)),
-					_Utils_Tuple2(
-					'color',
-					elm$json$Json$Encode$string(color))
-				]));
-	});
-var author$project$GitHubGraph$createRepoLabel = F4(
-	function (token, repo, name, color) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$post('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + '/labels'))))))));
-	});
-var author$project$Main$LabelChanged = F2(
-	function (a, b) {
-		return {$: 'LabelChanged', a: a, b: b};
-	});
-var author$project$Main$createLabel = F3(
-	function (model, repo, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A4(author$project$GitHubGraph$createRepoLabel, token, repo, label.name, label.color));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var lukewestby$elm_http_builder$HttpBuilder$delete = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('DELETE');
-var author$project$GitHubGraph$deleteRepoLabel = F3(
-	function (token, repo, name) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
-					lukewestby$elm_http_builder$HttpBuilder$delete('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + name))))))));
-	});
-var author$project$Main$deleteLabel = F3(
-	function (model, repo, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A3(author$project$GitHubGraph$deleteRepoLabel, token, repo, label.name));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$Drag$land = function (model) {
-	if (model.$ === 'Dropped') {
-		var state = model.a;
-		return author$project$Drag$Dropped(
-			_Utils_update(
-				state,
-				{landed: true}));
-	} else {
-		return model;
-	}
-};
-var author$project$Main$finishProjectDragRefresh = function (model) {
-	var updateContent = F2(
-		function (content, m) {
-			var data = m.data;
-			if (content.$ === 'IssueCardContent') {
-				var issue = content.a;
-				return _Utils_update(
-					m,
-					{
-						allCards: A3(
-							elm$core$Dict$insert,
-							issue.id,
-							author$project$Card$fromIssue(issue),
-							m.allCards),
-						data: _Utils_update(
-							data,
-							{
-								issues: A3(elm$core$Dict$insert, issue.id, issue, data.issues)
-							})
-					});
-			} else {
-				var pr = content.a;
-				return _Utils_update(
-					m,
-					{
-						allCards: A3(
-							elm$core$Dict$insert,
-							pr.id,
-							author$project$Card$fromPR(pr),
-							m.allCards),
-						data: _Utils_update(
-							data,
-							{
-								prs: A3(elm$core$Dict$insert, pr.id, pr, data.prs)
-							})
-					});
-			}
-		});
-	var updateColumn = F3(
-		function (id, cards, m) {
-			var data = m.data;
-			return _Utils_update(
-				m,
-				{
-					data: _Utils_update(
-						data,
-						{
-							columnCards: A3(elm$core$Dict$insert, id, cards, data.columnCards)
-						})
-				});
-		});
-	var _n0 = model.projectDragRefresh;
-	if (_n0.$ === 'Nothing') {
-		return model;
-	} else {
-		var pdr = _n0.a;
-		var _n1 = _Utils_Tuple2(
-			_Utils_Tuple3(pdr.contentId, pdr.content, pdr.sourceId),
-			_Utils_Tuple3(pdr.sourceCards, pdr.targetId, pdr.targetCards));
-		_n1$6:
-		while (true) {
-			if (_n1.a.a.$ === 'Just') {
-				if (_n1.a.b.$ === 'Just') {
-					if (_n1.a.c.$ === 'Nothing') {
-						if (((_n1.b.a.$ === 'Nothing') && (_n1.b.b.$ === 'Just')) && (_n1.b.c.$ === 'Just')) {
-							var _n4 = _n1.a;
-							var c = _n4.b.a;
-							var _n5 = _n4.c;
-							var _n6 = _n1.b;
-							var _n7 = _n6.a;
-							var tid = _n6.b.a;
-							var tcs = _n6.c.a;
-							return author$project$Main$computeGraph(
-								A3(
-									updateColumn,
-									tid,
-									tcs,
-									A2(
-										updateContent,
-										c,
-										_Utils_update(
-											model,
-											{
-												projectDrag: author$project$Drag$complete(model.projectDrag)
-											}))));
-						} else {
-							break _n1$6;
-						}
-					} else {
-						if ((_n1.b.b.$ === 'Just') && (_n1.b.c.$ === 'Just')) {
-							if (_n1.b.a.$ === 'Just') {
-								var _n2 = _n1.a;
-								var c = _n2.b.a;
-								var sid = _n2.c.a;
-								var _n3 = _n1.b;
-								var scs = _n3.a.a;
-								var tid = _n3.b.a;
-								var tcs = _n3.c.a;
-								return author$project$Main$computeGraph(
-									A3(
-										updateColumn,
-										tid,
-										tcs,
-										A3(
-											updateColumn,
-											sid,
-											scs,
-											A2(
-												updateContent,
-												c,
-												_Utils_update(
-													model,
-													{
-														projectDrag: author$project$Drag$complete(model.projectDrag)
-													})))));
-							} else {
-								var _n8 = _n1.a;
-								var c = _n8.b.a;
-								var _n9 = _n1.b;
-								var tid = _n9.b.a;
-								var tcs = _n9.c.a;
-								return A3(
-									updateColumn,
-									tid,
-									tcs,
-									A2(
-										updateContent,
-										c,
-										_Utils_update(
-											model,
-											{
-												projectDrag: author$project$Drag$land(model.projectDrag)
-											})));
-							}
-						} else {
-							break _n1$6;
-						}
-					}
-				} else {
-					break _n1$6;
-				}
-			} else {
-				if (_n1.a.b.$ === 'Nothing') {
-					if (_n1.a.c.$ === 'Nothing') {
-						if (((_n1.b.a.$ === 'Nothing') && (_n1.b.b.$ === 'Just')) && (_n1.b.c.$ === 'Just')) {
-							var _n14 = _n1.a;
-							var _n15 = _n14.a;
-							var _n16 = _n14.b;
-							var _n17 = _n14.c;
-							var _n18 = _n1.b;
-							var _n19 = _n18.a;
-							var tid = _n18.b.a;
-							var tcs = _n18.c.a;
-							return A3(
-								updateColumn,
-								tid,
-								tcs,
-								_Utils_update(
-									model,
-									{
-										projectDrag: author$project$Drag$complete(model.projectDrag)
-									}));
-						} else {
-							break _n1$6;
-						}
-					} else {
-						if ((_n1.b.b.$ === 'Just') && (_n1.b.c.$ === 'Just')) {
-							if (_n1.b.a.$ === 'Just') {
-								var _n10 = _n1.a;
-								var _n11 = _n10.a;
-								var _n12 = _n10.b;
-								var sid = _n10.c.a;
-								var _n13 = _n1.b;
-								var scs = _n13.a.a;
-								var tid = _n13.b.a;
-								var tcs = _n13.c.a;
-								return A3(
-									updateColumn,
-									tid,
-									tcs,
-									A3(
-										updateColumn,
-										sid,
-										scs,
-										_Utils_update(
-											model,
-											{
-												projectDrag: author$project$Drag$complete(model.projectDrag)
-											})));
-							} else {
-								var _n20 = _n1.a;
-								var _n21 = _n20.a;
-								var _n22 = _n20.b;
-								var _n23 = _n1.b;
-								var tid = _n23.b.a;
-								var tcs = _n23.c.a;
-								return A3(
-									updateColumn,
-									tid,
-									tcs,
-									_Utils_update(
-										model,
-										{
-											projectDrag: author$project$Drag$land(model.projectDrag)
-										}));
-							}
-						} else {
-							break _n1$6;
-						}
-					}
-				} else {
-					break _n1$6;
-				}
-			}
-		}
-		return model;
-	}
-};
-var elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
-var elm$core$String$repeatHelp = F3(
-	function (n, chunk, result) {
-		return (n <= 0) ? result : A3(
-			elm$core$String$repeatHelp,
-			n >> 1,
-			_Utils_ap(chunk, chunk),
-			(!(n & 1)) ? result : _Utils_ap(result, chunk));
-	});
-var elm$core$String$repeat = F2(
-	function (n, chunk) {
-		return A3(elm$core$String$repeatHelp, n, chunk, '');
-	});
-var elm$core$String$padLeft = F3(
-	function (n, _char, string) {
-		return _Utils_ap(
-			A2(
-				elm$core$String$repeat,
-				n - elm$core$String$length(string),
-				elm$core$String$fromChar(_char)),
-			string);
-	});
-var elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var elm$random$Random$next = function (_n0) {
-	var state0 = _n0.a;
-	var incr = _n0.b;
-	return A2(elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
-var elm$random$Random$initialSeed = function (x) {
-	var _n0 = elm$random$Random$next(
-		A2(elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _n0.a;
-	var incr = _n0.b;
-	var state2 = (state1 + x) >>> 0;
-	return elm$random$Random$next(
-		A2(elm$random$Random$Seed, state2, incr));
-};
-var elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var elm$random$Random$peel = function (_n0) {
-	var state = _n0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var elm$random$Random$int = F2(
-	function (a, b) {
-		return elm$random$Random$Generator(
-			function (seed0) {
-				var _n0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _n0.a;
-				var hi = _n0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & elm$random$Random$peel(seed0)) >>> 0) + lo,
-						elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = elm$random$Random$peel(seed);
-							var seedN = elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var elm$random$Random$step = F2(
-	function (_n0, seed) {
-		var generator = _n0.a;
-		return generator(seed);
-	});
-var elm$core$Char$fromCode = _Char_fromCode;
-var fredcy$elm_parseint$ParseInt$charFromInt = function (i) {
-	return (i < 10) ? elm$core$Char$fromCode(
-		i + elm$core$Char$toCode(
-			_Utils_chr('0'))) : ((i < 36) ? elm$core$Char$fromCode(
-		(i - 10) + elm$core$Char$toCode(
-			_Utils_chr('A'))) : _Utils_chr('?'));
-};
-var fredcy$elm_parseint$ParseInt$toRadixUnsafe = F2(
-	function (radix, i) {
-		return (_Utils_cmp(i, radix) < 0) ? elm$core$String$fromChar(
-			fredcy$elm_parseint$ParseInt$charFromInt(i)) : _Utils_ap(
-			A2(fredcy$elm_parseint$ParseInt$toRadixUnsafe, radix, (i / radix) | 0),
-			elm$core$String$fromChar(
-				fredcy$elm_parseint$ParseInt$charFromInt(
-					A2(elm$core$Basics$modBy, radix, i))));
-	});
-var fredcy$elm_parseint$ParseInt$toHex = fredcy$elm_parseint$ParseInt$toRadixUnsafe(16);
-var author$project$Main$generateColor = function (seed) {
-	var _n0 = A2(
-		elm$random$Random$step,
-		A2(elm$random$Random$int, 0, 16777215),
-		elm$random$Random$initialSeed(seed));
-	var randomColor = _n0.a;
-	return A3(
-		elm$core$String$padLeft,
-		6,
-		_Utils_chr('0'),
-		fredcy$elm_parseint$ParseInt$toHex(randomColor));
-};
-var author$project$Main$labelKey = function (label) {
-	return _Utils_Tuple2(
-		label.name,
-		elm$core$String$toLower(label.color));
-};
-var author$project$Main$matchesLabel = F2(
-	function (sl, l) {
-		return _Utils_eq(l.name, sl.name) && _Utils_eq(
-			elm$core$String$toLower(l.color),
-			elm$core$String$toLower(sl.color));
-	});
-var author$project$Main$moveCard = F3(
-	function (model, _n0, cardId) {
-		var columnId = _n0.columnId;
-		var afterId = _n0.afterId;
-		var _n1 = model.me;
-		if (_n1.$ === 'Just') {
-			var token = _n1.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$CardMoved(columnId),
-				A4(author$project$GitHubGraph$moveCardAfter, token, columnId, cardId, afterId));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var elm$core$Result$toMaybe = function (result) {
-	if (result.$ === 'Ok') {
-		var v = result.a;
-		return elm$core$Maybe$Just(v);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$Main$randomizeColor = function (label) {
-	var currentColor = A2(
-		elm$core$Maybe$withDefault,
-		0,
-		elm$core$Result$toMaybe(
-			fredcy$elm_parseint$ParseInt$parseIntHex(label.color)));
-	var randomHex = author$project$Main$generateColor(currentColor);
-	return _Utils_update(
-		label,
-		{color: randomHex});
-};
-var author$project$GitHubGraph$removeIssueLabel = F3(
-	function (token, issue, name) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
-					lukewestby$elm_http_builder$HttpBuilder$delete(
-						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
-	});
-var author$project$Main$removeIssueLabel = F3(
-	function (model, issue, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$IssueRefreshed)),
-				A3(author$project$GitHubGraph$removeIssueLabel, token, issue, label));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$GitHubGraph$removePullRequestLabel = F3(
-	function (token, issue, name) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
-					lukewestby$elm_http_builder$HttpBuilder$delete(
-						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
-	});
-var author$project$Main$removePullRequestLabel = F3(
-	function (model, pr, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$PullRequestRefreshed)),
-				A3(author$project$GitHubGraph$removePullRequestLabel, token, pr, label));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
-var author$project$Main$BouncePage = {$: 'BouncePage'};
-var author$project$Main$LabelsPage = {$: 'LabelsPage'};
-var author$project$Main$ProjectPage = function (a) {
-	return {$: 'ProjectPage', a: a};
-};
-var author$project$Main$PullRequestsPage = {$: 'PullRequestsPage'};
-var author$project$Main$PullRequestsRepoPage = function (a) {
-	return {$: 'PullRequestsRepoPage', a: a};
-};
-var author$project$Main$ReleasePage = {$: 'ReleasePage'};
-var author$project$Main$ReleaseRepoPage = function (a) {
-	return {$: 'ReleaseRepoPage', a: a};
-};
-var elm$url$Url$Parser$Parser = function (a) {
-	return {$: 'Parser', a: a};
-};
-var elm$url$Url$Parser$State = F5(
-	function (visited, unvisited, params, frag, value) {
-		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
-	});
-var elm$url$Url$Parser$mapState = F2(
-	function (func, _n0) {
-		var visited = _n0.visited;
-		var unvisited = _n0.unvisited;
-		var params = _n0.params;
-		var frag = _n0.frag;
-		var value = _n0.value;
-		return A5(
-			elm$url$Url$Parser$State,
-			visited,
-			unvisited,
-			params,
-			frag,
-			func(value));
-	});
-var elm$url$Url$Parser$map = F2(
-	function (subValue, _n0) {
-		var parseArg = _n0.a;
-		return elm$url$Url$Parser$Parser(
-			function (_n1) {
-				var visited = _n1.visited;
-				var unvisited = _n1.unvisited;
-				var params = _n1.params;
-				var frag = _n1.frag;
-				var value = _n1.value;
-				return A2(
-					elm$core$List$map,
-					elm$url$Url$Parser$mapState(value),
-					parseArg(
-						A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
-			});
-	});
-var elm$core$List$concatMap = F2(
-	function (f, list) {
-		return elm$core$List$concat(
-			A2(elm$core$List$map, f, list));
-	});
-var elm$url$Url$Parser$oneOf = function (parsers) {
-	return elm$url$Url$Parser$Parser(
-		function (state) {
-			return A2(
-				elm$core$List$concatMap,
-				function (_n0) {
-					var parser = _n0.a;
-					return parser(state);
-				},
-				parsers);
-		});
-};
-var elm$url$Url$Parser$s = function (str) {
-	return elm$url$Url$Parser$Parser(
-		function (_n0) {
-			var visited = _n0.visited;
-			var unvisited = _n0.unvisited;
-			var params = _n0.params;
-			var frag = _n0.frag;
-			var value = _n0.value;
-			if (!unvisited.b) {
-				return _List_Nil;
-			} else {
-				var next = unvisited.a;
-				var rest = unvisited.b;
-				return _Utils_eq(next, str) ? _List_fromArray(
-					[
-						A5(
-						elm$url$Url$Parser$State,
-						A2(elm$core$List$cons, next, visited),
-						rest,
-						params,
-						frag,
-						value)
-					]) : _List_Nil;
-			}
-		});
-};
-var elm$url$Url$Parser$slash = F2(
-	function (_n0, _n1) {
-		var parseBefore = _n0.a;
-		var parseAfter = _n1.a;
-		return elm$url$Url$Parser$Parser(
-			function (state) {
-				return A2(
-					elm$core$List$concatMap,
-					parseAfter,
-					parseBefore(state));
-			});
-	});
-var elm$url$Url$Parser$custom = F2(
-	function (tipe, stringToSomething) {
-		return elm$url$Url$Parser$Parser(
-			function (_n0) {
-				var visited = _n0.visited;
-				var unvisited = _n0.unvisited;
-				var params = _n0.params;
-				var frag = _n0.frag;
-				var value = _n0.value;
-				if (!unvisited.b) {
-					return _List_Nil;
-				} else {
-					var next = unvisited.a;
-					var rest = unvisited.b;
-					var _n2 = stringToSomething(next);
-					if (_n2.$ === 'Just') {
-						var nextValue = _n2.a;
-						return _List_fromArray(
-							[
-								A5(
-								elm$url$Url$Parser$State,
-								A2(elm$core$List$cons, next, visited),
-								rest,
-								params,
-								frag,
-								value(nextValue))
-							]);
-					} else {
-						return _List_Nil;
-					}
-				}
-			});
-	});
-var elm$url$Url$Parser$string = A2(elm$url$Url$Parser$custom, 'STRING', elm$core$Maybe$Just);
-var elm$url$Url$Parser$top = elm$url$Url$Parser$Parser(
-	function (state) {
-		return _List_fromArray(
-			[state]);
-	});
-var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
-	_List_fromArray(
-		[
-			A2(elm$url$Url$Parser$map, author$project$Main$AllProjectsPage, elm$url$Url$Parser$top),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$AllProjectsPage,
-			elm$url$Url$Parser$s('projects')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$ProjectPage,
-			A2(
-				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('projects'),
-				elm$url$Url$Parser$string)),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$GlobalGraphPage,
-			elm$url$Url$Parser$s('graph')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$LabelsPage,
-			elm$url$Url$Parser$s('labels')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$ReleaseRepoPage,
-			A2(
-				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('release'),
-				elm$url$Url$Parser$string)),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$ReleasePage,
-			elm$url$Url$Parser$s('release')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$PullRequestsPage,
-			elm$url$Url$Parser$s('pull-requests')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$PullRequestsRepoPage,
-			A2(
-				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('pull-requests'),
-				elm$url$Url$Parser$string)),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$BouncePage,
-			A2(
-				elm$url$Url$Parser$slash,
-				elm$url$Url$Parser$s('auth'),
-				elm$url$Url$Parser$s('github'))),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$BouncePage,
-			elm$url$Url$Parser$s('auth')),
-			A2(
-			elm$url$Url$Parser$map,
-			author$project$Main$BouncePage,
-			elm$url$Url$Parser$s('logout'))
-		]));
-var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
-var author$project$GitHubGraph$updateRepoLabel = F5(
-	function (token, repo, label, name, color) {
-		return A2(
-			elm$core$Task$mapError,
-			jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
-					A2(
-						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
-						lukewestby$elm_http_builder$HttpBuilder$patch('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + label.name)))))))));
-	});
-var author$project$Main$updateLabel = F4(
-	function (model, repo, label1, label2) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A5(author$project$GitHubGraph$updateRepoLabel, token, repo, label1, label2.name, label2.color));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
-	});
-var elm$browser$Browser$External = function (a) {
-	return {$: 'External', a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 'Internal', a: a};
-};
-var elm$browser$Browser$Dom$NotFound = function (a) {
-	return {$: 'NotFound', a: a};
-};
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0.a;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
-	}
-};
-var elm$core$Task$perform = F2(
-	function (toMessage, task) {
-		return elm$core$Task$command(
-			elm$core$Task$Perform(
-				A2(elm$core$Task$map, toMessage, task)));
-	});
-var elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			elm$core$String$slice,
-			n,
-			elm$core$String$length(string),
-			string);
-	});
-var elm$url$Url$Http = {$: 'Http'};
-var elm$url$Url$Https = {$: 'Https'};
-var elm$core$String$indexes = _String_indexes;
-var elm$core$String$left = F2(
-	function (n, string) {
-		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
-	});
-var elm$url$Url$Url = F6(
-	function (protocol, host, port_, path, query, fragment) {
-		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
-	});
-var elm$url$Url$chompBeforePath = F5(
-	function (protocol, path, params, frag, str) {
-		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, ':', str);
-			if (!_n0.b) {
-				return elm$core$Maybe$Just(
-					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
-			} else {
-				if (!_n0.b.b) {
-					var i = _n0.a;
-					var _n1 = elm$core$String$toInt(
-						A2(elm$core$String$dropLeft, i + 1, str));
-					if (_n1.$ === 'Nothing') {
-						return elm$core$Maybe$Nothing;
-					} else {
-						var port_ = _n1;
-						return elm$core$Maybe$Just(
-							A6(
-								elm$url$Url$Url,
-								protocol,
-								A2(elm$core$String$left, i, str),
-								port_,
-								path,
-								params,
-								frag));
-					}
-				} else {
-					return elm$core$Maybe$Nothing;
-				}
-			}
-		}
-	});
-var elm$url$Url$chompBeforeQuery = F4(
-	function (protocol, params, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '/', str);
-			if (!_n0.b) {
-				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
-			} else {
-				var i = _n0.a;
-				return A5(
-					elm$url$Url$chompBeforePath,
-					protocol,
-					A2(elm$core$String$dropLeft, i, str),
-					params,
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompBeforeFragment = F3(
-	function (protocol, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '?', str);
-			if (!_n0.b) {
-				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
-			} else {
-				var i = _n0.a;
-				return A4(
-					elm$url$Url$chompBeforeQuery,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompAfterProtocol = F2(
-	function (protocol, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '#', str);
-			if (!_n0.b) {
-				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
-			} else {
-				var i = _n0.a;
-				return A3(
-					elm$url$Url$chompBeforeFragment,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$fromString = function (str) {
-	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		elm$url$Url$Http,
-		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		elm$url$Url$Https,
-		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
-};
-var elm$browser$Browser$Navigation$load = _Browser_load;
-var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
-var elm$core$Dict$map = F2(
-	function (func, dict) {
-		if (dict.$ === 'RBEmpty_elm_builtin') {
-			return elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			return A5(
-				elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				A2(func, key, value),
-				A2(elm$core$Dict$map, func, left),
-				A2(elm$core$Dict$map, func, right));
-		}
-	});
-var elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
-	});
-var elm$core$List$partition = F2(
-	function (pred, list) {
-		var step = F2(
-			function (x, _n0) {
-				var trues = _n0.a;
-				var falses = _n0.b;
-				return pred(x) ? _Utils_Tuple2(
-					A2(elm$core$List$cons, x, trues),
-					falses) : _Utils_Tuple2(
-					trues,
-					A2(elm$core$List$cons, x, falses));
-			});
-		return A3(
-			elm$core$List$foldr,
-			step,
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			list);
-	});
-var elm$core$Set$foldr = F3(
-	function (func, initialState, _n0) {
-		var dict = _n0.a;
-		return A3(
-			elm$core$Dict$foldr,
-			F3(
-				function (key, _n1, state) {
-					return A2(func, key, state);
-				}),
-			initialState,
-			dict);
-	});
-var elm$core$Set$remove = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return elm$core$Set$Set_elm_builtin(
-			A2(elm$core$Dict$remove, key, dict));
-	});
-var elm$url$Url$addPort = F2(
-	function (maybePort, starter) {
-		if (maybePort.$ === 'Nothing') {
-			return starter;
-		} else {
-			var port_ = maybePort.a;
-			return starter + (':' + elm$core$String$fromInt(port_));
-		}
-	});
-var elm$url$Url$addPrefixed = F3(
-	function (prefix, maybeSegment, starter) {
-		if (maybeSegment.$ === 'Nothing') {
-			return starter;
-		} else {
-			var segment = maybeSegment.a;
-			return _Utils_ap(
-				starter,
-				_Utils_ap(prefix, segment));
-		}
-	});
-var elm$url$Url$toString = function (url) {
-	var http = function () {
-		var _n0 = url.protocol;
-		if (_n0.$ === 'Http') {
-			return 'http://';
-		} else {
-			return 'https://';
-		}
-	}();
-	return A3(
-		elm$url$Url$addPrefixed,
-		'#',
-		url.fragment,
-		A3(
-			elm$url$Url$addPrefixed,
-			'?',
-			url.query,
-			_Utils_ap(
-				A2(
-					elm$url$Url$addPort,
-					url.port_,
-					_Utils_ap(http, url.host)),
-				url.path)));
-};
-var elm$url$Url$Parser$getFirstMatch = function (states) {
-	getFirstMatch:
-	while (true) {
-		if (!states.b) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var state = states.a;
-			var rest = states.b;
-			var _n1 = state.unvisited;
-			if (!_n1.b) {
-				return elm$core$Maybe$Just(state.value);
-			} else {
-				if ((_n1.a === '') && (!_n1.b.b)) {
-					return elm$core$Maybe$Just(state.value);
-				} else {
-					var $temp$states = rest;
-					states = $temp$states;
-					continue getFirstMatch;
-				}
-			}
-		}
-	}
-};
-var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
-	if (!segments.b) {
-		return _List_Nil;
-	} else {
-		if ((segments.a === '') && (!segments.b.b)) {
-			return _List_Nil;
-		} else {
-			var segment = segments.a;
-			var rest = segments.b;
-			return A2(
-				elm$core$List$cons,
-				segment,
-				elm$url$Url$Parser$removeFinalEmpty(rest));
-		}
-	}
-};
-var elm$url$Url$Parser$preparePath = function (path) {
-	var _n0 = A2(elm$core$String$split, '/', path);
-	if (_n0.b && (_n0.a === '')) {
-		var segments = _n0.b;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	} else {
-		var segments = _n0;
-		return elm$url$Url$Parser$removeFinalEmpty(segments);
-	}
-};
-var elm$url$Url$percentDecode = _Url_percentDecode;
-var elm$url$Url$Parser$addToParametersHelp = F2(
-	function (value, maybeList) {
-		if (maybeList.$ === 'Nothing') {
-			return elm$core$Maybe$Just(
-				_List_fromArray(
-					[value]));
-		} else {
-			var list = maybeList.a;
-			return elm$core$Maybe$Just(
-				A2(elm$core$List$cons, value, list));
-		}
-	});
-var elm$url$Url$Parser$addParam = F2(
-	function (segment, dict) {
-		var _n0 = A2(elm$core$String$split, '=', segment);
-		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
-			var rawKey = _n0.a;
-			var _n1 = _n0.b;
-			var rawValue = _n1.a;
-			var _n2 = elm$url$Url$percentDecode(rawKey);
-			if (_n2.$ === 'Nothing') {
-				return dict;
-			} else {
-				var key = _n2.a;
-				var _n3 = elm$url$Url$percentDecode(rawValue);
-				if (_n3.$ === 'Nothing') {
-					return dict;
-				} else {
-					var value = _n3.a;
-					return A3(
-						elm$core$Dict$update,
-						key,
-						elm$url$Url$Parser$addToParametersHelp(value),
-						dict);
-				}
-			}
-		} else {
-			return dict;
-		}
-	});
-var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
-	if (maybeQuery.$ === 'Nothing') {
-		return elm$core$Dict$empty;
-	} else {
-		var qry = maybeQuery.a;
-		return A3(
-			elm$core$List$foldr,
-			elm$url$Url$Parser$addParam,
-			elm$core$Dict$empty,
-			A2(elm$core$String$split, '&', qry));
-	}
-};
-var elm$url$Url$Parser$parse = F2(
-	function (_n0, url) {
-		var parser = _n0.a;
-		return elm$url$Url$Parser$getFirstMatch(
-			parser(
-				A5(
-					elm$url$Url$Parser$State,
-					_List_Nil,
-					elm$url$Url$Parser$preparePath(url.path),
-					elm$url$Url$Parser$prepareQuery(url.query),
-					url.fragment,
-					elm$core$Basics$identity)));
-	});
-var y0hy0h$ordered_containers$OrderedSet$insert = F2(
-	function (key, _n0) {
-		var list = _n0.a;
-		var dict = _n0.b;
-		var _n1 = A2(elm$core$Dict$get, key, dict);
-		if (_n1.$ === 'Just') {
-			return A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, list, dict);
-		} else {
-			return A2(
-				y0hy0h$ordered_containers$OrderedSet$OrderedSet,
-				_Utils_ap(
-					list,
-					_List_fromArray(
-						[key])),
-				A3(elm$core$Dict$insert, key, _Utils_Tuple0, dict));
-		}
-	});
-var y0hy0h$ordered_containers$OrderedSet$remove = F2(
-	function (key, _n0) {
-		var list = _n0.a;
-		var dict = _n0.b;
-		var _n1 = A2(elm$core$Dict$get, key, dict);
-		if (_n1.$ === 'Just') {
-			return A2(
-				y0hy0h$ordered_containers$OrderedSet$OrderedSet,
-				A2(
-					elm$core$List$filter,
-					function (k) {
-						return !_Utils_eq(k, key);
-					},
-					list),
-				A2(elm$core$Dict$remove, key, dict));
-		} else {
-			return A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, list, dict);
-		}
-	});
-var y0hy0h$ordered_containers$OrderedSet$toList = function (_n0) {
-	var list = _n0.a;
-	return list;
-};
-var author$project$Main$update = F2(
-	function (msg, model) {
-		update:
-		while (true) {
-			switch (msg.$) {
-				case 'RetryPolling':
-					return model.isPolling ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{isPolling: true}),
-						author$project$Backend$fetchData(author$project$Main$DataFetched));
-				case 'LinkClicked':
-					var urlRequest = msg.a;
-					if (urlRequest.$ === 'Internal') {
-						var url = urlRequest.a;
-						return _Utils_Tuple2(
-							model,
-							A2(
-								elm$browser$Browser$Navigation$pushUrl,
-								model.key,
-								elm$url$Url$toString(url)));
-					} else {
-						var href = urlRequest.a;
-						return _Utils_Tuple2(
-							model,
-							elm$browser$Browser$Navigation$load(href));
-					}
-				case 'UrlChanged':
-					var url = msg.a;
-					var _n2 = A2(elm$url$Url$Parser$parse, author$project$Main$routeParser, url);
-					if (_n2.$ === 'Just') {
-						if (_n2.a.$ === 'BouncePage') {
-							var _n3 = _n2.a;
-							return _Utils_Tuple2(
-								model,
-								elm$browser$Browser$Navigation$load(
-									elm$url$Url$toString(url)));
-						} else {
-							var page = _n2.a;
-							var paged = _Utils_update(
-								model,
-								{page: page});
-							var graphed = function () {
-								switch (page.$) {
-									case 'GlobalGraphPage':
-										return author$project$Main$computeGraph(
-											_Utils_update(
-												paged,
-												{baseGraphFilter: elm$core$Maybe$Nothing}));
-									case 'ProjectPage':
-										var name = page.a;
-										return author$project$Main$computeGraph(
-											_Utils_update(
-												paged,
-												{
-													baseGraphFilter: elm$core$Maybe$Just(
-														author$project$Main$InProjectFilter(name))
-												}));
-									default:
-										return paged;
-								}
-							}();
-							return _Utils_Tuple2(
-								author$project$Main$computeDataView(graphed),
-								elm$core$Platform$Cmd$none);
-						}
-					} else {
-						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-					}
-				case 'SetCurrentTime':
-					var date = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{currentTime: date})),
-						elm$core$Platform$Cmd$none);
-				case 'ProjectDrag':
-					var subMsg = msg.a;
-					var dragModel = A2(author$project$Drag$update, subMsg, model.projectDrag);
-					var newModel = _Utils_update(
-						model,
-						{projectDrag: dragModel});
-					if (dragModel.$ === 'Dropping') {
-						var state = dragModel.a;
-						var $temp$msg = state.msg,
-							$temp$model = _Utils_update(
-							newModel,
-							{
-								projectDrag: author$project$Drag$drop(newModel.projectDrag)
-							});
-						msg = $temp$msg;
-						model = $temp$model;
-						continue update;
-					} else {
-						return _Utils_Tuple2(newModel, elm$core$Platform$Cmd$none);
-					}
-				case 'MilestoneDrag':
-					var subMsg = msg.a;
-					var dragModel = A2(author$project$Drag$update, subMsg, model.milestoneDrag);
-					var newModel = _Utils_update(
-						model,
-						{milestoneDrag: dragModel});
-					if (dragModel.$ === 'Dropping') {
-						var state = dragModel.a;
-						var $temp$msg = state.msg,
-							$temp$model = _Utils_update(
-							newModel,
-							{
-								projectDrag: author$project$Drag$drop(newModel.projectDrag)
-							});
-						msg = $temp$msg;
-						model = $temp$model;
-						continue update;
-					} else {
-						return _Utils_Tuple2(newModel, elm$core$Platform$Cmd$none);
-					}
-				case 'MoveCardAfter':
-					var source = msg.a;
-					var dest = msg.b;
-					if (source.$ === 'FromColumnCardSource') {
-						var cardId = source.a.cardId;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$moveCard, model, dest, cardId));
-					} else {
-						var contentId = source.a.contentId;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$addCard, model, dest, contentId));
-					}
-				case 'CardMoved':
-					if (msg.b.$ === 'Ok') {
-						var col = msg.a;
-						var content = msg.b.a.content;
-						var _n8 = model.projectDrag;
-						if (_n8.$ === 'Dropped') {
-							var drag = _n8.a;
-							var wrapValue = F2(
-								function (f, indexed) {
-									return _Utils_update(
-										indexed,
-										{
-											value: f(indexed.value)
-										});
-								});
-							var msourceId = function () {
-								var _n12 = drag.source;
-								if (_n12.$ === 'FromColumnCardSource') {
-									var cs = _n12.a;
-									return _Utils_eq(cs.columnId, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.columnId);
-								} else {
-									return elm$core$Maybe$Nothing;
-								}
-							}();
-							var _n9 = function () {
-								if (content.$ === 'Just') {
-									if (content.a.$ === 'IssueCardContent') {
-										var issue = content.a.a;
-										return _Utils_Tuple2(
-											elm$core$Maybe$Just(issue.id),
-											A2(
-												author$project$Backend$refreshIssue,
-												issue.id,
-												A2(
-													elm$core$Basics$composeL,
-													author$project$Main$CardDropContentRefreshed,
-													elm$core$Result$map(
-														function (x) {
-															return {
-																index: x.index,
-																value: author$project$GitHubGraph$IssueCardContent(x.value)
-															};
-														}))));
-									} else {
-										var pr = content.a.a;
-										return _Utils_Tuple2(
-											elm$core$Maybe$Just(pr.id),
-											A2(
-												author$project$Backend$refreshPR,
-												pr.id,
-												A2(
-													elm$core$Basics$composeL,
-													author$project$Main$CardDropContentRefreshed,
-													elm$core$Result$map(
-														function (x) {
-															return {
-																index: x.index,
-																value: author$project$GitHubGraph$PullRequestCardContent(x.value)
-															};
-														}))));
-									}
-								} else {
-									return _Utils_Tuple2(elm$core$Maybe$Nothing, elm$core$Platform$Cmd$none);
-								}
-							}();
-							var mcontentId = _n9.a;
-							var refreshContent = _n9.b;
-							if (msourceId.$ === 'Just') {
-								var sourceId = msourceId.a;
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											projectDragRefresh: elm$core$Maybe$Just(
-												{
-													content: elm$core$Maybe$Nothing,
-													contentId: mcontentId,
-													sourceCards: elm$core$Maybe$Nothing,
-													sourceId: elm$core$Maybe$Just(sourceId),
-													targetCards: elm$core$Maybe$Nothing,
-													targetId: elm$core$Maybe$Just(col)
-												})
-										}),
-									elm$core$Platform$Cmd$batch(
-										_List_fromArray(
-											[
-												refreshContent,
-												A2(author$project$Backend$refreshCards, sourceId, author$project$Main$CardDropSourceRefreshed),
-												A2(author$project$Backend$refreshCards, col, author$project$Main$CardDropTargetRefreshed)
-											])));
-							} else {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											projectDragRefresh: elm$core$Maybe$Just(
-												{
-													content: elm$core$Maybe$Nothing,
-													contentId: mcontentId,
-													sourceCards: elm$core$Maybe$Nothing,
-													sourceId: elm$core$Maybe$Nothing,
-													targetCards: elm$core$Maybe$Nothing,
-													targetId: elm$core$Maybe$Just(col)
-												})
-										}),
-									elm$core$Platform$Cmd$batch(
-										_List_fromArray(
-											[
-												refreshContent,
-												A2(author$project$Backend$refreshCards, col, author$project$Main$CardDropTargetRefreshed)
-											])));
-							}
-						} else {
-							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-						}
-					} else {
-						var col = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to move card',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'CardDropContentRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						var _n13 = model.projectDragRefresh;
-						if (_n13.$ === 'Nothing') {
-							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-						} else {
-							var pdr = _n13.a;
-							return _Utils_Tuple2(
-								author$project$Main$finishProjectDragRefresh(
-									_Utils_update(
-										model,
-										{
-											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
-											projectDragRefresh: elm$core$Maybe$Just(
-												_Utils_update(
-													pdr,
-													{
-														content: elm$core$Maybe$Just(value)
-													}))
-										})),
-								elm$core$Platform$Cmd$none);
-						}
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh card',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'CardDropSourceRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						var _n14 = model.projectDragRefresh;
-						if (_n14.$ === 'Nothing') {
-							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-						} else {
-							var pdr = _n14.a;
-							return _Utils_Tuple2(
-								author$project$Main$finishProjectDragRefresh(
-									_Utils_update(
-										model,
-										{
-											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
-											projectDragRefresh: elm$core$Maybe$Just(
-												_Utils_update(
-													pdr,
-													{
-														sourceCards: elm$core$Maybe$Just(value)
-													}))
-										})),
-								elm$core$Platform$Cmd$none);
-						}
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh card',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'CardDropTargetRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						var _n15 = model.projectDragRefresh;
-						if (_n15.$ === 'Nothing') {
-							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-						} else {
-							var pdr = _n15.a;
-							return _Utils_Tuple2(
-								author$project$Main$finishProjectDragRefresh(
-									_Utils_update(
-										model,
-										{
-											dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
-											projectDragRefresh: elm$core$Maybe$Just(
-												_Utils_update(
-													pdr,
-													{
-														targetCards: elm$core$Maybe$Just(value)
-													}))
-										})),
-								elm$core$Platform$Cmd$none);
-						}
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh card',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'CardsRefreshed':
-					if (msg.b.$ === 'Ok') {
-						var col = msg.a;
-						var index = msg.b.a.index;
-						var value = msg.b.a.value;
-						var data = model.data;
-						var newData = _Utils_update(
-							data,
-							{
-								columnCards: A3(elm$core$Dict$insert, col, value, data.columnCards)
-							});
-						return _Utils_Tuple2(
-							author$project$Main$computeDataView(
-								_Utils_update(
-									model,
-									{
-										data: newData,
-										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex)
-									})),
-							elm$core$Platform$Cmd$none);
-					} else {
-						var col = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh cards',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'SearchCards':
-					var str = msg.a;
-					var tokens = A2(elm$core$String$split, ' ', str);
-					var cardsByTitle = A3(
-						elm$core$Dict$foldl,
-						F2(
-							function (_n20, card) {
-								return author$project$Card$isOpen(card) ? A2(
-									elm$core$Dict$insert,
-									elm$core$String$toLower(card.title),
-									card) : elm$core$Basics$identity;
-							}),
-						elm$core$Dict$empty,
-						model.allCards);
-					var _n16 = A2(
-						elm$core$List$partition,
-						elm$core$String$contains(':'),
-						tokens);
-					var filterTokens = _n16.a;
-					var rest = _n16.b;
-					var filters = A2(
-						elm$core$List$map,
-						elm$core$String$split(':'),
-						filterTokens);
-					var query = elm$core$String$toLower(
-						A2(elm$core$String$join, ' ', rest));
-					var cardMatch = F2(
-						function (title, card) {
-							return ((elm$core$String$length(query) < 2) && elm$core$List$isEmpty(filters)) ? false : (A2(elm$core$String$contains, query, title) ? function (a) {
-								return A2(elm$core$List$all, a, filters);
-							}(
-								function (filter) {
-									if (((filter.b && (filter.a === 'label')) && filter.b.b) && (!filter.b.b.b)) {
-										var _n19 = filter.b;
-										var name = _n19.a;
-										return A3(author$project$Main$hasLabel, model, name, card);
-									} else {
-										return false;
-									}
-								}) : false);
-						});
-					var foundCards = A3(
-						elm$core$Dict$foldl,
-						F2(
-							function (_n17, card) {
-								return elm$core$Set$insert(card.id);
-							}),
-						elm$core$Set$empty,
-						A2(elm$core$Dict$filter, cardMatch, cardsByTitle));
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{anticipatedCards: foundCards, cardSearch: str})),
-						elm$core$Platform$Cmd$none);
-				case 'SelectAnticipatedCards':
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									anticipatedCards: elm$core$Set$empty,
-									selectedCards: A3(elm$core$Set$foldr, y0hy0h$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'SelectCard':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									selectedCards: A2(y0hy0h$ordered_containers$OrderedSet$insert, id, model.selectedCards)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'ClearSelectedCards':
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{selectedCards: y0hy0h$ordered_containers$OrderedSet$empty})),
-						elm$core$Platform$Cmd$none);
-				case 'DeselectCard':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									selectedCards: A2(y0hy0h$ordered_containers$OrderedSet$remove, id, model.selectedCards)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'HighlightNode':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									highlightedNode: elm$core$Maybe$Just(id)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'UnhighlightNode':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{highlightedNode: elm$core$Maybe$Nothing})),
-						elm$core$Platform$Cmd$none);
-				case 'AnticipateCardFromNode':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									anticipatedCards: A2(elm$core$Set$insert, id, model.anticipatedCards),
-									highlightedCard: elm$core$Maybe$Just(id)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'UnanticipateCardFromNode':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraphState(
-							_Utils_update(
-								model,
-								{
-									anticipatedCards: A2(elm$core$Set$remove, id, model.anticipatedCards),
-									highlightedCard: elm$core$Maybe$Nothing
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'MeFetched':
-					if (msg.a.$ === 'Ok') {
-						var me = msg.a.a;
-						return _Utils_Tuple2(
-							author$project$Main$computeGraphState(
-								_Utils_update(
-									model,
-									{me: me})),
-							elm$core$Platform$Cmd$none);
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'error fetching self',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'GraphsFetched':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						var computed = author$project$Main$computeGraph(
-							_Utils_update(
-								model,
-								{graphs: value}));
-						return A3(
-							author$project$Log$debug,
-							'graphs fetched',
-							elm$core$List$length(computed.cardGraphs),
-							_Utils_Tuple2(
-								author$project$Main$computeGraphState(computed),
-								elm$core$Platform$Cmd$none));
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'error fetching graph',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'DataFetched':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						return _Utils_Tuple2(
-							function () {
-								if (_Utils_cmp(index, model.dataIndex) > 0) {
-									var prCards = A2(
-										elm$core$Dict$map,
-										function (_n25) {
-											return author$project$Card$fromPR;
-										},
-										value.prs);
-									var issueCards = A2(
-										elm$core$Dict$map,
-										function (_n24) {
-											return author$project$Card$fromIssue;
-										},
-										value.issues);
-									var allLabels = A3(
-										elm$core$Dict$foldl,
-										F3(
-											function (_n23, r, ls) {
-												return A3(
-													elm$core$List$foldl,
-													function (l) {
-														return A2(elm$core$Dict$insert, l.id, l);
-													},
-													ls,
-													r.labels);
-											}),
-										elm$core$Dict$empty,
-										value.repos);
-									var colorLightnessCache = A3(
-										elm$core$Dict$foldl,
-										F3(
-											function (_n21, _n22, cache) {
-												var color = _n22.color;
-												return A3(
-													elm$core$Dict$insert,
-													color,
-													author$project$Main$computeColorIsLight(color),
-													cache);
-											}),
-										elm$core$Dict$empty,
-										allLabels);
-									var allCards = A2(elm$core$Dict$union, issueCards, prCards);
-									return author$project$Main$computeDataView(
-										_Utils_update(
-											model,
-											{allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}));
-								} else {
-									return A3(
-										author$project$Log$debug,
-										'ignoring stale index',
-										_Utils_Tuple2(index, model.dataIndex),
-										model);
-								}
-							}(),
-							elm$core$Platform$Cmd$batch(
-								_List_fromArray(
-									[
-										author$project$Backend$pollData(author$project$Main$DataFetched),
-										_Utils_eq(model.page, author$project$Main$GlobalGraphPage) ? author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched) : elm$core$Platform$Cmd$none
-									])));
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'error fetching data',
-							err,
-							_Utils_Tuple2(
-								_Utils_update(
-									model,
-									{isPolling: false}),
-								elm$core$Platform$Cmd$none));
-					}
-				case 'MirrorLabel':
-					var newLabel = msg.a;
-					var cmds = A3(
-						elm$core$Dict$foldl,
-						F3(
-							function (_n26, r, acc) {
-								var _n27 = A2(
-									elm$core$List$filter,
-									A2(
-										elm$core$Basics$composeL,
-										elm$core$Basics$eq(newLabel.name),
-										function ($) {
-											return $.name;
-										}),
-									r.labels);
-								if (!_n27.b) {
-									return A2(
-										elm$core$List$cons,
-										A3(author$project$Main$createLabel, model, r, newLabel),
-										acc);
-								} else {
-									var label = _n27.a;
-									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
-										elm$core$List$cons,
-										A4(author$project$Main$updateLabel, model, r, label, newLabel),
-										acc);
-								}
-							}),
-						_List_Nil,
-						model.data.repos);
-					return _Utils_Tuple2(
-						model,
-						elm$core$Platform$Cmd$batch(cmds));
-				case 'StartDeletingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									elm$core$Set$insert,
-									author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'StopDeletingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									elm$core$Set$remove,
-									author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'DeleteLabel':
-					var label = msg.a;
-					var cmds = A3(
-						elm$core$Dict$foldl,
-						F3(
-							function (_n28, r, acc) {
-								var _n29 = A2(
-									elm$core$List$filter,
-									author$project$Main$matchesLabel(label),
-									r.labels);
-								if (!_n29.b) {
-									return acc;
-								} else {
-									var repoLabel = _n29.a;
-									return A2(
-										elm$core$List$cons,
-										A3(author$project$Main$deleteLabel, model, r, repoLabel),
-										acc);
-								}
-							}),
-						_List_Nil,
-						model.data.repos);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									elm$core$Set$remove,
-									author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						elm$core$Platform$Cmd$batch(cmds));
-				case 'StartEditingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A3(
-									elm$core$Dict$insert,
-									author$project$Main$labelKey(label),
-									label,
-									model.editingLabels)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'StopEditingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A2(
-									elm$core$Dict$remove,
-									author$project$Main$labelKey(label),
-									model.editingLabels)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'SetLabelName':
-					var label = msg.a;
-					var newName = msg.b;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A3(
-									elm$core$Dict$update,
-									author$project$Main$labelKey(label),
-									elm$core$Maybe$map(
-										function (newLabel) {
-											return _Utils_update(
-												newLabel,
-												{name: newName});
-										}),
-									model.editingLabels)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'SetLabelColor':
-					var newColor = msg.a;
-					var newLabel = model.newLabel;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A2(
-									elm$core$Dict$map,
-									F2(
-										function (_n30, label) {
-											return _Utils_update(
-												label,
-												{color: newColor});
-										}),
-									model.editingLabels),
-								newLabel: elm$core$String$isEmpty(newLabel.name) ? newLabel : _Utils_update(
-									newLabel,
-									{color: newColor}),
-								newLabelColored: !elm$core$String$isEmpty(newLabel.name)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'RandomizeLabelColor':
-					var label = msg.a;
-					var _n31 = A2(
-						elm$core$Dict$get,
-						author$project$Main$labelKey(label),
-						model.editingLabels);
-					if (_n31.$ === 'Nothing') {
-						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-					} else {
-						var newLabel = _n31.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									editingLabels: A3(
-										elm$core$Dict$insert,
-										author$project$Main$labelKey(label),
-										author$project$Main$randomizeColor(newLabel),
-										model.editingLabels)
-								}),
-							elm$core$Platform$Cmd$none);
-					}
-				case 'EditLabel':
-					var oldLabel = msg.a;
-					var _n32 = A2(
-						elm$core$Dict$get,
-						author$project$Main$labelKey(oldLabel),
-						model.editingLabels);
-					if (_n32.$ === 'Nothing') {
-						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-					} else {
-						var newLabel = _n32.a;
-						var cmds = A3(
-							elm$core$Dict$foldl,
-							F3(
-								function (_n33, r, acc) {
-									var _n34 = A2(
-										elm$core$List$filter,
-										author$project$Main$matchesLabel(oldLabel),
-										r.labels);
-									if (_n34.b) {
-										var repoLabel = _n34.a;
-										return A2(
-											elm$core$List$cons,
-											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
-											acc);
-									} else {
-										return acc;
-									}
-								}),
-							_List_Nil,
-							model.data.repos);
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									editingLabels: A2(
-										elm$core$Dict$remove,
-										author$project$Main$labelKey(oldLabel),
-										model.editingLabels)
-								}),
-							elm$core$Platform$Cmd$batch(cmds));
-					}
-				case 'CreateLabel':
-					if (model.newLabel.name === '') {
-						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-					} else {
-						var $temp$msg = author$project$Main$MirrorLabel(model.newLabel),
-							$temp$model = _Utils_update(
-							model,
-							{
-								newLabel: {color: 'ffffff', name: ''},
-								newLabelColored: false
-							});
-						msg = $temp$msg;
-						model = $temp$model;
-						continue update;
-					}
-				case 'RandomizeNewLabelColor':
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								newLabel: author$project$Main$randomizeColor(model.newLabel),
-								newLabelColored: true
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'SetNewLabelName':
-					var name = msg.a;
-					var newLabel = model.newLabel;
-					var newColor = model.newLabelColored ? model.newLabel.color : author$project$Main$generateColor(
-						author$project$Hash$hash(name));
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								newLabel: _Utils_update(
-									newLabel,
-									{color: newColor, name: name})
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'LabelChanged':
-					if (msg.b.$ === 'Ok') {
-						var repo = msg.a;
-						var repoSel = {name: repo.name, owner: repo.owner};
-						return _Utils_Tuple2(
-							model,
-							A2(author$project$Backend$refreshRepo, repoSel, author$project$Main$RepoRefreshed));
-					} else {
-						var repo = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to modify labels',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'RepoRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						var data = model.data;
-						var allLabels = A3(
-							elm$core$List$foldl,
-							function (l) {
-								return A2(elm$core$Dict$insert, l.id, l);
-							},
-							model.allLabels,
-							value.labels);
-						var colorLightnessCache = A3(
-							elm$core$Dict$foldl,
-							F3(
-								function (_n35, _n36, cache) {
-									var color = _n36.color;
-									return A3(
-										elm$core$Dict$insert,
-										color,
-										author$project$Main$computeColorIsLight(color),
-										cache);
-								}),
-							elm$core$Dict$empty,
-							allLabels);
-						return _Utils_Tuple2(
-							author$project$Main$computeDataView(
-								_Utils_update(
-									model,
-									{
-										allLabels: allLabels,
-										colorLightnessCache: colorLightnessCache,
-										data: _Utils_update(
-											data,
-											{
-												repos: A3(elm$core$Dict$insert, value.id, value, data.repos)
-											}),
-										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex)
-									})),
-							elm$core$Platform$Cmd$none);
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh repo',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'LabelCard':
-					var card = msg.a;
-					var label = msg.b;
-					var _n37 = card.content;
-					if (_n37.$ === 'IssueCardContent') {
-						var issue = _n37.a;
-						return _Utils_Tuple2(
-							model,
-							A3(
-								author$project$Main$addIssueLabels,
-								model,
-								issue,
-								_List_fromArray(
-									[label])));
-					} else {
-						var pr = _n37.a;
-						return _Utils_Tuple2(
-							model,
-							A3(
-								author$project$Main$addPullRequestLabels,
-								model,
-								pr,
-								_List_fromArray(
-									[label])));
-					}
-				case 'UnlabelCard':
-					var card = msg.a;
-					var label = msg.b;
-					var _n38 = card.content;
-					if (_n38.$ === 'IssueCardContent') {
-						var issue = _n38.a;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$removeIssueLabel, model, issue, label));
-					} else {
-						var pr = _n38.a;
-						return _Utils_Tuple2(
-							model,
-							A3(author$project$Main$removePullRequestLabel, model, pr, label));
-					}
-				case 'DataChanged':
-					if (msg.b.$ === 'Ok') {
-						var cb = msg.a;
-						return _Utils_Tuple2(model, cb);
-					} else {
-						var cb = msg.a;
-						var err = msg.b.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to change data',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'RefreshIssue':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						model,
-						A2(author$project$Backend$refreshIssue, id, author$project$Main$IssueRefreshed));
-				case 'IssueRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						return _Utils_Tuple2(
-							author$project$Main$computeDataView(
-								_Utils_update(
-									model,
-									{
-										allCards: A3(
-											elm$core$Dict$insert,
-											value.id,
-											author$project$Card$fromIssue(value),
-											model.allCards),
-										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
-										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
-									})),
-							elm$core$Platform$Cmd$none);
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh issue',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'RefreshPullRequest':
-					var id = msg.a;
-					return _Utils_Tuple2(
-						model,
-						A2(author$project$Backend$refreshPR, id, author$project$Main$PullRequestRefreshed));
-				case 'PullRequestRefreshed':
-					if (msg.a.$ === 'Ok') {
-						var index = msg.a.a.index;
-						var value = msg.a.a.value;
-						return _Utils_Tuple2(
-							author$project$Main$computeDataView(
-								_Utils_update(
-									model,
-									{
-										allCards: A3(
-											elm$core$Dict$insert,
-											value.id,
-											author$project$Card$fromPR(value),
-											model.allCards),
-										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
-										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
-									})),
-							elm$core$Platform$Cmd$none);
-					} else {
-						var err = msg.a.a;
-						return A3(
-							author$project$Log$debug,
-							'failed to refresh pr',
-							err,
-							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
-					}
-				case 'AddFilter':
-					var filter = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraph(
-							_Utils_update(
-								model,
-								{
-									graphFilters: A2(elm$core$List$cons, filter, model.graphFilters)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'RemoveFilter':
-					var filter = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraph(
-							_Utils_update(
-								model,
-								{
-									graphFilters: A2(
-										elm$core$List$filter,
-										elm$core$Basics$neq(filter),
-										model.graphFilters)
-								})),
-						elm$core$Platform$Cmd$none);
-				case 'SetGraphSort':
-					var sort = msg.a;
-					return _Utils_Tuple2(
-						author$project$Main$computeGraph(
-							_Utils_update(
-								model,
-								{graphSort: sort})),
-						elm$core$Platform$Cmd$none);
-				case 'ToggleLabelFilters':
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{showLabelFilters: !model.showLabelFilters}),
-						elm$core$Platform$Cmd$none);
-				case 'SetLabelSearch':
-					var string = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{labelSearch: string}),
-						elm$core$Platform$Cmd$none);
-				case 'ToggleLabelOperations':
-					return _Utils_Tuple2(
-						model.showLabelOperations ? _Utils_update(
-							model,
-							{cardLabelOperations: elm$core$Dict$empty, labelSearch: '', showLabelOperations: false}) : author$project$Main$computeDataView(
-							_Utils_update(
-								model,
-								{showLabelOperations: true})),
-						elm$core$Platform$Cmd$none);
-				case 'SetLabelOperation':
-					var name = msg.a;
-					var op = msg.b;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								cardLabelOperations: A3(elm$core$Dict$insert, name, op, model.cardLabelOperations)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'UnsetLabelOperation':
-					var name = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								cardLabelOperations: A2(elm$core$Dict$remove, name, model.cardLabelOperations)
-							}),
-						elm$core$Platform$Cmd$none);
-				case 'ApplyLabelOperations':
-					var cards = A2(
-						elm$core$List$filterMap,
-						function (a) {
-							return A2(elm$core$Dict$get, a, model.allCards);
-						},
-						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n39 = A2(
-						elm$core$List$partition,
-						A2(
-							elm$core$Basics$composeL,
-							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
-							elm$core$Tuple$second),
-						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n39.a;
-					var removePairs = _n39.b;
-					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
-					var adds = A2(
-						elm$core$List$map,
-						function (card) {
-							var _n41 = card.content;
-							if (_n41.$ === 'IssueCardContent') {
-								var issue = _n41.a;
-								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
-							} else {
-								var pr = _n41.a;
-								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
-							}
-						},
-						cards);
-					var labelsToRemove = A2(elm$core$List$map, elm$core$Tuple$first, removePairs);
-					var removals = A2(
-						elm$core$List$concatMap,
-						function (name) {
-							return A2(
-								elm$core$List$filterMap,
-								function (card) {
-									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n40 = card.content;
-										if (_n40.$ === 'IssueCardContent') {
-											var issue = _n40.a;
-											return elm$core$Maybe$Just(
-												A3(author$project$Main$removeIssueLabel, model, issue, name));
-										} else {
-											var pr = _n40.a;
-											return elm$core$Maybe$Just(
-												A3(author$project$Main$removePullRequestLabel, model, pr, name));
-										}
-									} else {
-										return elm$core$Maybe$Nothing;
-									}
-								},
-								cards);
-						},
-						labelsToRemove);
-					return _Utils_Tuple2(
-						model,
-						elm$core$Platform$Cmd$batch(
-							_Utils_ap(adds, removals)));
-				case 'SetReleaseRepoTab':
-					var tab = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{releaseRepoTab: tab}),
-						elm$core$Platform$Cmd$none);
-				default:
-					var tab = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{repoPullRequestsTab: tab}),
-						elm$core$Platform$Cmd$none);
-			}
-		}
-	});
-var author$project$Main$init = F3(
-	function (config, url, key) {
-		var model = {
-			allCards: elm$core$Dict$empty,
-			allLabels: elm$core$Dict$empty,
-			anticipatedCards: elm$core$Set$empty,
-			baseGraphFilter: elm$core$Maybe$Nothing,
-			cardGraphs: _List_Nil,
-			cardLabelOperations: elm$core$Dict$empty,
-			cardSearch: '',
-			colorLightnessCache: elm$core$Dict$empty,
-			config: config,
-			currentTime: elm$time$Time$millisToPosix(config.initialTime),
-			data: author$project$Backend$emptyData,
-			dataIndex: 0,
-			dataView: {labelToRepoToId: elm$core$Dict$empty, prsByRepo: elm$core$Dict$empty, releaseRepos: elm$core$Dict$empty, reposByLabel: elm$core$Dict$empty},
-			deletingLabels: elm$core$Set$empty,
-			editingLabels: elm$core$Dict$empty,
-			graphFilters: _List_Nil,
-			graphSort: author$project$Main$ImpactSort,
-			graphs: _List_Nil,
-			highlightedCard: elm$core$Maybe$Nothing,
-			highlightedNode: elm$core$Maybe$Nothing,
-			isPolling: true,
-			key: key,
-			labelSearch: '',
-			me: elm$core$Maybe$Nothing,
-			milestoneDrag: author$project$Drag$init,
-			newLabel: {color: 'ffffff', name: ''},
-			newLabelColored: false,
-			newMilestoneName: '',
-			page: author$project$Main$GlobalGraphPage,
-			projectDrag: author$project$Drag$init,
-			projectDragRefresh: elm$core$Maybe$Nothing,
-			releaseRepoTab: 0,
-			repoPullRequestsTab: 0,
-			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
-			showLabelFilters: false,
-			showLabelOperations: false,
-			suggestedLabels: _List_Nil
-		};
-		var _n0 = A2(
-			author$project$Main$update,
-			author$project$Main$UrlChanged(url),
-			model);
-		var navedModel = _n0.a;
-		var navedMsgs = _n0.b;
-		return _Utils_Tuple2(
-			navedModel,
-			elm$core$Platform$Cmd$batch(
-				_List_fromArray(
-					[
-						author$project$Backend$fetchData(author$project$Main$DataFetched),
-						author$project$Backend$fetchMe(author$project$Main$MeFetched),
-						navedMsgs
-					])));
-	});
-var author$project$Main$RetryPolling = {$: 'RetryPolling'};
-var author$project$Main$SetCurrentTime = function (a) {
-	return {$: 'SetCurrentTime', a: a};
-};
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$time$Time$Every = F2(
-	function (a, b) {
-		return {$: 'Every', a: a, b: b};
-	});
-var elm$time$Time$State = F2(
-	function (taggers, processes) {
-		return {processes: processes, taggers: taggers};
-	});
-var elm$time$Time$init = elm$core$Task$succeed(
-	A2(elm$time$Time$State, elm$core$Dict$empty, elm$core$Dict$empty));
-var elm$core$Dict$merge = F6(
-	function (leftStep, bothStep, rightStep, leftDict, rightDict, initialResult) {
-		var stepState = F3(
-			function (rKey, rValue, _n0) {
-				stepState:
-				while (true) {
-					var list = _n0.a;
-					var result = _n0.b;
-					if (!list.b) {
-						return _Utils_Tuple2(
-							list,
-							A3(rightStep, rKey, rValue, result));
-					} else {
-						var _n2 = list.a;
-						var lKey = _n2.a;
-						var lValue = _n2.b;
-						var rest = list.b;
-						if (_Utils_cmp(lKey, rKey) < 0) {
-							var $temp$rKey = rKey,
-								$temp$rValue = rValue,
-								$temp$_n0 = _Utils_Tuple2(
-								rest,
-								A3(leftStep, lKey, lValue, result));
-							rKey = $temp$rKey;
-							rValue = $temp$rValue;
-							_n0 = $temp$_n0;
-							continue stepState;
-						} else {
-							if (_Utils_cmp(lKey, rKey) > 0) {
-								return _Utils_Tuple2(
-									list,
-									A3(rightStep, rKey, rValue, result));
-							} else {
-								return _Utils_Tuple2(
-									rest,
-									A4(bothStep, lKey, lValue, rValue, result));
-							}
-						}
-					}
-				}
-			});
-		var _n3 = A3(
-			elm$core$Dict$foldl,
-			stepState,
-			_Utils_Tuple2(
-				elm$core$Dict$toList(leftDict),
-				initialResult),
-			rightDict);
-		var leftovers = _n3.a;
-		var intermediateResult = _n3.b;
-		return A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n4, result) {
-					var k = _n4.a;
-					var v = _n4.b;
-					return A3(leftStep, k, v, result);
-				}),
-			intermediateResult,
-			leftovers);
-	});
-var elm$core$Process$kill = _Scheduler_kill;
-var elm$time$Time$addMySub = F2(
-	function (_n0, state) {
-		var interval = _n0.a;
-		var tagger = _n0.b;
-		var _n1 = A2(elm$core$Dict$get, interval, state);
-		if (_n1.$ === 'Nothing') {
-			return A3(
-				elm$core$Dict$insert,
-				interval,
-				_List_fromArray(
-					[tagger]),
-				state);
-		} else {
-			var taggers = _n1.a;
-			return A3(
-				elm$core$Dict$insert,
-				interval,
-				A2(elm$core$List$cons, tagger, taggers),
-				state);
-		}
-	});
-var elm$core$Platform$sendToSelf = _Platform_sendToSelf;
-var elm$core$Process$spawn = _Scheduler_spawn;
-var elm$time$Time$setInterval = _Time_setInterval;
-var elm$time$Time$spawnHelp = F3(
-	function (router, intervals, processes) {
-		if (!intervals.b) {
-			return elm$core$Task$succeed(processes);
-		} else {
-			var interval = intervals.a;
-			var rest = intervals.b;
-			var spawnTimer = elm$core$Process$spawn(
-				A2(
-					elm$time$Time$setInterval,
-					interval,
-					A2(elm$core$Platform$sendToSelf, router, interval)));
-			var spawnRest = function (id) {
-				return A3(
-					elm$time$Time$spawnHelp,
-					router,
-					rest,
-					A3(elm$core$Dict$insert, interval, id, processes));
-			};
-			return A2(elm$core$Task$andThen, spawnRest, spawnTimer);
-		}
-	});
-var elm$time$Time$onEffects = F3(
-	function (router, subs, _n0) {
-		var processes = _n0.processes;
-		var rightStep = F3(
-			function (_n6, id, _n7) {
-				var spawns = _n7.a;
-				var existing = _n7.b;
-				var kills = _n7.c;
-				return _Utils_Tuple3(
-					spawns,
-					existing,
-					A2(
-						elm$core$Task$andThen,
-						function (_n5) {
-							return kills;
-						},
-						elm$core$Process$kill(id)));
-			});
-		var newTaggers = A3(elm$core$List$foldl, elm$time$Time$addMySub, elm$core$Dict$empty, subs);
-		var leftStep = F3(
-			function (interval, taggers, _n4) {
-				var spawns = _n4.a;
-				var existing = _n4.b;
-				var kills = _n4.c;
-				return _Utils_Tuple3(
-					A2(elm$core$List$cons, interval, spawns),
-					existing,
-					kills);
-			});
-		var bothStep = F4(
-			function (interval, taggers, id, _n3) {
-				var spawns = _n3.a;
-				var existing = _n3.b;
-				var kills = _n3.c;
-				return _Utils_Tuple3(
-					spawns,
-					A3(elm$core$Dict$insert, interval, id, existing),
-					kills);
-			});
-		var _n1 = A6(
-			elm$core$Dict$merge,
-			leftStep,
-			bothStep,
-			rightStep,
-			newTaggers,
-			processes,
-			_Utils_Tuple3(
-				_List_Nil,
-				elm$core$Dict$empty,
-				elm$core$Task$succeed(_Utils_Tuple0)));
-		var spawnList = _n1.a;
-		var existingDict = _n1.b;
-		var killTask = _n1.c;
-		return A2(
-			elm$core$Task$andThen,
-			function (newProcesses) {
-				return elm$core$Task$succeed(
-					A2(elm$time$Time$State, newTaggers, newProcesses));
-			},
-			A2(
-				elm$core$Task$andThen,
-				function (_n2) {
-					return A3(elm$time$Time$spawnHelp, router, spawnList, existingDict);
-				},
-				killTask));
-	});
-var elm$time$Time$onSelfMsg = F3(
-	function (router, interval, state) {
-		var _n0 = A2(elm$core$Dict$get, interval, state.taggers);
-		if (_n0.$ === 'Nothing') {
-			return elm$core$Task$succeed(state);
-		} else {
-			var taggers = _n0.a;
-			var tellTaggers = function (time) {
-				return elm$core$Task$sequence(
-					A2(
-						elm$core$List$map,
-						function (tagger) {
-							return A2(
-								elm$core$Platform$sendToApp,
-								router,
-								tagger(time));
-						},
-						taggers));
-			};
-			return A2(
-				elm$core$Task$andThen,
-				function (_n1) {
-					return elm$core$Task$succeed(state);
-				},
-				A2(elm$core$Task$andThen, tellTaggers, elm$time$Time$now));
-		}
-	});
-var elm$time$Time$subMap = F2(
-	function (f, _n0) {
-		var interval = _n0.a;
-		var tagger = _n0.b;
-		return A2(
-			elm$time$Time$Every,
-			interval,
-			A2(elm$core$Basics$composeL, f, tagger));
-	});
-_Platform_effectManagers['Time'] = _Platform_createManager(elm$time$Time$init, elm$time$Time$onEffects, elm$time$Time$onSelfMsg, 0, elm$time$Time$subMap);
-var elm$time$Time$subscription = _Platform_leaf('Time');
-var elm$time$Time$every = F2(
-	function (interval, tagger) {
-		return elm$time$Time$subscription(
-			A2(elm$time$Time$Every, interval, tagger));
-	});
-var author$project$Main$subscriptions = function (model) {
-	return elm$core$Platform$Sub$batch(
-		_List_fromArray(
-			[
-				A2(elm$time$Time$every, (60 * 60) * 1000, author$project$Main$SetCurrentTime),
-				A2(
-				elm$time$Time$every,
-				5 * 1000,
-				elm$core$Basics$always(author$project$Main$RetryPolling))
-			]));
-};
-var author$project$Main$SearchCards = function (a) {
-	return {$: 'SearchCards', a: a};
-};
-var author$project$Main$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
-var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$form = _VirtualDom_node('form');
-var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
-var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
-var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
-var elm$html$Html$Events$alwaysStop = function (x) {
-	return _Utils_Tuple2(x, true);
-};
-var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
-	return {$: 'MayStopPropagation', a: a};
-};
-var elm$html$Html$Events$stopPropagationOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayStopPropagation(decoder));
-	});
-var elm$json$Json$Decode$at = F2(
-	function (fields, decoder) {
-		return A3(elm$core$List$foldr, elm$json$Json$Decode$field, decoder, fields);
-	});
-var elm$html$Html$Events$targetValue = A2(
-	elm$json$Json$Decode$at,
-	_List_fromArray(
-		['target', 'value']),
-	elm$json$Json$Decode$string);
-var elm$html$Html$Events$onInput = function (tagger) {
-	return A2(
-		elm$html$Html$Events$stopPropagationOn,
-		'input',
-		A2(
-			elm$json$Json$Decode$map,
-			elm$html$Html$Events$alwaysStop,
-			A2(elm$json$Json$Decode$map, tagger, elm$html$Html$Events$targetValue)));
-};
-var elm$html$Html$Events$alwaysPreventDefault = function (msg) {
-	return _Utils_Tuple2(msg, true);
-};
-var elm$virtual_dom$VirtualDom$MayPreventDefault = function (a) {
-	return {$: 'MayPreventDefault', a: a};
-};
-var elm$html$Html$Events$preventDefaultOn = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$MayPreventDefault(decoder));
-	});
-var elm$html$Html$Events$onSubmit = function (msg) {
-	return A2(
-		elm$html$Html$Events$preventDefaultOn,
-		'submit',
-		A2(
-			elm$json$Json$Decode$map,
-			elm$html$Html$Events$alwaysPreventDefault,
-			elm$json$Json$Decode$succeed(msg)));
-};
-var author$project$Main$viewSearch = function (model) {
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('card-search')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$form,
-				_List_fromArray(
-					[
-						elm$html$Html$Events$onSubmit(author$project$Main$SelectAnticipatedCards)
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$input,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$type_('search'),
-								elm$html$Html$Attributes$placeholder('search cards'),
-								elm$html$Html$Attributes$value(model.cardSearch),
-								elm$html$Html$Events$onInput(author$project$Main$SearchCards)
-							]),
-						_List_Nil)
-					]))
-			]));
-};
-var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4 C4.55,4 5,4.45 5,5 C5,5.55 4.55,6 4,6 C3.45,6 3,5.55 3,5 L3,5 Z M11,5 C11,4.45 10.55,4 10,4 C9.45,4 9,4.45 9,5 C9,5.55 9.45,6 10,6 C10.55,6 11,5.55 11,5 L11,5 Z M11,11 C11,10.45 10.55,10 10,10 C9.45,10 9,10.45 9,11 C9,11.55 9.45,12 10,12 C10.55,12 11,11.55 11,11 L11,11 Z M13,1 L5,1 L5,3.17 C5.36,3.36 5.64,3.64 5.83,4 L8.17,4 C8.59,3.22 9.5,2.72 10.51,2.95 C11.26,3.14 11.87,3.75 12.04,4.5 C12.35,5.88 11.32,7.09 9.99,7.09 C9.19,7.09 8.51,6.65 8.16,6 L5.83,6 C5.41,6.8 4.5,7.28 3.49,7.03 C2.76,6.86 2.15,6.25 1.97,5.51 C1.72,4.49 2.2,3.59 3,3.17 L3,1 L1,1 C0.45,1 0,1.45 0,2 L0,14 C0,14.55 0.45,15 1,15 L6,10 L8.17,10 C8.59,9.22 9.5,8.72 10.51,8.95 C11.26,9.14 11.87,9.75 12.04,10.5 C12.35,11.88 11.32,13.09 9.99,13.09 C9.19,13.09 8.51,12.65 8.16,12 L6.99,12 L4,15 L13,15 C13.55,15 14,14.55 14,14 L14,2 C14,1.45 13.55,1 13,1 L13,1 Z';
-var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
-var capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
-var capitalist$elm_octicons$Octicons$gitPullRequest = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
-var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
-var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
-var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
-var capitalist$elm_octicons$Octicons$project = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
-var capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
-var capitalist$elm_octicons$Octicons$signIn = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$signInPath, '0 0 14 16', 'signIn');
-var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.96,1 L3.5,1 C2.13,1 1,2.13 1,3.5 L1,5.97 C1,6.63 1.27,7.27 1.73,7.74 L7.79,13.8 C8.18,14.19 8.81,14.19 9.2,13.8 L13.79,9.21 C14.18,8.82 14.18,8.19 13.79,7.8 L7.73,1.73 L7.73,1.73 Z M2.38,7.09 C2.07,6.79 1.91,6.39 1.91,5.96 L1.91,3.5 C1.91,2.62 2.63,1.91 3.5,1.91 L5.97,1.91 C6.39,1.91 6.8,2.07 7.1,2.38 L13.24,8.51 L8.51,13.24 L2.38,7.09 L2.38,7.09 Z M3.01,3 L5.01,3 L5.01,5 L3,5 L3,3 L3.01,3 Z';
-var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
-var elm$html$Html$a = _VirtualDom_node('a');
-var elm$html$Html$Attributes$href = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'href',
-		_VirtualDom_noJavaScriptUri(url));
-};
-var author$project$Main$viewNavBar = function (model) {
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('nav-bar')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('nav')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-								elm$html$Html$text('Projects')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/release')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
-								elm$html$Html$text('Release')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/pull-requests')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
-								elm$html$Html$text('PRs')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/graph')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
-								elm$html$Html$text('Graph')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/labels')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-								elm$html$Html$text('Labels')
-							]))
-					])),
-				function () {
-				var _n0 = model.me;
-				if (_n0.$ === 'Nothing') {
-					return A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('user-info'),
-								elm$html$Html$Attributes$href('/auth/github')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts),
-								elm$html$Html$text('Sign In')
-							]));
-				} else {
-					var user = _n0.a.user;
-					return A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('user-info'),
-								elm$html$Html$Attributes$href(user.url)
-							]),
-						_List_fromArray(
-							[
-								A2(
-								elm$html$Html$img,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('user-avatar'),
-										elm$html$Html$Attributes$src(user.avatar)
-									]),
-								_List_Nil),
-								elm$html$Html$text(user.login)
-							]));
-				}
-			}(),
-				author$project$Main$viewSearch(model)
-			]));
-};
-var author$project$Main$selectStatefulProject = function (project) {
-	var findColumns = function (match) {
-		return A2(
-			elm$core$List$filter,
-			A2(
-				elm$core$Basics$composeL,
-				match,
-				function ($) {
-					return $.name;
-				}),
-			project.columns);
-	};
-	var icebox = findColumns(author$project$Project$detectColumn.icebox);
-	var inFlights = findColumns(author$project$Project$detectColumn.inFlight);
-	var dones = findColumns(author$project$Project$detectColumn.done);
-	var backlogs = findColumns(author$project$Project$detectColumn.backlog);
-	var _n0 = _Utils_Tuple2(
-		backlogs,
-		_Utils_Tuple3(icebox, inFlights, dones));
-	if ((((((_n0.a.b && _n0.b.a.b) && (!_n0.b.a.b.b)) && _n0.b.b.b) && (!_n0.b.b.b.b)) && _n0.b.c.b) && (!_n0.b.c.b.b)) {
-		var bs = _n0.a;
-		var _n1 = _n0.b;
-		var _n2 = _n1.a;
-		var ib = _n2.a;
-		var _n3 = _n1.b;
-		var i = _n3.a;
-		var _n4 = _n1.c;
-		var d = _n4.a;
-		return elm$core$Maybe$Just(
-			{backlogs: bs, done: d, icebox: ib, inFlight: i, project: project});
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$Colors$gray500 = '#6a737d';
-var author$project$Colors$gray = author$project$Colors$gray500;
-var author$project$Main$onlyOpenCards = function (model) {
-	return elm$core$List$filter(
-		function (_n0) {
-			var contentId = _n0.contentId;
-			if (contentId.$ === 'Just') {
-				var id = contentId.a;
-				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
-				if (_n2.$ === 'Just') {
-					var card = _n2.a;
-					return author$project$Card$isOpen(card);
-				} else {
-					return false;
-				}
-			} else {
-				return false;
-			}
-		});
-};
-var author$project$Main$viewMetric = F5(
-	function (icon, count, plural, singular, description) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('metric')
-				]),
-			_List_fromArray(
-				[
-					icon,
-					A2(
-					elm$html$Html$span,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('count')
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(
-							elm$core$String$fromInt(count))
-						])),
-					elm$html$Html$text(' '),
-					elm$html$Html$text(
-					(count === 1) ? singular : plural),
-					elm$html$Html$text(' '),
-					elm$html$Html$text(description)
-				]));
-	});
-var capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
-var capitalist$elm_octicons$Octicons$book = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
-var capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
-var capitalist$elm_octicons$Octicons$pulse = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$pulsePolygon, '0 0 14 16', 'pulse');
-var author$project$Main$viewProject = F2(
-	function (model, _n0) {
-		var project = _n0.project;
-		var backlogs = _n0.backlogs;
-		var inFlight = _n0.inFlight;
-		var done = _n0.done;
-		var cardCount = function (column) {
-			return A2(
-				elm$core$Maybe$withDefault,
-				0,
-				A2(
-					elm$core$Maybe$map,
-					A2(
-						elm$core$Basics$composeL,
-						elm$core$List$length,
-						author$project$Main$onlyOpenCards(model)),
-					A2(elm$core$Dict$get, column.id, model.data.columnCards)));
-		};
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('metrics-item')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$a,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('column-title'),
-							elm$html$Html$Attributes$href('/projects/' + project.name)
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-							elm$html$Html$text(project.name)
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('metrics')
-						]),
-					_List_fromArray(
-						[
-							A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$book(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$gray})),
-							elm$core$List$sum(
-								A2(elm$core$List$map, cardCount, backlogs)),
-							'stories',
-							'story',
-							'scheduled'),
-							A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$pulse(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$yellow})),
-							cardCount(inFlight),
-							'stories',
-							'story',
-							'in-flight'),
-							A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$check(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$green})),
-							cardCount(done),
-							'stories',
-							'story',
-							'done')
-						]))
-				]));
-	});
-var author$project$Main$viewAllProjectsPage = function (model) {
-	var statefulProjects = A2(
-		elm$core$List$filterMap,
-		author$project$Main$selectStatefulProject,
-		elm$core$Dict$values(model.data.projects));
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('page-content')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('page-header')
-					]),
-				_List_fromArray(
-					[
-						capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-						elm$html$Html$text('Projects')
-					])),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('projects-list')
-					]),
-				A2(
-					elm$core$List$map,
-					author$project$Main$viewProject(model),
-					statefulProjects))
-			]));
-};
-var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
-var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
-var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
-var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
-var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = F2(
-	function (graph, edge) {
-		var target = function () {
-			var _n1 = A2(
-				elm$core$Maybe$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.node;
-					},
-					function ($) {
-						return $.label;
-					}),
-				A2(elm_community$graph$Graph$get, edge.to, graph));
-			if (_n1.$ === 'Just') {
-				var x = _n1.a.x;
-				var y = _n1.a.y;
-				return {x: x, y: y};
-			} else {
-				return {x: 0, y: 0};
-			}
-		}();
-		var source = function () {
-			var _n0 = A2(
-				elm$core$Maybe$map,
-				A2(
-					elm$core$Basics$composeR,
-					function ($) {
-						return $.node;
-					},
-					function ($) {
-						return $.label;
-					}),
-				A2(elm_community$graph$Graph$get, edge.from, graph));
-			if (_n0.$ === 'Just') {
-				var x = _n0.a.x;
-				var y = _n0.a.y;
-				return {x: x, y: y};
-			} else {
-				return {x: 0, y: 0};
-			}
-		}();
-		return A2(
-			elm$svg$Svg$line,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$class('graph-edge'),
-					elm$svg$Svg$Attributes$x1(
-					elm$core$String$fromFloat(source.x)),
-					elm$svg$Svg$Attributes$y1(
-					elm$core$String$fromFloat(source.y)),
-					elm$svg$Svg$Attributes$x2(
-					elm$core$String$fromFloat(target.x)),
-					elm$svg$Svg$Attributes$y2(
-					elm$core$String$fromFloat(target.y))
-				]),
-			_List_Nil);
-	});
-var author$project$Main$nodeBounds = function (nc) {
-	var y = nc.node.label.y;
-	var x = nc.node.label.x;
-	return nc.node.label.value.bounds(
-		{x: x, y: y});
-};
-var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
-var elm$svg$Svg$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
+var elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
+var elm$svg$Svg$Lazy$lazy4 = elm$virtual_dom$VirtualDom$lazy4;
 var author$project$Main$viewNodeLowerUpper = F3(
 	function (state, _n0, _n1) {
 		var node = _n0.node;
+		var incoming = _n0.incoming;
+		var outgoing = _n0.outgoing;
 		var fs = _n1.a;
 		var ns = _n1.b;
-		var pos = {x: node.label.x, y: node.label.y};
-		return _Utils_Tuple2(
-			A2(
-				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewLower, pos, state),
-				fs),
-			A2(
-				elm$core$List$cons,
-				A3(elm$svg$Svg$Lazy$lazy2, node.label.value.viewUpper, pos, state),
-				ns));
+		var bs = _n1.c;
+		var _n2 = A2(elm$core$Dict$get, node.label.value, state.allCards);
+		if (_n2.$ === 'Just') {
+			var card = _n2.a;
+			var pos = {x: node.label.x, y: node.label.y};
+			var context = {incoming: incoming, outgoing: outgoing};
+			var radiiWithFlair = A2(author$project$Main$cardRadiusWithFlair, card, context);
+			var bounds = {x1: node.label.x - radiiWithFlair, x2: node.label.x + radiiWithFlair, y1: node.label.y - radiiWithFlair, y2: node.label.y + radiiWithFlair};
+			return _Utils_Tuple3(
+				A2(
+					elm$core$List$cons,
+					_Utils_Tuple2(
+						node.label.value,
+						A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardFlair, card, context, pos, state)),
+					fs),
+				A2(
+					elm$core$List$cons,
+					_Utils_Tuple2(
+						node.label.value,
+						A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardCircle, card, context, pos, state)),
+					ns),
+				A2(elm$core$List$cons, bounds, bs));
+		} else {
+			return _Utils_Tuple3(fs, ns, bs);
+		}
 	});
+var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
+	function (namespace, tag) {
+		return A2(
+			_VirtualDom_keyedNodeNS,
+			namespace,
+			_VirtualDom_noScript(tag));
+	});
+var elm$svg$Svg$Keyed$node = elm$virtual_dom$VirtualDom$keyedNodeNS('http://www.w3.org/2000/svg');
+var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
+var elm$svg$Svg$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
 var elm_community$graph$Graph$edges = function (graph) {
 	var flippedFoldl = F3(
 		function (f, dict, list) {
@@ -17964,12 +17929,18 @@ var author$project$Main$viewGraph = F2(
 	function (state, _n0) {
 		var graph = _n0.graph;
 		var padding = 10;
-		var nodeContexts = A3(elm_community$graph$Graph$fold, elm$core$List$cons, _List_Nil, graph);
 		var links = A2(
 			elm$core$List$map,
 			A2(elm$svg$Svg$Lazy$lazy2, author$project$Main$linkPath, graph),
 			elm_community$graph$Graph$edges(graph));
-		var bounds = A2(elm$core$List$map, author$project$Main$nodeBounds, nodeContexts);
+		var _n1 = A3(
+			elm_community$graph$Graph$fold,
+			author$project$Main$viewNodeLowerUpper(state),
+			_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
+			graph);
+		var flairs = _n1.a;
+		var nodes = _n1.b;
+		var bounds = _n1.c;
 		var maxX = A3(
 			elm$core$List$foldl,
 			F2(
@@ -18008,17 +17979,10 @@ var author$project$Main$viewGraph = F2(
 			999999,
 			bounds) - padding;
 		var height = maxY - minY;
-		var _n1 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
-		var scaleW = _n1.a;
-		var scaleH = _n1.b;
-		var _n2 = A3(
-			elm_community$graph$Graph$fold,
-			author$project$Main$viewNodeLowerUpper(state),
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			graph);
-		var flairs = _n2.a;
-		var nodes = _n2.b;
-		return elm$core$List$isEmpty(nodes) ? elm$html$Html$text('empty?') : A2(
+		var _n2 = (width > 980) ? _Utils_Tuple2(980, height / (width / 980)) : _Utils_Tuple2(width, height);
+		var scaleW = _n2.a;
+		var scaleH = _n2.b;
+		return A2(
 			elm$svg$Svg$svg,
 			_List_fromArray(
 				[
@@ -18031,8 +17995,9 @@ var author$project$Main$viewGraph = F2(
 				]),
 			_List_fromArray(
 				[
-					A2(
-					elm$svg$Svg$g,
+					A3(
+					elm$svg$Svg$Keyed$node,
+					'g',
 					_List_fromArray(
 						[
 							elm$svg$Svg$Attributes$class('lower')
@@ -18045,8 +18010,9 @@ var author$project$Main$viewGraph = F2(
 							elm$svg$Svg$Attributes$class('links')
 						]),
 					links),
-					A2(
-					elm$svg$Svg$g,
+					A3(
+					elm$svg$Svg$Keyed$node,
+					'g',
 					_List_fromArray(
 						[
 							elm$svg$Svg$Attributes$class('upper')
@@ -18470,6 +18436,11 @@ var author$project$Main$viewGraphControls = function (model) {
 					]))
 			]));
 };
+var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
+	return _VirtualDom_keyedNode(
+		_VirtualDom_noScript(tag));
+};
+var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
 var elm$html$Html$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
 var author$project$Main$viewSpatialGraph = function (model) {
 	return A2(
@@ -18478,23 +18449,27 @@ var author$project$Main$viewSpatialGraph = function (model) {
 			[
 				elm$html$Html$Attributes$class('spatial-graph')
 			]),
-		A2(
-			elm$core$List$cons,
-			author$project$Main$viewGraphControls(model),
-			A2(
-				elm$core$List$map,
-				F2(
-					function (f, _n0) {
-						var a = _n0.a;
-						var b = _n0.b;
-						return A2(f, a, b);
-					})(
-					elm$html$Html$Lazy$lazy2(author$project$Main$viewGraph)),
+		_List_fromArray(
+			[
+				author$project$Main$viewGraphControls(model),
 				A3(
-					author$project$Log$debug,
-					'rendering graphs',
-					elm$core$List$length(model.cardGraphs),
-					model.cardGraphs))));
+				elm$html$Html$Keyed$node,
+				'div',
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('graphs')
+					]),
+				A2(
+					elm$core$List$map,
+					function (_n0) {
+						var state = _n0.a;
+						var graph = _n0.b;
+						return _Utils_Tuple2(
+							author$project$Main$graphId(graph),
+							A3(elm$html$Html$Lazy$lazy2, author$project$Main$viewGraph, state, graph));
+					},
+					model.cardGraphs))
+			]));
 };
 var author$project$Main$viewGlobalGraphPage = function (model) {
 	return A2(
