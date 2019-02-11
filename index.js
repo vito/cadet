@@ -169,9 +169,13 @@ worker.ports.setIssues.subscribe(function(issues) {
 
 var needsRefresh = true;
 
-setInterval(function() {
+function markGraphRefreshNecessary() {
+  needsRefresh = true;
+}
+
+function refreshGraphIfNecessary() {
   if (!needsRefresh) {
-    console.log("not refreshing graph");
+    queueGraphRefresh();
     return;
   }
 
@@ -179,8 +183,8 @@ setInterval(function() {
   needsRefresh = false;
 
   var references = [];
-  for (var i in data.references) {
-    references.push([i, data.references[i]]);
+  for (var r in data.references) {
+    references.push([r, data.references[r]]);
   }
 
   var cardIds = [];
@@ -194,16 +198,20 @@ setInterval(function() {
   for (var p in data.prs) {
     var pr = data.prs[p];
     if (pr.state == "OPEN") {
-      cardIds.push(i);
+      cardIds.push(p);
     }
   }
 
   worker.ports.refreshGraph.send([cardIds, references]);
-}, 1 * 1000);
 
-function refreshGraph() {
-  needsRefresh = true;
+  queueGraphRefresh();
 }
+
+function queueGraphRefresh() {
+  setTimeout(refreshGraphIfNecessary, 1000);
+}
+
+queueGraphRefresh();
 
 worker.ports.setIssue.subscribe(function(issue) {
   data.issues[issue.id] = issue;
@@ -211,7 +219,7 @@ worker.ports.setIssue.subscribe(function(issue) {
   popRefresh("issue", issue.id, issue);
   popPoll();
 
-  refreshGraph();
+  markGraphRefreshNecessary();
 });
 
 worker.ports.setPullRequests.subscribe(function(prs) {
@@ -224,7 +232,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
 
   popPoll();
 
-  refreshGraph();
+  markGraphRefreshNecessary();
 });
 
 worker.ports.setPullRequest.subscribe(function(pr) {
@@ -233,7 +241,7 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   popRefresh("pr", pr.id, pr);
   popPoll();
 
-  refreshGraph();
+  markGraphRefreshNecessary();
 });
 
 worker.ports.setComparison.subscribe(function(args) {
@@ -251,7 +259,7 @@ worker.ports.setReferences.subscribe(function(args) {
   dataIndex++;
   popPoll();
 
-  refreshGraph();
+  markGraphRefreshNecessary();
 });
 
 worker.ports.setActors.subscribe(function(args) {
@@ -314,7 +322,7 @@ worker.ports.setCards.subscribe(function(args) {
   popRefresh("columnCards", id, newColumnCards);
   popPoll();
 
-  refreshGraph();
+  markGraphRefreshNecessary();
 });
 
 app.use(compression())
