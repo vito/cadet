@@ -121,7 +121,7 @@ code {
     fill: @white;
   }
 
-  .button {
+  .button, .user-info {
     font-size: 14px;
     color: @white;
 
@@ -143,15 +143,9 @@ code {
 
   .user-info {
     font-weight: 600;
-    font-size: 16px;
-    color: @gray-100;
     padding: 12px;
 
     .octicon {
-      width: 20px;
-      height: 20px;
-      margin-right: 10px;
-
       * {
         fill: @white;
       }
@@ -160,12 +154,12 @@ code {
 }
 
 .user-avatar {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
   vertical-align: middle;
   display: inline-block;
-  margin-right: 10px;
+  margin-right: 8px;
   margin-top: -2px;
 
   // prevent broken image from going out of bounds
