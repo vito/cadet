@@ -183,7 +183,22 @@ setInterval(function() {
     references.push([i, data.references[i]]);
   }
 
-  worker.ports.refreshGraph.send([Object.keys(data.issues), references]);
+  var cardIds = [];
+  for (var i in data.issues) {
+    var issue = data.issues[i];
+    if (issue.state == "OPEN") {
+      cardIds.push(i);
+    }
+  }
+
+  for (var p in data.prs) {
+    var pr = data.prs[p];
+    if (pr.state == "OPEN") {
+      cardIds.push(i);
+    }
+  }
+
+  worker.ports.refreshGraph.send([cardIds, references]);
 }, 1 * 1000);
 
 function refreshGraph() {

@@ -16316,15 +16316,6 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
-				case 'RefreshGraphs':
-					var t = msg.a;
-					return A3(
-						author$project$Log$debug,
-						'refreshing graphs',
-						t,
-						_Utils_Tuple2(
-							model,
-							author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched)));
 				case 'GraphsFetched':
 					if (msg.a.$ === 'Ok') {
 						var index = msg.a.a.index;

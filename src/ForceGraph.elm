@@ -63,7 +63,7 @@ fromGraph g =
             Force.iterations iterations <|
                 Force.simulation forces
     in
-    { graph = graph, simulation = newSimulation }
+    computeSimulation { graph = graph, simulation = newSimulation }
 
 
 member : Graph.NodeId -> ForceGraph n -> Bool

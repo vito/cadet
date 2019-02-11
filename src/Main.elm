@@ -191,7 +191,6 @@ type Msg
     | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
-    | RefreshGraphs Time.Posix
     | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
@@ -746,10 +745,6 @@ update msg model =
         MeFetched (Err err) ->
             Log.debug "error fetching self" err <|
                 ( model, Cmd.none )
-
-        RefreshGraphs t ->
-            Log.debug "refreshing graphs" t <|
-                ( model, Backend.fetchGraphs GraphsFetched )
 
         GraphsFetched (Ok { index, value }) ->
             let
