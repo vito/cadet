@@ -10,6 +10,8 @@ module GitHubGraph exposing
     , MergeableState(..)
     , Milestone
     , MilestoneState(..)
+    , PageInfo
+    , PagedSelector
     , Project
     , ProjectColumn
     , ProjectColumnCard
@@ -66,8 +68,10 @@ module GitHubGraph exposing
     , fetchRepo
     , fetchRepoIssue
     , fetchRepoIssues
+    , fetchRepoIssuesPage
     , fetchRepoPullRequest
     , fetchRepoPullRequests
+    , fetchRepoPullRequestsPage
     , fetchTimeline
     , issueScore
     , labelEq
@@ -94,6 +98,7 @@ import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
+import Log
 import Task exposing (Task)
 import Time
 
@@ -471,6 +476,11 @@ fetchRepoIssues token repo =
     fetchPaged issuesQuery token { selector = repo, after = Nothing }
 
 
+fetchRepoIssuesPage : Token -> PagedSelector RepoSelector -> (Result Error ( List Issue, PageInfo ) -> msg) -> Cmd msg
+fetchRepoIssuesPage token psel msg =
+    fetchPage issuesQuery token psel msg
+
+
 compareRepoRefs : Token -> RepoSelector -> String -> String -> Task Error V3Comparison
 compareRepoRefs token repo base mergeBase =
     HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/compare/" ++ base ++ "..." ++ mergeBase)
@@ -490,6 +500,11 @@ fetchRepoIssue token sel =
 fetchRepoPullRequests : Token -> RepoSelector -> Task Error (List PullRequest)
 fetchRepoPullRequests token repo =
     fetchPaged pullRequestsQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoPullRequestsPage : Token -> PagedSelector RepoSelector -> (Result Error ( List PullRequest, PageInfo ) -> msg) -> Cmd msg
+fetchRepoPullRequestsPage token psel msg =
+    fetchPage pullRequestsQuery token psel msg
 
 
 fetchRepoPullRequest : Token -> IssueOrPRSelector -> Task Error PullRequest
@@ -806,13 +821,31 @@ authedOptions token =
     }
 
 
+fetchPage : GB.Document GB.Query (PagedResult a) (PagedSelector s) -> Token -> PagedSelector s -> (Result Error ( List a, PageInfo ) -> msg) -> Cmd msg
+fetchPage doc token psel msg =
+    let
+        fetchNextPage res =
+            case res of
+                Ok { content, pageInfo } ->
+                    msg (Ok ( content, pageInfo ))
+
+                Err err ->
+                    msg (Err err)
+    in
+    doc
+        |> GB.request psel
+        |> GH.customSendQuery (authedOptions token)
+        |> Task.attempt fetchNextPage
+
+
 fetchPaged : GB.Document GB.Query (PagedResult a) (PagedSelector s) -> Token -> PagedSelector s -> Task Error (List a)
 fetchPaged doc token psel =
     let
         fetchNextPage { content, pageInfo } =
             if pageInfo.hasNextPage then
-                fetchPaged doc token { psel | after = pageInfo.endCursor }
-                    |> Task.map ((++) content)
+                Log.debug "has next page" psel <|
+                    Task.map ((++) content) <|
+                        fetchPaged doc token { psel | after = pageInfo.endCursor }
 
             else
                 Task.succeed content

@@ -108,9 +108,9 @@ type Msg
     | ProjectsFetched (List GitHubGraph.Project -> Msg) (Result GitHubGraph.Error (List GitHubGraph.Project))
     | FetchCards (List GitHubGraph.Project)
     | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
-    | IssuesFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.Issue))
+    | IssuesPageFetched (GitHubGraph.PagedSelector GitHubGraph.RepoSelector) (Result GitHubGraph.Error ( List GitHubGraph.Issue, GitHubGraph.PageInfo ))
     | IssueFetched (Result GitHubGraph.Error GitHubGraph.Issue)
-    | PullRequestsFetched GitHubGraph.Repo (Result GitHubGraph.Error (List GitHubGraph.PullRequest))
+    | PullRequestsPageFetched (GitHubGraph.PagedSelector GitHubGraph.RepoSelector) (Result GitHubGraph.Error ( List GitHubGraph.PullRequest, GitHubGraph.PageInfo ))
     | FetchComparison GitHubGraph.Repo
     | ComparisonFetched GitHubGraph.Repo (Result GitHubGraph.Error GitHubGraph.V3Comparison)
     | PullRequestFetched (Result GitHubGraph.Error GitHubGraph.PullRequest)
@@ -289,8 +289,14 @@ update msg model =
                         List.filter (not << .isArchived) repos
 
                     fetch repo =
-                        [ fetchIssues model repo
-                        , fetchPullRequests model repo
+                        let
+                            psel =
+                                { selector = { owner = repo.owner, name = repo.name }
+                                , after = Nothing
+                                }
+                        in
+                        [ fetchIssuesPage model psel
+                        , fetchPullRequestsPage model psel
                         , fetchComparison model repo
                         ]
                 in
@@ -344,21 +350,28 @@ update msg model =
             Log.debug "failed to fetch cards" ( colId, err ) <|
                 backOff model (fetchCards model colId)
 
-        IssuesFetched repo (Ok issues) ->
+        IssuesPageFetched psel (Ok ( issues, pageInfo )) ->
             let
                 fetchTimelines =
                     issues
                         |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
                         |> List.map (fetchIssueTimeline model << .id)
+
+                fetchNext =
+                    if pageInfo.hasNextPage then
+                        fetchIssuesPage model { psel | after = pageInfo.endCursor }
+
+                    else
+                        Cmd.none
             in
-            Log.debug "issues fetched for" repo.url <|
-                ( { model | loadQueue = model.loadQueue ++ fetchTimelines }
+            Log.debug "issues fetched for" psel <|
+                ( { model | loadQueue = fetchNext :: model.loadQueue ++ fetchTimelines }
                 , setIssues (List.map GitHubGraph.encodeIssue issues)
                 )
 
-        IssuesFetched repo (Err err) ->
-            Log.debug "failed to fetch issues" ( repo.url, err ) <|
-                backOff model (fetchIssues model repo)
+        IssuesPageFetched psel (Err err) ->
+            Log.debug "failed to fetch issues" ( psel, err ) <|
+                backOff model (fetchIssuesPage model psel)
 
         IssueFetched (Ok issue) ->
             Log.debug "issue fetched" issue.url <|
@@ -370,7 +383,7 @@ update msg model =
             Log.debug "failed to fetch issue" err <|
                 ( model, Cmd.none )
 
-        PullRequestsFetched repo (Ok prs) ->
+        PullRequestsPageFetched psel (Ok ( prs, pageInfo )) ->
             let
                 openPRs =
                     List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen) prs
@@ -390,11 +403,22 @@ update msg model =
                         )
                         model.commitPRs
                         openPRs
+
+                fetchNext =
+                    if pageInfo.hasNextPage then
+                        fetchPullRequestsPage model { psel | after = pageInfo.endCursor }
+
+                    else
+                        Cmd.none
             in
-            Log.debug "prs fetched for" repo.url <|
-                ( { model | commitPRs = commitPRs, loadQueue = model.loadQueue ++ fetchTimelines }
+            Log.debug "prs fetched for" psel <|
+                ( { model | commitPRs = commitPRs, loadQueue = fetchNext :: model.loadQueue ++ fetchTimelines }
                 , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
                 )
+
+        PullRequestsPageFetched psel (Err err) ->
+            Log.debug "failed to fetch prs" ( psel, err ) <|
+                backOff model (fetchPullRequestsPage model psel)
 
         FetchComparison repo ->
             ( { model | loadQueue = fetchComparison model repo :: model.loadQueue }, Cmd.none )
@@ -408,10 +432,6 @@ update msg model =
                 ( model
                 , setComparison ( repo.id, GitHubGraph.encodeV3Comparison comparison )
                 )
-
-        PullRequestsFetched repo (Err err) ->
-            Log.debug "failed to fetch prs" ( repo.url, err ) <|
-                backOff model (fetchPullRequests model repo)
 
         PullRequestFetched (Ok pr) ->
             Log.debug "pr fetched" pr.url <|
@@ -552,10 +572,9 @@ fetchCards model colId =
         GitHubGraph.fetchProjectColumnCards model.githubToken { id = colId }
 
 
-fetchIssues : Model -> GitHubGraph.Repo -> Cmd Msg
-fetchIssues model repo =
-    GitHubGraph.fetchRepoIssues model.githubToken { owner = repo.owner, name = repo.name }
-        |> Task.attempt (IssuesFetched repo)
+fetchIssuesPage : Model -> GitHubGraph.PagedSelector GitHubGraph.RepoSelector -> Cmd Msg
+fetchIssuesPage model psel =
+    GitHubGraph.fetchRepoIssuesPage model.githubToken psel (IssuesPageFetched psel)
 
 
 fetchRepoIssue : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
@@ -578,10 +597,9 @@ fetchRepoIssueOrPR model sel =
         ]
 
 
-fetchPullRequests : Model -> GitHubGraph.Repo -> Cmd Msg
-fetchPullRequests model repo =
-    GitHubGraph.fetchRepoPullRequests model.githubToken { owner = repo.owner, name = repo.name }
-        |> Task.attempt (PullRequestsFetched repo)
+fetchPullRequestsPage : Model -> GitHubGraph.PagedSelector GitHubGraph.RepoSelector -> Cmd Msg
+fetchPullRequestsPage model psel =
+    GitHubGraph.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
 
 
 fetchComparison : Model -> GitHubGraph.Repo -> Cmd Msg
