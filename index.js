@@ -208,7 +208,7 @@ function refreshGraphIfNecessary() {
 }
 
 function queueGraphRefresh() {
-  setTimeout(refreshGraphIfNecessary, 1000);
+  setTimeout(refreshGraphIfNecessary, 10000);
 }
 
 queueGraphRefresh();
