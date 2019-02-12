@@ -135,8 +135,8 @@ init { githubToken, githubOrg, skipTimeline, noRefresh } =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every 100 (always PopQueue)
-        , Time.every (5 * 60 * 1000) (always RetryQueue)
+        [ Time.every 500 (always PopQueue)
+        , Time.every (60 * 1000) (always RetryQueue)
         , if model.noRefresh then
             Sub.none
 
@@ -163,7 +163,9 @@ update msg model =
                     ( { model | loadQueue = rest }, first )
 
                 _ ->
-                    ( model, Cmd.none )
+                    Log.debug "load queue finished!"
+                        []
+                        ( model, Cmd.none )
 
         RetryQueue ->
             if List.isEmpty model.failedQueue then
