@@ -2869,7 +2869,6 @@ viewGraph state { graph } =
     Svg.svg
         [ SA.width (String.fromFloat width ++ "px")
         , SA.style "max-width: 95%"
-        , SA.height "auto"
         , SA.viewBox (String.fromFloat minX ++ " " ++ String.fromFloat minY ++ " " ++ String.fromFloat width ++ " " ++ String.fromFloat height)
         ]
         [ Svg.g [ SA.class "links" ] links

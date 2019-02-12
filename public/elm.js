@@ -18004,7 +18004,6 @@ var author$project$Main$viewGraph = F2(
 					elm$svg$Svg$Attributes$width(
 					elm$core$String$fromFloat(width) + 'px'),
 					elm$svg$Svg$Attributes$style('max-width: 95%'),
-					elm$svg$Svg$Attributes$height('auto'),
 					elm$svg$Svg$Attributes$viewBox(
 					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
 				]),
