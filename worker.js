@@ -11253,7 +11253,7 @@ var author$project$GitHubGraph$pullRequestsQuery = function () {
 		[
 			_Utils_Tuple2(
 			'first',
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10)),
 			_Utils_Tuple2(
 			'after',
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar))

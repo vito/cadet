@@ -1360,7 +1360,7 @@ pullRequestsQuery =
             GV.required "after" .after (GV.nullable GV.string)
 
         pageArgs =
-            [ ( "first", GA.int 100 )
+            [ ( "first", GA.int 10 )
             , ( "after", GA.variable afterVar )
             ]
 
