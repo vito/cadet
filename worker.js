@@ -11657,11 +11657,7 @@ var author$project$Main$update = F2(
 							{loadQueue: rest}),
 						first);
 				} else {
-					return A3(
-						author$project$Log$debug,
-						'load queue finished!',
-						_List_Nil,
-						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				}
 			case 'RetryQueue':
 				return elm$core$List$isEmpty(model.failedQueue) ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : A3(

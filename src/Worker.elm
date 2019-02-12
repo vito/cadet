@@ -163,9 +163,7 @@ update msg model =
                     ( { model | loadQueue = rest }, first )
 
                 _ ->
-                    Log.debug "load queue finished!"
-                        []
-                        ( model, Cmd.none )
+                    ( model, Cmd.none )
 
         RetryQueue ->
             if List.isEmpty model.failedQueue then
