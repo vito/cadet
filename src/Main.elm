@@ -1141,7 +1141,7 @@ updateGraphStates model =
             , cardEvents = model.data.actors
             }
 
-        affectedByState { graph } =
+        affectedByState graph =
             Graph.fold
                 (\{ node } affected ->
                     if affected then
@@ -1607,7 +1607,7 @@ viewSpatialGraph model =
 
 
 graphId : ForceGraph GitHubGraph.ID -> String
-graphId { graph } =
+graphId graph =
     Graph.fold (\{ node } acc -> min node.label.value acc) "" graph
 
 
@@ -2671,7 +2671,7 @@ sortAndFilterGraphs model =
                                             matches
                                 )
                                 Set.empty
-                                fg.graph
+                                fg
                     in
                     if Set.isEmpty matching then
                         fgs
@@ -2759,7 +2759,7 @@ satisfiesFilter model filter card =
 
 graphImpactCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
 graphImpactCompare model a b =
-    case compare (Graph.size a.graph) (Graph.size b.graph) of
+    case compare (Graph.size a) (Graph.size b) of
         EQ ->
             let
                 graphScore =
@@ -2774,7 +2774,7 @@ graphImpactCompare model a b =
                         )
                         0
             in
-            compare (graphScore a.graph) (graphScore b.graph)
+            compare (graphScore a) (graphScore b)
 
         x ->
             x
@@ -2802,7 +2802,7 @@ graphUserActivityCompare model login a b =
                 )
                 0
     in
-    compare (latestUserActivity a.graph) (latestUserActivity b.graph)
+    compare (latestUserActivity a) (latestUserActivity b)
 
 
 graphAllActivityCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
@@ -2833,11 +2833,11 @@ graphAllActivityCompare model a b =
                 )
                 0
     in
-    compare (latestActivity a.graph) (latestActivity b.graph)
+    compare (latestActivity a) (latestActivity b)
 
 
 viewGraph : CardNodeState -> ForceGraph GitHubGraph.ID -> Html Msg
-viewGraph state { graph } =
+viewGraph state graph =
     let
         ( flairs, nodes, bounds ) =
             Graph.fold (viewNodeLowerUpper state) ( [], [], [] ) graph

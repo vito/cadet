@@ -1,4 +1,4 @@
-module ForceGraph exposing (ForceGraph, ForceNode, decode, encode, fromGraph, isCompleted, member, tick, update)
+module ForceGraph exposing (ForceGraph, ForceNode, decode, encode, fromGraph, member, update)
 
 import Force
 import Graph exposing (Graph)
@@ -10,9 +10,7 @@ import Random
 
 
 type alias ForceGraph n =
-    { graph : Graph (ForceNode n) ()
-    , simulation : Force.State Graph.NodeId
-    }
+    Graph (ForceNode n) ()
 
 
 type alias ForceNode n =
@@ -63,36 +61,33 @@ fromGraph g =
             Force.iterations iterations <|
                 Force.simulation forces
     in
-    computeSimulation { graph = graph, simulation = newSimulation }
+    computeSimulation newSimulation graph
 
 
 member : Graph.NodeId -> ForceGraph n -> Bool
-member id =
-    Graph.member id << .graph
+member =
+    Graph.member
 
 
 update : Graph.NodeId -> (n -> n) -> ForceGraph n -> ForceGraph n
 update id f fg =
-    { fg
-        | graph =
-            Graph.update id
-                (Maybe.map
-                    (\nc ->
-                        let
-                            ncnode =
-                                nc.node
+    Graph.update id
+        (Maybe.map
+            (\nc ->
+                let
+                    ncnode =
+                        nc.node
 
-                            label =
-                                ncnode.label
+                    label =
+                        ncnode.label
 
-                            value =
-                                label.value
-                        in
-                        { nc | node = { ncnode | label = { label | value = f value } } }
-                    )
-                )
-                fg.graph
-    }
+                    value =
+                        label.value
+                in
+                { nc | node = { ncnode | label = { label | value = f value } } }
+            )
+        )
+        fg
 
 
 node : Graph.NodeContext { value : n, size : Float } () -> Graph.NodeContext (ForceNode n) ()
@@ -127,42 +122,14 @@ node nc =
     }
 
 
-computeSimulation : ForceGraph n -> ForceGraph n
-computeSimulation fg =
-    if isCompleted fg then
-        fg
-
-    else
-        computeSimulation (tick fg)
-
-
-simulate : Int -> ForceGraph n -> ForceGraph n
-simulate num fg =
-    if num == 0 then
-        fg
-
-    else
-        simulate (num - 1) (tick fg)
-
-
-tick : ForceGraph n -> ForceGraph n
-tick { graph, simulation } =
-    let
-        ( newState, list ) =
-            Force.tick simulation (List.map .label (Graph.nodes graph))
-    in
-    { graph = updateGraphWithList graph list
-    , simulation = newState
-    }
-
-
-isCompleted : ForceGraph n -> Bool
-isCompleted =
-    .simulation >> Force.isCompleted
+computeSimulation : Force.State Graph.NodeId -> ForceGraph n -> ForceGraph n
+computeSimulation simulation graph =
+    updateGraphWithList graph <|
+        Force.computeSimulation simulation (List.map .label (Graph.nodes graph))
 
 
 encode : (n -> JE.Value) -> ForceGraph n -> JE.Value
-encode encoder { graph } =
+encode encoder graph =
     let
         encodeNode nc =
             JE.object
@@ -237,10 +204,8 @@ decode decoder =
             in
             Graph.insert nc g
 
-        toGraph nodes =
-            { graph = List.foldl addGraphNode Graph.empty nodes
-            , simulation = Force.simulation []
-            }
+        toGraph =
+            List.foldl addGraphNode Graph.empty
     in
     JD.list decodeNode
         |> JD.map toGraph
