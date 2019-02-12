@@ -8400,21 +8400,6 @@ var elm_community$graph$Graph$insert = F2(
 				elm$core$Maybe$Just(nodeContext)),
 			graph);
 	});
-var elm$core$Basics$pow = _Basics_pow;
-var gampleman$elm_visualization$Force$State = function (a) {
-	return {$: 'State', a: a};
-};
-var gampleman$elm_visualization$Force$simulation = function (forces) {
-	return gampleman$elm_visualization$Force$State(
-		{
-			alpha: 1.0,
-			alphaDecay: 1 - A2(elm$core$Basics$pow, 1.0e-3, 1 / 300),
-			alphaTarget: 0.0,
-			forces: forces,
-			minAlpha: 1.0e-3,
-			velocityDecay: 0.6
-		});
-};
 var author$project$ForceGraph$decode = function (decoder) {
 	var decodeNode = A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -8450,12 +8435,7 @@ var author$project$ForceGraph$decode = function (decoder) {
 			};
 			return A2(elm_community$graph$Graph$insert, nc, g);
 		});
-	var toGraph = function (nodes) {
-		return {
-			graph: A3(elm$core$List$foldl, addGraphNode, elm_community$graph$Graph$empty, nodes),
-			simulation: gampleman$elm_visualization$Force$simulation(_List_Nil)
-		};
-	};
+	var toGraph = A2(elm$core$List$foldl, addGraphNode, elm_community$graph$Graph$empty);
 	return A2(
 		elm$json$Json$Decode$map,
 		toGraph,
@@ -11675,16 +11655,16 @@ var author$project$Main$graphAllActivityCompare = F3(
 			0);
 		return A2(
 			elm$core$Basics$compare,
-			latestActivity(a.graph),
-			latestActivity(b.graph));
+			latestActivity(a),
+			latestActivity(b));
 	});
 var elm_community$graph$Graph$size = A2(elm$core$Basics$composeR, elm_community$graph$Graph$unGraph, elm_community$intdict$IntDict$size);
 var author$project$Main$graphImpactCompare = F3(
 	function (model, a, b) {
 		var _n0 = A2(
 			elm$core$Basics$compare,
-			elm_community$graph$Graph$size(a.graph),
-			elm_community$graph$Graph$size(b.graph));
+			elm_community$graph$Graph$size(a),
+			elm_community$graph$Graph$size(b));
 		if (_n0.$ === 'EQ') {
 			var graphScore = A2(
 				elm_community$graph$Graph$fold,
@@ -11702,8 +11682,8 @@ var author$project$Main$graphImpactCompare = F3(
 				0);
 			return A2(
 				elm$core$Basics$compare,
-				graphScore(a.graph),
-				graphScore(b.graph));
+				graphScore(a),
+				graphScore(b));
 		} else {
 			var x = _n0;
 			return x;
@@ -11754,8 +11734,8 @@ var author$project$Main$graphUserActivityCompare = F4(
 			0);
 		return A2(
 			elm$core$Basics$compare,
-			latestUserActivity(a.graph),
-			latestUserActivity(b.graph));
+			latestUserActivity(a),
+			latestUserActivity(b));
 	});
 var author$project$Card$isPR = function (card) {
 	var _n0 = card.state;
@@ -11918,7 +11898,7 @@ var author$project$Main$sortAndFilterGraphs = function (model) {
 							}
 						}),
 					elm$core$Set$empty,
-					fg.graph);
+					fg);
 				return elm$core$Set$isEmpty(matching) ? fgs : A2(
 					elm$core$List$cons,
 					_Utils_Tuple2(
@@ -11955,8 +11935,7 @@ var y0hy0h$ordered_containers$OrderedSet$member = F2(
 	});
 var author$project$Main$updateGraphStates = function (model) {
 	var newState = {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
-	var affectedByState = function (_n2) {
-		var graph = _n2.graph;
+	var affectedByState = function (graph) {
 		return A3(
 			elm_community$graph$Graph$fold,
 			F2(
@@ -15438,13 +15417,12 @@ var elm$core$Basics$min = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) < 0) ? x : y;
 	});
-var author$project$Main$graphId = function (_n0) {
-	var graph = _n0.graph;
+var author$project$Main$graphId = function (graph) {
 	return A3(
 		elm_community$graph$Graph$fold,
 		F2(
-			function (_n1, acc) {
-				var node = _n1.node;
+			function (_n0, acc) {
+				var node = _n0.node;
 				return A2(elm$core$Basics$min, node.label.value, acc);
 			}),
 		'',
@@ -15984,6 +15962,7 @@ var folkertdev$svg_path_lowlevel$Path$LowLevel$defaultConfig = {floatFormatter: 
 var elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
+var elm$core$Basics$pow = _Basics_pow;
 var folkertdev$svg_path_lowlevel$Path$LowLevel$roundTo = F2(
 	function (n, value) {
 		if (!n) {
@@ -17944,26 +17923,25 @@ var elm_community$graph$Graph$edges = function (graph) {
 		_List_Nil);
 };
 var author$project$Main$viewGraph = F2(
-	function (state, _n0) {
-		var graph = _n0.graph;
+	function (state, graph) {
 		var padding = 10;
 		var links = A2(
 			elm$core$List$map,
 			A2(author$project$Main$linkPath, state, graph),
 			elm_community$graph$Graph$edges(graph));
-		var _n1 = A3(
+		var _n0 = A3(
 			elm_community$graph$Graph$fold,
 			author$project$Main$viewNodeLowerUpper(state),
 			_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
 			graph);
-		var flairs = _n1.a;
-		var nodes = _n1.b;
-		var bounds = _n1.c;
+		var flairs = _n0.a;
+		var nodes = _n0.b;
+		var bounds = _n0.c;
 		var maxX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n5, acc) {
-					var x2 = _n5.x2;
+				function (_n4, acc) {
+					var x2 = _n4.x2;
 					return A2(elm$core$Basics$max, x2, acc);
 				}),
 			0,
@@ -17971,8 +17949,8 @@ var author$project$Main$viewGraph = F2(
 		var maxY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n4, acc) {
-					var y2 = _n4.y2;
+				function (_n3, acc) {
+					var y2 = _n3.y2;
 					return A2(elm$core$Basics$max, y2, acc);
 				}),
 			0,
@@ -17980,8 +17958,8 @@ var author$project$Main$viewGraph = F2(
 		var minX = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n3, acc) {
-					var x1 = _n3.x1;
+				function (_n2, acc) {
+					var x1 = _n2.x1;
 					return A2(elm$core$Basics$min, x1, acc);
 				}),
 			999999,
@@ -17990,8 +17968,8 @@ var author$project$Main$viewGraph = F2(
 		var minY = A3(
 			elm$core$List$foldl,
 			F2(
-				function (_n2, acc) {
-					var y1 = _n2.y1;
+				function (_n1, acc) {
+					var y1 = _n1.y1;
 					return A2(elm$core$Basics$min, y1, acc);
 				}),
 			999999,

@@ -4086,8 +4086,7 @@ var elm_community$graph$Graph$fold = F3(
 		return A2(go, acc, graph);
 	});
 var author$project$ForceGraph$encode = F2(
-	function (encoder, _n0) {
-		var graph = _n0.graph;
+	function (encoder, graph) {
 		var encodeNode = function (nc) {
 			return elm$json$Json$Encode$object(
 				_List_fromArray(
@@ -4864,17 +4863,6 @@ var author$project$Main$backOff = F2(
 				}),
 			elm$core$Platform$Cmd$none);
 	});
-var gampleman$elm_visualization$Force$isCompleted = function (_n0) {
-	var alpha = _n0.a.alpha;
-	var minAlpha = _n0.a.minAlpha;
-	return _Utils_cmp(alpha, minAlpha) < 1;
-};
-var author$project$ForceGraph$isCompleted = A2(
-	elm$core$Basics$composeR,
-	function ($) {
-		return $.simulation;
-	},
-	gampleman$elm_visualization$Force$isCompleted);
 var author$project$ForceGraph$updateContextWithValue = F2(
 	function (nc, value) {
 		var ncnode = nc.node;
@@ -4991,6 +4979,11 @@ var elm_community$graph$Graph$nodes = A2(
 			function ($) {
 				return $.node;
 			})));
+var gampleman$elm_visualization$Force$isCompleted = function (_n0) {
+	var alpha = _n0.a.alpha;
+	var minAlpha = _n0.a.minAlpha;
+	return _Utils_cmp(alpha, minAlpha) < 1;
+};
 var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
 var elm$core$Dict$Black = {$: 'Black'};
@@ -6297,37 +6290,39 @@ var gampleman$elm_visualization$Force$tick = F2(
 				updateEntity,
 				elm$core$Dict$values(newNodes)));
 	});
-var author$project$ForceGraph$tick = function (_n0) {
-	var graph = _n0.graph;
-	var simulation = _n0.simulation;
-	var _n1 = A2(
-		gampleman$elm_visualization$Force$tick,
-		simulation,
-		A2(
-			elm$core$List$map,
-			function ($) {
-				return $.label;
-			},
-			elm_community$graph$Graph$nodes(graph)));
-	var newState = _n1.a;
-	var list = _n1.b;
-	return {
-		graph: A2(author$project$ForceGraph$updateGraphWithList, graph, list),
-		simulation: newState
-	};
-};
-var author$project$ForceGraph$computeSimulation = function (fg) {
-	computeSimulation:
-	while (true) {
-		if (author$project$ForceGraph$isCompleted(fg)) {
-			return fg;
-		} else {
-			var $temp$fg = author$project$ForceGraph$tick(fg);
-			fg = $temp$fg;
-			continue computeSimulation;
+var gampleman$elm_visualization$Force$computeSimulation = F2(
+	function (state, entities) {
+		computeSimulation:
+		while (true) {
+			if (gampleman$elm_visualization$Force$isCompleted(state)) {
+				return entities;
+			} else {
+				var _n0 = A2(gampleman$elm_visualization$Force$tick, state, entities);
+				var newState = _n0.a;
+				var newEntities = _n0.b;
+				var $temp$state = newState,
+					$temp$entities = newEntities;
+				state = $temp$state;
+				entities = $temp$entities;
+				continue computeSimulation;
+			}
 		}
-	}
-};
+	});
+var author$project$ForceGraph$computeSimulation = F2(
+	function (simulation, graph) {
+		return A2(
+			author$project$ForceGraph$updateGraphWithList,
+			graph,
+			A2(
+				gampleman$elm_visualization$Force$computeSimulation,
+				simulation,
+				A2(
+					elm$core$List$map,
+					function ($) {
+						return $.label;
+					},
+					elm_community$graph$Graph$nodes(graph))));
+	});
 var elm$core$Basics$abs = function (n) {
 	return (n < 0) ? (-n) : n;
 };
@@ -6611,8 +6606,7 @@ var author$project$ForceGraph$fromGraph = function (g) {
 		gampleman$elm_visualization$Force$iterations,
 		iterations,
 		gampleman$elm_visualization$Force$simulation(forces));
-	return author$project$ForceGraph$computeSimulation(
-		{graph: graph, simulation: newSimulation});
+	return A2(author$project$ForceGraph$computeSimulation, newSimulation, graph);
 };
 var elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
 var author$project$Hash$updateHash = F2(
@@ -10315,16 +10309,20 @@ var author$project$GitHubGraph$fetchPaged = F3(
 		var fetchNextPage = function (_n0) {
 			var content = _n0.content;
 			var pageInfo = _n0.pageInfo;
-			return pageInfo.hasNextPage ? A2(
-				elm$core$Task$map,
-				elm$core$Basics$append(content),
-				A3(
-					author$project$GitHubGraph$fetchPaged,
-					doc,
-					token,
-					_Utils_update(
-						psel,
-						{after: pageInfo.endCursor}))) : elm$core$Task$succeed(content);
+			return pageInfo.hasNextPage ? A3(
+				author$project$Log$debug,
+				'has next page',
+				psel,
+				A2(
+					elm$core$Task$map,
+					elm$core$Basics$append(content),
+					A3(
+						author$project$GitHubGraph$fetchPaged,
+						doc,
+						token,
+						_Utils_update(
+							psel,
+							{after: pageInfo.endCursor})))) : elm$core$Task$succeed(content);
 		};
 		return A2(
 			elm$core$Task$andThen,
@@ -10804,6 +10802,29 @@ var author$project$Main$fetchIssueTimeline = F2(
 				model.githubToken,
 				{id: id}));
 	});
+var author$project$GitHubGraph$fetchPage = F4(
+	function (doc, token, psel, msg) {
+		var fetchNextPage = function (res) {
+			if (res.$ === 'Ok') {
+				var content = res.a.content;
+				var pageInfo = res.a.pageInfo;
+				return msg(
+					elm$core$Result$Ok(
+						_Utils_Tuple2(content, pageInfo)));
+			} else {
+				var err = res.a;
+				return msg(
+					elm$core$Result$Err(err));
+			}
+		};
+		return A2(
+			elm$core$Task$attempt,
+			fetchNextPage,
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery,
+				author$project$GitHubGraph$authedOptions(token),
+				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, psel, doc)));
+	});
 var author$project$GitHubGraph$issuesQuery = function () {
 	var repoNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -10884,27 +10905,21 @@ var author$project$GitHubGraph$issuesQuery = function () {
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'issues', pageArgs, paged))));
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
 }();
-var author$project$GitHubGraph$fetchRepoIssues = F2(
-	function (token, repo) {
-		return A3(
-			author$project$GitHubGraph$fetchPaged,
-			author$project$GitHubGraph$issuesQuery,
-			token,
-			{after: elm$core$Maybe$Nothing, selector: repo});
+var author$project$GitHubGraph$fetchRepoIssuesPage = F3(
+	function (token, psel, msg) {
+		return A4(author$project$GitHubGraph$fetchPage, author$project$GitHubGraph$issuesQuery, token, psel, msg);
 	});
-var author$project$Main$IssuesFetched = F2(
+var author$project$Main$IssuesPageFetched = F2(
 	function (a, b) {
-		return {$: 'IssuesFetched', a: a, b: b};
+		return {$: 'IssuesPageFetched', a: a, b: b};
 	});
-var author$project$Main$fetchIssues = F2(
-	function (model, repo) {
-		return A2(
-			elm$core$Task$attempt,
-			author$project$Main$IssuesFetched(repo),
-			A2(
-				author$project$GitHubGraph$fetchRepoIssues,
-				model.githubToken,
-				{name: repo.name, owner: repo.owner}));
+var author$project$Main$fetchIssuesPage = F2(
+	function (model, psel) {
+		return A3(
+			author$project$GitHubGraph$fetchRepoIssuesPage,
+			model.githubToken,
+			psel,
+			author$project$Main$IssuesPageFetched(psel));
 	});
 var author$project$GitHubGraph$PullRequestReview = F3(
 	function (author, state, createdAt) {
@@ -11275,27 +11290,21 @@ var author$project$GitHubGraph$pullRequestsQuery = function () {
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pullRequests', pageArgs, paged))));
 	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
 }();
-var author$project$GitHubGraph$fetchRepoPullRequests = F2(
-	function (token, repo) {
-		return A3(
-			author$project$GitHubGraph$fetchPaged,
-			author$project$GitHubGraph$pullRequestsQuery,
-			token,
-			{after: elm$core$Maybe$Nothing, selector: repo});
+var author$project$GitHubGraph$fetchRepoPullRequestsPage = F3(
+	function (token, psel, msg) {
+		return A4(author$project$GitHubGraph$fetchPage, author$project$GitHubGraph$pullRequestsQuery, token, psel, msg);
 	});
-var author$project$Main$PullRequestsFetched = F2(
+var author$project$Main$PullRequestsPageFetched = F2(
 	function (a, b) {
-		return {$: 'PullRequestsFetched', a: a, b: b};
+		return {$: 'PullRequestsPageFetched', a: a, b: b};
 	});
-var author$project$Main$fetchPullRequests = F2(
-	function (model, repo) {
-		return A2(
-			elm$core$Task$attempt,
-			author$project$Main$PullRequestsFetched(repo),
-			A2(
-				author$project$GitHubGraph$fetchRepoPullRequests,
-				model.githubToken,
-				{name: repo.name, owner: repo.owner}));
+var author$project$Main$fetchPullRequestsPage = F2(
+	function (model, psel) {
+		return A3(
+			author$project$GitHubGraph$fetchRepoPullRequestsPage,
+			model.githubToken,
+			psel,
+			author$project$Main$PullRequestsPageFetched(psel));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Int');
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue);
@@ -11648,7 +11657,11 @@ var author$project$Main$update = F2(
 							{loadQueue: rest}),
 						first);
 				} else {
-					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					return A3(
+						author$project$Log$debug,
+						'load queue finished!',
+						_List_Nil,
+						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 				}
 			case 'RetryQueue':
 				return elm$core$List$isEmpty(model.failedQueue) ? _Utils_Tuple2(model, elm$core$Platform$Cmd$none) : A3(
@@ -11947,10 +11960,14 @@ var author$project$Main$update = F2(
 							repos),
 						function () {
 							var fetch = function (repo) {
+								var psel = {
+									after: elm$core$Maybe$Nothing,
+									selector: {name: repo.name, owner: repo.owner}
+								};
 								return _List_fromArray(
 									[
-										A2(author$project$Main$fetchIssues, model, repo),
-										A2(author$project$Main$fetchPullRequests, model, repo),
+										A2(author$project$Main$fetchIssuesPage, model, psel),
+										A2(author$project$Main$fetchPullRequestsPage, model, psel),
 										A2(author$project$Main$fetchComparison, model, repo)
 									]);
 							};
@@ -12114,10 +12131,12 @@ var author$project$Main$update = F2(
 							model,
 							A2(author$project$Main$fetchCards, model, colId)));
 				}
-			case 'IssuesFetched':
+			case 'IssuesPageFetched':
 				if (msg.b.$ === 'Ok') {
-					var repo = msg.a;
-					var issues = msg.b.a;
+					var psel = msg.a;
+					var _n7 = msg.b.a;
+					var issues = _n7.a;
+					var pageInfo = _n7.b;
 					var fetchTimelines = A2(
 						elm$core$List$map,
 						A2(
@@ -12135,29 +12154,38 @@ var author$project$Main$update = F2(
 								},
 								elm$core$Basics$eq(author$project$GitHubGraph$IssueStateOpen)),
 							issues));
+					var fetchNext = pageInfo.hasNextPage ? A2(
+						author$project$Main$fetchIssuesPage,
+						model,
+						_Utils_update(
+							psel,
+							{after: pageInfo.endCursor})) : elm$core$Platform$Cmd$none;
 					return A3(
 						author$project$Log$debug,
 						'issues fetched for',
-						repo.url,
+						psel,
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									loadQueue: _Utils_ap(model.loadQueue, fetchTimelines)
+									loadQueue: A2(
+										elm$core$List$cons,
+										fetchNext,
+										_Utils_ap(model.loadQueue, fetchTimelines))
 								}),
 							author$project$Main$setIssues(
 								A2(elm$core$List$map, author$project$GitHubGraph$encodeIssue, issues))));
 				} else {
-					var repo = msg.a;
+					var psel = msg.a;
 					var err = msg.b.a;
 					return A3(
 						author$project$Log$debug,
 						'failed to fetch issues',
-						_Utils_Tuple2(repo.url, err),
+						_Utils_Tuple2(psel, err),
 						A2(
 							author$project$Main$backOff,
 							model,
-							A2(author$project$Main$fetchIssues, model, repo)));
+							A2(author$project$Main$fetchIssuesPage, model, psel)));
 				}
 			case 'IssueFetched':
 				if (msg.a.$ === 'Ok') {
@@ -12186,6 +12214,77 @@ var author$project$Main$update = F2(
 						'failed to fetch issue',
 						err,
 						_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+				}
+			case 'PullRequestsPageFetched':
+				if (msg.b.$ === 'Ok') {
+					var psel = msg.a;
+					var _n8 = msg.b.a;
+					var prs = _n8.a;
+					var pageInfo = _n8.b;
+					var openPRs = A2(
+						elm$core$List$filter,
+						A2(
+							elm$core$Basics$composeR,
+							function ($) {
+								return $.state;
+							},
+							elm$core$Basics$eq(author$project$GitHubGraph$PullRequestStateOpen)),
+						prs);
+					var fetchTimelines = A2(
+						elm$core$List$map,
+						A2(
+							elm$core$Basics$composeL,
+							author$project$Main$fetchPRTimelineAndReviews(model),
+							function ($) {
+								return $.id;
+							}),
+						openPRs);
+					var fetchNext = pageInfo.hasNextPage ? A2(
+						author$project$Main$fetchPullRequestsPage,
+						model,
+						_Utils_update(
+							psel,
+							{after: pageInfo.endCursor})) : elm$core$Platform$Cmd$none;
+					var commitPRs = A3(
+						elm$core$List$foldl,
+						function (pr) {
+							var _n9 = pr.lastCommit;
+							if (_n9.$ === 'Just') {
+								var sha = _n9.a.sha;
+								return A2(elm$core$Dict$insert, sha, pr.id);
+							} else {
+								return elm$core$Basics$identity;
+							}
+						},
+						model.commitPRs,
+						openPRs);
+					return A3(
+						author$project$Log$debug,
+						'prs fetched for',
+						psel,
+						_Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									commitPRs: commitPRs,
+									loadQueue: A2(
+										elm$core$List$cons,
+										fetchNext,
+										_Utils_ap(model.loadQueue, fetchTimelines))
+								}),
+							author$project$Main$setPullRequests(
+								A2(elm$core$List$map, author$project$GitHubGraph$encodePullRequest, prs))));
+				} else {
+					var psel = msg.a;
+					var err = msg.b.a;
+					return A3(
+						author$project$Log$debug,
+						'failed to fetch prs',
+						_Utils_Tuple2(psel, err),
+						A2(
+							author$project$Main$backOff,
+							model,
+							A2(author$project$Main$fetchPullRequestsPage, model, psel)));
 				}
 			case 'FetchComparison':
 				var repo = msg.a;
@@ -12225,66 +12324,6 @@ var author$project$Main$update = F2(
 									repo.id,
 									author$project$GitHubGraph$encodeV3Comparison(comparison)))));
 				}
-			case 'PullRequestsFetched':
-				if (msg.b.$ === 'Ok') {
-					var repo = msg.a;
-					var prs = msg.b.a;
-					var openPRs = A2(
-						elm$core$List$filter,
-						A2(
-							elm$core$Basics$composeR,
-							function ($) {
-								return $.state;
-							},
-							elm$core$Basics$eq(author$project$GitHubGraph$PullRequestStateOpen)),
-						prs);
-					var fetchTimelines = A2(
-						elm$core$List$map,
-						A2(
-							elm$core$Basics$composeL,
-							author$project$Main$fetchPRTimelineAndReviews(model),
-							function ($) {
-								return $.id;
-							}),
-						openPRs);
-					var commitPRs = A3(
-						elm$core$List$foldl,
-						function (pr) {
-							var _n7 = pr.lastCommit;
-							if (_n7.$ === 'Just') {
-								var sha = _n7.a.sha;
-								return A2(elm$core$Dict$insert, sha, pr.id);
-							} else {
-								return elm$core$Basics$identity;
-							}
-						},
-						model.commitPRs,
-						openPRs);
-					return A3(
-						author$project$Log$debug,
-						'prs fetched for',
-						repo.url,
-						_Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									commitPRs: commitPRs,
-									loadQueue: _Utils_ap(model.loadQueue, fetchTimelines)
-								}),
-							author$project$Main$setPullRequests(
-								A2(elm$core$List$map, author$project$GitHubGraph$encodePullRequest, prs))));
-				} else {
-					var repo = msg.a;
-					var err = msg.b.a;
-					return A3(
-						author$project$Log$debug,
-						'failed to fetch prs',
-						_Utils_Tuple2(repo.url, err),
-						A2(
-							author$project$Main$backOff,
-							model,
-							A2(author$project$Main$fetchPullRequests, model, repo)));
-				}
 			case 'PullRequestFetched':
 				if (msg.a.$ === 'Ok') {
 					var pr = msg.a.a;
@@ -12297,9 +12336,9 @@ var author$project$Main$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _n8 = pr.lastCommit;
-										if (_n8.$ === 'Just') {
-											var sha = _n8.a.sha;
+										var _n10 = pr.lastCommit;
+										if (_n10.$ === 'Just') {
+											var sha = _n10.a.sha;
 											return A3(elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12368,9 +12407,9 @@ var author$project$Main$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _n10 = msg.b.a;
-					var timeline = _n10.a;
-					var reviews = _n10.b;
+					var _n12 = msg.b.a;
+					var timeline = _n12.a;
+					var reviews = _n12.b;
 					var reviewers = A2(
 						elm$core$List$map,
 						author$project$GitHubGraph$encodePullRequestReview,
@@ -12378,8 +12417,8 @@ var author$project$Main$update = F2(
 							A3(
 								elm$core$List$foldl,
 								function (r) {
-									var _n12 = r.state;
-									switch (_n12.$) {
+									var _n14 = r.state;
+									switch (_n14.$) {
 										case 'PullRequestReviewStatePending':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -12778,11 +12817,11 @@ var author$project$Main$subscriptions = function (model) {
 			[
 				A2(
 				elm$time$Time$every,
-				100,
+				500,
 				elm$core$Basics$always(author$project$Main$PopQueue)),
 				A2(
 				elm$time$Time$every,
-				(5 * 60) * 1000,
+				60 * 1000,
 				elm$core$Basics$always(author$project$Main$RetryQueue)),
 				model.noRefresh ? elm$core$Platform$Sub$none : A2(
 				elm$time$Time$every,
