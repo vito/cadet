@@ -20820,8 +20820,8 @@ var author$project$Main$viewSidebar = function (model) {
 					}),
 				elm$core$Set$toList(model.anticipatedCards))));
 	var sidebarCards = _Utils_ap(
-		anticipatedCards,
-		elm$core$List$reverse(selectedCards));
+		elm$core$List$reverse(selectedCards),
+		anticipatedCards);
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(

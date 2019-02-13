@@ -1484,7 +1484,7 @@ viewSidebar model =
                 List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
 
         sidebarCards =
-            anticipatedCards ++ List.reverse selectedCards
+            List.reverse selectedCards ++ anticipatedCards
     in
     Html.div [ HA.class "main-sidebar" ]
         [ viewSidebarControls model
