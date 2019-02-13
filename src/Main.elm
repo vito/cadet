@@ -10,7 +10,6 @@ import Dict exposing (Dict)
 import Drag
 import ForceGraph as FG exposing (ForceGraph)
 import GitHubGraph
-import Graph exposing (Graph)
 import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
@@ -1142,19 +1141,15 @@ updateGraphStates model =
             }
 
         affectedByState graph =
-            Graph.fold
-                (\{ node } affected ->
+            FG.fold
+                (\node affected ->
                     if affected then
                         True
 
                     else
-                        let
-                            id =
-                                node.label.value
-                        in
-                        OrderedSet.member id newState.selectedCards
-                            || Set.member id newState.anticipatedCards
-                            || (newState.highlightedNode == Just id)
+                        OrderedSet.member node.value newState.selectedCards
+                            || Set.member node.value newState.anticipatedCards
+                            || (newState.highlightedNode == Just node.value)
                 )
                 False
                 graph
@@ -1608,7 +1603,8 @@ viewSpatialGraph model =
 
 graphId : ForceGraph GitHubGraph.ID -> String
 graphId graph =
-    Graph.fold (\{ node } acc -> min node.label.value acc) "" graph
+    FG.fold (\{ id } acc -> max id acc) 0 graph
+        |> String.fromInt
 
 
 viewGraphControls : Model -> Html Msg
@@ -2657,9 +2653,9 @@ sortAndFilterGraphs model =
                 (\fg fgs ->
                     let
                         matching =
-                            Graph.fold
-                                (\{ node } matches ->
-                                    case Dict.get node.label.value model.allCards of
+                            FG.fold
+                                (\node matches ->
+                                    case Dict.get node.value model.allCards of
                                         Just card ->
                                             if satisfiesFilters model allFilters card then
                                                 Set.insert card.id matches
@@ -2759,13 +2755,13 @@ satisfiesFilter model filter card =
 
 graphImpactCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
 graphImpactCompare model a b =
-    case compare (Graph.size a) (Graph.size b) of
+    case compare (FG.size a) (FG.size b) of
         EQ ->
             let
                 graphScore =
-                    Graph.fold
-                        (\{ node } sum ->
-                            case Dict.get node.label.value model.allCards of
+                    FG.fold
+                        (\node sum ->
+                            case Dict.get node.value model.allCards of
                                 Just { score } ->
                                     score + sum
 
@@ -2784,11 +2780,11 @@ graphUserActivityCompare : Model -> String -> ForceGraph GitHubGraph.ID -> Force
 graphUserActivityCompare model login a b =
     let
         latestUserActivity =
-            Graph.fold
-                (\{ node } latest ->
+            FG.fold
+                (\node latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.label.value model.data.actors)
+                            Maybe.withDefault [] (Dict.get node.value model.data.actors)
                                 |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
@@ -2809,16 +2805,16 @@ graphAllActivityCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHu
 graphAllActivityCompare model a b =
     let
         latestActivity =
-            Graph.fold
-                (\{ node } latest ->
+            FG.fold
+                (\node latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.label.value model.data.actors)
+                            Maybe.withDefault [] (Dict.get node.value model.data.actors)
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
 
                         mupdated =
-                            Dict.get node.label.value model.allCards
+                            Dict.get node.value model.allCards
                                 |> Maybe.map (.updatedAt >> Time.posixToMillis)
                     in
                     case ( mlatest, mupdated ) of
@@ -2840,7 +2836,7 @@ viewGraph : CardNodeState -> ForceGraph GitHubGraph.ID -> Html Msg
 viewGraph state graph =
     let
         ( flairs, nodes, bounds ) =
-            Graph.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
+            FG.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
 
         padding =
             10
@@ -2864,7 +2860,7 @@ viewGraph state graph =
             maxY - minY
 
         links =
-            List.map (linkPath state graph) (Graph.edges graph)
+            List.map (linkPath state graph) graph.edges
     in
     Svg.svg
         [ SA.width (String.fromFloat width ++ "px")
@@ -2879,31 +2875,28 @@ viewGraph state graph =
 
 viewNodeLowerUpper :
     CardNodeState
-    -> Graph.NodeContext (FG.ForceNode GitHubGraph.ID) ()
+    -> FG.ForceNode GitHubGraph.ID
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
-viewNodeLowerUpper state { node, incoming, outgoing } ( fs, ns, bs ) =
-    case Dict.get node.label.value state.allCards of
+viewNodeLowerUpper state { value, mass, x, y } ( fs, ns, bs ) =
+    case Dict.get value state.allCards of
         Just card ->
             let
-                context =
-                    { incoming = incoming, outgoing = outgoing }
-
                 pos =
-                    { x = node.label.x, y = node.label.y }
+                    { x = x, y = y }
 
                 radiiWithFlair =
-                    cardRadiusWithFlair card context
+                    cardRadiusWithFlair card mass
 
                 bounds =
-                    { x1 = node.label.x - radiiWithFlair
-                    , y1 = node.label.y - radiiWithFlair
-                    , x2 = node.label.x + radiiWithFlair
-                    , y2 = node.label.y + radiiWithFlair
+                    { x1 = x - radiiWithFlair
+                    , y1 = y - radiiWithFlair
+                    , x2 = x + radiiWithFlair
+                    , y2 = y + radiiWithFlair
                     }
             in
-            ( ( node.label.value, Svg.Lazy.lazy4 viewCardFlair card context pos state ) :: fs
-            , ( node.label.value, Svg.Lazy.lazy4 viewCardCircle card context pos state ) :: ns
+            ( ( value, Svg.Lazy.lazy4 viewCardFlair card mass pos state ) :: fs
+            , ( value, Svg.Lazy.lazy4 viewCardCircle card mass pos state ) :: ns
             , bounds :: bs
             )
 
@@ -2911,31 +2904,31 @@ viewNodeLowerUpper state { node, incoming, outgoing } ( fs, ns, bs ) =
             ( fs, ns, bs )
 
 
-viewCardFlair : Card -> GraphContext -> Position -> CardNodeState -> Svg Msg
-viewCardFlair card context pos state =
+viewCardFlair : Card -> Float -> Position -> CardNodeState -> Svg Msg
+viewCardFlair card radius pos state =
     let
         flairArcs =
-            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id state.reviewers) card context
+            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id state.reviewers) card radius
 
         radii =
-            { base = cardRadiusBase card context
-            , withoutFlair = cardRadiusWithoutFlair card context
-            , withFlair = cardRadiusWithFlair card context
+            { base = radius
+            , withoutFlair = radius
+            , withFlair = cardRadiusWithFlair card radius
             }
     in
     viewCardNodeFlair card radii flairArcs pos state
 
 
-viewCardCircle : Card -> GraphContext -> Position -> CardNodeState -> Svg Msg
-viewCardCircle card context pos state =
+viewCardCircle : Card -> Float -> Position -> CardNodeState -> Svg Msg
+viewCardCircle card radius pos state =
     let
         labelArcs =
-            cardLabelArcs state.allLabels card context
+            cardLabelArcs state.allLabels card radius
 
         radii =
-            { base = cardRadiusBase card context
-            , withoutFlair = cardRadiusWithoutFlair card context
-            , withFlair = cardRadiusWithFlair card context
+            { base = radius
+            , withoutFlair = radius
+            , withFlair = cardRadiusWithFlair card radius
             }
 
         circle =
@@ -2962,11 +2955,11 @@ isFilteredOut state id =
     not (Set.isEmpty state.filteredCards) && not (Set.member id state.filteredCards)
 
 
-linkPath : CardNodeState -> Graph (FG.ForceNode GitHubGraph.ID) () -> Graph.Edge () -> Svg Msg
-linkPath state graph edge =
+linkPath : CardNodeState -> ForceGraph GitHubGraph.ID -> ( FG.NodeId, FG.NodeId ) -> Svg Msg
+linkPath state graph ( from, to ) =
     let
         getEnd end =
-            case Maybe.map (.node >> .label) (Graph.get end graph) of
+            case FG.get end graph of
                 Just { x, y, value } ->
                     ( { x = x, y = y }, isFilteredOut state value )
 
@@ -2974,10 +2967,10 @@ linkPath state graph edge =
                     ( { x = 0, y = 0 }, False )
 
         ( source, sourceIsFilteredOut ) =
-            getEnd edge.from
+            getEnd from
 
         ( target, targetIsFilteredOut ) =
-            getEnd edge.to
+            getEnd to
     in
     Svg.line
         [ SA.class "graph-edge"
@@ -2994,26 +2987,9 @@ linkPath state graph edge =
         []
 
 
-type alias GraphContext =
-    { incoming : IntDict ()
-    , outgoing : IntDict ()
-    }
-
-
-cardRadiusBase : Card -> GraphContext -> Float
-cardRadiusBase card { incoming, outgoing } =
-    20
-        + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
-
-
-cardRadiusWithLabels : Card -> GraphContext -> Float
-cardRadiusWithLabels card context =
-    cardRadiusBase card context + 3
-
-
-cardRadiusWithoutFlair : Card -> GraphContext -> Float
-cardRadiusWithoutFlair card context =
-    cardRadiusWithLabels card context
+cardRadiusWithLabels : Float -> Float
+cardRadiusWithLabels mass =
+    mass + 3
 
 
 flairRadiusBase : Float
@@ -3021,8 +2997,8 @@ flairRadiusBase =
     20
 
 
-cardRadiusWithFlair : Card -> GraphContext -> Float
-cardRadiusWithFlair card context =
+cardRadiusWithFlair : Card -> Float -> Float
+cardRadiusWithFlair card mass =
     let
         reactionCounts =
             List.map .count card.reactions
@@ -3030,15 +3006,12 @@ cardRadiusWithFlair card context =
         highestFlair =
             List.foldl (\num acc -> max num acc) 0 (card.commentCount :: reactionCounts)
     in
-    cardRadiusWithoutFlair card context + flairRadiusBase + toFloat highestFlair
+    mass + flairRadiusBase + toFloat highestFlair
 
 
-reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> GraphContext -> List (Svg Msg)
-reactionFlairArcs reviews card context =
+reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> Float -> List (Svg Msg)
+reactionFlairArcs reviews card radius =
     let
-        radius =
-            cardRadiusWithoutFlair card context
-
         reactionTypeEmoji type_ =
             case type_ of
                 GitHubGraph.ReactionTypeThumbsUp ->
@@ -3220,12 +3193,9 @@ reactionFlairArcs reviews card context =
                 ]
 
 
-cardLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> GraphContext -> List (Svg Msg)
-cardLabelArcs allLabels card context =
+cardLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> Float -> List (Svg Msg)
+cardLabelArcs allLabels card radius =
     let
-        radius =
-            cardRadiusBase card context
-
         labelSegments =
             Shape.pie
                 { startAngle = 0

@@ -1,7 +1,16 @@
-module ForceGraph exposing (ForceGraph, ForceNode, decode, encode, fromGraph, member, update)
+module ForceGraph exposing
+    ( ForceGraph
+    , ForceNode
+    , NodeId
+    , decode
+    , encode
+    , fold
+    , fromGraph
+    , get
+    , size
+    )
 
 import Force
-import Graph exposing (Graph)
 import IntDict exposing (IntDict)
 import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
@@ -10,25 +19,39 @@ import Random
 
 
 type alias ForceGraph n =
-    Graph (ForceNode n) ()
+    { nodes : IntDict (ForceNode n)
+    , edges : List ( NodeId, NodeId )
+    }
+
+
+type alias NodeId =
+    Int
 
 
 type alias ForceNode n =
-    Force.Entity Graph.NodeId { value : n, size : Float }
+    Force.Entity NodeId { mass : Float, value : n }
 
 
-fromGraph : Graph { value : n, size : Float } () -> ForceGraph n
-fromGraph g =
+type alias DecodedNode n =
+    { id : NodeId
+    , x : Float
+    , y : Float
+    , vy : Float
+    , vx : Float
+    , mass : Float
+    , value : n
+    }
+
+
+fromGraph : IntDict { value : value, mass : Float } -> List ( NodeId, NodeId ) -> ForceGraph value
+fromGraph nodes edges =
     let
-        graph =
-            Graph.mapContexts node g
-
-        link { from, to } =
+        link ( from, to ) =
             let
                 distance =
-                    case ( Graph.get from graph, Graph.get to graph ) of
-                        ( Just fnc, Just tnc ) ->
-                            20 + ceiling (tnc.node.label.size + fnc.node.label.size)
+                    case ( IntDict.get from nodes, IntDict.get to nodes ) of
+                        ( Just f, Just t ) ->
+                            20 + ceiling (f.mass + t.mass)
 
                         _ ->
                             0
@@ -40,134 +63,93 @@ fromGraph g =
             }
 
         forces =
-            [ Force.customLinks 1 <| List.map link <| Graph.edges graph
-            , Force.manyBodyStrength -200 <| List.map .id <| Graph.nodes graph
+            [ Force.customLinks 1 (List.map link edges)
+            , Force.manyBodyStrength -200 (IntDict.keys nodes)
             ]
 
-        size =
-            Graph.size graph
+        nodeCount =
+            IntDict.size nodes
 
         iterations =
-            if size == 1 then
+            if nodeCount == 1 then
                 1
 
-            else if size < 5 then
+            else if nodeCount < 5 then
                 50
 
             else
-                size * 10
+                nodeCount * 10
 
         newSimulation =
             Force.iterations iterations <|
                 Force.simulation forces
-    in
-    computeSimulation newSimulation graph
 
+        addNode id { mass, value } acc =
+            let
+                canvas =
+                    500
 
-member : Graph.NodeId -> ForceGraph n -> Bool
-member =
-    Graph.member
+                ( x, s2 ) =
+                    Random.step (Random.float 0 canvas) (Random.initialSeed id)
 
-
-update : Graph.NodeId -> (n -> n) -> ForceGraph n -> ForceGraph n
-update id f fg =
-    Graph.update id
-        (Maybe.map
-            (\nc ->
-                let
-                    ncnode =
-                        nc.node
-
-                    label =
-                        ncnode.label
-
-                    value =
-                        label.value
-                in
-                { nc | node = { ncnode | label = { label | value = f value } } }
-            )
-        )
-        fg
-
-
-node : Graph.NodeContext { value : n, size : Float } () -> Graph.NodeContext (ForceNode n) ()
-node nc =
-    let
-        ncnode =
-            nc.node
-
-        canvas =
-            500
-
-        ( x, s2 ) =
-            Random.step (Random.float 0 canvas) (Random.initialSeed ncnode.id)
-
-        ( y, s3 ) =
-            Random.step (Random.float 0 canvas) s2
-    in
-    { incoming = nc.incoming
-    , outgoing = nc.outgoing
-    , node =
-        { id = ncnode.id
-        , label =
-            { x = x
+                ( y, s3 ) =
+                    Random.step (Random.float 0 canvas) s2
+            in
+            { id = id
+            , x = x
             , y = y
             , vx = 0.0
             , vy = 0.0
-            , id = ncnode.id
-            , value = ncnode.label.value
-            , size = ncnode.label.size
+            , mass = mass
+            , value = value
             }
-        }
+                :: acc
+
+        simulated =
+            Force.computeSimulation newSimulation (IntDict.foldl addNode [] nodes)
+    in
+    { nodes = List.foldl (\n ns -> IntDict.insert n.id n ns) IntDict.empty simulated
+    , edges = edges
     }
 
 
-computeSimulation : Force.State Graph.NodeId -> ForceGraph n -> ForceGraph n
-computeSimulation simulation graph =
-    updateGraphWithList graph <|
-        Force.computeSimulation simulation (List.map .label (Graph.nodes graph))
+get : NodeId -> ForceGraph n -> Maybe (ForceNode n)
+get id { nodes } =
+    IntDict.get id nodes
+
+
+size : ForceGraph n -> Int
+size { nodes } =
+    IntDict.size nodes
+
+
+fold : (ForceNode n -> acc -> acc) -> acc -> ForceGraph n -> acc
+fold f init { nodes } =
+    IntDict.foldl (\_ -> f) init nodes
 
 
 encode : (n -> JE.Value) -> ForceGraph n -> JE.Value
 encode encoder graph =
     let
-        encodeNode nc =
+        encodeNode { id, x, y, value, mass } =
             JE.object
-                [ ( "id", JE.int nc.node.id )
-                , ( "incoming", encodeIntDict nc.incoming )
-                , ( "outgoing", encodeIntDict nc.outgoing )
-                , ( "value", encoder nc.node.label.value )
-                , ( "x", JE.float nc.node.label.x )
-                , ( "y", JE.float nc.node.label.y )
-                , ( "size", JE.float nc.node.label.size )
+                [ ( "id", JE.int id )
+                , ( "x", JE.float x )
+                , ( "y", JE.float y )
+                , ( "mass", JE.float mass )
+                , ( "value", encoder value )
                 ]
 
-        nodes =
-            Graph.fold (\n ns -> encodeNode n :: ns) [] graph
+        encodeEdge ( from, to ) =
+            JE.object
+                [ ( "from", JE.int from )
+                , ( "to", JE.int to )
+                ]
     in
-    JE.list identity nodes
-
-
-encodeIntDict : IntDict () -> JE.Value
-encodeIntDict =
-    JE.list JE.int << IntDict.keys
-
-
-decodeIntDict : JD.Decoder (IntDict ())
-decodeIntDict =
-    JD.map (IntDict.fromList << List.map (\i -> ( i, () ))) <|
-        JD.list JD.int
-
-
-type alias DecodedNode n =
-    { id : Int
-    , incoming : IntDict ()
-    , outgoing : IntDict ()
-    , value : n
-    , x : Float
-    , y : Float
-    , size : Float
-    }
+    JE.object
+        [ ( "nodes", JE.list encodeNode (IntDict.values graph.nodes) )
+        , ( "edges", JE.list encodeEdge graph.edges )
+        ]
 
 
 decode : JD.Decoder n -> JD.Decoder (ForceGraph n)
@@ -176,57 +158,21 @@ decode decoder =
         decodeNode =
             JD.succeed DecodedNode
                 |> andMap (JD.field "id" JD.int)
-                |> andMap (JD.field "incoming" decodeIntDict)
-                |> andMap (JD.field "outgoing" decodeIntDict)
-                |> andMap (JD.field "value" decoder)
                 |> andMap (JD.field "x" JD.float)
                 |> andMap (JD.field "y" JD.float)
-                |> andMap (JD.field "size" JD.float)
+                |> andMap (JD.succeed 0)
+                |> andMap (JD.succeed 0)
+                |> andMap (JD.field "mass" JD.float)
+                |> andMap (JD.field "value" decoder)
 
-        addGraphNode n g =
-            let
-                nc =
-                    { node =
-                        { id = n.id
-                        , label =
-                            { id = n.id
-                            , x = n.x
-                            , y = n.y
-                            , vx = 0.0
-                            , vy = 0.0
-                            , size = n.size
-                            , value = n.value
-                            }
-                        }
-                    , incoming = n.incoming
-                    , outgoing = n.outgoing
-                    }
-            in
-            Graph.insert nc g
+        decodeEdge =
+            JD.succeed Tuple.pair
+                |> andMap (JD.field "from" JD.int)
+                |> andMap (JD.field "to" JD.int)
 
-        toGraph =
-            List.foldl addGraphNode Graph.empty
+        toDict =
+            List.foldl (\n ns -> IntDict.insert n.id n ns) IntDict.empty
     in
-    JD.list decodeNode
-        |> JD.map toGraph
-
-
-updateGraphWithList : Graph (ForceNode n) () -> List (ForceNode n) -> Graph (ForceNode n) ()
-updateGraphWithList =
-    let
-        graphUpdater value =
-            Maybe.map (\ctx -> updateContextWithValue ctx value)
-    in
-    List.foldr (\ncnode -> Graph.update ncnode.id (graphUpdater ncnode))
-
-
-updateContextWithValue : Graph.NodeContext (ForceNode n) () -> ForceNode n -> Graph.NodeContext (ForceNode n) ()
-updateContextWithValue nc value =
-    let
-        ncnode =
-            nc.node
-
-        label =
-            ncnode.label
-    in
-    { nc | node = { ncnode | label = value } }
+    JD.succeed ForceGraph
+        |> andMap (JD.field "nodes" (JD.map toDict (JD.list decodeNode)))
+        |> andMap (JD.field "edges" (JD.list decodeEdge))
