@@ -793,91 +793,92 @@ type alias NodeEdges =
     }
 
 
-cardRadiusBase : NodeEdges -> Float
-cardRadiusBase { incoming, outgoing } =
+cardRadiusBase : Int -> Int -> Float
+cardRadiusBase incomingCount outgoingCount =
     20
-        + ((toFloat (IntDict.size incoming) / 2) + toFloat (IntDict.size outgoing * 2))
+        + ((toFloat incomingCount / 2) + toFloat (outgoingCount * 2))
 
 
 computeGraph : List GitHubGraph.ID -> List ( GitHubGraph.ID, List GitHubGraph.ID ) -> List (ForceGraph GitHubGraph.ID)
-computeGraph cardIds references =
+computeGraph cardIdStrs references =
     let
-        cardEdges =
+        bump n i =
+            Dict.update i (Just << (+) n << Maybe.withDefault 0)
+
+        ( allEdges, incoming, outgoing ) =
             List.foldl
-                (\( idStr, sourceIds ) refs ->
+                (\( targetIdStr, sourceIdStrs ) ( es, i, o ) ->
                     let
-                        id =
-                            Hash.hash idStr
+                        targetId =
+                            Hash.hash targetIdStr
+
+                        sourceIds =
+                            List.map Hash.hash sourceIdStrs
                     in
-                    List.map
-                        (\sourceId ->
-                            { from = Hash.hash sourceId
-                            , to = id
-                            , label = ()
-                            }
-                        )
-                        sourceIds
-                        ++ refs
+                    ( List.map (\sourceId -> ( sourceId, targetId )) sourceIds
+                        ++ es
+                    , bump (List.length sourceIds) targetId i
+                    , List.foldl (bump 1) o sourceIds
+                    )
                 )
-                []
+                ( [], Dict.empty, Dict.empty )
                 references
 
-        node cardId context =
-            { value = cardId
-            , size = cardRadiusBase context
-            }
+        size id =
+            cardRadiusBase
+                (Maybe.withDefault 0 (Dict.get id incoming))
+                (Maybe.withDefault 0 (Dict.get id outgoing))
 
-        cardNodeThunks =
-            List.map (\cardId -> Graph.Node (Hash.hash cardId) (node cardId)) cardIds
+        ( allNodes, cardIds ) =
+            List.foldl
+                (\gId ( ns, is ) ->
+                    let
+                        id =
+                            Hash.hash gId
+                    in
+                    ( Dict.insert id { value = gId, size = size id } ns
+                    , id :: is
+                    )
+                )
+                ( Dict.empty, [] )
+                cardIdStrs
 
-        applyWithContext nc =
-            { node = { id = nc.node.id, label = nc.node.label { incoming = nc.incoming, outgoing = nc.outgoing } }
-            , incoming = nc.incoming
-            , outgoing = nc.outgoing
-            }
-
-        graph =
-            Graph.mapContexts applyWithContext <|
-                Graph.fromNodesAndEdges
-                    cardNodeThunks
-                    cardEdges
-    in
-    subGraphs graph
-        |> List.map ForceGraph.fromGraph
-
-
-subGraphs : Graph n e -> List (Graph n e)
-subGraphs graph =
-    let
         singletonGraphs =
-            Graph.fold
-                (\nc ncs ->
-                    if IntDict.isEmpty nc.incoming && IntDict.isEmpty nc.outgoing then
-                        Graph.insert nc Graph.empty :: ncs
+            List.filterMap
+                (\id ->
+                    if not (Dict.member id incoming) && not (Dict.member id outgoing) then
+                        Maybe.map (\n -> ForceGraph.fromGraph (Dict.singleton id n) []) (Dict.get id allNodes)
 
                     else
-                        ncs
+                        Nothing
                 )
-                []
-                graph
+                cardIds
 
         subEdgeNodes =
-            List.foldl (\edge set -> Set.insert edge.from (Set.insert edge.to set)) Set.empty
+            List.foldl (\( from, to ) set -> Set.insert from (Set.insert to set)) Set.empty
+
+        graphFromEdges es =
+            let
+                nodes =
+                    subEdgeNodes es
+
+                subNodes =
+                    Dict.filter (\i _ -> Set.member i nodes) allNodes
+            in
+            ForceGraph.fromGraph subNodes es
 
         connectedGraphs =
-            graph
-                |> Graph.edges
-                |> subEdges
-                |> List.map ((\a -> Graph.inducedSubgraph a graph) << Set.toList << subEdgeNodes)
+            subEdges allEdges
+                |> List.map graphFromEdges
     in
     connectedGraphs ++ singletonGraphs
 
 
-subEdges : List (Graph.Edge e) -> List (List (Graph.Edge e))
+subEdges : List ( comparable, comparable ) -> List (List ( comparable, comparable ))
 subEdges =
     let
-        edgesRelated edge =
-            List.any (\{ from, to } -> from == edge.from || from == edge.to || to == edge.from || to == edge.to)
+        edgesRelated ( from1, to1 ) =
+            List.any (\( from2, to2 ) -> from1 == from2 || from1 == to2 || to1 == from2 || to1 == to2)
 
         go acc edges =
             case edges of

@@ -6,7 +6,7 @@
   "author": "Alex Suraci <suraci.alex@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "node index.js",
+    "start": "node --inspect index.js",
     "build": "make"
   },
   "dependencies": {
