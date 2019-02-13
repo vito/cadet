@@ -8541,6 +8541,26 @@ var author$project$GitHubGraph$milestoneObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Milestone))))));
+var author$project$GitHubGraph$ReactionGroup = F2(
+	function (type_, count) {
+		return {count: count, type_: type_};
+	});
+var author$project$GitHubGraph$reactionGroupObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'users',
+		_List_Nil,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'content',
+			_List_Nil,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$reactionTypes)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ReactionGroup)));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map = F2(
 	function (f, _n0) {
 		var sourceType = _n0.a;
@@ -8557,6 +8577,16 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map = F2(
 			vars,
 			fragments);
 	});
+var author$project$GitHubGraph$nonZeroReactionGroups = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
+	elm$core$List$filter(
+		A2(
+			elm$core$Basics$composeL,
+			elm$core$Basics$gt(0),
+			function ($) {
+				return $.count;
+			})),
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$reactionGroupObject));
 var author$project$GitHubGraph$nullableList = function (o) {
 	return A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
@@ -8616,26 +8646,6 @@ var author$project$GitHubGraph$projectCardObject = A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$CardLocation)))));
-var author$project$GitHubGraph$ReactionGroup = F2(
-	function (type_, count) {
-		return {count: count, type_: type_};
-	});
-var author$project$GitHubGraph$reactionGroupObject = A2(
-	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'users',
-		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
-	A2(
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-			'content',
-			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$reactionTypes)),
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ReactionGroup)));
 var author$project$GitHubGraph$RepoLocation = F4(
 	function (id, url, owner, name) {
 		return {id: id, name: name, owner: owner, url: url};
@@ -8787,11 +8797,7 @@ var author$project$GitHubGraph$prObject = A2(
 									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
 									A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A3(
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-											'reactionGroups',
-											_List_Nil,
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$reactionGroupObject)),
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHubGraph$nonZeroReactionGroups),
 										A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 											A3(
@@ -9746,11 +9752,7 @@ var author$project$GitHubGraph$issueObject = A2(
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-						'reactionGroups',
-						_List_Nil,
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$reactionGroupObject)),
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHubGraph$nonZeroReactionGroups),
 					A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 						A3(

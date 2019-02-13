@@ -1214,7 +1214,7 @@ issueObject =
         |> GB.with (GB.field "number" [] GB.int)
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-        |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
+        |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
         |> GB.with (GB.field "author" [] authorObject)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
@@ -1250,6 +1250,11 @@ nullableList o =
     GB.map (List.filterMap identity) (GB.list (GB.nullable o))
 
 
+nonZeroReactionGroups : GB.ValueSpec GB.NonNull (GB.ListType GB.NonNull GB.ObjectType) (List ReactionGroup) vars
+nonZeroReactionGroups =
+    GB.map (List.filter ((>) 0 << .count)) <| GB.list reactionGroupObject
+
+
 prObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequest vars
 prObject =
     GB.object PullRequest
@@ -1262,7 +1267,7 @@ prObject =
         |> GB.with (GB.field "number" [] GB.int)
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
-        |> GB.with (GB.field "reactionGroups" [] (GB.list reactionGroupObject))
+        |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
         |> GB.with (GB.field "author" [] authorObject)
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
