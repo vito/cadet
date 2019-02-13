@@ -843,10 +843,22 @@ computeGraph cardIdStrs references =
                 ( Dict.empty, [] )
                 cardIdStrs
 
+        ( connectedEdges, connectedNodes ) =
+            List.foldl
+                (\( from, to ) ( es, ns ) ->
+                    if Dict.member from allNodes && Dict.member to allNodes then
+                        ( ( from, to ) :: es, Set.insert from (Set.insert to ns) )
+
+                    else
+                        ( es, ns )
+                )
+                ( [], Set.empty )
+                allEdges
+
         singletonGraphs =
             List.filterMap
                 (\id ->
-                    if not (Dict.member id incoming) && not (Dict.member id outgoing) then
+                    if not (Set.member id connectedNodes) then
                         Maybe.map (\n -> ForceGraph.fromGraph (Dict.singleton id n) []) (Dict.get id allNodes)
 
                     else
@@ -868,7 +880,7 @@ computeGraph cardIdStrs references =
             ForceGraph.fromGraph subNodes es
 
         connectedGraphs =
-            subEdges allEdges
+            subEdges connectedEdges
                 |> List.map graphFromEdges
     in
     connectedGraphs ++ singletonGraphs

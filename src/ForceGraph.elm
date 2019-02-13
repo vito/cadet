@@ -109,8 +109,8 @@ encode encoder graph =
         encodeNode { id, x, y, value, size } =
             JE.object
                 [ ( "id", JE.int id )
-                , ( "x", JE.float (Log.debug "x" x x) )
-                , ( "y", JE.float (Log.debug "WHYYYYYYYYYYYYYYYYYYYYYY" y y) )
+                , ( "x", JE.float y )
+                , ( "y", JE.float y )
                 , ( "size", JE.float size )
                 , ( "value", encoder value )
                 ]

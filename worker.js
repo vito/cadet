@@ -3518,18 +3518,6 @@ var author$project$Backend$encodeEventActor = function (_n0) {
 					rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(createdAt)))
 			]));
 };
-var elm$core$Basics$always = F2(
-	function (a, _n0) {
-		return a;
-	});
-var elm$core$Debug$log = _Debug_log;
-var author$project$Log$debug = F3(
-	function (ctx, thing, a) {
-		return A2(
-			elm$core$Basics$always,
-			a,
-			A2(elm$core$Debug$log, ctx, thing));
-	});
 var elm$json$Json$Encode$float = _Json_wrap;
 var elm$json$Json$Encode$list = F2(
 	function (func, entries) {
@@ -3556,12 +3544,10 @@ var author$project$ForceGraph$encode = F2(
 						elm$json$Json$Encode$int(id)),
 						_Utils_Tuple2(
 						'x',
-						elm$json$Json$Encode$float(
-							A3(author$project$Log$debug, 'x', x, x))),
+						elm$json$Json$Encode$float(y)),
 						_Utils_Tuple2(
 						'y',
-						elm$json$Json$Encode$float(
-							A3(author$project$Log$debug, 'WHYYYYYYYYYYYYYYYYYYYYYY', y, y))),
+						elm$json$Json$Encode$float(y)),
 						_Utils_Tuple2(
 						'size',
 						elm$json$Json$Encode$float(size)),
@@ -4300,6 +4286,18 @@ var author$project$GitHubGraph$encodeV3Comparison = function (record) {
 				A2(elm$json$Json$Encode$list, author$project$GitHubGraph$encodeV3File, record.files))
 			]));
 };
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
+var elm$core$Debug$log = _Debug_log;
+var author$project$Log$debug = F3(
+	function (ctx, thing, a) {
+		return A2(
+			elm$core$Basics$always,
+			a,
+			A2(elm$core$Debug$log, ctx, thing));
+	});
 var author$project$Main$FetchCards = function (a) {
 	return {$: 'FetchCards', a: a};
 };
@@ -6157,9 +6155,9 @@ var author$project$Main$computeGraph = F2(
 		var subEdgeNodes = A2(
 			elm$core$List$foldl,
 			F2(
-				function (_n6, set) {
-					var from = _n6.a;
-					var to = _n6.b;
+				function (_n9, set) {
+					var from = _n9.a;
+					var to = _n9.b;
 					return A2(
 						elm$core$Set$insert,
 						from,
@@ -6249,12 +6247,34 @@ var author$project$Main$computeGraph = F2(
 			cardIdStrs);
 		var allNodes = _n3.a;
 		var cardIds = _n3.b;
+		var _n5 = A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n6, _n7) {
+					var from = _n6.a;
+					var to = _n6.b;
+					var es = _n7.a;
+					var ns = _n7.b;
+					return (A2(elm$core$Dict$member, from, allNodes) && A2(elm$core$Dict$member, to, allNodes)) ? _Utils_Tuple2(
+						A2(
+							elm$core$List$cons,
+							_Utils_Tuple2(from, to),
+							es),
+						A2(
+							elm$core$Set$insert,
+							from,
+							A2(elm$core$Set$insert, to, ns))) : _Utils_Tuple2(es, ns);
+				}),
+			_Utils_Tuple2(_List_Nil, elm$core$Set$empty),
+			allEdges);
+		var connectedEdges = _n5.a;
+		var connectedNodes = _n5.b;
 		var graphFromEdges = function (es) {
 			var nodes = subEdgeNodes(es);
 			var subNodes = A2(
 				elm$core$Dict$filter,
 				F2(
-					function (i, _n5) {
+					function (i, _n8) {
 						return A2(elm$core$Set$member, i, nodes);
 					}),
 				allNodes);
@@ -6263,11 +6283,11 @@ var author$project$Main$computeGraph = F2(
 		var connectedGraphs = A2(
 			elm$core$List$map,
 			graphFromEdges,
-			author$project$Main$subEdges(allEdges));
+			author$project$Main$subEdges(connectedEdges));
 		var singletonGraphs = A2(
 			elm$core$List$filterMap,
 			function (id) {
-				return ((!A2(elm$core$Dict$member, id, incoming)) && (!A2(elm$core$Dict$member, id, outgoing))) ? A2(
+				return (!A2(elm$core$Set$member, id, connectedNodes)) ? A2(
 					elm$core$Maybe$map,
 					function (n) {
 						return A2(
