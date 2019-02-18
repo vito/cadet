@@ -5,7 +5,7 @@
 
 @sidebar-min-width: 1150px;
 
-@wide-min-width: 800px;
+@wide-min-width: 850px;
 
 * {
   box-sizing: border-box;
@@ -1413,6 +1413,28 @@ a.column-title:hover, .page-header a:hover {
   position: relative;
 
   text-align: center;
+
+  .label {
+    margin-left: 0;
+    height: 18px;
+    width: 18px;
+
+    .label-text {
+      display: none;
+    }
+
+    @media(min-width: @wide-min-width) {
+      width: auto;
+
+      .label-text {
+        display: initial;
+      }
+    }
+  }
+
+  .label + .hide-label {
+    display: none;
+  }
 
   .octicon * {
     fill: @gray-200;

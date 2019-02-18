@@ -1977,11 +1977,19 @@ viewReleaseRepoPage model sir =
             SetReleaseRepoTab
             [ ( Octicons.inbox octiconOpts, "To Do", sir.openIssues ++ sir.openPRs )
             , ( Octicons.check octiconOpts, "Done", sir.doneCards )
-            , ( Octicons.book octiconOpts, "Documented", sir.documentedCards )
-            , ( Octicons.ellipsis octiconOpts, "Undocumented", sir.undocumentedCards )
-            , ( Octicons.archive octiconOpts, "No Impact", sir.noImpactCards )
+            , ( viewLabelByName model "release/documented", "Documented", sir.documentedCards )
+            , ( viewLabelByName model "release/undocumented", "Undocumented", sir.undocumentedCards )
+            , ( viewLabelByName model "release/no-impact", "No Impact", sir.noImpactCards )
             ]
         ]
+
+
+viewLabelByName : Model -> String -> Html Msg
+viewLabelByName model name =
+    Dict.get name model.dataView.labelToRepoToId
+        |> Maybe.andThen (List.head << Dict.values)
+        |> Maybe.withDefault ""
+        |> viewLabel model
 
 
 viewTabbedCards :
@@ -2215,8 +2223,8 @@ viewRepoPullRequestsPage model repo prCards =
                 [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
                 , ( Octicons.x octiconOpts, "Failed Checks", categorized.failedChecks )
                 , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
-                , ( Octicons.unverified octiconOpts, "Needs Tests", categorized.needsTest )
                 , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
+                , ( viewLabelByName model "needs-test", "Needs Tests", categorized.needsTest )
                 ]
             ]
         ]
