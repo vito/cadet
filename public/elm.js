@@ -12778,11 +12778,11 @@ var elm$core$List$partition = F2(
 			_Utils_Tuple2(_List_Nil, _List_Nil),
 			list);
 	});
-var elm$core$Set$foldr = F3(
+var elm$core$Set$foldl = F3(
 	function (func, initialState, _n0) {
 		var dict = _n0.a;
 		return A3(
-			elm$core$Dict$foldr,
+			elm$core$Dict$foldl,
 			F3(
 				function (key, _n1, state) {
 					return A2(func, key, state);
@@ -13435,7 +13435,7 @@ var author$project$Main$update = F2(
 								model,
 								{
 									anticipatedCards: elm$core$Set$empty,
-									selectedCards: A3(elm$core$Set$foldr, y0hy0h$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
+									selectedCards: A3(elm$core$Set$foldl, y0hy0h$ordered_containers$OrderedSet$insert, model.selectedCards, model.anticipatedCards)
 								})),
 						elm$core$Platform$Cmd$none);
 				case 'SelectCard':
@@ -14494,6 +14494,29 @@ var author$project$Main$subscriptions = function (model) {
 				elm$core$Basics$always(author$project$Main$RetryPolling))
 			]));
 };
+var elm$html$Html$span = _VirtualDom_node('span');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var author$project$Main$hideLabel = function (x) {
+	return A2(
+		elm$html$Html$span,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('hide-label')
+			]),
+		_List_fromArray(
+			[
+				elm$html$Html$text(x)
+			]));
+};
 var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
 var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
 var author$project$Main$SearchCards = function (a) {
@@ -14503,14 +14526,6 @@ var author$project$Main$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
 var elm$html$Html$div = _VirtualDom_node('div');
 var elm$html$Html$form = _VirtualDom_node('form');
 var elm$html$Html$input = _VirtualDom_node('input');
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
 var elm$html$Html$Attributes$placeholder = elm$html$Html$Attributes$stringProperty('placeholder');
 var elm$html$Html$Attributes$type_ = elm$html$Html$Attributes$stringProperty('type');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
@@ -14703,8 +14718,6 @@ var capitalist$elm_octicons$Octicons$tagPath = 'M7.73,1.73 C7.26,1.26 6.62,1 5.9
 var capitalist$elm_octicons$Octicons$tag = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$tagPath, '0 0 14 16', 'tag');
 var elm$html$Html$a = _VirtualDom_node('a');
 var elm$html$Html$img = _VirtualDom_node('img');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$href = function (url) {
 	return A2(
 		elm$html$Html$Attributes$stringProperty,
@@ -14744,7 +14757,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-								elm$html$Html$text('Projects')
+								author$project$Main$hideLabel('Projects')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -14756,7 +14769,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
-								elm$html$Html$text('Release')
+								author$project$Main$hideLabel('Release')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -14768,7 +14781,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
-								elm$html$Html$text('PRs')
+								author$project$Main$hideLabel('PRs')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -14780,7 +14793,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
-								elm$html$Html$text('Graph')
+								author$project$Main$hideLabel('Graph')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -14792,7 +14805,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-								elm$html$Html$text('Labels')
+								author$project$Main$hideLabel('Labels')
 							]))
 					])),
 				function () {
@@ -14808,7 +14821,7 @@ var author$project$Main$viewNavBar = function (model) {
 						_List_fromArray(
 							[
 								capitalist$elm_octicons$Octicons$signIn(author$project$Main$octiconOpts),
-								elm$html$Html$text('Sign In')
+								author$project$Main$hideLabel('Sign In')
 							]));
 				} else {
 					var user = _n0.a.user;
@@ -14829,7 +14842,7 @@ var author$project$Main$viewNavBar = function (model) {
 										elm$html$Html$Attributes$src(user.avatar)
 									]),
 								_List_Nil),
-								elm$html$Html$text(user.login)
+								author$project$Main$hideLabel(user.login)
 							]));
 				}
 			}(),
@@ -14894,7 +14907,6 @@ var author$project$Main$onlyOpenCards = function (model) {
 			}
 		});
 };
-var elm$html$Html$span = _VirtualDom_node('span');
 var author$project$Main$viewMetric = F5(
 	function (icon, count, plural, singular, description) {
 		return A2(
@@ -20175,14 +20187,16 @@ var author$project$Main$viewTabbedCards = F4(
 							elm$core$List$indexedMap,
 							F2(
 								function (idx, _n0) {
-									var title = _n0.a;
-									var cards = _n0.b;
+									var icon = _n0.a;
+									var label = _n0.b;
+									var cards = _n0.c;
 									return A2(
 										elm$html$Html$span,
 										tabAttrs(idx),
 										_List_fromArray(
 											[
-												elm$html$Html$text(title),
+												icon,
+												author$project$Main$hideLabel(label),
 												tabCount(
 												elm$core$List$length(cards))
 											]));
@@ -20203,7 +20217,7 @@ var author$project$Main$viewTabbedCards = F4(
 						tabs);
 					if (_n1.b) {
 						var _n2 = _n1.a;
-						var cards = _n2.b;
+						var cards = _n2.c;
 						return elm$core$List$isEmpty(cards) ? A2(
 							elm$html$Html$div,
 							_List_fromArray(
@@ -20240,6 +20254,10 @@ var author$project$Main$viewTabbedCards = F4(
 				}()
 				]));
 	});
+var capitalist$elm_octicons$Octicons$archivePath = 'M13 2H1v2h12V2zM0 4a1 1 0 0 0 1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v2zm2 1h10v9H2V5zm2 3h6V7H4v1z';
+var capitalist$elm_octicons$Octicons$archive = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$archivePath, '0 0 14 16', 'archive');
+var capitalist$elm_octicons$Octicons$ellipsisPath = 'M11 5H1c-0.55 0-1 0.45-1 1v4c0 0.55 0.45 1 1 1h10c0.55 0 1-0.45 1-1V6c0-0.55-0.45-1-1-1zM4 9H2V7h2v2z m3 0H5V7h2v2z m3 0H8V7h2v2z';
+var capitalist$elm_octicons$Octicons$ellipsis = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$ellipsisPath, '0 0 12 16', 'ellipsis');
 var author$project$Main$viewReleaseRepoPage = F2(
 	function (model, sir) {
 		return A2(
@@ -20300,13 +20318,26 @@ var author$project$Main$viewReleaseRepoPage = F2(
 					author$project$Main$SetReleaseRepoTab,
 					_List_fromArray(
 						[
-							_Utils_Tuple2(
+							_Utils_Tuple3(
+							capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
 							'To Do',
 							_Utils_ap(sir.openIssues, sir.openPRs)),
-							_Utils_Tuple2('Done', sir.doneCards),
-							_Utils_Tuple2('Documented', sir.documentedCards),
-							_Utils_Tuple2('Undocumented', sir.undocumentedCards),
-							_Utils_Tuple2('No Impact', sir.noImpactCards)
+							_Utils_Tuple3(
+							capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
+							'Done',
+							sir.doneCards),
+							_Utils_Tuple3(
+							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts),
+							'Documented',
+							sir.documentedCards),
+							_Utils_Tuple3(
+							capitalist$elm_octicons$Octicons$ellipsis(author$project$Main$octiconOpts),
+							'Undocumented',
+							sir.undocumentedCards),
+							_Utils_Tuple3(
+							capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts),
+							'No Impact',
+							sir.noImpactCards)
 						]))
 				]));
 	});
@@ -20375,6 +20406,10 @@ var author$project$Main$hasMergeConflict = function (card) {
 		return false;
 	}
 };
+var capitalist$elm_octicons$Octicons$lawPath = 'M7,4 C6.17,4 5.5,3.33 5.5,2.5 C5.5,1.67 6.17,1 7,1 C7.83,1 8.5,1.67 8.5,2.5 C8.5,3.33 7.83,4 7,4 L7,4 Z M14,10 C14,11.11 13.11,12 12,12 L11,12 C9.89,12 9,11.11 9,10 L11,6 L10,6 C9.45,6 9,5.55 9,5 L8,5 L8,13 C8.42,13 9,13.45 9,14 L10,14 C10.42,14 11,14.45 11,15 L3,15 C3,14.45 3.58,14 4,14 L5,14 C5,13.45 5.58,13 6,13 L6.03,13 L6,5 L5,5 C5,5.55 4.55,6 4,6 L3,6 L5,10 C5,11.11 4.11,12 3,12 L2,12 C0.89,12 0,11.11 0,10 L2,6 L1,6 L1,5 L4,5 C4,4.45 4.45,4 5,4 L9,4 C9.55,4 10,4.45 10,5 L13,5 L13,6 L12,6 L14,10 L14,10 Z M2.5,7 L1,10 L4,10 L2.5,7 L2.5,7 Z M13,10 L11.5,7 L10,10 L13,10 L13,10 Z';
+var capitalist$elm_octicons$Octicons$law = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$lawPath, '0 0 14 16', 'law');
+var capitalist$elm_octicons$Octicons$unverifiedPath = 'M15.67,7.06 L14.59,5.72 C14.42,5.5 14.31,5.24 14.28,4.95 L14.09,3.25 C14.01,2.55 13.46,2 12.76,1.92 L11.06,1.73 C10.76,1.7 10.5,1.57 10.28,1.4 L8.94,0.32 C8.39,-0.12 7.61,-0.12 7.06,0.32 L5.72,1.4 C5.5,1.57 5.24,1.68 4.95,1.71 L3.25,1.9 C2.55,1.98 2,2.53 1.92,3.23 L1.73,4.93 C1.7,5.23 1.57,5.49 1.4,5.71 L0.32,7.05 C-0.12,7.6 -0.12,8.38 0.32,8.93 L1.4,10.27 C1.57,10.49 1.68,10.75 1.71,11.04 L1.9,12.74 C1.98,13.44 2.53,13.99 3.23,14.07 L4.93,14.26 C5.23,14.29 5.49,14.42 5.71,14.59 L7.05,15.67 C7.6,16.11 8.38,16.11 8.93,15.67 L10.27,14.59 C10.49,14.42 10.75,14.31 11.04,14.28 L12.74,14.09 C13.44,14.01 13.99,13.46 14.07,12.76 L14.26,11.06 C14.29,10.76 14.42,10.5 14.59,10.28 L15.67,8.94 C16.11,8.39 16.11,7.61 15.67,7.06 L15.67,7.06 Z M9,11.5 C9,11.78 8.78,12 8.5,12 L7.5,12 C7.23,12 7,11.78 7,11.5 L7,10.5 C7,10.22 7.23,10 7.5,10 L8.5,10 C8.78,10 9,10.22 9,10.5 L9,11.5 L9,11.5 Z M10.56,6.61 C10.5,6.78 10.39,6.94 10.26,7.08 C10.13,7.24 10.12,7.27 9.93,7.46 C9.77,7.63 9.62,7.76 9.41,7.91 C9.3,8 9.21,8.1 9.13,8.18 C9.05,8.26 8.99,8.35 8.94,8.45 C8.89,8.55 8.86,8.64 8.83,8.75 C8.8,8.86 8.8,8.88 8.8,9 L7.13,9 C7.13,8.78 7.13,8.69 7.16,8.52 C7.19,8.33 7.24,8.16 7.3,8 C7.36,7.86 7.44,7.72 7.55,7.58 C7.66,7.45 7.78,7.33 7.96,7.2 C8.23,7.01 8.32,6.9 8.44,6.68 C8.56,6.46 8.64,6.3 8.64,6.09 C8.64,5.82 8.58,5.64 8.44,5.51 C8.31,5.38 8.13,5.32 7.86,5.32 C7.77,5.32 7.67,5.34 7.56,5.37 C7.45,5.4 7.39,5.46 7.31,5.53 C7.23,5.6 7.17,5.64 7.11,5.73 C7.05,5.82 7.02,5.87 7.02,6.01 L5.02,6.01 C5.02,5.63 5.15,5.45 5.29,5.18 C5.45,4.91 5.65,4.68 5.9,4.51 C6.15,4.34 6.45,4.21 6.78,4.13 C7.11,4.05 7.48,4 7.87,4 C8.31,4 8.7,4.05 9.04,4.13 C9.38,4.22 9.67,4.35 9.92,4.52 C10.15,4.69 10.33,4.9 10.47,5.15 C10.6,5.4 10.66,5.7 10.66,6.03 C10.66,6.25 10.66,6.45 10.58,6.62 L10.56,6.61 Z';
+var capitalist$elm_octicons$Octicons$unverified = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$unverifiedPath, '0 0 16 16', 'unverified');
 var author$project$Main$viewRepoPullRequestsPage = F3(
 	function (model, repo, prCards) {
 		var categorizeCard = F2(
@@ -20459,11 +20494,26 @@ var author$project$Main$viewRepoPullRequestsPage = F3(
 							author$project$Main$SetRepoPullRequestsTab,
 							_List_fromArray(
 								[
-									_Utils_Tuple2('Inbox', categorized.inbox),
-									_Utils_Tuple2('Failed Checks', categorized.failedChecks),
-									_Utils_Tuple2('Merge Conflict', categorized.mergeConflict),
-									_Utils_Tuple2('Needs Tests', categorized.needsTest),
-									_Utils_Tuple2('Changes Requested', categorized.changesRequested)
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
+									'Inbox',
+									categorized.inbox),
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
+									'Failed Checks',
+									categorized.failedChecks),
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$alert(author$project$Main$octiconOpts),
+									'Merge Conflict',
+									categorized.mergeConflict),
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$unverified(author$project$Main$octiconOpts),
+									'Needs Tests',
+									categorized.needsTest),
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$law(author$project$Main$octiconOpts),
+									'Changes Requested',
+									categorized.changesRequested)
 								]))
 						]))
 				]));
@@ -20821,9 +20871,7 @@ var author$project$Main$viewSidebar = function (model) {
 						return A2(y0hy0h$ordered_containers$OrderedSet$member, a, model.selectedCards);
 					}),
 				elm$core$Set$toList(model.anticipatedCards))));
-	var sidebarCards = _Utils_ap(
-		elm$core$List$reverse(selectedCards),
-		anticipatedCards);
+	var sidebarCards = _Utils_ap(selectedCards, anticipatedCards);
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
