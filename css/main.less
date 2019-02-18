@@ -3,6 +3,10 @@
 @project-bg: @gray-900;
 @column-bg: transparent;
 
+@sidebar-min-width: 1150px;
+
+@wide-min-width: 800px;
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -77,7 +81,7 @@ code {
 
   display: none;
 
-  @media(min-width: 900px) {
+  @media(min-width: @sidebar-min-width) {
     display: block;
   }
 
@@ -95,6 +99,15 @@ code {
     color: @gray-light;
     font-size: 14px;
     padding: @card-margin;
+  }
+}
+
+.hide-label {
+  display: none;
+  margin-left: 8px;
+
+  @media(min-width: @wide-min-width) {
+    display: inline;
   }
 }
 
@@ -128,7 +141,6 @@ code {
     .octicon {
       width: 16px;
       height: 16px;
-      margin-right: 8px;
 
       * {
         fill: @gray-300;
@@ -159,7 +171,6 @@ code {
   border-radius: 3px;
   vertical-align: middle;
   display: inline-block;
-  margin-right: 8px;
   margin-top: -2px;
 
   // prevent broken image from going out of bounds
@@ -170,7 +181,7 @@ code {
   flex-direction: row;
 
   display: none;
-  @media(min-width: 900px) {
+  @media(min-width: @sidebar-min-width) {
     display: flex;
   }
 
@@ -724,7 +735,7 @@ svg {
 
   .graph-edge {
     stroke-width: 4px;
-    stroke: @gray-light;
+    stroke: @gray;
   }
 
   .filtered-out {
@@ -820,7 +831,7 @@ svg {
 
 .labels-table {
   display: table;
-  width: 980px;
+  width: 100%;
 }
 
 .label-row {
@@ -1328,9 +1339,13 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .page-content {
-  width: 980px;
+  width: 100%;
   margin: 0 auto;
-  padding: 40px 0;
+  padding: 20px;
+
+  @media(min-width: @wide-min-width) {
+    padding: 50px;
+  }
 }
 
 .metrics-item {
@@ -1355,21 +1370,30 @@ a.column-title:hover, .page-header a:hover {
 .page-header {
   background: @black;
   padding-bottom: 25px;
-  font-size: 24px;
+  font-size: 18px;
   color: @white;
 
   .octicon {
     margin: 0 7px 0 4px;
-    width: 24px;
-    height: 24px;
+    width: 18px;
+    height: 18px;
 
     margin-left: 20px;
     &:first-child {
-      margin-left: 7px;
+      margin-left: 0px;
     }
 
     * {
       fill: @white;
+    }
+  }
+
+  @media(min-width: @wide-min-width) {
+    font-size: 24px;
+
+    .octicon {
+      width: 24px;
+      height: 24px;
     }
   }
 }
@@ -1380,14 +1404,19 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .tab {
-  padding: 7px 16px;
-  padding-top: 10px;
+  padding: 10px 10px 7px;
   background: @black;
   font-size: 14px;
   cursor: pointer;
   color: @gray-200;
   border-radius: 3px 3px 0 0;
   position: relative;
+
+  text-align: center;
+
+  .octicon * {
+    fill: @gray-200;
+  }
 
   .counter {
     background: fade(@white, 20%);
@@ -1404,6 +1433,10 @@ a.column-title:hover, .page-header a:hover {
   &.selected {
     background: @white;
     color: @gray-700;
+
+    .octicon * {
+      fill: @gray-700;
+    }
 
     &::before {
       content: " ";

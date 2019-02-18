@@ -1777,42 +1777,47 @@ hasFilter model filter =
     List.member filter model.graphFilters
 
 
+hideLabel : String -> Html Msg
+hideLabel x =
+    Html.span [ HA.class "hide-label" ] [ Html.text x ]
+
+
 viewNavBar : Model -> Html Msg
 viewNavBar model =
     Html.div [ HA.class "nav-bar" ]
         [ Html.div [ HA.class "nav" ]
             [ Html.a [ HA.class "button", HA.href "/" ]
                 [ Octicons.project octiconOpts
-                , Html.text "Projects"
+                , hideLabel "Projects"
                 ]
             , Html.a [ HA.class "button", HA.href "/release" ]
                 [ Octicons.milestone octiconOpts
-                , Html.text "Release"
+                , hideLabel "Release"
                 ]
             , Html.a [ HA.class "button", HA.href "/pull-requests" ]
                 [ Octicons.gitPullRequest octiconOpts
-                , Html.text "PRs"
+                , hideLabel "PRs"
                 ]
             , Html.a [ HA.class "button", HA.href "/graph" ]
                 [ Octicons.circuitBoard octiconOpts
-                , Html.text "Graph"
+                , hideLabel "Graph"
                 ]
             , Html.a [ HA.class "button", HA.href "/labels" ]
                 [ Octicons.tag octiconOpts
-                , Html.text "Labels"
+                , hideLabel "Labels"
                 ]
             ]
         , case model.me of
             Nothing ->
                 Html.a [ HA.class "user-info", HA.href "/auth/github" ]
                     [ Octicons.signIn octiconOpts
-                    , Html.text "Sign In"
+                    , hideLabel "Sign In"
                     ]
 
             Just { user } ->
                 Html.a [ HA.class "user-info", HA.href user.url ]
                     [ Html.img [ HA.class "user-avatar", HA.src user.avatar ] []
-                    , Html.text user.login
+                    , hideLabel user.login
                     ]
         , viewSearch model
         ]
@@ -1968,11 +1973,11 @@ viewReleaseRepoPage model sir =
         , viewTabbedCards model
             .releaseRepoTab
             SetReleaseRepoTab
-            [ ( "To Do", sir.openIssues ++ sir.openPRs )
-            , ( "Done", sir.doneCards )
-            , ( "Documented", sir.documentedCards )
-            , ( "Undocumented", sir.undocumentedCards )
-            , ( "No Impact", sir.noImpactCards )
+            [ ( Octicons.inbox octiconOpts, "To Do", sir.openIssues ++ sir.openPRs )
+            , ( Octicons.check octiconOpts, "Done", sir.doneCards )
+            , ( Octicons.book octiconOpts, "Documented", sir.documentedCards )
+            , ( Octicons.ellipsis octiconOpts, "Undocumented", sir.undocumentedCards )
+            , ( Octicons.archive octiconOpts, "No Impact", sir.noImpactCards )
             ]
         ]
 
@@ -1981,7 +1986,7 @@ viewTabbedCards :
     Model
     -> (Model -> Int)
     -> (Int -> Msg)
-    -> List ( String, List Card )
+    -> List ( Html Msg, String, List Card )
     -> Html Msg
 viewTabbedCards model currentTab setTab tabs =
     Html.div [ HA.class "tabbed-cards" ]
@@ -1997,9 +2002,10 @@ viewTabbedCards model currentTab setTab tabs =
           in
           Html.div [ HA.class "tab-row" ] <|
             List.indexedMap
-                (\idx ( title, cards ) ->
+                (\idx ( icon, label, cards ) ->
                     Html.span (tabAttrs idx)
-                        [ Html.text title
+                        [ icon
+                        , hideLabel label
                         , tabCount (List.length cards)
                         ]
                 )
@@ -2009,7 +2015,7 @@ viewTabbedCards model currentTab setTab tabs =
                 HA.classList [ ( "first-tab", currentTab model == 0 ) ]
           in
           case List.drop (currentTab model) tabs of
-            ( _, cards ) :: _ ->
+            ( _, _, cards ) :: _ ->
                 if List.isEmpty cards then
                     Html.div [ HA.class "no-tab-cards", firstTabClass ]
                         [ Html.text "no cards" ]
@@ -2204,11 +2210,11 @@ viewRepoPullRequestsPage model repo prCards =
             [ viewTabbedCards model
                 .repoPullRequestsTab
                 SetRepoPullRequestsTab
-                [ ( "Inbox", categorized.inbox )
-                , ( "Failed Checks", categorized.failedChecks )
-                , ( "Merge Conflict", categorized.mergeConflict )
-                , ( "Needs Tests", categorized.needsTest )
-                , ( "Changes Requested", categorized.changesRequested )
+                [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
+                , ( Octicons.x octiconOpts, "Failed Checks", categorized.failedChecks )
+                , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
+                , ( Octicons.unverified octiconOpts, "Needs Tests", categorized.needsTest )
+                , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
                 ]
             ]
         ]
