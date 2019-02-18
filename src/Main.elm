@@ -681,7 +681,7 @@ update msg model =
             ( updateGraphStates
                 { model
                     | anticipatedCards = Set.empty
-                    , selectedCards = Set.foldr OrderedSet.insert model.selectedCards model.anticipatedCards
+                    , selectedCards = Set.foldl OrderedSet.insert model.selectedCards model.anticipatedCards
                 }
             , Cmd.none
             )
@@ -1484,7 +1484,7 @@ viewSidebar model =
                 List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
 
         sidebarCards =
-            List.reverse selectedCards ++ anticipatedCards
+            selectedCards ++ anticipatedCards
     in
     Html.div [ HA.class "main-sidebar" ]
         [ viewSidebarControls model
