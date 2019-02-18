@@ -8,7 +8,7 @@ import Card exposing (Card)
 import Colors
 import Dict exposing (Dict)
 import Drag
-import ForceGraph as FG exposing (ForceGraph)
+import ForceGraph exposing (ForceGraph)
 import GitHubGraph
 import Hash
 import Html exposing (Html)
@@ -1141,7 +1141,7 @@ updateGraphStates model =
             }
 
         affectedByState graph =
-            FG.fold
+            ForceGraph.fold
                 (\node affected ->
                     if affected then
                         True
@@ -1603,7 +1603,7 @@ viewSpatialGraph model =
 
 graphId : ForceGraph GitHubGraph.ID -> String
 graphId graph =
-    FG.fold (\{ id } acc -> max id acc) 0 graph
+    ForceGraph.fold (\{ id } acc -> max id acc) 0 graph
         |> String.fromInt
 
 
@@ -2653,7 +2653,7 @@ sortAndFilterGraphs model =
                 (\fg fgs ->
                     let
                         matching =
-                            FG.fold
+                            ForceGraph.fold
                                 (\node matches ->
                                     case Dict.get node.value model.allCards of
                                         Just card ->
@@ -2755,11 +2755,11 @@ satisfiesFilter model filter card =
 
 graphImpactCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
 graphImpactCompare model a b =
-    case compare (FG.size a) (FG.size b) of
+    case compare (ForceGraph.size a) (ForceGraph.size b) of
         EQ ->
             let
                 graphScore =
-                    FG.fold
+                    ForceGraph.fold
                         (\node sum ->
                             case Dict.get node.value model.allCards of
                                 Just { score } ->
@@ -2780,7 +2780,7 @@ graphUserActivityCompare : Model -> String -> ForceGraph GitHubGraph.ID -> Force
 graphUserActivityCompare model login a b =
     let
         latestUserActivity =
-            FG.fold
+            ForceGraph.fold
                 (\node latest ->
                     let
                         mlatest =
@@ -2805,7 +2805,7 @@ graphAllActivityCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHu
 graphAllActivityCompare model a b =
     let
         latestActivity =
-            FG.fold
+            ForceGraph.fold
                 (\node latest ->
                     let
                         mlatest =
@@ -2836,7 +2836,7 @@ viewGraph : CardNodeState -> ForceGraph GitHubGraph.ID -> Html Msg
 viewGraph state graph =
     let
         ( flairs, nodes, bounds ) =
-            FG.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
+            ForceGraph.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
 
         padding =
             10
@@ -2875,7 +2875,7 @@ viewGraph state graph =
 
 viewNodeLowerUpper :
     CardNodeState
-    -> FG.ForceNode GitHubGraph.ID
+    -> ForceGraph.ForceNode GitHubGraph.ID
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
 viewNodeLowerUpper state { value, mass, x, y } ( fs, ns, bs ) =
@@ -2955,11 +2955,11 @@ isFilteredOut state id =
     not (Set.isEmpty state.filteredCards) && not (Set.member id state.filteredCards)
 
 
-linkPath : CardNodeState -> ForceGraph GitHubGraph.ID -> ( FG.NodeId, FG.NodeId ) -> Svg Msg
+linkPath : CardNodeState -> ForceGraph GitHubGraph.ID -> ( ForceGraph.NodeId, ForceGraph.NodeId ) -> Svg Msg
 linkPath state graph ( from, to ) =
     let
         getEnd end =
-            case FG.get end graph of
+            case ForceGraph.get end graph of
                 Just { x, y, value } ->
                     ( { x = x, y = y }, isFilteredOut state value )
 
