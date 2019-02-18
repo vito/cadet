@@ -59,7 +59,7 @@ type alias Model =
     , isPolling : Bool
     , dataIndex : Int
     , dataView : DataView
-    , allCards : Dict GitHubGraph.ID Card
+    , cards : Dict GitHubGraph.ID Card
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
     , cardSearch : String
@@ -196,6 +196,7 @@ type Msg
     | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
+    | CardsFetched (Result Http.Error (Backend.Indexed (Dict GitHubGraph.ID Card)))
     | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
@@ -331,7 +332,7 @@ init config url key =
                 , prsByRepo = Dict.empty
                 , releaseRepos = Dict.empty
                 }
-            , allCards = Dict.empty
+            , cards = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
             , cardSearch = ""
@@ -646,7 +647,7 @@ update msg model =
                                 identity
                         )
                         Dict.empty
-                        model.allCards
+                        model.cards
 
                 cardMatch title card =
                     if String.length query < 2 && List.isEmpty filters then
@@ -735,15 +736,6 @@ update msg model =
         DataFetched (Ok { index, value }) ->
             ( if index > model.dataIndex then
                 let
-                    issueCards =
-                        Dict.map (\_ -> Card.fromIssue) value.issues
-
-                    prCards =
-                        Dict.map (\_ -> Card.fromPR) value.prs
-
-                    allCards =
-                        Dict.union issueCards prCards
-
                     allLabels =
                         Dict.foldl (\_ r -> loadLabels r.labels) Dict.empty value.repos
 
@@ -759,7 +751,6 @@ update msg model =
                     { model
                         | data = value
                         , dataIndex = index
-                        , allCards = allCards
                         , allLabels = allLabels
                         , colorLightnessCache = colorLightnessCache
                     }
@@ -770,7 +761,10 @@ update msg model =
             , Cmd.batch
                 [ Backend.pollData DataFetched
                 , if index > model.dataIndex then
-                    Backend.fetchGraphs GraphsFetched
+                    Cmd.batch
+                        [ Backend.fetchCards CardsFetched
+                        , Backend.fetchGraphs GraphsFetched
+                        ]
 
                   else
                     Cmd.none
@@ -780,6 +774,14 @@ update msg model =
         DataFetched (Err err) ->
             Log.debug "error fetching data" err <|
                 ( { model | isPolling = False }, Cmd.none )
+
+        CardsFetched (Ok { index, value }) ->
+            Log.debug "cards fetched" ( index, Dict.size value ) <|
+                ( computeDataView { model | cards = value }, Cmd.none )
+
+        CardsFetched (Err err) ->
+            Log.debug "error fetching cards" err <|
+                ( model, Cmd.none )
 
         GraphsFetched (Ok { index, value }) ->
             Log.debug "graphs fetched" ( index, List.length value ) <|
@@ -1000,7 +1002,7 @@ update msg model =
             ( computeDataView
                 { model
                     | milestoneDrag = Drag.complete model.milestoneDrag
-                    , allCards = Dict.insert value.id (Card.fromIssue value) model.allCards
+                    , cards = Dict.insert value.id (Card.fromIssue value) model.cards
                     , dataIndex = max index model.dataIndex
                 }
             , Cmd.none
@@ -1017,7 +1019,7 @@ update msg model =
             ( computeDataView
                 { model
                     | milestoneDrag = Drag.complete model.milestoneDrag
-                    , allCards = Dict.insert value.id (Card.fromPR value) model.allCards
+                    , cards = Dict.insert value.id (Card.fromPR value) model.cards
                     , dataIndex = max index model.dataIndex
                 }
             , Cmd.none
@@ -1070,7 +1072,7 @@ update msg model =
         ApplyLabelOperations ->
             let
                 cards =
-                    List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
+                    List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
 
                 ( addPairs, removePairs ) =
                     Dict.toList model.cardLabelOperations
@@ -1127,7 +1129,7 @@ updateGraphStates : Model -> Model
 updateGraphStates model =
     let
         newState =
-            { allCards = model.allCards
+            { allCards = model.cards
             , allLabels = model.allLabels
             , reviewers = model.data.reviewers
             , currentTime = model.currentTime
@@ -1258,11 +1260,11 @@ computeDataView origModel =
             }
 
         PullRequestsPage ->
-            { model | dataView = { dataView | prsByRepo = prsByRepo model.allCards } }
+            { model | dataView = { dataView | prsByRepo = prsByRepo model.cards } }
 
         PullRequestsRepoPage _ ->
             { model
-                | dataView = { dataView | prsByRepo = prsByRepo model.allCards }
+                | dataView = { dataView | prsByRepo = prsByRepo model.cards }
                 , suggestedLabels = [ "needs-test" ]
             }
 
@@ -1285,22 +1287,22 @@ computeDataView origModel =
 computeReleaseRepos : Model -> Dict String ReleaseRepo
 computeReleaseRepos model =
     let
-        selectPRsInComparison comparison prId pr acc =
-            case pr.mergeCommit of
-                Nothing ->
-                    acc
+        selectPRsInComparison comparison id card acc =
+            case card.content of
+                GitHubGraph.PullRequestCardContent pr ->
+                    case pr.mergeCommit of
+                        Nothing ->
+                            acc
 
-                Just { sha } ->
-                    if List.any ((==) sha << .sha) comparison.commits then
-                        case Dict.get prId model.allCards of
-                            Just prc ->
-                                prc :: acc
+                        Just { sha } ->
+                            if List.any ((==) sha << .sha) comparison.commits then
+                                card :: acc
 
-                            Nothing ->
+                            else
                                 acc
 
-                    else
-                        acc
+                _ ->
+                    acc
 
         selectCardsInMilestone milestone cardId card acc =
             case card.milestone of
@@ -1331,7 +1333,7 @@ computeReleaseRepos model =
                                     |> List.head
 
                             mergedPRs =
-                                Dict.foldl (selectPRsInComparison comparison) [] model.data.prs
+                                Dict.foldl (selectPRsInComparison comparison) [] model.cards
 
                             milestoneCards =
                                 case nextMilestone of
@@ -1339,7 +1341,7 @@ computeReleaseRepos model =
                                         []
 
                                     Just nm ->
-                                        Dict.foldl (selectCardsInMilestone nm) [] model.allCards
+                                        Dict.foldl (selectCardsInMilestone nm) [] model.cards
 
                             allCards =
                                 milestoneCards ++ mergedPRs
@@ -1476,12 +1478,12 @@ viewSidebar model =
     let
         anticipatedCards =
             List.map (viewCardEntry model) <|
-                List.filterMap (\a -> Dict.get a model.allCards) <|
+                List.filterMap (\a -> Dict.get a model.cards) <|
                     List.filter (not << (\a -> OrderedSet.member a model.selectedCards)) (Set.toList model.anticipatedCards)
 
         selectedCards =
             List.map (viewCardEntry model) <|
-                List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
+                List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
 
         sidebarCards =
             selectedCards ++ anticipatedCards
@@ -1513,7 +1515,7 @@ viewSidebarControls model =
                         Nothing ->
                             let
                                 cards =
-                                    List.filterMap (\a -> Dict.get a model.allCards) (OrderedSet.toList model.selectedCards)
+                                    List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
                             in
                             if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
                                 ( "checked", Octicons.check octiconOpts, SetLabelOperation name RemoveLabelOperation )
@@ -2259,7 +2261,7 @@ viewLabelRow model label repos =
                         ( ps, is )
                 )
                 ( [], [] )
-                model.allCards
+                model.cards
     in
     Html.div [ HA.class "label-row" ]
         [ Html.div [ HA.class "label-cell" ]
@@ -2436,7 +2438,7 @@ onlyOpenCards model =
         \{ contentId } ->
             case contentId of
                 Just id ->
-                    case Dict.get id model.allCards of
+                    case Dict.get id model.cards of
                         Just card ->
                             Card.isOpen card
 
@@ -2555,7 +2557,7 @@ viewProjectColumnCard model project col ghCard =
             ]
 
         ( Nothing, Just contentId ) ->
-            case Dict.get contentId model.allCards of
+            case Dict.get contentId model.cards of
                 Just card ->
                     [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
                     , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
@@ -2661,7 +2663,7 @@ sortAndFilterGraphs model =
                         matching =
                             ForceGraph.fold
                                 (\node matches ->
-                                    case Dict.get node.value model.allCards of
+                                    case Dict.get node.value model.cards of
                                         Just card ->
                                             if satisfiesFilters model allFilters card then
                                                 Set.insert card.id matches
@@ -2705,7 +2707,7 @@ sortAndFilterGraphs model =
 
 baseGraphState : Model -> CardNodeState
 baseGraphState model =
-    { allCards = model.allCards
+    { allCards = model.cards
     , allLabels = model.allLabels
     , reviewers = model.data.reviewers
     , currentTime = model.currentTime
@@ -2767,7 +2769,7 @@ graphImpactCompare model a b =
                 graphScore =
                     ForceGraph.fold
                         (\node sum ->
-                            case Dict.get node.value model.allCards of
+                            case Dict.get node.value model.cards of
                                 Just { score } ->
                                     score + sum
 
@@ -2820,7 +2822,7 @@ graphAllActivityCompare model a b =
                                 |> List.maximum
 
                         mupdated =
-                            Dict.get node.value model.allCards
+                            Dict.get node.value model.cards
                                 |> Maybe.map (.updatedAt >> Time.posixToMillis)
                     in
                     case ( mlatest, mupdated ) of
@@ -3908,7 +3910,7 @@ addCard model { projectId, columnId, afterId } contentId =
 
 contentCardId : Model -> GitHubGraph.ID -> GitHubGraph.ID -> Maybe GitHubGraph.ID
 contentCardId model projectId contentId =
-    case Dict.get contentId model.allCards of
+    case Dict.get contentId model.cards of
         Just card ->
             case List.filter ((==) projectId << .id << .project) card.cards of
                 [ c ] ->
@@ -4055,16 +4057,10 @@ finishProjectDragRefresh model =
             in
             case content of
                 GitHubGraph.IssueCardContent issue ->
-                    { m
-                        | allCards = Dict.insert issue.id (Card.fromIssue issue) m.allCards
-                        , data = { data | issues = Dict.insert issue.id issue data.issues }
-                    }
+                    { m | cards = Dict.insert issue.id (Card.fromIssue issue) m.cards }
 
                 GitHubGraph.PullRequestCardContent pr ->
-                    { m
-                        | allCards = Dict.insert pr.id (Card.fromPR pr) m.allCards
-                        , data = { data | prs = Dict.insert pr.id pr data.prs }
-                    }
+                    { m | cards = Dict.insert pr.id (Card.fromPR pr) m.cards }
     in
     case model.projectDragRefresh of
         Nothing ->

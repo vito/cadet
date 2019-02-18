@@ -33,12 +33,6 @@ const data = {
   // repos by id
   repos: {},
 
-  // issues by id
-  issues: {},
-
-  // prs by id
-  prs: {},
-
   // repo comparisons to last release, by repo id
   comparisons: {},
 
@@ -56,6 +50,14 @@ const data = {
 
   // cards by column id
   columnCards: {}
+}
+
+const cards = {
+  // issues by id
+  issues: {},
+
+  // prs by id
+  prs: {}
 }
 
 // list of graphs for all issues
@@ -158,7 +160,7 @@ worker.ports.setProjects.subscribe(function(projects) {
 worker.ports.setIssues.subscribe(function(issues) {
   for (var i = 0; i < issues.length; i++) {
     var issue = issues[i];
-    data.issues[issue.id] = issue;
+    cards.issues[issue.id] = issue;
     dataIndex++;
     popRefresh("issue", issue.id, issue);
   }
@@ -188,15 +190,15 @@ function refreshGraphIfNecessary() {
   }
 
   var cardIds = [];
-  for (var i in data.issues) {
-    var issue = data.issues[i];
+  for (var i in cards.issues) {
+    var issue = cards.issues[i];
     if (issue.state == "OPEN") {
       cardIds.push(i);
     }
   }
 
-  for (var p in data.prs) {
-    var pr = data.prs[p];
+  for (var p in cards.prs) {
+    var pr = cards.prs[p];
     if (pr.state == "OPEN") {
       cardIds.push(p);
     }
@@ -214,7 +216,7 @@ function queueGraphRefresh() {
 queueGraphRefresh();
 
 worker.ports.setIssue.subscribe(function(issue) {
-  data.issues[issue.id] = issue;
+  cards.issues[issue.id] = issue;
   dataIndex++;
   popRefresh("issue", issue.id, issue);
   popPoll();
@@ -225,7 +227,7 @@ worker.ports.setIssue.subscribe(function(issue) {
 worker.ports.setPullRequests.subscribe(function(prs) {
   for (var i = 0; i < prs.length; i++) {
     var pr = prs[i];
-    data.prs[pr.id] = pr;
+    cards.prs[pr.id] = pr;
     dataIndex++;
     popRefresh("pr", pr.id, pr);
   }
@@ -236,7 +238,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
 });
 
 worker.ports.setPullRequest.subscribe(function(pr) {
-  data.prs[pr.id] = pr;
+  cards.prs[pr.id] = pr;
   dataIndex++;
   popRefresh("pr", pr.id, pr);
   popPoll();
@@ -288,7 +290,7 @@ worker.ports.setCards.subscribe(function(args) {
     if (card.content) {
       var issue = card.content.issue;
       if (issue) {
-        data.issues[issue.id] = issue;
+        cards.issues[issue.id] = issue;
         dataIndex++;
         popRefresh("issue", issue.id, issue);
 
@@ -300,7 +302,7 @@ worker.ports.setCards.subscribe(function(args) {
 
       var pr = card.content.pull_request;
       if (pr) {
-        data.prs[pr.id] = pr;
+        cards.prs[pr.id] = pr;
         dataIndex++;
         popRefresh("pr", pr.id, pr);
 
@@ -394,14 +396,21 @@ app.get('/me', (req, res) => {
   res.send(JSON.stringify(req.user || null))
 })
 
-app.get('/data', (req, res) => {
+function sendData(res, val) {
   res.set('X-Data-Index', dataIndex.toString());
-  res.send(JSON.stringify(data))
+  res.send(JSON.stringify(val))
+}
+
+app.get('/data', (req, res) => {
+  sendData(res, data);
+})
+
+app.get('/cards', (req, res) => {
+  sendData(res, cards);
 })
 
 app.get('/graphs', (req, res) => {
-  res.set('X-Data-Index', dataIndex.toString());
-  res.send(JSON.stringify(graphs))
+  sendData(res, graphs);
 })
 
 app.get('/refresh', (req, res) => {

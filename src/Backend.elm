@@ -7,6 +7,7 @@ module Backend exposing
     , User
     , emptyData
     , encodeEventActor
+    , fetchCards
     , fetchData
     , fetchGraphs
     , fetchMe
@@ -17,6 +18,7 @@ module Backend exposing
     , refreshRepo
     )
 
+import Card exposing (Card)
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
 import GitHubGraph
@@ -39,14 +41,18 @@ type alias Indexed a =
 
 type alias Data =
     { repos : Dict GitHubGraph.ID GitHubGraph.Repo
-    , issues : Dict GitHubGraph.ID GitHubGraph.Issue
-    , prs : Dict GitHubGraph.ID GitHubGraph.PullRequest
     , projects : Dict GitHubGraph.ID GitHubGraph.Project
     , columnCards : Dict GitHubGraph.ID (List ColumnCard)
     , references : Dict GitHubGraph.ID (List GitHubGraph.ID)
     , actors : Dict GitHubGraph.ID (List EventActor)
     , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
     , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
+    }
+
+
+type alias Cards =
+    { issues : Dict GitHubGraph.ID GitHubGraph.Issue
+    , prs : Dict GitHubGraph.ID GitHubGraph.PullRequest
     }
 
 
@@ -81,8 +87,6 @@ type alias ColumnCard =
 emptyData : Data
 emptyData =
     { repos = Dict.empty
-    , issues = Dict.empty
-    , prs = Dict.empty
     , projects = Dict.empty
     , columnCards = Dict.empty
     , references = Dict.empty
@@ -115,6 +119,14 @@ fetchData f =
         |> Task.attempt f
 
 
+fetchCards : (Result Http.Error (Indexed (Dict GitHubGraph.ID Card)) -> msg) -> Cmd msg
+fetchCards f =
+    HttpBuilder.get "/cards"
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeCards)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
 fetchGraphs : (Result Http.Error (Indexed (List (ForceGraph GitHubGraph.ID))) -> msg) -> Cmd msg
 fetchGraphs f =
     HttpBuilder.get "/graphs"
@@ -135,7 +147,7 @@ pollData f =
 refreshCards : GitHubGraph.ID -> (Result Http.Error (Indexed (List ColumnCard)) -> msg) -> Cmd msg
 refreshCards col f =
     HttpBuilder.get ("/refresh?columnCards=" ++ col)
-        |> HttpBuilder.withExpect (expectJsonWithIndex decodeCards)
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeColumnCards)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
@@ -176,18 +188,29 @@ decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
         |> andMap (JD.field "repos" <| JD.dict GitHubGraph.decodeRepo)
-        |> andMap (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
-        |> andMap (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
         |> andMap (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
-        |> andMap (JD.field "columnCards" <| JD.dict decodeCards)
+        |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
         |> andMap (JD.field "references" <| JD.dict (JD.list JD.string))
         |> andMap (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
         |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
         |> andMap (JD.field "comparisons" <| JD.dict GitHubGraph.decodeV3Comparison)
 
 
-decodeCards : JD.Decoder (List ColumnCard)
+decodeCards : JD.Decoder (Dict GitHubGraph.ID Card)
 decodeCards =
+    let
+        unifyCards is ps =
+            Dict.foldl (\id p -> Dict.insert id (Card.fromPR p))
+                (Dict.foldl (\id i -> Dict.insert id (Card.fromIssue i)) Dict.empty is)
+                ps
+    in
+    JD.succeed unifyCards
+        |> andMap (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
+        |> andMap (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
+
+
+decodeColumnCards : JD.Decoder (List ColumnCard)
+decodeColumnCards =
     JD.list decodeColumnCard
 
 

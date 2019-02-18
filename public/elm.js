@@ -4918,10 +4918,10 @@ var author$project$Main$UrlChanged = function (a) {
 };
 var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
-var author$project$Backend$emptyData = {actors: elm$core$Dict$empty, columnCards: elm$core$Dict$empty, comparisons: elm$core$Dict$empty, issues: elm$core$Dict$empty, projects: elm$core$Dict$empty, prs: elm$core$Dict$empty, references: elm$core$Dict$empty, repos: elm$core$Dict$empty, reviewers: elm$core$Dict$empty};
-var author$project$Backend$Data = F9(
-	function (repos, issues, prs, projects, columnCards, references, actors, reviewers, comparisons) {
-		return {actors: actors, columnCards: columnCards, comparisons: comparisons, issues: issues, projects: projects, prs: prs, references: references, repos: repos, reviewers: reviewers};
+var author$project$Backend$emptyData = {actors: elm$core$Dict$empty, columnCards: elm$core$Dict$empty, comparisons: elm$core$Dict$empty, projects: elm$core$Dict$empty, references: elm$core$Dict$empty, repos: elm$core$Dict$empty, reviewers: elm$core$Dict$empty};
+var author$project$Backend$Data = F7(
+	function (repos, projects, columnCards, references, actors, reviewers, comparisons) {
+		return {actors: actors, columnCards: columnCards, comparisons: comparisons, projects: projects, references: references, repos: repos, reviewers: reviewers};
 	});
 var author$project$Backend$ColumnCard = F3(
 	function (id, contentId, note) {
@@ -5430,7 +5430,7 @@ var author$project$Backend$decodeColumnCard = A2(
 			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 			elm$json$Json$Decode$succeed(author$project$Backend$ColumnCard))));
 var elm$json$Json$Decode$list = _Json_decodeList;
-var author$project$Backend$decodeCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
+var author$project$Backend$decodeColumnCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
 var author$project$Backend$EventActor = F3(
 	function (user, avatar, createdAt) {
 		return {avatar: avatar, createdAt: createdAt, user: user};
@@ -6175,38 +6175,9 @@ var author$project$Backend$decodeEventActor = A2(
 				'user',
 				elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
 			elm$json$Json$Decode$succeed(author$project$Backend$EventActor))));
-var author$project$GitHubGraph$Issue = function (id) {
-	return function (url) {
-		return function (createdAt) {
-			return function (updatedAt) {
-				return function (state) {
-					return function (repo) {
-						return function (number) {
-							return function (title) {
-								return function (commentCount) {
-									return function (reactions) {
-										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (milestone) {
-														return {author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var author$project$GitHubGraph$CardLocation = F4(
-	function (id, url, project, column) {
-		return {column: column, id: id, project: project, url: url};
+var author$project$GitHubGraph$Project = F6(
+	function (id, url, name, number, body, columns) {
+		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
 	});
 var author$project$GitHubGraph$ProjectColumn = F3(
 	function (id, name, databaseId) {
@@ -6222,39 +6193,32 @@ var author$project$GitHubGraph$decodeProjectColumn = A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 			elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectColumn))));
-var author$project$GitHubGraph$ProjectLocation = F4(
-	function (id, url, name, number) {
-		return {id: id, name: name, number: number, url: url};
-	});
-var author$project$GitHubGraph$decodeProjectLocation = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectLocation)))));
-var author$project$GitHubGraph$decodeCardLocation = A2(
+var author$project$GitHubGraph$decodeProject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
-		'column',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeProjectColumn)),
+		'columns',
+		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeProjectColumn)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'project', author$project$GitHubGraph$decodeProjectLocation),
+		A2(elm$json$Json$Decode$field, 'body', elm$json$Json$Decode$string),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$CardLocation)))));
+				A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+				A2(
+					elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Project)))))));
+var author$project$GitHubGraph$PullRequestReview = F3(
+	function (author, state, createdAt) {
+		return {author: author, createdAt: createdAt, state: state};
+	});
 var author$project$GitHubGraph$customDecoder = F2(
 	function (decoder, toResult) {
 		return A2(
@@ -6271,12 +6235,18 @@ var author$project$GitHubGraph$customDecoder = F2(
 			},
 			decoder);
 	});
-var author$project$GitHubGraph$IssueStateClosed = {$: 'IssueStateClosed'};
-var author$project$GitHubGraph$IssueStateOpen = {$: 'IssueStateOpen'};
-var author$project$GitHubGraph$issueStates = _List_fromArray(
+var author$project$GitHubGraph$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
+var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
+var author$project$GitHubGraph$PullRequestReviewStateCommented = {$: 'PullRequestReviewStateCommented'};
+var author$project$GitHubGraph$PullRequestReviewStateDismissed = {$: 'PullRequestReviewStateDismissed'};
+var author$project$GitHubGraph$PullRequestReviewStatePending = {$: 'PullRequestReviewStatePending'};
+var author$project$GitHubGraph$pullRequestReviewStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', author$project$GitHubGraph$IssueStateOpen),
-		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$IssueStateClosed)
+		_Utils_Tuple2('PENDING', author$project$GitHubGraph$PullRequestReviewStatePending),
+		_Utils_Tuple2('COMMENTED', author$project$GitHubGraph$PullRequestReviewStateCommented),
+		_Utils_Tuple2('APPROVED', author$project$GitHubGraph$PullRequestReviewStateApproved),
+		_Utils_Tuple2('CHANGES_REQUESTED', author$project$GitHubGraph$PullRequestReviewStateChangesRequested),
+		_Utils_Tuple2('DISMISSED', author$project$GitHubGraph$PullRequestReviewStateDismissed)
 	]);
 var elm$core$Dict$Black = {$: 'Black'};
 var elm$core$Dict$RBNode_elm_builtin = F5(
@@ -6430,21 +6400,35 @@ var elm$core$Dict$get = F2(
 			}
 		}
 	});
-var author$project$GitHubGraph$decodeIssueState = function () {
+var author$project$GitHubGraph$decodePullRequestReviewState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$issueStates));
+			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestReviewStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
 		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to IssueState. Pattern: ' + string);
+			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestReviewState. Pattern: ' + string);
 		}
 	};
 	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
+var author$project$GitHubGraph$decodePullRequestReview = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestReviewState),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'author', author$project$GitHubGraph$decodeUser),
+			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequestReview))));
+var author$project$GitHubGraph$Repo = F8(
+	function (id, url, owner, name, isArchived, labels, milestones, releases) {
+		return {id: id, isArchived: isArchived, labels: labels, milestones: milestones, name: name, owner: owner, releases: releases, url: url};
+	});
 var author$project$GitHubGraph$Label = F3(
 	function (id, name, color) {
 		return {color: color, id: id, name: name};
@@ -6504,492 +6488,6 @@ var author$project$GitHubGraph$decodeMilestone = A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 					elm$json$Json$Decode$succeed(author$project$GitHubGraph$Milestone))))));
-var author$project$GitHubGraph$ReactionGroup = F2(
-	function (type_, count) {
-		return {count: count, type_: type_};
-	});
-var author$project$GitHubGraph$ReactionTypeConfused = {$: 'ReactionTypeConfused'};
-var author$project$GitHubGraph$ReactionTypeEyes = {$: 'ReactionTypeEyes'};
-var author$project$GitHubGraph$ReactionTypeHeart = {$: 'ReactionTypeHeart'};
-var author$project$GitHubGraph$ReactionTypeHooray = {$: 'ReactionTypeHooray'};
-var author$project$GitHubGraph$ReactionTypeLaugh = {$: 'ReactionTypeLaugh'};
-var author$project$GitHubGraph$ReactionTypeRocket = {$: 'ReactionTypeRocket'};
-var author$project$GitHubGraph$ReactionTypeThumbsDown = {$: 'ReactionTypeThumbsDown'};
-var author$project$GitHubGraph$ReactionTypeThumbsUp = {$: 'ReactionTypeThumbsUp'};
-var author$project$GitHubGraph$reactionTypes = _List_fromArray(
-	[
-		_Utils_Tuple2('THUMBS_UP', author$project$GitHubGraph$ReactionTypeThumbsUp),
-		_Utils_Tuple2('THUMBS_DOWN', author$project$GitHubGraph$ReactionTypeThumbsDown),
-		_Utils_Tuple2('LAUGH', author$project$GitHubGraph$ReactionTypeLaugh),
-		_Utils_Tuple2('HOORAY', author$project$GitHubGraph$ReactionTypeHooray),
-		_Utils_Tuple2('CONFUSED', author$project$GitHubGraph$ReactionTypeConfused),
-		_Utils_Tuple2('HEART', author$project$GitHubGraph$ReactionTypeHeart),
-		_Utils_Tuple2('ROCKET', author$project$GitHubGraph$ReactionTypeRocket),
-		_Utils_Tuple2('EYES', author$project$GitHubGraph$ReactionTypeEyes)
-	]);
-var author$project$GitHubGraph$decodeReactionType = function () {
-	var decodeToType = function (string) {
-		var _n0 = A2(
-			elm$core$Dict$get,
-			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$reactionTypes));
-		if (_n0.$ === 'Just') {
-			var type_ = _n0.a;
-			return elm$core$Result$Ok(type_);
-		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to ReactionType. Pattern: ' + string);
-		}
-	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
-}();
-var author$project$GitHubGraph$decodeReactionGroup = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'count', elm$json$Json$Decode$int),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'type_', author$project$GitHubGraph$decodeReactionType),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$ReactionGroup)));
-var author$project$GitHubGraph$RepoLocation = F4(
-	function (id, url, owner, name) {
-		return {id: id, name: name, owner: owner, url: url};
-	});
-var author$project$GitHubGraph$decodeRepoLocation = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'owner', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$RepoLocation)))));
-var author$project$GitHubGraph$decodeIssue = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'milestone',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			elm$json$Json$Decode$field,
-			'cards',
-			elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(
-				elm$json$Json$Decode$field,
-				'labels',
-				elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(
-					elm$json$Json$Decode$field,
-					'author',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
-				A2(
-					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(
-						elm$json$Json$Decode$field,
-						'reactions',
-						elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
-					A2(
-						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
-						A2(
-							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
-							A2(
-								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
-								A2(
-									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
-									A2(
-										elm_community$json_extra$Json$Decode$Extra$andMap,
-										A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeIssueState),
-										A2(
-											elm_community$json_extra$Json$Decode$Extra$andMap,
-											A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-											A2(
-												elm_community$json_extra$Json$Decode$Extra$andMap,
-												A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-												A2(
-													elm_community$json_extra$Json$Decode$Extra$andMap,
-													A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-													A2(
-														elm_community$json_extra$Json$Decode$Extra$andMap,
-														A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-														elm$json$Json$Decode$succeed(author$project$GitHubGraph$Issue)))))))))))))));
-var author$project$GitHubGraph$Project = F6(
-	function (id, url, name, number, body, columns) {
-		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
-	});
-var author$project$GitHubGraph$decodeProject = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'columns',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeProjectColumn)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'body', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-				A2(
-					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-					A2(
-						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Project)))))));
-var author$project$GitHubGraph$PullRequest = function (id) {
-	return function (url) {
-		return function (createdAt) {
-			return function (updatedAt) {
-				return function (state) {
-					return function (repo) {
-						return function (number) {
-							return function (title) {
-								return function (commentCount) {
-									return function (reactions) {
-										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (additions) {
-														return function (deletions) {
-															return function (milestone) {
-																return function (mergeable) {
-																	return function (lastCommit) {
-																		return function (mergeCommit) {
-																			return {additions: additions, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
-																		};
-																	};
-																};
-															};
-														};
-													};
-												};
-											};
-										};
-									};
-								};
-							};
-						};
-					};
-				};
-			};
-		};
-	};
-};
-var author$project$GitHubGraph$Commit = F6(
-	function (sha, status, author, committer, authoredAt, committedAt) {
-		return {author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status};
-	});
-var author$project$GitHubGraph$GitActor = F4(
-	function (email, name, avatar, user) {
-		return {avatar: avatar, email: email, name: name, user: user};
-	});
-var author$project$GitHubGraph$decodeGitActor = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'user',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$GitActor)))));
-var author$project$GitHubGraph$Status = F2(
-	function (state, contexts) {
-		return {contexts: contexts, state: state};
-	});
-var author$project$GitHubGraph$StatusContext = F4(
-	function (state, context, targetUrl, creator) {
-		return {context: context, creator: creator, state: state, targetUrl: targetUrl};
-	});
-var author$project$GitHubGraph$Actor = F3(
-	function (url, login, avatar) {
-		return {avatar: avatar, login: login, url: url};
-	});
-var author$project$GitHubGraph$decodeActor = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'login', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$Actor))));
-var author$project$GitHubGraph$StatusStateError = {$: 'StatusStateError'};
-var author$project$GitHubGraph$StatusStateExpected = {$: 'StatusStateExpected'};
-var author$project$GitHubGraph$StatusStateFailure = {$: 'StatusStateFailure'};
-var author$project$GitHubGraph$StatusStatePending = {$: 'StatusStatePending'};
-var author$project$GitHubGraph$StatusStateSuccess = {$: 'StatusStateSuccess'};
-var author$project$GitHubGraph$statusStates = _List_fromArray(
-	[
-		_Utils_Tuple2('EXPECTED', author$project$GitHubGraph$StatusStateExpected),
-		_Utils_Tuple2('ERROR', author$project$GitHubGraph$StatusStateError),
-		_Utils_Tuple2('FAILURE', author$project$GitHubGraph$StatusStateFailure),
-		_Utils_Tuple2('PENDING', author$project$GitHubGraph$StatusStatePending),
-		_Utils_Tuple2('SUCCESS', author$project$GitHubGraph$StatusStateSuccess)
-	]);
-var author$project$GitHubGraph$decodeStatusState = function () {
-	var decodeToType = function (string) {
-		var _n0 = A2(
-			elm$core$Dict$get,
-			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$statusStates));
-		if (_n0.$ === 'Just') {
-			var type_ = _n0.a;
-			return elm$core$Result$Ok(type_);
-		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to StatusState. Pattern: ' + string);
-		}
-	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
-}();
-var author$project$GitHubGraph$decodeStatusContext = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'creator', author$project$GitHubGraph$decodeActor),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			elm$json$Json$Decode$field,
-			'target_url',
-			elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'context', elm$json$Json$Decode$string),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$StatusContext)))));
-var author$project$GitHubGraph$decodeStatus = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'contexts',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeStatusContext)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$Status)));
-var author$project$GitHubGraph$decodeCommit = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'committed_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'authored_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(
-				elm$json$Json$Decode$field,
-				'committer',
-				elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(
-					elm$json$Json$Decode$field,
-					'author',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
-				A2(
-					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(
-						elm$json$Json$Decode$field,
-						'status',
-						elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeStatus)),
-					A2(
-						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Commit)))))));
-var author$project$GitHubGraph$MergeableStateConflicting = {$: 'MergeableStateConflicting'};
-var author$project$GitHubGraph$MergeableStateMergeable = {$: 'MergeableStateMergeable'};
-var author$project$GitHubGraph$MergeableStateUnknown = {$: 'MergeableStateUnknown'};
-var author$project$GitHubGraph$mergeableStates = _List_fromArray(
-	[
-		_Utils_Tuple2('MERGEABLE', author$project$GitHubGraph$MergeableStateMergeable),
-		_Utils_Tuple2('CONFLICTING', author$project$GitHubGraph$MergeableStateConflicting),
-		_Utils_Tuple2('UNKNOWN', author$project$GitHubGraph$MergeableStateUnknown)
-	]);
-var author$project$GitHubGraph$decodeMergeableState = function () {
-	var decodeToType = function (string) {
-		var _n0 = A2(
-			elm$core$Dict$get,
-			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$mergeableStates));
-		if (_n0.$ === 'Just') {
-			var type_ = _n0.a;
-			return elm$core$Result$Ok(type_);
-		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to MergeableState. Pattern: ' + string);
-		}
-	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
-}();
-var author$project$GitHubGraph$PullRequestStateClosed = {$: 'PullRequestStateClosed'};
-var author$project$GitHubGraph$PullRequestStateMerged = {$: 'PullRequestStateMerged'};
-var author$project$GitHubGraph$PullRequestStateOpen = {$: 'PullRequestStateOpen'};
-var author$project$GitHubGraph$pullRequestStates = _List_fromArray(
-	[
-		_Utils_Tuple2('OPEN', author$project$GitHubGraph$PullRequestStateOpen),
-		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$PullRequestStateClosed),
-		_Utils_Tuple2('MERGED', author$project$GitHubGraph$PullRequestStateMerged)
-	]);
-var author$project$GitHubGraph$decodePullRequestState = function () {
-	var decodeToType = function (string) {
-		var _n0 = A2(
-			elm$core$Dict$get,
-			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestStates));
-		if (_n0.$ === 'Just') {
-			var type_ = _n0.a;
-			return elm$core$Result$Ok(type_);
-		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestState. Pattern: ' + string);
-		}
-	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
-}();
-var author$project$GitHubGraph$decodePullRequest = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'merge_commit',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			elm$json$Json$Decode$field,
-			'last_commit',
-			elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'mergeable', author$project$GitHubGraph$decodeMergeableState),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(
-					elm$json$Json$Decode$field,
-					'milestone',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
-				A2(
-					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'deletions', elm$json$Json$Decode$int),
-					A2(
-						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'additions', elm$json$Json$Decode$int),
-						A2(
-							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(
-								elm$json$Json$Decode$field,
-								'cards',
-								elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
-							A2(
-								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(
-									elm$json$Json$Decode$field,
-									'labels',
-									elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
-								A2(
-									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(
-										elm$json$Json$Decode$field,
-										'author',
-										elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
-									A2(
-										elm_community$json_extra$Json$Decode$Extra$andMap,
-										A2(
-											elm$json$Json$Decode$field,
-											'reactions',
-											elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
-										A2(
-											elm_community$json_extra$Json$Decode$Extra$andMap,
-											A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
-											A2(
-												elm_community$json_extra$Json$Decode$Extra$andMap,
-												A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
-												A2(
-													elm_community$json_extra$Json$Decode$Extra$andMap,
-													A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
-													A2(
-														elm_community$json_extra$Json$Decode$Extra$andMap,
-														A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
-														A2(
-															elm_community$json_extra$Json$Decode$Extra$andMap,
-															A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestState),
-															A2(
-																elm_community$json_extra$Json$Decode$Extra$andMap,
-																A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-																A2(
-																	elm_community$json_extra$Json$Decode$Extra$andMap,
-																	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-																	A2(
-																		elm_community$json_extra$Json$Decode$Extra$andMap,
-																		A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-																		A2(
-																			elm_community$json_extra$Json$Decode$Extra$andMap,
-																			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-																			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequest))))))))))))))))))));
-var author$project$GitHubGraph$PullRequestReview = F3(
-	function (author, state, createdAt) {
-		return {author: author, createdAt: createdAt, state: state};
-	});
-var author$project$GitHubGraph$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
-var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
-var author$project$GitHubGraph$PullRequestReviewStateCommented = {$: 'PullRequestReviewStateCommented'};
-var author$project$GitHubGraph$PullRequestReviewStateDismissed = {$: 'PullRequestReviewStateDismissed'};
-var author$project$GitHubGraph$PullRequestReviewStatePending = {$: 'PullRequestReviewStatePending'};
-var author$project$GitHubGraph$pullRequestReviewStates = _List_fromArray(
-	[
-		_Utils_Tuple2('PENDING', author$project$GitHubGraph$PullRequestReviewStatePending),
-		_Utils_Tuple2('COMMENTED', author$project$GitHubGraph$PullRequestReviewStateCommented),
-		_Utils_Tuple2('APPROVED', author$project$GitHubGraph$PullRequestReviewStateApproved),
-		_Utils_Tuple2('CHANGES_REQUESTED', author$project$GitHubGraph$PullRequestReviewStateChangesRequested),
-		_Utils_Tuple2('DISMISSED', author$project$GitHubGraph$PullRequestReviewStateDismissed)
-	]);
-var author$project$GitHubGraph$decodePullRequestReviewState = function () {
-	var decodeToType = function (string) {
-		var _n0 = A2(
-			elm$core$Dict$get,
-			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestReviewStates));
-		if (_n0.$ === 'Just') {
-			var type_ = _n0.a;
-			return elm$core$Result$Ok(type_);
-		} else {
-			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestReviewState. Pattern: ' + string);
-		}
-	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
-}();
-var author$project$GitHubGraph$decodePullRequestReview = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestReviewState),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'author', author$project$GitHubGraph$decodeUser),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequestReview))));
-var author$project$GitHubGraph$Repo = F8(
-	function (id, url, owner, name, isArchived, labels, milestones, releases) {
-		return {id: id, isArchived: isArchived, labels: labels, milestones: milestones, name: name, owner: owner, releases: releases, url: url};
-	});
 var author$project$GitHubGraph$Release = F4(
 	function (id, url, name, tag) {
 		return {id: id, name: name, tag: tag, url: url};
@@ -7172,7 +6670,7 @@ var author$project$Backend$decodeData = A2(
 					A2(
 						elm$json$Json$Decode$field,
 						'columnCards',
-						elm$json$Json$Decode$dict(author$project$Backend$decodeCards)),
+						elm$json$Json$Decode$dict(author$project$Backend$decodeColumnCards)),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2(
@@ -7183,21 +6681,9 @@ var author$project$Backend$decodeData = A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
 							A2(
 								elm$json$Json$Decode$field,
-								'prs',
-								elm$json$Json$Decode$dict(author$project$GitHubGraph$decodePullRequest)),
-							A2(
-								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(
-									elm$json$Json$Decode$field,
-									'issues',
-									elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeIssue)),
-								A2(
-									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(
-										elm$json$Json$Decode$field,
-										'repos',
-										elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeRepo)),
-									elm$json$Json$Decode$succeed(author$project$Backend$Data))))))))));
+								'repos',
+								elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeRepo)),
+							elm$json$Json$Decode$succeed(author$project$Backend$Data))))))));
 var elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (maybeValue.$ === 'Just') {
@@ -7952,6 +7438,824 @@ var author$project$Main$ImpactSort = {$: 'ImpactSort'};
 var author$project$Main$MeFetched = function (a) {
 	return {$: 'MeFetched', a: a};
 };
+var author$project$Card$IssueState = function (a) {
+	return {$: 'IssueState', a: a};
+};
+var elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var elm$core$Maybe$map = F2(
+	function (f, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return elm$core$Maybe$Just(
+				f(value));
+		} else {
+			return elm$core$Maybe$Nothing;
+		}
+	});
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (maybe.$ === 'Just') {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var author$project$Card$inColumn = function (match) {
+	return elm$core$List$any(
+		A2(
+			elm$core$Basics$composeL,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Maybe$withDefault(false),
+				elm$core$Maybe$map(
+					A2(
+						elm$core$Basics$composeL,
+						match,
+						function ($) {
+							return $.name;
+						}))),
+			function ($) {
+				return $.column;
+			}));
+};
+var elm$core$String$startsWith = _String_startsWith;
+var author$project$Project$detectColumn = {
+	backlog: elm$core$String$startsWith('Backlog'),
+	done: elm$core$Basics$eq('Done'),
+	icebox: elm$core$Basics$eq('Icebox'),
+	inFlight: elm$core$Basics$eq('In Flight')
+};
+var author$project$Card$cardProcessState = function (_n0) {
+	var cards = _n0.cards;
+	var labels = _n0.labels;
+	return {
+		hasBugLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('bug'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasEnhancementLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('enhancement'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasPausedLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('paused'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		hasWontfixLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('wontfix'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
+		inBacklogColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.backlog, cards),
+		inDoneColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.done, cards),
+		inIceboxColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.icebox, cards),
+		inInFlightColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.inFlight, cards)
+	};
+};
+var author$project$GitHubGraph$IssueCardContent = function (a) {
+	return {$: 'IssueCardContent', a: a};
+};
+var elm$core$List$sum = function (numbers) {
+	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
+};
+var author$project$GitHubGraph$reactionScore = function (reactions) {
+	return elm$core$List$sum(
+		function (a) {
+			return A2(elm$core$List$map, a, reactions);
+		}(
+			function (_n0) {
+				var type_ = _n0.type_;
+				var count = _n0.count;
+				switch (type_.$) {
+					case 'ReactionTypeThumbsUp':
+						return 2 * count;
+					case 'ReactionTypeThumbsDown':
+						return (-2) * count;
+					case 'ReactionTypeLaugh':
+						return count;
+					case 'ReactionTypeConfused':
+						return -count;
+					case 'ReactionTypeHeart':
+						return 3 * count;
+					case 'ReactionTypeHooray':
+						return 3 * count;
+					case 'ReactionTypeRocket':
+						return 3 * count;
+					default:
+						return 2 * count;
+				}
+			}));
+};
+var author$project$GitHubGraph$issueScore = function (_n0) {
+	var reactions = _n0.reactions;
+	var commentCount = _n0.commentCount;
+	return author$project$GitHubGraph$reactionScore(reactions) + (2 * commentCount);
+};
+var author$project$Card$fromIssue = function (issue) {
+	var id = issue.id;
+	var url = issue.url;
+	var repo = issue.repo;
+	var number = issue.number;
+	var title = issue.title;
+	var updatedAt = issue.updatedAt;
+	var author = issue.author;
+	var labels = issue.labels;
+	var cards = issue.cards;
+	var commentCount = issue.commentCount;
+	var reactions = issue.reactions;
+	var state = issue.state;
+	var milestone = issue.milestone;
+	return {
+		author: author,
+		cards: cards,
+		commentCount: commentCount,
+		content: author$project$GitHubGraph$IssueCardContent(issue),
+		id: id,
+		labels: A2(
+			elm$core$List$map,
+			function ($) {
+				return $.id;
+			},
+			labels),
+		milestone: milestone,
+		number: number,
+		processState: author$project$Card$cardProcessState(
+			{cards: cards, labels: labels}),
+		reactions: reactions,
+		repo: repo,
+		score: author$project$GitHubGraph$issueScore(issue),
+		state: author$project$Card$IssueState(state),
+		title: title,
+		updatedAt: updatedAt,
+		url: url
+	};
+};
+var author$project$Card$PullRequestState = function (a) {
+	return {$: 'PullRequestState', a: a};
+};
+var author$project$GitHubGraph$PullRequestCardContent = function (a) {
+	return {$: 'PullRequestCardContent', a: a};
+};
+var author$project$GitHubGraph$pullRequestScore = function (_n0) {
+	var reactions = _n0.reactions;
+	var commentCount = _n0.commentCount;
+	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
+};
+var author$project$Card$fromPR = function (pr) {
+	var id = pr.id;
+	var url = pr.url;
+	var repo = pr.repo;
+	var number = pr.number;
+	var title = pr.title;
+	var updatedAt = pr.updatedAt;
+	var author = pr.author;
+	var labels = pr.labels;
+	var cards = pr.cards;
+	var commentCount = pr.commentCount;
+	var reactions = pr.reactions;
+	var state = pr.state;
+	var milestone = pr.milestone;
+	return {
+		author: author,
+		cards: cards,
+		commentCount: commentCount,
+		content: author$project$GitHubGraph$PullRequestCardContent(pr),
+		id: id,
+		labels: A2(
+			elm$core$List$map,
+			function ($) {
+				return $.id;
+			},
+			labels),
+		milestone: milestone,
+		number: number,
+		processState: author$project$Card$cardProcessState(
+			{cards: cards, labels: labels}),
+		reactions: reactions,
+		repo: repo,
+		score: author$project$GitHubGraph$pullRequestScore(pr),
+		state: author$project$Card$PullRequestState(state),
+		title: title,
+		updatedAt: updatedAt,
+		url: url
+	};
+};
+var author$project$GitHubGraph$Issue = function (id) {
+	return function (url) {
+		return function (createdAt) {
+			return function (updatedAt) {
+				return function (state) {
+					return function (repo) {
+						return function (number) {
+							return function (title) {
+								return function (commentCount) {
+									return function (reactions) {
+										return function (author) {
+											return function (labels) {
+												return function (cards) {
+													return function (milestone) {
+														return {author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var author$project$GitHubGraph$CardLocation = F4(
+	function (id, url, project, column) {
+		return {column: column, id: id, project: project, url: url};
+	});
+var author$project$GitHubGraph$ProjectLocation = F4(
+	function (id, url, name, number) {
+		return {id: id, name: name, number: number, url: url};
+	});
+var author$project$GitHubGraph$decodeProjectLocation = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectLocation)))));
+var author$project$GitHubGraph$decodeCardLocation = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		elm$json$Json$Decode$field,
+		'column',
+		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeProjectColumn)),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'project', author$project$GitHubGraph$decodeProjectLocation),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHubGraph$CardLocation)))));
+var author$project$GitHubGraph$IssueStateClosed = {$: 'IssueStateClosed'};
+var author$project$GitHubGraph$IssueStateOpen = {$: 'IssueStateOpen'};
+var author$project$GitHubGraph$issueStates = _List_fromArray(
+	[
+		_Utils_Tuple2('OPEN', author$project$GitHubGraph$IssueStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$IssueStateClosed)
+	]);
+var author$project$GitHubGraph$decodeIssueState = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHubGraph$issueStates));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to IssueState. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
+var author$project$GitHubGraph$ReactionGroup = F2(
+	function (type_, count) {
+		return {count: count, type_: type_};
+	});
+var author$project$GitHubGraph$ReactionTypeConfused = {$: 'ReactionTypeConfused'};
+var author$project$GitHubGraph$ReactionTypeEyes = {$: 'ReactionTypeEyes'};
+var author$project$GitHubGraph$ReactionTypeHeart = {$: 'ReactionTypeHeart'};
+var author$project$GitHubGraph$ReactionTypeHooray = {$: 'ReactionTypeHooray'};
+var author$project$GitHubGraph$ReactionTypeLaugh = {$: 'ReactionTypeLaugh'};
+var author$project$GitHubGraph$ReactionTypeRocket = {$: 'ReactionTypeRocket'};
+var author$project$GitHubGraph$ReactionTypeThumbsDown = {$: 'ReactionTypeThumbsDown'};
+var author$project$GitHubGraph$ReactionTypeThumbsUp = {$: 'ReactionTypeThumbsUp'};
+var author$project$GitHubGraph$reactionTypes = _List_fromArray(
+	[
+		_Utils_Tuple2('THUMBS_UP', author$project$GitHubGraph$ReactionTypeThumbsUp),
+		_Utils_Tuple2('THUMBS_DOWN', author$project$GitHubGraph$ReactionTypeThumbsDown),
+		_Utils_Tuple2('LAUGH', author$project$GitHubGraph$ReactionTypeLaugh),
+		_Utils_Tuple2('HOORAY', author$project$GitHubGraph$ReactionTypeHooray),
+		_Utils_Tuple2('CONFUSED', author$project$GitHubGraph$ReactionTypeConfused),
+		_Utils_Tuple2('HEART', author$project$GitHubGraph$ReactionTypeHeart),
+		_Utils_Tuple2('ROCKET', author$project$GitHubGraph$ReactionTypeRocket),
+		_Utils_Tuple2('EYES', author$project$GitHubGraph$ReactionTypeEyes)
+	]);
+var author$project$GitHubGraph$decodeReactionType = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHubGraph$reactionTypes));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to ReactionType. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
+var author$project$GitHubGraph$decodeReactionGroup = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'count', elm$json$Json$Decode$int),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'type_', author$project$GitHubGraph$decodeReactionType),
+		elm$json$Json$Decode$succeed(author$project$GitHubGraph$ReactionGroup)));
+var author$project$GitHubGraph$RepoLocation = F4(
+	function (id, url, owner, name) {
+		return {id: id, name: name, owner: owner, url: url};
+	});
+var author$project$GitHubGraph$decodeRepoLocation = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'owner', elm$json$Json$Decode$string),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHubGraph$RepoLocation)))));
+var author$project$GitHubGraph$decodeIssue = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		elm$json$Json$Decode$field,
+		'milestone',
+		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			elm$json$Json$Decode$field,
+			'cards',
+			elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(
+				elm$json$Json$Decode$field,
+				'labels',
+				elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(
+					elm$json$Json$Decode$field,
+					'author',
+					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+				A2(
+					elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(
+						elm$json$Json$Decode$field,
+						'reactions',
+						elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
+						A2(
+							elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
+							A2(
+								elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+								A2(
+									elm_community$json_extra$Json$Decode$Extra$andMap,
+									A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
+									A2(
+										elm_community$json_extra$Json$Decode$Extra$andMap,
+										A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeIssueState),
+										A2(
+											elm_community$json_extra$Json$Decode$Extra$andMap,
+											A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+											A2(
+												elm_community$json_extra$Json$Decode$Extra$andMap,
+												A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+												A2(
+													elm_community$json_extra$Json$Decode$Extra$andMap,
+													A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+													A2(
+														elm_community$json_extra$Json$Decode$Extra$andMap,
+														A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+														elm$json$Json$Decode$succeed(author$project$GitHubGraph$Issue)))))))))))))));
+var author$project$GitHubGraph$PullRequest = function (id) {
+	return function (url) {
+		return function (createdAt) {
+			return function (updatedAt) {
+				return function (state) {
+					return function (repo) {
+						return function (number) {
+							return function (title) {
+								return function (commentCount) {
+									return function (reactions) {
+										return function (author) {
+											return function (labels) {
+												return function (cards) {
+													return function (additions) {
+														return function (deletions) {
+															return function (milestone) {
+																return function (mergeable) {
+																	return function (lastCommit) {
+																		return function (mergeCommit) {
+																			return {additions: additions, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+																		};
+																	};
+																};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var author$project$GitHubGraph$Commit = F6(
+	function (sha, status, author, committer, authoredAt, committedAt) {
+		return {author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status};
+	});
+var author$project$GitHubGraph$GitActor = F4(
+	function (email, name, avatar, user) {
+		return {avatar: avatar, email: email, name: name, user: user};
+	});
+var author$project$GitHubGraph$decodeGitActor = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		elm$json$Json$Decode$field,
+		'user',
+		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHubGraph$GitActor)))));
+var author$project$GitHubGraph$Status = F2(
+	function (state, contexts) {
+		return {contexts: contexts, state: state};
+	});
+var author$project$GitHubGraph$StatusContext = F4(
+	function (state, context, targetUrl, creator) {
+		return {context: context, creator: creator, state: state, targetUrl: targetUrl};
+	});
+var author$project$GitHubGraph$Actor = F3(
+	function (url, login, avatar) {
+		return {avatar: avatar, login: login, url: url};
+	});
+var author$project$GitHubGraph$decodeActor = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'login', elm$json$Json$Decode$string),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			elm$json$Json$Decode$succeed(author$project$GitHubGraph$Actor))));
+var author$project$GitHubGraph$StatusStateError = {$: 'StatusStateError'};
+var author$project$GitHubGraph$StatusStateExpected = {$: 'StatusStateExpected'};
+var author$project$GitHubGraph$StatusStateFailure = {$: 'StatusStateFailure'};
+var author$project$GitHubGraph$StatusStatePending = {$: 'StatusStatePending'};
+var author$project$GitHubGraph$StatusStateSuccess = {$: 'StatusStateSuccess'};
+var author$project$GitHubGraph$statusStates = _List_fromArray(
+	[
+		_Utils_Tuple2('EXPECTED', author$project$GitHubGraph$StatusStateExpected),
+		_Utils_Tuple2('ERROR', author$project$GitHubGraph$StatusStateError),
+		_Utils_Tuple2('FAILURE', author$project$GitHubGraph$StatusStateFailure),
+		_Utils_Tuple2('PENDING', author$project$GitHubGraph$StatusStatePending),
+		_Utils_Tuple2('SUCCESS', author$project$GitHubGraph$StatusStateSuccess)
+	]);
+var author$project$GitHubGraph$decodeStatusState = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHubGraph$statusStates));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to StatusState. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
+var author$project$GitHubGraph$decodeStatusContext = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'creator', author$project$GitHubGraph$decodeActor),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			elm$json$Json$Decode$field,
+			'target_url',
+			elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'context', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
+				elm$json$Json$Decode$succeed(author$project$GitHubGraph$StatusContext)))));
+var author$project$GitHubGraph$decodeStatus = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		elm$json$Json$Decode$field,
+		'contexts',
+		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeStatusContext)),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
+		elm$json$Json$Decode$succeed(author$project$GitHubGraph$Status)));
+var author$project$GitHubGraph$decodeCommit = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(elm$json$Json$Decode$field, 'committed_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(elm$json$Json$Decode$field, 'authored_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(
+				elm$json$Json$Decode$field,
+				'committer',
+				elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(
+					elm$json$Json$Decode$field,
+					'author',
+					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
+				A2(
+					elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(
+						elm$json$Json$Decode$field,
+						'status',
+						elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeStatus)),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
+						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Commit)))))));
+var author$project$GitHubGraph$MergeableStateConflicting = {$: 'MergeableStateConflicting'};
+var author$project$GitHubGraph$MergeableStateMergeable = {$: 'MergeableStateMergeable'};
+var author$project$GitHubGraph$MergeableStateUnknown = {$: 'MergeableStateUnknown'};
+var author$project$GitHubGraph$mergeableStates = _List_fromArray(
+	[
+		_Utils_Tuple2('MERGEABLE', author$project$GitHubGraph$MergeableStateMergeable),
+		_Utils_Tuple2('CONFLICTING', author$project$GitHubGraph$MergeableStateConflicting),
+		_Utils_Tuple2('UNKNOWN', author$project$GitHubGraph$MergeableStateUnknown)
+	]);
+var author$project$GitHubGraph$decodeMergeableState = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHubGraph$mergeableStates));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to MergeableState. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
+var author$project$GitHubGraph$PullRequestStateClosed = {$: 'PullRequestStateClosed'};
+var author$project$GitHubGraph$PullRequestStateMerged = {$: 'PullRequestStateMerged'};
+var author$project$GitHubGraph$PullRequestStateOpen = {$: 'PullRequestStateOpen'};
+var author$project$GitHubGraph$pullRequestStates = _List_fromArray(
+	[
+		_Utils_Tuple2('OPEN', author$project$GitHubGraph$PullRequestStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$PullRequestStateClosed),
+		_Utils_Tuple2('MERGED', author$project$GitHubGraph$PullRequestStateMerged)
+	]);
+var author$project$GitHubGraph$decodePullRequestState = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestStates));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestState. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
+var author$project$GitHubGraph$decodePullRequest = A2(
+	elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		elm$json$Json$Decode$field,
+		'merge_commit',
+		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
+	A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			elm$json$Json$Decode$field,
+			'last_commit',
+			elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(elm$json$Json$Decode$field, 'mergeable', author$project$GitHubGraph$decodeMergeableState),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(
+					elm$json$Json$Decode$field,
+					'milestone',
+					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
+				A2(
+					elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2(elm$json$Json$Decode$field, 'deletions', elm$json$Json$Decode$int),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'additions', elm$json$Json$Decode$int),
+						A2(
+							elm_community$json_extra$Json$Decode$Extra$andMap,
+							A2(
+								elm$json$Json$Decode$field,
+								'cards',
+								elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
+							A2(
+								elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2(
+									elm$json$Json$Decode$field,
+									'labels',
+									elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
+								A2(
+									elm_community$json_extra$Json$Decode$Extra$andMap,
+									A2(
+										elm$json$Json$Decode$field,
+										'author',
+										elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+									A2(
+										elm_community$json_extra$Json$Decode$Extra$andMap,
+										A2(
+											elm$json$Json$Decode$field,
+											'reactions',
+											elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
+										A2(
+											elm_community$json_extra$Json$Decode$Extra$andMap,
+											A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
+											A2(
+												elm_community$json_extra$Json$Decode$Extra$andMap,
+												A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
+												A2(
+													elm_community$json_extra$Json$Decode$Extra$andMap,
+													A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+													A2(
+														elm_community$json_extra$Json$Decode$Extra$andMap,
+														A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
+														A2(
+															elm_community$json_extra$Json$Decode$Extra$andMap,
+															A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestState),
+															A2(
+																elm_community$json_extra$Json$Decode$Extra$andMap,
+																A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+																A2(
+																	elm_community$json_extra$Json$Decode$Extra$andMap,
+																	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+																	A2(
+																		elm_community$json_extra$Json$Decode$Extra$andMap,
+																		A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+																		A2(
+																			elm_community$json_extra$Json$Decode$Extra$andMap,
+																			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+																			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequest))))))))))))))))))));
+var elm$core$Dict$foldl = F3(
+	function (func, acc, dict) {
+		foldl:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return acc;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$func = func,
+					$temp$acc = A3(
+					func,
+					key,
+					value,
+					A3(elm$core$Dict$foldl, func, acc, left)),
+					$temp$dict = right;
+				func = $temp$func;
+				acc = $temp$acc;
+				dict = $temp$dict;
+				continue foldl;
+			}
+		}
+	});
+var author$project$Backend$decodeCards = function () {
+	var unifyCards = F2(
+		function (is, ps) {
+			return A3(
+				elm$core$Dict$foldl,
+				F2(
+					function (id, p) {
+						return A2(
+							elm$core$Dict$insert,
+							id,
+							author$project$Card$fromPR(p));
+					}),
+				A3(
+					elm$core$Dict$foldl,
+					F2(
+						function (id, i) {
+							return A2(
+								elm$core$Dict$insert,
+								id,
+								author$project$Card$fromIssue(i));
+						}),
+					elm$core$Dict$empty,
+					is),
+				ps);
+		});
+	return A2(
+		elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			elm$json$Json$Decode$field,
+			'prs',
+			elm$json$Json$Decode$dict(author$project$GitHubGraph$decodePullRequest)),
+		A2(
+			elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2(
+				elm$json$Json$Decode$field,
+				'issues',
+				elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeIssue)),
+			elm$json$Json$Decode$succeed(unifyCards)));
+}();
+var author$project$Backend$fetchCards = function (f) {
+	return A2(
+		elm$core$Task$attempt,
+		f,
+		lukewestby$elm_http_builder$HttpBuilder$toTask(
+			A2(
+				lukewestby$elm_http_builder$HttpBuilder$withExpect,
+				author$project$Backend$expectJsonWithIndex(author$project$Backend$decodeCards),
+				lukewestby$elm_http_builder$HttpBuilder$get('/cards'))));
+};
 var author$project$ForceGraph$DecodedNode = F7(
 	function (id, x, y, vy, vx, mass, value) {
 		return {id: id, mass: mass, value: value, vx: vx, vy: vy, x: x, y: y};
@@ -8207,7 +8511,7 @@ var author$project$Backend$refreshCards = F2(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withExpect,
-					author$project$Backend$expectJsonWithIndex(author$project$Backend$decodeCards),
+					author$project$Backend$expectJsonWithIndex(author$project$Backend$decodeColumnCards),
 					lukewestby$elm_http_builder$HttpBuilder$get('/refresh?columnCards=' + col))));
 	});
 var author$project$Backend$refreshIssue = F2(
@@ -8243,248 +8547,6 @@ var author$project$Backend$refreshRepo = F2(
 					author$project$Backend$expectJsonWithIndex(author$project$GitHubGraph$decodeRepo),
 					lukewestby$elm_http_builder$HttpBuilder$get('/refresh?repo=' + (repo.owner + ('/' + repo.name))))));
 	});
-var author$project$Card$IssueState = function (a) {
-	return {$: 'IssueState', a: a};
-};
-var elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
-var elm$core$Maybe$map = F2(
-	function (f, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return elm$core$Maybe$Just(
-				f(value));
-		} else {
-			return elm$core$Maybe$Nothing;
-		}
-	});
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (maybe.$ === 'Just') {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var author$project$Card$inColumn = function (match) {
-	return elm$core$List$any(
-		A2(
-			elm$core$Basics$composeL,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Maybe$withDefault(false),
-				elm$core$Maybe$map(
-					A2(
-						elm$core$Basics$composeL,
-						match,
-						function ($) {
-							return $.name;
-						}))),
-			function ($) {
-				return $.column;
-			}));
-};
-var elm$core$String$startsWith = _String_startsWith;
-var author$project$Project$detectColumn = {
-	backlog: elm$core$String$startsWith('Backlog'),
-	done: elm$core$Basics$eq('Done'),
-	icebox: elm$core$Basics$eq('Icebox'),
-	inFlight: elm$core$Basics$eq('In Flight')
-};
-var author$project$Card$cardProcessState = function (_n0) {
-	var cards = _n0.cards;
-	var labels = _n0.labels;
-	return {
-		hasBugLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('bug'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasEnhancementLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('enhancement'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasPausedLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('paused'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasWontfixLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('wontfix'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		inBacklogColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.backlog, cards),
-		inDoneColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.done, cards),
-		inIceboxColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.icebox, cards),
-		inInFlightColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.inFlight, cards)
-	};
-};
-var author$project$GitHubGraph$IssueCardContent = function (a) {
-	return {$: 'IssueCardContent', a: a};
-};
-var elm$core$List$sum = function (numbers) {
-	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
-};
-var author$project$GitHubGraph$reactionScore = function (reactions) {
-	return elm$core$List$sum(
-		function (a) {
-			return A2(elm$core$List$map, a, reactions);
-		}(
-			function (_n0) {
-				var type_ = _n0.type_;
-				var count = _n0.count;
-				switch (type_.$) {
-					case 'ReactionTypeThumbsUp':
-						return 2 * count;
-					case 'ReactionTypeThumbsDown':
-						return (-2) * count;
-					case 'ReactionTypeLaugh':
-						return count;
-					case 'ReactionTypeConfused':
-						return -count;
-					case 'ReactionTypeHeart':
-						return 3 * count;
-					case 'ReactionTypeHooray':
-						return 3 * count;
-					case 'ReactionTypeRocket':
-						return 3 * count;
-					default:
-						return 2 * count;
-				}
-			}));
-};
-var author$project$GitHubGraph$issueScore = function (_n0) {
-	var reactions = _n0.reactions;
-	var commentCount = _n0.commentCount;
-	return author$project$GitHubGraph$reactionScore(reactions) + (2 * commentCount);
-};
-var author$project$Card$fromIssue = function (issue) {
-	var id = issue.id;
-	var url = issue.url;
-	var repo = issue.repo;
-	var number = issue.number;
-	var title = issue.title;
-	var updatedAt = issue.updatedAt;
-	var author = issue.author;
-	var labels = issue.labels;
-	var cards = issue.cards;
-	var commentCount = issue.commentCount;
-	var reactions = issue.reactions;
-	var state = issue.state;
-	var milestone = issue.milestone;
-	return {
-		author: author,
-		cards: cards,
-		commentCount: commentCount,
-		content: author$project$GitHubGraph$IssueCardContent(issue),
-		id: id,
-		labels: A2(
-			elm$core$List$map,
-			function ($) {
-				return $.id;
-			},
-			labels),
-		milestone: milestone,
-		number: number,
-		processState: author$project$Card$cardProcessState(
-			{cards: cards, labels: labels}),
-		reactions: reactions,
-		repo: repo,
-		score: author$project$GitHubGraph$issueScore(issue),
-		state: author$project$Card$IssueState(state),
-		title: title,
-		updatedAt: updatedAt,
-		url: url
-	};
-};
-var author$project$Card$PullRequestState = function (a) {
-	return {$: 'PullRequestState', a: a};
-};
-var author$project$GitHubGraph$PullRequestCardContent = function (a) {
-	return {$: 'PullRequestCardContent', a: a};
-};
-var author$project$GitHubGraph$pullRequestScore = function (_n0) {
-	var reactions = _n0.reactions;
-	var commentCount = _n0.commentCount;
-	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
-};
-var author$project$Card$fromPR = function (pr) {
-	var id = pr.id;
-	var url = pr.url;
-	var repo = pr.repo;
-	var number = pr.number;
-	var title = pr.title;
-	var updatedAt = pr.updatedAt;
-	var author = pr.author;
-	var labels = pr.labels;
-	var cards = pr.cards;
-	var commentCount = pr.commentCount;
-	var reactions = pr.reactions;
-	var state = pr.state;
-	var milestone = pr.milestone;
-	return {
-		author: author,
-		cards: cards,
-		commentCount: commentCount,
-		content: author$project$GitHubGraph$PullRequestCardContent(pr),
-		id: id,
-		labels: A2(
-			elm$core$List$map,
-			function ($) {
-				return $.id;
-			},
-			labels),
-		milestone: milestone,
-		number: number,
-		processState: author$project$Card$cardProcessState(
-			{cards: cards, labels: labels}),
-		reactions: reactions,
-		repo: repo,
-		score: author$project$GitHubGraph$pullRequestScore(pr),
-		state: author$project$Card$PullRequestState(state),
-		title: title,
-		updatedAt: updatedAt,
-		url: url
-	};
-};
 var author$project$Card$isOpen = function (card) {
 	var _n0 = card.state;
 	_n0$2:
@@ -8599,6 +8661,9 @@ var author$project$Main$CardDropSourceRefreshed = function (a) {
 };
 var author$project$Main$CardDropTargetRefreshed = function (a) {
 	return {$: 'CardDropTargetRefreshed', a: a};
+};
+var author$project$Main$CardsFetched = function (a) {
+	return {$: 'CardsFetched', a: a};
 };
 var author$project$Main$GraphsFetched = function (a) {
 	return {$: 'GraphsFetched', a: a};
@@ -9012,31 +9077,6 @@ var elm$core$Set$insert = F2(
 var elm$core$Set$fromList = function (list) {
 	return A3(elm$core$List$foldl, elm$core$Set$insert, elm$core$Set$empty, list);
 };
-var elm$core$Dict$foldl = F3(
-	function (func, acc, dict) {
-		foldl:
-		while (true) {
-			if (dict.$ === 'RBEmpty_elm_builtin') {
-				return acc;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var $temp$func = func,
-					$temp$acc = A3(
-					func,
-					key,
-					value,
-					A3(elm$core$Dict$foldl, func, acc, left)),
-					$temp$dict = right;
-				func = $temp$func;
-				acc = $temp$acc;
-				dict = $temp$dict;
-				continue foldl;
-			}
-		}
-	});
 var elm$core$Dict$filter = F2(
 	function (isGood, dict) {
 		return A3(
@@ -10732,7 +10772,7 @@ var author$project$Main$CardMoved = F2(
 	});
 var author$project$Main$contentCardId = F3(
 	function (model, projectId, contentId) {
-		var _n0 = A2(elm$core$Dict$get, contentId, model.allCards);
+		var _n0 = A2(elm$core$Dict$get, contentId, model.cards);
 		if (_n0.$ === 'Just') {
 			var card = _n0.a;
 			var _n1 = A2(
@@ -11072,31 +11112,27 @@ var author$project$Main$hasLabel = F3(
 var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$computeReleaseRepos = function (model) {
 	var selectPRsInComparison = F4(
-		function (comparison, prId, pr, acc) {
-			var _n9 = pr.mergeCommit;
-			if (_n9.$ === 'Nothing') {
-				return acc;
-			} else {
-				var sha = _n9.a.sha;
-				if (A2(
-					elm$core$List$any,
-					A2(
-						elm$core$Basics$composeL,
-						elm$core$Basics$eq(sha),
-						function ($) {
-							return $.sha;
-						}),
-					comparison.commits)) {
-					var _n10 = A2(elm$core$Dict$get, prId, model.allCards);
-					if (_n10.$ === 'Just') {
-						var prc = _n10.a;
-						return A2(elm$core$List$cons, prc, acc);
-					} else {
-						return acc;
-					}
-				} else {
+		function (comparison, id, card, acc) {
+			var _n9 = card.content;
+			if (_n9.$ === 'PullRequestCardContent') {
+				var pr = _n9.a;
+				var _n10 = pr.mergeCommit;
+				if (_n10.$ === 'Nothing') {
 					return acc;
+				} else {
+					var sha = _n10.a.sha;
+					return A2(
+						elm$core$List$any,
+						A2(
+							elm$core$Basics$composeL,
+							elm$core$Basics$eq(sha),
+							function ($) {
+								return $.sha;
+							}),
+						comparison.commits) ? A2(elm$core$List$cons, card, acc) : acc;
 				}
+			} else {
+				return acc;
 			}
 		});
 	var selectCardsInMilestone = F4(
@@ -11141,14 +11177,14 @@ var author$project$Main$computeReleaseRepos = function (model) {
 								elm$core$Dict$foldl,
 								selectCardsInMilestone(nm),
 								_List_Nil,
-								model.allCards);
+								model.cards);
 						}
 					}();
 					var mergedPRs = A3(
 						elm$core$Dict$foldl,
 						selectPRsInComparison(comparison),
 						_List_Nil,
-						model.data.prs);
+						model.cards);
 					var categorizeByDocumentedState = F2(
 						function (card, sir) {
 							return A3(author$project$Main$hasLabel, model, 'release/documented', card) ? _Utils_update(
@@ -11268,7 +11304,7 @@ var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	});
 var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
 var author$project$Main$baseGraphState = function (model) {
-	return {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.data.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+	return {allCards: model.cards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.data.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
 };
 var elm$core$List$maximum = function (list) {
 	if (list.b) {
@@ -11294,7 +11330,7 @@ var author$project$Main$graphAllActivityCompare = F3(
 								return $.updatedAt;
 							},
 							elm$time$Time$posixToMillis),
-						A2(elm$core$Dict$get, node.value, model.allCards));
+						A2(elm$core$Dict$get, node.value, model.cards));
 					var mlatest = elm$core$List$maximum(
 						A2(
 							elm$core$List$map,
@@ -11345,7 +11381,7 @@ var author$project$Main$graphImpactCompare = F3(
 				author$project$ForceGraph$fold,
 				F2(
 					function (node, sum) {
-						var _n1 = A2(elm$core$Dict$get, node.value, model.allCards);
+						var _n1 = A2(elm$core$Dict$get, node.value, model.cards);
 						if (_n1.$ === 'Just') {
 							var score = _n1.a.score;
 							return score + sum;
@@ -11561,7 +11597,7 @@ var author$project$Main$sortAndFilterGraphs = function (model) {
 					author$project$ForceGraph$fold,
 					F2(
 						function (node, matches) {
-							var _n0 = A2(elm$core$Dict$get, node.value, model.allCards);
+							var _n0 = A2(elm$core$Dict$get, node.value, model.cards);
 							if (_n0.$ === 'Just') {
 								var card = _n0.a;
 								return A3(author$project$Main$satisfiesFilters, model, allFilters, card) ? A2(elm$core$Set$insert, card.id, matches) : matches;
@@ -11606,7 +11642,7 @@ var y0hy0h$ordered_containers$OrderedSet$member = F2(
 		return A2(elm$core$Dict$member, key, dict);
 	});
 var author$project$Main$updateGraphStates = function (model) {
-	var newState = {allCards: model.allCards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
+	var newState = {allCards: model.cards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.data.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.data.reviewers, selectedCards: model.selectedCards};
 	var affectedByState = function (graph) {
 		return A3(
 			author$project$ForceGraph$fold,
@@ -11784,7 +11820,7 @@ var author$project$Main$computeDataView = function (origModel) {
 					dataView: _Utils_update(
 						dataView,
 						{
-							prsByRepo: prsByRepo(model.allCards)
+							prsByRepo: prsByRepo(model.cards)
 						})
 				});
 		case 'PullRequestsRepoPage':
@@ -11794,7 +11830,7 @@ var author$project$Main$computeDataView = function (origModel) {
 					dataView: _Utils_update(
 						dataView,
 						{
-							prsByRepo: prsByRepo(model.allCards)
+							prsByRepo: prsByRepo(model.cards)
 						}),
 					suggestedLabels: _List_fromArray(
 						['needs-test'])
@@ -11902,32 +11938,22 @@ var author$project$Main$finishProjectDragRefresh = function (model) {
 				return _Utils_update(
 					m,
 					{
-						allCards: A3(
+						cards: A3(
 							elm$core$Dict$insert,
 							issue.id,
 							author$project$Card$fromIssue(issue),
-							m.allCards),
-						data: _Utils_update(
-							data,
-							{
-								issues: A3(elm$core$Dict$insert, issue.id, issue, data.issues)
-							})
+							m.cards)
 					});
 			} else {
 				var pr = content.a;
 				return _Utils_update(
 					m,
 					{
-						allCards: A3(
+						cards: A3(
 							elm$core$Dict$insert,
 							pr.id,
 							author$project$Card$fromPR(pr),
-							m.allCards),
-						data: _Utils_update(
-							data,
-							{
-								prs: A3(elm$core$Dict$insert, pr.id, pr, data.prs)
-							})
+							m.cards)
 					});
 			}
 		});
@@ -12756,10 +12782,26 @@ var elm$core$Dict$map = F2(
 				A2(elm$core$Dict$map, func, right));
 		}
 	});
-var elm$core$Dict$union = F2(
-	function (t1, t2) {
-		return A3(elm$core$Dict$foldl, elm$core$Dict$insert, t2, t1);
+var elm$core$Dict$sizeHelp = F2(
+	function (n, dict) {
+		sizeHelp:
+		while (true) {
+			if (dict.$ === 'RBEmpty_elm_builtin') {
+				return n;
+			} else {
+				var left = dict.d;
+				var right = dict.e;
+				var $temp$n = A2(elm$core$Dict$sizeHelp, n + 1, right),
+					$temp$dict = left;
+				n = $temp$n;
+				dict = $temp$dict;
+				continue sizeHelp;
+			}
+		}
 	});
+var elm$core$Dict$size = function (dict) {
+	return A2(elm$core$Dict$sizeHelp, 0, dict);
+};
 var elm$core$List$partition = F2(
 	function (pred, list) {
 		var step = F2(
@@ -13386,7 +13428,7 @@ var author$project$Main$update = F2(
 									card) : elm$core$Basics$identity;
 							}),
 						elm$core$Dict$empty,
-						model.allCards);
+						model.cards);
 					var _n16 = A2(
 						elm$core$List$partition,
 						elm$core$String$contains(':'),
@@ -13529,18 +13571,6 @@ var author$project$Main$update = F2(
 						return _Utils_Tuple2(
 							function () {
 								if (_Utils_cmp(index, model.dataIndex) > 0) {
-									var prCards = A2(
-										elm$core$Dict$map,
-										function (_n25) {
-											return author$project$Card$fromPR;
-										},
-										value.prs);
-									var issueCards = A2(
-										elm$core$Dict$map,
-										function (_n24) {
-											return author$project$Card$fromIssue;
-										},
-										value.issues);
 									var allLabels = A3(
 										elm$core$Dict$foldl,
 										F2(
@@ -13562,11 +13592,10 @@ var author$project$Main$update = F2(
 											}),
 										elm$core$Dict$empty,
 										allLabels);
-									var allCards = A2(elm$core$Dict$union, issueCards, prCards);
 									return author$project$Main$computeDataView(
 										_Utils_update(
 											model,
-											{allCards: allCards, allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}));
+											{allLabels: allLabels, colorLightnessCache: colorLightnessCache, data: value, dataIndex: index}));
 								} else {
 									return A3(
 										author$project$Log$debug,
@@ -13579,7 +13608,12 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									[
 										author$project$Backend$pollData(author$project$Main$DataFetched),
-										(_Utils_cmp(index, model.dataIndex) > 0) ? author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched) : elm$core$Platform$Cmd$none
+										(_Utils_cmp(index, model.dataIndex) > 0) ? elm$core$Platform$Cmd$batch(
+										_List_fromArray(
+											[
+												author$project$Backend$fetchCards(author$project$Main$CardsFetched),
+												author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched)
+											])) : elm$core$Platform$Cmd$none
 									])));
 					} else {
 						var err = msg.a.a;
@@ -13592,6 +13626,30 @@ var author$project$Main$update = F2(
 									model,
 									{isPolling: false}),
 								elm$core$Platform$Cmd$none));
+					}
+				case 'CardsFetched':
+					if (msg.a.$ === 'Ok') {
+						var index = msg.a.a.index;
+						var value = msg.a.a.value;
+						return A3(
+							author$project$Log$debug,
+							'cards fetched',
+							_Utils_Tuple2(
+								index,
+								elm$core$Dict$size(value)),
+							_Utils_Tuple2(
+								author$project$Main$computeDataView(
+									_Utils_update(
+										model,
+										{cards: value})),
+								elm$core$Platform$Cmd$none));
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching cards',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
 				case 'GraphsFetched':
 					if (msg.a.$ === 'Ok') {
@@ -13622,8 +13680,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n26, r, acc) {
-								var _n27 = A2(
+							function (_n24, r, acc) {
+								var _n25 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -13632,13 +13690,13 @@ var author$project$Main$update = F2(
 											return $.name;
 										}),
 									r.labels);
-								if (!_n27.b) {
+								if (!_n25.b) {
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _n27.a;
+									var label = _n25.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Main$updateLabel, model, r, label, newLabel),
@@ -13679,15 +13737,15 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n28, r, acc) {
-								var _n29 = A2(
+							function (_n26, r, acc) {
+								var _n27 = A2(
 									elm$core$List$filter,
 									author$project$Main$matchesLabel(label),
 									r.labels);
-								if (!_n29.b) {
+								if (!_n27.b) {
 									return acc;
 								} else {
-									var repoLabel = _n29.a;
+									var repoLabel = _n27.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$deleteLabel, model, r, repoLabel),
@@ -13760,7 +13818,7 @@ var author$project$Main$update = F2(
 								editingLabels: A2(
 									elm$core$Dict$map,
 									F2(
-										function (_n30, label) {
+										function (_n28, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -13774,14 +13832,14 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _n31 = A2(
+					var _n29 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_n31.$ === 'Nothing') {
+					if (_n29.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n31.a;
+						var newLabel = _n29.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13796,24 +13854,24 @@ var author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _n32 = A2(
+					var _n30 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_n32.$ === 'Nothing') {
+					if (_n30.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n32.a;
+						var newLabel = _n30.a;
 						var cmds = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n33, r, acc) {
-									var _n34 = A2(
+								function (_n31, r, acc) {
+									var _n32 = A2(
 										elm$core$List$filter,
 										author$project$Main$matchesLabel(oldLabel),
 										r.labels);
-									if (_n34.b) {
-										var repoLabel = _n34.a;
+									if (_n32.b) {
+										var repoLabel = _n32.a;
 										return A2(
 											elm$core$List$cons,
 											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
@@ -13898,8 +13956,8 @@ var author$project$Main$update = F2(
 						var colorLightnessCache = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n35, _n36, cache) {
-									var color = _n36.color;
+								function (_n33, _n34, cache) {
+									var color = _n34.color;
 									return A3(
 										elm$core$Dict$insert,
 										color,
@@ -13934,9 +13992,9 @@ var author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n37 = card.content;
-					if (_n37.$ === 'IssueCardContent') {
-						var issue = _n37.a;
+					var _n35 = card.content;
+					if (_n35.$ === 'IssueCardContent') {
+						var issue = _n35.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -13946,7 +14004,7 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _n37.a;
+						var pr = _n35.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -13959,14 +14017,14 @@ var author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n38 = card.content;
-					if (_n38.$ === 'IssueCardContent') {
-						var issue = _n38.a;
+					var _n36 = card.content;
+					if (_n36.$ === 'IssueCardContent') {
+						var issue = _n36.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _n38.a;
+						var pr = _n36.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, label));
@@ -13998,11 +14056,11 @@ var author$project$Main$update = F2(
 								_Utils_update(
 									model,
 									{
-										allCards: A3(
+										cards: A3(
 											elm$core$Dict$insert,
 											value.id,
 											author$project$Card$fromIssue(value),
-											model.allCards),
+											model.cards),
 										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
 										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
 									})),
@@ -14029,11 +14087,11 @@ var author$project$Main$update = F2(
 								_Utils_update(
 									model,
 									{
-										allCards: A3(
+										cards: A3(
 											elm$core$Dict$insert,
 											value.id,
 											author$project$Card$fromPR(value),
-											model.allCards),
+											model.cards),
 										dataIndex: A2(elm$core$Basics$max, index, model.dataIndex),
 										milestoneDrag: author$project$Drag$complete(model.milestoneDrag)
 									})),
@@ -14122,28 +14180,28 @@ var author$project$Main$update = F2(
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
-							return A2(elm$core$Dict$get, a, model.allCards);
+							return A2(elm$core$Dict$get, a, model.cards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n39 = A2(
+					var _n37 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n39.a;
-					var removePairs = _n39.b;
+					var addPairs = _n37.a;
+					var removePairs = _n37.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n41 = card.content;
-							if (_n41.$ === 'IssueCardContent') {
-								var issue = _n41.a;
+							var _n39 = card.content;
+							if (_n39.$ === 'IssueCardContent') {
+								var issue = _n39.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n41.a;
+								var pr = _n39.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -14156,13 +14214,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n40 = card.content;
-										if (_n40.$ === 'IssueCardContent') {
-											var issue = _n40.a;
+										var _n38 = card.content;
+										if (_n38.$ === 'IssueCardContent') {
+											var issue = _n38.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n40.a;
+											var pr = _n38.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -14197,13 +14255,13 @@ var author$project$Main$update = F2(
 var author$project$Main$init = F3(
 	function (config, url, key) {
 		var model = {
-			allCards: elm$core$Dict$empty,
 			allLabels: elm$core$Dict$empty,
 			anticipatedCards: elm$core$Set$empty,
 			baseGraphFilter: elm$core$Maybe$Nothing,
 			cardGraphs: _List_Nil,
 			cardLabelOperations: elm$core$Dict$empty,
 			cardSearch: '',
+			cards: elm$core$Dict$empty,
 			colorLightnessCache: elm$core$Dict$empty,
 			config: config,
 			currentTime: elm$time$Time$millisToPosix(config.initialTime),
@@ -14895,7 +14953,7 @@ var author$project$Main$onlyOpenCards = function (model) {
 			var contentId = _n0.contentId;
 			if (contentId.$ === 'Just') {
 				var id = contentId.a;
-				var _n2 = A2(elm$core$Dict$get, id, model.allCards);
+				var _n2 = A2(elm$core$Dict$get, id, model.cards);
 				if (_n2.$ === 'Just') {
 					var card = _n2.a;
 					return author$project$Card$isOpen(card);
@@ -18239,7 +18297,7 @@ var author$project$Main$viewLabelRow = F3(
 						A2(elm$core$List$cons, c, is))) : _Utils_Tuple2(ps, is);
 				}),
 			_Utils_Tuple2(_List_Nil, _List_Nil),
-			model.allCards);
+			model.cards);
 		var prs = _n0.a;
 		var issues = _n0.b;
 		return A2(
@@ -19697,7 +19755,7 @@ var author$project$Main$viewProjectColumnCard = F4(
 				if (_n0.b.$ === 'Just') {
 					var _n2 = _n0.a;
 					var contentId = _n0.b.a;
-					var _n3 = A2(elm$core$Dict$get, contentId, model.allCards);
+					var _n3 = A2(elm$core$Dict$get, contentId, model.cards);
 					if (_n3.$ === 'Just') {
 						var card = _n3.a;
 						return _List_fromArray(
@@ -20643,7 +20701,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
-							return A2(elm$core$Dict$get, a, model.allCards);
+							return A2(elm$core$Dict$get, a, model.cards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
 					return ((!elm$core$List$isEmpty(cards)) && A2(
@@ -20851,7 +20909,7 @@ var author$project$Main$viewSidebar = function (model) {
 		A2(
 			elm$core$List$filterMap,
 			function (a) {
-				return A2(elm$core$Dict$get, a, model.allCards);
+				return A2(elm$core$Dict$get, a, model.cards);
 			},
 			y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards)));
 	var anticipatedCards = A2(
@@ -20860,7 +20918,7 @@ var author$project$Main$viewSidebar = function (model) {
 		A2(
 			elm$core$List$filterMap,
 			function (a) {
-				return A2(elm$core$Dict$get, a, model.allCards);
+				return A2(elm$core$Dict$get, a, model.cards);
 			},
 			A2(
 				elm$core$List$filter,
