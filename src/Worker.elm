@@ -607,22 +607,26 @@ fetchComparison model repo =
         findTag releases =
             case releases of
                 [] ->
-                    -- just yield an empty comparison
-                    "HEAD"
+                    Nothing
 
                 release :: rest ->
                     case release.tag of
                         Just t ->
-                            t.name
+                            Just t.name
 
                         Nothing ->
                             findTag rest
 
-        base =
+        mbase =
             findTag repo.releases
     in
-    GitHubGraph.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
-        |> Task.attempt (ComparisonFetched repo)
+    case mbase of
+        Just base ->
+            GitHubGraph.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
+                |> Task.attempt (ComparisonFetched repo)
+
+        Nothing ->
+            Cmd.none
 
 
 fetchRepoPullRequest : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg

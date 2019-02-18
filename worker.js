@@ -10198,14 +10198,14 @@ var author$project$Main$fetchComparison = F2(
 			findTag:
 			while (true) {
 				if (!releases.b) {
-					return 'HEAD';
+					return elm$core$Maybe$Nothing;
 				} else {
 					var release = releases.a;
 					var rest = releases.b;
 					var _n1 = release.tag;
 					if (_n1.$ === 'Just') {
 						var t = _n1.a;
-						return t.name;
+						return elm$core$Maybe$Just(t.name);
 					} else {
 						var $temp$releases = rest;
 						releases = $temp$releases;
@@ -10214,16 +10214,21 @@ var author$project$Main$fetchComparison = F2(
 				}
 			}
 		};
-		var base = findTag(repo.releases);
-		return A2(
-			elm$core$Task$attempt,
-			author$project$Main$ComparisonFetched(repo),
-			A4(
-				author$project$GitHubGraph$compareRepoRefs,
-				model.githubToken,
-				{name: repo.name, owner: repo.owner},
-				base,
-				'HEAD'));
+		var mbase = findTag(repo.releases);
+		if (mbase.$ === 'Just') {
+			var base = mbase.a;
+			return A2(
+				elm$core$Task$attempt,
+				author$project$Main$ComparisonFetched(repo),
+				A4(
+					author$project$GitHubGraph$compareRepoRefs,
+					model.githubToken,
+					{name: repo.name, owner: repo.owner},
+					base,
+					'HEAD'));
+		} else {
+			return elm$core$Platform$Cmd$none;
+		}
 	});
 var author$project$GitHubGraph$fetchIssue = F2(
 	function (token, id) {
