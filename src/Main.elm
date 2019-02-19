@@ -56,10 +56,11 @@ type alias Model =
     , milestoneDrag : Drag.Model Card (Maybe String) Msg
     , data : Data
     , graphs : List (ForceGraph GitHubGraph.ID)
-    , isPolling : Bool
     , dataIndex : Int
     , dataView : DataView
     , cards : Dict GitHubGraph.ID Card
+    , actors : Dict GitHubGraph.ID (List Backend.EventActor)
+    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
     , cardSearch : String
@@ -184,7 +185,7 @@ type CardSource
 type Msg
     = LinkClicked Browser.UrlRequest
     | UrlChanged Url
-    | RetryPolling
+    | Poll
     | SetCurrentTime Time.Posix
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
@@ -196,7 +197,7 @@ type Msg
     | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
-    | CardsFetched (Result Http.Error (Backend.Indexed (Dict GitHubGraph.ID Card)))
+    | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
     | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
     | SelectCard GitHubGraph.ID
     | DeselectCard GitHubGraph.ID
@@ -324,7 +325,6 @@ init config url key =
             , me = Nothing
             , data = Backend.emptyData
             , graphs = []
-            , isPolling = True
             , dataIndex = 0
             , dataView =
                 { reposByLabel = Dict.empty
@@ -333,6 +333,8 @@ init config url key =
                 , releaseRepos = Dict.empty
                 }
             , cards = Dict.empty
+            , actors = Dict.empty
+            , reviewers = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
             , cardSearch = ""
@@ -378,19 +380,15 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
         [ Time.every (60 * 60 * 1000) SetCurrentTime
-        , Time.every (5 * 1000) (always RetryPolling)
+        , Time.every (10 * 1000) (always Poll)
         ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        RetryPolling ->
-            if model.isPolling then
-                ( model, Cmd.none )
-
-            else
-                ( { model | isPolling = True }, Backend.fetchData DataFetched )
+        Poll ->
+            ( model, Backend.fetchData DataFetched )
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -734,7 +732,7 @@ update msg model =
                 ( model, Cmd.none )
 
         DataFetched (Ok { index, value }) ->
-            ( if index > model.dataIndex then
+            if index > model.dataIndex then
                 let
                     allLabels =
                         Dict.foldl (\_ r -> loadLabels r.labels) Dict.empty value.repos
@@ -747,39 +745,49 @@ update msg model =
                             Dict.empty
                             allLabels
                 in
-                computeDataView <|
+                ( computeDataView <|
                     { model
                         | data = value
                         , dataIndex = index
                         , allLabels = allLabels
                         , colorLightnessCache = colorLightnessCache
                     }
+                , Cmd.batch
+                    -- update card/graph data for new index
+                    [ Backend.fetchCardData CardDataFetched
+                    , Backend.fetchGraphs GraphsFetched
 
-              else
+                    -- keep polling eagerly as long as there's new data
+                    , Backend.pollData DataFetched
+                    ]
+                )
+
+            else
                 Log.debug "ignoring stale index" ( index, model.dataIndex ) <|
-                    model
-            , Cmd.batch
-                [ Backend.pollData DataFetched
-                , if index > model.dataIndex then
-                    Cmd.batch
-                        [ Backend.fetchCards CardsFetched
-                        , Backend.fetchGraphs GraphsFetched
-                        ]
-
-                  else
-                    Cmd.none
-                ]
-            )
+                    ( model, Cmd.none )
 
         DataFetched (Err err) ->
             Log.debug "error fetching data" err <|
-                ( { model | isPolling = False }, Cmd.none )
+                ( model, Cmd.none )
 
-        CardsFetched (Ok { index, value }) ->
-            Log.debug "cards fetched" ( index, Dict.size value ) <|
-                ( computeDataView { model | cards = value }, Cmd.none )
+        CardDataFetched (Ok { index, value }) ->
+            let
+                cards =
+                    Dict.union
+                        (Dict.map (always Card.fromIssue) value.issues)
+                        (Dict.map (always Card.fromPR) value.prs)
+            in
+            Log.debug "cards fetched" ( index, Dict.size value.issues + Dict.size value.prs ) <|
+                ( computeDataView
+                    { model
+                        | cards = cards
+                        , actors = value.actors
+                        , reviewers = value.reviewers
+                    }
+                , Cmd.none
+                )
 
-        CardsFetched (Err err) ->
+        CardDataFetched (Err err) ->
             Log.debug "error fetching cards" err <|
                 ( model, Cmd.none )
 
@@ -1131,7 +1139,7 @@ updateGraphStates model =
         newState =
             { allCards = model.cards
             , allLabels = model.allLabels
-            , reviewers = model.data.reviewers
+            , reviewers = model.reviewers
             , currentTime = model.currentTime
             , selectedCards = model.selectedCards
             , filteredCards = Set.empty
@@ -1139,7 +1147,7 @@ updateGraphStates model =
             , highlightedNode = model.highlightedNode
             , me = model.me
             , dataIndex = model.dataIndex
-            , cardEvents = model.data.actors
+            , cardEvents = model.actors
             }
 
         affectedByState graph =
@@ -2150,7 +2158,7 @@ failedChecks card =
 
 changesRequested : Model -> Card -> Bool
 changesRequested model card =
-    case Dict.get card.id model.data.reviewers of
+    case Dict.get card.id model.reviewers of
         Just reviews ->
             List.any ((==) GitHubGraph.PullRequestReviewStateChangesRequested << .state) reviews
 
@@ -2717,11 +2725,11 @@ baseGraphState : Model -> CardNodeState
 baseGraphState model =
     { allCards = model.cards
     , allLabels = model.allLabels
-    , reviewers = model.data.reviewers
+    , reviewers = model.reviewers
     , currentTime = model.currentTime
     , me = model.me
     , dataIndex = model.dataIndex
-    , cardEvents = model.data.actors
+    , cardEvents = model.actors
     , selectedCards = OrderedSet.empty
     , anticipatedCards = Set.empty
     , filteredCards = Set.empty
@@ -2800,7 +2808,7 @@ graphUserActivityCompare model login a b =
                 (\node latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.value model.data.actors)
+                            Maybe.withDefault [] (Dict.get node.value model.actors)
                                 |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
@@ -2825,7 +2833,7 @@ graphAllActivityCompare model a b =
                 (\node latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.value model.data.actors)
+                            Maybe.withDefault [] (Dict.get node.value model.actors)
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
 
@@ -3420,7 +3428,7 @@ isInProject name card =
 
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
-    Maybe.withDefault [] (Dict.get card.id model.data.actors)
+    Maybe.withDefault [] (Dict.get card.id model.actors)
         |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
@@ -3503,7 +3511,7 @@ viewCard model card =
             , ( "last-activity-is-me"
               , case model.me of
                     Just { user } ->
-                        lastActivityIsByUser model.data.actors user.login card
+                        lastActivityIsByUser model.actors user.login card
 
                     Nothing ->
                         False
@@ -3676,7 +3684,7 @@ prIcons model card =
                             []
 
                 reviews =
-                    Maybe.withDefault [] <| Dict.get card.id model.data.reviewers
+                    Maybe.withDefault [] <| Dict.get card.id model.reviewers
 
                 reviewStates =
                     List.map
@@ -3739,7 +3747,7 @@ viewNoteCard model col text =
 
 recentActors : Model -> Card -> List Backend.EventActor
 recentActors model card =
-    Dict.get card.id model.data.actors
+    Dict.get card.id model.actors
         |> Maybe.withDefault []
         |> List.reverse
         |> List.take 3

@@ -36,15 +36,6 @@ const data = {
   // repo comparisons to last release, by repo id
   comparisons: {},
 
-  // map from issue/pr id to issues/pr ids that referenced it
-  references: {},
-
-  // map from issue/pr id to actors in timeline
-  actors: {},
-
-  // map from pr to review states per user
-  reviewers: {},
-
   // projects by id
   projects: {},
 
@@ -57,8 +48,17 @@ const cards = {
   issues: {},
 
   // prs by id
-  prs: {}
+  prs: {},
+
+  // map from issue/pr id to actors in timeline
+  actors: {},
+
+  // map from pr to review states per user
+  reviewers: {}
 }
+
+// map from issue/pr id to issues/pr ids that referenced it
+var references = {}
 
 // list of graphs for all issues
 var graphs = []
@@ -184,9 +184,9 @@ function refreshGraphIfNecessary() {
   console.log("refreshing graph");
   needsRefresh = false;
 
-  var references = [];
-  for (var r in data.references) {
-    references.push([r, data.references[r]]);
+  var refs = [];
+  for (var r in references) {
+    refs.push([r, references[r]]);
   }
 
   var cardIds = [];
@@ -204,7 +204,7 @@ function refreshGraphIfNecessary() {
     }
   }
 
-  worker.ports.refreshGraph.send([cardIds, references]);
+  worker.ports.refreshGraph.send([cardIds, refs]);
 
   queueGraphRefresh();
 }
@@ -257,7 +257,7 @@ worker.ports.setComparison.subscribe(function(args) {
 worker.ports.setReferences.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.references[id] = val;
+  references[id] = val;
   dataIndex++;
   popPoll();
 
@@ -267,7 +267,7 @@ worker.ports.setReferences.subscribe(function(args) {
 worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.actors[id] = val;
+  cards.actors[id] = val;
   dataIndex++;
   popPoll();
 });
@@ -275,7 +275,7 @@ worker.ports.setActors.subscribe(function(args) {
 worker.ports.setReviewers.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.reviewers[id] = val;
+  cards.reviewers[id] = val;
   dataIndex++;
   popPoll();
 });
