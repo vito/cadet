@@ -1,4 +1,4 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Backend exposing (Data, Me)
 import Browser
@@ -18,6 +18,7 @@ import Html.Keyed
 import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
+import Json.Decode as JD
 import Log
 import Markdown
 import Octicons
@@ -40,48 +41,70 @@ import Url exposing (Url)
 import Url.Parser as UP exposing ((</>))
 
 
+port eventReceived : (( String, String, String ) -> msg) -> Sub msg
+
+
 type alias Config =
     { initialTime : Int
     }
 
 
 type alias Model =
+    -- nav/user/global state
     { key : Nav.Key
-    , config : Config
-    , me : Maybe Me
     , page : Page
+    , me : Maybe Me
     , currentTime : Time.Posix
-    , projectDrag : Drag.Model CardSource CardDestination Msg
-    , projectDragRefresh : Maybe ProjectDragRefresh
-    , milestoneDrag : Drag.Model Card (Maybe String) Msg
-    , data : Data
-    , graphs : List (ForceGraph GitHubGraph.ID)
+
+    -- data from backend
     , dataIndex : Int
+    , repos : Dict GitHubGraph.ID GitHubGraph.Repo
+    , projects : Dict GitHubGraph.ID GitHubGraph.Project
+    , columnCards : Dict GitHubGraph.ID (List Backend.ColumnCard)
+    , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
+    , graphs : List (ForceGraph GitHubGraph.ID)
     , dataView : DataView
     , cards : Dict GitHubGraph.ID Card
     , actors : Dict GitHubGraph.ID (List Backend.EventActor)
     , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+
+    -- 'views' into data
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
     , colorLightnessCache : Dict String Bool
+
+    -- card dragging in projects
+    , projectDrag : Drag.Model CardSource CardDestination Msg
+    , projectDragRefresh : Maybe ProjectDragRefresh
+
+    -- sidebar card search/selecting state
     , cardSearch : String
     , selectedCards : OrderedSet GitHubGraph.ID
     , anticipatedCards : Set GitHubGraph.ID
+
+    -- sidebar label operations
+    , labelSearch : String
+    , showLabelOperations : Bool
+    , cardLabelOperations : Dict String CardLabelOperation
+
+    -- card/node hover state
     , highlightedCard : Maybe GitHubGraph.ID
     , highlightedNode : Maybe GitHubGraph.ID
+
+    -- card graph state
+    , cardGraphs : List ( CardNodeState, ForceGraph GitHubGraph.ID )
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
-    , cardGraphs : List ( CardNodeState, ForceGraph GitHubGraph.ID )
+    , showLabelFilters : Bool
+
+    -- label crud state
     , deletingLabels : Set ( String, String )
     , editingLabels : Dict ( String, String ) SharedLabel
     , newLabel : SharedLabel
     , newLabelColored : Bool
-    , newMilestoneName : String
-    , showLabelFilters : Bool
-    , labelSearch : String
+
+    -- card tabbed view state
     , suggestedLabels : List String
-    , showLabelOperations : Bool
-    , cardLabelOperations : Dict String CardLabelOperation
     , releaseRepoTab : Int
     , repoPullRequestsTab : Int
     }
@@ -188,15 +211,12 @@ type Msg
     | Poll
     | SetCurrentTime Time.Posix
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
-    | MilestoneDrag (Drag.Msg Card (Maybe String) Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ProjectColumnCard)
-    | CardDropContentRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.CardContent))
-    | CardDropSourceRefreshed (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
-    | CardDropTargetRefreshed (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
-    | CardsRefreshed GitHubGraph.ID (Result Http.Error (Backend.Indexed (List Backend.ColumnCard)))
+    | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
+    | EventReceived ( String, String, String )
     | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
     | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
     | SelectCard GitHubGraph.ID
@@ -222,13 +242,10 @@ type Msg
     | RandomizeNewLabelColor
     | SetNewLabelName String
     | LabelChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
-    | RepoRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Repo))
     | LabelCard Card String
     | UnlabelCard Card String
     | RefreshIssue GitHubGraph.ID
-    | IssueRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.Issue))
     | RefreshPullRequest GitHubGraph.ID
-    | PullRequestRefreshed (Result Http.Error (Backend.Indexed GitHubGraph.PullRequest))
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
@@ -320,12 +337,14 @@ init config url key =
     let
         model =
             { key = key
-            , config = config
             , page = GlobalGraphPage
             , me = Nothing
-            , data = Backend.emptyData
             , graphs = []
             , dataIndex = 0
+            , repos = Dict.empty
+            , projects = Dict.empty
+            , columnCards = Dict.empty
+            , comparisons = Dict.empty
             , dataView =
                 { reposByLabel = Dict.empty
                 , labelToRepoToId = Dict.empty
@@ -349,12 +368,10 @@ init config url key =
             , graphSort = ImpactSort
             , projectDrag = Drag.init
             , projectDragRefresh = Nothing
-            , milestoneDrag = Drag.init
             , deletingLabels = Set.empty
             , editingLabels = Dict.empty
             , newLabel = { name = "", color = "ffffff" }
             , newLabelColored = False
-            , newMilestoneName = ""
             , showLabelFilters = False
             , labelSearch = ""
             , suggestedLabels = []
@@ -379,8 +396,9 @@ init config url key =
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.batch
-        [ Time.every (60 * 60 * 1000) SetCurrentTime
-        , Time.every (10 * 1000) (always Poll)
+        [ eventReceived EventReceived
+        , Time.every (60 * 1000) (always Poll)
+        , Time.every (60 * 60 * 1000) SetCurrentTime
         ]
 
 
@@ -445,21 +463,6 @@ update msg model =
                 _ ->
                     ( newModel, Cmd.none )
 
-        MilestoneDrag subMsg ->
-            let
-                dragModel =
-                    Drag.update subMsg model.milestoneDrag
-
-                newModel =
-                    { model | milestoneDrag = dragModel }
-            in
-            case dragModel of
-                Drag.Dropping state ->
-                    update state.msg { newModel | projectDrag = Drag.drop newModel.projectDrag }
-
-                _ ->
-                    ( newModel, Cmd.none )
-
         MoveCardAfter source dest ->
             case source of
                 FromColumnCardSource { cardId } ->
@@ -479,18 +482,12 @@ update msg model =
                             case content of
                                 Just (GitHubGraph.IssueCardContent issue) ->
                                     ( Just issue.id
-                                    , Backend.refreshIssue issue.id
-                                        (CardDropContentRefreshed
-                                            << Result.map (\x -> { index = x.index, value = GitHubGraph.IssueCardContent x.value })
-                                        )
+                                    , Backend.refreshIssue issue.id RefreshQueued
                                     )
 
                                 Just (GitHubGraph.PullRequestCardContent pr) ->
                                     ( Just pr.id
-                                    , Backend.refreshPR pr.id
-                                        (CardDropContentRefreshed
-                                            << Result.map (\x -> { index = x.index, value = GitHubGraph.PullRequestCardContent x.value })
-                                        )
+                                    , Backend.refreshPR pr.id RefreshQueued
                                     )
 
                                 Nothing ->
@@ -523,8 +520,8 @@ update msg model =
                               }
                             , Cmd.batch
                                 [ refreshContent
-                                , Backend.refreshCards sourceId CardDropSourceRefreshed
-                                , Backend.refreshCards col CardDropTargetRefreshed
+                                , Backend.refreshCards sourceId RefreshQueued
+                                , Backend.refreshCards col RefreshQueued
                                 ]
                             )
 
@@ -542,7 +539,7 @@ update msg model =
                               }
                             , Cmd.batch
                                 [ refreshContent
-                                , Backend.refreshCards col CardDropTargetRefreshed
+                                , Backend.refreshCards col RefreshQueued
                                 ]
                             )
 
@@ -553,72 +550,11 @@ update msg model =
             Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
 
-        CardDropContentRefreshed (Ok { index, value }) ->
-            case model.projectDragRefresh of
-                Nothing ->
-                    ( model, Cmd.none )
+        RefreshQueued (Ok ()) ->
+            Log.debug "refresh queued" () ( model, Cmd.none )
 
-                Just pdr ->
-                    ( finishProjectDragRefresh
-                        { model
-                            | projectDragRefresh = Just { pdr | content = Just value }
-                            , dataIndex = max index model.dataIndex
-                        }
-                    , Cmd.none
-                    )
-
-        CardDropContentRefreshed (Err err) ->
-            Log.debug "failed to refresh card" err <|
-                ( model, Cmd.none )
-
-        CardDropSourceRefreshed (Ok { index, value }) ->
-            case model.projectDragRefresh of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just pdr ->
-                    ( finishProjectDragRefresh
-                        { model
-                            | projectDragRefresh = Just { pdr | sourceCards = Just value }
-                            , dataIndex = max index model.dataIndex
-                        }
-                    , Cmd.none
-                    )
-
-        CardDropSourceRefreshed (Err err) ->
-            Log.debug "failed to refresh card" err <|
-                ( model, Cmd.none )
-
-        CardDropTargetRefreshed (Ok { index, value }) ->
-            case model.projectDragRefresh of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just pdr ->
-                    ( finishProjectDragRefresh
-                        { model
-                            | projectDragRefresh = Just { pdr | targetCards = Just value }
-                            , dataIndex = max index model.dataIndex
-                        }
-                    , Cmd.none
-                    )
-
-        CardDropTargetRefreshed (Err err) ->
-            Log.debug "failed to refresh card" err <|
-                ( model, Cmd.none )
-
-        CardsRefreshed col (Ok { index, value }) ->
-            let
-                data =
-                    model.data
-
-                newData =
-                    { data | columnCards = Dict.insert col value data.columnCards }
-            in
-            ( computeDataView { model | data = newData, dataIndex = max index model.dataIndex }, Cmd.none )
-
-        CardsRefreshed col (Err err) ->
-            Log.debug "failed to refresh cards" err <|
+        RefreshQueued (Err err) ->
+            Log.debug "refresh failed" err <|
                 ( model, Cmd.none )
 
         SearchCards str ->
@@ -731,6 +667,31 @@ update msg model =
             Log.debug "error fetching self" err <|
                 ( model, Cmd.none )
 
+        EventReceived ( event, data, indexStr ) ->
+            case String.toInt indexStr of
+                Just index ->
+                    ( if index >= model.dataIndex then
+                        let
+                            newModel =
+                                handleEvent model event data index
+                        in
+                        computeDataView { newModel | dataIndex = index }
+
+                      else
+                        Log.debug "skipping event for stale index" ( model.dataIndex, index ) <|
+                            model
+                    , if index == model.dataIndex + 1 then
+                        Cmd.none
+
+                      else
+                        Log.debug "skipped a data index; syncing" ( model.dataIndex, index ) <|
+                            Backend.fetchData DataFetched
+                    )
+
+                Nothing ->
+                    Log.debug "invalid event index" indexStr <|
+                        ( model, Cmd.none )
+
         DataFetched (Ok { index, value }) ->
             if index > model.dataIndex then
                 let
@@ -747,18 +708,17 @@ update msg model =
                 in
                 ( computeDataView <|
                     { model
-                        | data = value
-                        , dataIndex = index
+                        | dataIndex = index
+                        , repos = value.repos
+                        , projects = value.projects
+                        , columnCards = value.columnCards
+                        , comparisons = value.comparisons
                         , allLabels = allLabels
                         , colorLightnessCache = colorLightnessCache
                     }
                 , Cmd.batch
-                    -- update card/graph data for new index
                     [ Backend.fetchCardData CardDataFetched
                     , Backend.fetchGraphs GraphsFetched
-
-                    -- keep polling eagerly as long as there's new data
-                    , Backend.pollData DataFetched
                     ]
                 )
 
@@ -816,7 +776,7 @@ update msg model =
                                         updateLabel model r label newLabel :: acc
                         )
                         []
-                        model.data.repos
+                        model.repos
             in
             ( model, Cmd.batch cmds )
 
@@ -839,7 +799,7 @@ update msg model =
                                     deleteLabel model r repoLabel :: acc
                         )
                         []
-                        model.data.repos
+                        model.repos
             in
             ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
 
@@ -907,7 +867,7 @@ update msg model =
                                             acc
                                 )
                                 []
-                                model.data.repos
+                                model.repos
                     in
                     ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
 
@@ -944,40 +904,10 @@ update msg model =
                 repoSel =
                     { owner = repo.owner, name = repo.name }
             in
-            ( model, Backend.refreshRepo repoSel RepoRefreshed )
+            ( model, Backend.refreshRepo repoSel RefreshQueued )
 
         LabelChanged repo (Err err) ->
             Log.debug "failed to modify labels" err <|
-                ( model, Cmd.none )
-
-        RepoRefreshed (Ok { index, value }) ->
-            let
-                data =
-                    model.data
-
-                allLabels =
-                    loadLabels value.labels model.allLabels
-
-                colorLightnessCache =
-                    Dict.foldl
-                        (\_ { color } cache ->
-                            Dict.insert color (computeColorIsLight color) cache
-                        )
-                        Dict.empty
-                        allLabels
-            in
-            ( computeDataView
-                { model
-                    | data = { data | repos = Dict.insert value.id value data.repos }
-                    , dataIndex = max index model.dataIndex
-                    , allLabels = allLabels
-                    , colorLightnessCache = colorLightnessCache
-                }
-            , Cmd.none
-            )
-
-        RepoRefreshed (Err err) ->
-            Log.debug "failed to refresh repo" err <|
                 ( model, Cmd.none )
 
         LabelCard card label ->
@@ -1004,38 +934,10 @@ update msg model =
                 ( model, Cmd.none )
 
         RefreshIssue id ->
-            ( model, Backend.refreshIssue id IssueRefreshed )
-
-        IssueRefreshed (Ok { index, value }) ->
-            ( computeDataView
-                { model
-                    | milestoneDrag = Drag.complete model.milestoneDrag
-                    , cards = Dict.insert value.id (Card.fromIssue value) model.cards
-                    , dataIndex = max index model.dataIndex
-                }
-            , Cmd.none
-            )
-
-        IssueRefreshed (Err err) ->
-            Log.debug "failed to refresh issue" err <|
-                ( model, Cmd.none )
+            ( model, Backend.refreshIssue id RefreshQueued )
 
         RefreshPullRequest id ->
-            ( model, Backend.refreshPR id PullRequestRefreshed )
-
-        PullRequestRefreshed (Ok { index, value }) ->
-            ( computeDataView
-                { model
-                    | milestoneDrag = Drag.complete model.milestoneDrag
-                    , cards = Dict.insert value.id (Card.fromPR value) model.cards
-                    , dataIndex = max index model.dataIndex
-                }
-            , Cmd.none
-            )
-
-        PullRequestRefreshed (Err err) ->
-            Log.debug "failed to refresh pr" err <|
-                ( model, Cmd.none )
+            ( model, Backend.refreshPR id RefreshQueued )
 
         AddFilter filter ->
             ( sortAndFilterGraphs <|
@@ -1250,8 +1152,8 @@ computeDataView origModel =
 
         dataView =
             { origDataView
-                | reposByLabel = groupRepoLabels origModel.data.repos
-                , labelToRepoToId = groupLabelsToRepoToId origModel.data.repos
+                | reposByLabel = groupRepoLabels origModel.repos
+                , labelToRepoToId = groupLabelsToRepoToId origModel.repos
             }
 
         model =
@@ -1331,7 +1233,7 @@ computeReleaseRepos model =
                 acc
 
             else
-                case Dict.get repoId model.data.repos of
+                case Dict.get repoId model.repos of
                     Just repo ->
                         let
                             nextMilestone =
@@ -1417,7 +1319,7 @@ computeReleaseRepos model =
                     Nothing ->
                         acc
     in
-    Dict.foldl makeReleaseRepo Dict.empty model.data.comparisons
+    Dict.foldl makeReleaseRepo Dict.empty model.comparisons
 
 
 view : Model -> Browser.Document Msg
@@ -1878,7 +1780,7 @@ viewAllProjectsPage : Model -> Html Msg
 viewAllProjectsPage model =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject (Dict.values model.data.projects)
+            List.filterMap selectStatefulProject (Dict.values model.projects)
     in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
@@ -2486,7 +2388,7 @@ viewProject : Model -> ProjectState -> Html Msg
 viewProject model { project, backlogs, inFlight, done } =
     let
         cardCount column =
-            Dict.get column.id model.data.columnCards
+            Dict.get column.id model.columnCards
                 |> Maybe.map (List.length << onlyOpenCards model)
                 |> Maybe.withDefault 0
     in
@@ -2523,7 +2425,7 @@ viewProjectColumn model project mod icon col =
     let
         cards =
             mod <|
-                Maybe.withDefault [] (Dict.get col.id model.data.columnCards)
+                Maybe.withDefault [] (Dict.get col.id model.columnCards)
 
         dropCandidate =
             { msgFunc = MoveCardAfter
@@ -2592,7 +2494,7 @@ viewProjectPage : Model -> String -> Html Msg
 viewProjectPage model name =
     let
         statefulProjects =
-            List.filterMap selectStatefulProject (Dict.values model.data.projects)
+            List.filterMap selectStatefulProject (Dict.values model.projects)
 
         mproject =
             List.head <|
@@ -3950,7 +3852,7 @@ findCardColumns model cardId =
                 columnIds
         )
         []
-        model.data.columnCards
+        model.columnCards
 
 
 labelKey : SharedLabel -> ( String, String )
@@ -3996,7 +3898,7 @@ addIssueLabels model issue labels =
     case model.me of
         Just { token } ->
             GitHubGraph.addIssueLabels token issue labels
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
 
         Nothing ->
             Cmd.none
@@ -4007,7 +3909,7 @@ removeIssueLabel model issue label =
     case model.me of
         Just { token } ->
             GitHubGraph.removeIssueLabel token issue label
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id IssueRefreshed))
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
 
         Nothing ->
             Cmd.none
@@ -4018,7 +3920,7 @@ addPullRequestLabels model pr labels =
     case model.me of
         Just { token } ->
             GitHubGraph.addPullRequestLabels token pr labels
-                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
+                |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
 
         Nothing ->
             Cmd.none
@@ -4029,7 +3931,7 @@ removePullRequestLabel model pr label =
     case model.me of
         Just { token } ->
             GitHubGraph.removePullRequestLabel token pr label
-                |> Task.attempt (DataChanged (Backend.refreshPR pr.id PullRequestRefreshed))
+                |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
 
         Nothing ->
             Cmd.none
@@ -4056,65 +3958,84 @@ generateColor seed =
     String.padLeft 6 '0' (ParseInt.toHex randomColor)
 
 
-finishProjectDragRefresh : Model -> Model
-finishProjectDragRefresh model =
+handleEvent : Model -> String -> String -> Int -> Model
+handleEvent model event data index =
     let
-        updateColumn id cards m =
-            let
-                data =
-                    m.data
-            in
-            { m | data = { data | columnCards = Dict.insert id cards data.columnCards } }
+        withDecoded decoder fn =
+            case JD.decodeString decoder data of
+                Ok val ->
+                    Log.debug ("updating " ++ event) () <|
+                        fn val
 
-        updateContent content m =
-            let
-                data =
-                    m.data
-            in
-            case content of
-                GitHubGraph.IssueCardContent issue ->
-                    { m | cards = Dict.insert issue.id (Card.fromIssue issue) m.cards }
-
-                GitHubGraph.PullRequestCardContent pr ->
-                    { m | cards = Dict.insert pr.id (Card.fromPR pr) m.cards }
+                Err err ->
+                    Log.debug "error decoding event" err <|
+                        model
     in
-    case model.projectDragRefresh of
-        Nothing ->
-            model
+    case event of
+        "repo" ->
+            withDecoded GitHubGraph.decodeRepo <|
+                \val ->
+                    let
+                        allLabels =
+                            loadLabels val.labels model.allLabels
 
-        Just pdr ->
-            case ( ( pdr.contentId, pdr.content, pdr.sourceId ), ( pdr.sourceCards, pdr.targetId, pdr.targetCards ) ) of
-                ( ( Just _, Just c, Just sid ), ( Just scs, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.complete model.projectDrag }
-                        |> updateContent c
-                        |> updateColumn sid scs
-                        |> updateColumn tid tcs
+                        colorLightnessCache =
+                            Dict.foldl
+                                (\_ { color } cache ->
+                                    Dict.insert color (computeColorIsLight color) cache
+                                )
+                                Dict.empty
+                                allLabels
+                    in
+                    { model
+                        | repos = Dict.insert val.id val model.repos
+                        , allLabels = allLabels
+                        , colorLightnessCache = colorLightnessCache
+                    }
 
-                ( ( Just _, Just c, Nothing ), ( Nothing, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.complete model.projectDrag }
-                        |> updateContent c
-                        |> updateColumn tid tcs
+        "project" ->
+            withDecoded GitHubGraph.decodeProject <|
+                \val ->
+                    { model | projects = Dict.insert val.id val model.projects }
 
-                ( ( Just _, Just c, Just _ ), ( _, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.land model.projectDrag }
-                        |> updateContent c
-                        |> updateColumn tid tcs
+        "columnCards" ->
+            withDecoded Backend.decodeColumnCardsEvent <|
+                \val ->
+                    { model | columnCards = Dict.insert val.columnId val.cards model.columnCards }
 
-                ( ( Nothing, Nothing, Just sid ), ( Just scs, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.complete model.projectDrag }
-                        |> updateColumn sid scs
-                        |> updateColumn tid tcs
+        "comparison" ->
+            withDecoded Backend.decodeComparisonEvent <|
+                \val ->
+                    { model | comparisons = Dict.insert val.repoId val.comparison model.comparisons }
 
-                ( ( Nothing, Nothing, Nothing ), ( Nothing, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.complete model.projectDrag }
-                        |> updateColumn tid tcs
+        "issue" ->
+            withDecoded GitHubGraph.decodeIssue <|
+                \val ->
+                    { model | cards = Dict.insert val.id (Card.fromIssue val) model.cards }
 
-                ( ( Nothing, Nothing, Just _ ), ( _, Just tid, Just tcs ) ) ->
-                    { model | projectDrag = Drag.land model.projectDrag }
-                        |> updateColumn tid tcs
+        "pr" ->
+            withDecoded GitHubGraph.decodePullRequest <|
+                \val ->
+                    { model | cards = Dict.insert val.id (Card.fromPR val) model.cards }
 
-                _ ->
-                    model
+        "actors" ->
+            withDecoded Backend.decodeActorsEvent <|
+                \val ->
+                    { model | actors = Dict.insert val.cardId val.actors model.actors }
+
+        "reviewers" ->
+            withDecoded Backend.decodeReviewersEvent <|
+                \val ->
+                    { model | reviewers = Dict.insert val.cardId val.reviewers model.reviewers }
+
+        "graphs" ->
+            withDecoded Backend.decodeGraphs <|
+                \val ->
+                    { model | graphs = val }
+
+        _ ->
+            Log.debug "event ignored" ( event, data, index ) <|
+                model
 
 
 emptyArc : Shape.Arc

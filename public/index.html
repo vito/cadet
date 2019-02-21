@@ -15,6 +15,30 @@
           initialTime: (new Date()).getTime()
         }
       });
+
+      var events = new EventSource('/events');
+
+      events.onerror = function() {
+        console.log('events error');
+      }
+
+      events.onopen = function() {
+        console.log('listening for events');
+      }
+
+      function forwardEvent(e) {
+        app.ports.eventReceived.send([e.type, e.data, e.lastEventId]);
+      }
+
+      events.addEventListener("repo", forwardEvent);
+      events.addEventListener("project", forwardEvent);
+      events.addEventListener("columnCards", forwardEvent);
+      events.addEventListener("issue", forwardEvent);
+      events.addEventListener("pr", forwardEvent);
+      events.addEventListener("graphs", forwardEvent);
+      events.addEventListener("comparison", forwardEvent);
+      events.addEventListener("actors", forwardEvent);
+      events.addEventListener("reviewers", forwardEvent);
     </script>
   </body>
 </html>

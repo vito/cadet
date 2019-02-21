@@ -8,6 +8,7 @@ const enforceSsl = require('express-enforces-ssl')
 const helmet = require('helmet')
 
 const GitHubStrategy = require('passport-github').Strategy
+const SSE = require('express-sse')
 
 global.XMLHttpRequest = require("xhr2")
 
@@ -24,10 +25,10 @@ const worker = elmApp.Elm.Main.init({
 const app = express()
 const port = process.env.PORT || 8000;
 
+var events = new SSE();
 
 // mononically increasing numbers for every update made to the data
 var dataIndex = 1;
-var graphIndex = 0;
 
 const data = {
   // repos by id
@@ -63,44 +64,9 @@ var references = {}
 // list of graphs for all issues
 var graphs = []
 
-// map from data set to object id to client requests waiting on it
-var refreshing = {}
-
-function queueRefresh(field, id, res) {
-  console.log("queue refresh", field, id);
-
-  var reqs = refreshing[field];
-  if (reqs === undefined) {
-    reqs = {};
-    refreshing[field] = reqs;
-  }
-
-  if (!(id in reqs)) {
-    reqs[id] = [];
-  }
-
-  reqs[id].push(res);
-}
-
-function popRefresh(field, id, data) {
-  var reqs = refreshing[field];
-  if (reqs === undefined) {
-    return;
-  }
-
-  var waiting = reqs[id];
-  if (waiting === undefined) {
-    return;
-  }
-
-  delete reqs[id];
-
-  var res;
-  while (res = waiting.pop()) {
-    console.log("sending refreshed data for", field, id);
-    res.set('X-Data-Index', dataIndex.toString());
-    res.send(JSON.stringify(data));
-  }
+function bumpIndexAndEmitUpdate(field, data) {
+  dataIndex++;
+  events.send(data, field, dataIndex);
 }
 
 var polling = [];
@@ -120,18 +86,15 @@ function popPoll() {
 setInterval(popPoll, 30 * 1000);
 
 worker.ports.setGraphs.subscribe(function(gs) {
-  console.log("got graphs", gs.length);
   graphs = gs;
-  graphIndex++;
+  bumpIndexAndEmitUpdate("graphs", gs);
 });
 
 worker.ports.setRepos.subscribe(function(repos) {
   for (var i = 0; i < repos.length; i++) {
     var repo = repos[i];
     data.repos[repo.id] = repo;
-    dataIndex++;
-    popRefresh("repo", repo.owner+"/"+repo.name, repo);
-    popRefresh("repo", repo.id, repo);
+    bumpIndexAndEmitUpdate("repo", repo);
   }
 
   popPoll();
@@ -139,9 +102,7 @@ worker.ports.setRepos.subscribe(function(repos) {
 
 worker.ports.setRepo.subscribe(function(repo) {
   data.repos[repo.id] = repo;
-  dataIndex++;
-  popRefresh("repo", repo.owner+"/"+repo.name, repo);
-  popRefresh("repo", repo.id, repo);
+  bumpIndexAndEmitUpdate("repo", repo);
   popPoll();
 });
 
@@ -149,9 +110,7 @@ worker.ports.setProjects.subscribe(function(projects) {
   for (var i = 0; i < projects.length; i++) {
     var project = projects[i];
     data.projects[project.id] = project;
-    dataIndex++;
-    popRefresh("project", project.name, project);
-    popRefresh("project", project.id, project);
+    bumpIndexAndEmitUpdate("project", project);
   }
 
   popPoll();
@@ -161,8 +120,7 @@ worker.ports.setIssues.subscribe(function(issues) {
   for (var i = 0; i < issues.length; i++) {
     var issue = issues[i];
     cards.issues[issue.id] = issue;
-    dataIndex++;
-    popRefresh("issue", issue.id, issue);
+    bumpIndexAndEmitUpdate("issue", issue);
   }
 
   popPoll();
@@ -217,8 +175,7 @@ queueGraphRefresh();
 
 worker.ports.setIssue.subscribe(function(issue) {
   cards.issues[issue.id] = issue;
-  dataIndex++;
-  popRefresh("issue", issue.id, issue);
+  bumpIndexAndEmitUpdate("issue", issue);
   popPoll();
 
   markGraphRefreshNecessary();
@@ -228,8 +185,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
   for (var i = 0; i < prs.length; i++) {
     var pr = prs[i];
     cards.prs[pr.id] = pr;
-    dataIndex++;
-    popRefresh("pr", pr.id, pr);
+    bumpIndexAndEmitUpdate("pr", pr);
   }
 
   popPoll();
@@ -239,8 +195,7 @@ worker.ports.setPullRequests.subscribe(function(prs) {
 
 worker.ports.setPullRequest.subscribe(function(pr) {
   cards.prs[pr.id] = pr;
-  dataIndex++;
-  popRefresh("pr", pr.id, pr);
+  bumpIndexAndEmitUpdate("pr", pr);
   popPoll();
 
   markGraphRefreshNecessary();
@@ -250,7 +205,7 @@ worker.ports.setComparison.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   data.comparisons[id] = val;
-  dataIndex++;
+  bumpIndexAndEmitUpdate("comparison", { repoId: id, comparison: val });
   popPoll();
 });
 
@@ -258,7 +213,6 @@ worker.ports.setReferences.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   references[id] = val;
-  dataIndex++;
   popPoll();
 
   markGraphRefreshNecessary();
@@ -268,7 +222,7 @@ worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   cards.actors[id] = val;
-  dataIndex++;
+  bumpIndexAndEmitUpdate("actors", { cardId: id, actors: val });
   popPoll();
 });
 
@@ -276,7 +230,7 @@ worker.ports.setReviewers.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   cards.reviewers[id] = val;
-  dataIndex++;
+  bumpIndexAndEmitUpdate("reviewers", { cardId: id, reviewers: val });
   popPoll();
 });
 
@@ -291,8 +245,7 @@ worker.ports.setCards.subscribe(function(args) {
       var issue = card.content.issue;
       if (issue) {
         cards.issues[issue.id] = issue;
-        dataIndex++;
-        popRefresh("issue", issue.id, issue);
+        bumpIndexAndEmitUpdate("issue", issue);
 
         newColumnCards.push({
           id: card.id,
@@ -303,8 +256,7 @@ worker.ports.setCards.subscribe(function(args) {
       var pr = card.content.pull_request;
       if (pr) {
         cards.prs[pr.id] = pr;
-        dataIndex++;
-        popRefresh("pr", pr.id, pr);
+        bumpIndexAndEmitUpdate("pr", pr);
 
         newColumnCards.push({
           id: card.id,
@@ -320,14 +272,22 @@ worker.ports.setCards.subscribe(function(args) {
   }
 
   data.columnCards[id] = newColumnCards;
-  dataIndex++;
-  popRefresh("columnCards", id, newColumnCards);
+  bumpIndexAndEmitUpdate("columnCards", { columnId: id, cards: newColumnCards });
   popPoll();
 
   markGraphRefreshNecessary();
 });
 
-app.use(compression())
+app.use(compression({
+  filter: function(req, res) {
+    if (req.headers["accept"] == "text/event-stream") {
+      return false;
+    }
+
+    return compression.filter(req, res);
+  }
+}));
+
 app.use(bodyParser.json())
 
 if (app.get('env') === 'production') {
@@ -396,6 +356,8 @@ app.get('/me', (req, res) => {
   res.send(JSON.stringify(req.user || null))
 })
 
+app.get('/events', events.init);
+
 function sendData(res, val) {
   res.set('X-Data-Index', dataIndex.toString());
   res.send(JSON.stringify(val))
@@ -416,9 +378,10 @@ app.get('/graphs', (req, res) => {
 app.get('/refresh', (req, res) => {
   for (const field in req.query) {
     var id = req.query[field];
-    queueRefresh(field, id, res);
     worker.ports.refresh.send([field, id]);
   }
+
+  res.send("refreshing");
 })
 
 app.get('/poll', (req, res) => {

@@ -454,6 +454,11 @@ express-session@^1.15.6:
     uid-safe "~2.1.5"
     utils-merge "1.0.1"
 
+express-sse@^0.5.0:
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/express-sse/-/express-sse-0.5.0.tgz#a0287071869f74dd767fdd09caa93886cc673dfb"
+  integrity sha512-AXscbK4+0NOvfX76Y9FbJyXX+re3DZYyoIkhRpv1Jawm7YdN0Dk+kz9TAaZhJ7Y++6r45H0FnVH6aDs1bHKZ9A==
+
 express@^4.16.2:
   version "4.16.4"
   resolved "https://registry.yarnpkg.com/express/-/express-4.16.4.tgz#fddef61926109e24c515ea97fd2f1bdbf62df12e"

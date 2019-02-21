@@ -1,12 +1,17 @@
 module Backend exposing
     ( CardData
     , ColumnCard
+    , ColumnCardsEvent
     , Data
     , EventActor
     , Indexed
     , Me
     , User
-    , emptyData
+    , decodeActorsEvent
+    , decodeColumnCardsEvent
+    , decodeComparisonEvent
+    , decodeGraphs
+    , decodeReviewersEvent
     , encodeEventActor
     , fetchCardData
     , fetchData
@@ -84,15 +89,6 @@ type alias ColumnCard =
     }
 
 
-emptyData : Data
-emptyData =
-    { repos = Dict.empty
-    , projects = Dict.empty
-    , columnCards = Dict.empty
-    , comparisons = Dict.empty
-    }
-
-
 expectJsonWithIndex : JD.Decoder a -> Http.Expect (Indexed a)
 expectJsonWithIndex decoder =
     Http.expectStringResponse <|
@@ -127,7 +123,7 @@ fetchCardData f =
 fetchGraphs : (Result Http.Error (Indexed (List (ForceGraph GitHubGraph.ID))) -> msg) -> Cmd msg
 fetchGraphs f =
     HttpBuilder.get "/graphs"
-        |> HttpBuilder.withExpect (expectJsonWithIndex (JD.list <| ForceGraph.decode JD.string))
+        |> HttpBuilder.withExpect (expectJsonWithIndex decodeGraphs)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
@@ -141,34 +137,30 @@ pollData f =
         |> Task.attempt f
 
 
-refreshCards : GitHubGraph.ID -> (Result Http.Error (Indexed (List ColumnCard)) -> msg) -> Cmd msg
+refreshCards : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshCards col f =
     HttpBuilder.get ("/refresh?columnCards=" ++ col)
-        |> HttpBuilder.withExpect (expectJsonWithIndex decodeColumnCards)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error (Indexed GitHubGraph.Repo) -> msg) -> Cmd msg
+refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error () -> msg) -> Cmd msg
 refreshRepo repo f =
     HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
-        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodeRepo)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshIssue : GitHubGraph.ID -> (Result Http.Error (Indexed GitHubGraph.Issue) -> msg) -> Cmd msg
+refreshIssue : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshIssue id f =
     HttpBuilder.get ("/refresh?issue=" ++ id)
-        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodeIssue)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshPR : GitHubGraph.ID -> (Result Http.Error (Indexed GitHubGraph.PullRequest) -> msg) -> Cmd msg
+refreshPR : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshPR id f =
     HttpBuilder.get ("/refresh?pr=" ++ id)
-        |> HttpBuilder.withExpect (expectJsonWithIndex GitHubGraph.decodePullRequest)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
@@ -243,3 +235,60 @@ encodeEventActor { user, avatar, createdAt } =
         , ( "avatar", JE.string avatar )
         , ( "createdAt", JE.string (Iso8601.fromTime createdAt) )
         ]
+
+
+decodeGraphs : JD.Decoder (List (ForceGraph GitHubGraph.ID))
+decodeGraphs =
+    JD.list (ForceGraph.decode JD.string)
+
+
+type alias ColumnCardsEvent =
+    { columnId : GitHubGraph.ID
+    , cards : List ColumnCard
+    }
+
+
+decodeColumnCardsEvent : JD.Decoder ColumnCardsEvent
+decodeColumnCardsEvent =
+    JD.succeed ColumnCardsEvent
+        |> andMap (JD.field "columnId" JD.string)
+        |> andMap (JD.field "cards" decodeColumnCards)
+
+
+type alias ActorsEvent =
+    { cardId : GitHubGraph.ID
+    , actors : List EventActor
+    }
+
+
+decodeActorsEvent : JD.Decoder ActorsEvent
+decodeActorsEvent =
+    JD.succeed ActorsEvent
+        |> andMap (JD.field "cardId" JD.string)
+        |> andMap (JD.field "actors" (JD.list decodeEventActor))
+
+
+type alias ReviewersEvent =
+    { cardId : GitHubGraph.ID
+    , reviewers : List GitHubGraph.PullRequestReview
+    }
+
+
+decodeReviewersEvent : JD.Decoder ReviewersEvent
+decodeReviewersEvent =
+    JD.succeed ReviewersEvent
+        |> andMap (JD.field "cardId" JD.string)
+        |> andMap (JD.field "reviewers" (JD.list GitHubGraph.decodePullRequestReview))
+
+
+type alias ComparisonEvent =
+    { repoId : GitHubGraph.ID
+    , comparison : GitHubGraph.V3Comparison
+    }
+
+
+decodeComparisonEvent : JD.Decoder ComparisonEvent
+decodeComparisonEvent =
+    JD.succeed ComparisonEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "comparison" GitHubGraph.decodeV3Comparison)
