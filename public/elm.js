@@ -8481,6 +8481,9 @@ var author$project$Card$isOpen = function (card) {
 	}
 	return false;
 };
+var author$project$Drag$complete = function (mode) {
+	return author$project$Drag$NotDragging;
+};
 var author$project$Drag$Dropped = function (a) {
 	return {$: 'Dropped', a: a};
 };
@@ -13050,92 +13053,118 @@ var author$project$Main$update = F2(
 					}
 				case 'CardMoved':
 					if (msg.b.$ === 'Ok') {
-						var col = msg.a;
-						var content = msg.b.a.content;
+						var targetCol = msg.a;
+						var card = msg.b.a;
 						var _n7 = model.projectDrag;
 						if (_n7.$ === 'Dropped') {
 							var drag = _n7.a;
-							var wrapValue = F2(
-								function (f, indexed) {
-									return _Utils_update(
-										indexed,
-										{
-											value: f(indexed.value)
-										});
-								});
-							var msourceId = function () {
-								var _n11 = drag.source;
-								if (_n11.$ === 'FromColumnCardSource') {
-									var cs = _n11.a;
-									return _Utils_eq(cs.columnId, col) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(cs.columnId);
+							var removeCard = elm$core$List$filter(
+								A2(
+									elm$core$Basics$composeL,
+									elm$core$Basics$neq(card.id),
+									function ($) {
+										return $.id;
+									}));
+							var removeCardFromOldColumn = function () {
+								var _n13 = drag.source;
+								if (_n13.$ === 'FromColumnCardSource') {
+									var cs = _n13.a;
+									return A2(
+										elm$core$Dict$update,
+										cs.columnId,
+										elm$core$Maybe$map(removeCard));
 								} else {
-									return elm$core$Maybe$Nothing;
+									return elm$core$Basics$identity;
 								}
 							}();
-							var _n8 = function () {
-								if (content.$ === 'Just') {
-									if (content.a.$ === 'IssueCardContent') {
-										var issue = content.a.a;
-										return _Utils_Tuple2(
-											elm$core$Maybe$Just(issue.id),
-											A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued));
+							var insertAfter = F3(
+								function (id, _new, cards) {
+									if (cards.b) {
+										var c = cards.a;
+										var rest = cards.b;
+										return _Utils_eq(c.id, id) ? A2(
+											elm$core$List$cons,
+											c,
+											A2(elm$core$List$cons, _new, rest)) : A2(
+											elm$core$List$cons,
+											c,
+											A3(insertAfter, id, _new, rest));
 									} else {
-										var pr = content.a.a;
-										return _Utils_Tuple2(
-											elm$core$Maybe$Just(pr.id),
-											A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued));
+										return _List_fromArray(
+											[_new]);
 									}
+								});
+							var colCard = {
+								contentId: function () {
+									var _n12 = card.content;
+									if (_n12.$ === 'Just') {
+										if (_n12.a.$ === 'IssueCardContent') {
+											var id = _n12.a.a.id;
+											return elm$core$Maybe$Just(id);
+										} else {
+											var id = _n12.a.a.id;
+											return elm$core$Maybe$Just(id);
+										}
+									} else {
+										return elm$core$Maybe$Nothing;
+									}
+								}(),
+								id: card.id,
+								note: card.note
+							};
+							var insertCard = function (cards) {
+								var _n11 = drag.target.afterId;
+								if (_n11.$ === 'Nothing') {
+									return A2(elm$core$List$cons, colCard, cards);
 								} else {
-									return _Utils_Tuple2(elm$core$Maybe$Nothing, elm$core$Platform$Cmd$none);
+									var cardId = _n11.a;
+									return A3(insertAfter, cardId, colCard, cards);
 								}
-							}();
-							var mcontentId = _n8.a;
-							var refreshContent = _n8.b;
-							if (msourceId.$ === 'Just') {
-								var sourceId = msourceId.a;
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											projectDragRefresh: elm$core$Maybe$Just(
-												{
-													content: elm$core$Maybe$Nothing,
-													contentId: mcontentId,
-													sourceCards: elm$core$Maybe$Nothing,
-													sourceId: elm$core$Maybe$Just(sourceId),
-													targetCards: elm$core$Maybe$Nothing,
-													targetId: elm$core$Maybe$Just(col)
-												})
-										}),
-									elm$core$Platform$Cmd$batch(
-										_List_fromArray(
-											[
-												refreshContent,
-												A2(author$project$Backend$refreshCards, sourceId, author$project$Main$RefreshQueued),
-												A2(author$project$Backend$refreshCards, col, author$project$Main$RefreshQueued)
-											])));
-							} else {
-								return _Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											projectDragRefresh: elm$core$Maybe$Just(
-												{
-													content: elm$core$Maybe$Nothing,
-													contentId: mcontentId,
-													sourceCards: elm$core$Maybe$Nothing,
-													sourceId: elm$core$Maybe$Nothing,
-													targetCards: elm$core$Maybe$Nothing,
-													targetId: elm$core$Maybe$Just(col)
-												})
-										}),
-									elm$core$Platform$Cmd$batch(
-										_List_fromArray(
-											[
-												refreshContent,
-												A2(author$project$Backend$refreshCards, col, author$project$Main$RefreshQueued)
-											])));
-							}
+							};
+							var addCardToNewColumn = A2(
+								elm$core$Dict$update,
+								targetCol,
+								elm$core$Maybe$map(insertCard));
+							var movedOptimistically = _Utils_update(
+								model,
+								{
+									columnCards: addCardToNewColumn(
+										removeCardFromOldColumn(model.columnCards))
+								});
+							return _Utils_Tuple2(
+								_Utils_update(
+									movedOptimistically,
+									{
+										projectDrag: author$project$Drag$complete(model.projectDrag)
+									}),
+								elm$core$Platform$Cmd$batch(
+									_List_fromArray(
+										[
+											A2(author$project$Backend$refreshCards, targetCol, author$project$Main$RefreshQueued),
+											function () {
+											var _n9 = card.content;
+											if (_n9.$ === 'Just') {
+												if (_n9.a.$ === 'IssueCardContent') {
+													var issue = _n9.a.a;
+													return A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued);
+												} else {
+													var pr = _n9.a.a;
+													return A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued);
+												}
+											} else {
+												return elm$core$Platform$Cmd$none;
+											}
+										}(),
+											function () {
+											var _n10 = drag.source;
+											if (_n10.$ === 'FromColumnCardSource') {
+												var cs = _n10.a;
+												return _Utils_eq(cs.columnId, targetCol) ? elm$core$Platform$Cmd$none : A2(author$project$Backend$refreshCards, cs.columnId, author$project$Main$RefreshQueued);
+											} else {
+												return elm$core$Platform$Cmd$none;
+											}
+										}()
+										])));
 						} else {
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						}
@@ -13169,7 +13198,7 @@ var author$project$Main$update = F2(
 					var cardsByTitle = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n16, card) {
+							function (_n18, card) {
 								return author$project$Card$isOpen(card) ? A2(
 									elm$core$Dict$insert,
 									elm$core$String$toLower(card.title),
@@ -13177,12 +13206,12 @@ var author$project$Main$update = F2(
 							}),
 						elm$core$Dict$empty,
 						model.cards);
-					var _n12 = A2(
+					var _n14 = A2(
 						elm$core$List$partition,
 						elm$core$String$contains(':'),
 						tokens);
-					var filterTokens = _n12.a;
-					var rest = _n12.b;
+					var filterTokens = _n14.a;
+					var rest = _n14.b;
 					var filters = A2(
 						elm$core$List$map,
 						elm$core$String$split(':'),
@@ -13196,8 +13225,8 @@ var author$project$Main$update = F2(
 							}(
 								function (filter) {
 									if (((filter.b && (filter.a === 'label')) && filter.b.b) && (!filter.b.b.b)) {
-										var _n15 = filter.b;
-										var name = _n15.a;
+										var _n17 = filter.b;
+										var name = _n17.a;
 										return A3(author$project$Main$hasLabel, model, name, card);
 									} else {
 										return false;
@@ -13207,7 +13236,7 @@ var author$project$Main$update = F2(
 					var foundCards = A3(
 						elm$core$Dict$foldl,
 						F2(
-							function (_n13, card) {
+							function (_n15, card) {
 								return elm$core$Set$insert(card.id);
 							}),
 						elm$core$Set$empty,
@@ -13313,13 +13342,13 @@ var author$project$Main$update = F2(
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _n17 = msg.a;
-					var event = _n17.a;
-					var data = _n17.b;
-					var indexStr = _n17.c;
-					var _n18 = elm$core$String$toInt(indexStr);
-					if (_n18.$ === 'Just') {
-						var index = _n18.a;
+					var _n19 = msg.a;
+					var event = _n19.a;
+					var data = _n19.b;
+					var indexStr = _n19.c;
+					var _n20 = elm$core$String$toInt(indexStr);
+					if (_n20.$ === 'Just') {
+						var index = _n20.a;
 						return _Utils_Tuple2(
 							function () {
 								if (_Utils_cmp(index, model.dataIndex) > -1) {
@@ -13356,7 +13385,7 @@ var author$project$Main$update = F2(
 							var allLabels = A3(
 								elm$core$Dict$foldl,
 								F2(
-									function (_n21, r) {
+									function (_n23, r) {
 										return author$project$Main$loadLabels(r.labels);
 									}),
 								elm$core$Dict$empty,
@@ -13364,8 +13393,8 @@ var author$project$Main$update = F2(
 							var colorLightnessCache = A3(
 								elm$core$Dict$foldl,
 								F3(
-									function (_n19, _n20, cache) {
-										var color = _n20.color;
+									function (_n21, _n22, cache) {
+										var color = _n22.color;
 										return A3(
 											elm$core$Dict$insert,
 											color,
@@ -13463,8 +13492,8 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n22, r, acc) {
-								var _n23 = A2(
+							function (_n24, r, acc) {
+								var _n25 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -13473,13 +13502,13 @@ var author$project$Main$update = F2(
 											return $.name;
 										}),
 									r.labels);
-								if (!_n23.b) {
+								if (!_n25.b) {
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _n23.a;
+									var label = _n25.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Main$updateLabel, model, r, label, newLabel),
@@ -13520,15 +13549,15 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n24, r, acc) {
-								var _n25 = A2(
+							function (_n26, r, acc) {
+								var _n27 = A2(
 									elm$core$List$filter,
 									author$project$Main$matchesLabel(label),
 									r.labels);
-								if (!_n25.b) {
+								if (!_n27.b) {
 									return acc;
 								} else {
-									var repoLabel = _n25.a;
+									var repoLabel = _n27.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Main$deleteLabel, model, r, repoLabel),
@@ -13601,7 +13630,7 @@ var author$project$Main$update = F2(
 								editingLabels: A2(
 									elm$core$Dict$map,
 									F2(
-										function (_n26, label) {
+										function (_n28, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -13615,14 +13644,14 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _n27 = A2(
+					var _n29 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_n27.$ === 'Nothing') {
+					if (_n29.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n27.a;
+						var newLabel = _n29.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -13637,24 +13666,24 @@ var author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _n28 = A2(
+					var _n30 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_n28.$ === 'Nothing') {
+					if (_n30.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n28.a;
+						var newLabel = _n30.a;
 						var cmds = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n29, r, acc) {
-									var _n30 = A2(
+								function (_n31, r, acc) {
+									var _n32 = A2(
 										elm$core$List$filter,
 										author$project$Main$matchesLabel(oldLabel),
 										r.labels);
-									if (_n30.b) {
-										var repoLabel = _n30.a;
+									if (_n32.b) {
+										var repoLabel = _n32.a;
 										return A2(
 											elm$core$List$cons,
 											A4(author$project$Main$updateLabel, model, r, repoLabel, newLabel),
@@ -13733,9 +13762,9 @@ var author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n31 = card.content;
-					if (_n31.$ === 'IssueCardContent') {
-						var issue = _n31.a;
+					var _n33 = card.content;
+					if (_n33.$ === 'IssueCardContent') {
+						var issue = _n33.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -13745,7 +13774,7 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _n31.a;
+						var pr = _n33.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -13758,14 +13787,14 @@ var author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n32 = card.content;
-					if (_n32.$ === 'IssueCardContent') {
-						var issue = _n32.a;
+					var _n34 = card.content;
+					if (_n34.$ === 'IssueCardContent') {
+						var issue = _n34.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _n32.a;
+						var pr = _n34.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Main$removePullRequestLabel, model, pr, label));
@@ -13872,25 +13901,25 @@ var author$project$Main$update = F2(
 							return A2(elm$core$Dict$get, a, model.cards);
 						},
 						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n33 = A2(
+					var _n35 = A2(
 						elm$core$List$partition,
 						A2(
 							elm$core$Basics$composeL,
 							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
 							elm$core$Tuple$second),
 						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n33.a;
-					var removePairs = _n33.b;
+					var addPairs = _n35.a;
+					var removePairs = _n35.b;
 					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
 					var adds = A2(
 						elm$core$List$map,
 						function (card) {
-							var _n35 = card.content;
-							if (_n35.$ === 'IssueCardContent') {
-								var issue = _n35.a;
+							var _n37 = card.content;
+							if (_n37.$ === 'IssueCardContent') {
+								var issue = _n37.a;
 								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
 							} else {
-								var pr = _n35.a;
+								var pr = _n37.a;
 								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
 							}
 						},
@@ -13903,13 +13932,13 @@ var author$project$Main$update = F2(
 								elm$core$List$filterMap,
 								function (card) {
 									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n34 = card.content;
-										if (_n34.$ === 'IssueCardContent') {
-											var issue = _n34.a;
+										var _n36 = card.content;
+										if (_n36.$ === 'IssueCardContent') {
+											var issue = _n36.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removeIssueLabel, model, issue, name));
 										} else {
-											var pr = _n34.a;
+											var pr = _n36.a;
 											return elm$core$Maybe$Just(
 												A3(author$project$Main$removePullRequestLabel, model, pr, name));
 										}
@@ -13972,7 +14001,6 @@ var author$project$Main$init = F3(
 			newLabelColored: false,
 			page: author$project$Main$GlobalGraphPage,
 			projectDrag: author$project$Drag$init,
-			projectDragRefresh: elm$core$Maybe$Nothing,
 			projects: elm$core$Dict$empty,
 			releaseRepoTab: 0,
 			repoPullRequestsTab: 0,

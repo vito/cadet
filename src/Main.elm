@@ -74,7 +74,6 @@ type alias Model =
 
     -- card dragging in projects
     , projectDrag : Drag.Model CardSource CardDestination Msg
-    , projectDragRefresh : Maybe ProjectDragRefresh
 
     -- sidebar card search/selecting state
     , cardSearch : String
@@ -367,7 +366,6 @@ init config url key =
             , graphFilters = []
             , graphSort = ImpactSort
             , projectDrag = Drag.init
-            , projectDragRefresh = Nothing
             , deletingLabels = Set.empty
             , editingLabels = Dict.empty
             , newLabel = { name = "", color = "ffffff" }
@@ -471,77 +469,87 @@ update msg model =
                 NewContentCardSource { contentId } ->
                     ( model, addCard model dest contentId )
 
-        CardMoved col (Ok { content }) ->
+        CardMoved targetCol (Ok card) ->
             case model.projectDrag of
                 Drag.Dropped drag ->
                     let
-                        wrapValue f indexed =
-                            { indexed | value = f indexed.value }
+                        colCard =
+                            { id = card.id
+                            , contentId =
+                                case card.content of
+                                    Just (GitHubGraph.IssueCardContent { id }) ->
+                                        Just id
 
-                        ( mcontentId, refreshContent ) =
-                            case content of
-                                Just (GitHubGraph.IssueCardContent issue) ->
-                                    ( Just issue.id
-                                    , Backend.refreshIssue issue.id RefreshQueued
-                                    )
+                                    Just (GitHubGraph.PullRequestCardContent { id }) ->
+                                        Just id
 
-                                Just (GitHubGraph.PullRequestCardContent pr) ->
-                                    ( Just pr.id
-                                    , Backend.refreshPR pr.id RefreshQueued
-                                    )
+                                    Nothing ->
+                                        Nothing
+                            , note = card.note
+                            }
 
-                                Nothing ->
-                                    ( Nothing, Cmd.none )
+                        removeCard =
+                            List.filter ((/=) card.id << .id)
 
-                        msourceId =
+                        removeCardFromOldColumn =
                             case drag.source of
                                 FromColumnCardSource cs ->
-                                    if cs.columnId == col then
-                                        Nothing
-
-                                    else
-                                        Just cs.columnId
+                                    Dict.update cs.columnId (Maybe.map removeCard)
 
                                 NewContentCardSource _ ->
-                                    Nothing
-                    in
-                    case msourceId of
-                        Just sourceId ->
-                            ( { model
-                                | projectDragRefresh =
-                                    Just
-                                        { contentId = mcontentId
-                                        , content = Nothing
-                                        , sourceId = Just sourceId
-                                        , sourceCards = Nothing
-                                        , targetId = Just col
-                                        , targetCards = Nothing
-                                        }
-                              }
-                            , Cmd.batch
-                                [ refreshContent
-                                , Backend.refreshCards sourceId RefreshQueued
-                                , Backend.refreshCards col RefreshQueued
-                                ]
-                            )
+                                    identity
 
-                        Nothing ->
-                            ( { model
-                                | projectDragRefresh =
-                                    Just
-                                        { contentId = mcontentId
-                                        , content = Nothing
-                                        , sourceId = Nothing
-                                        , sourceCards = Nothing
-                                        , targetId = Just col
-                                        , targetCards = Nothing
-                                        }
-                              }
-                            , Cmd.batch
-                                [ refreshContent
-                                , Backend.refreshCards col RefreshQueued
-                                ]
-                            )
+                        insertAfter id new cards =
+                            case cards of
+                                c :: rest ->
+                                    if c.id == id then
+                                        c :: new :: rest
+
+                                    else
+                                        c :: insertAfter id new rest
+
+                                [] ->
+                                    -- this shouldn't really happen
+                                    [ new ]
+
+                        insertCard cards =
+                            case drag.target.afterId of
+                                Nothing ->
+                                    colCard :: cards
+
+                                Just cardId ->
+                                    insertAfter cardId colCard cards
+
+                        addCardToNewColumn =
+                            Dict.update targetCol (Maybe.map insertCard)
+
+                        movedOptimistically =
+                            { model | columnCards = addCardToNewColumn (removeCardFromOldColumn model.columnCards) }
+                    in
+                    ( { movedOptimistically | projectDrag = Drag.complete model.projectDrag }
+                    , Cmd.batch
+                        [ Backend.refreshCards targetCol RefreshQueued
+                        , case card.content of
+                            Just (GitHubGraph.IssueCardContent issue) ->
+                                Backend.refreshIssue issue.id RefreshQueued
+
+                            Just (GitHubGraph.PullRequestCardContent pr) ->
+                                Backend.refreshPR pr.id RefreshQueued
+
+                            Nothing ->
+                                Cmd.none
+                        , case drag.source of
+                            FromColumnCardSource cs ->
+                                if cs.columnId == targetCol then
+                                    Cmd.none
+
+                                else
+                                    Backend.refreshCards cs.columnId RefreshQueued
+
+                            NewContentCardSource _ ->
+                                Cmd.none
+                        ]
+                    )
 
                 _ ->
                     ( model, Cmd.none )

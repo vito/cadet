@@ -1,4 +1,14 @@
-module Drag exposing (DragState, DropCandidate, DropState, Model(..), Msg(..), StartState, complete, decodeStartState, draggable, drop, hasNeverLeft, init, isDragging, land, onDrop, update, viewDropArea)
+module Drag exposing
+    ( Model(..)
+    , Msg(..)
+    , complete
+    , draggable
+    , drop
+    , init
+    , land
+    , update
+    , viewDropArea
+    )
 
 import DOM
 import Html exposing (Html)
