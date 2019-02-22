@@ -63,10 +63,12 @@ type alias Model =
     , columnCards : Dict GitHubGraph.ID (List Backend.ColumnCard)
     , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
     , graphs : List (ForceGraph GitHubGraph.ID)
-    , dataView : DataView
     , cards : Dict GitHubGraph.ID Card
     , actors : Dict GitHubGraph.ID (List Backend.EventActor)
     , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+
+    -- alternate views into the data, i.e. 'milestone to cards', 'label to repo'
+    , dataView : DataView
 
     -- 'views' into data
     , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
@@ -3364,20 +3366,6 @@ lastActivityIsByUser cardEvents login card =
 isAnticipated : Model -> Card -> Bool
 isAnticipated model card =
     Set.member card.id model.anticipatedCards && not (OrderedSet.member card.id model.selectedCards)
-
-
-labelNames : Model -> Card -> List String
-labelNames model card =
-    let
-        selectLabel id acc =
-            case Dict.get id model.allLabels of
-                Just l ->
-                    l.name :: acc
-
-                Nothing ->
-                    acc
-    in
-    List.foldl selectLabel [] card.labels
 
 
 hasLabel : Model -> String -> Card -> Bool

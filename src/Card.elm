@@ -1,4 +1,20 @@
-module Card exposing (Card, ProcessState, State(..), cardProcessState, fromIssue, fromPR, inColumn, isAcceptedPR, isBacklog, isBug, isDone, isEnhancement, isIcebox, isInFlight, isMerged, isOpen, isOpenPR, isPR, isPaused, isUntriaged, isWontfix)
+module Card exposing
+    ( Card
+    , ProcessState
+    , State(..)
+    , fromIssue
+    , fromPR
+    , isBacklog
+    , isDone
+    , isIcebox
+    , isInFlight
+    , isMerged
+    , isOpen
+    , isOpenPR
+    , isPR
+    , isPaused
+    , isUntriaged
+    )
 
 import GitHubGraph
 import Project
@@ -30,9 +46,6 @@ type alias ProcessState =
     , inInFlightColumn : Bool
     , inBacklogColumn : Bool
     , inDoneColumn : Bool
-    , hasEnhancementLabel : Bool
-    , hasBugLabel : Bool
-    , hasWontfixLabel : Bool
     , hasPausedLabel : Bool
     }
 
@@ -153,33 +166,10 @@ cardProcessState { cards, labels } =
     , inInFlightColumn = inColumn Project.detectColumn.inFlight cards
     , inBacklogColumn = inColumn Project.detectColumn.backlog cards
     , inDoneColumn = inColumn Project.detectColumn.done cards
-    , hasEnhancementLabel = List.any ((==) "enhancement" << .name) labels
-    , hasBugLabel = List.any ((==) "bug" << .name) labels
-    , hasWontfixLabel = List.any ((==) "wontfix" << .name) labels
     , hasPausedLabel = List.any ((==) "paused" << .name) labels
     }
-
-
-isEnhancement : Card -> Bool
-isEnhancement card =
-    card.processState.hasEnhancementLabel
-
-
-isBug : Card -> Bool
-isBug card =
-    card.processState.hasBugLabel
-
-
-isWontfix : Card -> Bool
-isWontfix card =
-    card.processState.hasWontfixLabel
 
 
 isPaused : Card -> Bool
 isPaused card =
     card.processState.hasPausedLabel
-
-
-isAcceptedPR : Card -> Bool
-isAcceptedPR card =
-    (isEnhancement card || isBug card) && isMerged card
