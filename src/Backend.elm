@@ -24,7 +24,6 @@ module Backend exposing
     , refreshRepo
     )
 
-import Card exposing (Card)
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
 import GitHub

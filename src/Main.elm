@@ -63,15 +63,24 @@ type alias Model =
     , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
     , comparisons : Dict GitHub.ID GitHub.V3Comparison
     , graphs : List (ForceGraph GitHub.ID)
-    , cards : Dict GitHub.ID Card
+    , issues : Dict GitHub.ID GitHub.Issue
+    , prs : Dict GitHub.ID GitHub.PullRequest
     , actors : Dict GitHub.ID (List Backend.EventActor)
     , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
 
-    -- alternate views into the data, i.e. 'milestone to cards', 'label to repo'
-    , dataView : DataView
-
     -- 'views' into data
     , allLabels : Dict GitHub.ID GitHub.Label
+    , cards : Dict GitHub.ID Card
+    , reposByName : Dict String GitHub.ID
+    , reposByLabel : Dict ( String, String ) (List GitHub.ID)
+    , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
+    , prsByMergeCommit : Dict String GitHub.ID
+    , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
+    , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
+    , releaseRepos : Dict GitHub.ID ReleaseRepo
+
+    -- cache of computed lightness values for each color; used for determining
+    -- whether label text should be white or dark
     , colorLightnessCache : Dict String Bool
 
     -- card dragging in projects
@@ -92,7 +101,7 @@ type alias Model =
     , highlightedNode : Maybe GitHub.ID
 
     -- card graph state
-    , cardGraphs : List ( CardNodeState, ForceGraph GitHub.ID )
+    , statefulGraphs : List ( CardNodeState, ForceGraph GitHub.ID )
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
@@ -124,14 +133,6 @@ type alias ProjectDragRefresh =
 type CardLabelOperation
     = AddLabelOperation
     | RemoveLabelOperation
-
-
-type alias DataView =
-    { reposByLabel : Dict ( String, String ) (List GitHub.Repo)
-    , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
-    , prsByRepo : Dict String ( GitHub.RepoLocation, List Card )
-    , releaseRepos : Dict GitHub.ID ReleaseRepo
-    }
 
 
 type alias ReleaseRepo =
@@ -346,15 +347,18 @@ init config url key =
             , projects = Dict.empty
             , columnCards = Dict.empty
             , comparisons = Dict.empty
-            , dataView =
-                { reposByLabel = Dict.empty
-                , labelToRepoToId = Dict.empty
-                , prsByRepo = Dict.empty
-                , releaseRepos = Dict.empty
-                }
-            , cards = Dict.empty
+            , reposByLabel = Dict.empty
+            , reposByName = Dict.empty
+            , labelToRepoToId = Dict.empty
+            , openPRsByRepo = Dict.empty
+            , prsByMergeCommit = Dict.empty
+            , cardsByMilestone = Dict.empty
+            , releaseRepos = Dict.empty
+            , issues = Dict.empty
+            , prs = Dict.empty
             , actors = Dict.empty
             , reviewers = Dict.empty
+            , cards = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
             , cardSearch = ""
@@ -363,7 +367,7 @@ init config url key =
             , highlightedCard = Nothing
             , highlightedNode = Nothing
             , currentTime = Time.millisToPosix config.initialTime
-            , cardGraphs = []
+            , statefulGraphs = []
             , baseGraphFilter = Nothing
             , graphFilters = []
             , graphSort = ImpactSort
@@ -422,22 +426,8 @@ update msg model =
                     ( model, Nav.load (Url.toString url) )
 
                 Just page ->
-                    let
-                        paged =
-                            { model | page = page }
-
-                        graphed =
-                            case page of
-                                GlobalGraphPage ->
-                                    { paged | baseGraphFilter = Nothing }
-
-                                ProjectPage name ->
-                                    { paged | baseGraphFilter = Just (InProjectFilter name) }
-
-                                _ ->
-                                    paged
-                    in
-                    ( computeDataView graphed
+                    ( { model | page = page }
+                        |> computeViewForPage
                     , Cmd.none
                     )
 
@@ -681,11 +671,9 @@ update msg model =
             case String.toInt indexStr of
                 Just index ->
                     ( if index >= model.dataIndex then
-                        let
-                            newModel =
-                                handleEvent model event data index
-                        in
-                        computeDataView { newModel | dataIndex = index }
+                        { model | dataIndex = index }
+                            |> handleEvent event data index
+                            |> computeViewForPage
 
                       else
                         Log.debug "skipping event for stale index" ( model.dataIndex, index ) <|
@@ -704,32 +692,16 @@ update msg model =
 
         DataFetched (Ok { index, value }) ->
             if index > model.dataIndex then
-                let
-                    allLabels =
-                        Dict.foldl (\_ r -> loadLabels r.labels) Dict.empty value.repos
-
-                    colorLightnessCache =
-                        Dict.foldl
-                            (\_ { color } cache ->
-                                Dict.insert color (computeColorIsLight color) cache
-                            )
-                            Dict.empty
-                            allLabels
-                in
-                ( computeDataView <|
-                    { model
-                        | dataIndex = index
-                        , repos = value.repos
-                        , projects = value.projects
-                        , columnCards = value.columnCards
-                        , comparisons = value.comparisons
-                        , allLabels = allLabels
-                        , colorLightnessCache = colorLightnessCache
-                    }
-                , Cmd.batch
-                    [ Backend.fetchCardData CardDataFetched
-                    , Backend.fetchGraphs GraphsFetched
-                    ]
+                ( { model
+                    | dataIndex = index
+                    , repos = value.repos
+                    , projects = value.projects
+                    , columnCards = value.columnCards
+                    , comparisons = value.comparisons
+                  }
+                    |> computeDataView
+                    |> computeViewForPage
+                , Backend.fetchCardData CardDataFetched
                 )
 
             else
@@ -741,20 +713,16 @@ update msg model =
                 ( model, Cmd.none )
 
         CardDataFetched (Ok { index, value }) ->
-            let
-                cards =
-                    Dict.union
-                        (Dict.map (always Card.fromIssue) value.issues)
-                        (Dict.map (always Card.fromPR) value.prs)
-            in
             Log.debug "cards fetched" ( index, Dict.size value.issues + Dict.size value.prs ) <|
-                ( computeDataView
-                    { model
-                        | cards = cards
-                        , actors = value.actors
-                        , reviewers = value.reviewers
-                    }
-                , Cmd.none
+                ( { model
+                    | issues = value.issues
+                    , prs = value.prs
+                    , actors = value.actors
+                    , reviewers = value.reviewers
+                  }
+                    |> computeCardsView
+                    |> computeViewForPage
+                , Backend.fetchGraphs GraphsFetched
                 )
 
         CardDataFetched (Err err) ->
@@ -763,7 +731,11 @@ update msg model =
 
         GraphsFetched (Ok { index, value }) ->
             Log.debug "graphs fetched" ( index, List.length value ) <|
-                ( computeDataView { model | graphs = value }, Cmd.none )
+                ( { model | graphs = value }
+                    |> computeGraphsView
+                    |> computeViewForPage
+                , Cmd.none
+                )
 
         GraphsFetched (Err err) ->
             Log.debug "error fetching graphs" err <|
@@ -950,22 +922,20 @@ update msg model =
             ( model, Backend.refreshPR id RefreshQueued )
 
         AddFilter filter ->
-            ( sortAndFilterGraphs <|
-                { model | graphFilters = filter :: model.graphFilters }
+            ( computeGraphsView { model | graphFilters = filter :: model.graphFilters }
             , Cmd.none
             )
 
         RemoveFilter filter ->
-            ( sortAndFilterGraphs <|
-                { model | graphFilters = List.filter ((/=) filter) model.graphFilters }
+            ( computeGraphsView { model | graphFilters = List.filter ((/=) filter) model.graphFilters }
             , Cmd.none
             )
 
         SetGraphSort sort ->
-            ( sortAndFilterGraphs { model | graphSort = sort }, Cmd.none )
+            ( computeGraphsView { model | graphSort = sort }, Cmd.none )
 
         ToggleLabelFilters ->
-            ( { model | showLabelFilters = not model.showLabelFilters }, Cmd.none )
+            ( computeGraphsView { model | showLabelFilters = not model.showLabelFilters }, Cmd.none )
 
         SetLabelSearch string ->
             ( { model | labelSearch = string }, Cmd.none )
@@ -979,7 +949,7 @@ update msg model =
                 }
 
               else
-                computeDataView { model | showLabelOperations = True }
+                { model | showLabelOperations = True }
             , Cmd.none
             )
 
@@ -1077,7 +1047,7 @@ updateGraphStates model =
                 graph
     in
     { model
-        | cardGraphs =
+        | statefulGraphs =
             List.map
                 (\( s, g ) ->
                     if affectedByState g then
@@ -1093,30 +1063,88 @@ updateGraphStates model =
                         in
                         ( { base | filteredCards = s.filteredCards }, g )
                 )
-                model.cardGraphs
+                model.statefulGraphs
     }
 
 
-computeDataView : Model -> Model
-computeDataView origModel =
-    let
-        addToList card entry =
-            case entry of
-                Nothing ->
-                    Just [ card ]
+addToList : x -> Maybe (List x) -> Maybe (List x)
+addToList x entry =
+    case entry of
+        Nothing ->
+            Just [ x ]
 
-                Just cards ->
-                    Just (card :: cards)
+        Just xs ->
+            Just (x :: xs)
+
+
+computeViewForPage : Model -> Model
+computeViewForPage model =
+    let
+        reset =
+            { model
+                | baseGraphFilter = Nothing
+                , suggestedLabels = []
+            }
+    in
+    case model.page of
+        GlobalGraphPage ->
+            { reset | baseGraphFilter = Nothing }
+                |> updateGraphStates
+
+        ProjectPage name ->
+            { reset | baseGraphFilter = Just (InProjectFilter name) }
+                |> updateGraphStates
+
+        ReleasePage ->
+            reset
+                |> computeReleaseRepos
+
+        ReleaseRepoPage _ ->
+            { reset
+                | suggestedLabels =
+                    [ "release/documented"
+                    , "release/undocumented"
+                    , "release/no-impact"
+                    ]
+            }
+                |> computeReleaseRepos
+
+        PullRequestsRepoPage _ ->
+            { reset
+                | suggestedLabels = [ "needs-test" ]
+            }
+
+        _ ->
+            reset
+
+
+computeDataView : Model -> Model
+computeDataView model =
+    let
+        reposByName =
+            Dict.foldl (\id { name } -> Dict.insert name id) Dict.empty model.repos
+
+        allLabels =
+            Dict.foldl
+                (\_ repo als ->
+                    List.foldl
+                        (\label -> Dict.insert label.id { label | color = String.toLower label.color })
+                        als
+                        repo.labels
+                )
+                Dict.empty
+                model.repos
 
         groupRepoLabels =
             Dict.foldl
                 (\_ repo cbn ->
                     List.foldl
-                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addToList repo))
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addToList repo.id))
                         cbn
                         repo.labels
                 )
                 Dict.empty
+                model.repos
 
         setRepoLabelId label repo mrc =
             case mrc of
@@ -1130,113 +1158,108 @@ computeDataView origModel =
             Dict.foldl
                 (\_ repo lrc ->
                     List.foldl
-                        (\label lrc2 ->
-                            Dict.update label.name (setRepoLabelId label repo) lrc2
-                        )
+                        (\label -> Dict.update label.name (setRepoLabelId label repo))
                         lrc
                         repo.labels
                 )
                 Dict.empty
+                model.repos
 
-        addCardAndRepo card entry =
-            case entry of
-                Nothing ->
-                    Just ( card.repo, [ card ] )
-
-                Just ( repo, cards ) ->
-                    Just ( repo, card :: cards )
-
-        prsByRepo =
+        colorLightnessCache =
             Dict.foldl
-                (\_ card acc ->
-                    if Card.isOpenPR card then
-                        Dict.update card.repo.name (addCardAndRepo card) acc
-
-                    else
-                        acc
-                )
-                Dict.empty
-
-        origDataView =
-            origModel.dataView
-
-        dataView =
-            { origDataView
-                | reposByLabel = groupRepoLabels origModel.repos
-                , labelToRepoToId = groupLabelsToRepoToId origModel.repos
-            }
-
-        model =
-            { origModel | suggestedLabels = [], dataView = dataView }
+                (\_ label -> Dict.update label.color (warmColorLightnessCache label.color))
+                model.colorLightnessCache
+                allLabels
     in
-    case model.page of
-        ReleasePage ->
-            { model | dataView = { dataView | releaseRepos = computeReleaseRepos model } }
-
-        ReleaseRepoPage _ ->
-            { model
-                | dataView = { dataView | releaseRepos = computeReleaseRepos model }
-                , suggestedLabels = [ "release/documented", "release/undocumented", "release/no-impact" ]
-            }
-
-        PullRequestsPage ->
-            { model | dataView = { dataView | prsByRepo = prsByRepo model.cards } }
-
-        PullRequestsRepoPage _ ->
-            { model
-                | dataView = { dataView | prsByRepo = prsByRepo model.cards }
-                , suggestedLabels = [ "needs-test" ]
-            }
-
-        LabelsPage ->
-            model
-
-        GlobalGraphPage ->
-            updateGraphStates (sortAndFilterGraphs model)
-
-        ProjectPage _ ->
-            updateGraphStates (sortAndFilterGraphs model)
-
-        AllProjectsPage ->
-            model
-
-        BouncePage ->
-            model
+    { model
+        | reposByName = reposByName
+        , reposByLabel = groupRepoLabels
+        , labelToRepoToId = groupLabelsToRepoToId
+        , allLabels = allLabels
+        , colorLightnessCache = colorLightnessCache
+    }
 
 
-computeReleaseRepos : Model -> Dict String ReleaseRepo
-computeReleaseRepos model =
+computeCardsView : Model -> Model
+computeCardsView model =
     let
-        selectPRsInComparison comparison id card acc =
-            case card.content of
-                GitHub.PullRequestCardContent pr ->
+        cards =
+            Dict.union
+                (Dict.map (always Card.fromIssue) model.issues)
+                (Dict.map (always Card.fromPR) model.prs)
+
+        prsByMergeCommit =
+            Dict.foldl
+                (\_ pr prs ->
                     case pr.mergeCommit of
                         Nothing ->
-                            acc
+                            prs
 
                         Just { sha } ->
-                            if List.any ((==) sha << .sha) comparison.commits then
-                                card :: acc
+                            Dict.insert sha pr.id prs
+                )
+                Dict.empty
+                model.prs
 
-                            else
-                                acc
-
-                _ ->
-                    acc
-
-        selectCardsInMilestone milestone cardId card acc =
-            case card.milestone of
-                Nothing ->
-                    acc
-
-                Just { id } ->
-                    -- don't double-count merged PRs - they are collected via the
-                    -- comparison
-                    if milestone.id == id && not (Card.isMerged card) then
-                        card :: acc
+        openPRsByRepo =
+            Dict.foldl
+                (\_ pr prs ->
+                    if pr.state == GitHub.PullRequestStateOpen then
+                        Dict.update pr.repo.id (addToList pr.id) prs
 
                     else
-                        acc
+                        prs
+                )
+                Dict.empty
+                model.prs
+
+        cardsByMilestone =
+            Dict.foldl
+                (\id card cbm ->
+                    case card.milestone of
+                        Just milestone ->
+                            Dict.update milestone.id (addToList id) cbm
+
+                        Nothing ->
+                            cbm
+                )
+                Dict.empty
+                cards
+    in
+    { model
+        | cards = cards
+        , prsByMergeCommit = prsByMergeCommit
+        , openPRsByRepo = openPRsByRepo
+        , cardsByMilestone = cardsByMilestone
+    }
+
+
+warmColorLightnessCache : String -> Maybe Bool -> Maybe Bool
+warmColorLightnessCache color mb =
+    case mb of
+        Nothing ->
+            Just (computeColorIsLight color)
+
+        _ ->
+            mb
+
+
+computeReleaseRepos : Model -> Model
+computeReleaseRepos model =
+    let
+        issueOrOpenPR cardId =
+            case Dict.get cardId model.cards of
+                Nothing ->
+                    Nothing
+
+                Just card ->
+                    if Card.isMerged card then
+                        -- don't double-count merged PRs - they are collected via the
+                        -- comparison
+                        Nothing
+
+                    else
+                        Just card
 
         makeReleaseRepo repoId comparison acc =
             if comparison.totalCommits == 0 then
@@ -1252,8 +1275,13 @@ computeReleaseRepos model =
                                     |> List.sortBy .number
                                     |> List.head
 
-                            mergedPRs =
-                                Dict.foldl (selectPRsInComparison comparison) [] model.cards
+                            mergedPRCards =
+                                List.filterMap
+                                    (\{ sha } ->
+                                        Dict.get sha model.prsByMergeCommit
+                                            |> Maybe.andThen (\id -> Dict.get id model.cards)
+                                    )
+                                    comparison.commits
 
                             milestoneCards =
                                 case nextMilestone of
@@ -1261,10 +1289,12 @@ computeReleaseRepos model =
                                         []
 
                                     Just nm ->
-                                        Dict.foldl (selectCardsInMilestone nm) [] model.cards
+                                        Dict.get nm.id model.cardsByMilestone
+                                            |> Maybe.withDefault []
+                                            |> List.filterMap issueOrOpenPR
 
                             allCards =
-                                milestoneCards ++ mergedPRs
+                                milestoneCards ++ mergedPRCards
 
                             categorizeByDocumentedState card sir =
                                 if hasLabel model "release/documented" card then
@@ -1329,7 +1359,7 @@ computeReleaseRepos model =
                     Nothing ->
                         acc
     in
-    Dict.foldl makeReleaseRepo Dict.empty model.comparisons
+    { model | releaseRepos = Dict.foldl makeReleaseRepo Dict.empty model.comparisons }
 
 
 view : Model -> Browser.Document Msg
@@ -1370,7 +1400,7 @@ viewPage model =
                 viewReleasePage model
 
             ReleaseRepoPage repoName ->
-                case Dict.get repoName model.dataView.releaseRepos of
+                case Dict.get repoName model.releaseRepos of
                     Just sir ->
                         viewReleaseRepoPage model sir
 
@@ -1381,12 +1411,7 @@ viewPage model =
                 viewPullRequestsPage model
 
             PullRequestsRepoPage repoName ->
-                case Dict.get repoName model.dataView.prsByRepo of
-                    Just ( repo, cards ) ->
-                        viewRepoPullRequestsPage model repo cards
-
-                    Nothing ->
-                        Html.text "repo not found"
+                viewRepoPullRequestsPage model repoName
 
             BouncePage ->
                 Html.text "you shouldn't see this"
@@ -1462,7 +1487,7 @@ viewSidebarControls model =
 
         labelOptions =
             if model.showLabelOperations then
-                Dict.keys model.dataView.reposByLabel
+                Dict.keys model.reposByLabel
                     |> List.filter (String.contains model.labelSearch << Tuple.first)
                     |> List.map (\( a, b ) -> viewLabelOperation a b)
 
@@ -1517,9 +1542,9 @@ viewSpatialGraph : Model -> Html Msg
 viewSpatialGraph model =
     Html.div [ HA.class "spatial-graph" ]
         [ viewGraphControls model
-        , Html.Keyed.node "div" [ HA.class "graphs" ] <|
-            List.map (\( state, graph ) -> ( graphId graph, Html.Lazy.lazy2 viewGraph state graph ))
-                model.cardGraphs
+        , model.statefulGraphs
+            |> List.map (\( state, graph ) -> ( graphId graph, Html.Lazy.lazy2 viewGraph state graph ))
+            |> Html.Keyed.node "div" [ HA.class "graphs" ]
         ]
 
 
@@ -1554,7 +1579,7 @@ viewGraphControls model =
                 model.graphFilters
 
         allLabelFilters =
-            (\a -> List.filterMap a (Dict.toList model.dataView.reposByLabel)) <|
+            (\a -> List.filterMap a (Dict.toList model.reposByLabel)) <|
                 \( ( name, color ), _ ) ->
                     if String.contains model.labelSearch name then
                         Just <|
@@ -1839,9 +1864,9 @@ viewLabelsPage model =
                 ]
 
         labelRows =
-            (\a -> List.map a (Dict.toList model.dataView.reposByLabel)) <|
-                \( ( name, color ), repos ) ->
-                    viewLabelRow model { name = name, color = color } repos
+            (\a -> List.map a (Dict.toList model.reposByLabel)) <|
+                \( ( name, color ), repoIds ) ->
+                    viewLabelRow model { name = name, color = color } repoIds
     in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
@@ -1858,7 +1883,7 @@ viewReleasePage : Model -> Html Msg
 viewReleasePage model =
     let
         repos =
-            Dict.values model.dataView.releaseRepos
+            Dict.values model.releaseRepos
                 |> List.sortBy (.totalCommits << .comparison)
                 |> List.reverse
     in
@@ -1906,7 +1931,7 @@ viewReleaseRepoPage model sir =
 
 viewLabelByName : Model -> String -> Html Msg
 viewLabelByName model name =
-    Dict.get name model.dataView.labelToRepoToId
+    Dict.get name model.labelToRepoToId
         |> Maybe.andThen (List.head << Dict.values)
         |> Maybe.withDefault ""
         |> viewLabel model
@@ -2017,29 +2042,15 @@ viewReleaseRepo model sir =
 
 viewPullRequestsPage : Model -> Html Msg
 viewPullRequestsPage model =
-    let
-        viewRepoPRs repo prs =
-            Html.div [ HA.class "repo-pull-requests" ]
-                [ Html.a [ HA.class "column-title", HA.href ("/pull-requests/" ++ repo.name) ]
-                    [ Octicons.repo octiconOpts
-                    , Html.text repo.name
-                    ]
-                , prs
-                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                    |> List.reverse
-                    |> List.map (viewCard model)
-                    |> Html.div [ HA.class "cards" ]
-                ]
-    in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.gitPullRequest octiconOpts
             , Html.text "Pull Requests"
             ]
-        , Dict.values model.dataView.prsByRepo
+        , Dict.toList model.openPRsByRepo
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
-            |> List.map (\( a, b ) -> viewRepoPRs a b)
+            |> List.map (\( a, b ) -> viewRepoPRs model a b)
             |> Html.div [ HA.class "pull-request-columns" ]
         ]
 
@@ -2051,6 +2062,27 @@ type alias CategorizedRepoPRs =
     , mergeConflict : List Card
     , changesRequested : List Card
     }
+
+
+viewRepoPRs : Model -> GitHub.ID -> List GitHub.ID -> Html Msg
+viewRepoPRs model repoId prIds =
+    case Dict.get repoId model.repos of
+        Just repo ->
+            Html.div [ HA.class "repo-pull-requests" ]
+                [ Html.a [ HA.class "column-title", HA.href ("/pull-requests/" ++ repo.name) ]
+                    [ Octicons.repo octiconOpts
+                    , Html.text repo.name
+                    ]
+                , prIds
+                    |> List.filterMap (\id -> Dict.get id model.cards)
+                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                    |> List.reverse
+                    |> List.map (viewCard model)
+                    |> Html.div [ HA.class "cards" ]
+                ]
+
+        Nothing ->
+            Html.text ""
 
 
 failedChecks : Card -> Bool
@@ -2096,9 +2128,15 @@ hasMergeConflict card =
             False
 
 
-viewRepoPullRequestsPage : Model -> GitHub.RepoLocation -> List Card -> Html Msg
-viewRepoPullRequestsPage model repo prCards =
+viewRepoPullRequestsPage : Model -> String -> Html Msg
+viewRepoPullRequestsPage model repoName =
     let
+        prCards =
+            Dict.get repoName model.reposByName
+                |> Maybe.andThen (\id -> Dict.get id model.openPRsByRepo)
+                |> Maybe.map (List.filterMap (\id -> Dict.get id model.cards))
+                |> Maybe.withDefault []
+
         categorizeCard card cat =
             if hasLabel model "needs-test" card then
                 { cat | needsTest = card :: cat.needsTest }
@@ -2133,7 +2171,7 @@ viewRepoPullRequestsPage model repo prCards =
                     , Html.text "Pull Requests"
                     ]
                 , Octicons.repo octiconOpts
-                , Html.text repo.name
+                , Html.text repoName
                 ]
             ]
         , Html.div [ HA.class "repo-pull-requests" ]
@@ -2169,8 +2207,8 @@ includesLabel model label labelIds =
         labelIds
 
 
-viewLabelRow : Model -> SharedLabel -> List GitHub.Repo -> Html Msg
-viewLabelRow model label repos =
+viewLabelRow : Model -> SharedLabel -> List GitHub.ID -> Html Msg
+viewLabelRow model label repoIds =
     let
         stateKey =
             labelKey label
@@ -2266,10 +2304,10 @@ viewLabelRow model label repos =
             ]
         , Html.div [ HA.class "label-cell" ]
             [ Html.div [ HA.class "label-counts last" ]
-                [ Html.span [ HA.class "count", HA.title (String.join ", " (List.map .name repos)) ]
+                [ Html.span [ HA.class "count" ]
                     [ Octicons.repo octiconOpts
                     , Html.span [ HA.class "count-number" ]
-                        [ Html.text (String.fromInt (List.length repos))
+                        [ Html.text (String.fromInt (List.length repoIds))
                         ]
                     ]
                 ]
@@ -2570,9 +2608,12 @@ viewSearch model =
         ]
 
 
-sortAndFilterGraphs : Model -> Model
-sortAndFilterGraphs model =
+computeGraphsView : Model -> Model
+computeGraphsView model =
     let
+        baseState =
+            baseGraphState model
+
         allFilters =
             case model.baseGraphFilter of
                 Just f ->
@@ -2580,9 +2621,6 @@ sortAndFilterGraphs model =
 
                 Nothing ->
                     model.graphFilters
-
-        baseState =
-            baseGraphState model
 
         filteredGraphs =
             List.foldl
@@ -2624,13 +2662,13 @@ sortAndFilterGraphs model =
 
                 AllActivitySort ->
                     graphAllActivityCompare model a b
-
-        graphs =
+    in
+    { model
+        | statefulGraphs =
             filteredGraphs
                 |> List.sortWith sortFunc
                 |> List.reverse
-    in
-    { model | cardGraphs = graphs }
+    }
 
 
 baseGraphState : Model -> CardNodeState
@@ -3372,7 +3410,7 @@ hasLabel : Model -> String -> Card -> Bool
 hasLabel model name card =
     let
         mlabelId =
-            Dict.get name model.dataView.labelToRepoToId
+            Dict.get name model.labelToRepoToId
                 |> Maybe.andThen (Dict.get card.repo.id)
     in
     case mlabelId of
@@ -3711,7 +3749,7 @@ viewSuggestedLabel : Model -> Card -> String -> Html Msg
 viewSuggestedLabel model card name =
     let
         mlabelId =
-            Dict.get name model.dataView.labelToRepoToId
+            Dict.get name model.labelToRepoToId
                 |> Maybe.andThen (Dict.get card.repo.id)
 
         mlabel =
@@ -3954,8 +3992,8 @@ generateColor seed =
     String.padLeft 6 '0' (ParseInt.toHex randomColor)
 
 
-handleEvent : Model -> String -> String -> Int -> Model
-handleEvent model event data index =
+handleEvent : String -> String -> Int -> Model -> Model
+handleEvent event data index model =
     let
         withDecoded decoder fn =
             case JD.decodeString decoder data of
@@ -3971,23 +4009,8 @@ handleEvent model event data index =
         "repo" ->
             withDecoded GitHub.decodeRepo <|
                 \val ->
-                    let
-                        allLabels =
-                            loadLabels val.labels model.allLabels
-
-                        colorLightnessCache =
-                            Dict.foldl
-                                (\_ { color } cache ->
-                                    Dict.insert color (computeColorIsLight color) cache
-                                )
-                                Dict.empty
-                                allLabels
-                    in
-                    { model
-                        | repos = Dict.insert val.id val model.repos
-                        , allLabels = allLabels
-                        , colorLightnessCache = colorLightnessCache
-                    }
+                    { model | repos = Dict.insert val.id val model.repos }
+                        |> computeDataView
 
         "project" ->
             withDecoded GitHub.decodeProject <|
@@ -4007,12 +4030,14 @@ handleEvent model event data index =
         "issue" ->
             withDecoded GitHub.decodeIssue <|
                 \val ->
-                    { model | cards = Dict.insert val.id (Card.fromIssue val) model.cards }
+                    { model | issues = Dict.insert val.id val model.issues }
+                        |> computeCardsView
 
         "pr" ->
             withDecoded GitHub.decodePullRequest <|
                 \val ->
-                    { model | cards = Dict.insert val.id (Card.fromPR val) model.cards }
+                    { model | prs = Dict.insert val.id val model.prs }
+                        |> computeCardsView
 
         "actors" ->
             withDecoded Backend.decodeActorsEvent <|
@@ -4028,6 +4053,7 @@ handleEvent model event data index =
             withDecoded Backend.decodeGraphs <|
                 \val ->
                     { model | graphs = val }
+                        |> computeGraphsView
 
         _ ->
             Log.debug "event ignored" ( event, data, index ) <|
@@ -4049,8 +4075,3 @@ emptyArc =
 octiconOpts : Octicons.Options
 octiconOpts =
     Octicons.defaultOptions
-
-
-loadLabels : List GitHub.Label -> Dict GitHub.ID GitHub.Label -> Dict GitHub.ID GitHub.Label
-loadLabels labels all =
-    List.foldl (\l -> Dict.insert l.id { l | color = String.toLower l.color }) all labels
