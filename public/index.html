@@ -16,29 +16,40 @@
         }
       });
 
-      var events = new EventSource('/events');
-
-      events.onerror = function() {
-        console.log('events error');
-      }
-
-      events.onopen = function() {
-        console.log('listening for events');
-      }
-
       function forwardEvent(e) {
         app.ports.eventReceived.send([e.type, e.data, e.lastEventId]);
       }
 
-      events.addEventListener("repo", forwardEvent);
-      events.addEventListener("project", forwardEvent);
-      events.addEventListener("columnCards", forwardEvent);
-      events.addEventListener("issue", forwardEvent);
-      events.addEventListener("pr", forwardEvent);
-      events.addEventListener("graphs", forwardEvent);
-      events.addEventListener("comparison", forwardEvent);
-      events.addEventListener("actors", forwardEvent);
-      events.addEventListener("reviewers", forwardEvent);
+      var events;
+
+      function connectToEvents() {
+        events = new EventSource('/events');
+
+        events.onerror = function() {
+          if (events.readyState == 2) {
+            console.log("fatal events error; reconnecting in 5s...")
+            setTimeout(connectToEvents, 5000);
+          } else {
+            console.log("events error; letting browser reconnect...");
+          }
+        }
+
+        events.onopen = function() {
+          console.log('listening for events');
+        }
+
+        events.addEventListener("repo", forwardEvent);
+        events.addEventListener("project", forwardEvent);
+        events.addEventListener("columnCards", forwardEvent);
+        events.addEventListener("issue", forwardEvent);
+        events.addEventListener("pr", forwardEvent);
+        events.addEventListener("graphs", forwardEvent);
+        events.addEventListener("comparison", forwardEvent);
+        events.addEventListener("actors", forwardEvent);
+        events.addEventListener("reviewers", forwardEvent);
+      }
+
+      connectToEvents();
     </script>
   </body>
 </html>
