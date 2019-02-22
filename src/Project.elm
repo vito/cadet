@@ -1,6 +1,6 @@
 module Project exposing (detectColumn)
 
-import GitHubGraph
+import GitHub
 
 
 detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }

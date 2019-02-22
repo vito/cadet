@@ -5428,16 +5428,16 @@ var author$project$Backend$decodeColumnCard = A2(
 			elm$json$Json$Decode$succeed(author$project$Backend$ColumnCard))));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Backend$decodeColumnCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
-var author$project$GitHubGraph$Project = F6(
+var author$project$GitHub$Project = F6(
 	function (id, url, name, number, body, columns) {
 		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
 	});
-var author$project$GitHubGraph$ProjectColumn = F3(
+var author$project$GitHub$ProjectColumn = F3(
 	function (id, name, databaseId) {
 		return {databaseId: databaseId, id: id, name: name};
 	});
 var elm$json$Json$Decode$int = _Json_decodeInt;
-var author$project$GitHubGraph$decodeProjectColumn = A2(
+var author$project$GitHub$decodeProjectColumn = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'database_id', elm$json$Json$Decode$int),
 	A2(
@@ -5446,13 +5446,13 @@ var author$project$GitHubGraph$decodeProjectColumn = A2(
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectColumn))));
-var author$project$GitHubGraph$decodeProject = A2(
+			elm$json$Json$Decode$succeed(author$project$GitHub$ProjectColumn))));
+var author$project$GitHub$decodeProject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'columns',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeProjectColumn)),
+		elm$json$Json$Decode$list(author$project$GitHub$decodeProjectColumn)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'body', elm$json$Json$Decode$string),
@@ -5468,16 +5468,16 @@ var author$project$GitHubGraph$decodeProject = A2(
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Project)))))));
-var author$project$GitHubGraph$Repo = F8(
+						elm$json$Json$Decode$succeed(author$project$GitHub$Project)))))));
+var author$project$GitHub$Repo = F8(
 	function (id, url, owner, name, isArchived, labels, milestones, releases) {
 		return {id: id, isArchived: isArchived, labels: labels, milestones: milestones, name: name, owner: owner, releases: releases, url: url};
 	});
-var author$project$GitHubGraph$Label = F3(
+var author$project$GitHub$Label = F3(
 	function (id, name, color) {
 		return {color: color, id: id, name: name};
 	});
-var author$project$GitHubGraph$decodeLabel = A2(
+var author$project$GitHub$decodeLabel = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'color', elm$json$Json$Decode$string),
 	A2(
@@ -5486,14 +5486,14 @@ var author$project$GitHubGraph$decodeLabel = A2(
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$Label))));
-var author$project$GitHubGraph$Milestone = F5(
+			elm$json$Json$Decode$succeed(author$project$GitHub$Label))));
+var author$project$GitHub$Milestone = F5(
 	function (id, number, title, state, description) {
 		return {description: description, id: id, number: number, state: state, title: title};
 	});
 var elm$json$Json$Decode$andThen = _Json_andThen;
 var elm$json$Json$Decode$fail = _Json_fail;
-var author$project$GitHubGraph$customDecoder = F2(
+var author$project$GitHub$customDecoder = F2(
 	function (decoder, toResult) {
 		return A2(
 			elm$json$Json$Decode$andThen,
@@ -5509,12 +5509,12 @@ var author$project$GitHubGraph$customDecoder = F2(
 			},
 			decoder);
 	});
-var author$project$GitHubGraph$MilestoneStateClosed = {$: 'MilestoneStateClosed'};
-var author$project$GitHubGraph$MilestoneStateOpen = {$: 'MilestoneStateOpen'};
-var author$project$GitHubGraph$milestoneStates = _List_fromArray(
+var author$project$GitHub$MilestoneStateClosed = {$: 'MilestoneStateClosed'};
+var author$project$GitHub$MilestoneStateOpen = {$: 'MilestoneStateOpen'};
+var author$project$GitHub$milestoneStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', author$project$GitHubGraph$MilestoneStateOpen),
-		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$MilestoneStateClosed)
+		_Utils_Tuple2('OPEN', author$project$GitHub$MilestoneStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHub$MilestoneStateClosed)
 	]);
 var elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
@@ -5670,12 +5670,12 @@ var elm$core$Dict$get = F2(
 			}
 		}
 	});
-var author$project$GitHubGraph$decodeMilestoneState = function () {
+var author$project$GitHub$decodeMilestoneState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$milestoneStates));
+			elm$core$Dict$fromList(author$project$GitHub$milestoneStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -5683,9 +5683,9 @@ var author$project$GitHubGraph$decodeMilestoneState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to MilestoneState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$decodeMilestone = A2(
+var author$project$GitHub$decodeMilestone = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
@@ -5693,7 +5693,7 @@ var author$project$GitHubGraph$decodeMilestone = A2(
 		elm$json$Json$Decode$maybe(elm$json$Json$Decode$string)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeMilestoneState),
+		A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeMilestoneState),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
@@ -5703,39 +5703,39 @@ var author$project$GitHubGraph$decodeMilestone = A2(
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-					elm$json$Json$Decode$succeed(author$project$GitHubGraph$Milestone))))));
-var author$project$GitHubGraph$Release = F4(
+					elm$json$Json$Decode$succeed(author$project$GitHub$Milestone))))));
+var author$project$GitHub$Release = F4(
 	function (id, url, name, tag) {
 		return {id: id, name: name, tag: tag, url: url};
 	});
-var author$project$GitHubGraph$Tag = F2(
+var author$project$GitHub$Tag = F2(
 	function (name, target) {
 		return {name: name, target: target};
 	});
-var author$project$GitHubGraph$GitObject = F2(
+var author$project$GitHub$GitObject = F2(
 	function (url, oid) {
 		return {oid: oid, url: url};
 	});
-var author$project$GitHubGraph$decodeGitObject = A2(
+var author$project$GitHub$decodeGitObject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'oid', elm$json$Json$Decode$string),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$GitObject)));
-var author$project$GitHubGraph$decodeTag = A2(
+		elm$json$Json$Decode$succeed(author$project$GitHub$GitObject)));
+var author$project$GitHub$decodeTag = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'target', author$project$GitHubGraph$decodeGitObject),
+	A2(elm$json$Json$Decode$field, 'target', author$project$GitHub$decodeGitObject),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$Tag)));
-var author$project$GitHubGraph$decodeRelease = A2(
+		elm$json$Json$Decode$succeed(author$project$GitHub$Tag)));
+var author$project$GitHub$decodeRelease = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'tag',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeTag)),
+		elm$json$Json$Decode$maybe(author$project$GitHub$decodeTag)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
@@ -5748,26 +5748,26 @@ var author$project$GitHubGraph$decodeRelease = A2(
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$Release)))));
+				elm$json$Json$Decode$succeed(author$project$GitHub$Release)))));
 var elm$json$Json$Decode$bool = _Json_decodeBool;
-var author$project$GitHubGraph$decodeRepo = A2(
+var author$project$GitHub$decodeRepo = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'releases',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeRelease)),
+		elm$json$Json$Decode$list(author$project$GitHub$decodeRelease)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
 			elm$json$Json$Decode$field,
 			'milestones',
-			elm$json$Json$Decode$list(author$project$GitHubGraph$decodeMilestone)),
+			elm$json$Json$Decode$list(author$project$GitHub$decodeMilestone)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(
 				elm$json$Json$Decode$field,
 				'labels',
-				elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
+				elm$json$Json$Decode$list(author$project$GitHub$decodeLabel)),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'is_archived', elm$json$Json$Decode$bool),
@@ -5783,27 +5783,27 @@ var author$project$GitHubGraph$decodeRepo = A2(
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
 								A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-								elm$json$Json$Decode$succeed(author$project$GitHubGraph$Repo)))))))));
-var author$project$GitHubGraph$V3Comparison = F9(
+								elm$json$Json$Decode$succeed(author$project$GitHub$Repo)))))))));
+var author$project$GitHub$V3Comparison = F9(
 	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits, files) {
 		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, files: files, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
 	});
-var author$project$GitHubGraph$V3Commit = F2(
+var author$project$GitHub$V3Commit = F2(
 	function (url, sha) {
 		return {sha: sha, url: url};
 	});
-var author$project$GitHubGraph$decodeV3Commit = A2(
+var author$project$GitHub$decodeV3Commit = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$V3Commit)));
-var author$project$GitHubGraph$V3File = F3(
+		elm$json$Json$Decode$succeed(author$project$GitHub$V3Commit)));
+var author$project$GitHub$V3File = F3(
 	function (sha, filename, status) {
 		return {filename: filename, sha: sha, status: status};
 	});
-var author$project$GitHubGraph$decodeV3File = A2(
+var author$project$GitHub$decodeV3File = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
 	A2(
@@ -5812,19 +5812,19 @@ var author$project$GitHubGraph$decodeV3File = A2(
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$V3File))));
-var author$project$GitHubGraph$decodeV3Comparison = A2(
+			elm$json$Json$Decode$succeed(author$project$GitHub$V3File))));
+var author$project$GitHub$decodeV3Comparison = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'files',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeV3File)),
+		elm$json$Json$Decode$list(author$project$GitHub$decodeV3File)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
 			elm$json$Json$Decode$field,
 			'commits',
-			elm$json$Json$Decode$list(author$project$GitHubGraph$decodeV3Commit)),
+			elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
@@ -5836,17 +5836,17 @@ var author$project$GitHubGraph$decodeV3Comparison = A2(
 					A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHubGraph$decodeV3Commit),
+						A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
 						A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHubGraph$decodeV3Commit),
+							A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
 								A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
 								A2(
 									elm_community$json_extra$Json$Decode$Extra$andMap,
 									A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-									elm$json$Json$Decode$succeed(author$project$GitHubGraph$V3Comparison))))))))));
+									elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison))))))))));
 var elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var elm$json$Json$Decode$dict = function (decoder) {
 	return A2(
@@ -5859,7 +5859,7 @@ var author$project$Backend$decodeData = A2(
 	A2(
 		elm$json$Json$Decode$field,
 		'comparisons',
-		elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeV3Comparison)),
+		elm$json$Json$Decode$dict(author$project$GitHub$decodeV3Comparison)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
@@ -5871,13 +5871,13 @@ var author$project$Backend$decodeData = A2(
 			A2(
 				elm$json$Json$Decode$field,
 				'projects',
-				elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeProject)),
+				elm$json$Json$Decode$dict(author$project$GitHub$decodeProject)),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
 					'repos',
-					elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeRepo)),
+					elm$json$Json$Decode$dict(author$project$GitHub$decodeRepo)),
 				elm$json$Json$Decode$succeed(author$project$Backend$Data)))));
 var elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
@@ -6721,11 +6721,11 @@ var author$project$Backend$EventActor = F3(
 	function (user, avatar, createdAt) {
 		return {avatar: avatar, createdAt: createdAt, user: user};
 	});
-var author$project$GitHubGraph$User = F5(
+var author$project$GitHub$User = F5(
 	function (id, databaseId, url, login, avatar) {
 		return {avatar: avatar, databaseId: databaseId, id: id, login: login, url: url};
 	});
-var author$project$GitHubGraph$decodeUser = A2(
+var author$project$GitHub$decodeUser = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
 	A2(
@@ -6740,7 +6740,7 @@ var author$project$GitHubGraph$decodeUser = A2(
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-					elm$json$Json$Decode$succeed(author$project$GitHubGraph$User))))));
+					elm$json$Json$Decode$succeed(author$project$GitHub$User))))));
 var elm$parser$Parser$DeadEnd = F3(
 	function (row, col, problem) {
 		return {col: col, problem: problem, row: row};
@@ -7376,9 +7376,9 @@ var author$project$Backend$decodeEventActor = A2(
 			A2(
 				elm$json$Json$Decode$field,
 				'user',
-				elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+				elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 			elm$json$Json$Decode$succeed(author$project$Backend$EventActor))));
-var author$project$GitHubGraph$Issue = function (id) {
+var author$project$GitHub$Issue = function (id) {
 	return function (url) {
 		return function (createdAt) {
 			return function (updatedAt) {
@@ -7407,15 +7407,15 @@ var author$project$GitHubGraph$Issue = function (id) {
 		};
 	};
 };
-var author$project$GitHubGraph$CardLocation = F4(
+var author$project$GitHub$CardLocation = F4(
 	function (id, url, project, column) {
 		return {column: column, id: id, project: project, url: url};
 	});
-var author$project$GitHubGraph$ProjectLocation = F4(
+var author$project$GitHub$ProjectLocation = F4(
 	function (id, url, name, number) {
 		return {id: id, name: name, number: number, url: url};
 	});
-var author$project$GitHubGraph$decodeProjectLocation = A2(
+var author$project$GitHub$decodeProjectLocation = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 	A2(
@@ -7427,36 +7427,36 @@ var author$project$GitHubGraph$decodeProjectLocation = A2(
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$ProjectLocation)))));
-var author$project$GitHubGraph$decodeCardLocation = A2(
+				elm$json$Json$Decode$succeed(author$project$GitHub$ProjectLocation)))));
+var author$project$GitHub$decodeCardLocation = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'column',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeProjectColumn)),
+		elm$json$Json$Decode$maybe(author$project$GitHub$decodeProjectColumn)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'project', author$project$GitHubGraph$decodeProjectLocation),
+		A2(elm$json$Json$Decode$field, 'project', author$project$GitHub$decodeProjectLocation),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$CardLocation)))));
-var author$project$GitHubGraph$IssueStateClosed = {$: 'IssueStateClosed'};
-var author$project$GitHubGraph$IssueStateOpen = {$: 'IssueStateOpen'};
-var author$project$GitHubGraph$issueStates = _List_fromArray(
+				elm$json$Json$Decode$succeed(author$project$GitHub$CardLocation)))));
+var author$project$GitHub$IssueStateClosed = {$: 'IssueStateClosed'};
+var author$project$GitHub$IssueStateOpen = {$: 'IssueStateOpen'};
+var author$project$GitHub$issueStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', author$project$GitHubGraph$IssueStateOpen),
-		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$IssueStateClosed)
+		_Utils_Tuple2('OPEN', author$project$GitHub$IssueStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHub$IssueStateClosed)
 	]);
-var author$project$GitHubGraph$decodeIssueState = function () {
+var author$project$GitHub$decodeIssueState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$issueStates));
+			elm$core$Dict$fromList(author$project$GitHub$issueStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7464,37 +7464,37 @@ var author$project$GitHubGraph$decodeIssueState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to IssueState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$ReactionGroup = F2(
+var author$project$GitHub$ReactionGroup = F2(
 	function (type_, count) {
 		return {count: count, type_: type_};
 	});
-var author$project$GitHubGraph$ReactionTypeConfused = {$: 'ReactionTypeConfused'};
-var author$project$GitHubGraph$ReactionTypeEyes = {$: 'ReactionTypeEyes'};
-var author$project$GitHubGraph$ReactionTypeHeart = {$: 'ReactionTypeHeart'};
-var author$project$GitHubGraph$ReactionTypeHooray = {$: 'ReactionTypeHooray'};
-var author$project$GitHubGraph$ReactionTypeLaugh = {$: 'ReactionTypeLaugh'};
-var author$project$GitHubGraph$ReactionTypeRocket = {$: 'ReactionTypeRocket'};
-var author$project$GitHubGraph$ReactionTypeThumbsDown = {$: 'ReactionTypeThumbsDown'};
-var author$project$GitHubGraph$ReactionTypeThumbsUp = {$: 'ReactionTypeThumbsUp'};
-var author$project$GitHubGraph$reactionTypes = _List_fromArray(
+var author$project$GitHub$ReactionTypeConfused = {$: 'ReactionTypeConfused'};
+var author$project$GitHub$ReactionTypeEyes = {$: 'ReactionTypeEyes'};
+var author$project$GitHub$ReactionTypeHeart = {$: 'ReactionTypeHeart'};
+var author$project$GitHub$ReactionTypeHooray = {$: 'ReactionTypeHooray'};
+var author$project$GitHub$ReactionTypeLaugh = {$: 'ReactionTypeLaugh'};
+var author$project$GitHub$ReactionTypeRocket = {$: 'ReactionTypeRocket'};
+var author$project$GitHub$ReactionTypeThumbsDown = {$: 'ReactionTypeThumbsDown'};
+var author$project$GitHub$ReactionTypeThumbsUp = {$: 'ReactionTypeThumbsUp'};
+var author$project$GitHub$reactionTypes = _List_fromArray(
 	[
-		_Utils_Tuple2('THUMBS_UP', author$project$GitHubGraph$ReactionTypeThumbsUp),
-		_Utils_Tuple2('THUMBS_DOWN', author$project$GitHubGraph$ReactionTypeThumbsDown),
-		_Utils_Tuple2('LAUGH', author$project$GitHubGraph$ReactionTypeLaugh),
-		_Utils_Tuple2('HOORAY', author$project$GitHubGraph$ReactionTypeHooray),
-		_Utils_Tuple2('CONFUSED', author$project$GitHubGraph$ReactionTypeConfused),
-		_Utils_Tuple2('HEART', author$project$GitHubGraph$ReactionTypeHeart),
-		_Utils_Tuple2('ROCKET', author$project$GitHubGraph$ReactionTypeRocket),
-		_Utils_Tuple2('EYES', author$project$GitHubGraph$ReactionTypeEyes)
+		_Utils_Tuple2('THUMBS_UP', author$project$GitHub$ReactionTypeThumbsUp),
+		_Utils_Tuple2('THUMBS_DOWN', author$project$GitHub$ReactionTypeThumbsDown),
+		_Utils_Tuple2('LAUGH', author$project$GitHub$ReactionTypeLaugh),
+		_Utils_Tuple2('HOORAY', author$project$GitHub$ReactionTypeHooray),
+		_Utils_Tuple2('CONFUSED', author$project$GitHub$ReactionTypeConfused),
+		_Utils_Tuple2('HEART', author$project$GitHub$ReactionTypeHeart),
+		_Utils_Tuple2('ROCKET', author$project$GitHub$ReactionTypeRocket),
+		_Utils_Tuple2('EYES', author$project$GitHub$ReactionTypeEyes)
 	]);
-var author$project$GitHubGraph$decodeReactionType = function () {
+var author$project$GitHub$decodeReactionType = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$reactionTypes));
+			elm$core$Dict$fromList(author$project$GitHub$reactionTypes));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7502,20 +7502,20 @@ var author$project$GitHubGraph$decodeReactionType = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to ReactionType. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$decodeReactionGroup = A2(
+var author$project$GitHub$decodeReactionGroup = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'count', elm$json$Json$Decode$int),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'type_', author$project$GitHubGraph$decodeReactionType),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$ReactionGroup)));
-var author$project$GitHubGraph$RepoLocation = F4(
+		A2(elm$json$Json$Decode$field, 'type_', author$project$GitHub$decodeReactionType),
+		elm$json$Json$Decode$succeed(author$project$GitHub$ReactionGroup)));
+var author$project$GitHub$RepoLocation = F4(
 	function (id, url, owner, name) {
 		return {id: id, name: name, owner: owner, url: url};
 	});
-var author$project$GitHubGraph$decodeRepoLocation = A2(
+var author$project$GitHub$decodeRepoLocation = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
 	A2(
@@ -7527,37 +7527,37 @@ var author$project$GitHubGraph$decodeRepoLocation = A2(
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$RepoLocation)))));
-var author$project$GitHubGraph$decodeIssue = A2(
+				elm$json$Json$Decode$succeed(author$project$GitHub$RepoLocation)))));
+var author$project$GitHub$decodeIssue = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'milestone',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
+		elm$json$Json$Decode$maybe(author$project$GitHub$decodeMilestone)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
 			elm$json$Json$Decode$field,
 			'cards',
-			elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
+			elm$json$Json$Decode$list(author$project$GitHub$decodeCardLocation)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(
 				elm$json$Json$Decode$field,
 				'labels',
-				elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
+				elm$json$Json$Decode$list(author$project$GitHub$decodeLabel)),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
 					'author',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+					elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
 						elm$json$Json$Decode$field,
 						'reactions',
-						elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
+						elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
@@ -7569,10 +7569,10 @@ var author$project$GitHubGraph$decodeIssue = A2(
 								A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 								A2(
 									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
+									A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
 									A2(
 										elm_community$json_extra$Json$Decode$Extra$andMap,
-										A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeIssueState),
+										A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeIssueState),
 										A2(
 											elm_community$json_extra$Json$Decode$Extra$andMap,
 											A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
@@ -7585,8 +7585,8 @@ var author$project$GitHubGraph$decodeIssue = A2(
 													A2(
 														elm_community$json_extra$Json$Decode$Extra$andMap,
 														A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-														elm$json$Json$Decode$succeed(author$project$GitHubGraph$Issue)))))))))))))));
-var author$project$GitHubGraph$PullRequest = function (id) {
+														elm$json$Json$Decode$succeed(author$project$GitHub$Issue)))))))))))))));
+var author$project$GitHub$PullRequest = function (id) {
 	return function (url) {
 		return function (createdAt) {
 			return function (updatedAt) {
@@ -7625,20 +7625,20 @@ var author$project$GitHubGraph$PullRequest = function (id) {
 		};
 	};
 };
-var author$project$GitHubGraph$Commit = F6(
+var author$project$GitHub$Commit = F6(
 	function (sha, status, author, committer, authoredAt, committedAt) {
 		return {author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status};
 	});
-var author$project$GitHubGraph$GitActor = F4(
+var author$project$GitHub$GitActor = F4(
 	function (email, name, avatar, user) {
 		return {avatar: avatar, email: email, name: name, user: user};
 	});
-var author$project$GitHubGraph$decodeGitActor = A2(
+var author$project$GitHub$decodeGitActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'user',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+		elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
@@ -7648,20 +7648,20 @@ var author$project$GitHubGraph$decodeGitActor = A2(
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(elm$json$Json$Decode$field, 'email', elm$json$Json$Decode$string),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$GitActor)))));
-var author$project$GitHubGraph$Status = F2(
+				elm$json$Json$Decode$succeed(author$project$GitHub$GitActor)))));
+var author$project$GitHub$Status = F2(
 	function (state, contexts) {
 		return {contexts: contexts, state: state};
 	});
-var author$project$GitHubGraph$StatusContext = F4(
+var author$project$GitHub$StatusContext = F4(
 	function (state, context, targetUrl, creator) {
 		return {context: context, creator: creator, state: state, targetUrl: targetUrl};
 	});
-var author$project$GitHubGraph$Actor = F3(
+var author$project$GitHub$Actor = F3(
 	function (url, login, avatar) {
 		return {avatar: avatar, login: login, url: url};
 	});
-var author$project$GitHubGraph$decodeActor = A2(
+var author$project$GitHub$decodeActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
 	A2(
@@ -7670,26 +7670,26 @@ var author$project$GitHubGraph$decodeActor = A2(
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$Actor))));
-var author$project$GitHubGraph$StatusStateError = {$: 'StatusStateError'};
-var author$project$GitHubGraph$StatusStateExpected = {$: 'StatusStateExpected'};
-var author$project$GitHubGraph$StatusStateFailure = {$: 'StatusStateFailure'};
-var author$project$GitHubGraph$StatusStatePending = {$: 'StatusStatePending'};
-var author$project$GitHubGraph$StatusStateSuccess = {$: 'StatusStateSuccess'};
-var author$project$GitHubGraph$statusStates = _List_fromArray(
+			elm$json$Json$Decode$succeed(author$project$GitHub$Actor))));
+var author$project$GitHub$StatusStateError = {$: 'StatusStateError'};
+var author$project$GitHub$StatusStateExpected = {$: 'StatusStateExpected'};
+var author$project$GitHub$StatusStateFailure = {$: 'StatusStateFailure'};
+var author$project$GitHub$StatusStatePending = {$: 'StatusStatePending'};
+var author$project$GitHub$StatusStateSuccess = {$: 'StatusStateSuccess'};
+var author$project$GitHub$statusStates = _List_fromArray(
 	[
-		_Utils_Tuple2('EXPECTED', author$project$GitHubGraph$StatusStateExpected),
-		_Utils_Tuple2('ERROR', author$project$GitHubGraph$StatusStateError),
-		_Utils_Tuple2('FAILURE', author$project$GitHubGraph$StatusStateFailure),
-		_Utils_Tuple2('PENDING', author$project$GitHubGraph$StatusStatePending),
-		_Utils_Tuple2('SUCCESS', author$project$GitHubGraph$StatusStateSuccess)
+		_Utils_Tuple2('EXPECTED', author$project$GitHub$StatusStateExpected),
+		_Utils_Tuple2('ERROR', author$project$GitHub$StatusStateError),
+		_Utils_Tuple2('FAILURE', author$project$GitHub$StatusStateFailure),
+		_Utils_Tuple2('PENDING', author$project$GitHub$StatusStatePending),
+		_Utils_Tuple2('SUCCESS', author$project$GitHub$StatusStateSuccess)
 	]);
-var author$project$GitHubGraph$decodeStatusState = function () {
+var author$project$GitHub$decodeStatusState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$statusStates));
+			elm$core$Dict$fromList(author$project$GitHub$statusStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7697,11 +7697,11 @@ var author$project$GitHubGraph$decodeStatusState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to StatusState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$decodeStatusContext = A2(
+var author$project$GitHub$decodeStatusContext = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'creator', author$project$GitHubGraph$decodeActor),
+	A2(elm$json$Json$Decode$field, 'creator', author$project$GitHub$decodeActor),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
@@ -7713,19 +7713,19 @@ var author$project$GitHubGraph$decodeStatusContext = A2(
 			A2(elm$json$Json$Decode$field, 'context', elm$json$Json$Decode$string),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
-				elm$json$Json$Decode$succeed(author$project$GitHubGraph$StatusContext)))));
-var author$project$GitHubGraph$decodeStatus = A2(
+				A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeStatusState),
+				elm$json$Json$Decode$succeed(author$project$GitHub$StatusContext)))));
+var author$project$GitHub$decodeStatus = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'contexts',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodeStatusContext)),
+		elm$json$Json$Decode$list(author$project$GitHub$decodeStatusContext)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodeStatusState),
-		elm$json$Json$Decode$succeed(author$project$GitHubGraph$Status)));
-var author$project$GitHubGraph$decodeCommit = A2(
+		A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeStatusState),
+		elm$json$Json$Decode$succeed(author$project$GitHub$Status)));
+var author$project$GitHub$decodeCommit = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'committed_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 	A2(
@@ -7736,38 +7736,38 @@ var author$project$GitHubGraph$decodeCommit = A2(
 			A2(
 				elm$json$Json$Decode$field,
 				'committer',
-				elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
+				elm$json$Json$Decode$maybe(author$project$GitHub$decodeGitActor)),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
 					'author',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeGitActor)),
+					elm$json$Json$Decode$maybe(author$project$GitHub$decodeGitActor)),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
 						elm$json$Json$Decode$field,
 						'status',
-						elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeStatus)),
+						elm$json$Json$Decode$maybe(author$project$GitHub$decodeStatus)),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-						elm$json$Json$Decode$succeed(author$project$GitHubGraph$Commit)))))));
-var author$project$GitHubGraph$MergeableStateConflicting = {$: 'MergeableStateConflicting'};
-var author$project$GitHubGraph$MergeableStateMergeable = {$: 'MergeableStateMergeable'};
-var author$project$GitHubGraph$MergeableStateUnknown = {$: 'MergeableStateUnknown'};
-var author$project$GitHubGraph$mergeableStates = _List_fromArray(
+						elm$json$Json$Decode$succeed(author$project$GitHub$Commit)))))));
+var author$project$GitHub$MergeableStateConflicting = {$: 'MergeableStateConflicting'};
+var author$project$GitHub$MergeableStateMergeable = {$: 'MergeableStateMergeable'};
+var author$project$GitHub$MergeableStateUnknown = {$: 'MergeableStateUnknown'};
+var author$project$GitHub$mergeableStates = _List_fromArray(
 	[
-		_Utils_Tuple2('MERGEABLE', author$project$GitHubGraph$MergeableStateMergeable),
-		_Utils_Tuple2('CONFLICTING', author$project$GitHubGraph$MergeableStateConflicting),
-		_Utils_Tuple2('UNKNOWN', author$project$GitHubGraph$MergeableStateUnknown)
+		_Utils_Tuple2('MERGEABLE', author$project$GitHub$MergeableStateMergeable),
+		_Utils_Tuple2('CONFLICTING', author$project$GitHub$MergeableStateConflicting),
+		_Utils_Tuple2('UNKNOWN', author$project$GitHub$MergeableStateUnknown)
 	]);
-var author$project$GitHubGraph$decodeMergeableState = function () {
+var author$project$GitHub$decodeMergeableState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$mergeableStates));
+			elm$core$Dict$fromList(author$project$GitHub$mergeableStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7775,23 +7775,23 @@ var author$project$GitHubGraph$decodeMergeableState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to MergeableState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$PullRequestStateClosed = {$: 'PullRequestStateClosed'};
-var author$project$GitHubGraph$PullRequestStateMerged = {$: 'PullRequestStateMerged'};
-var author$project$GitHubGraph$PullRequestStateOpen = {$: 'PullRequestStateOpen'};
-var author$project$GitHubGraph$pullRequestStates = _List_fromArray(
+var author$project$GitHub$PullRequestStateClosed = {$: 'PullRequestStateClosed'};
+var author$project$GitHub$PullRequestStateMerged = {$: 'PullRequestStateMerged'};
+var author$project$GitHub$PullRequestStateOpen = {$: 'PullRequestStateOpen'};
+var author$project$GitHub$pullRequestStates = _List_fromArray(
 	[
-		_Utils_Tuple2('OPEN', author$project$GitHubGraph$PullRequestStateOpen),
-		_Utils_Tuple2('CLOSED', author$project$GitHubGraph$PullRequestStateClosed),
-		_Utils_Tuple2('MERGED', author$project$GitHubGraph$PullRequestStateMerged)
+		_Utils_Tuple2('OPEN', author$project$GitHub$PullRequestStateOpen),
+		_Utils_Tuple2('CLOSED', author$project$GitHub$PullRequestStateClosed),
+		_Utils_Tuple2('MERGED', author$project$GitHub$PullRequestStateMerged)
 	]);
-var author$project$GitHubGraph$decodePullRequestState = function () {
+var author$project$GitHub$decodePullRequestState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestStates));
+			elm$core$Dict$fromList(author$project$GitHub$pullRequestStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7799,29 +7799,29 @@ var author$project$GitHubGraph$decodePullRequestState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$decodePullRequest = A2(
+var author$project$GitHub$decodePullRequest = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'merge_commit',
-		elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
+		elm$json$Json$Decode$maybe(author$project$GitHub$decodeCommit)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
 			elm$json$Json$Decode$field,
 			'last_commit',
-			elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeCommit)),
+			elm$json$Json$Decode$maybe(author$project$GitHub$decodeCommit)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'mergeable', author$project$GitHubGraph$decodeMergeableState),
+			A2(elm$json$Json$Decode$field, 'mergeable', author$project$GitHub$decodeMergeableState),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
 					'milestone',
-					elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeMilestone)),
+					elm$json$Json$Decode$maybe(author$project$GitHub$decodeMilestone)),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'deletions', elm$json$Json$Decode$int),
@@ -7833,25 +7833,25 @@ var author$project$GitHubGraph$decodePullRequest = A2(
 							A2(
 								elm$json$Json$Decode$field,
 								'cards',
-								elm$json$Json$Decode$list(author$project$GitHubGraph$decodeCardLocation)),
+								elm$json$Json$Decode$list(author$project$GitHub$decodeCardLocation)),
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
 								A2(
 									elm$json$Json$Decode$field,
 									'labels',
-									elm$json$Json$Decode$list(author$project$GitHubGraph$decodeLabel)),
+									elm$json$Json$Decode$list(author$project$GitHub$decodeLabel)),
 								A2(
 									elm_community$json_extra$Json$Decode$Extra$andMap,
 									A2(
 										elm$json$Json$Decode$field,
 										'author',
-										elm$json$Json$Decode$maybe(author$project$GitHubGraph$decodeUser)),
+										elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 									A2(
 										elm_community$json_extra$Json$Decode$Extra$andMap,
 										A2(
 											elm$json$Json$Decode$field,
 											'reactions',
-											elm$json$Json$Decode$list(author$project$GitHubGraph$decodeReactionGroup)),
+											elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
 										A2(
 											elm_community$json_extra$Json$Decode$Extra$andMap,
 											A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
@@ -7863,10 +7863,10 @@ var author$project$GitHubGraph$decodePullRequest = A2(
 													A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 													A2(
 														elm_community$json_extra$Json$Decode$Extra$andMap,
-														A2(elm$json$Json$Decode$field, 'repo', author$project$GitHubGraph$decodeRepoLocation),
+														A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
 														A2(
 															elm_community$json_extra$Json$Decode$Extra$andMap,
-															A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestState),
+															A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodePullRequestState),
 															A2(
 																elm_community$json_extra$Json$Decode$Extra$andMap,
 																A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
@@ -7879,30 +7879,30 @@ var author$project$GitHubGraph$decodePullRequest = A2(
 																		A2(
 																			elm_community$json_extra$Json$Decode$Extra$andMap,
 																			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-																			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequest))))))))))))))))))));
-var author$project$GitHubGraph$PullRequestReview = F3(
+																			elm$json$Json$Decode$succeed(author$project$GitHub$PullRequest))))))))))))))))))));
+var author$project$GitHub$PullRequestReview = F3(
 	function (author, state, createdAt) {
 		return {author: author, createdAt: createdAt, state: state};
 	});
-var author$project$GitHubGraph$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
-var author$project$GitHubGraph$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
-var author$project$GitHubGraph$PullRequestReviewStateCommented = {$: 'PullRequestReviewStateCommented'};
-var author$project$GitHubGraph$PullRequestReviewStateDismissed = {$: 'PullRequestReviewStateDismissed'};
-var author$project$GitHubGraph$PullRequestReviewStatePending = {$: 'PullRequestReviewStatePending'};
-var author$project$GitHubGraph$pullRequestReviewStates = _List_fromArray(
+var author$project$GitHub$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
+var author$project$GitHub$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
+var author$project$GitHub$PullRequestReviewStateCommented = {$: 'PullRequestReviewStateCommented'};
+var author$project$GitHub$PullRequestReviewStateDismissed = {$: 'PullRequestReviewStateDismissed'};
+var author$project$GitHub$PullRequestReviewStatePending = {$: 'PullRequestReviewStatePending'};
+var author$project$GitHub$pullRequestReviewStates = _List_fromArray(
 	[
-		_Utils_Tuple2('PENDING', author$project$GitHubGraph$PullRequestReviewStatePending),
-		_Utils_Tuple2('COMMENTED', author$project$GitHubGraph$PullRequestReviewStateCommented),
-		_Utils_Tuple2('APPROVED', author$project$GitHubGraph$PullRequestReviewStateApproved),
-		_Utils_Tuple2('CHANGES_REQUESTED', author$project$GitHubGraph$PullRequestReviewStateChangesRequested),
-		_Utils_Tuple2('DISMISSED', author$project$GitHubGraph$PullRequestReviewStateDismissed)
+		_Utils_Tuple2('PENDING', author$project$GitHub$PullRequestReviewStatePending),
+		_Utils_Tuple2('COMMENTED', author$project$GitHub$PullRequestReviewStateCommented),
+		_Utils_Tuple2('APPROVED', author$project$GitHub$PullRequestReviewStateApproved),
+		_Utils_Tuple2('CHANGES_REQUESTED', author$project$GitHub$PullRequestReviewStateChangesRequested),
+		_Utils_Tuple2('DISMISSED', author$project$GitHub$PullRequestReviewStateDismissed)
 	]);
-var author$project$GitHubGraph$decodePullRequestReviewState = function () {
+var author$project$GitHub$decodePullRequestReviewState = function () {
 	var decodeToType = function (string) {
 		var _n0 = A2(
 			elm$core$Dict$get,
 			string,
-			elm$core$Dict$fromList(author$project$GitHubGraph$pullRequestReviewStates));
+			elm$core$Dict$fromList(author$project$GitHub$pullRequestReviewStates));
 		if (_n0.$ === 'Just') {
 			var type_ = _n0.a;
 			return elm$core$Result$Ok(type_);
@@ -7910,25 +7910,25 @@ var author$project$GitHubGraph$decodePullRequestReviewState = function () {
 			return elm$core$Result$Err('Not valid pattern for decoder to PullRequestReviewState. Pattern: ' + string);
 		}
 	};
-	return A2(author$project$GitHubGraph$customDecoder, elm$json$Json$Decode$string, decodeToType);
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
 }();
-var author$project$GitHubGraph$decodePullRequestReview = A2(
+var author$project$GitHub$decodePullRequestReview = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'state', author$project$GitHubGraph$decodePullRequestReviewState),
+		A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodePullRequestReviewState),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'author', author$project$GitHubGraph$decodeUser),
-			elm$json$Json$Decode$succeed(author$project$GitHubGraph$PullRequestReview))));
+			A2(elm$json$Json$Decode$field, 'author', author$project$GitHub$decodeUser),
+			elm$json$Json$Decode$succeed(author$project$GitHub$PullRequestReview))));
 var author$project$Backend$decodeCardData = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
 		'reviewers',
 		elm$json$Json$Decode$dict(
-			elm$json$Json$Decode$list(author$project$GitHubGraph$decodePullRequestReview))),
+			elm$json$Json$Decode$list(author$project$GitHub$decodePullRequestReview))),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(
@@ -7941,13 +7941,13 @@ var author$project$Backend$decodeCardData = A2(
 			A2(
 				elm$json$Json$Decode$field,
 				'prs',
-				elm$json$Json$Decode$dict(author$project$GitHubGraph$decodePullRequest)),
+				elm$json$Json$Decode$dict(author$project$GitHub$decodePullRequest)),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
 					'issues',
-					elm$json$Json$Decode$dict(author$project$GitHubGraph$decodeIssue)),
+					elm$json$Json$Decode$dict(author$project$GitHub$decodeIssue)),
 				elm$json$Json$Decode$succeed(author$project$Backend$CardData)))));
 var author$project$Backend$fetchCardData = function (f) {
 	return A2(
@@ -8289,38 +8289,11 @@ var author$project$Card$cardProcessState = function (_n0) {
 	var cards = _n0.cards;
 	var labels = _n0.labels;
 	return {
-		hasBugLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('bug'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasEnhancementLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('enhancement'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
 		hasPausedLabel: A2(
 			elm$core$List$any,
 			A2(
 				elm$core$Basics$composeL,
 				elm$core$Basics$eq('paused'),
-				function ($) {
-					return $.name;
-				}),
-			labels),
-		hasWontfixLabel: A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeL,
-				elm$core$Basics$eq('wontfix'),
 				function ($) {
 					return $.name;
 				}),
@@ -8331,13 +8304,13 @@ var author$project$Card$cardProcessState = function (_n0) {
 		inInFlightColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.inFlight, cards)
 	};
 };
-var author$project$GitHubGraph$IssueCardContent = function (a) {
+var author$project$GitHub$IssueCardContent = function (a) {
 	return {$: 'IssueCardContent', a: a};
 };
 var elm$core$List$sum = function (numbers) {
 	return A3(elm$core$List$foldl, elm$core$Basics$add, 0, numbers);
 };
-var author$project$GitHubGraph$reactionScore = function (reactions) {
+var author$project$GitHub$reactionScore = function (reactions) {
 	return elm$core$List$sum(
 		function (a) {
 			return A2(elm$core$List$map, a, reactions);
@@ -8365,10 +8338,10 @@ var author$project$GitHubGraph$reactionScore = function (reactions) {
 				}
 			}));
 };
-var author$project$GitHubGraph$issueScore = function (_n0) {
+var author$project$GitHub$issueScore = function (_n0) {
 	var reactions = _n0.reactions;
 	var commentCount = _n0.commentCount;
-	return author$project$GitHubGraph$reactionScore(reactions) + (2 * commentCount);
+	return author$project$GitHub$reactionScore(reactions) + (2 * commentCount);
 };
 var author$project$Card$fromIssue = function (issue) {
 	var id = issue.id;
@@ -8388,7 +8361,7 @@ var author$project$Card$fromIssue = function (issue) {
 		author: author,
 		cards: cards,
 		commentCount: commentCount,
-		content: author$project$GitHubGraph$IssueCardContent(issue),
+		content: author$project$GitHub$IssueCardContent(issue),
 		id: id,
 		labels: A2(
 			elm$core$List$map,
@@ -8402,7 +8375,7 @@ var author$project$Card$fromIssue = function (issue) {
 			{cards: cards, labels: labels}),
 		reactions: reactions,
 		repo: repo,
-		score: author$project$GitHubGraph$issueScore(issue),
+		score: author$project$GitHub$issueScore(issue),
 		state: author$project$Card$IssueState(state),
 		title: title,
 		updatedAt: updatedAt,
@@ -8412,13 +8385,13 @@ var author$project$Card$fromIssue = function (issue) {
 var author$project$Card$PullRequestState = function (a) {
 	return {$: 'PullRequestState', a: a};
 };
-var author$project$GitHubGraph$PullRequestCardContent = function (a) {
+var author$project$GitHub$PullRequestCardContent = function (a) {
 	return {$: 'PullRequestCardContent', a: a};
 };
-var author$project$GitHubGraph$pullRequestScore = function (_n0) {
+var author$project$GitHub$pullRequestScore = function (_n0) {
 	var reactions = _n0.reactions;
 	var commentCount = _n0.commentCount;
-	return (1000 + author$project$GitHubGraph$reactionScore(reactions)) + (2 * commentCount);
+	return (1000 + author$project$GitHub$reactionScore(reactions)) + (2 * commentCount);
 };
 var author$project$Card$fromPR = function (pr) {
 	var id = pr.id;
@@ -8438,7 +8411,7 @@ var author$project$Card$fromPR = function (pr) {
 		author: author,
 		cards: cards,
 		commentCount: commentCount,
-		content: author$project$GitHubGraph$PullRequestCardContent(pr),
+		content: author$project$GitHub$PullRequestCardContent(pr),
 		id: id,
 		labels: A2(
 			elm$core$List$map,
@@ -8452,7 +8425,7 @@ var author$project$Card$fromPR = function (pr) {
 			{cards: cards, labels: labels}),
 		reactions: reactions,
 		repo: repo,
-		score: author$project$GitHubGraph$pullRequestScore(pr),
+		score: author$project$GitHub$pullRequestScore(pr),
 		state: author$project$Card$PullRequestState(state),
 		title: title,
 		updatedAt: updatedAt,
@@ -8580,12 +8553,12 @@ var author$project$Main$MirrorLabel = function (a) {
 var author$project$Main$RefreshQueued = function (a) {
 	return {$: 'RefreshQueued', a: a};
 };
-var author$project$GitHubGraph$ProjectColumnCard = F4(
+var author$project$GitHub$ProjectColumnCard = F4(
 	function (id, url, content, note) {
 		return {content: content, id: id, note: note, url: url};
 	});
-var author$project$GitHubGraph$DateType = {$: 'DateType'};
-var author$project$GitHubGraph$pickEnum2 = F2(
+var author$project$GitHub$DateType = {$: 'DateType'};
+var author$project$GitHub$pickEnum2 = F2(
 	function (ma, mb) {
 		if (ma.$ === 'Just') {
 			var x = ma.a;
@@ -8871,7 +8844,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with = F2(
 			objectSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(selection));
 	});
-var author$project$GitHubGraph$userObject = A2(
+var author$project$GitHub$userObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 	A2(
@@ -8886,7 +8859,7 @@ var author$project$GitHubGraph$userObject = A2(
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$User))))));
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$User))))));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$InlineFragment = function (a) {
 	return {$: 'InlineFragment', a: a};
 };
@@ -8913,22 +8886,22 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeCondition = funct
 	return {$: 'TypeCondition', a: a};
 };
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType = jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeCondition;
-var author$project$GitHubGraph$authorObject = A2(
+var author$project$GitHub$authorObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 		elm$core$Maybe$Just(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Bot')),
-		author$project$GitHubGraph$userObject),
+		author$project$GitHub$userObject),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 			elm$core$Maybe$Just(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
-			author$project$GitHubGraph$userObject),
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$pickEnum2)));
-var author$project$GitHubGraph$labelObject = A2(
+			author$project$GitHub$userObject),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$pickEnum2)));
+var author$project$GitHub$labelObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'color', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 	A2(
@@ -8937,7 +8910,7 @@ var author$project$GitHubGraph$labelObject = A2(
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Label))));
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Label))));
 var elm$json$Json$Encode$string = _Json_wrap;
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$EnumType = function (a) {
 	return {$: 'EnumType', a: a};
@@ -9112,7 +9085,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_n0) 
 			fragments);
 	}
 };
-var author$project$GitHubGraph$milestoneObject = A2(
+var author$project$GitHub$milestoneObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
@@ -9125,7 +9098,7 @@ var author$project$GitHubGraph$milestoneObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'state',
 			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$milestoneStates)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$milestoneStates)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -9135,8 +9108,8 @@ var author$project$GitHubGraph$milestoneObject = A2(
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Milestone))))));
-var author$project$GitHubGraph$reactionGroupObject = A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Milestone))))));
+var author$project$GitHub$reactionGroupObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
@@ -9150,8 +9123,8 @@ var author$project$GitHubGraph$reactionGroupObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'content',
 			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$reactionTypes)),
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ReactionGroup)));
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$reactionTypes)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ReactionGroup)));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ListType = function (a) {
 	return {$: 'ListType', a: a};
 };
@@ -9196,7 +9169,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map = F2(
 			vars,
 			fragments);
 	});
-var author$project$GitHubGraph$nonZeroReactionGroups = A2(
+var author$project$GitHub$nonZeroReactionGroups = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
 	elm$core$List$filter(
 		A2(
@@ -9205,7 +9178,7 @@ var author$project$GitHubGraph$nonZeroReactionGroups = A2(
 			function ($) {
 				return $.count;
 			})),
-	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$reactionGroupObject));
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$reactionGroupObject));
 var elm$core$List$maybeCons = F3(
 	function (f, mx, xs) {
 		var _n0 = f(mx);
@@ -9224,14 +9197,14 @@ var elm$core$List$filterMap = F2(
 			_List_Nil,
 			xs);
 	});
-var author$project$GitHubGraph$nullableList = function (o) {
+var author$project$GitHub$nullableList = function (o) {
 	return A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
 		elm$core$List$filterMap(elm$core$Basics$identity),
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(o)));
 };
-var author$project$GitHubGraph$columnObject = A2(
+var author$project$GitHub$columnObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 	A2(
@@ -9240,8 +9213,8 @@ var author$project$GitHubGraph$columnObject = A2(
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ProjectColumn))));
-var author$project$GitHubGraph$projectLocationObject = A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumn))));
+var author$project$GitHub$projectLocationObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 	A2(
@@ -9253,25 +9226,25 @@ var author$project$GitHubGraph$projectLocationObject = A2(
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ProjectLocation)))));
-var author$project$GitHubGraph$projectCardObject = A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectLocation)))));
+var author$project$GitHub$projectCardObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'column',
 		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$columnObject)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$columnObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'project', _List_Nil, author$project$GitHubGraph$projectLocationObject),
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'project', _List_Nil, author$project$GitHub$projectLocationObject),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$CardLocation)))));
-var author$project$GitHubGraph$repoLocationObject = A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$CardLocation)))));
+var author$project$GitHub$repoLocationObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 	A2(
@@ -9288,7 +9261,7 @@ var author$project$GitHubGraph$repoLocationObject = A2(
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$RepoLocation)))));
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$RepoLocation)))));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 	function (responseKey, selection) {
 		var ast = selection.a;
@@ -9329,13 +9302,13 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int = function (x) {
 		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue(x),
 		_List_Nil);
 };
-var author$project$GitHubGraph$issueObject = A2(
+var author$project$GitHub$issueObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'milestone',
 		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$milestoneObject)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$milestoneObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
@@ -9352,7 +9325,7 @@ var author$project$GitHubGraph$issueObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 					'nodes',
 					_List_Nil,
-					author$project$GitHubGraph$nullableList(author$project$GitHubGraph$projectCardObject)))),
+					author$project$GitHub$nullableList(author$project$GitHub$projectCardObject)))),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(
@@ -9369,13 +9342,13 @@ var author$project$GitHubGraph$issueObject = A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 						'nodes',
 						_List_Nil,
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$labelObject)))),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHubGraph$nonZeroReactionGroups),
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 					A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 						A3(
@@ -9392,7 +9365,7 @@ var author$project$GitHubGraph$issueObject = A2(
 								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHubGraph$repoLocationObject),
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 									A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 										A2(
@@ -9402,35 +9375,35 @@ var author$project$GitHubGraph$issueObject = A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 												'state',
 												_List_Nil,
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$issueStates))),
+												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$issueStates))),
 										A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 											A3(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 												'updatedAt',
 												_List_Nil,
-												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 												A3(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 													'createdAt',
 													_List_Nil,
-													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Issue)))))))))))))));
-var author$project$GitHubGraph$gitActorObject = A2(
+														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Issue)))))))))))))));
+var author$project$GitHub$gitActorObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'user',
 		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$userObject)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$userObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -9440,8 +9413,8 @@ var author$project$GitHubGraph$gitActorObject = A2(
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'email', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$GitActor)))));
-var author$project$GitHubGraph$actorObject = A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$GitActor)))));
+var author$project$GitHub$actorObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 	A2(
@@ -9450,10 +9423,10 @@ var author$project$GitHubGraph$actorObject = A2(
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Actor))));
-var author$project$GitHubGraph$statusContextObject = A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Actor))));
+var author$project$GitHub$statusContextObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'creator', _List_Nil, author$project$GitHubGraph$actorObject),
+	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'creator', _List_Nil, author$project$GitHub$actorObject),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
@@ -9470,62 +9443,62 @@ var author$project$GitHubGraph$statusContextObject = A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 					'state',
 					_List_Nil,
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$statusStates)),
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$StatusContext)))));
-var author$project$GitHubGraph$statusObject = A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$statusStates)),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$StatusContext)))));
+var author$project$GitHub$statusObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'contexts',
 		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$statusContextObject)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$statusContextObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'state',
 			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$statusStates)),
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Status)));
-var author$project$GitHubGraph$commitObject = A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$statusStates)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Status)));
+var author$project$GitHub$commitObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'committedDate',
 		_List_Nil,
-		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'authoredDate',
 			_List_Nil,
-			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 				'committer',
 				_List_Nil,
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$gitActorObject)),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$gitActorObject)),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 					'author',
 					_List_Nil,
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$gitActorObject)),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$gitActorObject)),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 						'status',
 						_List_Nil,
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$statusObject)),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$statusObject)),
 					A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'oid', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$Commit)))))));
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Commit)))))));
 var elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -9535,13 +9508,13 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var author$project$GitHubGraph$prObject = A2(
+var author$project$GitHub$prObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 		'mergeCommit',
 		_List_Nil,
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$commitObject)),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$commitObject)),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
@@ -9563,21 +9536,21 @@ var author$project$GitHubGraph$prObject = A2(
 						_List_Nil,
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'commit', _List_Nil, author$project$GitHubGraph$commitObject))))))),
+								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'commit', _List_Nil, author$project$GitHub$commitObject))))))),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 				'mergeable',
 				_List_Nil,
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$mergeableStates)),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$mergeableStates)),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 					'milestone',
 					_List_Nil,
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHubGraph$milestoneObject)),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(author$project$GitHub$milestoneObject)),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'deletions', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
@@ -9600,7 +9573,7 @@ var author$project$GitHubGraph$prObject = A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 										'nodes',
 										_List_Nil,
-										author$project$GitHubGraph$nullableList(author$project$GitHubGraph$projectCardObject)))),
+										author$project$GitHub$nullableList(author$project$GitHub$projectCardObject)))),
 							A2(
 								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 								A3(
@@ -9617,13 +9590,13 @@ var author$project$GitHubGraph$prObject = A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 											'nodes',
 											_List_Nil,
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHubGraph$labelObject)))),
+											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHubGraph$authorObject),
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
 									A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHubGraph$nonZeroReactionGroups),
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 										A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 											A3(
@@ -9640,7 +9613,7 @@ var author$project$GitHubGraph$prObject = A2(
 													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHubGraph$repoLocationObject),
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 														A2(
 															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 															A2(
@@ -9650,44 +9623,44 @@ var author$project$GitHubGraph$prObject = A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 																	'state',
 																	_List_Nil,
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHubGraph$pullRequestStates))),
+																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestStates))),
 															A2(
 																jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																A3(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 																	'updatedAt',
 																	_List_Nil,
-																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																	A3(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 																		'createdAt',
 																		_List_Nil,
-																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHubGraph$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																	A2(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 																		A2(
 																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$PullRequest))))))))))))))))))));
-var author$project$GitHubGraph$projectColumnCardObject = function () {
+																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest))))))))))))))))))));
+var author$project$GitHub$projectColumnCardObject = function () {
 	var content = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 			elm$core$Maybe$Just(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('PullRequest')),
-			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHubGraph$PullRequestCardContent, author$project$GitHubGraph$prObject)),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$PullRequestCardContent, author$project$GitHub$prObject)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 				elm$core$Maybe$Just(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Issue')),
-				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHubGraph$IssueCardContent, author$project$GitHubGraph$issueObject)),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$pickEnum2)));
+				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$IssueCardContent, author$project$GitHub$issueObject)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$pickEnum2)));
 	return A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
@@ -9704,7 +9677,7 @@ var author$project$GitHubGraph$projectColumnCardObject = function () {
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHubGraph$ProjectColumnCard)))));
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumnCard)))));
 }();
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation = function (a) {
 	return {$: 'Operation', a: a};
@@ -10203,7 +10176,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required = F3(
 			typeRef,
 			A2(elm$core$Basics$composeR, extract, convert));
 	});
-var author$project$GitHubGraph$addCardMutation = function () {
+var author$project$GitHub$addCardMutation = function () {
 	var contentIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'contentId',
@@ -10244,9 +10217,9 @@ var author$project$GitHubGraph$addCardMutation = function () {
 						'cardEdge',
 						_List_Nil,
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, author$project$GitHubGraph$projectColumnCardObject)))))));
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, author$project$GitHub$projectColumnCardObject)))))));
 }();
-var author$project$GitHubGraph$auth = function (token) {
+var author$project$GitHub$auth = function (token) {
 	return (token === '') ? _List_Nil : _List_fromArray(
 		[
 			_Utils_Tuple2('Authorization', 'token ' + token)
@@ -10257,7 +10230,7 @@ var elm$http$Http$Internal$Header = F2(
 		return {$: 'Header', a: a, b: b};
 	});
 var elm$http$Http$header = elm$http$Http$Internal$Header;
-var author$project$GitHubGraph$authHeaders = A2(
+var author$project$GitHub$authHeaders = A2(
 	elm$core$Basics$composeL,
 	elm$core$List$map(
 		function (_n0) {
@@ -10265,10 +10238,10 @@ var author$project$GitHubGraph$authHeaders = A2(
 			var b = _n0.b;
 			return A2(elm$http$Http$header, a, b);
 		}),
-	author$project$GitHubGraph$auth);
-var author$project$GitHubGraph$authedOptions = function (token) {
+	author$project$GitHub$auth);
+var author$project$GitHub$authedOptions = function (token) {
 	return {
-		headers: author$project$GitHubGraph$authHeaders(token),
+		headers: author$project$GitHub$authHeaders(token),
 		method: 'POST',
 		timeout: elm$core$Maybe$Nothing,
 		url: 'https://api.github.com/graphql',
@@ -10585,15 +10558,15 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request = F2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$documentVariables(doc))
 			});
 	});
-var author$project$GitHubGraph$addContentCard = F3(
+var author$project$GitHub$addContentCard = F3(
 	function (token, columnID, contentID) {
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
-			author$project$GitHubGraph$authedOptions(token),
+			author$project$GitHub$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
 				{columnId: columnID, contentId: contentID},
-				author$project$GitHubGraph$addCardMutation));
+				author$project$GitHub$addCardMutation));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_n0) {
@@ -10615,7 +10588,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable = functi
 			elm$core$Maybe$map(convert),
 			elm$core$Maybe$withDefault(jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue)));
 };
-var author$project$GitHubGraph$moveCardMutation = function () {
+var author$project$GitHub$moveCardMutation = function () {
 	var columnIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'columnId',
@@ -10666,27 +10639,27 @@ var author$project$GitHubGraph$moveCardMutation = function () {
 						'cardEdge',
 						_List_Nil,
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, author$project$GitHubGraph$projectColumnCardObject)))))));
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, author$project$GitHub$projectColumnCardObject)))))));
 }();
-var author$project$GitHubGraph$moveCardAfter = F4(
+var author$project$GitHub$moveCardAfter = F4(
 	function (token, columnID, cardID, mafterID) {
 		return A2(
 			jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
-			author$project$GitHubGraph$authedOptions(token),
+			author$project$GitHub$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
 				{afterId: mafterID, cardId: cardID, columnId: columnID},
-				author$project$GitHubGraph$moveCardMutation));
+				author$project$GitHub$moveCardMutation));
 	});
-var author$project$GitHubGraph$addContentCardAfter = F4(
+var author$project$GitHub$addContentCardAfter = F4(
 	function (token, columnID, contentID, mafterID) {
 		return A2(
 			elm$core$Task$andThen,
 			function (_n0) {
 				var id = _n0.id;
-				return A4(author$project$GitHubGraph$moveCardAfter, token, columnID, id, mafterID);
+				return A4(author$project$GitHub$moveCardAfter, token, columnID, id, mafterID);
 			},
-			A3(author$project$GitHubGraph$addContentCard, token, columnID, contentID));
+			A3(author$project$GitHub$addContentCard, token, columnID, contentID));
 	});
 var author$project$Main$CardMoved = F2(
 	function (a, b) {
@@ -10737,12 +10710,12 @@ var author$project$Main$addCard = F3(
 				return A2(
 					elm$core$Task$attempt,
 					author$project$Main$CardMoved(columnId),
-					A4(author$project$GitHubGraph$moveCardAfter, token, columnId, cardId, afterId));
+					A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
 			} else {
 				return A2(
 					elm$core$Task$attempt,
 					author$project$Main$CardMoved(columnId),
-					A4(author$project$GitHubGraph$addContentCardAfter, token, columnId, contentId, afterId));
+					A4(author$project$GitHub$addContentCardAfter, token, columnId, contentId, afterId));
 			}
 		} else {
 			return elm$core$Platform$Cmd$none;
@@ -10776,7 +10749,7 @@ var lukewestby$elm_http_builder$HttpBuilder$withJsonBody = function (value) {
 	return lukewestby$elm_http_builder$HttpBuilder$withBody(
 		elm$http$Http$jsonBody(value));
 };
-var author$project$GitHubGraph$addIssueLabels = F3(
+var author$project$GitHub$addIssueLabels = F3(
 	function (token, issue, names) {
 		return A2(
 			elm$core$Task$mapError,
@@ -10787,7 +10760,7 @@ var author$project$GitHubGraph$addIssueLabels = F3(
 					A2(elm$json$Json$Encode$list, elm$json$Json$Encode$string, names),
 					A2(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
+						author$project$GitHub$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$post(
 							'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + '/labels'))))))))));
 	});
@@ -10804,12 +10777,12 @@ var author$project$Main$addIssueLabels = F3(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
 					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHubGraph$addIssueLabels, token, issue, labels));
+				A3(author$project$GitHub$addIssueLabels, token, issue, labels));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
 	});
-var author$project$GitHubGraph$addPullRequestLabels = F3(
+var author$project$GitHub$addPullRequestLabels = F3(
 	function (token, issue, names) {
 		return A2(
 			elm$core$Task$mapError,
@@ -10820,7 +10793,7 @@ var author$project$GitHubGraph$addPullRequestLabels = F3(
 					A2(elm$json$Json$Encode$list, elm$json$Json$Encode$string, names),
 					A2(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
+						author$project$GitHub$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$post(
 							'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + '/labels'))))))))));
 	});
@@ -10833,7 +10806,7 @@ var author$project$Main$addPullRequestLabels = F3(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
 					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHubGraph$addPullRequestLabels, token, pr, labels));
+				A3(author$project$GitHub$addPullRequestLabels, token, pr, labels));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -11002,12 +10975,12 @@ var author$project$Main$computeColorIsLight = function (hex) {
 var author$project$Card$isOpenPR = function (card) {
 	return _Utils_eq(
 		card.state,
-		author$project$Card$PullRequestState(author$project$GitHubGraph$PullRequestStateOpen));
+		author$project$Card$PullRequestState(author$project$GitHub$PullRequestStateOpen));
 };
 var author$project$Card$isMerged = function (card) {
 	return _Utils_eq(
 		card.state,
-		author$project$Card$PullRequestState(author$project$GitHubGraph$PullRequestStateMerged));
+		author$project$Card$PullRequestState(author$project$GitHub$PullRequestStateMerged));
 };
 var elm$core$List$member = F2(
 	function (x, xs) {
@@ -11085,7 +11058,7 @@ var author$project$Main$computeReleaseRepos = function (model) {
 								elm$core$List$filter,
 								A2(
 									elm$core$Basics$composeL,
-									elm$core$Basics$eq(author$project$GitHubGraph$MilestoneStateOpen),
+									elm$core$Basics$eq(author$project$GitHub$MilestoneStateOpen),
 									function ($) {
 										return $.state;
 									}),
@@ -11771,7 +11744,7 @@ var author$project$Main$computeDataView = function (origModel) {
 			return model;
 	}
 };
-var author$project$GitHubGraph$encodeLabelPatch = F2(
+var author$project$GitHub$encodeLabelPatch = F2(
 	function (name, color) {
 		return elm$json$Json$Encode$object(
 			_List_fromArray(
@@ -11784,7 +11757,7 @@ var author$project$GitHubGraph$encodeLabelPatch = F2(
 					elm$json$Json$Encode$string(color))
 				]));
 	});
-var author$project$GitHubGraph$createRepoLabel = F4(
+var author$project$GitHub$createRepoLabel = F4(
 	function (token, repo, name, color) {
 		return A2(
 			elm$core$Task$mapError,
@@ -11792,10 +11765,10 @@ var author$project$GitHubGraph$createRepoLabel = F4(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
+					A2(author$project$GitHub$encodeLabelPatch, name, color),
 					A2(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
+						author$project$GitHub$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$post('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + '/labels'))))))));
 	});
 var author$project$Main$LabelChanged = F2(
@@ -11810,13 +11783,13 @@ var author$project$Main$createLabel = F3(
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$LabelChanged(repo),
-				A4(author$project$GitHubGraph$createRepoLabel, token, repo, label.name, label.color));
+				A4(author$project$GitHub$createRepoLabel, token, repo, label.name, label.color));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
 	});
 var lukewestby$elm_http_builder$HttpBuilder$delete = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('DELETE');
-var author$project$GitHubGraph$deleteRepoLabel = F3(
+var author$project$GitHub$deleteRepoLabel = F3(
 	function (token, repo, name) {
 		return A2(
 			elm$core$Task$mapError,
@@ -11824,7 +11797,7 @@ var author$project$GitHubGraph$deleteRepoLabel = F3(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
+					author$project$GitHub$auth(token),
 					lukewestby$elm_http_builder$HttpBuilder$delete('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + name))))))));
 	});
 var author$project$Main$deleteLabel = F3(
@@ -11835,7 +11808,7 @@ var author$project$Main$deleteLabel = F3(
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$LabelChanged(repo),
-				A3(author$project$GitHubGraph$deleteRepoLabel, token, repo, label.name));
+				A3(author$project$GitHub$deleteRepoLabel, token, repo, label.name));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -11990,7 +11963,7 @@ var author$project$Backend$ComparisonEvent = F2(
 	});
 var author$project$Backend$decodeComparisonEvent = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'comparison', author$project$GitHubGraph$decodeV3Comparison),
+	A2(elm$json$Json$Decode$field, 'comparison', author$project$GitHub$decodeV3Comparison),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'repoId', elm$json$Json$Decode$string),
@@ -12004,7 +11977,7 @@ var author$project$Backend$decodeReviewersEvent = A2(
 	A2(
 		elm$json$Json$Decode$field,
 		'reviewers',
-		elm$json$Json$Decode$list(author$project$GitHubGraph$decodePullRequestReview)),
+		elm$json$Json$Decode$list(author$project$GitHub$decodePullRequestReview)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'cardId', elm$json$Json$Decode$string),
@@ -12047,7 +12020,7 @@ var author$project$Main$handleEvent = F4(
 			case 'repo':
 				return A2(
 					withDecoded,
-					author$project$GitHubGraph$decodeRepo,
+					author$project$GitHub$decodeRepo,
 					function (val) {
 						var allLabels = A2(author$project$Main$loadLabels, val.labels, model.allLabels);
 						var colorLightnessCache = A3(
@@ -12074,7 +12047,7 @@ var author$project$Main$handleEvent = F4(
 			case 'project':
 				return A2(
 					withDecoded,
-					author$project$GitHubGraph$decodeProject,
+					author$project$GitHub$decodeProject,
 					function (val) {
 						return _Utils_update(
 							model,
@@ -12107,7 +12080,7 @@ var author$project$Main$handleEvent = F4(
 			case 'issue':
 				return A2(
 					withDecoded,
-					author$project$GitHubGraph$decodeIssue,
+					author$project$GitHub$decodeIssue,
 					function (val) {
 						return _Utils_update(
 							model,
@@ -12122,7 +12095,7 @@ var author$project$Main$handleEvent = F4(
 			case 'pr':
 				return A2(
 					withDecoded,
-					author$project$GitHubGraph$decodePullRequest,
+					author$project$GitHub$decodePullRequest,
 					function (val) {
 						return _Utils_update(
 							model,
@@ -12194,7 +12167,7 @@ var author$project$Main$moveCard = F3(
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$CardMoved(columnId),
-				A4(author$project$GitHubGraph$moveCardAfter, token, columnId, cardId, afterId));
+				A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -12218,7 +12191,7 @@ var author$project$Main$randomizeColor = function (label) {
 		label,
 		{color: randomHex});
 };
-var author$project$GitHubGraph$removeIssueLabel = F3(
+var author$project$GitHub$removeIssueLabel = F3(
 	function (token, issue, name) {
 		return A2(
 			elm$core$Task$mapError,
@@ -12226,7 +12199,7 @@ var author$project$GitHubGraph$removeIssueLabel = F3(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
+					author$project$GitHub$auth(token),
 					lukewestby$elm_http_builder$HttpBuilder$delete(
 						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
 	});
@@ -12239,12 +12212,12 @@ var author$project$Main$removeIssueLabel = F3(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
 					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHubGraph$removeIssueLabel, token, issue, label));
+				A3(author$project$GitHub$removeIssueLabel, token, issue, label));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
 	});
-var author$project$GitHubGraph$removePullRequestLabel = F3(
+var author$project$GitHub$removePullRequestLabel = F3(
 	function (token, issue, name) {
 		return A2(
 			elm$core$Task$mapError,
@@ -12252,7 +12225,7 @@ var author$project$GitHubGraph$removePullRequestLabel = F3(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					author$project$GitHubGraph$auth(token),
+					author$project$GitHub$auth(token),
 					lukewestby$elm_http_builder$HttpBuilder$delete(
 						'https://api.github.com/repos/' + (issue.repo.owner + ('/' + (issue.repo.name + ('/issues/' + (elm$core$String$fromInt(issue.number) + ('/labels/' + name))))))))));
 	});
@@ -12265,7 +12238,7 @@ var author$project$Main$removePullRequestLabel = F3(
 				elm$core$Task$attempt,
 				author$project$Main$DataChanged(
 					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHubGraph$removePullRequestLabel, token, pr, label));
+				A3(author$project$GitHub$removePullRequestLabel, token, pr, label));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -12479,7 +12452,7 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			elm$url$Url$Parser$s('logout'))
 		]));
 var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
-var author$project$GitHubGraph$updateRepoLabel = F5(
+var author$project$GitHub$updateRepoLabel = F5(
 	function (token, repo, label, name, color) {
 		return A2(
 			elm$core$Task$mapError,
@@ -12487,10 +12460,10 @@ var author$project$GitHubGraph$updateRepoLabel = F5(
 			lukewestby$elm_http_builder$HttpBuilder$toTask(
 				A2(
 					lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2(author$project$GitHubGraph$encodeLabelPatch, name, color),
+					A2(author$project$GitHub$encodeLabelPatch, name, color),
 					A2(
 						lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						author$project$GitHubGraph$auth(token),
+						author$project$GitHub$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$patch('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + label.name)))))))));
 	});
 var author$project$Main$updateLabel = F4(
@@ -12501,7 +12474,7 @@ var author$project$Main$updateLabel = F4(
 			return A2(
 				elm$core$Task$attempt,
 				author$project$Main$LabelChanged(repo),
-				A5(author$project$GitHubGraph$updateRepoLabel, token, repo, label1, label2.name, label2.color));
+				A5(author$project$GitHub$updateRepoLabel, token, repo, label1, label2.name, label2.color));
 		} else {
 			return elm$core$Platform$Cmd$none;
 		}
@@ -20161,7 +20134,7 @@ var author$project$Main$changesRequested = F2(
 				elm$core$List$any,
 				A2(
 					elm$core$Basics$composeL,
-					elm$core$Basics$eq(author$project$GitHubGraph$PullRequestReviewStateChangesRequested),
+					elm$core$Basics$eq(author$project$GitHub$PullRequestReviewStateChangesRequested),
 					function ($) {
 						return $.state;
 					}),
@@ -20186,7 +20159,7 @@ var author$project$Main$failedChecks = function (card) {
 				elm$core$List$any,
 				A2(
 					elm$core$Basics$composeL,
-					elm$core$Basics$eq(author$project$GitHubGraph$StatusStateFailure),
+					elm$core$Basics$eq(author$project$GitHub$StatusStateFailure),
 					function ($) {
 						return $.state;
 					}),

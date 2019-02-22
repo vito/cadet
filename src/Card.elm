@@ -16,27 +16,27 @@ module Card exposing
     , isUntriaged
     )
 
-import GitHubGraph
+import GitHub
 import Project
 import Time
 
 
 type alias Card =
-    { id : GitHubGraph.ID
-    , content : GitHubGraph.CardContent
+    { id : GitHub.ID
+    , content : GitHub.CardContent
     , url : String
-    , repo : GitHubGraph.RepoLocation
+    , repo : GitHub.RepoLocation
     , number : Int
     , title : String
     , updatedAt : Time.Posix
-    , author : Maybe GitHubGraph.User
-    , labels : List GitHubGraph.ID
-    , cards : List GitHubGraph.CardLocation
+    , author : Maybe GitHub.User
+    , labels : List GitHub.ID
+    , cards : List GitHub.CardLocation
     , commentCount : Int
-    , reactions : GitHubGraph.Reactions
+    , reactions : GitHub.Reactions
     , score : Int
     , state : State
-    , milestone : Maybe GitHubGraph.Milestone
+    , milestone : Maybe GitHub.Milestone
     , processState : ProcessState
     }
 
@@ -51,14 +51,14 @@ type alias ProcessState =
 
 
 type State
-    = IssueState GitHubGraph.IssueState
-    | PullRequestState GitHubGraph.PullRequestState
+    = IssueState GitHub.IssueState
+    | PullRequestState GitHub.PullRequestState
 
 
-fromIssue : GitHubGraph.Issue -> Card
+fromIssue : GitHub.Issue -> Card
 fromIssue ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
-    , content = GitHubGraph.IssueCardContent issue
+    , content = GitHub.IssueCardContent issue
     , url = url
     , repo = repo
     , number = number
@@ -69,17 +69,17 @@ fromIssue ({ id, url, repo, number, title, updatedAt, author, labels, cards, com
     , cards = cards
     , commentCount = commentCount
     , reactions = reactions
-    , score = GitHubGraph.issueScore issue
+    , score = GitHub.issueScore issue
     , state = IssueState state
     , milestone = milestone
     , processState = cardProcessState { cards = cards, labels = labels }
     }
 
 
-fromPR : GitHubGraph.PullRequest -> Card
+fromPR : GitHub.PullRequest -> Card
 fromPR ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
     { id = id
-    , content = GitHubGraph.PullRequestCardContent pr
+    , content = GitHub.PullRequestCardContent pr
     , url = url
     , repo = repo
     , number = number
@@ -90,7 +90,7 @@ fromPR ({ id, url, repo, number, title, updatedAt, author, labels, cards, commen
     , cards = cards
     , commentCount = commentCount
     , reactions = reactions
-    , score = GitHubGraph.pullRequestScore pr
+    , score = GitHub.pullRequestScore pr
     , state = PullRequestState state
     , milestone = milestone
     , processState = cardProcessState { cards = cards, labels = labels }
@@ -100,10 +100,10 @@ fromPR ({ id, url, repo, number, title, updatedAt, author, labels, cards, commen
 isOpen : Card -> Bool
 isOpen card =
     case card.state of
-        IssueState GitHubGraph.IssueStateOpen ->
+        IssueState GitHub.IssueStateOpen ->
             True
 
-        PullRequestState GitHubGraph.PullRequestStateOpen ->
+        PullRequestState GitHub.PullRequestStateOpen ->
             True
 
         _ ->
@@ -112,7 +112,7 @@ isOpen card =
 
 isOpenPR : Card -> Bool
 isOpenPR card =
-    card.state == PullRequestState GitHubGraph.PullRequestStateOpen
+    card.state == PullRequestState GitHub.PullRequestStateOpen
 
 
 isInFlight : Card -> Bool
@@ -135,7 +135,7 @@ isIcebox card =
     card.processState.inIceboxColumn
 
 
-inColumn : (String -> Bool) -> List GitHubGraph.CardLocation -> Bool
+inColumn : (String -> Bool) -> List GitHub.CardLocation -> Bool
 inColumn match =
     List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column)
 
@@ -157,10 +157,10 @@ isUntriaged card =
 
 isMerged : Card -> Bool
 isMerged card =
-    card.state == PullRequestState GitHubGraph.PullRequestStateMerged
+    card.state == PullRequestState GitHub.PullRequestStateMerged
 
 
-cardProcessState : { cards : List GitHubGraph.CardLocation, labels : List GitHubGraph.Label } -> ProcessState
+cardProcessState : { cards : List GitHub.CardLocation, labels : List GitHub.Label } -> ProcessState
 cardProcessState { cards, labels } =
     { inIceboxColumn = inColumn Project.detectColumn.icebox cards
     , inInFlightColumn = inColumn Project.detectColumn.inFlight cards

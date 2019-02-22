@@ -4,7 +4,7 @@ import Backend
 import Card exposing (Card)
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
-import GitHubGraph
+import GitHub
 import Hash
 import IntDict exposing (IntDict)
 import Json.Decode as JD
@@ -38,28 +38,28 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
-port setComparison : ( GitHubGraph.ID, JD.Value ) -> Cmd msg
+port setComparison : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
-port setReferences : ( GitHubGraph.ID, List GitHubGraph.ID ) -> Cmd msg
+port setReferences : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
 
 
-port setActors : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+port setActors : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
-port setReviewers : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+port setReviewers : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
-port setCards : ( GitHubGraph.ID, List JD.Value ) -> Cmd msg
+port setCards : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
 port setGraphs : JD.Value -> Cmd msg
 
 
-port refresh : (( String, GitHubGraph.ID ) -> msg) -> Sub msg
+port refresh : (( String, GitHub.ID ) -> msg) -> Sub msg
 
 
-port refreshGraph : (( List GitHubGraph.ID, List ( GitHubGraph.ID, List GitHubGraph.ID ) ) -> msg) -> Sub msg
+port refreshGraph : (( List GitHub.ID, List ( GitHub.ID, List GitHub.ID ) ) -> msg) -> Sub msg
 
 
 port hook : (( String, JD.Value ) -> msg) -> Sub msg
@@ -89,8 +89,8 @@ type alias Model =
     , noRefresh : Bool
     , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
-    , projects : List GitHubGraph.Project
-    , commitPRs : Dict String GitHubGraph.ID
+    , projects : List GitHub.Project
+    , commitPRs : Dict String GitHub.ID
     }
 
 
@@ -99,22 +99,22 @@ type Msg
     | Refresh
     | PopQueue
     | RetryQueue
-    | RefreshRequested String GitHubGraph.ID
-    | GraphRefreshRequested (List GitHubGraph.ID) (List ( GitHubGraph.ID, List GitHubGraph.ID ))
+    | RefreshRequested String GitHub.ID
+    | GraphRefreshRequested (List GitHub.ID) (List ( GitHub.ID, List GitHub.ID ))
     | HookReceived String JD.Value
-    | RepositoriesFetched (Result GitHubGraph.Error (List GitHubGraph.Repo))
-    | RepositoryFetched (GitHubGraph.Repo -> Msg) (Result GitHubGraph.Error GitHubGraph.Repo)
-    | ProjectsFetched (List GitHubGraph.Project -> Msg) (Result GitHubGraph.Error (List GitHubGraph.Project))
-    | FetchCards (List GitHubGraph.Project)
-    | CardsFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.ProjectColumnCard))
-    | IssuesPageFetched (GitHubGraph.PagedSelector GitHubGraph.RepoSelector) (Result GitHubGraph.Error ( List GitHubGraph.Issue, GitHubGraph.PageInfo ))
-    | IssueFetched (Result GitHubGraph.Error GitHubGraph.Issue)
-    | PullRequestsPageFetched (GitHubGraph.PagedSelector GitHubGraph.RepoSelector) (Result GitHubGraph.Error ( List GitHubGraph.PullRequest, GitHubGraph.PageInfo ))
-    | FetchComparison GitHubGraph.Repo
-    | ComparisonFetched GitHubGraph.Repo (Result GitHubGraph.Error GitHubGraph.V3Comparison)
-    | PullRequestFetched (Result GitHubGraph.Error GitHubGraph.PullRequest)
-    | IssueTimelineFetched GitHubGraph.ID (Result GitHubGraph.Error (List GitHubGraph.TimelineEvent))
-    | PullRequestTimelineAndReviewsFetched GitHubGraph.ID (Result GitHubGraph.Error ( List GitHubGraph.TimelineEvent, List GitHubGraph.PullRequestReview ))
+    | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
+    | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
+    | ProjectsFetched (List GitHub.Project -> Msg) (Result GitHub.Error (List GitHub.Project))
+    | FetchCards (List GitHub.Project)
+    | CardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
+    | IssuesPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.Issue, GitHub.PageInfo ))
+    | IssueFetched (Result GitHub.Error GitHub.Issue)
+    | PullRequestsPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.PullRequest, GitHub.PageInfo ))
+    | FetchComparison GitHub.Repo
+    | ComparisonFetched GitHub.Repo (Result GitHub.Error GitHub.V3Comparison)
+    | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
+    | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
+    | PullRequestTimelineAndReviewsFetched GitHub.ID (Result GitHub.Error ( List GitHub.TimelineEvent, List GitHub.PullRequestReview ))
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -300,7 +300,7 @@ update msg model =
                         ]
                 in
                 ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
-                , setRepos (List.map GitHubGraph.encodeRepo activeRepos)
+                , setRepos (List.map GitHub.encodeRepo activeRepos)
                 )
 
         RepositoriesFetched (Err err) ->
@@ -313,7 +313,7 @@ update msg model =
                     ( next, cmd ) =
                         update (nextMsg repo) model
                 in
-                ( next, Cmd.batch [ cmd, setRepo (GitHubGraph.encodeRepo repo) ] )
+                ( next, Cmd.batch [ cmd, setRepo (GitHub.encodeRepo repo) ] )
 
         RepositoryFetched nextMsg (Err err) ->
             Log.debug "failed to fetch repo" err <|
@@ -328,7 +328,7 @@ update msg model =
                 ( next
                 , Cmd.batch
                     [ cmd
-                    , setProjects (List.map GitHubGraph.encodeProject projects)
+                    , setProjects (List.map GitHub.encodeProject projects)
                     ]
                 )
 
@@ -342,7 +342,7 @@ update msg model =
         CardsFetched colId (Ok cards) ->
             Log.debug "cards fetched for" colId <|
                 ( model
-                , setCards ( colId, List.map GitHubGraph.encodeProjectColumnCard cards )
+                , setCards ( colId, List.map GitHub.encodeProjectColumnCard cards )
                 )
 
         CardsFetched colId (Err err) ->
@@ -353,7 +353,7 @@ update msg model =
             let
                 fetchTimelines =
                     issues
-                        |> List.filter (.state >> (==) GitHubGraph.IssueStateOpen)
+                        |> List.filter (.state >> (==) GitHub.IssueStateOpen)
                         |> List.map (fetchIssueTimeline model << .id)
 
                 fetchNext =
@@ -365,7 +365,7 @@ update msg model =
             in
             Log.debug "issues fetched for" psel <|
                 ( { model | loadQueue = fetchNext :: model.loadQueue ++ fetchTimelines }
-                , setIssues (List.map GitHubGraph.encodeIssue issues)
+                , setIssues (List.map GitHub.encodeIssue issues)
                 )
 
         IssuesPageFetched psel (Err err) ->
@@ -375,7 +375,7 @@ update msg model =
         IssueFetched (Ok issue) ->
             Log.debug "issue fetched" issue.url <|
                 ( { model | loadQueue = model.loadQueue ++ [ fetchIssueTimeline model issue.id ] }
-                , setIssue (GitHubGraph.encodeIssue issue)
+                , setIssue (GitHub.encodeIssue issue)
                 )
 
         IssueFetched (Err err) ->
@@ -385,7 +385,7 @@ update msg model =
         PullRequestsPageFetched psel (Ok ( prs, pageInfo )) ->
             let
                 openPRs =
-                    List.filter (.state >> (==) GitHubGraph.PullRequestStateOpen) prs
+                    List.filter (.state >> (==) GitHub.PullRequestStateOpen) prs
 
                 fetchTimelines =
                     List.map (fetchPRTimelineAndReviews model << .id) openPRs
@@ -412,7 +412,7 @@ update msg model =
             in
             Log.debug "prs fetched for" psel <|
                 ( { model | commitPRs = commitPRs, loadQueue = fetchNext :: model.loadQueue ++ fetchTimelines }
-                , setPullRequests (List.map GitHubGraph.encodePullRequest prs)
+                , setPullRequests (List.map GitHub.encodePullRequest prs)
                 )
 
         PullRequestsPageFetched psel (Err err) ->
@@ -429,7 +429,7 @@ update msg model =
         ComparisonFetched repo (Ok comparison) ->
             Log.debug "comparison fetched for" repo.url <|
                 ( model
-                , setComparison ( repo.id, GitHubGraph.encodeV3Comparison comparison )
+                , setComparison ( repo.id, GitHub.encodeV3Comparison comparison )
                 )
 
         PullRequestFetched (Ok pr) ->
@@ -444,7 +444,7 @@ update msg model =
                                 model.commitPRs
                     , loadQueue = model.loadQueue ++ [ fetchPRTimelineAndReviews model pr.id ]
                   }
-                , setPullRequest (GitHubGraph.encodePullRequest pr)
+                , setPullRequest (GitHub.encodePullRequest pr)
                 )
 
         PullRequestFetched (Err err) ->
@@ -455,7 +455,7 @@ update msg model =
             let
                 findSource event =
                     case event of
-                        GitHubGraph.CrossReferencedEvent eid ->
+                        GitHub.CrossReferencedEvent eid ->
                             Just eid
 
                         _ ->
@@ -483,7 +483,7 @@ update msg model =
             let
                 findSource event =
                     case event of
-                        GitHubGraph.CrossReferencedEvent eid ->
+                        GitHub.CrossReferencedEvent eid ->
                             Just eid
 
                         _ ->
@@ -509,25 +509,25 @@ update msg model =
                     List.foldl
                         (\r ->
                             case r.state of
-                                GitHubGraph.PullRequestReviewStatePending ->
+                                GitHub.PullRequestReviewStatePending ->
                                     Dict.insert r.author.id r
 
-                                GitHubGraph.PullRequestReviewStateCommented ->
+                                GitHub.PullRequestReviewStateCommented ->
                                     identity
 
-                                GitHubGraph.PullRequestReviewStateApproved ->
+                                GitHub.PullRequestReviewStateApproved ->
                                     Dict.insert r.author.id r
 
-                                GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                GitHub.PullRequestReviewStateChangesRequested ->
                                     Dict.insert r.author.id r
 
-                                GitHubGraph.PullRequestReviewStateDismissed ->
+                                GitHub.PullRequestReviewStateDismissed ->
                                     Dict.remove r.author.id
                         )
                         Dict.empty
                         reviews
                         |> Dict.values
-                        |> List.map GitHubGraph.encodePullRequestReview
+                        |> List.map GitHub.encodePullRequestReview
             in
             Log.debug "timeline and reviews fetched for" id <|
                 ( model
@@ -556,39 +556,39 @@ backOff model cmd =
 fetchRepos : Model -> Cmd Msg
 fetchRepos model =
     Task.attempt RepositoriesFetched <|
-        GitHubGraph.fetchOrgRepos model.githubToken { name = model.githubOrg }
+        GitHub.fetchOrgRepos model.githubToken { name = model.githubOrg }
 
 
-fetchProjects : Model -> (List GitHubGraph.Project -> Msg) -> Cmd Msg
+fetchProjects : Model -> (List GitHub.Project -> Msg) -> Cmd Msg
 fetchProjects model nextMsg =
     Task.attempt (ProjectsFetched nextMsg) <|
-        GitHubGraph.fetchOrgProjects model.githubToken { name = model.githubOrg }
+        GitHub.fetchOrgProjects model.githubToken { name = model.githubOrg }
 
 
-fetchCards : Model -> GitHubGraph.ID -> Cmd Msg
+fetchCards : Model -> GitHub.ID -> Cmd Msg
 fetchCards model colId =
     Task.attempt (CardsFetched colId) <|
-        GitHubGraph.fetchProjectColumnCards model.githubToken { id = colId }
+        GitHub.fetchProjectColumnCards model.githubToken { id = colId }
 
 
-fetchIssuesPage : Model -> GitHubGraph.PagedSelector GitHubGraph.RepoSelector -> Cmd Msg
+fetchIssuesPage : Model -> GitHub.PagedSelector GitHub.RepoSelector -> Cmd Msg
 fetchIssuesPage model psel =
-    GitHubGraph.fetchRepoIssuesPage model.githubToken psel (IssuesPageFetched psel)
+    GitHub.fetchRepoIssuesPage model.githubToken psel (IssuesPageFetched psel)
 
 
-fetchRepoIssue : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchRepoIssue : Model -> GitHub.IssueOrPRSelector -> Cmd Msg
 fetchRepoIssue model sel =
-    GitHubGraph.fetchRepoIssue model.githubToken sel
+    GitHub.fetchRepoIssue model.githubToken sel
         |> Task.attempt IssueFetched
 
 
-fetchIssue : Model -> GitHubGraph.ID -> Cmd Msg
+fetchIssue : Model -> GitHub.ID -> Cmd Msg
 fetchIssue model id =
-    GitHubGraph.fetchIssue model.githubToken id
+    GitHub.fetchIssue model.githubToken id
         |> Task.attempt IssueFetched
 
 
-fetchRepoIssueOrPR : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchRepoIssueOrPR : Model -> GitHub.IssueOrPRSelector -> Cmd Msg
 fetchRepoIssueOrPR model sel =
     Cmd.batch
         [ fetchRepoIssue model sel
@@ -596,12 +596,12 @@ fetchRepoIssueOrPR model sel =
         ]
 
 
-fetchPullRequestsPage : Model -> GitHubGraph.PagedSelector GitHubGraph.RepoSelector -> Cmd Msg
+fetchPullRequestsPage : Model -> GitHub.PagedSelector GitHub.RepoSelector -> Cmd Msg
 fetchPullRequestsPage model psel =
-    GitHubGraph.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
+    GitHub.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
 
 
-fetchComparison : Model -> GitHubGraph.Repo -> Cmd Msg
+fetchComparison : Model -> GitHub.Repo -> Cmd Msg
 fetchComparison model repo =
     let
         findTag releases =
@@ -622,32 +622,32 @@ fetchComparison model repo =
     in
     case mbase of
         Just base ->
-            GitHubGraph.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
+            GitHub.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
                 |> Task.attempt (ComparisonFetched repo)
 
         Nothing ->
             Cmd.none
 
 
-fetchRepoPullRequest : Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg
+fetchRepoPullRequest : Model -> GitHub.IssueOrPRSelector -> Cmd Msg
 fetchRepoPullRequest model sel =
-    GitHubGraph.fetchRepoPullRequest model.githubToken sel
+    GitHub.fetchRepoPullRequest model.githubToken sel
         |> Task.attempt PullRequestFetched
 
 
-fetchPullRequest : Model -> GitHubGraph.ID -> Cmd Msg
+fetchPullRequest : Model -> GitHub.ID -> Cmd Msg
 fetchPullRequest model id =
-    GitHubGraph.fetchPullRequest model.githubToken id
+    GitHub.fetchPullRequest model.githubToken id
         |> Task.attempt PullRequestFetched
 
 
-fetchRepo : Model -> (GitHubGraph.Repo -> Msg) -> GitHubGraph.RepoSelector -> Cmd Msg
+fetchRepo : Model -> (GitHub.Repo -> Msg) -> GitHub.RepoSelector -> Cmd Msg
 fetchRepo model nextMsg sel =
-    GitHubGraph.fetchRepo model.githubToken sel
+    GitHub.fetchRepo model.githubToken sel
         |> Task.attempt (RepositoryFetched nextMsg)
 
 
-decodeAndFetchRepo : (GitHubGraph.Repo -> Msg) -> JD.Value -> Model -> Model
+decodeAndFetchRepo : (GitHub.Repo -> Msg) -> JD.Value -> Model -> Model
 decodeAndFetchRepo nextMsg payload model =
     case JD.decodeValue decodeRepoSelector payload of
         Ok sel ->
@@ -676,7 +676,7 @@ decodeAndFetchPRForCommit payload model =
                 model
 
 
-decodeAndFetchIssueOrPR : String -> JD.Value -> (Model -> GitHubGraph.IssueOrPRSelector -> Cmd Msg) -> Model -> Model
+decodeAndFetchIssueOrPR : String -> JD.Value -> (Model -> GitHub.IssueOrPRSelector -> Cmd Msg) -> Model -> Model
 decodeAndFetchIssueOrPR field payload fetch model =
     case JD.decodeValue (decodeIssueOrPRSelector field) payload of
         Ok sel ->
@@ -687,17 +687,17 @@ decodeAndFetchIssueOrPR field payload fetch model =
                 model
 
 
-fetchIssueTimeline : Model -> GitHubGraph.ID -> Cmd Msg
+fetchIssueTimeline : Model -> GitHub.ID -> Cmd Msg
 fetchIssueTimeline model id =
     if model.skipTimeline then
         Cmd.none
 
     else
-        GitHubGraph.fetchTimeline model.githubToken { id = id }
+        GitHub.fetchTimeline model.githubToken { id = id }
             |> Task.attempt (IssueTimelineFetched id)
 
 
-fetchPRTimelineAndReviews : Model -> GitHubGraph.ID -> Cmd Msg
+fetchPRTimelineAndReviews : Model -> GitHub.ID -> Cmd Msg
 fetchPRTimelineAndReviews model id =
     let
         fetchTimeline =
@@ -705,27 +705,27 @@ fetchPRTimelineAndReviews model id =
                 Task.succeed []
 
             else
-                GitHubGraph.fetchTimeline model.githubToken { id = id }
+                GitHub.fetchTimeline model.githubToken { id = id }
     in
     fetchTimeline
         |> Task.andThen
             (\timeline ->
-                GitHubGraph.fetchPullRequestReviews model.githubToken { id = id }
+                GitHub.fetchPullRequestReviews model.githubToken { id = id }
                     |> Task.map (\b -> ( timeline, b ))
             )
         |> Task.attempt (PullRequestTimelineAndReviewsFetched id)
 
 
-decodeRepoSelector : JD.Decoder GitHubGraph.RepoSelector
+decodeRepoSelector : JD.Decoder GitHub.RepoSelector
 decodeRepoSelector =
-    JD.succeed GitHubGraph.RepoSelector
+    JD.succeed GitHub.RepoSelector
         |> andMap (JD.at [ "repository", "owner", "login" ] JD.string)
         |> andMap (JD.at [ "repository", "name" ] JD.string)
 
 
-decodeIssueOrPRSelector : String -> JD.Decoder GitHubGraph.IssueOrPRSelector
+decodeIssueOrPRSelector : String -> JD.Decoder GitHub.IssueOrPRSelector
 decodeIssueOrPRSelector field =
-    JD.succeed GitHubGraph.IssueOrPRSelector
+    JD.succeed GitHub.IssueOrPRSelector
         |> andMap (JD.at [ "repository", "owner", "login" ] JD.string)
         |> andMap (JD.at [ "repository", "name" ] JD.string)
         |> andMap (JD.at [ field, "number" ] JD.int)
@@ -746,10 +746,10 @@ decodeAffectedColumnIds =
         (JD.maybe <| JD.at [ "changes", "column_id", "from" ] JD.int)
 
 
-eventActor : GitHubGraph.TimelineEvent -> Maybe Backend.EventActor
+eventActor : GitHub.TimelineEvent -> Maybe Backend.EventActor
 eventActor event =
     case event of
-        GitHubGraph.IssueCommentEvent muser date ->
+        GitHub.IssueCommentEvent muser date ->
             case muser of
                 Just user ->
                     Just { user = Just user, avatar = user.avatar, createdAt = date }
@@ -757,7 +757,7 @@ eventActor event =
                 Nothing ->
                     Nothing
 
-        GitHubGraph.CommitEvent commit ->
+        GitHub.CommitEvent commit ->
             case ( commit.author, commit.committer ) of
                 ( Just author, Just committer ) ->
                     case author.user of
@@ -776,7 +776,7 @@ eventActor event =
                 ( Nothing, Nothing ) ->
                     Nothing
 
-        GitHubGraph.CrossReferencedEvent _ ->
+        GitHub.CrossReferencedEvent _ ->
             Nothing
 
 
@@ -796,7 +796,7 @@ cardRadiusBase incomingCount outgoingCount =
         + ((toFloat incomingCount / 2) + toFloat (outgoingCount * 2))
 
 
-computeGraph : List GitHubGraph.ID -> List ( GitHubGraph.ID, List GitHubGraph.ID ) -> List (ForceGraph GitHubGraph.ID)
+computeGraph : List GitHub.ID -> List ( GitHub.ID, List GitHub.ID ) -> List (ForceGraph GitHub.ID)
 computeGraph cardIdStrs references =
     let
         bump n i =

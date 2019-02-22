@@ -9,7 +9,7 @@ import Colors
 import Dict exposing (Dict)
 import Drag
 import ForceGraph exposing (ForceGraph)
-import GitHubGraph
+import GitHub
 import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
@@ -58,20 +58,20 @@ type alias Model =
 
     -- data from backend
     , dataIndex : Int
-    , repos : Dict GitHubGraph.ID GitHubGraph.Repo
-    , projects : Dict GitHubGraph.ID GitHubGraph.Project
-    , columnCards : Dict GitHubGraph.ID (List Backend.ColumnCard)
-    , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
-    , graphs : List (ForceGraph GitHubGraph.ID)
-    , cards : Dict GitHubGraph.ID Card
-    , actors : Dict GitHubGraph.ID (List Backend.EventActor)
-    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+    , repos : Dict GitHub.ID GitHub.Repo
+    , projects : Dict GitHub.ID GitHub.Project
+    , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
+    , comparisons : Dict GitHub.ID GitHub.V3Comparison
+    , graphs : List (ForceGraph GitHub.ID)
+    , cards : Dict GitHub.ID Card
+    , actors : Dict GitHub.ID (List Backend.EventActor)
+    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
 
     -- alternate views into the data, i.e. 'milestone to cards', 'label to repo'
     , dataView : DataView
 
     -- 'views' into data
-    , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
+    , allLabels : Dict GitHub.ID GitHub.Label
     , colorLightnessCache : Dict String Bool
 
     -- card dragging in projects
@@ -79,8 +79,8 @@ type alias Model =
 
     -- sidebar card search/selecting state
     , cardSearch : String
-    , selectedCards : OrderedSet GitHubGraph.ID
-    , anticipatedCards : Set GitHubGraph.ID
+    , selectedCards : OrderedSet GitHub.ID
+    , anticipatedCards : Set GitHub.ID
 
     -- sidebar label operations
     , labelSearch : String
@@ -88,11 +88,11 @@ type alias Model =
     , cardLabelOperations : Dict String CardLabelOperation
 
     -- card/node hover state
-    , highlightedCard : Maybe GitHubGraph.ID
-    , highlightedNode : Maybe GitHubGraph.ID
+    , highlightedCard : Maybe GitHub.ID
+    , highlightedNode : Maybe GitHub.ID
 
     -- card graph state
-    , cardGraphs : List ( CardNodeState, ForceGraph GitHubGraph.ID )
+    , cardGraphs : List ( CardNodeState, ForceGraph GitHub.ID )
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
@@ -112,11 +112,11 @@ type alias Model =
 
 
 type alias ProjectDragRefresh =
-    { contentId : Maybe GitHubGraph.ID
-    , content : Maybe GitHubGraph.CardContent
-    , sourceId : Maybe GitHubGraph.ID
+    { contentId : Maybe GitHub.ID
+    , content : Maybe GitHub.CardContent
+    , sourceId : Maybe GitHub.ID
     , sourceCards : Maybe (List Backend.ColumnCard)
-    , targetId : Maybe GitHubGraph.ID
+    , targetId : Maybe GitHub.ID
     , targetCards : Maybe (List Backend.ColumnCard)
     }
 
@@ -127,17 +127,17 @@ type CardLabelOperation
 
 
 type alias DataView =
-    { reposByLabel : Dict ( String, String ) (List GitHubGraph.Repo)
-    , labelToRepoToId : Dict String (Dict GitHubGraph.ID GitHubGraph.ID)
-    , prsByRepo : Dict String ( GitHubGraph.RepoLocation, List Card )
-    , releaseRepos : Dict GitHubGraph.ID ReleaseRepo
+    { reposByLabel : Dict ( String, String ) (List GitHub.Repo)
+    , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
+    , prsByRepo : Dict String ( GitHub.RepoLocation, List Card )
+    , releaseRepos : Dict GitHub.ID ReleaseRepo
     }
 
 
 type alias ReleaseRepo =
-    { repo : GitHubGraph.Repo
-    , nextMilestone : Maybe GitHubGraph.Milestone
-    , comparison : GitHubGraph.V3Comparison
+    { repo : GitHub.Repo
+    , nextMilestone : Maybe GitHub.Milestone
+    , comparison : GitHub.V3Comparison
     , openPRs : List Card
     , mergedPRs : List Card
     , openIssues : List Card
@@ -180,30 +180,30 @@ type alias SharedLabel =
 
 
 type alias CardNodeState =
-    { allCards : Dict GitHubGraph.ID Card
-    , allLabels : Dict GitHubGraph.ID GitHubGraph.Label
-    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+    { allCards : Dict GitHub.ID Card
+    , allLabels : Dict GitHub.ID GitHub.Label
+    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     , currentTime : Time.Posix
-    , selectedCards : OrderedSet GitHubGraph.ID
-    , anticipatedCards : Set GitHubGraph.ID
-    , filteredCards : Set GitHubGraph.ID
-    , highlightedNode : Maybe GitHubGraph.ID
+    , selectedCards : OrderedSet GitHub.ID
+    , anticipatedCards : Set GitHub.ID
+    , filteredCards : Set GitHub.ID
+    , highlightedNode : Maybe GitHub.ID
     , me : Maybe Me
     , dataIndex : Int
-    , cardEvents : Dict GitHubGraph.ID (List Backend.EventActor)
+    , cardEvents : Dict GitHub.ID (List Backend.EventActor)
     }
 
 
 type alias CardDestination =
-    { projectId : GitHubGraph.ID
-    , columnId : GitHubGraph.ID
-    , afterId : Maybe GitHubGraph.ID
+    { projectId : GitHub.ID
+    , columnId : GitHub.ID
+    , afterId : Maybe GitHub.ID
     }
 
 
 type CardSource
-    = FromColumnCardSource { columnId : GitHubGraph.ID, cardId : GitHubGraph.ID }
-    | NewContentCardSource { contentId : GitHubGraph.ID }
+    = FromColumnCardSource { columnId : GitHub.ID, cardId : GitHub.ID }
+    | NewContentCardSource { contentId : GitHub.ID }
 
 
 type Msg
@@ -213,19 +213,19 @@ type Msg
     | SetCurrentTime Time.Posix
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MoveCardAfter CardSource CardDestination
-    | CardMoved GitHubGraph.ID (Result GitHubGraph.Error GitHubGraph.ProjectColumnCard)
+    | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Me))
     | DataFetched (Result Http.Error (Backend.Indexed Data))
     | EventReceived ( String, String, String )
     | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
-    | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHubGraph.ID))))
-    | SelectCard GitHubGraph.ID
-    | DeselectCard GitHubGraph.ID
-    | HighlightNode GitHubGraph.ID
-    | UnhighlightNode GitHubGraph.ID
-    | AnticipateCardFromNode GitHubGraph.ID
-    | UnanticipateCardFromNode GitHubGraph.ID
+    | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHub.ID))))
+    | SelectCard GitHub.ID
+    | DeselectCard GitHub.ID
+    | HighlightNode GitHub.ID
+    | UnhighlightNode GitHub.ID
+    | AnticipateCardFromNode GitHub.ID
+    | UnanticipateCardFromNode GitHub.ID
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
@@ -242,11 +242,11 @@ type Msg
     | CreateLabel
     | RandomizeNewLabelColor
     | SetNewLabelName String
-    | LabelChanged GitHubGraph.Repo (Result GitHubGraph.Error ())
+    | LabelChanged GitHub.Repo (Result GitHub.Error ())
     | LabelCard Card String
     | UnlabelCard Card String
-    | RefreshIssue GitHubGraph.ID
-    | RefreshPullRequest GitHubGraph.ID
+    | RefreshIssue GitHub.ID
+    | RefreshPullRequest GitHub.ID
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
@@ -256,7 +256,7 @@ type Msg
     | SetLabelOperation String CardLabelOperation
     | UnsetLabelOperation String
     | ApplyLabelOperations
-    | DataChanged (Cmd Msg) (Result GitHubGraph.Error ())
+    | DataChanged (Cmd Msg) (Result GitHub.Error ())
     | SetReleaseRepoTab Int
     | SetRepoPullRequestsTab Int
 
@@ -479,10 +479,10 @@ update msg model =
                             { id = card.id
                             , contentId =
                                 case card.content of
-                                    Just (GitHubGraph.IssueCardContent { id }) ->
+                                    Just (GitHub.IssueCardContent { id }) ->
                                         Just id
 
-                                    Just (GitHubGraph.PullRequestCardContent { id }) ->
+                                    Just (GitHub.PullRequestCardContent { id }) ->
                                         Just id
 
                                     Nothing ->
@@ -532,10 +532,10 @@ update msg model =
                     , Cmd.batch
                         [ Backend.refreshCards targetCol RefreshQueued
                         , case card.content of
-                            Just (GitHubGraph.IssueCardContent issue) ->
+                            Just (GitHub.IssueCardContent issue) ->
                                 Backend.refreshIssue issue.id RefreshQueued
 
-                            Just (GitHubGraph.PullRequestCardContent pr) ->
+                            Just (GitHub.PullRequestCardContent pr) ->
                                 Backend.refreshPR pr.id RefreshQueued
 
                             Nothing ->
@@ -922,18 +922,18 @@ update msg model =
 
         LabelCard card label ->
             case card.content of
-                GitHubGraph.IssueCardContent issue ->
+                GitHub.IssueCardContent issue ->
                     ( model, addIssueLabels model issue [ label ] )
 
-                GitHubGraph.PullRequestCardContent pr ->
+                GitHub.PullRequestCardContent pr ->
                     ( model, addPullRequestLabels model pr [ label ] )
 
         UnlabelCard card label ->
             case card.content of
-                GitHubGraph.IssueCardContent issue ->
+                GitHub.IssueCardContent issue ->
                     ( model, removeIssueLabel model issue label )
 
-                GitHubGraph.PullRequestCardContent pr ->
+                GitHub.PullRequestCardContent pr ->
                     ( model, removePullRequestLabel model pr label )
 
         DataChanged cb (Ok ()) ->
@@ -1008,10 +1008,10 @@ update msg model =
                     List.map
                         (\card ->
                             case card.content of
-                                GitHubGraph.IssueCardContent issue ->
+                                GitHub.IssueCardContent issue ->
                                     addIssueLabels model issue labelsToAdd
 
-                                GitHubGraph.PullRequestCardContent pr ->
+                                GitHub.PullRequestCardContent pr ->
                                     addPullRequestLabels model pr labelsToAdd
                         )
                         cards
@@ -1023,10 +1023,10 @@ update msg model =
                                 (\card ->
                                     if hasLabel model name card then
                                         case card.content of
-                                            GitHubGraph.IssueCardContent issue ->
+                                            GitHub.IssueCardContent issue ->
                                                 Just (removeIssueLabel model issue name)
 
-                                            GitHubGraph.PullRequestCardContent pr ->
+                                            GitHub.PullRequestCardContent pr ->
                                                 Just (removePullRequestLabel model pr name)
 
                                     else
@@ -1209,7 +1209,7 @@ computeReleaseRepos model =
     let
         selectPRsInComparison comparison id card acc =
             case card.content of
-                GitHubGraph.PullRequestCardContent pr ->
+                GitHub.PullRequestCardContent pr ->
                     case pr.mergeCommit of
                         Nothing ->
                             acc
@@ -1248,7 +1248,7 @@ computeReleaseRepos model =
                         let
                             nextMilestone =
                                 repo.milestones
-                                    |> List.filter ((==) GitHubGraph.MilestoneStateOpen << .state)
+                                    |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
                                     |> List.sortBy .number
                                     |> List.head
 
@@ -1281,19 +1281,19 @@ computeReleaseRepos model =
 
                             categorizeByCardState card sir =
                                 case card.state of
-                                    Card.IssueState GitHubGraph.IssueStateOpen ->
+                                    Card.IssueState GitHub.IssueStateOpen ->
                                         { sir | openIssues = card :: sir.openIssues }
 
-                                    Card.IssueState GitHubGraph.IssueStateClosed ->
+                                    Card.IssueState GitHub.IssueStateClosed ->
                                         { sir | closedIssues = card :: sir.closedIssues }
 
-                                    Card.PullRequestState GitHubGraph.PullRequestStateOpen ->
+                                    Card.PullRequestState GitHub.PullRequestStateOpen ->
                                         { sir | openPRs = card :: sir.openPRs }
 
-                                    Card.PullRequestState GitHubGraph.PullRequestStateMerged ->
+                                    Card.PullRequestState GitHub.PullRequestStateMerged ->
                                         { sir | mergedPRs = card :: sir.mergedPRs }
 
-                                    Card.PullRequestState GitHubGraph.PullRequestStateClosed ->
+                                    Card.PullRequestState GitHub.PullRequestStateClosed ->
                                         -- ignored
                                         sir
 
@@ -1523,7 +1523,7 @@ viewSpatialGraph model =
         ]
 
 
-graphId : ForceGraph GitHubGraph.ID -> String
+graphId : ForceGraph GitHub.ID -> String
 graphId graph =
     ForceGraph.fold (\{ id } acc -> max id acc) 0 graph
         |> String.fromInt
@@ -1746,15 +1746,15 @@ viewNavBar model =
 
 
 type alias ProjectState =
-    { project : GitHubGraph.Project
-    , icebox : GitHubGraph.ProjectColumn
-    , backlogs : List GitHubGraph.ProjectColumn
-    , inFlight : GitHubGraph.ProjectColumn
-    , done : GitHubGraph.ProjectColumn
+    { project : GitHub.Project
+    , icebox : GitHub.ProjectColumn
+    , backlogs : List GitHub.ProjectColumn
+    , inFlight : GitHub.ProjectColumn
+    , done : GitHub.ProjectColumn
     }
 
 
-selectStatefulProject : GitHubGraph.Project -> Maybe ProjectState
+selectStatefulProject : GitHub.Project -> Maybe ProjectState
 selectStatefulProject project =
     let
         findColumns match =
@@ -2056,10 +2056,10 @@ type alias CategorizedRepoPRs =
 failedChecks : Card -> Bool
 failedChecks card =
     case card.content of
-        GitHubGraph.PullRequestCardContent { lastCommit } ->
+        GitHub.PullRequestCardContent { lastCommit } ->
             case lastCommit |> Maybe.andThen .status of
                 Just { contexts } ->
-                    List.any ((==) GitHubGraph.StatusStateFailure << .state) contexts
+                    List.any ((==) GitHub.StatusStateFailure << .state) contexts
 
                 Nothing ->
                     False
@@ -2072,7 +2072,7 @@ changesRequested : Model -> Card -> Bool
 changesRequested model card =
     case Dict.get card.id model.reviewers of
         Just reviews ->
-            List.any ((==) GitHubGraph.PullRequestReviewStateChangesRequested << .state) reviews
+            List.any ((==) GitHub.PullRequestReviewStateChangesRequested << .state) reviews
 
         _ ->
             False
@@ -2081,22 +2081,22 @@ changesRequested model card =
 hasMergeConflict : Card -> Bool
 hasMergeConflict card =
     case card.content of
-        GitHubGraph.PullRequestCardContent { mergeable } ->
+        GitHub.PullRequestCardContent { mergeable } ->
             case mergeable of
-                GitHubGraph.MergeableStateMergeable ->
+                GitHub.MergeableStateMergeable ->
                     False
 
-                GitHubGraph.MergeableStateConflicting ->
+                GitHub.MergeableStateConflicting ->
                     True
 
-                GitHubGraph.MergeableStateUnknown ->
+                GitHub.MergeableStateUnknown ->
                     False
 
         _ ->
             False
 
 
-viewRepoPullRequestsPage : Model -> GitHubGraph.RepoLocation -> List Card -> Html Msg
+viewRepoPullRequestsPage : Model -> GitHub.RepoLocation -> List Card -> Html Msg
 viewRepoPullRequestsPage model repo prCards =
     let
         categorizeCard card cat =
@@ -2150,12 +2150,12 @@ viewRepoPullRequestsPage model repo prCards =
         ]
 
 
-matchesLabel : SharedLabel -> GitHubGraph.Label -> Bool
+matchesLabel : SharedLabel -> GitHub.Label -> Bool
 matchesLabel sl l =
     l.name == sl.name && String.toLower l.color == String.toLower sl.color
 
 
-includesLabel : Model -> SharedLabel -> List GitHubGraph.ID -> Bool
+includesLabel : Model -> SharedLabel -> List GitHub.ID -> Bool
 includesLabel model label labelIds =
     List.any
         (\id ->
@@ -2169,7 +2169,7 @@ includesLabel model label labelIds =
         labelIds
 
 
-viewLabelRow : Model -> SharedLabel -> List GitHubGraph.Repo -> Html Msg
+viewLabelRow : Model -> SharedLabel -> List GitHub.Repo -> Html Msg
 viewLabelRow model label repos =
     let
         stateKey =
@@ -2430,7 +2430,7 @@ viewProject model { project, backlogs, inFlight, done } =
         ]
 
 
-viewProjectColumn : Model -> GitHubGraph.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> Html Msg -> GitHubGraph.ProjectColumn -> Html Msg
+viewProjectColumn : Model -> GitHub.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> Html Msg -> GitHub.ProjectColumn -> Html Msg
 viewProjectColumn model project mod icon col =
     let
         cards =
@@ -2463,7 +2463,7 @@ viewProjectColumn model project mod icon col =
         ]
 
 
-viewProjectColumnCard : Model -> GitHubGraph.Project -> GitHubGraph.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
+viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
 viewProjectColumnCard model project col ghCard =
     let
         dragId =
@@ -2689,7 +2689,7 @@ satisfiesFilter model filter card =
             Card.isUntriaged card
 
 
-graphImpactCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
+graphImpactCompare : Model -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
 graphImpactCompare model a b =
     case compare (ForceGraph.size a) (ForceGraph.size b) of
         EQ ->
@@ -2712,7 +2712,7 @@ graphImpactCompare model a b =
             x
 
 
-graphUserActivityCompare : Model -> String -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
+graphUserActivityCompare : Model -> String -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
 graphUserActivityCompare model login a b =
     let
         latestUserActivity =
@@ -2737,7 +2737,7 @@ graphUserActivityCompare model login a b =
     compare (latestUserActivity a) (latestUserActivity b)
 
 
-graphAllActivityCompare : Model -> ForceGraph GitHubGraph.ID -> ForceGraph GitHubGraph.ID -> Order
+graphAllActivityCompare : Model -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
 graphAllActivityCompare model a b =
     let
         latestActivity =
@@ -2768,7 +2768,7 @@ graphAllActivityCompare model a b =
     compare (latestActivity a) (latestActivity b)
 
 
-viewGraph : CardNodeState -> ForceGraph GitHubGraph.ID -> Html Msg
+viewGraph : CardNodeState -> ForceGraph GitHub.ID -> Html Msg
 viewGraph state graph =
     let
         ( flairs, nodes, bounds ) =
@@ -2811,7 +2811,7 @@ viewGraph state graph =
 
 viewNodeLowerUpper :
     CardNodeState
-    -> ForceGraph.ForceNode GitHubGraph.ID
+    -> ForceGraph.ForceNode GitHub.ID
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
 viewNodeLowerUpper state { value, mass, x, y } ( fs, ns, bs ) =
@@ -2886,12 +2886,12 @@ viewCardCircle card radius pos state =
     viewCardNode card radii circle labelArcs pos state
 
 
-isFilteredOut : CardNodeState -> GitHubGraph.ID -> Bool
+isFilteredOut : CardNodeState -> GitHub.ID -> Bool
 isFilteredOut state id =
     not (Set.isEmpty state.filteredCards) && not (Set.member id state.filteredCards)
 
 
-linkPath : CardNodeState -> ForceGraph GitHubGraph.ID -> ( ForceGraph.NodeId, ForceGraph.NodeId ) -> Svg Msg
+linkPath : CardNodeState -> ForceGraph GitHub.ID -> ( ForceGraph.NodeId, ForceGraph.NodeId ) -> Svg Msg
 linkPath state graph ( from, to ) =
     let
         getEnd end =
@@ -2945,33 +2945,33 @@ cardRadiusWithFlair card mass =
     mass + flairRadiusBase + toFloat highestFlair
 
 
-reactionFlairArcs : List GitHubGraph.PullRequestReview -> Card -> Float -> List (Svg Msg)
+reactionFlairArcs : List GitHub.PullRequestReview -> Card -> Float -> List (Svg Msg)
 reactionFlairArcs reviews card radius =
     let
         reactionTypeEmoji type_ =
             case type_ of
-                GitHubGraph.ReactionTypeThumbsUp ->
+                GitHub.ReactionTypeThumbsUp ->
                     "👍"
 
-                GitHubGraph.ReactionTypeThumbsDown ->
+                GitHub.ReactionTypeThumbsDown ->
                     "👎"
 
-                GitHubGraph.ReactionTypeLaugh ->
+                GitHub.ReactionTypeLaugh ->
                     "😄"
 
-                GitHubGraph.ReactionTypeConfused ->
+                GitHub.ReactionTypeConfused ->
                     "😕"
 
-                GitHubGraph.ReactionTypeHeart ->
+                GitHub.ReactionTypeHeart ->
                     "💖"
 
-                GitHubGraph.ReactionTypeHooray ->
+                GitHub.ReactionTypeHooray ->
                     "🎉"
 
-                GitHubGraph.ReactionTypeRocket ->
+                GitHub.ReactionTypeRocket ->
                     "🚀"
 
-                GitHubGraph.ReactionTypeEyes ->
+                GitHub.ReactionTypeEyes ->
                     "👀"
 
         emojiReactions =
@@ -2981,10 +2981,10 @@ reactionFlairArcs reviews card radius =
 
         prSegments =
             case card.content of
-                GitHubGraph.IssueCardContent _ ->
+                GitHub.IssueCardContent _ ->
                     []
 
-                GitHubGraph.PullRequestCardContent pr ->
+                GitHub.PullRequestCardContent pr ->
                     let
                         statusChecks =
                             case Maybe.map .status pr.lastCommit of
@@ -2993,35 +2993,35 @@ reactionFlairArcs reviews card radius =
                                         \c ->
                                             ( Html.span [ HA.class "status-icon" ]
                                                 [ case c.state of
-                                                    GitHubGraph.StatusStatePending ->
+                                                    GitHub.StatusStatePending ->
                                                         Octicons.primitiveDot { octiconOpts | color = Colors.yellow }
 
-                                                    GitHubGraph.StatusStateSuccess ->
+                                                    GitHub.StatusStateSuccess ->
                                                         Octicons.check { octiconOpts | color = Colors.green }
 
-                                                    GitHubGraph.StatusStateFailure ->
+                                                    GitHub.StatusStateFailure ->
                                                         Octicons.x { octiconOpts | color = Colors.red }
 
-                                                    GitHubGraph.StatusStateExpected ->
+                                                    GitHub.StatusStateExpected ->
                                                         Octicons.question { octiconOpts | color = Colors.purple }
 
-                                                    GitHubGraph.StatusStateError ->
+                                                    GitHub.StatusStateError ->
                                                         Octicons.alert { octiconOpts | color = Colors.orange }
                                                 ]
                                             , case c.state of
-                                                GitHubGraph.StatusStatePending ->
+                                                GitHub.StatusStatePending ->
                                                     "pending"
 
-                                                GitHubGraph.StatusStateSuccess ->
+                                                GitHub.StatusStateSuccess ->
                                                     "success"
 
-                                                GitHubGraph.StatusStateFailure ->
+                                                GitHub.StatusStateFailure ->
                                                     "failure"
 
-                                                GitHubGraph.StatusStateExpected ->
+                                                GitHub.StatusStateExpected ->
                                                     "expected"
 
-                                                GitHubGraph.StatusStateError ->
+                                                GitHub.StatusStateError ->
                                                     "error"
                                             , 0
                                             )
@@ -3034,19 +3034,19 @@ reactionFlairArcs reviews card radius =
                                 (\r ->
                                     ( Html.img [ HA.class "status-actor", HA.src r.author.avatar ] []
                                     , case r.state of
-                                        GitHubGraph.PullRequestReviewStatePending ->
+                                        GitHub.PullRequestReviewStatePending ->
                                             "pending"
 
-                                        GitHubGraph.PullRequestReviewStateApproved ->
+                                        GitHub.PullRequestReviewStateApproved ->
                                             "success"
 
-                                        GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                        GitHub.PullRequestReviewStateChangesRequested ->
                                             "failure"
 
-                                        GitHubGraph.PullRequestReviewStateCommented ->
+                                        GitHub.PullRequestReviewStateCommented ->
                                             "commented"
 
-                                        GitHubGraph.PullRequestReviewStateDismissed ->
+                                        GitHub.PullRequestReviewStateDismissed ->
                                             "dismissed"
                                     , 0
                                     )
@@ -3055,13 +3055,13 @@ reactionFlairArcs reviews card radius =
                     in
                     ( Html.span [ HA.class "status-icon" ] [ Octicons.gitMerge octiconOpts ]
                     , case pr.mergeable of
-                        GitHubGraph.MergeableStateMergeable ->
+                        GitHub.MergeableStateMergeable ->
                             "success"
 
-                        GitHubGraph.MergeableStateConflicting ->
+                        GitHub.MergeableStateConflicting ->
                             "failure"
 
-                        GitHubGraph.MergeableStateUnknown ->
+                        GitHub.MergeableStateUnknown ->
                             "pending"
                     , 0
                     )
@@ -3129,7 +3129,7 @@ reactionFlairArcs reviews card radius =
                 ]
 
 
-cardLabelArcs : Dict GitHubGraph.ID GitHubGraph.Label -> Card -> Float -> List (Svg Msg)
+cardLabelArcs : Dict GitHub.ID GitHub.Label -> Card -> Float -> List (Svg Msg)
 cardLabelArcs allLabels card radius =
     let
         labelSegments =
@@ -3344,7 +3344,7 @@ involvesUser model login card =
         |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
-lastActivityIsByUser : Dict GitHubGraph.ID (List Backend.EventActor) -> String -> Card -> Bool
+lastActivityIsByUser : Dict GitHub.ID (List Backend.EventActor) -> String -> Card -> Bool
 lastActivityIsByUser cardEvents login card =
     let
         events =
@@ -3532,10 +3532,10 @@ externalIcons card =
 prIcons : Model -> Card -> List (Html Msg)
 prIcons model card =
     case card.content of
-        GitHubGraph.IssueCardContent _ ->
+        GitHub.IssueCardContent _ ->
             []
 
-        GitHubGraph.PullRequestCardContent pr ->
+        GitHub.PullRequestCardContent pr ->
             let
                 statusChecks =
                     case Maybe.map .status pr.lastCommit of
@@ -3545,36 +3545,36 @@ prIcons model card =
                                     let
                                         color =
                                             case c.state of
-                                                GitHubGraph.StatusStatePending ->
+                                                GitHub.StatusStatePending ->
                                                     Colors.yellow
 
-                                                GitHubGraph.StatusStateSuccess ->
+                                                GitHub.StatusStateSuccess ->
                                                     Colors.green
 
-                                                GitHubGraph.StatusStateFailure ->
+                                                GitHub.StatusStateFailure ->
                                                     Colors.red
 
-                                                GitHubGraph.StatusStateExpected ->
+                                                GitHub.StatusStateExpected ->
                                                     Colors.purple
 
-                                                GitHubGraph.StatusStateError ->
+                                                GitHub.StatusStateError ->
                                                     Colors.orange
                                     in
                                     Html.span [ HA.class "status-icon" ]
                                         [ case c.state of
-                                            GitHubGraph.StatusStatePending ->
+                                            GitHub.StatusStatePending ->
                                                 Octicons.primitiveDot { octiconOpts | color = color }
 
-                                            GitHubGraph.StatusStateSuccess ->
+                                            GitHub.StatusStateSuccess ->
                                                 Octicons.check { octiconOpts | color = color }
 
-                                            GitHubGraph.StatusStateFailure ->
+                                            GitHub.StatusStateFailure ->
                                                 Octicons.x { octiconOpts | color = color }
 
-                                            GitHubGraph.StatusStateExpected ->
+                                            GitHub.StatusStateExpected ->
                                                 Octicons.question { octiconOpts | color = color }
 
-                                            GitHubGraph.StatusStateError ->
+                                            GitHub.StatusStateError ->
                                                 Octicons.alert { octiconOpts | color = color }
                                         ]
 
@@ -3590,19 +3590,19 @@ prIcons model card =
                             let
                                 reviewClass =
                                     case r.state of
-                                        GitHubGraph.PullRequestReviewStatePending ->
+                                        GitHub.PullRequestReviewStatePending ->
                                             "pending"
 
-                                        GitHubGraph.PullRequestReviewStateApproved ->
+                                        GitHub.PullRequestReviewStateApproved ->
                                             "success"
 
-                                        GitHubGraph.PullRequestReviewStateChangesRequested ->
+                                        GitHub.PullRequestReviewStateChangesRequested ->
                                             "failure"
 
-                                        GitHubGraph.PullRequestReviewStateCommented ->
+                                        GitHub.PullRequestReviewStateCommented ->
                                             "commented"
 
-                                        GitHubGraph.PullRequestReviewStateDismissed ->
+                                        GitHub.PullRequestReviewStateDismissed ->
                                             "dismissed"
                             in
                             Html.img [ HA.class ("status-actor " ++ reviewClass), HA.src r.author.avatar ] []
@@ -3613,19 +3613,19 @@ prIcons model card =
                 { octiconOpts
                     | color =
                         case pr.mergeable of
-                            GitHubGraph.MergeableStateMergeable ->
+                            GitHub.MergeableStateMergeable ->
                                 Colors.green
 
-                            GitHubGraph.MergeableStateConflicting ->
+                            GitHub.MergeableStateConflicting ->
                                 Colors.red
 
-                            GitHubGraph.MergeableStateUnknown ->
+                            GitHub.MergeableStateUnknown ->
                                 Colors.yellow
                 }
                 :: (statusChecks ++ reviewStates)
 
 
-viewNoteCard : Model -> GitHubGraph.ProjectColumn -> String -> Html Msg
+viewNoteCard : Model -> GitHub.ProjectColumn -> String -> Html Msg
 viewNoteCard model col text =
     Html.div
         [ HA.classList
@@ -3752,7 +3752,7 @@ viewSuggestedLabel model card name =
                 ]
 
 
-viewLabel : Model -> GitHubGraph.ID -> Html Msg
+viewLabel : Model -> GitHub.ID -> Html Msg
 viewLabel model id =
     let
         ( name, color ) =
@@ -3789,40 +3789,40 @@ viewCardActor model { createdAt, avatar } =
         []
 
 
-isOrgMember : Maybe (List GitHubGraph.User) -> GitHubGraph.User -> Bool
+isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
 isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
 
 
-moveCard : Model -> CardDestination -> GitHubGraph.ID -> Cmd Msg
+moveCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
 moveCard model { columnId, afterId } cardId =
     case model.me of
         Just { token } ->
-            GitHubGraph.moveCardAfter token columnId cardId afterId
+            GitHub.moveCardAfter token columnId cardId afterId
                 |> Task.attempt (CardMoved columnId)
 
         Nothing ->
             Cmd.none
 
 
-addCard : Model -> CardDestination -> GitHubGraph.ID -> Cmd Msg
+addCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
 addCard model { projectId, columnId, afterId } contentId =
     case model.me of
         Just { token } ->
             case contentCardId model projectId contentId of
                 Just cardId ->
-                    GitHubGraph.moveCardAfter token columnId cardId afterId
+                    GitHub.moveCardAfter token columnId cardId afterId
                         |> Task.attempt (CardMoved columnId)
 
                 Nothing ->
-                    GitHubGraph.addContentCardAfter token columnId contentId afterId
+                    GitHub.addContentCardAfter token columnId contentId afterId
                         |> Task.attempt (CardMoved columnId)
 
         Nothing ->
             Cmd.none
 
 
-contentCardId : Model -> GitHubGraph.ID -> GitHubGraph.ID -> Maybe GitHubGraph.ID
+contentCardId : Model -> GitHub.ID -> GitHub.ID -> Maybe GitHub.ID
 contentCardId model projectId contentId =
     case Dict.get contentId model.cards of
         Just card ->
@@ -3837,7 +3837,7 @@ contentCardId model projectId contentId =
             Nothing
 
 
-findCardColumns : Model -> GitHubGraph.ID -> List GitHubGraph.ID
+findCardColumns : Model -> GitHub.ID -> List GitHub.ID
 findCardColumns model cardId =
     Dict.foldl
         (\columnId cards columnIds ->
@@ -3856,77 +3856,77 @@ labelKey label =
     ( label.name, String.toLower label.color )
 
 
-createLabel : Model -> GitHubGraph.Repo -> SharedLabel -> Cmd Msg
+createLabel : Model -> GitHub.Repo -> SharedLabel -> Cmd Msg
 createLabel model repo label =
     case model.me of
         Just { token } ->
-            GitHubGraph.createRepoLabel token repo label.name label.color
+            GitHub.createRepoLabel token repo label.name label.color
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
             Cmd.none
 
 
-updateLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> SharedLabel -> Cmd Msg
+updateLabel : Model -> GitHub.Repo -> GitHub.Label -> SharedLabel -> Cmd Msg
 updateLabel model repo label1 label2 =
     case model.me of
         Just { token } ->
-            GitHubGraph.updateRepoLabel token repo label1 label2.name label2.color
+            GitHub.updateRepoLabel token repo label1 label2.name label2.color
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
             Cmd.none
 
 
-deleteLabel : Model -> GitHubGraph.Repo -> GitHubGraph.Label -> Cmd Msg
+deleteLabel : Model -> GitHub.Repo -> GitHub.Label -> Cmd Msg
 deleteLabel model repo label =
     case model.me of
         Just { token } ->
-            GitHubGraph.deleteRepoLabel token repo label.name
+            GitHub.deleteRepoLabel token repo label.name
                 |> Task.attempt (LabelChanged repo)
 
         Nothing ->
             Cmd.none
 
 
-addIssueLabels : Model -> GitHubGraph.Issue -> List String -> Cmd Msg
+addIssueLabels : Model -> GitHub.Issue -> List String -> Cmd Msg
 addIssueLabels model issue labels =
     case model.me of
         Just { token } ->
-            GitHubGraph.addIssueLabels token issue labels
+            GitHub.addIssueLabels token issue labels
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
 
         Nothing ->
             Cmd.none
 
 
-removeIssueLabel : Model -> GitHubGraph.Issue -> String -> Cmd Msg
+removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg
 removeIssueLabel model issue label =
     case model.me of
         Just { token } ->
-            GitHubGraph.removeIssueLabel token issue label
+            GitHub.removeIssueLabel token issue label
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
 
         Nothing ->
             Cmd.none
 
 
-addPullRequestLabels : Model -> GitHubGraph.PullRequest -> List String -> Cmd Msg
+addPullRequestLabels : Model -> GitHub.PullRequest -> List String -> Cmd Msg
 addPullRequestLabels model pr labels =
     case model.me of
         Just { token } ->
-            GitHubGraph.addPullRequestLabels token pr labels
+            GitHub.addPullRequestLabels token pr labels
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
 
         Nothing ->
             Cmd.none
 
 
-removePullRequestLabel : Model -> GitHubGraph.PullRequest -> String -> Cmd Msg
+removePullRequestLabel : Model -> GitHub.PullRequest -> String -> Cmd Msg
 removePullRequestLabel model pr label =
     case model.me of
         Just { token } ->
-            GitHubGraph.removePullRequestLabel token pr label
+            GitHub.removePullRequestLabel token pr label
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
 
         Nothing ->
@@ -3969,7 +3969,7 @@ handleEvent model event data index =
     in
     case event of
         "repo" ->
-            withDecoded GitHubGraph.decodeRepo <|
+            withDecoded GitHub.decodeRepo <|
                 \val ->
                     let
                         allLabels =
@@ -3990,7 +3990,7 @@ handleEvent model event data index =
                     }
 
         "project" ->
-            withDecoded GitHubGraph.decodeProject <|
+            withDecoded GitHub.decodeProject <|
                 \val ->
                     { model | projects = Dict.insert val.id val model.projects }
 
@@ -4005,12 +4005,12 @@ handleEvent model event data index =
                     { model | comparisons = Dict.insert val.repoId val.comparison model.comparisons }
 
         "issue" ->
-            withDecoded GitHubGraph.decodeIssue <|
+            withDecoded GitHub.decodeIssue <|
                 \val ->
                     { model | cards = Dict.insert val.id (Card.fromIssue val) model.cards }
 
         "pr" ->
-            withDecoded GitHubGraph.decodePullRequest <|
+            withDecoded GitHub.decodePullRequest <|
                 \val ->
                     { model | cards = Dict.insert val.id (Card.fromPR val) model.cards }
 
@@ -4051,6 +4051,6 @@ octiconOpts =
     Octicons.defaultOptions
 
 
-loadLabels : List GitHubGraph.Label -> Dict GitHubGraph.ID GitHubGraph.Label -> Dict GitHubGraph.ID GitHubGraph.Label
+loadLabels : List GitHub.Label -> Dict GitHub.ID GitHub.Label -> Dict GitHub.ID GitHub.Label
 loadLabels labels all =
     List.foldl (\l -> Dict.insert l.id { l | color = String.toLower l.color }) all labels

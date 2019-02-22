@@ -27,7 +27,7 @@ module Backend exposing
 import Card exposing (Card)
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
-import GitHubGraph
+import GitHub
 import Http
 import HttpBuilder
 import Iso8601
@@ -46,18 +46,18 @@ type alias Indexed a =
 
 
 type alias Data =
-    { repos : Dict GitHubGraph.ID GitHubGraph.Repo
-    , projects : Dict GitHubGraph.ID GitHubGraph.Project
-    , columnCards : Dict GitHubGraph.ID (List ColumnCard)
-    , comparisons : Dict GitHubGraph.ID GitHubGraph.V3Comparison
+    { repos : Dict GitHub.ID GitHub.Repo
+    , projects : Dict GitHub.ID GitHub.Project
+    , columnCards : Dict GitHub.ID (List ColumnCard)
+    , comparisons : Dict GitHub.ID GitHub.V3Comparison
     }
 
 
 type alias CardData =
-    { issues : Dict GitHubGraph.ID GitHubGraph.Issue
-    , prs : Dict GitHubGraph.ID GitHubGraph.PullRequest
-    , actors : Dict GitHubGraph.ID (List EventActor)
-    , reviewers : Dict GitHubGraph.ID (List GitHubGraph.PullRequestReview)
+    { issues : Dict GitHub.ID GitHub.Issue
+    , prs : Dict GitHub.ID GitHub.PullRequest
+    , actors : Dict GitHub.ID (List EventActor)
+    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     }
 
 
@@ -76,15 +76,15 @@ type alias User =
 
 
 type alias EventActor =
-    { user : Maybe GitHubGraph.User
+    { user : Maybe GitHub.User
     , avatar : String
     , createdAt : Time.Posix
     }
 
 
 type alias ColumnCard =
-    { id : GitHubGraph.ID
-    , contentId : Maybe GitHubGraph.ID
+    { id : GitHub.ID
+    , contentId : Maybe GitHub.ID
     , note : Maybe String
     }
 
@@ -120,7 +120,7 @@ fetchCardData f =
         |> Task.attempt f
 
 
-fetchGraphs : (Result Http.Error (Indexed (List (ForceGraph GitHubGraph.ID))) -> msg) -> Cmd msg
+fetchGraphs : (Result Http.Error (Indexed (List (ForceGraph GitHub.ID))) -> msg) -> Cmd msg
 fetchGraphs f =
     HttpBuilder.get "/graphs"
         |> HttpBuilder.withExpect (expectJsonWithIndex decodeGraphs)
@@ -137,28 +137,28 @@ pollData f =
         |> Task.attempt f
 
 
-refreshCards : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
+refreshCards : GitHub.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshCards col f =
     HttpBuilder.get ("/refresh?columnCards=" ++ col)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshRepo : GitHubGraph.RepoSelector -> (Result Http.Error () -> msg) -> Cmd msg
+refreshRepo : GitHub.RepoSelector -> (Result Http.Error () -> msg) -> Cmd msg
 refreshRepo repo f =
     HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshIssue : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
+refreshIssue : GitHub.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshIssue id f =
     HttpBuilder.get ("/refresh?issue=" ++ id)
         |> HttpBuilder.toTask
         |> Task.attempt f
 
 
-refreshPR : GitHubGraph.ID -> (Result Http.Error () -> msg) -> Cmd msg
+refreshPR : GitHub.ID -> (Result Http.Error () -> msg) -> Cmd msg
 refreshPR id f =
     HttpBuilder.get ("/refresh?pr=" ++ id)
         |> HttpBuilder.toTask
@@ -176,19 +176,19 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
-        |> andMap (JD.field "repos" <| JD.dict GitHubGraph.decodeRepo)
-        |> andMap (JD.field "projects" <| JD.dict GitHubGraph.decodeProject)
+        |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
+        |> andMap (JD.field "projects" <| JD.dict GitHub.decodeProject)
         |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
-        |> andMap (JD.field "comparisons" <| JD.dict GitHubGraph.decodeV3Comparison)
+        |> andMap (JD.field "comparisons" <| JD.dict GitHub.decodeV3Comparison)
 
 
 decodeCardData : JD.Decoder CardData
 decodeCardData =
     JD.succeed CardData
-        |> andMap (JD.field "issues" <| JD.dict GitHubGraph.decodeIssue)
-        |> andMap (JD.field "prs" <| JD.dict GitHubGraph.decodePullRequest)
+        |> andMap (JD.field "issues" <| JD.dict GitHub.decodeIssue)
+        |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
         |> andMap (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
-        |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHubGraph.decodePullRequestReview))
+        |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
 
 
 decodeColumnCards : JD.Decoder (List ColumnCard)
@@ -223,7 +223,7 @@ decodeUser =
 decodeEventActor : JD.Decoder EventActor
 decodeEventActor =
     JD.succeed EventActor
-        |> andMap (JD.field "user" (JD.maybe GitHubGraph.decodeUser))
+        |> andMap (JD.field "user" (JD.maybe GitHub.decodeUser))
         |> andMap (JD.field "avatar" JD.string)
         |> andMap (JD.field "createdAt" JDE.datetime)
 
@@ -231,19 +231,19 @@ decodeEventActor =
 encodeEventActor : EventActor -> JE.Value
 encodeEventActor { user, avatar, createdAt } =
     JE.object
-        [ ( "user", JEE.maybe GitHubGraph.encodeUser user )
+        [ ( "user", JEE.maybe GitHub.encodeUser user )
         , ( "avatar", JE.string avatar )
         , ( "createdAt", JE.string (Iso8601.fromTime createdAt) )
         ]
 
 
-decodeGraphs : JD.Decoder (List (ForceGraph GitHubGraph.ID))
+decodeGraphs : JD.Decoder (List (ForceGraph GitHub.ID))
 decodeGraphs =
     JD.list (ForceGraph.decode JD.string)
 
 
 type alias ColumnCardsEvent =
-    { columnId : GitHubGraph.ID
+    { columnId : GitHub.ID
     , cards : List ColumnCard
     }
 
@@ -256,7 +256,7 @@ decodeColumnCardsEvent =
 
 
 type alias ActorsEvent =
-    { cardId : GitHubGraph.ID
+    { cardId : GitHub.ID
     , actors : List EventActor
     }
 
@@ -269,8 +269,8 @@ decodeActorsEvent =
 
 
 type alias ReviewersEvent =
-    { cardId : GitHubGraph.ID
-    , reviewers : List GitHubGraph.PullRequestReview
+    { cardId : GitHub.ID
+    , reviewers : List GitHub.PullRequestReview
     }
 
 
@@ -278,12 +278,12 @@ decodeReviewersEvent : JD.Decoder ReviewersEvent
 decodeReviewersEvent =
     JD.succeed ReviewersEvent
         |> andMap (JD.field "cardId" JD.string)
-        |> andMap (JD.field "reviewers" (JD.list GitHubGraph.decodePullRequestReview))
+        |> andMap (JD.field "reviewers" (JD.list GitHub.decodePullRequestReview))
 
 
 type alias ComparisonEvent =
-    { repoId : GitHubGraph.ID
-    , comparison : GitHubGraph.V3Comparison
+    { repoId : GitHub.ID
+    , comparison : GitHub.V3Comparison
     }
 
 
@@ -291,4 +291,4 @@ decodeComparisonEvent : JD.Decoder ComparisonEvent
 decodeComparisonEvent =
     JD.succeed ComparisonEvent
         |> andMap (JD.field "repoId" JD.string)
-        |> andMap (JD.field "comparison" GitHubGraph.decodeV3Comparison)
+        |> andMap (JD.field "comparison" GitHub.decodeV3Comparison)

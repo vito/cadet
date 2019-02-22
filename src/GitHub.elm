@@ -1,4 +1,4 @@
-module GitHubGraph exposing
+module GitHub exposing
     ( CardContent(..)
     , CardLocation
     , Error
