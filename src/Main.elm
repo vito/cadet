@@ -694,21 +694,21 @@ update msg model =
         EventReceived ( event, data, indexStr ) ->
             case String.toInt indexStr of
                 Just index ->
-                    ( if index >= model.dataIndex then
-                        { model | dataIndex = index }
+                    if index >= model.dataIndex then
+                        ( { model | dataIndex = index }
                             |> handleEvent event data index
                             |> computeViewForPage
+                        , if index == model.dataIndex + 1 then
+                            Cmd.none
 
-                      else
+                          else
+                            Log.debug "skipped a data index; syncing" ( model.dataIndex, index ) <|
+                                Backend.fetchData DataFetched
+                        )
+
+                    else
                         Log.debug "skipping event for stale index" ( model.dataIndex, index ) <|
-                            model
-                    , if index == model.dataIndex + 1 then
-                        Cmd.none
-
-                      else
-                        Log.debug "skipped a data index; syncing" ( model.dataIndex, index ) <|
-                            Backend.fetchData DataFetched
-                    )
+                            ( model, Cmd.none )
 
                 Nothing ->
                     Log.debug "invalid event index" indexStr <|
