@@ -11179,16 +11179,6 @@ var author$project$Main$computeDataView = function (model) {
 		model,
 		{allLabels: allLabels, colorLightnessCache: colorLightnessCache, labelToRepoToId: groupLabelsToRepoToId, reposByLabel: groupRepoLabels, reposByName: reposByName});
 };
-var elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(
-			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
 var author$project$Main$graphAllActivityCompare = F3(
 	function (model, a, b) {
 		var latestActivity = A2(
@@ -11197,19 +11187,18 @@ var author$project$Main$graphAllActivityCompare = F3(
 				function (_n0, latest) {
 					var card = _n0.card;
 					var updated = elm$time$Time$posixToMillis(card.updatedAt);
-					var mlatest = elm$core$List$maximum(
+					var mlatest = A2(
+						elm$core$Maybe$map,
 						A2(
-							elm$core$List$map,
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.createdAt;
-								},
-								elm$time$Time$posixToMillis),
-							A2(
-								elm$core$Maybe$withDefault,
-								_List_Nil,
-								A2(elm$core$Dict$get, card.id, model.actors))));
+							elm$core$Basics$composeR,
+							function ($) {
+								return $.createdAt;
+							},
+							elm$time$Time$posixToMillis),
+						A2(
+							elm$core$Maybe$andThen,
+							elm$core$List$head,
+							A2(elm$core$Dict$get, card.id, model.actors)));
 					if (mlatest.$ === 'Just') {
 						var activity = mlatest.a;
 						return A2(elm$core$Basics$max, activity, latest);
@@ -11246,54 +11235,6 @@ var author$project$Main$graphImpactCompare = F3(
 			var x = _n0;
 			return x;
 		}
-	});
-var author$project$Main$graphUserActivityCompare = F4(
-	function (model, login, a, b) {
-		var latestUserActivity = A2(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, latest) {
-					var card = _n0.card;
-					var mlatest = elm$core$List$maximum(
-						A2(
-							elm$core$List$map,
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.createdAt;
-								},
-								elm$time$Time$posixToMillis),
-							A2(
-								elm$core$List$filter,
-								A2(
-									elm$core$Basics$composeR,
-									function ($) {
-										return $.user;
-									},
-									A2(
-										elm$core$Basics$composeR,
-										elm$core$Maybe$map(
-											function ($) {
-												return $.login;
-											}),
-										elm$core$Basics$eq(
-											elm$core$Maybe$Just(login)))),
-								A2(
-									elm$core$Maybe$withDefault,
-									_List_Nil,
-									A2(elm$core$Dict$get, card.id, model.actors)))));
-					if (mlatest.$ === 'Nothing') {
-						return latest;
-					} else {
-						var activity = mlatest.a;
-						return A2(elm$core$Basics$max, activity, latest);
-					}
-				}),
-			0);
-		return A2(
-			elm$core$Basics$compare,
-			latestUserActivity(a),
-			latestUserActivity(b));
 	});
 var elm_community$intdict$IntDict$foldl = F3(
 	function (f, acc, dict) {
@@ -11576,14 +11517,10 @@ var author$project$Main$computeGraphsView = function (model) {
 	var sortFunc = F2(
 		function (a, b) {
 			var _n0 = model.graphSort;
-			switch (_n0.$) {
-				case 'ImpactSort':
-					return A3(author$project$Main$graphImpactCompare, model, a.nodes, b.nodes);
-				case 'UserActivitySort':
-					var login = _n0.a;
-					return A4(author$project$Main$graphUserActivityCompare, model, login, a.nodes, b.nodes);
-				default:
-					return A3(author$project$Main$graphAllActivityCompare, model, a.nodes, b.nodes);
+			if (_n0.$ === 'ImpactSort') {
+				return A3(author$project$Main$graphImpactCompare, model, a.nodes, b.nodes);
+			} else {
+				return A3(author$project$Main$graphAllActivityCompare, model, a.nodes, b.nodes);
 			}
 		});
 	var filteredGraphs = A2(
@@ -13372,8 +13309,8 @@ var author$project$Main$update = F2(
 					var _n19 = elm$core$String$toInt(indexStr);
 					if (_n19.$ === 'Just') {
 						var index = _n19.a;
-						return _Utils_Tuple2(
-							(_Utils_cmp(index, model.dataIndex) > -1) ? author$project$Main$computeViewForPage(
+						return (_Utils_cmp(index, model.dataIndex) > -1) ? _Utils_Tuple2(
+							author$project$Main$computeViewForPage(
 								A4(
 									author$project$Main$handleEvent,
 									event,
@@ -13381,16 +13318,16 @@ var author$project$Main$update = F2(
 									index,
 									_Utils_update(
 										model,
-										{dataIndex: index}))) : A3(
-								author$project$Log$debug,
-								'skipping event for stale index',
-								_Utils_Tuple2(model.dataIndex, index),
-								model),
+										{dataIndex: index}))),
 							_Utils_eq(index, model.dataIndex + 1) ? elm$core$Platform$Cmd$none : A3(
 								author$project$Log$debug,
 								'skipped a data index; syncing',
 								_Utils_Tuple2(model.dataIndex, index),
-								author$project$Backend$fetchData(author$project$Main$DataFetched)));
+								author$project$Backend$fetchData(author$project$Main$DataFetched))) : A3(
+							author$project$Log$debug,
+							'skipping event for stale index',
+							_Utils_Tuple2(model.dataIndex, index),
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					} else {
 						return A3(
 							author$project$Log$debug,
@@ -17372,9 +17309,6 @@ var author$project$Main$SetLabelSearch = function (a) {
 };
 var author$project$Main$ToggleLabelFilters = {$: 'ToggleLabelFilters'};
 var author$project$Main$UntriagedFilter = {$: 'UntriagedFilter'};
-var author$project$Main$UserActivitySort = function (a) {
-	return {$: 'UserActivitySort', a: a};
-};
 var author$project$Main$hasFilter = F2(
 	function (model, filter) {
 		return A2(elm$core$List$member, filter, model.graphFilters);
@@ -17463,10 +17397,10 @@ var author$project$Main$viewGraphControls = function (model) {
 			a,
 			elm$core$Dict$toList(model.reposByLabel));
 	}(
-		function (_n2) {
-			var _n3 = _n2.a;
-			var name = _n3.a;
-			var color = _n3.b;
+		function (_n1) {
+			var _n2 = _n1.a;
+			var name = _n2.a;
+			var color = _n2.b;
 			return A2(elm$core$String$contains, model.labelSearch, name) ? elm$core$Maybe$Just(
 				A2(
 					elm$html$Html$div,
@@ -17733,38 +17667,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							[
 								capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
 								elm$html$Html$text('all activity')
-							])),
-						function () {
-						var _n1 = model.me;
-						if (_n1.$ === 'Just') {
-							var user = _n1.a.user;
-							return A2(
-								elm$html$Html$div,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('control-setting', true),
-												_Utils_Tuple2(
-												'active',
-												_Utils_eq(
-													model.graphSort,
-													author$project$Main$UserActivitySort(user.login)))
-											])),
-										elm$html$Html$Events$onClick(
-										author$project$Main$SetGraphSort(
-											author$project$Main$UserActivitySort(user.login)))
-									]),
-								_List_fromArray(
-									[
-										capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
-										elm$html$Html$text('my activity')
-									]));
-						} else {
-							return elm$html$Html$text('');
-						}
-					}()
+							]))
 					]))
 			]));
 };
@@ -18754,23 +18657,26 @@ var author$project$Main$isAnticipated = F2(
 	});
 var author$project$Main$lastActivityIsByUser = F3(
 	function (cardEvents, login, card) {
-		var events = A2(
+		return A2(
 			elm$core$Maybe$withDefault,
-			_List_Nil,
-			A2(elm$core$Dict$get, card.id, cardEvents));
-		var _n0 = elm$core$List$head(
-			elm$core$List$reverse(events));
-		if (_n0.$ === 'Just') {
-			var user = _n0.a.user;
-			if (user.$ === 'Just') {
-				var u = user.a;
-				return _Utils_eq(u.login, login);
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
+			false,
+			A2(
+				elm$core$Maybe$map,
+				A2(
+					elm$core$Basics$composeL,
+					elm$core$Basics$eq(login),
+					function ($) {
+						return $.login;
+					}),
+				A2(
+					elm$core$Maybe$andThen,
+					function ($) {
+						return $.user;
+					},
+					A2(
+						elm$core$Maybe$andThen,
+						elm$core$List$head,
+						A2(elm$core$Dict$get, card.id, cardEvents)))));
 	});
 var author$project$Main$prIcons = F2(
 	function (model, card) {
@@ -18910,11 +18816,10 @@ var author$project$Main$recentActors = F2(
 			A2(
 				elm$core$List$take,
 				3,
-				elm$core$List$reverse(
-					A2(
-						elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2(elm$core$Dict$get, card.id, model.actors)))));
+				A2(
+					elm$core$Maybe$withDefault,
+					_List_Nil,
+					A2(elm$core$Dict$get, card.id, model.actors))));
 	});
 var author$project$Main$viewLabel = F2(
 	function (model, label) {

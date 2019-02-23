@@ -465,7 +465,10 @@ update msg model =
                     List.filterMap findSource timeline
 
                 actors =
-                    List.map Backend.encodeEventActor (List.filterMap eventActor timeline)
+                    timeline
+                        |> List.filterMap eventActor
+                        |> List.map Backend.encodeEventActor
+                        |> List.reverse
             in
             Log.debug "timeline fetched for" id <|
                 ( model

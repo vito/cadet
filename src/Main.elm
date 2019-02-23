@@ -2789,9 +2789,9 @@ graphAllActivityCompare model a b =
                 (\{ card } latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get card.id model.actors)
-                                |> List.map (.createdAt >> Time.posixToMillis)
-                                |> List.maximum
+                            Dict.get card.id model.actors
+                                |> Maybe.andThen List.head
+                                |> Maybe.map (.createdAt >> Time.posixToMillis)
 
                         updated =
                             Time.posixToMillis card.updatedAt
@@ -3328,21 +3328,11 @@ involvesUser model login card =
 
 lastActivityIsByUser : Dict GitHub.ID (List Backend.EventActor) -> String -> Card -> Bool
 lastActivityIsByUser cardEvents login card =
-    let
-        events =
-            Maybe.withDefault [] (Dict.get card.id cardEvents)
-    in
-    case List.head (List.reverse events) of
-        Just { user } ->
-            case user of
-                Just u ->
-                    u.login == login
-
-                Nothing ->
-                    False
-
-        Nothing ->
-            False
+    Dict.get card.id cardEvents
+        |> Maybe.andThen List.head
+        |> Maybe.andThen .user
+        |> Maybe.map ((==) login << .login)
+        |> Maybe.withDefault False
 
 
 isAnticipated : Model -> Card -> Bool
@@ -3629,7 +3619,6 @@ recentActors : Model -> Card -> List Backend.EventActor
 recentActors model card =
     Dict.get card.id model.actors
         |> Maybe.withDefault []
-        |> List.reverse
         |> List.take 3
         |> List.reverse
 

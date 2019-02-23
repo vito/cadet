@@ -11998,10 +11998,11 @@ var author$project$Main$update = F2(
 						}
 					};
 					var edges = A2(elm$core$List$filterMap, findSource, timeline);
-					var actors = A2(
-						elm$core$List$map,
-						author$project$Backend$encodeEventActor,
-						A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline));
+					var actors = elm$core$List$reverse(
+						A2(
+							elm$core$List$map,
+							author$project$Backend$encodeEventActor,
+							A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline)));
 					return A3(
 						author$project$Log$debug,
 						'timeline fetched for',
