@@ -168,7 +168,7 @@ type CardLabelOperation
 type alias ReleaseRepo =
     { repo : GitHub.Repo
     , nextMilestone : Maybe GitHub.Milestone
-    , comparison : GitHub.V3Comparison
+    , totalCommits : Int
     , openPRs : List Card
     , mergedPRs : List Card
     , openIssues : List Card
@@ -1266,9 +1266,26 @@ warmColorLightnessCache color mb =
             mb
 
 
-computeReleaseRepos : Model -> Model
-computeReleaseRepos model =
+makeReleaseRepo : Model -> GitHub.Repo -> ReleaseRepo
+makeReleaseRepo model repo =
     let
+        nextMilestone =
+            repo.milestones
+                |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
+                |> List.sortBy .number
+                |> List.head
+
+        mcomparison =
+            Dict.get repo.id model.comparisons
+
+        mergedPRCards =
+            List.filterMap
+                (\{ sha } ->
+                    Dict.get sha model.prsByMergeCommit
+                        |> Maybe.andThen (\id -> Dict.get id model.cards)
+                )
+                (Maybe.withDefault [] (Maybe.map .commits mcomparison))
+
         issueOrOpenPR cardId =
             case Dict.get cardId model.cards of
                 Nothing ->
@@ -1283,105 +1300,93 @@ computeReleaseRepos model =
                     else
                         Just card
 
-        makeReleaseRepo repoId comparison acc =
-            if comparison.totalCommits == 0 then
-                acc
+        milestoneCards =
+            case nextMilestone of
+                Nothing ->
+                    []
+
+                Just nm ->
+                    Dict.get nm.id model.cardsByMilestone
+                        |> Maybe.withDefault []
+                        |> List.filterMap issueOrOpenPR
+
+        allCards =
+            milestoneCards ++ mergedPRCards
+
+        categorizeByDocumentedState card sir =
+            if hasLabel model "release/documented" card then
+                { sir | documentedCards = card :: sir.documentedCards }
+
+            else if hasLabel model "release/undocumented" card then
+                { sir | undocumentedCards = card :: sir.undocumentedCards }
+
+            else if hasLabel model "release/no-impact" card then
+                { sir | noImpactCards = card :: sir.noImpactCards }
 
             else
-                case Dict.get repoId model.repos of
-                    Just repo ->
-                        let
-                            nextMilestone =
-                                repo.milestones
-                                    |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
-                                    |> List.sortBy .number
-                                    |> List.head
+                { sir | doneCards = card :: sir.doneCards }
 
-                            mergedPRCards =
-                                List.filterMap
-                                    (\{ sha } ->
-                                        Dict.get sha model.prsByMergeCommit
-                                            |> Maybe.andThen (\id -> Dict.get id model.cards)
-                                    )
-                                    comparison.commits
+        categorizeByCardState card sir =
+            case card.state of
+                Card.IssueState GitHub.IssueStateOpen ->
+                    { sir | openIssues = card :: sir.openIssues }
 
-                            milestoneCards =
-                                case nextMilestone of
-                                    Nothing ->
-                                        []
+                Card.IssueState GitHub.IssueStateClosed ->
+                    { sir | closedIssues = card :: sir.closedIssues }
 
-                                    Just nm ->
-                                        Dict.get nm.id model.cardsByMilestone
-                                            |> Maybe.withDefault []
-                                            |> List.filterMap issueOrOpenPR
+                Card.PullRequestState GitHub.PullRequestStateOpen ->
+                    { sir | openPRs = card :: sir.openPRs }
 
-                            allCards =
-                                milestoneCards ++ mergedPRCards
+                Card.PullRequestState GitHub.PullRequestStateMerged ->
+                    { sir | mergedPRs = card :: sir.mergedPRs }
 
-                            categorizeByDocumentedState card sir =
-                                if hasLabel model "release/documented" card then
-                                    { sir | documentedCards = card :: sir.documentedCards }
+                Card.PullRequestState GitHub.PullRequestStateClosed ->
+                    -- ignored
+                    sir
 
-                                else if hasLabel model "release/undocumented" card then
-                                    { sir | undocumentedCards = card :: sir.undocumentedCards }
+        categorizeCard card sir =
+            let
+                byState =
+                    categorizeByCardState card sir
+            in
+            if Card.isOpen card then
+                byState
 
-                                else if hasLabel model "release/no-impact" card then
-                                    { sir | noImpactCards = card :: sir.noImpactCards }
-
-                                else
-                                    { sir | doneCards = card :: sir.doneCards }
-
-                            categorizeByCardState card sir =
-                                case card.state of
-                                    Card.IssueState GitHub.IssueStateOpen ->
-                                        { sir | openIssues = card :: sir.openIssues }
-
-                                    Card.IssueState GitHub.IssueStateClosed ->
-                                        { sir | closedIssues = card :: sir.closedIssues }
-
-                                    Card.PullRequestState GitHub.PullRequestStateOpen ->
-                                        { sir | openPRs = card :: sir.openPRs }
-
-                                    Card.PullRequestState GitHub.PullRequestStateMerged ->
-                                        { sir | mergedPRs = card :: sir.mergedPRs }
-
-                                    Card.PullRequestState GitHub.PullRequestStateClosed ->
-                                        -- ignored
-                                        sir
-
-                            categorizeCard card sir =
-                                let
-                                    byState =
-                                        categorizeByCardState card sir
-                                in
-                                if Card.isOpen card then
-                                    byState
-
-                                else
-                                    categorizeByDocumentedState card byState
-
-                            releaseRepo =
-                                List.foldl categorizeCard
-                                    { repo = repo
-                                    , nextMilestone = nextMilestone
-                                    , comparison = comparison
-                                    , openPRs = []
-                                    , mergedPRs = []
-                                    , openIssues = []
-                                    , closedIssues = []
-                                    , doneCards = []
-                                    , documentedCards = []
-                                    , undocumentedCards = []
-                                    , noImpactCards = []
-                                    }
-                                    allCards
-                        in
-                        Dict.insert repo.name releaseRepo acc
-
-                    Nothing ->
-                        acc
+            else
+                categorizeByDocumentedState card byState
     in
-    { model | releaseRepos = Dict.foldl makeReleaseRepo Dict.empty model.comparisons }
+    List.foldl categorizeCard
+        { repo = repo
+        , nextMilestone = nextMilestone
+        , totalCommits = Maybe.withDefault 0 (Maybe.map .totalCommits mcomparison)
+        , openPRs = []
+        , mergedPRs = []
+        , openIssues = []
+        , closedIssues = []
+        , doneCards = []
+        , documentedCards = []
+        , undocumentedCards = []
+        , noImpactCards = []
+        }
+        allCards
+
+
+computeReleaseRepos : Model -> Model
+computeReleaseRepos model =
+    let
+        addReleaseRepo repoId repo acc =
+            let
+                releaseRepo =
+                    makeReleaseRepo model repo
+            in
+            case ( releaseRepo.nextMilestone, releaseRepo.totalCommits ) of
+                ( Nothing, 0 ) ->
+                    acc
+
+                _ ->
+                    Dict.insert repo.name releaseRepo acc
+    in
+    { model | releaseRepos = Dict.foldl addReleaseRepo Dict.empty model.repos }
 
 
 view : Model -> Browser.Document Msg
@@ -1905,7 +1910,7 @@ viewReleasePage model =
     let
         repos =
             Dict.values model.releaseRepos
-                |> List.sortBy (.totalCommits << .comparison)
+                |> List.sortBy .totalCommits
                 |> List.reverse
     in
     Html.div [ HA.class "page-content" ]
@@ -2035,7 +2040,7 @@ viewReleaseRepo model sir =
         , Html.div [ HA.class "metrics" ]
             [ viewMetric
                 (Octicons.gitCommit { octiconOpts | color = Colors.gray })
-                sir.comparison.totalCommits
+                sir.totalCommits
                 "commits"
                 "commit"
                 "since last release"
