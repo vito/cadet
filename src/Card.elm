@@ -47,6 +47,7 @@ type alias ProcessState =
     , inBacklogColumn : Bool
     , inDoneColumn : Bool
     , hasPausedLabel : Bool
+    , hasTriageLabel : Bool
     }
 
 
@@ -152,7 +153,7 @@ isPR card =
 
 isUntriaged : Card -> Bool
 isUntriaged card =
-    List.isEmpty card.cards
+    card.processState.hasTriageLabel
 
 
 isMerged : Card -> Bool
@@ -167,6 +168,7 @@ cardProcessState { cards, labels } =
     , inBacklogColumn = inColumn Project.detectColumn.backlog cards
     , inDoneColumn = inColumn Project.detectColumn.done cards
     , hasPausedLabel = List.any ((==) "paused" << .name) labels
+    , hasTriageLabel = List.any ((==) "triage" << .name) labels
     }
 
 
