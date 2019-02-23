@@ -1128,10 +1128,12 @@ computeViewForPage model =
     case model.page of
         GlobalGraphPage ->
             reset
+                |> computeGraphsView
                 |> updateGraphStates
 
         ProjectPage name ->
             { reset | baseGraphFilter = Just (InProjectFilter name) }
+                |> computeGraphsView
                 |> updateGraphStates
 
         ReleasePage ->
@@ -3985,8 +3987,10 @@ handleEvent event data index model =
         "graphs" ->
             withDecoded Backend.decodeGraphs <|
                 \val ->
+                    -- graphs view is computed in computeViewForPage since it
+                    -- depends on filter state and that has to be handled there
+                    -- so the filter gets applied when they navigate to the page
                     { model | graphs = val }
-                        |> computeGraphsView
 
         _ ->
             Log.debug "event ignored" ( event, data, index ) <|

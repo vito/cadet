@@ -11941,16 +11941,18 @@ var author$project$Main$computeViewForPage = function (model) {
 	var _n0 = model.page;
 	switch (_n0.$) {
 		case 'GlobalGraphPage':
-			return author$project$Main$updateGraphStates(reset);
+			return author$project$Main$updateGraphStates(
+				author$project$Main$computeGraphsView(reset));
 		case 'ProjectPage':
 			var name = _n0.a;
 			return author$project$Main$updateGraphStates(
-				_Utils_update(
-					reset,
-					{
-						baseGraphFilter: elm$core$Maybe$Just(
-							author$project$Main$InProjectFilter(name))
-					}));
+				author$project$Main$computeGraphsView(
+					_Utils_update(
+						reset,
+						{
+							baseGraphFilter: elm$core$Maybe$Just(
+								author$project$Main$InProjectFilter(name))
+						})));
 		case 'ReleasePage':
 			return author$project$Main$computeReleaseRepos(reset);
 		case 'ReleaseRepoPage':
@@ -12322,10 +12324,9 @@ var author$project$Main$handleEvent = F4(
 					withDecoded,
 					author$project$Backend$decodeGraphs,
 					function (val) {
-						return author$project$Main$computeGraphsView(
-							_Utils_update(
-								model,
-								{graphs: val}));
+						return _Utils_update(
+							model,
+							{graphs: val});
 					});
 			default:
 				return A3(
