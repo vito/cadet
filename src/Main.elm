@@ -200,7 +200,6 @@ type GraphFilter
 
 type GraphSort
     = ImpactSort
-    | UserActivitySort String
     | AllActivitySort
 
 
@@ -1729,18 +1728,6 @@ viewGraphControls model =
                 [ Octicons.clock octiconOpts
                 , Html.text "all activity"
                 ]
-            , case model.me of
-                Just { user } ->
-                    Html.div
-                        [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == UserActivitySort user.login ) ]
-                        , HE.onClick (SetGraphSort (UserActivitySort user.login))
-                        ]
-                        [ Octicons.clock octiconOpts
-                        , Html.text "my activity"
-                        ]
-
-                Nothing ->
-                    Html.text ""
             ]
         ]
 
@@ -2726,9 +2713,6 @@ computeGraphsView model =
                 ImpactSort ->
                     graphImpactCompare model a.nodes b.nodes
 
-                UserActivitySort login ->
-                    graphUserActivityCompare model login a.nodes b.nodes
-
                 AllActivitySort ->
                     graphAllActivityCompare model a.nodes b.nodes
     in
@@ -2795,31 +2779,6 @@ graphImpactCompare model a b =
 
         x ->
             x
-
-
-graphUserActivityCompare : Model -> String -> List CardNode -> List CardNode -> Order
-graphUserActivityCompare model login a b =
-    let
-        latestUserActivity =
-            List.foldl
-                (\{ card } latest ->
-                    let
-                        mlatest =
-                            Maybe.withDefault [] (Dict.get card.id model.actors)
-                                |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
-                                |> List.map (.createdAt >> Time.posixToMillis)
-                                |> List.maximum
-                    in
-                    case mlatest of
-                        Nothing ->
-                            latest
-
-                        Just activity ->
-                            max activity latest
-                )
-                0
-    in
-    compare (latestUserActivity a) (latestUserActivity b)
 
 
 graphAllActivityCompare : Model -> List CardNode -> List CardNode -> Order
