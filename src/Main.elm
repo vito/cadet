@@ -1952,10 +1952,18 @@ viewReleaseRepoPage model sir =
 
 viewLabelByName : Model -> String -> Html Msg
 viewLabelByName model name =
-    Dict.get name model.labelToRepoToId
-        |> Maybe.andThen (List.head << Dict.values)
-        |> Maybe.withDefault ""
-        |> viewLabel model
+    let
+        mlabel =
+            Dict.get name model.labelToRepoToId
+                |> Maybe.andThen (List.head << Dict.values)
+                |> Maybe.andThen (\id -> Dict.get id model.allLabels)
+    in
+    case mlabel of
+        Just label ->
+            viewLabel model label
+
+        Nothing ->
+            Html.text ("missing label: " ++ name)
 
 
 viewTabbedCards :
@@ -3446,7 +3454,7 @@ viewCard model card =
                     ++ externalIcons card
                 )
             , Html.span [ HA.class "card-labels" ] <|
-                List.map (viewLabel model) card.labels
+                List.map (searchableLabel model) card.labels
                     ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
             , Html.div [ HA.class "card-meta" ]
                 [ Html.a
@@ -3762,26 +3770,25 @@ viewSuggestedLabel model card name =
                 ]
 
 
-viewLabel : Model -> GitHub.ID -> Html Msg
-viewLabel model id =
-    let
-        ( name, color ) =
-            case Dict.get id model.allLabels of
-                Just label ->
-                    ( label.name, label.color )
-
-                Nothing ->
-                    ( "unknown", "ff00ff" )
-    in
+viewLabel : Model -> GitHub.Label -> Html Msg
+viewLabel model label =
     Html.span
-        ([ HA.class "label"
-         , HE.onClick (searchLabel model name)
-         ]
-            ++ labelColorStyles model color
-        )
+        ([ HA.class "label" ] ++ labelColorStyles model label.color)
         [ Html.span [ HA.class "label-text" ]
-            [ Html.text name ]
+            [ Html.text label.name ]
         ]
+
+
+searchableLabel : Model -> GitHub.ID -> Html Msg
+searchableLabel model labelId =
+    case Dict.get labelId model.allLabels of
+        Just label ->
+            Html.span [ HE.onClick (searchLabel model label.name) ]
+                [ viewLabel model label
+                ]
+
+        Nothing ->
+            Html.text ""
 
 
 viewCardActor : Model -> Backend.EventActor -> Html Msg
