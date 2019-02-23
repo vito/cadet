@@ -1853,7 +1853,7 @@ viewAllProjectsPage model =
             [ Octicons.project octiconOpts
             , Html.text "Projects"
             ]
-        , Html.div [ HA.class "projects-list" ]
+        , Html.div [ HA.class "metrics-items" ]
             (List.map (viewProject model) statefulProjects)
         ]
 
@@ -1923,7 +1923,7 @@ viewReleasePage model =
             [ Octicons.milestone octiconOpts
             , Html.text "Release"
             ]
-        , Html.div [ HA.class "release-repos" ]
+        , Html.div [ HA.class "metrics-items" ]
             (List.map (viewReleaseRepo model) repos)
         ]
 
@@ -2064,7 +2064,7 @@ viewReleaseRepo model sir =
                     (List.length sir.closedIssues)
                     "closed issues"
                     "closed issue"
-                    "in current milestone"
+                    "in milestone"
             , if List.isEmpty sir.openIssues then
                 Html.text ""
 
@@ -2074,7 +2074,7 @@ viewReleaseRepo model sir =
                     (List.length sir.openIssues)
                     "open issues"
                     "open issue"
-                    "in current milestone"
+                    "in milestone"
             ]
         ]
 

@@ -3,6 +3,9 @@
 @project-bg: @gray-900;
 @column-bg: transparent;
 
+@card-width: 300px;
+@card-margin: 8px;
+
 @sidebar-min-width: 1150px;
 
 @wide-min-width: 850px;
@@ -508,9 +511,6 @@ code {
     opacity: 0.25;
   }
 }
-
-@card-width: 300px;
-@card-margin: 8px;
 
 .cards {
   display: flex;
@@ -1281,10 +1281,13 @@ svg {
   display: flex;
   flex-flow: row wrap;
   align-content: flex-start;
-  justify-content: space-around;
+  justify-content: space-between;
 }
 
 .repo-pull-requests .card {
+  margin-left: 0;
+  margin-right: 0;
+
   .card-actor:last-child {
     animation: wiggle 0.5s infinite;
   }
@@ -1346,8 +1349,16 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
+.metrics-items {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .metrics-item {
   margin-bottom: 50px;
+  width: @card-width;
 }
 
 .metric {

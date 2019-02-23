@@ -14857,7 +14857,7 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$class('projects-list')
+						elm$html$Html$Attributes$class('metrics-items')
 					]),
 				A2(
 					elm$core$List$map,
@@ -19720,7 +19720,7 @@ var author$project$Main$viewReleaseRepo = F2(
 							elm$core$List$length(sir.closedIssues),
 							'closed issues',
 							'closed issue',
-							'in current milestone'),
+							'in milestone'),
 							elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A5(
 							author$project$Main$viewMetric,
 							capitalist$elm_octicons$Octicons$issueOpened(
@@ -19730,7 +19730,7 @@ var author$project$Main$viewReleaseRepo = F2(
 							elm$core$List$length(sir.openIssues),
 							'open issues',
 							'open issue',
-							'in current milestone')
+							'in milestone')
 						]))
 				]));
 	});
@@ -19765,7 +19765,7 @@ var author$project$Main$viewReleasePage = function (model) {
 				elm$html$Html$div,
 				_List_fromArray(
 					[
-						elm$html$Html$Attributes$class('release-repos')
+						elm$html$Html$Attributes$class('metrics-items')
 					]),
 				A2(
 					elm$core$List$map,
