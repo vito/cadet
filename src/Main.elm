@@ -2697,7 +2697,7 @@ statefulGraph model fg =
                                     , y = toNode.y
                                     }
                                 , filteredOut =
-                                    not (Set.member from matches || Set.member to matches)
+                                    not (Set.member from matches && Set.member to matches)
                                 }
 
                         _ ->
