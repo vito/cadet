@@ -10680,6 +10680,15 @@ var author$project$Card$cardProcessState = function (_n0) {
 					return $.name;
 				}),
 			labels),
+		hasTriageLabel: A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeL,
+				elm$core$Basics$eq('triage'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
 		inBacklogColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.backlog, cards),
 		inDoneColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.done, cards),
 		inIceboxColumn: A2(author$project$Card$inColumn, author$project$Project$detectColumn.icebox, cards),
@@ -11373,7 +11382,7 @@ var author$project$Card$isPR = function (card) {
 	}
 };
 var author$project$Card$isUntriaged = function (card) {
-	return elm$core$List$isEmpty(card.cards);
+	return card.processState.hasTriageLabel;
 };
 var author$project$Main$hasLabelAndColor = F4(
 	function (model, name, color, card) {
@@ -11531,7 +11540,7 @@ var author$project$Main$statefulGraph = F2(
 					var toNode = _n4.b.a;
 					return elm$core$Maybe$Just(
 						{
-							filteredOut: !(A2(elm$core$Set$member, from, matches) || A2(elm$core$Set$member, to, matches)),
+							filteredOut: !(A2(elm$core$Set$member, from, matches) && A2(elm$core$Set$member, to, matches)),
 							source: {x: fromNode.x, y: fromNode.y},
 							target: {x: toNode.x, y: toNode.y}
 						});
@@ -11615,147 +11624,176 @@ var author$project$Main$hasLabel = F3(
 		}
 	});
 var elm$core$List$sortBy = _List_sortBy;
+var author$project$Main$makeReleaseRepo = F2(
+	function (model, repo) {
+		var nextMilestone = elm$core$List$head(
+			A2(
+				elm$core$List$sortBy,
+				function ($) {
+					return $.number;
+				},
+				A2(
+					elm$core$List$filter,
+					A2(
+						elm$core$Basics$composeL,
+						elm$core$Basics$eq(author$project$GitHub$MilestoneStateOpen),
+						function ($) {
+							return $.state;
+						}),
+					repo.milestones)));
+		var mcomparison = A2(elm$core$Dict$get, repo.id, model.comparisons);
+		var mergedPRCards = A2(
+			elm$core$List$filterMap,
+			function (_n8) {
+				var sha = _n8.sha;
+				return A2(
+					elm$core$Maybe$andThen,
+					function (id) {
+						return A2(elm$core$Dict$get, id, model.cards);
+					},
+					A2(elm$core$Dict$get, sha, model.prsByMergeCommit));
+			},
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(
+					elm$core$Maybe$map,
+					function ($) {
+						return $.commits;
+					},
+					mcomparison)));
+		var issueOrOpenPR = function (cardId) {
+			var _n7 = A2(elm$core$Dict$get, cardId, model.cards);
+			if (_n7.$ === 'Nothing') {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var card = _n7.a;
+				return author$project$Card$isMerged(card) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(card);
+			}
+		};
+		var milestoneCards = function () {
+			if (nextMilestone.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var nm = nextMilestone.a;
+				return A2(
+					elm$core$List$filterMap,
+					issueOrOpenPR,
+					A2(
+						elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2(elm$core$Dict$get, nm.id, model.cardsByMilestone)));
+			}
+		}();
+		var categorizeByDocumentedState = F2(
+			function (card, sir) {
+				return A3(author$project$Main$hasLabel, model, 'release/documented', card) ? _Utils_update(
+					sir,
+					{
+						documentedCards: A2(elm$core$List$cons, card, sir.documentedCards)
+					}) : (A3(author$project$Main$hasLabel, model, 'release/undocumented', card) ? _Utils_update(
+					sir,
+					{
+						undocumentedCards: A2(elm$core$List$cons, card, sir.undocumentedCards)
+					}) : (A3(author$project$Main$hasLabel, model, 'release/no-impact', card) ? _Utils_update(
+					sir,
+					{
+						noImpactCards: A2(elm$core$List$cons, card, sir.noImpactCards)
+					}) : _Utils_update(
+					sir,
+					{
+						doneCards: A2(elm$core$List$cons, card, sir.doneCards)
+					})));
+			});
+		var categorizeByCardState = F2(
+			function (card, sir) {
+				var _n0 = card.state;
+				if (_n0.$ === 'IssueState') {
+					if (_n0.a.$ === 'IssueStateOpen') {
+						var _n1 = _n0.a;
+						return _Utils_update(
+							sir,
+							{
+								openIssues: A2(elm$core$List$cons, card, sir.openIssues)
+							});
+					} else {
+						var _n2 = _n0.a;
+						return _Utils_update(
+							sir,
+							{
+								closedIssues: A2(elm$core$List$cons, card, sir.closedIssues)
+							});
+					}
+				} else {
+					switch (_n0.a.$) {
+						case 'PullRequestStateOpen':
+							var _n3 = _n0.a;
+							return _Utils_update(
+								sir,
+								{
+									openPRs: A2(elm$core$List$cons, card, sir.openPRs)
+								});
+						case 'PullRequestStateMerged':
+							var _n4 = _n0.a;
+							return _Utils_update(
+								sir,
+								{
+									mergedPRs: A2(elm$core$List$cons, card, sir.mergedPRs)
+								});
+						default:
+							var _n5 = _n0.a;
+							return sir;
+					}
+				}
+			});
+		var categorizeCard = F2(
+			function (card, sir) {
+				var byState = A2(categorizeByCardState, card, sir);
+				return author$project$Card$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
+			});
+		var allCards = _Utils_ap(milestoneCards, mergedPRCards);
+		return A3(
+			elm$core$List$foldl,
+			categorizeCard,
+			{
+				closedIssues: _List_Nil,
+				documentedCards: _List_Nil,
+				doneCards: _List_Nil,
+				mergedPRs: _List_Nil,
+				nextMilestone: nextMilestone,
+				noImpactCards: _List_Nil,
+				openIssues: _List_Nil,
+				openPRs: _List_Nil,
+				repo: repo,
+				totalCommits: A2(
+					elm$core$Maybe$withDefault,
+					0,
+					A2(
+						elm$core$Maybe$map,
+						function ($) {
+							return $.totalCommits;
+						},
+						mcomparison)),
+				undocumentedCards: _List_Nil
+			},
+			allCards);
+	});
 var author$project$Main$computeReleaseRepos = function (model) {
-	var issueOrOpenPR = function (cardId) {
-		var _n9 = A2(elm$core$Dict$get, cardId, model.cards);
-		if (_n9.$ === 'Nothing') {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var card = _n9.a;
-			return author$project$Card$isMerged(card) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(card);
-		}
-	};
-	var makeReleaseRepo = F3(
-		function (repoId, comparison, acc) {
-			if (!comparison.totalCommits) {
+	var addReleaseRepo = F3(
+		function (repoId, repo, acc) {
+			var releaseRepo = A2(author$project$Main$makeReleaseRepo, model, repo);
+			var _n0 = _Utils_Tuple2(releaseRepo.nextMilestone, releaseRepo.totalCommits);
+			if ((_n0.a.$ === 'Nothing') && (!_n0.b)) {
+				var _n1 = _n0.a;
 				return acc;
 			} else {
-				var _n0 = A2(elm$core$Dict$get, repoId, model.repos);
-				if (_n0.$ === 'Just') {
-					var repo = _n0.a;
-					var nextMilestone = elm$core$List$head(
-						A2(
-							elm$core$List$sortBy,
-							function ($) {
-								return $.number;
-							},
-							A2(
-								elm$core$List$filter,
-								A2(
-									elm$core$Basics$composeL,
-									elm$core$Basics$eq(author$project$GitHub$MilestoneStateOpen),
-									function ($) {
-										return $.state;
-									}),
-								repo.milestones)));
-					var milestoneCards = function () {
-						if (nextMilestone.$ === 'Nothing') {
-							return _List_Nil;
-						} else {
-							var nm = nextMilestone.a;
-							return A2(
-								elm$core$List$filterMap,
-								issueOrOpenPR,
-								A2(
-									elm$core$Maybe$withDefault,
-									_List_Nil,
-									A2(elm$core$Dict$get, nm.id, model.cardsByMilestone)));
-						}
-					}();
-					var mergedPRCards = A2(
-						elm$core$List$filterMap,
-						function (_n7) {
-							var sha = _n7.sha;
-							return A2(
-								elm$core$Maybe$andThen,
-								function (id) {
-									return A2(elm$core$Dict$get, id, model.cards);
-								},
-								A2(elm$core$Dict$get, sha, model.prsByMergeCommit));
-						},
-						comparison.commits);
-					var categorizeByDocumentedState = F2(
-						function (card, sir) {
-							return A3(author$project$Main$hasLabel, model, 'release/documented', card) ? _Utils_update(
-								sir,
-								{
-									documentedCards: A2(elm$core$List$cons, card, sir.documentedCards)
-								}) : (A3(author$project$Main$hasLabel, model, 'release/undocumented', card) ? _Utils_update(
-								sir,
-								{
-									undocumentedCards: A2(elm$core$List$cons, card, sir.undocumentedCards)
-								}) : (A3(author$project$Main$hasLabel, model, 'release/no-impact', card) ? _Utils_update(
-								sir,
-								{
-									noImpactCards: A2(elm$core$List$cons, card, sir.noImpactCards)
-								}) : _Utils_update(
-								sir,
-								{
-									doneCards: A2(elm$core$List$cons, card, sir.doneCards)
-								})));
-						});
-					var categorizeByCardState = F2(
-						function (card, sir) {
-							var _n1 = card.state;
-							if (_n1.$ === 'IssueState') {
-								if (_n1.a.$ === 'IssueStateOpen') {
-									var _n2 = _n1.a;
-									return _Utils_update(
-										sir,
-										{
-											openIssues: A2(elm$core$List$cons, card, sir.openIssues)
-										});
-								} else {
-									var _n3 = _n1.a;
-									return _Utils_update(
-										sir,
-										{
-											closedIssues: A2(elm$core$List$cons, card, sir.closedIssues)
-										});
-								}
-							} else {
-								switch (_n1.a.$) {
-									case 'PullRequestStateOpen':
-										var _n4 = _n1.a;
-										return _Utils_update(
-											sir,
-											{
-												openPRs: A2(elm$core$List$cons, card, sir.openPRs)
-											});
-									case 'PullRequestStateMerged':
-										var _n5 = _n1.a;
-										return _Utils_update(
-											sir,
-											{
-												mergedPRs: A2(elm$core$List$cons, card, sir.mergedPRs)
-											});
-									default:
-										var _n6 = _n1.a;
-										return sir;
-								}
-							}
-						});
-					var categorizeCard = F2(
-						function (card, sir) {
-							var byState = A2(categorizeByCardState, card, sir);
-							return author$project$Card$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
-						});
-					var allCards = _Utils_ap(milestoneCards, mergedPRCards);
-					var releaseRepo = A3(
-						elm$core$List$foldl,
-						categorizeCard,
-						{closedIssues: _List_Nil, comparison: comparison, documentedCards: _List_Nil, doneCards: _List_Nil, mergedPRs: _List_Nil, nextMilestone: nextMilestone, noImpactCards: _List_Nil, openIssues: _List_Nil, openPRs: _List_Nil, repo: repo, undocumentedCards: _List_Nil},
-						allCards);
-					return A3(elm$core$Dict$insert, repo.name, releaseRepo, acc);
-				} else {
-					return acc;
-				}
+				return A3(elm$core$Dict$insert, repo.name, releaseRepo, acc);
 			}
 		});
 	return _Utils_update(
 		model,
 		{
-			releaseRepos: A3(elm$core$Dict$foldl, makeReleaseRepo, elm$core$Dict$empty, model.comparisons)
+			releaseRepos: A3(elm$core$Dict$foldl, addReleaseRepo, elm$core$Dict$empty, model.repos)
 		});
 };
 var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
@@ -18878,6 +18916,50 @@ var author$project$Main$recentActors = F2(
 						_List_Nil,
 						A2(elm$core$Dict$get, card.id, model.actors)))));
 	});
+var author$project$Main$viewLabel = F2(
+	function (model, label) {
+		return A2(
+			elm$html$Html$span,
+			_Utils_ap(
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('label')
+					]),
+				A2(author$project$Main$labelColorStyles, model, label.color)),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$span,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('label-text')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text(label.name)
+						]))
+				]));
+	});
+var author$project$Main$searchableLabel = F2(
+	function (model, labelId) {
+		var _n0 = A2(elm$core$Dict$get, labelId, model.allLabels);
+		if (_n0.$ === 'Just') {
+			var label = _n0.a;
+			return A2(
+				elm$html$Html$span,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(
+						A2(author$project$Main$searchLabel, model, label.name))
+					]),
+				_List_fromArray(
+					[
+						A2(author$project$Main$viewLabel, model, label)
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	});
 var author$project$Main$viewCardActor = F2(
 	function (model, _n0) {
 		var createdAt = _n0.createdAt;
@@ -18893,43 +18975,6 @@ var author$project$Main$viewCardActor = F2(
 					elm$html$Html$Attributes$draggable('false')
 				]),
 			_List_Nil);
-	});
-var author$project$Main$viewLabel = F2(
-	function (model, id) {
-		var _n0 = function () {
-			var _n1 = A2(elm$core$Dict$get, id, model.allLabels);
-			if (_n1.$ === 'Just') {
-				var label = _n1.a;
-				return _Utils_Tuple2(label.name, label.color);
-			} else {
-				return _Utils_Tuple2('unknown', 'ff00ff');
-			}
-		}();
-		var name = _n0.a;
-		var color = _n0.b;
-		return A2(
-			elm$html$Html$span,
-			_Utils_ap(
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('label'),
-						elm$html$Html$Events$onClick(
-						A2(author$project$Main$searchLabel, model, name))
-					]),
-				A2(author$project$Main$labelColorStyles, model, color)),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$span,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('label-text')
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(name)
-						]))
-				]));
 	});
 var author$project$Colors$white = '#fff';
 var capitalist$elm_octicons$Octicons$dashPolygon = '0 7 0 9 8 9 8 7';
@@ -19113,7 +19158,7 @@ var author$project$Main$viewCard = F2(
 							_Utils_ap(
 								A2(
 									elm$core$List$map,
-									author$project$Main$viewLabel(model),
+									author$project$Main$searchableLabel(model),
 									card.labels),
 								A2(
 									elm$core$List$map,
@@ -19702,7 +19747,7 @@ var author$project$Main$viewReleaseRepo = F2(
 								_Utils_update(
 									author$project$Main$octiconOpts,
 									{color: author$project$Colors$gray})),
-							sir.comparison.totalCommits,
+							sir.totalCommits,
 							'commits',
 							'commit',
 							'since last release'),
@@ -19743,14 +19788,9 @@ var author$project$Main$viewReleasePage = function (model) {
 	var repos = elm$core$List$reverse(
 		A2(
 			elm$core$List$sortBy,
-			A2(
-				elm$core$Basics$composeL,
-				function ($) {
-					return $.totalCommits;
-				},
-				function ($) {
-					return $.comparison;
-				}),
+			function ($) {
+				return $.totalCommits;
+			},
 			elm$core$Dict$values(model.releaseRepos)));
 	return A2(
 		elm$html$Html$div,
@@ -19788,16 +19828,21 @@ var author$project$Main$SetReleaseRepoTab = function (a) {
 };
 var author$project$Main$viewLabelByName = F2(
 	function (model, name) {
-		return A2(
-			author$project$Main$viewLabel,
-			model,
+		var mlabel = A2(
+			elm$core$Maybe$andThen,
+			function (id) {
+				return A2(elm$core$Dict$get, id, model.allLabels);
+			},
 			A2(
-				elm$core$Maybe$withDefault,
-				'',
-				A2(
-					elm$core$Maybe$andThen,
-					A2(elm$core$Basics$composeL, elm$core$List$head, elm$core$Dict$values),
-					A2(elm$core$Dict$get, name, model.labelToRepoToId))));
+				elm$core$Maybe$andThen,
+				A2(elm$core$Basics$composeL, elm$core$List$head, elm$core$Dict$values),
+				A2(elm$core$Dict$get, name, model.labelToRepoToId)));
+		if (mlabel.$ === 'Just') {
+			var label = mlabel.a;
+			return A2(author$project$Main$viewLabel, model, label);
+		} else {
+			return elm$html$Html$text('missing label: ' + name);
+		}
 	});
 var author$project$Main$viewTabbedCards = F4(
 	function (model, currentTab, setTab, tabs) {
