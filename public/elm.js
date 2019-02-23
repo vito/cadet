@@ -2713,107 +2713,6 @@ var _Bitwise_shiftRightZfBy = F2(function(offset, a)
 });
 
 
-// CREATE
-
-var _Regex_never = /.^/;
-
-var _Regex_fromStringWith = F2(function(options, string)
-{
-	var flags = 'g';
-	if (options.multiline) { flags += 'm'; }
-	if (options.caseInsensitive) { flags += 'i'; }
-
-	try
-	{
-		return elm$core$Maybe$Just(new RegExp(string, flags));
-	}
-	catch(error)
-	{
-		return elm$core$Maybe$Nothing;
-	}
-});
-
-
-// USE
-
-var _Regex_contains = F2(function(re, string)
-{
-	return string.match(re) !== null;
-});
-
-
-var _Regex_findAtMost = F3(function(n, re, str)
-{
-	var out = [];
-	var number = 0;
-	var string = str;
-	var lastIndex = re.lastIndex;
-	var prevLastIndex = -1;
-	var result;
-	while (number++ < n && (result = re.exec(string)))
-	{
-		if (prevLastIndex == re.lastIndex) break;
-		var i = result.length - 1;
-		var subs = new Array(i);
-		while (i > 0)
-		{
-			var submatch = result[i];
-			subs[--i] = submatch
-				? elm$core$Maybe$Just(submatch)
-				: elm$core$Maybe$Nothing;
-		}
-		out.push(A4(elm$regex$Regex$Match, result[0], result.index, number, _List_fromArray(subs)));
-		prevLastIndex = re.lastIndex;
-	}
-	re.lastIndex = lastIndex;
-	return _List_fromArray(out);
-});
-
-
-var _Regex_replaceAtMost = F4(function(n, re, replacer, string)
-{
-	var count = 0;
-	function jsReplacer(match)
-	{
-		if (count++ >= n)
-		{
-			return match;
-		}
-		var i = arguments.length - 3;
-		var submatches = new Array(i);
-		while (i > 0)
-		{
-			var submatch = arguments[i];
-			submatches[--i] = submatch
-				? elm$core$Maybe$Just(submatch)
-				: elm$core$Maybe$Nothing;
-		}
-		return replacer(A4(elm$regex$Regex$Match, match, arguments[arguments.length - 2], count, _List_fromArray(submatches)));
-	}
-	return string.replace(re, jsReplacer);
-});
-
-var _Regex_splitAtMost = F3(function(n, re, str)
-{
-	var string = str;
-	var out = [];
-	var start = re.lastIndex;
-	var restoreLastIndex = re.lastIndex;
-	while (n--)
-	{
-		var result = re.exec(string);
-		if (!result) break;
-		out.push(string.slice(start, result.index));
-		start = re.lastIndex;
-	}
-	out.push(string.slice(start));
-	re.lastIndex = restoreLastIndex;
-	return _List_fromArray(out);
-});
-
-var _Regex_infinity = Infinity;
-
-
 
 
 // HELPERS
@@ -4811,6 +4710,107 @@ function _Browser_load(url)
 		}
 	}));
 }
+
+
+// CREATE
+
+var _Regex_never = /.^/;
+
+var _Regex_fromStringWith = F2(function(options, string)
+{
+	var flags = 'g';
+	if (options.multiline) { flags += 'm'; }
+	if (options.caseInsensitive) { flags += 'i'; }
+
+	try
+	{
+		return elm$core$Maybe$Just(new RegExp(string, flags));
+	}
+	catch(error)
+	{
+		return elm$core$Maybe$Nothing;
+	}
+});
+
+
+// USE
+
+var _Regex_contains = F2(function(re, string)
+{
+	return string.match(re) !== null;
+});
+
+
+var _Regex_findAtMost = F3(function(n, re, str)
+{
+	var out = [];
+	var number = 0;
+	var string = str;
+	var lastIndex = re.lastIndex;
+	var prevLastIndex = -1;
+	var result;
+	while (number++ < n && (result = re.exec(string)))
+	{
+		if (prevLastIndex == re.lastIndex) break;
+		var i = result.length - 1;
+		var subs = new Array(i);
+		while (i > 0)
+		{
+			var submatch = result[i];
+			subs[--i] = submatch
+				? elm$core$Maybe$Just(submatch)
+				: elm$core$Maybe$Nothing;
+		}
+		out.push(A4(elm$regex$Regex$Match, result[0], result.index, number, _List_fromArray(subs)));
+		prevLastIndex = re.lastIndex;
+	}
+	re.lastIndex = lastIndex;
+	return _List_fromArray(out);
+});
+
+
+var _Regex_replaceAtMost = F4(function(n, re, replacer, string)
+{
+	var count = 0;
+	function jsReplacer(match)
+	{
+		if (count++ >= n)
+		{
+			return match;
+		}
+		var i = arguments.length - 3;
+		var submatches = new Array(i);
+		while (i > 0)
+		{
+			var submatch = arguments[i];
+			submatches[--i] = submatch
+				? elm$core$Maybe$Just(submatch)
+				: elm$core$Maybe$Nothing;
+		}
+		return replacer(A4(elm$regex$Regex$Match, match, arguments[arguments.length - 2], count, _List_fromArray(submatches)));
+	}
+	return string.replace(re, jsReplacer);
+});
+
+var _Regex_splitAtMost = F3(function(n, re, str)
+{
+	var string = str;
+	var out = [];
+	var start = re.lastIndex;
+	var restoreLastIndex = re.lastIndex;
+	while (n--)
+	{
+		var result = re.exec(string);
+		if (!result) break;
+		out.push(string.slice(start, result.index));
+		start = re.lastIndex;
+	}
+	out.push(string.slice(start));
+	re.lastIndex = restoreLastIndex;
+	return _List_fromArray(out);
+});
+
+var _Regex_infinity = Infinity;
 
 
 
@@ -10500,32 +10500,198 @@ var author$project$Main$contentCardId = F3(
 			return elm$core$Maybe$Nothing;
 		}
 	});
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var elm$browser$Browser$External = function (a) {
+	return {$: 'External', a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 'Internal', a: a};
+};
+var elm$browser$Browser$Dom$NotFound = function (a) {
+	return {$: 'NotFound', a: a};
+};
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0.a;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$perform = F2(
+	function (toMessage, task) {
+		return elm$core$Task$command(
+			elm$core$Task$Perform(
+				A2(elm$core$Task$map, toMessage, task)));
+	});
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 'Normal':
+			return 0;
+		case 'MayStopPropagation':
+			return 1;
+		case 'MayPreventDefault':
+			return 2;
+		default:
+			return 3;
+	}
+};
+var elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			elm$core$String$slice,
+			n,
+			elm$core$String$length(string),
+			string);
+	});
+var elm$core$String$startsWith = _String_startsWith;
+var elm$url$Url$Http = {$: 'Http'};
+var elm$url$Url$Https = {$: 'Https'};
+var elm$core$String$indexes = _String_indexes;
+var elm$core$String$left = F2(
+	function (n, string) {
+		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
+	});
+var elm$url$Url$Url = F6(
+	function (protocol, host, port_, path, query, fragment) {
+		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
+	});
+var elm$url$Url$chompBeforePath = F5(
+	function (protocol, path, params, frag, str) {
+		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, ':', str);
+			if (!_n0.b) {
+				return elm$core$Maybe$Just(
+					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
+			} else {
+				if (!_n0.b.b) {
+					var i = _n0.a;
+					var _n1 = elm$core$String$toInt(
+						A2(elm$core$String$dropLeft, i + 1, str));
+					if (_n1.$ === 'Nothing') {
+						return elm$core$Maybe$Nothing;
+					} else {
+						var port_ = _n1;
+						return elm$core$Maybe$Just(
+							A6(
+								elm$url$Url$Url,
+								protocol,
+								A2(elm$core$String$left, i, str),
+								port_,
+								path,
+								params,
+								frag));
+					}
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			}
+		}
+	});
+var elm$url$Url$chompBeforeQuery = F4(
+	function (protocol, params, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '/', str);
+			if (!_n0.b) {
+				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
+			} else {
+				var i = _n0.a;
+				return A5(
+					elm$url$Url$chompBeforePath,
+					protocol,
+					A2(elm$core$String$dropLeft, i, str),
+					params,
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompBeforeFragment = F3(
+	function (protocol, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '?', str);
+			if (!_n0.b) {
+				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
+			} else {
+				var i = _n0.a;
+				return A4(
+					elm$url$Url$chompBeforeQuery,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompAfterProtocol = F2(
+	function (protocol, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '#', str);
+			if (!_n0.b) {
+				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
+			} else {
+				var i = _n0.a;
+				return A3(
+					elm$url$Url$chompBeforeFragment,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$fromString = function (str) {
+	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		elm$url$Url$Http,
+		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		elm$url$Url$Https,
+		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
+};
+var elm$browser$Browser$Navigation$load = _Browser_load;
+var author$project$Main$withTokenOrLogIn = F2(
+	function (model, f) {
+		var _n0 = model.me;
+		if (_n0.$ === 'Just') {
+			var token = _n0.a.token;
+			return f(token);
+		} else {
+			return elm$browser$Browser$Navigation$load('/auth/github');
+		}
+	});
 var author$project$Main$addCard = F3(
 	function (model, _n0, contentId) {
 		var projectId = _n0.projectId;
 		var columnId = _n0.columnId;
 		var afterId = _n0.afterId;
-		var _n1 = model.me;
-		if (_n1.$ === 'Just') {
-			var token = _n1.a.token;
-			var _n2 = A3(author$project$Main$contentCardId, model, projectId, contentId);
-			if (_n2.$ === 'Just') {
-				var cardId = _n2.a;
-				return A2(
-					elm$core$Task$attempt,
-					author$project$Main$CardMoved(columnId),
-					A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
-			} else {
-				return A2(
-					elm$core$Task$attempt,
-					author$project$Main$CardMoved(columnId),
-					A4(author$project$GitHub$addContentCardAfter, token, columnId, contentId, afterId));
-			}
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				var _n1 = A3(author$project$Main$contentCardId, model, projectId, contentId);
+				if (_n1.$ === 'Just') {
+					var cardId = _n1.a;
+					return A2(
+						elm$core$Task$attempt,
+						author$project$Main$CardMoved(columnId),
+						A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
+				} else {
+					return A2(
+						elm$core$Task$attempt,
+						author$project$Main$CardMoved(columnId),
+						A4(author$project$GitHub$addContentCardAfter, token, columnId, contentId, afterId));
+				}
+			});
 	});
 var lukewestby$elm_http_builder$HttpBuilder$post = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
 var lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
@@ -10576,17 +10742,16 @@ var author$project$Main$DataChanged = F2(
 	});
 var author$project$Main$addIssueLabels = F3(
 	function (model, issue, labels) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHub$addIssueLabels, token, issue, labels));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$DataChanged(
+						A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
+					A3(author$project$GitHub$addIssueLabels, token, issue, labels));
+			});
 	});
 var author$project$GitHub$addPullRequestLabels = F3(
 	function (token, issue, names) {
@@ -10605,17 +10770,16 @@ var author$project$GitHub$addPullRequestLabels = F3(
 	});
 var author$project$Main$addPullRequestLabels = F3(
 	function (model, pr, labels) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHub$addPullRequestLabels, token, pr, labels));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$DataChanged(
+						A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
+					A3(author$project$GitHub$addPullRequestLabels, token, pr, labels));
+			});
 	});
 var author$project$Card$IssueState = function (a) {
 	return {$: 'IssueState', a: a};
@@ -10638,7 +10802,6 @@ var author$project$Card$inColumn = function (match) {
 				return $.column;
 			}));
 };
-var elm$core$String$startsWith = _String_startsWith;
 var author$project$Project$detectColumn = {
 	backlog: elm$core$String$startsWith('Backlog'),
 	done: elm$core$Basics$eq('Done'),
@@ -11842,16 +12005,15 @@ var author$project$Main$LabelChanged = F2(
 	});
 var author$project$Main$createLabel = F3(
 	function (model, repo, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A4(author$project$GitHub$createRepoLabel, token, repo, label.name, label.color));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$LabelChanged(repo),
+					A4(author$project$GitHub$createRepoLabel, token, repo, label.name, label.color));
+			});
 	});
 var lukewestby$elm_http_builder$HttpBuilder$delete = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('DELETE');
 var author$project$GitHub$deleteRepoLabel = F3(
@@ -11867,16 +12029,15 @@ var author$project$GitHub$deleteRepoLabel = F3(
 	});
 var author$project$Main$deleteLabel = F3(
 	function (model, repo, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A3(author$project$GitHub$deleteRepoLabel, token, repo, label.name));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$LabelChanged(repo),
+					A3(author$project$GitHub$deleteRepoLabel, token, repo, label.name));
+			});
 	});
 var elm$core$String$cons = _String_cons;
 var elm$core$String$fromChar = function (_char) {
@@ -12189,16 +12350,15 @@ var author$project$Main$moveCard = F3(
 	function (model, _n0, cardId) {
 		var columnId = _n0.columnId;
 		var afterId = _n0.afterId;
-		var _n1 = model.me;
-		if (_n1.$ === 'Just') {
-			var token = _n1.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$CardMoved(columnId),
-				A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$CardMoved(columnId),
+					A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
+			});
 	});
 var elm$core$Result$toMaybe = function (result) {
 	if (result.$ === 'Ok') {
@@ -12233,17 +12393,16 @@ var author$project$GitHub$removeIssueLabel = F3(
 	});
 var author$project$Main$removeIssueLabel = F3(
 	function (model, issue, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHub$removeIssueLabel, token, issue, label));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$DataChanged(
+						A2(author$project$Backend$refreshIssue, issue.id, author$project$Main$RefreshQueued)),
+					A3(author$project$GitHub$removeIssueLabel, token, issue, label));
+			});
 	});
 var author$project$GitHub$removePullRequestLabel = F3(
 	function (token, issue, name) {
@@ -12259,17 +12418,16 @@ var author$project$GitHub$removePullRequestLabel = F3(
 	});
 var author$project$Main$removePullRequestLabel = F3(
 	function (model, pr, label) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$DataChanged(
-					A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
-				A3(author$project$GitHub$removePullRequestLabel, token, pr, label));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$DataChanged(
+						A2(author$project$Backend$refreshPR, pr.id, author$project$Main$RefreshQueued)),
+					A3(author$project$GitHub$removePullRequestLabel, token, pr, label));
+			});
 	});
 var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
 var author$project$Main$BouncePage = {$: 'BouncePage'};
@@ -12602,175 +12760,16 @@ var author$project$GitHub$updateRepoLabel = F5(
 	});
 var author$project$Main$updateLabel = F4(
 	function (model, repo, label1, label2) {
-		var _n0 = model.me;
-		if (_n0.$ === 'Just') {
-			var token = _n0.a.token;
-			return A2(
-				elm$core$Task$attempt,
-				author$project$Main$LabelChanged(repo),
-				A5(author$project$GitHub$updateRepoLabel, token, repo, label1, label2.name, label2.color));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$LabelChanged(repo),
+					A5(author$project$GitHub$updateRepoLabel, token, repo, label1, label2.name, label2.color));
+			});
 	});
-var elm$browser$Browser$External = function (a) {
-	return {$: 'External', a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 'Internal', a: a};
-};
-var elm$browser$Browser$Dom$NotFound = function (a) {
-	return {$: 'NotFound', a: a};
-};
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0.a;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
-	}
-};
-var elm$core$Task$perform = F2(
-	function (toMessage, task) {
-		return elm$core$Task$command(
-			elm$core$Task$Perform(
-				A2(elm$core$Task$map, toMessage, task)));
-	});
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 'Normal':
-			return 0;
-		case 'MayStopPropagation':
-			return 1;
-		case 'MayPreventDefault':
-			return 2;
-		default:
-			return 3;
-	}
-};
-var elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			elm$core$String$slice,
-			n,
-			elm$core$String$length(string),
-			string);
-	});
-var elm$url$Url$Http = {$: 'Http'};
-var elm$url$Url$Https = {$: 'Https'};
-var elm$core$String$indexes = _String_indexes;
-var elm$core$String$left = F2(
-	function (n, string) {
-		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
-	});
-var elm$url$Url$Url = F6(
-	function (protocol, host, port_, path, query, fragment) {
-		return {fragment: fragment, host: host, path: path, port_: port_, protocol: protocol, query: query};
-	});
-var elm$url$Url$chompBeforePath = F5(
-	function (protocol, path, params, frag, str) {
-		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, ':', str);
-			if (!_n0.b) {
-				return elm$core$Maybe$Just(
-					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
-			} else {
-				if (!_n0.b.b) {
-					var i = _n0.a;
-					var _n1 = elm$core$String$toInt(
-						A2(elm$core$String$dropLeft, i + 1, str));
-					if (_n1.$ === 'Nothing') {
-						return elm$core$Maybe$Nothing;
-					} else {
-						var port_ = _n1;
-						return elm$core$Maybe$Just(
-							A6(
-								elm$url$Url$Url,
-								protocol,
-								A2(elm$core$String$left, i, str),
-								port_,
-								path,
-								params,
-								frag));
-					}
-				} else {
-					return elm$core$Maybe$Nothing;
-				}
-			}
-		}
-	});
-var elm$url$Url$chompBeforeQuery = F4(
-	function (protocol, params, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '/', str);
-			if (!_n0.b) {
-				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
-			} else {
-				var i = _n0.a;
-				return A5(
-					elm$url$Url$chompBeforePath,
-					protocol,
-					A2(elm$core$String$dropLeft, i, str),
-					params,
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompBeforeFragment = F3(
-	function (protocol, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '?', str);
-			if (!_n0.b) {
-				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
-			} else {
-				var i = _n0.a;
-				return A4(
-					elm$url$Url$chompBeforeQuery,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompAfterProtocol = F2(
-	function (protocol, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '#', str);
-			if (!_n0.b) {
-				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
-			} else {
-				var i = _n0.a;
-				return A3(
-					elm$url$Url$chompBeforeFragment,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$fromString = function (str) {
-	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		elm$url$Url$Http,
-		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		elm$url$Url$Https,
-		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
-};
-var elm$browser$Browser$Navigation$load = _Browser_load;
 var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var elm$core$Basics$ge = _Utils_ge;
 var elm$core$Dict$sizeHelp = F2(
@@ -12793,6 +12792,8 @@ var elm$core$Dict$sizeHelp = F2(
 var elm$core$Dict$size = function (dict) {
 	return A2(elm$core$Dict$sizeHelp, 0, dict);
 };
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
 var elm$core$Set$foldl = F3(
 	function (func, initialState, _n0) {
 		var dict = _n0.a;

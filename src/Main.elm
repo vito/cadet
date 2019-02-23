@@ -3782,21 +3782,28 @@ isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
 
 
-moveCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
-moveCard model { columnId, afterId } cardId =
+withTokenOrLogIn : Model -> (String -> Cmd Msg) -> Cmd Msg
+withTokenOrLogIn model f =
     case model.me of
         Just { token } ->
-            GitHub.moveCardAfter token columnId cardId afterId
-                |> Task.attempt (CardMoved columnId)
+            f token
 
         Nothing ->
-            Cmd.none
+            Nav.load "/auth/github"
+
+
+moveCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
+moveCard model { columnId, afterId } cardId =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.moveCardAfter token columnId cardId afterId
+                |> Task.attempt (CardMoved columnId)
 
 
 addCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
 addCard model { projectId, columnId, afterId } contentId =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             case contentCardId model projectId contentId of
                 Just cardId ->
                     GitHub.moveCardAfter token columnId cardId afterId
@@ -3805,9 +3812,6 @@ addCard model { projectId, columnId, afterId } contentId =
                 Nothing ->
                     GitHub.addContentCardAfter token columnId contentId afterId
                         |> Task.attempt (CardMoved columnId)
-
-        Nothing ->
-            Cmd.none
 
 
 contentCardId : Model -> GitHub.ID -> GitHub.ID -> Maybe GitHub.ID
@@ -3846,79 +3850,58 @@ labelKey label =
 
 createLabel : Model -> GitHub.Repo -> SharedLabel -> Cmd Msg
 createLabel model repo label =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.createRepoLabel token repo label.name label.color
                 |> Task.attempt (LabelChanged repo)
-
-        Nothing ->
-            Cmd.none
 
 
 updateLabel : Model -> GitHub.Repo -> GitHub.Label -> SharedLabel -> Cmd Msg
 updateLabel model repo label1 label2 =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.updateRepoLabel token repo label1 label2.name label2.color
                 |> Task.attempt (LabelChanged repo)
-
-        Nothing ->
-            Cmd.none
 
 
 deleteLabel : Model -> GitHub.Repo -> GitHub.Label -> Cmd Msg
 deleteLabel model repo label =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.deleteRepoLabel token repo label.name
                 |> Task.attempt (LabelChanged repo)
-
-        Nothing ->
-            Cmd.none
 
 
 addIssueLabels : Model -> GitHub.Issue -> List String -> Cmd Msg
 addIssueLabels model issue labels =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.addIssueLabels token issue labels
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
-
-        Nothing ->
-            Cmd.none
 
 
 removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg
 removeIssueLabel model issue label =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.removeIssueLabel token issue label
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
-
-        Nothing ->
-            Cmd.none
 
 
 addPullRequestLabels : Model -> GitHub.PullRequest -> List String -> Cmd Msg
 addPullRequestLabels model pr labels =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.addPullRequestLabels token pr labels
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
-
-        Nothing ->
-            Cmd.none
 
 
 removePullRequestLabel : Model -> GitHub.PullRequest -> String -> Cmd Msg
 removePullRequestLabel model pr label =
-    case model.me of
-        Just { token } ->
+    withTokenOrLogIn model <|
+        \token ->
             GitHub.removePullRequestLabel token pr label
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
-
-        Nothing ->
-            Cmd.none
 
 
 randomizeColor : SharedLabel -> SharedLabel
