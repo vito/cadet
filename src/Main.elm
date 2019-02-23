@@ -385,7 +385,7 @@ init config url key =
             , cards = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
-            , cardSearch = ""
+            , cardSearch = "is:open "
             , selectedCards = OrderedSet.empty
             , anticipatedCards = Set.empty
             , highlightedCard = Nothing
@@ -582,56 +582,10 @@ update msg model =
                 ( model, Cmd.none )
 
         SearchCards str ->
-            let
-                tokens =
-                    String.split " " str
-
-                ( filterTokens, rest ) =
-                    List.partition (String.contains ":") tokens
-
-                filters =
-                    List.map (String.split ":") filterTokens
-
-                query =
-                    String.toLower (String.join " " rest)
-
-                cardsByTitle =
-                    Dict.foldl
-                        (\_ card ->
-                            if Card.isOpen card then
-                                Dict.insert (String.toLower card.title) card
-
-                            else
-                                identity
-                        )
-                        Dict.empty
-                        model.cards
-
-                cardMatch title card =
-                    if String.length query < 2 && List.isEmpty filters then
-                        False
-
-                    else if String.contains query title then
-                        (\a -> List.all a filters) <|
-                            \filter ->
-                                case filter of
-                                    [ "label", name ] ->
-                                        hasLabel model name card
-
-                                    _ ->
-                                        False
-
-                    else
-                        False
-
-                foundCards =
-                    Dict.filter cardMatch cardsByTitle
-                        |> Dict.foldl (\_ card -> Set.insert card.id) Set.empty
-            in
             ( updateGraphStates
                 { model
                     | cardSearch = str
-                    , anticipatedCards = foundCards
+                    , anticipatedCards = searchCards model str
                 }
             , Cmd.none
             )
@@ -1037,6 +991,70 @@ update msg model =
 
         SetRepoPullRequestsTab tab ->
             ( { model | repoPullRequestsTab = tab }, Cmd.none )
+
+
+searchCards : Model -> String -> Set GitHub.ID
+searchCards model str =
+    let
+        tokens =
+            String.split " " str
+
+        ( filterTokens, rest ) =
+            List.partition (String.contains ":") tokens
+
+        filters =
+            List.map (String.split ":" >> searchFilter model) filterTokens
+
+        query =
+            String.toLower (String.join " " rest)
+
+        titleMatch title _ =
+            String.contains query title
+    in
+    if String.length query < 2 then
+        -- don't bother querying with so few characters
+        Set.empty
+
+    else
+        filteredCardsByTitle model filters
+            |> Dict.filter titleMatch
+            |> Dict.foldl (\_ -> Set.insert) Set.empty
+
+
+searchFilter : Model -> List String -> Card -> Bool
+searchFilter model filter card =
+    case filter of
+        [ "label", name ] ->
+            hasLabel model name card
+
+        [ "is", "pr" ] ->
+            Card.isPR card
+
+        [ "is", "issue" ] ->
+            not (Card.isPR card)
+
+        [ "is", "open" ] ->
+            Card.isOpen card
+
+        [ "is", "closed" ] ->
+            not (Card.isOpen card)
+
+        _ ->
+            False
+
+
+filteredCardsByTitle : Model -> List (Card -> Bool) -> Dict String GitHub.ID
+filteredCardsByTitle model filters =
+    Dict.foldl
+        (\_ card ->
+            if List.all (\f -> f card) filters then
+                Dict.insert (String.toLower card.title) card.id
+
+            else
+                identity
+        )
+        Dict.empty
+        model.cards
 
 
 updateGraphStates : Model -> Model
