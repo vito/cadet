@@ -101,7 +101,7 @@ type alias Model =
     , highlightedNode : Maybe GitHub.ID
 
     -- card graph state
-    , statefulGraphs : List ( CardNodeState, ForceGraph GitHub.ID )
+    , statefulGraphs : List StatefulGraph
     , baseGraphFilter : Maybe GraphFilter
     , graphFilters : List GraphFilter
     , graphSort : GraphSort
@@ -117,6 +117,36 @@ type alias Model =
     , suggestedLabels : List String
     , releaseRepoTab : Int
     , repoPullRequestsTab : Int
+    }
+
+
+type alias StatefulGraph =
+    { state : CardNodeState
+    , nodes : List CardNode
+    , edges : List CardEdge
+    , matches : Set Int
+    }
+
+
+type alias CardNode =
+    { card : Card
+    , x : Float
+    , y : Float
+    , mass : Float
+    , filteredOut : Bool
+    }
+
+
+type alias CardEdge =
+    { source : CardEdgePoint
+    , target : CardEdgePoint
+    , filteredOut : Bool
+    }
+
+
+type alias CardEdgePoint =
+    { x : Float
+    , y : Float
     }
 
 
@@ -181,17 +211,12 @@ type alias SharedLabel =
 
 
 type alias CardNodeState =
-    { allCards : Dict GitHub.ID Card
-    , allLabels : Dict GitHub.ID GitHub.Label
+    { allLabels : Dict GitHub.ID GitHub.Label
     , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     , currentTime : Time.Posix
     , selectedCards : OrderedSet GitHub.ID
     , anticipatedCards : Set GitHub.ID
-    , filteredCards : Set GitHub.ID
     , highlightedNode : Maybe GitHub.ID
-    , me : Maybe Me
-    , dataIndex : Int
-    , cardEvents : Dict GitHub.ID (List Backend.EventActor)
     }
 
 
@@ -1019,52 +1044,49 @@ updateGraphStates : Model -> Model
 updateGraphStates model =
     let
         newState =
-            { allCards = model.cards
-            , allLabels = model.allLabels
-            , reviewers = model.reviewers
-            , currentTime = model.currentTime
+            { currentTime = model.currentTime
             , selectedCards = model.selectedCards
-            , filteredCards = Set.empty
             , anticipatedCards = model.anticipatedCards
             , highlightedNode = model.highlightedNode
-            , me = model.me
-            , dataIndex = model.dataIndex
-            , cardEvents = model.actors
+            , allLabels = model.allLabels
+            , reviewers = model.reviewers
             }
 
-        affectedByState graph =
-            ForceGraph.fold
-                (\node affected ->
-                    if affected then
-                        True
-
-                    else
-                        OrderedSet.member node.value newState.selectedCards
-                            || Set.member node.value newState.anticipatedCards
-                            || (newState.highlightedNode == Just node.value)
+        affectedByState =
+            List.any
+                (\{ card } ->
+                    OrderedSet.member card.id newState.selectedCards
+                        || Set.member card.id newState.anticipatedCards
+                        || (newState.highlightedNode == Just card.id)
                 )
-                False
-                graph
     in
     { model
         | statefulGraphs =
             List.map
-                (\( s, g ) ->
-                    if affectedByState g then
-                        ( { newState | filteredCards = s.filteredCards }, g )
+                (\sg ->
+                    if affectedByState sg.nodes then
+                        -- set new state for graph containing
+                        -- selected/anticipated/highlighted cards
+                        { sg | state = newState }
 
-                    else if isBaseGraphState model s then
-                        ( s, g )
+                    else if isBaseGraphState model sg.state then
+                        -- preserve current state
+                        sg
 
                     else
-                        let
-                            base =
-                                baseGraphState model
-                        in
-                        ( { base | filteredCards = s.filteredCards }, g )
+                        -- reset to initial state
+                        { sg | state = baseGraphState model }
                 )
                 model.statefulGraphs
     }
+
+
+isBaseGraphState : Model -> CardNodeState -> Bool
+isBaseGraphState model state =
+    (state.currentTime == model.currentTime)
+        && Set.isEmpty state.anticipatedCards
+        && OrderedSet.isEmpty state.selectedCards
+        && (state.highlightedNode == Nothing)
 
 
 addToList : x -> Maybe (List x) -> Maybe (List x)
@@ -1088,7 +1110,7 @@ computeViewForPage model =
     in
     case model.page of
         GlobalGraphPage ->
-            { reset | baseGraphFilter = Nothing }
+            reset
                 |> updateGraphStates
 
         ProjectPage name ->
@@ -1543,15 +1565,14 @@ viewSpatialGraph model =
     Html.div [ HA.class "spatial-graph" ]
         [ viewGraphControls model
         , model.statefulGraphs
-            |> List.map (\( state, graph ) -> ( graphId graph, Html.Lazy.lazy2 viewGraph state graph ))
+            |> List.map (\graph -> ( graphId graph, Html.Lazy.lazy viewGraph graph ))
             |> Html.Keyed.node "div" [ HA.class "graphs" ]
         ]
 
 
-graphId : ForceGraph GitHub.ID -> String
+graphId : StatefulGraph -> String
 graphId graph =
-    ForceGraph.fold (\{ id } acc -> max id acc) 0 graph
-        |> String.fromInt
+    List.foldl (\{ card } acc -> max card.id acc) "" graph.nodes
 
 
 viewGraphControls : Model -> Html Msg
@@ -2608,12 +2629,9 @@ viewSearch model =
         ]
 
 
-computeGraphsView : Model -> Model
-computeGraphsView model =
+statefulGraph : Model -> ForceGraph GitHub.ID -> StatefulGraph
+statefulGraph model fg =
     let
-        baseState =
-            baseGraphState model
-
         allFilters =
             case model.baseGraphFilter of
                 Just f ->
@@ -2622,46 +2640,84 @@ computeGraphsView model =
                 Nothing ->
                     model.graphFilters
 
-        filteredGraphs =
-            List.foldl
-                (\fg fgs ->
-                    let
-                        matching =
-                            ForceGraph.fold
-                                (\node matches ->
-                                    case Dict.get node.value model.cards of
-                                        Just card ->
-                                            if satisfiesFilters model allFilters card then
-                                                Set.insert card.id matches
+        ( nodes, matches ) =
+            ForceGraph.fold
+                (\node ( ns, ms ) ->
+                    case Dict.get node.value model.cards of
+                        Just card ->
+                            let
+                                satisfies =
+                                    satisfiesFilters model allFilters card
+                            in
+                            ( { card = card
+                              , x = node.x
+                              , y = node.y
+                              , mass = node.mass
+                              , filteredOut = not satisfies
+                              }
+                                :: ns
+                            , if satisfies then
+                                Set.insert node.id ms
 
-                                            else
-                                                matches
+                              else
+                                ms
+                            )
 
-                                        Nothing ->
-                                            matches
-                                )
-                                Set.empty
-                                fg
-                    in
-                    if Set.isEmpty matching then
-                        fgs
-
-                    else
-                        ( { baseState | filteredCards = matching }, fg ) :: fgs
+                        Nothing ->
+                            ( ns, ms )
                 )
-                []
-                model.graphs
+                ( [], Set.empty )
+                fg
 
-        sortFunc ( _, a ) ( _, b ) =
+        edges =
+            List.filterMap
+                (\( from, to ) ->
+                    case ( ForceGraph.get from fg, ForceGraph.get to fg ) of
+                        ( Just fromNode, Just toNode ) ->
+                            Just
+                                { source =
+                                    { x = fromNode.x
+                                    , y = fromNode.y
+                                    }
+                                , target =
+                                    { x = toNode.x
+                                    , y = toNode.y
+                                    }
+                                , filteredOut =
+                                    not (Set.member from matches || Set.member to matches)
+                                }
+
+                        _ ->
+                            Nothing
+                )
+                fg.edges
+    in
+    { state = baseGraphState model
+    , nodes = nodes
+    , edges = edges
+    , matches = matches
+    }
+
+
+computeGraphsView : Model -> Model
+computeGraphsView model =
+    let
+        statefulGraphs =
+            List.map (statefulGraph model) model.graphs
+
+        filteredGraphs =
+            List.filter (not << Set.isEmpty << .matches) statefulGraphs
+
+        sortFunc a b =
             case model.graphSort of
                 ImpactSort ->
-                    graphImpactCompare model a b
+                    graphImpactCompare model a.nodes b.nodes
 
                 UserActivitySort login ->
-                    graphUserActivityCompare model login a b
+                    graphUserActivityCompare model login a.nodes b.nodes
 
                 AllActivitySort ->
-                    graphAllActivityCompare model a b
+                    graphAllActivityCompare model a.nodes b.nodes
     in
     { model
         | statefulGraphs =
@@ -2673,28 +2729,13 @@ computeGraphsView model =
 
 baseGraphState : Model -> CardNodeState
 baseGraphState model =
-    { allCards = model.cards
-    , allLabels = model.allLabels
+    { allLabels = model.allLabels
     , reviewers = model.reviewers
     , currentTime = model.currentTime
-    , me = model.me
-    , dataIndex = model.dataIndex
-    , cardEvents = model.actors
     , selectedCards = OrderedSet.empty
     , anticipatedCards = Set.empty
-    , filteredCards = Set.empty
     , highlightedNode = Nothing
     }
-
-
-isBaseGraphState : Model -> CardNodeState -> Bool
-isBaseGraphState model state =
-    (state.currentTime == model.currentTime)
-        && (state.me == model.me)
-        && (state.dataIndex == model.dataIndex)
-        && Set.isEmpty state.anticipatedCards
-        && OrderedSet.isEmpty state.selectedCards
-        && (state.highlightedNode == Nothing)
 
 
 satisfiesFilters : Model -> List GraphFilter -> Card -> Bool
@@ -2727,21 +2768,14 @@ satisfiesFilter model filter card =
             Card.isUntriaged card
 
 
-graphImpactCompare : Model -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
+graphImpactCompare : Model -> List CardNode -> List CardNode -> Order
 graphImpactCompare model a b =
-    case compare (ForceGraph.size a) (ForceGraph.size b) of
+    case compare (List.length a) (List.length b) of
         EQ ->
             let
                 graphScore =
-                    ForceGraph.fold
-                        (\node sum ->
-                            case Dict.get node.value model.cards of
-                                Just { score } ->
-                                    score + sum
-
-                                Nothing ->
-                                    sum
-                        )
+                    List.foldl
+                        (\{ card } sum -> card.score + sum)
                         0
             in
             compare (graphScore a) (graphScore b)
@@ -2750,15 +2784,15 @@ graphImpactCompare model a b =
             x
 
 
-graphUserActivityCompare : Model -> String -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
+graphUserActivityCompare : Model -> String -> List CardNode -> List CardNode -> Order
 graphUserActivityCompare model login a b =
     let
         latestUserActivity =
-            ForceGraph.fold
-                (\node latest ->
+            List.foldl
+                (\{ card } latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.value model.actors)
+                            Maybe.withDefault [] (Dict.get card.id model.actors)
                                 |> List.filter (.user >> Maybe.map .login >> (==) (Just login))
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
@@ -2775,42 +2809,38 @@ graphUserActivityCompare model login a b =
     compare (latestUserActivity a) (latestUserActivity b)
 
 
-graphAllActivityCompare : Model -> ForceGraph GitHub.ID -> ForceGraph GitHub.ID -> Order
+graphAllActivityCompare : Model -> List CardNode -> List CardNode -> Order
 graphAllActivityCompare model a b =
     let
         latestActivity =
-            ForceGraph.fold
-                (\node latest ->
+            List.foldl
+                (\{ card } latest ->
                     let
                         mlatest =
-                            Maybe.withDefault [] (Dict.get node.value model.actors)
+                            Maybe.withDefault [] (Dict.get card.id model.actors)
                                 |> List.map (.createdAt >> Time.posixToMillis)
                                 |> List.maximum
 
-                        mupdated =
-                            Dict.get node.value model.cards
-                                |> Maybe.map (.updatedAt >> Time.posixToMillis)
+                        updated =
+                            Time.posixToMillis card.updatedAt
                     in
-                    case ( mlatest, mupdated ) of
-                        ( Just activity, _ ) ->
+                    case mlatest of
+                        Just activity ->
                             max activity latest
 
-                        ( Nothing, Just updated ) ->
+                        Nothing ->
                             max updated latest
-
-                        ( Nothing, Nothing ) ->
-                            latest
                 )
                 0
     in
     compare (latestActivity a) (latestActivity b)
 
 
-viewGraph : CardNodeState -> ForceGraph GitHub.ID -> Html Msg
-viewGraph state graph =
+viewGraph : StatefulGraph -> Html Msg
+viewGraph graph =
     let
         ( flairs, nodes, bounds ) =
-            ForceGraph.fold (viewNodeLowerUpper state) ( [], [], [] ) graph
+            List.foldl (viewNodeLowerUpper graph.state) ( [], [], [] ) graph.nodes
 
         padding =
             10
@@ -2834,7 +2864,7 @@ viewGraph state graph =
             maxY - minY
 
         links =
-            List.map (linkPath state graph) graph.edges
+            List.map (linkPath graph.state) graph.edges
     in
     Svg.svg
         [ SA.width (String.fromFloat width ++ "px")
@@ -2849,60 +2879,101 @@ viewGraph state graph =
 
 viewNodeLowerUpper :
     CardNodeState
-    -> ForceGraph.ForceNode GitHub.ID
+    -> CardNode
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
-viewNodeLowerUpper state { value, mass, x, y } ( fs, ns, bs ) =
-    case Dict.get value state.allCards of
-        Just card ->
-            let
-                pos =
-                    { x = x, y = y }
+viewNodeLowerUpper state node ( fs, ns, bs ) =
+    let
+        radiiWithFlair =
+            cardRadiusWithFlair node.card node.mass
 
-                radiiWithFlair =
-                    cardRadiusWithFlair card mass
+        bounds =
+            { x1 = node.x - radiiWithFlair
+            , y1 = node.y - radiiWithFlair
+            , x2 = node.x + radiiWithFlair
+            , y2 = node.y + radiiWithFlair
+            }
 
-                bounds =
-                    { x1 = x - radiiWithFlair
-                    , y1 = y - radiiWithFlair
-                    , x2 = x + radiiWithFlair
-                    , y2 = y + radiiWithFlair
-                    }
-            in
-            ( ( value, Svg.Lazy.lazy4 viewCardFlair card mass pos state ) :: fs
-            , ( value, Svg.Lazy.lazy4 viewCardCircle card mass pos state ) :: ns
-            , bounds :: bs
-            )
+        isHighlighted =
+            Set.member node.card.id state.anticipatedCards
+                || (state.highlightedNode == Just node.card.id)
 
-        Nothing ->
-            ( fs, ns, bs )
+        isSelected =
+            OrderedSet.member node.card.id state.selectedCards
+    in
+    ( ( node.card.id, Svg.Lazy.lazy4 viewCardFlair node state.currentTime isHighlighted state.reviewers ) :: fs
+    , ( node.card.id, Svg.Lazy.lazy4 viewCardCircle node state.allLabels isHighlighted isSelected ) :: ns
+    , bounds :: bs
+    )
 
 
-viewCardFlair : Card -> Float -> Position -> CardNodeState -> Svg Msg
-viewCardFlair card radius pos state =
+viewCardFlair : CardNode -> Time.Posix -> Bool -> Dict GitHub.ID (List GitHub.PullRequestReview) -> Svg Msg
+viewCardFlair node currentTime isHighlighted reviewers =
     let
         flairArcs =
-            reactionFlairArcs (Maybe.withDefault [] <| Dict.get card.id state.reviewers) card radius
+            reactionFlairArcs (Maybe.withDefault [] <| Dict.get node.card.id reviewers) node.card node.mass
 
         radii =
-            { base = radius
-            , withoutFlair = radius
-            , withFlair = cardRadiusWithFlair card radius
+            { base = node.mass
+            , withoutFlair = node.mass
+            , withFlair = cardRadiusWithFlair node.card node.mass
             }
+
+        scale =
+            if isHighlighted then
+                "1.1"
+
+            else if node.filteredOut then
+                "0.5"
+
+            else
+                "1"
+
+        anticipateRadius =
+            if List.isEmpty node.card.labels then
+                radii.base + 5
+
+            else
+                radii.withoutFlair + 5
+
+        anticipatedHalo =
+            if isHighlighted then
+                Svg.circle
+                    [ SA.r (String.fromFloat anticipateRadius)
+                    , SA.class "anticipated-circle"
+                    ]
+                    []
+
+            else
+                Svg.text ""
+
+        classes =
+            [ "flair"
+            , activityClass currentTime node.card.updatedAt
+            , if node.filteredOut then
+                "filtered-out"
+
+              else
+                "filtered-in"
+            ]
     in
-    viewCardNodeFlair card radii flairArcs pos state
+    Svg.g
+        [ SA.transform ("translate(" ++ String.fromFloat node.x ++ "," ++ String.fromFloat node.y ++ ") scale(" ++ scale ++ ")")
+        , SA.class (String.join " " classes)
+        ]
+        (flairArcs ++ [ anticipatedHalo ])
 
 
-viewCardCircle : Card -> Float -> Position -> CardNodeState -> Svg Msg
-viewCardCircle card radius pos state =
+viewCardCircle : CardNode -> Dict GitHub.ID GitHub.Label -> Bool -> Bool -> Svg Msg
+viewCardCircle node labels isHighlighted isSelected =
     let
         labelArcs =
-            cardLabelArcs state.allLabels card radius
+            cardLabelArcs labels node.card node.mass
 
         radii =
-            { base = radius
-            , withoutFlair = radius
-            , withFlair = cardRadiusWithFlair card radius
+            { base = node.mass
+            , withoutFlair = node.mass
+            , withFlair = cardRadiusWithFlair node.card node.mass
             }
 
         circle =
@@ -2917,38 +2988,62 @@ viewCardCircle card radius pos state =
                     , SA.alignmentBaseline "middle"
                     , SA.class "issue-number"
                     ]
-                    [ Svg.text ("#" ++ String.fromInt card.number)
+                    [ Svg.text ("#" ++ String.fromInt node.card.number)
                     ]
                 ]
+
+        card =
+            node.card
+
+        scale =
+            if isHighlighted then
+                "1.1"
+
+            else if node.filteredOut then
+                "0.5"
+
+            else
+                "1"
     in
-    viewCardNode card radii circle labelArcs pos state
+    Svg.g
+        [ SA.transform ("translate(" ++ String.fromFloat node.x ++ "," ++ String.fromFloat node.y ++ ") scale(" ++ scale ++ ")")
+        , if Card.isInFlight card then
+            SA.class "in-flight"
+
+          else if Card.isDone card then
+            SA.class "done"
+
+          else if Card.isIcebox card then
+            SA.class "icebox"
+
+          else if Card.isBacklog card then
+            SA.class "backlog"
+
+          else
+            SA.class "untriaged"
+        , if node.filteredOut then
+            SA.class "filtered-out"
+
+          else
+            SA.class "filtered-in"
+        , SE.onMouseOver (AnticipateCardFromNode card.id)
+        , SE.onMouseOut (UnanticipateCardFromNode card.id)
+        , SE.onClick
+            (if isSelected then
+                DeselectCard card.id
+
+             else
+                SelectCard card.id
+            )
+        ]
+        (circle :: labelArcs)
 
 
-isFilteredOut : CardNodeState -> GitHub.ID -> Bool
-isFilteredOut state id =
-    not (Set.isEmpty state.filteredCards) && not (Set.member id state.filteredCards)
-
-
-linkPath : CardNodeState -> ForceGraph GitHub.ID -> ( ForceGraph.NodeId, ForceGraph.NodeId ) -> Svg Msg
-linkPath state graph ( from, to ) =
-    let
-        getEnd end =
-            case ForceGraph.get end graph of
-                Just { x, y, value } ->
-                    ( { x = x, y = y }, isFilteredOut state value )
-
-                Nothing ->
-                    ( { x = 0, y = 0 }, False )
-
-        ( source, sourceIsFilteredOut ) =
-            getEnd from
-
-        ( target, targetIsFilteredOut ) =
-            getEnd to
-    in
+linkPath : CardNodeState -> CardEdge -> Svg Msg
+linkPath state { source, target, filteredOut } =
     Svg.line
         [ SA.class "graph-edge"
-        , if sourceIsFilteredOut || targetIsFilteredOut then
+        , if filteredOut then
             SA.class "filtered-out"
 
           else
@@ -3195,72 +3290,6 @@ cardLabelArcs allLabels card radius =
         (List.filterMap (\a -> Dict.get a allLabels) card.labels)
 
 
-viewCardNodeFlair : Card -> CardNodeRadii -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
-viewCardNodeFlair card radii flair { x, y } state =
-    let
-        isHighlighted =
-            Set.member card.id state.anticipatedCards
-                || (state.highlightedNode == Just card.id)
-
-        isFiltered =
-            isFilteredOut state card.id
-
-        scale =
-            if isHighlighted then
-                "1.1"
-
-            else if isFiltered then
-                "0.5"
-
-            else
-                "1"
-
-        anticipateRadius =
-            if List.isEmpty card.labels then
-                radii.base + 5
-
-            else
-                radii.withoutFlair + 5
-
-        anticipatedHalo =
-            if isHighlighted then
-                Svg.circle
-                    [ SA.r (String.fromFloat anticipateRadius)
-                    , SA.class "anticipated-circle"
-                    ]
-                    []
-
-            else
-                Svg.text ""
-
-        classes =
-            [ "flair"
-            , activityClass state.currentTime card.updatedAt
-            , if isFiltered then
-                "filtered-out"
-
-              else
-                "filtered-in"
-            ]
-                ++ (case state.me of
-                        Nothing ->
-                            []
-
-                        Just { user } ->
-                            if lastActivityIsByUser state.cardEvents user.login card then
-                                [ "last-activity-is-me" ]
-
-                            else
-                                []
-                   )
-    in
-    Svg.g
-        [ SA.transform ("translate(" ++ String.fromFloat x ++ "," ++ String.fromFloat y ++ ") scale(" ++ scale ++ ")")
-        , SA.class (String.join " " classes)
-        ]
-        (flair ++ [ anticipatedHalo ])
-
-
 activityClass : Time.Posix -> Time.Posix -> String
 activityClass now date =
     let
@@ -3284,63 +3313,6 @@ activityClass now date =
 
     else
         "active-long-ago"
-
-
-viewCardNode : Card -> CardNodeRadii -> Svg Msg -> List (Svg Msg) -> Position -> CardNodeState -> Svg Msg
-viewCardNode card radii circle labels { x, y } state =
-    let
-        isSelected =
-            OrderedSet.member card.id state.selectedCards
-
-        isHighlighted =
-            Set.member card.id state.anticipatedCards
-                || (state.highlightedNode == Just card.id)
-
-        isFiltered =
-            isFilteredOut state card.id
-
-        scale =
-            if isHighlighted then
-                "1.1"
-
-            else if isFiltered then
-                "0.5"
-
-            else
-                "1"
-    in
-    Svg.g
-        [ SA.transform ("translate(" ++ String.fromFloat x ++ "," ++ String.fromFloat y ++ ") scale(" ++ scale ++ ")")
-        , if Card.isInFlight card then
-            SA.class "in-flight"
-
-          else if Card.isDone card then
-            SA.class "done"
-
-          else if Card.isIcebox card then
-            SA.class "icebox"
-
-          else if Card.isBacklog card then
-            SA.class "backlog"
-
-          else
-            SA.class "untriaged"
-        , if isFiltered then
-            SA.class "filtered-out"
-
-          else
-            SA.class "filtered-in"
-        , SE.onMouseOver (AnticipateCardFromNode card.id)
-        , SE.onMouseOut (UnanticipateCardFromNode card.id)
-        , SE.onClick
-            (if isSelected then
-                DeselectCard card.id
-
-             else
-                SelectCard card.id
-            )
-        ]
-        (circle :: labels)
 
 
 viewCardEntry : Model -> Card -> Html Msg

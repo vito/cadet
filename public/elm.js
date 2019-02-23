@@ -11170,6 +11170,122 @@ var author$project$Main$computeDataView = function (model) {
 		model,
 		{allLabels: allLabels, colorLightnessCache: colorLightnessCache, labelToRepoToId: groupLabelsToRepoToId, reposByLabel: groupRepoLabels, reposByName: reposByName});
 };
+var elm$core$List$maximum = function (list) {
+	if (list.b) {
+		var x = list.a;
+		var xs = list.b;
+		return elm$core$Maybe$Just(
+			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var author$project$Main$graphAllActivityCompare = F3(
+	function (model, a, b) {
+		var latestActivity = A2(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, latest) {
+					var card = _n0.card;
+					var updated = elm$time$Time$posixToMillis(card.updatedAt);
+					var mlatest = elm$core$List$maximum(
+						A2(
+							elm$core$List$map,
+							A2(
+								elm$core$Basics$composeR,
+								function ($) {
+									return $.createdAt;
+								},
+								elm$time$Time$posixToMillis),
+							A2(
+								elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2(elm$core$Dict$get, card.id, model.actors))));
+					if (mlatest.$ === 'Just') {
+						var activity = mlatest.a;
+						return A2(elm$core$Basics$max, activity, latest);
+					} else {
+						return A2(elm$core$Basics$max, updated, latest);
+					}
+				}),
+			0);
+		return A2(
+			elm$core$Basics$compare,
+			latestActivity(a),
+			latestActivity(b));
+	});
+var author$project$Main$graphImpactCompare = F3(
+	function (model, a, b) {
+		var _n0 = A2(
+			elm$core$Basics$compare,
+			elm$core$List$length(a),
+			elm$core$List$length(b));
+		if (_n0.$ === 'EQ') {
+			var graphScore = A2(
+				elm$core$List$foldl,
+				F2(
+					function (_n1, sum) {
+						var card = _n1.card;
+						return card.score + sum;
+					}),
+				0);
+			return A2(
+				elm$core$Basics$compare,
+				graphScore(a),
+				graphScore(b));
+		} else {
+			var x = _n0;
+			return x;
+		}
+	});
+var author$project$Main$graphUserActivityCompare = F4(
+	function (model, login, a, b) {
+		var latestUserActivity = A2(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, latest) {
+					var card = _n0.card;
+					var mlatest = elm$core$List$maximum(
+						A2(
+							elm$core$List$map,
+							A2(
+								elm$core$Basics$composeR,
+								function ($) {
+									return $.createdAt;
+								},
+								elm$time$Time$posixToMillis),
+							A2(
+								elm$core$List$filter,
+								A2(
+									elm$core$Basics$composeR,
+									function ($) {
+										return $.user;
+									},
+									A2(
+										elm$core$Basics$composeR,
+										elm$core$Maybe$map(
+											function ($) {
+												return $.login;
+											}),
+										elm$core$Basics$eq(
+											elm$core$Maybe$Just(login)))),
+								A2(
+									elm$core$Maybe$withDefault,
+									_List_Nil,
+									A2(elm$core$Dict$get, card.id, model.actors)))));
+					if (mlatest.$ === 'Nothing') {
+						return latest;
+					} else {
+						var activity = mlatest.a;
+						return A2(elm$core$Basics$max, activity, latest);
+					}
+				}),
+			0);
+		return A2(
+			elm$core$Basics$compare,
+			latestUserActivity(a),
+			latestUserActivity(b));
+	});
 var elm_community$intdict$IntDict$foldl = F3(
 	function (f, acc, dict) {
 		foldl:
@@ -11203,154 +11319,51 @@ var author$project$ForceGraph$fold = F3(
 			init,
 			nodes);
 	});
+var elm_community$intdict$IntDict$get = F2(
+	function (key, dict) {
+		get:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return elm$core$Maybe$Nothing;
+				case 'Leaf':
+					var l = dict.a;
+					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
+				default:
+					var i = dict.a;
+					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
+						return elm$core$Maybe$Nothing;
+					} else {
+						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
+							var $temp$key = key,
+								$temp$dict = i.right;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						} else {
+							var $temp$key = key,
+								$temp$dict = i.left;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						}
+					}
+			}
+		}
+	});
+var author$project$ForceGraph$get = F2(
+	function (id, _n0) {
+		var nodes = _n0.nodes;
+		return A2(elm_community$intdict$IntDict$get, id, nodes);
+	});
 var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
 	function (a, b) {
 		return {$: 'OrderedSet', a: a, b: b};
 	});
 var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
 var author$project$Main$baseGraphState = function (model) {
-	return {allCards: model.cards, allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, cardEvents: model.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: elm$core$Maybe$Nothing, me: model.me, reviewers: model.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+	return {allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, currentTime: model.currentTime, highlightedNode: elm$core$Maybe$Nothing, reviewers: model.reviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
 };
-var elm$core$List$maximum = function (list) {
-	if (list.b) {
-		var x = list.a;
-		var xs = list.b;
-		return elm$core$Maybe$Just(
-			A3(elm$core$List$foldl, elm$core$Basics$max, x, xs));
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$Main$graphAllActivityCompare = F3(
-	function (model, a, b) {
-		var latestActivity = A2(
-			author$project$ForceGraph$fold,
-			F2(
-				function (node, latest) {
-					var mupdated = A2(
-						elm$core$Maybe$map,
-						A2(
-							elm$core$Basics$composeR,
-							function ($) {
-								return $.updatedAt;
-							},
-							elm$time$Time$posixToMillis),
-						A2(elm$core$Dict$get, node.value, model.cards));
-					var mlatest = elm$core$List$maximum(
-						A2(
-							elm$core$List$map,
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.createdAt;
-								},
-								elm$time$Time$posixToMillis),
-							A2(
-								elm$core$Maybe$withDefault,
-								_List_Nil,
-								A2(elm$core$Dict$get, node.value, model.actors))));
-					var _n0 = _Utils_Tuple2(mlatest, mupdated);
-					if (_n0.a.$ === 'Just') {
-						var activity = _n0.a.a;
-						return A2(elm$core$Basics$max, activity, latest);
-					} else {
-						if (_n0.b.$ === 'Just') {
-							var _n1 = _n0.a;
-							var updated = _n0.b.a;
-							return A2(elm$core$Basics$max, updated, latest);
-						} else {
-							var _n2 = _n0.a;
-							var _n3 = _n0.b;
-							return latest;
-						}
-					}
-				}),
-			0);
-		return A2(
-			elm$core$Basics$compare,
-			latestActivity(a),
-			latestActivity(b));
-	});
-var author$project$ForceGraph$size = function (_n0) {
-	var nodes = _n0.nodes;
-	return elm_community$intdict$IntDict$size(nodes);
-};
-var author$project$Main$graphImpactCompare = F3(
-	function (model, a, b) {
-		var _n0 = A2(
-			elm$core$Basics$compare,
-			author$project$ForceGraph$size(a),
-			author$project$ForceGraph$size(b));
-		if (_n0.$ === 'EQ') {
-			var graphScore = A2(
-				author$project$ForceGraph$fold,
-				F2(
-					function (node, sum) {
-						var _n1 = A2(elm$core$Dict$get, node.value, model.cards);
-						if (_n1.$ === 'Just') {
-							var score = _n1.a.score;
-							return score + sum;
-						} else {
-							return sum;
-						}
-					}),
-				0);
-			return A2(
-				elm$core$Basics$compare,
-				graphScore(a),
-				graphScore(b));
-		} else {
-			var x = _n0;
-			return x;
-		}
-	});
-var author$project$Main$graphUserActivityCompare = F4(
-	function (model, login, a, b) {
-		var latestUserActivity = A2(
-			author$project$ForceGraph$fold,
-			F2(
-				function (node, latest) {
-					var mlatest = elm$core$List$maximum(
-						A2(
-							elm$core$List$map,
-							A2(
-								elm$core$Basics$composeR,
-								function ($) {
-									return $.createdAt;
-								},
-								elm$time$Time$posixToMillis),
-							A2(
-								elm$core$List$filter,
-								A2(
-									elm$core$Basics$composeR,
-									function ($) {
-										return $.user;
-									},
-									A2(
-										elm$core$Basics$composeR,
-										elm$core$Maybe$map(
-											function ($) {
-												return $.login;
-											}),
-										elm$core$Basics$eq(
-											elm$core$Maybe$Just(login)))),
-								A2(
-									elm$core$Maybe$withDefault,
-									_List_Nil,
-									A2(elm$core$Dict$get, node.value, model.actors)))));
-					if (mlatest.$ === 'Nothing') {
-						return latest;
-					} else {
-						var activity = mlatest.a;
-						return A2(elm$core$Basics$max, activity, latest);
-					}
-				}),
-			0);
-		return A2(
-			elm$core$Basics$compare,
-			latestUserActivity(a),
-			latestUserActivity(b));
-	});
 var author$project$Card$isPR = function (card) {
 	var _n0 = card.state;
 	if (_n0.$ === 'PullRequestState') {
@@ -11465,6 +11478,75 @@ var author$project$Main$satisfiesFilters = F3(
 			},
 			filters);
 	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
+	});
+var author$project$Main$statefulGraph = F2(
+	function (model, fg) {
+		var allFilters = function () {
+			var _n5 = model.baseGraphFilter;
+			if (_n5.$ === 'Just') {
+				var f = _n5.a;
+				return A2(elm$core$List$cons, f, model.graphFilters);
+			} else {
+				return model.graphFilters;
+			}
+		}();
+		var _n0 = A3(
+			author$project$ForceGraph$fold,
+			F2(
+				function (node, _n1) {
+					var ns = _n1.a;
+					var ms = _n1.b;
+					var _n2 = A2(elm$core$Dict$get, node.value, model.cards);
+					if (_n2.$ === 'Just') {
+						var card = _n2.a;
+						var satisfies = A3(author$project$Main$satisfiesFilters, model, allFilters, card);
+						return _Utils_Tuple2(
+							A2(
+								elm$core$List$cons,
+								{card: card, filteredOut: !satisfies, mass: node.mass, x: node.x, y: node.y},
+								ns),
+							satisfies ? A2(elm$core$Set$insert, node.id, ms) : ms);
+					} else {
+						return _Utils_Tuple2(ns, ms);
+					}
+				}),
+			_Utils_Tuple2(_List_Nil, elm$core$Set$empty),
+			fg);
+		var nodes = _n0.a;
+		var matches = _n0.b;
+		var edges = A2(
+			elm$core$List$filterMap,
+			function (_n3) {
+				var from = _n3.a;
+				var to = _n3.b;
+				var _n4 = _Utils_Tuple2(
+					A2(author$project$ForceGraph$get, from, fg),
+					A2(author$project$ForceGraph$get, to, fg));
+				if ((_n4.a.$ === 'Just') && (_n4.b.$ === 'Just')) {
+					var fromNode = _n4.a.a;
+					var toNode = _n4.b.a;
+					return elm$core$Maybe$Just(
+						{
+							filteredOut: !(A2(elm$core$Set$member, from, matches) || A2(elm$core$Set$member, to, matches)),
+							source: {x: fromNode.x, y: fromNode.y},
+							target: {x: toNode.x, y: toNode.y}
+						});
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			},
+			fg.edges);
+		return {
+			edges: edges,
+			matches: matches,
+			nodes: nodes,
+			state: author$project$Main$baseGraphState(model)
+		};
+	});
 var elm$core$List$sortWith = _List_sortWith;
 var elm$core$Dict$isEmpty = function (dict) {
 	if (dict.$ === 'RBEmpty_elm_builtin') {
@@ -11478,60 +11560,32 @@ var elm$core$Set$isEmpty = function (_n0) {
 	return elm$core$Dict$isEmpty(dict);
 };
 var author$project$Main$computeGraphsView = function (model) {
+	var statefulGraphs = A2(
+		elm$core$List$map,
+		author$project$Main$statefulGraph(model),
+		model.graphs);
 	var sortFunc = F2(
-		function (_n3, _n4) {
-			var a = _n3.b;
-			var b = _n4.b;
-			var _n2 = model.graphSort;
-			switch (_n2.$) {
+		function (a, b) {
+			var _n0 = model.graphSort;
+			switch (_n0.$) {
 				case 'ImpactSort':
-					return A3(author$project$Main$graphImpactCompare, model, a, b);
+					return A3(author$project$Main$graphImpactCompare, model, a.nodes, b.nodes);
 				case 'UserActivitySort':
-					var login = _n2.a;
-					return A4(author$project$Main$graphUserActivityCompare, model, login, a, b);
+					var login = _n0.a;
+					return A4(author$project$Main$graphUserActivityCompare, model, login, a.nodes, b.nodes);
 				default:
-					return A3(author$project$Main$graphAllActivityCompare, model, a, b);
+					return A3(author$project$Main$graphAllActivityCompare, model, a.nodes, b.nodes);
 			}
 		});
-	var baseState = author$project$Main$baseGraphState(model);
-	var allFilters = function () {
-		var _n1 = model.baseGraphFilter;
-		if (_n1.$ === 'Just') {
-			var f = _n1.a;
-			return A2(elm$core$List$cons, f, model.graphFilters);
-		} else {
-			return model.graphFilters;
-		}
-	}();
-	var filteredGraphs = A3(
-		elm$core$List$foldl,
-		F2(
-			function (fg, fgs) {
-				var matching = A3(
-					author$project$ForceGraph$fold,
-					F2(
-						function (node, matches) {
-							var _n0 = A2(elm$core$Dict$get, node.value, model.cards);
-							if (_n0.$ === 'Just') {
-								var card = _n0.a;
-								return A3(author$project$Main$satisfiesFilters, model, allFilters, card) ? A2(elm$core$Set$insert, card.id, matches) : matches;
-							} else {
-								return matches;
-							}
-						}),
-					elm$core$Set$empty,
-					fg);
-				return elm$core$Set$isEmpty(matching) ? fgs : A2(
-					elm$core$List$cons,
-					_Utils_Tuple2(
-						_Utils_update(
-							baseState,
-							{filteredCards: matching}),
-						fg),
-					fgs);
+	var filteredGraphs = A2(
+		elm$core$List$filter,
+		A2(
+			elm$core$Basics$composeL,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, elm$core$Set$isEmpty),
+			function ($) {
+				return $.matches;
 			}),
-		_List_Nil,
-		model.graphs);
+		statefulGraphs);
 	return _Utils_update(
 		model,
 		{
@@ -11709,12 +11763,7 @@ var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
 };
 var author$project$Main$isBaseGraphState = F2(
 	function (model, state) {
-		return _Utils_eq(state.currentTime, model.currentTime) && (_Utils_eq(state.me, model.me) && (_Utils_eq(state.dataIndex, model.dataIndex) && (elm$core$Set$isEmpty(state.anticipatedCards) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.selectedCards) && _Utils_eq(state.highlightedNode, elm$core$Maybe$Nothing)))));
-	});
-var elm$core$Set$member = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return A2(elm$core$Dict$member, key, dict);
+		return _Utils_eq(state.currentTime, model.currentTime) && (elm$core$Set$isEmpty(state.anticipatedCards) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.selectedCards) && _Utils_eq(state.highlightedNode, elm$core$Maybe$Nothing)));
 	});
 var y0hy0h$ordered_containers$OrderedSet$member = F2(
 	function (key, _n0) {
@@ -11722,45 +11771,27 @@ var y0hy0h$ordered_containers$OrderedSet$member = F2(
 		return A2(elm$core$Dict$member, key, dict);
 	});
 var author$project$Main$updateGraphStates = function (model) {
-	var newState = {allCards: model.cards, allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, cardEvents: model.actors, currentTime: model.currentTime, dataIndex: model.dataIndex, filteredCards: elm$core$Set$empty, highlightedNode: model.highlightedNode, me: model.me, reviewers: model.reviewers, selectedCards: model.selectedCards};
-	var affectedByState = function (graph) {
-		return A3(
-			author$project$ForceGraph$fold,
-			F2(
-				function (node, affected) {
-					return affected ? true : (A2(y0hy0h$ordered_containers$OrderedSet$member, node.value, newState.selectedCards) || (A2(elm$core$Set$member, node.value, newState.anticipatedCards) || _Utils_eq(
-						newState.highlightedNode,
-						elm$core$Maybe$Just(node.value))));
-				}),
-			false,
-			graph);
-	};
+	var newState = {allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, currentTime: model.currentTime, highlightedNode: model.highlightedNode, reviewers: model.reviewers, selectedCards: model.selectedCards};
+	var affectedByState = elm$core$List$any(
+		function (_n0) {
+			var card = _n0.card;
+			return A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, newState.selectedCards) || (A2(elm$core$Set$member, card.id, newState.anticipatedCards) || _Utils_eq(
+				newState.highlightedNode,
+				elm$core$Maybe$Just(card.id)));
+		});
 	return _Utils_update(
 		model,
 		{
 			statefulGraphs: A2(
 				elm$core$List$map,
-				function (_n0) {
-					var s = _n0.a;
-					var g = _n0.b;
-					if (affectedByState(g)) {
-						return _Utils_Tuple2(
-							_Utils_update(
-								newState,
-								{filteredCards: s.filteredCards}),
-							g);
-					} else {
-						if (A2(author$project$Main$isBaseGraphState, model, s)) {
-							return _Utils_Tuple2(s, g);
-						} else {
-							var base = author$project$Main$baseGraphState(model);
-							return _Utils_Tuple2(
-								_Utils_update(
-									base,
-									{filteredCards: s.filteredCards}),
-								g);
-						}
-					}
+				function (sg) {
+					return affectedByState(sg.nodes) ? _Utils_update(
+						sg,
+						{state: newState}) : (A2(author$project$Main$isBaseGraphState, model, sg.state) ? sg : _Utils_update(
+						sg,
+						{
+							state: author$project$Main$baseGraphState(model)
+						}));
 				},
 				model.statefulGraphs)
 		});
@@ -11772,10 +11803,7 @@ var author$project$Main$computeViewForPage = function (model) {
 	var _n0 = model.page;
 	switch (_n0.$) {
 		case 'GlobalGraphPage':
-			return author$project$Main$updateGraphStates(
-				_Utils_update(
-					reset,
-					{baseGraphFilter: elm$core$Maybe$Nothing}));
+			return author$project$Main$updateGraphStates(reset);
 		case 'ProjectPage':
 			var name = _n0.a;
 			return author$project$Main$updateGraphStates(
@@ -14818,94 +14846,32 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 			]));
 };
 var author$project$Main$graphId = function (graph) {
-	return elm$core$String$fromInt(
-		A3(
-			author$project$ForceGraph$fold,
-			F2(
-				function (_n0, acc) {
-					var id = _n0.id;
-					return A2(elm$core$Basics$max, id, acc);
-				}),
-			0,
-			graph));
+	return A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n0, acc) {
+				var card = _n0.card;
+				return A2(elm$core$Basics$max, card.id, acc);
+			}),
+		'',
+		graph.nodes);
 };
-var elm_community$intdict$IntDict$get = F2(
-	function (key, dict) {
-		get:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return elm$core$Maybe$Nothing;
-				case 'Leaf':
-					var l = dict.a;
-					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
-				default:
-					var i = dict.a;
-					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
-						return elm$core$Maybe$Nothing;
-					} else {
-						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
-							var $temp$key = key,
-								$temp$dict = i.right;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						} else {
-							var $temp$key = key,
-								$temp$dict = i.left;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						}
-					}
-			}
-		}
-	});
-var author$project$ForceGraph$get = F2(
-	function (id, _n0) {
-		var nodes = _n0.nodes;
-		return A2(elm_community$intdict$IntDict$get, id, nodes);
-	});
-var author$project$Main$isFilteredOut = F2(
-	function (state, id) {
-		return (!elm$core$Set$isEmpty(state.filteredCards)) && (!A2(elm$core$Set$member, id, state.filteredCards));
-	});
 var elm$svg$Svg$line = elm$svg$Svg$trustedNode('line');
 var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = F3(
-	function (state, graph, _n0) {
-		var from = _n0.a;
-		var to = _n0.b;
-		var getEnd = function (end) {
-			var _n3 = A2(author$project$ForceGraph$get, end, graph);
-			if (_n3.$ === 'Just') {
-				var x = _n3.a.x;
-				var y = _n3.a.y;
-				var value = _n3.a.value;
-				return _Utils_Tuple2(
-					{x: x, y: y},
-					A2(author$project$Main$isFilteredOut, state, value));
-			} else {
-				return _Utils_Tuple2(
-					{x: 0, y: 0},
-					false);
-			}
-		};
-		var _n1 = getEnd(to);
-		var target = _n1.a;
-		var targetIsFilteredOut = _n1.b;
-		var _n2 = getEnd(from);
-		var source = _n2.a;
-		var sourceIsFilteredOut = _n2.b;
+var author$project$Main$linkPath = F2(
+	function (state, _n0) {
+		var source = _n0.source;
+		var target = _n0.target;
+		var filteredOut = _n0.filteredOut;
 		return A2(
 			elm$svg$Svg$line,
 			_List_fromArray(
 				[
 					elm$svg$Svg$Attributes$class('graph-edge'),
-					(sourceIsFilteredOut || targetIsFilteredOut) ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
+					filteredOut ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
 					elm$svg$Svg$Attributes$x1(
 					elm$core$String$fromFloat(source.x)),
 					elm$svg$Svg$Attributes$y1(
@@ -14936,6 +14902,30 @@ var author$project$Main$cardRadiusWithFlair = F2(
 			A2(elm$core$List$cons, card.commentCount, reactionCounts));
 		return (mass + author$project$Main$flairRadiusBase) + highestFlair;
 	});
+var author$project$Card$isBacklog = function (card) {
+	return card.processState.inBacklogColumn;
+};
+var author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
+var author$project$Card$isIcebox = function (card) {
+	return card.processState.inIceboxColumn;
+};
+var author$project$Card$isInFlight = function (card) {
+	return card.processState.inInFlightColumn;
+};
+var author$project$Main$AnticipateCardFromNode = function (a) {
+	return {$: 'AnticipateCardFromNode', a: a};
+};
+var author$project$Main$DeselectCard = function (a) {
+	return {$: 'DeselectCard', a: a};
+};
+var author$project$Main$SelectCard = function (a) {
+	return {$: 'SelectCard', a: a};
+};
+var author$project$Main$UnanticipateCardFromNode = function (a) {
+	return {$: 'UnanticipateCardFromNode', a: a};
+};
 var elm$core$Basics$pi = _Basics_pi;
 var elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
@@ -16771,31 +16761,13 @@ var author$project$Main$cardLabelArcs = F3(
 				},
 				card.labels));
 	});
-var author$project$Card$isBacklog = function (card) {
-	return card.processState.inBacklogColumn;
-};
-var author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
-};
-var author$project$Card$isIcebox = function (card) {
-	return card.processState.inIceboxColumn;
-};
-var author$project$Card$isInFlight = function (card) {
-	return card.processState.inInFlightColumn;
-};
-var author$project$Main$AnticipateCardFromNode = function (a) {
-	return {$: 'AnticipateCardFromNode', a: a};
-};
-var author$project$Main$DeselectCard = function (a) {
-	return {$: 'DeselectCard', a: a};
-};
-var author$project$Main$SelectCard = function (a) {
-	return {$: 'SelectCard', a: a};
-};
-var author$project$Main$UnanticipateCardFromNode = function (a) {
-	return {$: 'UnanticipateCardFromNode', a: a};
-};
+var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
 var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
+var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
+var elm$svg$Svg$text_ = elm$svg$Svg$trustedNode('text');
+var elm$svg$Svg$Attributes$alignmentBaseline = _VirtualDom_attribute('alignment-baseline');
+var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
+var elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
 var elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
@@ -16825,47 +16797,15 @@ var elm$svg$Svg$Events$onMouseOver = function (msg) {
 		'mouseover',
 		elm$json$Json$Decode$succeed(msg));
 };
-var author$project$Main$viewCardNode = F6(
-	function (card, radii, circle, labels, _n0, state) {
-		var x = _n0.x;
-		var y = _n0.y;
-		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, state.selectedCards);
-		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
-			state.highlightedNode,
-			elm$core$Maybe$Just(card.id));
-		var isFiltered = A2(author$project$Main$isFilteredOut, state, card.id);
-		var scale = isHighlighted ? '1.1' : (isFiltered ? '0.5' : '1');
-		return A2(
-			elm$svg$Svg$g,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$transform(
-					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
-					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
-					isFiltered ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
-					elm$svg$Svg$Events$onMouseOver(
-					author$project$Main$AnticipateCardFromNode(card.id)),
-					elm$svg$Svg$Events$onMouseOut(
-					author$project$Main$UnanticipateCardFromNode(card.id)),
-					elm$svg$Svg$Events$onClick(
-					isSelected ? author$project$Main$DeselectCard(card.id) : author$project$Main$SelectCard(card.id))
-				]),
-			A2(elm$core$List$cons, circle, labels));
-	});
-var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
-var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
-var elm$svg$Svg$text_ = elm$svg$Svg$trustedNode('text');
-var elm$svg$Svg$Attributes$alignmentBaseline = _VirtualDom_attribute('alignment-baseline');
-var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
-var elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
 var author$project$Main$viewCardCircle = F4(
-	function (card, radius, pos, state) {
+	function (node, labels, isHighlighted, isSelected) {
+		var scale = isHighlighted ? '1.1' : (node.filteredOut ? '0.5' : '1');
 		var radii = {
-			base: radius,
-			withFlair: A2(author$project$Main$cardRadiusWithFlair, card, radius),
-			withoutFlair: radius
+			base: node.mass,
+			withFlair: A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass),
+			withoutFlair: node.mass
 		};
-		var labelArcs = A3(author$project$Main$cardLabelArcs, state.allLabels, card, radius);
+		var labelArcs = A3(author$project$Main$cardLabelArcs, labels, node.card, node.mass);
 		var circle = A2(
 			elm$svg$Svg$g,
 			_List_Nil,
@@ -16891,10 +16831,32 @@ var author$project$Main$viewCardCircle = F4(
 					_List_fromArray(
 						[
 							elm$svg$Svg$text(
-							'#' + elm$core$String$fromInt(card.number))
+							'#' + elm$core$String$fromInt(node.card.number))
 						]))
 				]));
-		return A6(author$project$Main$viewCardNode, card, radii, circle, labelArcs, pos, state);
+		var card = node.card;
+		return A2(
+			elm$svg$Svg$g,
+			_List_fromArray(
+				[
+					elm$svg$Svg$Attributes$transform(
+					'translate(' + (elm$core$String$fromFloat(node.x) + (',' + (elm$core$String$fromFloat(node.y) + (') scale(' + (scale + ')')))))),
+					author$project$Card$isInFlight(card) ? elm$svg$Svg$Attributes$class('in-flight') : (author$project$Card$isDone(card) ? elm$svg$Svg$Attributes$class('done') : (author$project$Card$isIcebox(card) ? elm$svg$Svg$Attributes$class('icebox') : (author$project$Card$isBacklog(card) ? elm$svg$Svg$Attributes$class('backlog') : elm$svg$Svg$Attributes$class('untriaged')))),
+					node.filteredOut ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
+					elm$svg$Svg$Events$onMouseOver(
+					author$project$Main$AnticipateCardFromNode(card.id)),
+					elm$svg$Svg$Events$onMouseOut(
+					author$project$Main$UnanticipateCardFromNode(card.id)),
+					elm$svg$Svg$Events$onClick(
+					isSelected ? author$project$Main$DeselectCard(card.id) : author$project$Main$SelectCard(card.id))
+				]),
+			A2(elm$core$List$cons, circle, labelArcs));
+	});
+var author$project$Main$activityClass = F2(
+	function (now, date) {
+		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
+		var daysSinceLastUpdate = (delta / (((24 * 60) * 60) * 1000)) | 0;
+		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
 	});
 var author$project$Colors$orange500 = '#f66a0a';
 var author$project$Colors$orange = author$project$Colors$orange500;
@@ -17177,59 +17139,29 @@ var author$project$Main$reactionFlairArcs = F3(
 							]));
 				}));
 	});
-var author$project$Main$activityClass = F2(
-	function (now, date) {
-		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
-		var daysSinceLastUpdate = (delta / (((24 * 60) * 60) * 1000)) | 0;
-		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
-	});
-var author$project$Main$lastActivityIsByUser = F3(
-	function (cardEvents, login, card) {
-		var events = A2(
-			elm$core$Maybe$withDefault,
-			_List_Nil,
-			A2(elm$core$Dict$get, card.id, cardEvents));
-		var _n0 = elm$core$List$head(
-			elm$core$List$reverse(events));
-		if (_n0.$ === 'Just') {
-			var user = _n0.a.user;
-			if (user.$ === 'Just') {
-				var u = user.a;
-				return _Utils_eq(u.login, login);
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	});
-var author$project$Main$viewCardNodeFlair = F5(
-	function (card, radii, flair, _n0, state) {
-		var x = _n0.x;
-		var y = _n0.y;
-		var isHighlighted = A2(elm$core$Set$member, card.id, state.anticipatedCards) || _Utils_eq(
-			state.highlightedNode,
-			elm$core$Maybe$Just(card.id));
-		var isFiltered = A2(author$project$Main$isFilteredOut, state, card.id);
-		var scale = isHighlighted ? '1.1' : (isFiltered ? '0.5' : '1');
-		var classes = _Utils_ap(
-			_List_fromArray(
-				[
-					'flair',
-					A2(author$project$Main$activityClass, state.currentTime, card.updatedAt),
-					isFiltered ? 'filtered-out' : 'filtered-in'
-				]),
-			function () {
-				var _n1 = state.me;
-				if (_n1.$ === 'Nothing') {
-					return _List_Nil;
-				} else {
-					var user = _n1.a.user;
-					return A3(author$project$Main$lastActivityIsByUser, state.cardEvents, user.login, card) ? _List_fromArray(
-						['last-activity-is-me']) : _List_Nil;
-				}
-			}());
-		var anticipateRadius = elm$core$List$isEmpty(card.labels) ? (radii.base + 5) : (radii.withoutFlair + 5);
+var author$project$Main$viewCardFlair = F4(
+	function (node, currentTime, isHighlighted, reviewers) {
+		var scale = isHighlighted ? '1.1' : (node.filteredOut ? '0.5' : '1');
+		var radii = {
+			base: node.mass,
+			withFlair: A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass),
+			withoutFlair: node.mass
+		};
+		var flairArcs = A3(
+			author$project$Main$reactionFlairArcs,
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(elm$core$Dict$get, node.card.id, reviewers)),
+			node.card,
+			node.mass);
+		var classes = _List_fromArray(
+			[
+				'flair',
+				A2(author$project$Main$activityClass, currentTime, node.card.updatedAt),
+				node.filteredOut ? 'filtered-out' : 'filtered-in'
+			]);
+		var anticipateRadius = elm$core$List$isEmpty(node.card.labels) ? (radii.base + 5) : (radii.withoutFlair + 5);
 		var anticipatedHalo = isHighlighted ? A2(
 			elm$svg$Svg$circle,
 			_List_fromArray(
@@ -17244,66 +17176,42 @@ var author$project$Main$viewCardNodeFlair = F5(
 			_List_fromArray(
 				[
 					elm$svg$Svg$Attributes$transform(
-					'translate(' + (elm$core$String$fromFloat(x) + (',' + (elm$core$String$fromFloat(y) + (') scale(' + (scale + ')')))))),
+					'translate(' + (elm$core$String$fromFloat(node.x) + (',' + (elm$core$String$fromFloat(node.y) + (') scale(' + (scale + ')')))))),
 					elm$svg$Svg$Attributes$class(
 					A2(elm$core$String$join, ' ', classes))
 				]),
 			_Utils_ap(
-				flair,
+				flairArcs,
 				_List_fromArray(
 					[anticipatedHalo])));
-	});
-var author$project$Main$viewCardFlair = F4(
-	function (card, radius, pos, state) {
-		var radii = {
-			base: radius,
-			withFlair: A2(author$project$Main$cardRadiusWithFlair, card, radius),
-			withoutFlair: radius
-		};
-		var flairArcs = A3(
-			author$project$Main$reactionFlairArcs,
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, card.id, state.reviewers)),
-			card,
-			radius);
-		return A5(author$project$Main$viewCardNodeFlair, card, radii, flairArcs, pos, state);
 	});
 var elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
 var elm$svg$Svg$Lazy$lazy4 = elm$virtual_dom$VirtualDom$lazy4;
 var author$project$Main$viewNodeLowerUpper = F3(
-	function (state, _n0, _n1) {
-		var value = _n0.value;
-		var mass = _n0.mass;
-		var x = _n0.x;
-		var y = _n0.y;
-		var fs = _n1.a;
-		var ns = _n1.b;
-		var bs = _n1.c;
-		var _n2 = A2(elm$core$Dict$get, value, state.allCards);
-		if (_n2.$ === 'Just') {
-			var card = _n2.a;
-			var radiiWithFlair = A2(author$project$Main$cardRadiusWithFlair, card, mass);
-			var pos = {x: x, y: y};
-			var bounds = {x1: x - radiiWithFlair, x2: x + radiiWithFlair, y1: y - radiiWithFlair, y2: y + radiiWithFlair};
-			return _Utils_Tuple3(
-				A2(
-					elm$core$List$cons,
-					_Utils_Tuple2(
-						value,
-						A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardFlair, card, mass, pos, state)),
-					fs),
-				A2(
-					elm$core$List$cons,
-					_Utils_Tuple2(
-						value,
-						A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardCircle, card, mass, pos, state)),
-					ns),
-				A2(elm$core$List$cons, bounds, bs));
-		} else {
-			return _Utils_Tuple3(fs, ns, bs);
-		}
+	function (state, node, _n0) {
+		var fs = _n0.a;
+		var ns = _n0.b;
+		var bs = _n0.c;
+		var radiiWithFlair = A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass);
+		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, node.card.id, state.selectedCards);
+		var isHighlighted = A2(elm$core$Set$member, node.card.id, state.anticipatedCards) || _Utils_eq(
+			state.highlightedNode,
+			elm$core$Maybe$Just(node.card.id));
+		var bounds = {x1: node.x - radiiWithFlair, x2: node.x + radiiWithFlair, y1: node.y - radiiWithFlair, y2: node.y + radiiWithFlair};
+		return _Utils_Tuple3(
+			A2(
+				elm$core$List$cons,
+				_Utils_Tuple2(
+					node.card.id,
+					A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardFlair, node, state.currentTime, isHighlighted, state.reviewers)),
+				fs),
+			A2(
+				elm$core$List$cons,
+				_Utils_Tuple2(
+					node.card.id,
+					A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardCircle, node, state.allLabels, isHighlighted, isSelected)),
+				ns),
+			A2(elm$core$List$cons, bounds, bs));
 	});
 var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
 	function (namespace, tag) {
@@ -17313,96 +17221,95 @@ var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
 			_VirtualDom_noScript(tag));
 	});
 var elm$svg$Svg$Keyed$node = elm$virtual_dom$VirtualDom$keyedNodeNS('http://www.w3.org/2000/svg');
-var author$project$Main$viewGraph = F2(
-	function (state, graph) {
-		var padding = 10;
-		var links = A2(
-			elm$core$List$map,
-			A2(author$project$Main$linkPath, state, graph),
-			graph.edges);
-		var _n0 = A3(
-			author$project$ForceGraph$fold,
-			author$project$Main$viewNodeLowerUpper(state),
-			_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
-			graph);
-		var flairs = _n0.a;
-		var nodes = _n0.b;
-		var bounds = _n0.c;
-		var maxX = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n4, acc) {
-					var x2 = _n4.x2;
-					return A2(elm$core$Basics$max, x2, acc);
-				}),
-			0,
-			bounds) + padding;
-		var maxY = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n3, acc) {
-					var y2 = _n3.y2;
-					return A2(elm$core$Basics$max, y2, acc);
-				}),
-			0,
-			bounds) + padding;
-		var minX = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n2, acc) {
-					var x1 = _n2.x1;
-					return A2(elm$core$Basics$min, x1, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var width = maxX - minX;
-		var minY = A3(
-			elm$core$List$foldl,
-			F2(
-				function (_n1, acc) {
-					var y1 = _n1.y1;
-					return A2(elm$core$Basics$min, y1, acc);
-				}),
-			999999,
-			bounds) - padding;
-		var height = maxY - minY;
-		return A2(
-			elm$svg$Svg$svg,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$width(
-					elm$core$String$fromFloat(width) + 'px'),
-					elm$svg$Svg$Attributes$style('max-width: 95%'),
-					elm$svg$Svg$Attributes$viewBox(
-					elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$g,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('links')
-						]),
-					links),
-					A3(
-					elm$svg$Svg$Keyed$node,
-					'g',
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('lower')
-						]),
-					flairs),
-					A3(
-					elm$svg$Svg$Keyed$node,
-					'g',
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$class('upper')
-						]),
-					nodes)
-				]));
-	});
+var author$project$Main$viewGraph = function (graph) {
+	var padding = 10;
+	var links = A2(
+		elm$core$List$map,
+		author$project$Main$linkPath(graph.state),
+		graph.edges);
+	var _n0 = A3(
+		elm$core$List$foldl,
+		author$project$Main$viewNodeLowerUpper(graph.state),
+		_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
+		graph.nodes);
+	var flairs = _n0.a;
+	var nodes = _n0.b;
+	var bounds = _n0.c;
+	var maxX = A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n4, acc) {
+				var x2 = _n4.x2;
+				return A2(elm$core$Basics$max, x2, acc);
+			}),
+		0,
+		bounds) + padding;
+	var maxY = A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n3, acc) {
+				var y2 = _n3.y2;
+				return A2(elm$core$Basics$max, y2, acc);
+			}),
+		0,
+		bounds) + padding;
+	var minX = A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n2, acc) {
+				var x1 = _n2.x1;
+				return A2(elm$core$Basics$min, x1, acc);
+			}),
+		999999,
+		bounds) - padding;
+	var width = maxX - minX;
+	var minY = A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n1, acc) {
+				var y1 = _n1.y1;
+				return A2(elm$core$Basics$min, y1, acc);
+			}),
+		999999,
+		bounds) - padding;
+	var height = maxY - minY;
+	return A2(
+		elm$svg$Svg$svg,
+		_List_fromArray(
+			[
+				elm$svg$Svg$Attributes$width(
+				elm$core$String$fromFloat(width) + 'px'),
+				elm$svg$Svg$Attributes$style('max-width: 95%'),
+				elm$svg$Svg$Attributes$viewBox(
+				elm$core$String$fromFloat(minX) + (' ' + (elm$core$String$fromFloat(minY) + (' ' + (elm$core$String$fromFloat(width) + (' ' + elm$core$String$fromFloat(height)))))))
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$svg$Svg$g,
+				_List_fromArray(
+					[
+						elm$svg$Svg$Attributes$class('links')
+					]),
+				links),
+				A3(
+				elm$svg$Svg$Keyed$node,
+				'g',
+				_List_fromArray(
+					[
+						elm$svg$Svg$Attributes$class('lower')
+					]),
+				flairs),
+				A3(
+				elm$svg$Svg$Keyed$node,
+				'g',
+				_List_fromArray(
+					[
+						elm$svg$Svg$Attributes$class('upper')
+					]),
+				nodes)
+			]));
+};
 var author$project$Main$AddFilter = function (a) {
 	return {$: 'AddFilter', a: a};
 };
@@ -17828,8 +17735,8 @@ var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 		_VirtualDom_noScript(tag));
 };
 var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
-var elm$virtual_dom$VirtualDom$lazy2 = _VirtualDom_lazy2;
-var elm$html$Html$Lazy$lazy2 = elm$virtual_dom$VirtualDom$lazy2;
+var elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
+var elm$html$Html$Lazy$lazy = elm$virtual_dom$VirtualDom$lazy;
 var author$project$Main$viewSpatialGraph = function (model) {
 	return A2(
 		elm$html$Html$div,
@@ -17849,12 +17756,10 @@ var author$project$Main$viewSpatialGraph = function (model) {
 					]),
 				A2(
 					elm$core$List$map,
-					function (_n0) {
-						var state = _n0.a;
-						var graph = _n0.b;
+					function (graph) {
 						return _Utils_Tuple2(
 							author$project$Main$graphId(graph),
-							A3(elm$html$Html$Lazy$lazy2, author$project$Main$viewGraph, state, graph));
+							A2(elm$html$Html$Lazy$lazy, author$project$Main$viewGraph, graph));
 					},
 					model.statefulGraphs))
 			]));
@@ -18808,6 +18713,26 @@ var author$project$Main$externalIcons = function (card) {
 var author$project$Main$isAnticipated = F2(
 	function (model, card) {
 		return A2(elm$core$Set$member, card.id, model.anticipatedCards) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, model.selectedCards));
+	});
+var author$project$Main$lastActivityIsByUser = F3(
+	function (cardEvents, login, card) {
+		var events = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			A2(elm$core$Dict$get, card.id, cardEvents));
+		var _n0 = elm$core$List$head(
+			elm$core$List$reverse(events));
+		if (_n0.$ === 'Just') {
+			var user = _n0.a.user;
+			if (user.$ === 'Just') {
+				var u = user.a;
+				return _Utils_eq(u.login, login);
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
 	});
 var author$project$Main$prIcons = F2(
 	function (model, card) {
