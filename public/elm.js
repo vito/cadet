@@ -7929,7 +7929,7 @@ var author$project$Backend$decodeCardData = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
-		'cardReviewers',
+		'prReviewers',
 		elm$json$Json$Decode$dict(
 			elm$json$Json$Decode$list(author$project$GitHub$decodePullRequestReview))),
 	A2(

@@ -9864,42 +9864,13 @@ var author$project$GitHub$IssueCommentEvent = F2(
 	function (a, b) {
 		return {$: 'IssueCommentEvent', a: a, b: b};
 	});
-var author$project$GitHub$PullRequestReviewEvent = function (a) {
-	return {$: 'PullRequestReviewEvent', a: a};
-};
-var author$project$GitHub$maybeOr4 = F4(
-	function (ma, mb, mc, md) {
+var author$project$GitHub$maybeOr3 = F3(
+	function (ma, mb, mc) {
 		return A2(
 			elm_community$maybe_extra$Maybe$Extra$or,
 			ma,
-			A2(
-				elm_community$maybe_extra$Maybe$Extra$or,
-				mb,
-				A2(elm_community$maybe_extra$Maybe$Extra$or, mc, md)));
+			A2(elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
 	});
-var author$project$GitHub$PullRequestReview = F3(
-	function (author, state, createdAt) {
-		return {author: author, createdAt: createdAt, state: state};
-	});
-var author$project$GitHub$prReviewObject = A2(
-	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'createdAt',
-		_List_Nil,
-		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
-	A2(
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-			'state',
-			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestReviewStates)),
-		A2(
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject)),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequestReview))));
 var author$project$GitHub$timelineQuery = function () {
 	var sourceID = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -9918,7 +9889,6 @@ var author$project$GitHub$timelineQuery = function () {
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string))),
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(elm_community$maybe_extra$Maybe$Extra$or)));
-	var prReviewEvent = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$PullRequestReviewEvent, author$project$GitHub$prReviewObject);
 	var pageInfo = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'hasNextPage', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
@@ -9964,30 +9934,23 @@ var author$project$GitHub$timelineQuery = function () {
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 			elm$core$Maybe$Just(
-				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('PullRequestReviewEvent')),
-			prReviewEvent),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Commit')),
+			commitEvent),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 				elm$core$Maybe$Just(
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Commit')),
-				commitEvent),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('CrossReferencedEvent')),
+				crossReferencedEvent),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 					elm$core$Maybe$Just(
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('CrossReferencedEvent')),
-					crossReferencedEvent),
-				A2(
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A2(
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-						elm$core$Maybe$Just(
-							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('IssueComment')),
-						issueCommentEvent),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$maybeOr4)))));
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('IssueComment')),
+					issueCommentEvent),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$maybeOr3))));
 	var paged = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
@@ -10190,6 +10153,29 @@ var author$project$Main$fetchIssuesPage = F2(
 			psel,
 			author$project$Main$IssuesPageFetched(psel));
 	});
+var author$project$GitHub$PullRequestReview = F3(
+	function (author, state, createdAt) {
+		return {author: author, createdAt: createdAt, state: state};
+	});
+var author$project$GitHub$prReviewObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'createdAt',
+		_List_Nil,
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'state',
+			_List_Nil,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestReviewStates)),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequestReview))));
 var author$project$GitHub$prReviewQuery = function () {
 	var pageInfo = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -11530,6 +11516,7 @@ var elm$core$List$member = F2(
 			},
 			xs);
 	});
+var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -12442,6 +12429,13 @@ var author$project$Main$update = F2(
 								},
 								elm$core$Dict$empty,
 								reviews)));
+					var reviewActor = function (review) {
+						return {
+							avatar: review.author.avatar,
+							createdAt: review.createdAt,
+							user: elm$core$Maybe$Just(review.author)
+						};
+					};
 					var findSource = function (event) {
 						if (event.$ === 'CrossReferencedEvent') {
 							var eid = event.a;
@@ -12455,7 +12449,17 @@ var author$project$Main$update = F2(
 						A2(
 							elm$core$List$map,
 							author$project$Backend$encodeEventActor,
-							A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline)));
+							A2(
+								elm$core$List$sortBy,
+								A2(
+									elm$core$Basics$composeL,
+									elm$time$Time$posixToMillis,
+									function ($) {
+										return $.createdAt;
+									}),
+								_Utils_ap(
+									A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline),
+									A2(elm$core$List$map, reviewActor, reviews)))));
 					return A3(
 						author$project$Log$debug,
 						'timeline and reviews fetched for',

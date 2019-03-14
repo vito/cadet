@@ -1626,15 +1626,11 @@ timelineQuery =
         commitEvent =
             GB.map CommitEvent commitObject
 
-        prReviewEvent =
-            GB.map PullRequestReviewEvent prReviewObject
-
         event =
-            GB.object maybeOr4
+            GB.object maybeOr3
                 |> GB.with (GB.inlineFragment (Just (GB.onType "IssueComment")) issueCommentEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "CrossReferencedEvent")) crossReferencedEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "Commit")) commitEvent)
-                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequestReviewEvent")) prReviewEvent)
 
         pageArgs =
             [ ( "first", GA.int 100 )

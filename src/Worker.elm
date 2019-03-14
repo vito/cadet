@@ -553,9 +553,17 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
+                reviewActor review =
+                    { user = Just review.author
+                    , avatar = review.author.avatar
+                    , createdAt = review.createdAt
+                    }
+
                 actors =
-                    timeline
-                        |> List.filterMap eventActor
+                    (List.filterMap eventActor timeline
+                        ++ List.map reviewActor reviews
+                    )
+                        |> List.sortBy (Time.posixToMillis << .createdAt)
                         |> List.map Backend.encodeEventActor
                         |> List.reverse
 
