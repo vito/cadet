@@ -38,7 +38,16 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
-port setComparison : ( GitHub.ID, JD.Value ) -> Cmd msg
+port setRepoComparison : ( GitHub.ID, JD.Value ) -> Cmd msg
+
+
+port setRepoLabels : ( GitHub.ID, JD.Value ) -> Cmd msg
+
+
+port setRepoMilestones : ( GitHub.ID, JD.Value ) -> Cmd msg
+
+
+port setRepoReleases : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
 port setReferences : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
@@ -110,8 +119,13 @@ type Msg
     | IssuesPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.Issue, GitHub.PageInfo ))
     | IssueFetched (Result GitHub.Error GitHub.Issue)
     | PullRequestsPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.PullRequest, GitHub.PageInfo ))
-    | FetchComparison GitHub.Repo
-    | ComparisonFetched GitHub.Repo (Result GitHub.Error GitHub.V3Comparison)
+    | FetchRepoLabels GitHub.Repo
+    | RepoLabelsFetched GitHub.Repo (Result GitHub.Error (List GitHub.Label))
+    | FetchRepoMilestones GitHub.Repo
+    | RepoMilestonesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Milestone))
+    | FetchRepoReleases GitHub.Repo
+    | RepoReleasesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Release))
+    | RepoComparisonFetched GitHub.Repo (List GitHub.Release) (Result GitHub.Error GitHub.V3Comparison)
     | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
     | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
     | PullRequestTimelineAndReviewsFetched GitHub.ID (Result GitHub.Error ( List GitHub.TimelineEvent, List GitHub.PullRequestReview ))
@@ -263,11 +277,11 @@ update msg model =
 
         HookReceived "push" payload ->
             Log.debug "push hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo FetchComparison payload model, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoReleases payload model, Cmd.none )
 
         HookReceived "release" payload ->
             Log.debug "release hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo FetchComparison payload model, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoReleases payload model, Cmd.none )
 
         HookReceived "repository" payload ->
             Log.debug "repository hook received; refreshing repo" () <|
@@ -289,14 +303,19 @@ update msg model =
 
                     fetch repo =
                         let
+                            sel =
+                                { owner = repo.owner, name = repo.name }
+
                             psel =
-                                { selector = { owner = repo.owner, name = repo.name }
+                                { selector = sel
                                 , after = Nothing
                                 }
                         in
                         [ fetchIssuesPage model psel
                         , fetchPullRequestsPage model psel
-                        , fetchComparison model repo
+                        , fetchRepoLabels model repo
+                        , fetchRepoMilestones model repo
+                        , fetchRepoReleases model repo
                         ]
                 in
                 ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
@@ -419,17 +438,56 @@ update msg model =
             Log.debug "failed to fetch prs" ( psel, err ) <|
                 backOff model (fetchPullRequestsPage model psel)
 
-        FetchComparison repo ->
-            ( { model | loadQueue = fetchComparison model repo :: model.loadQueue }, Cmd.none )
+        FetchRepoLabels repo ->
+            ( { model | loadQueue = fetchRepoLabels model repo :: model.loadQueue }, Cmd.none )
 
-        ComparisonFetched repo (Err err) ->
+        RepoLabelsFetched repo (Err err) ->
+            Log.debug "failed to fetch labels" ( repo.url, err ) <|
+                backOff model (fetchRepoLabels model repo)
+
+        RepoLabelsFetched repo (Ok labels) ->
+            Log.debug "labels fetched for" repo.url <|
+                ( model
+                , setRepoLabels ( repo.id, JE.list GitHub.encodeLabel labels )
+                )
+
+        FetchRepoMilestones repo ->
+            ( { model | loadQueue = fetchRepoMilestones model repo :: model.loadQueue }, Cmd.none )
+
+        RepoMilestonesFetched repo (Err err) ->
+            Log.debug "failed to fetch milestones" ( repo.url, err ) <|
+                backOff model (fetchRepoMilestones model repo)
+
+        RepoMilestonesFetched repo (Ok milestones) ->
+            Log.debug "milestones fetched for" repo.url <|
+                ( model
+                , setRepoMilestones ( repo.id, JE.list GitHub.encodeMilestone milestones )
+                )
+
+        FetchRepoReleases repo ->
+            ( { model | loadQueue = fetchRepoReleases model repo :: model.loadQueue }, Cmd.none )
+
+        RepoReleasesFetched repo (Err err) ->
+            Log.debug "failed to fetch releases" ( repo.url, err ) <|
+                backOff model (fetchRepoReleases model repo)
+
+        RepoReleasesFetched repo (Ok releases) ->
+            Log.debug "releases fetched for" repo.url <|
+                ( model
+                , Cmd.batch
+                    [ setRepoReleases ( repo.id, JE.list GitHub.encodeRelease releases )
+                    , fetchRepoComparison model repo releases
+                    ]
+                )
+
+        RepoComparisonFetched repo releases (Err err) ->
             Log.debug "failed to fetch comparison" ( repo.url, err ) <|
-                backOff model (fetchComparison model repo)
+                backOff model (fetchRepoComparison model repo releases)
 
-        ComparisonFetched repo (Ok comparison) ->
+        RepoComparisonFetched repo releases (Ok comparison) ->
             Log.debug "comparison fetched for" repo.url <|
                 ( model
-                , setComparison ( repo.id, GitHub.encodeV3Comparison comparison )
+                , setRepoComparison ( repo.id, GitHub.encodeV3Comparison comparison )
                 )
 
         PullRequestFetched (Ok pr) ->
@@ -597,11 +655,11 @@ fetchPullRequestsPage model psel =
     GitHub.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
 
 
-fetchComparison : Model -> GitHub.Repo -> Cmd Msg
-fetchComparison model repo =
+fetchRepoComparison : Model -> GitHub.Repo -> List GitHub.Release -> Cmd Msg
+fetchRepoComparison model repo releases =
     let
-        findTag releases =
-            case releases of
+        findTag rs =
+            case rs of
                 [] ->
                     Nothing
 
@@ -614,15 +672,33 @@ fetchComparison model repo =
                             findTag rest
 
         mbase =
-            findTag repo.releases
+            findTag releases
     in
     case mbase of
         Just base ->
             GitHub.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
-                |> Task.attempt (ComparisonFetched repo)
+                |> Task.attempt (RepoComparisonFetched repo releases)
 
         Nothing ->
             Cmd.none
+
+
+fetchRepoLabels : Model -> GitHub.Repo -> Cmd Msg
+fetchRepoLabels model repo =
+    GitHub.fetchRepoLabels model.githubToken { owner = repo.owner, name = repo.name }
+        |> Task.attempt (RepoLabelsFetched repo)
+
+
+fetchRepoMilestones : Model -> GitHub.Repo -> Cmd Msg
+fetchRepoMilestones model repo =
+    GitHub.fetchRepoMilestones model.githubToken { owner = repo.owner, name = repo.name }
+        |> Task.attempt (RepoMilestonesFetched repo)
+
+
+fetchRepoReleases : Model -> GitHub.Repo -> Cmd Msg
+fetchRepoReleases model repo =
+    GitHub.fetchRepoReleases model.githubToken { owner = repo.owner, name = repo.name }
+        |> Task.attempt (RepoReleasesFetched repo)
 
 
 fetchRepoPullRequest : Model -> GitHub.IssueOrPRSelector -> Cmd Msg

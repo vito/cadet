@@ -58,15 +58,18 @@ type alias Model =
 
     -- data from backend
     , dataIndex : Int
-    , repos : Dict GitHub.ID GitHub.Repo
     , projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
-    , comparisons : Dict GitHub.ID GitHub.V3Comparison
+    , repos : Dict GitHub.ID GitHub.Repo
+    , repoComparison : Dict GitHub.ID GitHub.V3Comparison
+    , repoLabels : Dict GitHub.ID (List GitHub.Label)
+    , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
+    , repoReleases : Dict GitHub.ID (List GitHub.Release)
     , graphs : List (ForceGraph GitHub.ID)
     , issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
-    , actors : Dict GitHub.ID (List Backend.EventActor)
-    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
+    , cardActors : Dict GitHub.ID (List Backend.EventActor)
+    , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
 
     -- 'views' into data
     , allLabels : Dict GitHub.ID GitHub.Label
@@ -211,7 +214,7 @@ type alias SharedLabel =
 
 type alias CardNodeState =
     { allLabels : Dict GitHub.ID GitHub.Label
-    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
+    , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     , currentTime : Time.Posix
     , selectedCards : OrderedSet GitHub.ID
     , anticipatedCards : Set GitHub.ID
@@ -370,7 +373,10 @@ init config url key =
             , repos = Dict.empty
             , projects = Dict.empty
             , columnCards = Dict.empty
-            , comparisons = Dict.empty
+            , repoComparison = Dict.empty
+            , repoLabels = Dict.empty
+            , repoMilestones = Dict.empty
+            , repoReleases = Dict.empty
             , reposByLabel = Dict.empty
             , reposByName = Dict.empty
             , labelToRepoToId = Dict.empty
@@ -380,8 +386,8 @@ init config url key =
             , releaseRepos = Dict.empty
             , issues = Dict.empty
             , prs = Dict.empty
-            , actors = Dict.empty
-            , reviewers = Dict.empty
+            , cardActors = Dict.empty
+            , prReviewers = Dict.empty
             , cards = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
@@ -672,10 +678,13 @@ update msg model =
             if index > model.dataIndex then
                 ( { model
                     | dataIndex = index
-                    , repos = value.repos
                     , projects = value.projects
                     , columnCards = value.columnCards
-                    , comparisons = value.comparisons
+                    , repos = value.repos
+                    , repoComparison = value.repoComparison
+                    , repoLabels = value.repoLabels
+                    , repoMilestones = value.repoMilestones
+                    , repoReleases = value.repoReleases
                   }
                     |> computeDataView
                     |> computeViewForPage
@@ -695,8 +704,8 @@ update msg model =
                 ( { model
                     | issues = value.issues
                     , prs = value.prs
-                    , actors = value.actors
-                    , reviewers = value.reviewers
+                    , cardActors = value.cardActors
+                    , prReviewers = value.prReviewers
                   }
                     |> computeCardsView
                     |> computeViewForPage
@@ -724,7 +733,11 @@ update msg model =
                 cmds =
                     Dict.foldl
                         (\_ r acc ->
-                            case List.filter ((==) newLabel.name << .name) r.labels of
+                            let
+                                labels =
+                                    Maybe.withDefault [] (Dict.get r.id model.repoLabels)
+                            in
+                            case List.filter ((==) newLabel.name << .name) labels of
                                 [] ->
                                     createLabel model r newLabel :: acc
 
@@ -751,7 +764,11 @@ update msg model =
                 cmds =
                     Dict.foldl
                         (\_ r acc ->
-                            case List.filter (matchesLabel label) r.labels of
+                            let
+                                labels =
+                                    Maybe.withDefault [] (Dict.get r.id model.repoLabels)
+                            in
+                            case List.filter (matchesLabel label) labels of
                                 [] ->
                                     acc
 
@@ -819,7 +836,11 @@ update msg model =
                         cmds =
                             Dict.foldl
                                 (\_ r acc ->
-                                    case List.filter (matchesLabel oldLabel) r.labels of
+                                    let
+                                        labels =
+                                            Maybe.withDefault [] (Dict.get r.id model.repoLabels)
+                                    in
+                                    case List.filter (matchesLabel oldLabel) labels of
                                         repoLabel :: _ ->
                                             updateLabel model r repoLabel newLabel :: acc
 
@@ -1066,7 +1087,7 @@ updateGraphStates model =
             , anticipatedCards = model.anticipatedCards
             , highlightedNode = model.highlightedNode
             , allLabels = model.allLabels
-            , reviewers = model.reviewers
+            , prReviewers = model.prReviewers
             }
 
         affectedByState =
@@ -1167,44 +1188,44 @@ computeDataView model =
 
         allLabels =
             Dict.foldl
-                (\_ repo als ->
+                (\_ labels als ->
                     List.foldl
                         (\label -> Dict.insert label.id { label | color = String.toLower label.color })
                         als
-                        repo.labels
+                        labels
                 )
                 Dict.empty
-                model.repos
+                model.repoLabels
 
         groupRepoLabels =
             Dict.foldl
-                (\_ repo cbn ->
+                (\repoId labels cbn ->
                     List.foldl
-                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addToList repo.id))
+                        (\label -> Dict.update ( label.name, String.toLower label.color ) (addToList repoId))
                         cbn
-                        repo.labels
+                        labels
                 )
                 Dict.empty
-                model.repos
+                model.repoLabels
 
-        setRepoLabelId label repo mrc =
+        setRepoLabelId label repoId mrc =
             case mrc of
                 Just rc ->
-                    Just (Dict.insert repo.id label.id rc)
+                    Just (Dict.insert repoId label.id rc)
 
                 Nothing ->
-                    Just (Dict.singleton repo.id label.id)
+                    Just (Dict.singleton repoId label.id)
 
         groupLabelsToRepoToId =
             Dict.foldl
-                (\_ repo lrc ->
+                (\repoId labels lrc ->
                     List.foldl
-                        (\label -> Dict.update label.name (setRepoLabelId label repo))
+                        (\label -> Dict.update label.name (setRepoLabelId label repoId))
                         lrc
-                        repo.labels
+                        labels
                 )
                 Dict.empty
-                model.repos
+                model.repoLabels
 
         colorLightnessCache =
             Dict.foldl
@@ -1289,13 +1310,14 @@ makeReleaseRepo : Model -> GitHub.Repo -> ReleaseRepo
 makeReleaseRepo model repo =
     let
         nextMilestone =
-            repo.milestones
+            Dict.get repo.id model.repoMilestones
+                |> Maybe.withDefault []
                 |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
                 |> List.sortBy .number
                 |> List.head
 
         mcomparison =
-            Dict.get repo.id model.comparisons
+            Dict.get repo.id model.repoComparison
 
         mergedPRCards =
             List.filterMap
@@ -2143,7 +2165,7 @@ failedChecks card =
 
 changesRequested : Model -> Card -> Bool
 changesRequested model card =
-    case Dict.get card.id model.reviewers of
+    case Dict.get card.id model.prReviewers of
         Just reviews ->
             List.any ((==) GitHub.PullRequestReviewStateChangesRequested << .state) reviews
 
@@ -2747,7 +2769,7 @@ computeGraphsView model =
 baseGraphState : Model -> CardNodeState
 baseGraphState model =
     { allLabels = model.allLabels
-    , reviewers = model.reviewers
+    , prReviewers = model.prReviewers
     , currentTime = model.currentTime
     , selectedCards = OrderedSet.empty
     , anticipatedCards = Set.empty
@@ -2809,7 +2831,7 @@ graphAllActivityCompare model a b =
                 (\{ card } latest ->
                     let
                         mlatest =
-                            Dict.get card.id model.actors
+                            Dict.get card.id model.cardActors
                                 |> Maybe.andThen List.head
                                 |> Maybe.map (.createdAt >> Time.posixToMillis)
 
@@ -2893,17 +2915,17 @@ viewNodeLowerUpper state node ( fs, ns, bs ) =
         isSelected =
             OrderedSet.member node.card.id state.selectedCards
     in
-    ( ( node.card.id, Svg.Lazy.lazy4 viewCardFlair node state.currentTime isHighlighted state.reviewers ) :: fs
+    ( ( node.card.id, Svg.Lazy.lazy4 viewCardFlair node state.currentTime isHighlighted state.prReviewers ) :: fs
     , ( node.card.id, Svg.Lazy.lazy4 viewCardCircle node state.allLabels isHighlighted isSelected ) :: ns
     , bounds :: bs
     )
 
 
 viewCardFlair : CardNode -> Time.Posix -> Bool -> Dict GitHub.ID (List GitHub.PullRequestReview) -> Svg Msg
-viewCardFlair node currentTime isHighlighted reviewers =
+viewCardFlair node currentTime isHighlighted prReviewers =
     let
         flairArcs =
-            reactionFlairArcs (Maybe.withDefault [] <| Dict.get node.card.id reviewers) node.card node.mass
+            reactionFlairArcs (Maybe.withDefault [] <| Dict.get node.card.id prReviewers) node.card node.mass
 
         radii =
             { base = node.mass
@@ -3342,7 +3364,7 @@ isInProject name card =
 
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
-    Maybe.withDefault [] (Dict.get card.id model.actors)
+    Maybe.withDefault [] (Dict.get card.id model.cardActors)
         |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
@@ -3401,7 +3423,7 @@ viewCard model card =
             , ( "last-activity-is-me"
               , case model.me of
                     Just { user } ->
-                        lastActivityIsByUser model.actors user.login card
+                        lastActivityIsByUser model.cardActors user.login card
 
                     Nothing ->
                         False
@@ -3574,7 +3596,7 @@ prIcons model card =
                             []
 
                 reviews =
-                    Maybe.withDefault [] <| Dict.get card.id model.reviewers
+                    Maybe.withDefault [] <| Dict.get card.id model.prReviewers
 
                 reviewStates =
                     List.map
@@ -3637,7 +3659,7 @@ viewNoteCard model col text =
 
 recentActors : Model -> Card -> List Backend.EventActor
 recentActors model card =
-    Dict.get card.id model.actors
+    Dict.get card.id model.cardActors
         |> Maybe.withDefault []
         |> List.take 3
         |> List.reverse
@@ -3941,12 +3963,6 @@ handleEvent event data index model =
                         model
     in
     case event of
-        "repo" ->
-            withDecoded GitHub.decodeRepo <|
-                \val ->
-                    { model | repos = Dict.insert val.id val model.repos }
-                        |> computeDataView
-
         "project" ->
             withDecoded GitHub.decodeProject <|
                 \val ->
@@ -3957,10 +3973,31 @@ handleEvent event data index model =
                 \val ->
                     { model | columnCards = Dict.insert val.columnId val.cards model.columnCards }
 
-        "comparison" ->
-            withDecoded Backend.decodeComparisonEvent <|
+        "repo" ->
+            withDecoded GitHub.decodeRepo <|
                 \val ->
-                    { model | comparisons = Dict.insert val.repoId val.comparison model.comparisons }
+                    { model | repos = Dict.insert val.id val model.repos }
+                        |> computeDataView
+
+        "repoComparison" ->
+            withDecoded Backend.decodeRepoComparisonEvent <|
+                \val ->
+                    { model | repoComparison = Dict.insert val.repoId val.comparison model.repoComparison }
+
+        "repoLabels" ->
+            withDecoded Backend.decodeRepoLabelsEvent <|
+                \val ->
+                    { model | repoLabels = Dict.insert val.repoId val.labels model.repoLabels }
+
+        "repoMilestones" ->
+            withDecoded Backend.decodeRepoMilestonesEvent <|
+                \val ->
+                    { model | repoMilestones = Dict.insert val.repoId val.milestones model.repoMilestones }
+
+        "repoReleases" ->
+            withDecoded Backend.decodeRepoReleasesEvent <|
+                \val ->
+                    { model | repoReleases = Dict.insert val.repoId val.releases model.repoReleases }
 
         "issue" ->
             withDecoded GitHub.decodeIssue <|
@@ -3974,15 +4011,15 @@ handleEvent event data index model =
                     { model | prs = Dict.insert val.id val model.prs }
                         |> computeCardsView
 
-        "actors" ->
+        "cardActors" ->
             withDecoded Backend.decodeActorsEvent <|
                 \val ->
-                    { model | actors = Dict.insert val.cardId val.actors model.actors }
+                    { model | cardActors = Dict.insert val.cardId val.actors model.cardActors }
 
-        "reviewers" ->
+        "prReviewers" ->
             withDecoded Backend.decodeReviewersEvent <|
                 \val ->
-                    { model | reviewers = Dict.insert val.cardId val.reviewers model.reviewers }
+                    { model | prReviewers = Dict.insert val.prId val.reviewers model.prReviewers }
 
         "graphs" ->
             withDecoded Backend.decodeGraphs <|

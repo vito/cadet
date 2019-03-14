@@ -34,8 +34,17 @@ const data = {
   // repos by id
   repos: {},
 
-  // repo comparisons to last release, by repo id
-  comparisons: {},
+  // labels by repo id
+  repoLabels: {},
+
+  // milestones by repo id
+  repoMilestones: {},
+
+  // releases by repo id
+  repoReleases: {},
+
+  // repo comparison to last release, by repo id
+  repoComparison: {},
 
   // projects by id
   projects: {},
@@ -52,10 +61,10 @@ const cards = {
   prs: {},
 
   // map from issue/pr id to actors in timeline
-  actors: {},
+  cardActors: {},
 
   // map from pr to review states per user
-  reviewers: {}
+  prReviewers: {}
 }
 
 // map from issue/pr id to issues/pr ids that referenced it
@@ -124,7 +133,6 @@ worker.ports.setIssues.subscribe(function(issues) {
   }
 
   popPoll();
-
 });
 
 var needsRefresh = true;
@@ -201,11 +209,35 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   markGraphRefreshNecessary();
 });
 
-worker.ports.setComparison.subscribe(function(args) {
+worker.ports.setRepoComparison.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.comparisons[id] = val;
-  bumpIndexAndEmitUpdate("comparison", { repoId: id, comparison: val });
+  data.repoComparison[id] = val;
+  bumpIndexAndEmitUpdate("repoComparison", { repoId: id, comparison: val });
+  popPoll();
+});
+
+worker.ports.setRepoLabels.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.repoLabels[id] = val;
+  bumpIndexAndEmitUpdate("repoLabels", { repoId: id, labels: val });
+  popPoll();
+});
+
+worker.ports.setRepoMilestones.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.repoMilestones[id] = val;
+  bumpIndexAndEmitUpdate("repoMilestones", { repoId: id, milestones: val });
+  popPoll();
+});
+
+worker.ports.setRepoReleases.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.repoReleases[id] = val;
+  bumpIndexAndEmitUpdate("repoReleases", { repoId: id, releases: val });
   popPoll();
 });
 
@@ -222,7 +254,7 @@ worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   cards.actors[id] = val;
-  bumpIndexAndEmitUpdate("actors", { cardId: id, actors: val });
+  bumpIndexAndEmitUpdate("cardActors", { cardId: id, actors: val });
   popPoll();
 });
 
@@ -230,7 +262,7 @@ worker.ports.setReviewers.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
   cards.reviewers[id] = val;
-  bumpIndexAndEmitUpdate("reviewers", { cardId: id, reviewers: val });
+  bumpIndexAndEmitUpdate("prReviewers", { prId: id, reviewers: val });
   popPoll();
 });
 

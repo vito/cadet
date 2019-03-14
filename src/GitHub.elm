@@ -22,6 +22,7 @@ module GitHub exposing
     , ReactionGroup
     , ReactionType(..)
     , Reactions
+    , Release
     , Repo
     , RepoLocation
     , RepoSelector
@@ -41,20 +42,26 @@ module GitHub exposing
     , createRepoLabel
     , createRepoMilestone
     , decodeIssue
+    , decodeLabel
+    , decodeMilestone
     , decodeProject
     , decodeProjectColumnCard
     , decodePullRequest
     , decodePullRequestReview
+    , decodeRelease
     , decodeRepo
     , decodeUser
     , decodeV3Comparison
     , deleteRepoLabel
     , deleteRepoMilestone
     , encodeIssue
+    , encodeLabel
+    , encodeMilestone
     , encodeProject
     , encodeProjectColumnCard
     , encodePullRequest
     , encodePullRequestReview
+    , encodeRelease
     , encodeRepo
     , encodeUser
     , encodeV3Comparison
@@ -67,11 +74,13 @@ module GitHub exposing
     , fetchPullRequestReviews
     , fetchRepo
     , fetchRepoIssue
-    , fetchRepoIssues
     , fetchRepoIssuesPage
+    , fetchRepoLabels
+    , fetchRepoMilestones
     , fetchRepoPullRequest
     , fetchRepoPullRequests
     , fetchRepoPullRequestsPage
+    , fetchRepoReleases
     , fetchTimeline
     , issueScore
     , labelEq
@@ -122,9 +131,6 @@ type alias Repo =
     , owner : String
     , name : String
     , isArchived : Bool
-    , labels : List Label
-    , milestones : List Milestone
-    , releases : List Release
     }
 
 
@@ -502,6 +508,21 @@ fetchRepoIssue token sel =
 fetchRepoPullRequests : Token -> RepoSelector -> Task Error (List PullRequest)
 fetchRepoPullRequests token repo =
     fetchPaged pullRequestsQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoLabels : Token -> RepoSelector -> Task Error (List Label)
+fetchRepoLabels token repo =
+    fetchPaged labelsQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoMilestones : Token -> RepoSelector -> Task Error (List Milestone)
+fetchRepoMilestones token repo =
+    fetchPaged milestonesQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoReleases : Token -> RepoSelector -> Task Error (List Release)
+fetchRepoReleases token repo =
+    fetchPaged releasesQuery token { selector = repo, after = Nothing }
 
 
 fetchRepoPullRequestsPage : Token -> PagedSelector RepoSelector -> (Result Error ( List PullRequest, PageInfo ) -> msg) -> Cmd msg
@@ -933,9 +954,6 @@ repoObject =
         |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "isArchived" [] GB.bool)
-        |> GB.with (GB.field "labels" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
-        |> GB.with (GB.field "milestones" [ ( "first", GA.int 100 ) ] (GB.extract <| GB.field "nodes" [] (GB.list milestoneObject)))
-        |> GB.with (GB.field "releases" [ ( "first", GA.int 100 ), ( "orderBy", GA.object [ ( "field", GA.enum "CREATED_AT" ), ( "direction", GA.enum "DESC" ) ] ) ] (GB.extract <| GB.field "nodes" [] (GB.list releaseObject)))
 
 
 repoQuery : GB.Document GB.Query Repo RepoSelector
@@ -1426,6 +1444,123 @@ pullRequestsQuery =
     GB.queryDocument queryRoot
 
 
+labelsQuery : GB.Document GB.Query (PagedResult Label) (PagedSelector RepoSelector)
+labelsQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.owner << .selector) GV.string
+
+        repoNameVar =
+            GV.required "repoName" (.name << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 10 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list labelObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "labels" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
+milestonesQuery : GB.Document GB.Query (PagedResult Milestone) (PagedSelector RepoSelector)
+milestonesQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.owner << .selector) GV.string
+
+        repoNameVar =
+            GV.required "repoName" (.name << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 10 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list milestoneObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "milestones" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
+releasesQuery : GB.Document GB.Query (PagedResult Release) (PagedSelector RepoSelector)
+releasesQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.owner << .selector) GV.string
+
+        repoNameVar =
+            GV.required "repoName" (.name << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 10 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list releaseObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "releases" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
 pullRequestQuery : GB.Document GB.Query PullRequest IssueOrPRSelector
 pullRequestQuery =
     let
@@ -1596,9 +1731,6 @@ decodeRepo =
         |> andMap (JD.field "owner" JD.string)
         |> andMap (JD.field "name" JD.string)
         |> andMap (JD.field "is_archived" JD.bool)
-        |> andMap (JD.field "labels" (JD.list decodeLabel))
-        |> andMap (JD.field "milestones" (JD.list decodeMilestone))
-        |> andMap (JD.field "releases" (JD.list decodeRelease))
 
 
 decodeRelease : JD.Decoder Release
@@ -1965,9 +2097,6 @@ encodeRepo record =
         , ( "owner", JE.string record.owner )
         , ( "name", JE.string record.name )
         , ( "is_archived", JE.bool record.isArchived )
-        , ( "labels", JE.list encodeLabel record.labels )
-        , ( "milestones", JE.list encodeMilestone record.milestones )
-        , ( "releases", JE.list encodeRelease record.releases )
         ]
 
 

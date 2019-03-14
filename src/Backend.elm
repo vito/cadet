@@ -9,8 +9,11 @@ module Backend exposing
     , User
     , decodeActorsEvent
     , decodeColumnCardsEvent
-    , decodeComparisonEvent
     , decodeGraphs
+    , decodeRepoComparisonEvent
+    , decodeRepoLabelsEvent
+    , decodeRepoMilestonesEvent
+    , decodeRepoReleasesEvent
     , decodeReviewersEvent
     , encodeEventActor
     , fetchCardData
@@ -45,18 +48,21 @@ type alias Indexed a =
 
 
 type alias Data =
-    { repos : Dict GitHub.ID GitHub.Repo
-    , projects : Dict GitHub.ID GitHub.Project
+    { projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List ColumnCard)
-    , comparisons : Dict GitHub.ID GitHub.V3Comparison
+    , repos : Dict GitHub.ID GitHub.Repo
+    , repoComparison : Dict GitHub.ID GitHub.V3Comparison
+    , repoLabels : Dict GitHub.ID (List GitHub.Label)
+    , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
+    , repoReleases : Dict GitHub.ID (List GitHub.Release)
     }
 
 
 type alias CardData =
     { issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
-    , actors : Dict GitHub.ID (List EventActor)
-    , reviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
+    , cardActors : Dict GitHub.ID (List EventActor)
+    , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     }
 
 
@@ -175,10 +181,13 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
-        |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
         |> andMap (JD.field "projects" <| JD.dict GitHub.decodeProject)
         |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
-        |> andMap (JD.field "comparisons" <| JD.dict GitHub.decodeV3Comparison)
+        |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
+        |> andMap (JD.field "repoComparison" <| JD.dict GitHub.decodeV3Comparison)
+        |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
+        |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
+        |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
 
 
 decodeCardData : JD.Decoder CardData
@@ -186,8 +195,8 @@ decodeCardData =
     JD.succeed CardData
         |> andMap (JD.field "issues" <| JD.dict GitHub.decodeIssue)
         |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
-        |> andMap (JD.field "actors" <| JD.dict (JD.list decodeEventActor))
-        |> andMap (JD.field "reviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
+        |> andMap (JD.field "cardActors" <| JD.dict (JD.list decodeEventActor))
+        |> andMap (JD.field "prReviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
 
 
 decodeColumnCards : JD.Decoder (List ColumnCard)
@@ -268,7 +277,7 @@ decodeActorsEvent =
 
 
 type alias ReviewersEvent =
-    { cardId : GitHub.ID
+    { prId : GitHub.ID
     , reviewers : List GitHub.PullRequestReview
     }
 
@@ -276,18 +285,57 @@ type alias ReviewersEvent =
 decodeReviewersEvent : JD.Decoder ReviewersEvent
 decodeReviewersEvent =
     JD.succeed ReviewersEvent
-        |> andMap (JD.field "cardId" JD.string)
+        |> andMap (JD.field "prId" JD.string)
         |> andMap (JD.field "reviewers" (JD.list GitHub.decodePullRequestReview))
 
 
-type alias ComparisonEvent =
+type alias RepoComparisonEvent =
     { repoId : GitHub.ID
     , comparison : GitHub.V3Comparison
     }
 
 
-decodeComparisonEvent : JD.Decoder ComparisonEvent
-decodeComparisonEvent =
-    JD.succeed ComparisonEvent
+decodeRepoComparisonEvent : JD.Decoder RepoComparisonEvent
+decodeRepoComparisonEvent =
+    JD.succeed RepoComparisonEvent
         |> andMap (JD.field "repoId" JD.string)
         |> andMap (JD.field "comparison" GitHub.decodeV3Comparison)
+
+
+type alias RepoLabelsEvent =
+    { repoId : GitHub.ID
+    , labels : List GitHub.Label
+    }
+
+
+decodeRepoLabelsEvent : JD.Decoder RepoLabelsEvent
+decodeRepoLabelsEvent =
+    JD.succeed RepoLabelsEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "labels" (JD.list GitHub.decodeLabel))
+
+
+type alias RepoMilestonesEvent =
+    { repoId : GitHub.ID
+    , milestones : List GitHub.Milestone
+    }
+
+
+decodeRepoMilestonesEvent : JD.Decoder RepoMilestonesEvent
+decodeRepoMilestonesEvent =
+    JD.succeed RepoMilestonesEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "milestones" (JD.list GitHub.decodeMilestone))
+
+
+type alias RepoReleasesEvent =
+    { repoId : GitHub.ID
+    , releases : List GitHub.Release
+    }
+
+
+decodeRepoReleasesEvent : JD.Decoder RepoReleasesEvent
+decodeRepoReleasesEvent =
+    JD.succeed RepoReleasesEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "releases" (JD.list GitHub.decodeRelease))
