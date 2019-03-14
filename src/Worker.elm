@@ -495,18 +495,11 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
-                reviewActor review =
-                    { user = Just review.author
-                    , avatar = review.author.avatar
-                    , createdAt = review.createdAt
-                    }
-
                 actors =
-                    (List.filterMap eventActor timeline
-                        ++ List.map reviewActor reviews
-                    )
-                        |> List.sortBy (Time.posixToMillis << .createdAt)
+                    timeline
+                        |> List.filterMap eventActor
                         |> List.map Backend.encodeEventActor
+                        |> List.reverse
 
                 reviewers =
                     List.foldl
@@ -778,6 +771,9 @@ eventActor event =
 
                 ( Nothing, Nothing ) ->
                     Nothing
+
+        GitHub.PullRequestReviewEvent { author, createdAt } ->
+            Just { avatar = author.avatar, user = Just author, createdAt = createdAt }
 
         GitHub.CrossReferencedEvent _ ->
             Nothing

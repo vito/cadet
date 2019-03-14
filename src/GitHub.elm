@@ -99,6 +99,7 @@ import Json.Decode.Extra as JDE exposing (andMap)
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
 import Log
+import Maybe.Extra as ME
 import Task exposing (Task)
 import Time
 
@@ -389,6 +390,7 @@ type TimelineEvent
     = IssueCommentEvent (Maybe User) Time.Posix
     | CrossReferencedEvent ID
     | CommitEvent Commit
+    | PullRequestReviewEvent PullRequestReview
 
 
 type alias PullRequestReview =
@@ -1166,7 +1168,7 @@ userObject =
 
 authorObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe User) vars
 authorObject =
-    GB.object pickEnum2
+    GB.object ME.or
         |> GB.with (GB.inlineFragment (Just <| GB.onType "User") userObject)
         |> GB.with (GB.inlineFragment (Just <| GB.onType "Bot") userObject)
 
@@ -1184,7 +1186,7 @@ projectColumnCardObject : GB.ValueSpec GB.NonNull GB.ObjectType ProjectColumnCar
 projectColumnCardObject =
     let
         content =
-            GB.object pickEnum2
+            GB.object ME.or
                 |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map IssueCardContent issueObject))
                 |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map PullRequestCardContent prObject))
     in
@@ -1478,7 +1480,7 @@ timelineQuery =
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
 
         sourceID =
-            GB.object pickEnum2
+            GB.object ME.or
                 |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.extract <| GB.field "id" [] GB.string))
                 |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.extract <| GB.field "id" [] GB.string))
 
@@ -1489,11 +1491,15 @@ timelineQuery =
         commitEvent =
             GB.map CommitEvent commitObject
 
+        prReviewEvent =
+            GB.map PullRequestReviewEvent prReviewObject
+
         event =
-            GB.object pickEnum3
+            GB.object maybeOr4
                 |> GB.with (GB.inlineFragment (Just (GB.onType "IssueComment")) issueCommentEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "CrossReferencedEvent")) crossReferencedEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "Commit")) commitEvent)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequestReviewEvent")) prReviewEvent)
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -1514,7 +1520,7 @@ timelineQuery =
             GB.extract (GB.field "timeline" pageArgs paged)
 
         issueOrPRTimeline =
-            GB.object pickEnum2
+            GB.object ME.or
                 |> GB.with (GB.inlineFragment (Just <| GB.onType "Issue") timeline)
                 |> GB.with (GB.inlineFragment (Just <| GB.onType "PullRequest") timeline)
 
@@ -1572,19 +1578,14 @@ prReviewQuery =
     GB.queryDocument queryRoot
 
 
-pickEnum2 : Maybe a -> Maybe a -> Maybe a
-pickEnum2 ma mb =
-    case ma of
-        Just x ->
-            Just x
-
-        Nothing ->
-            mb
+maybeOr3 : Maybe a -> Maybe a -> Maybe a -> Maybe a
+maybeOr3 ma mb mc =
+    ME.or ma (ME.or mb mc)
 
 
-pickEnum3 : Maybe a -> Maybe a -> Maybe a -> Maybe a
-pickEnum3 ma mb mc =
-    pickEnum2 ma (pickEnum2 mb mc)
+maybeOr4 : Maybe a -> Maybe a -> Maybe a -> Maybe a -> Maybe a
+maybeOr4 ma mb mc md =
+    ME.or ma (ME.or mb (ME.or mc md))
 
 
 decodeRepo : JD.Decoder Repo
