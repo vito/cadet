@@ -253,7 +253,7 @@ worker.ports.setReferences.subscribe(function(args) {
 worker.ports.setActors.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  cards.actors[id] = val;
+  cards.cardActors[id] = val;
   bumpIndexAndEmitUpdate("cardActors", { cardId: id, actors: val });
   popPoll();
 });
@@ -261,7 +261,7 @@ worker.ports.setActors.subscribe(function(args) {
 worker.ports.setReviewers.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  cards.reviewers[id] = val;
+  cards.prReviewers[id] = val;
   bumpIndexAndEmitUpdate("prReviewers", { prId: id, reviewers: val });
   popPoll();
 });
