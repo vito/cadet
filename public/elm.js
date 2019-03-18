@@ -20175,9 +20175,22 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 						return A2(elm$core$Dict$get, id, model.openPRsByRepo);
 					},
 					A2(elm$core$Dict$get, repoName, model.reposByName))));
+		var isInbox = function (card) {
+			var _n0 = model.me;
+			if (_n0.$ === 'Just') {
+				var user = _n0.a.user;
+				return !A3(author$project$Main$lastActivityIsByUser, model.cardActors, user.login, card);
+			} else {
+				return false;
+			}
+		};
 		var categorizeCard = F2(
 			function (card, cat) {
-				return A3(author$project$Main$hasLabel, model, 'needs-test', card) ? _Utils_update(
+				return isInbox(card) ? _Utils_update(
+					cat,
+					{
+						inbox: A2(elm$core$List$cons, card, cat.inbox)
+					}) : (A3(author$project$Main$hasLabel, model, 'needs-test', card) ? _Utils_update(
 					cat,
 					{
 						needsTest: A2(elm$core$List$cons, card, cat.needsTest)
@@ -20197,7 +20210,7 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)
-					}))));
+					})))));
 			});
 		var categorized = A3(
 			elm$core$List$foldl,

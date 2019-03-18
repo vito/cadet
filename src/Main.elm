@@ -2200,8 +2200,20 @@ viewRepoPullRequestsPage model repoName =
                 |> Maybe.map (List.filterMap (\id -> Dict.get id model.cards))
                 |> Maybe.withDefault []
 
+        isInbox card =
+            case model.me of
+                Just { user } ->
+                    not (lastActivityIsByUser model.cardActors user.login card)
+
+                Nothing ->
+                    False
+
         categorizeCard card cat =
-            if hasLabel model "needs-test" card then
+            if isInbox card then
+                -- force PRs that were last active by someone else into the inbox
+                { cat | inbox = card :: cat.inbox }
+
+            else if hasLabel model "needs-test" card then
                 { cat | needsTest = card :: cat.needsTest }
 
             else if changesRequested model card then
