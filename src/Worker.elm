@@ -224,7 +224,7 @@ update msg model =
 
         HookReceived "label" payload ->
             Log.debug "label hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo (always Noop) payload model, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoLabels payload model, Cmd.none )
 
         HookReceived "issues" payload ->
             Log.debug "issue hook received; refreshing issue and timeline" () <|
@@ -248,7 +248,7 @@ update msg model =
 
         HookReceived "milestone" payload ->
             Log.debug "milestone hook received; refreshing repo" () <|
-                ( decodeAndFetchRepo (always Noop) payload model, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoMilestones payload model, Cmd.none )
 
         HookReceived "project" payload ->
             Log.debug "project hook received; refreshing projects" () <|

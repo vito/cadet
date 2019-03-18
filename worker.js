@@ -4327,6 +4327,12 @@ var author$project$Log$debug = F3(
 var author$project$Main$FetchCards = function (a) {
 	return {$: 'FetchCards', a: a};
 };
+var author$project$Main$FetchRepoLabels = function (a) {
+	return {$: 'FetchRepoLabels', a: a};
+};
+var author$project$Main$FetchRepoMilestones = function (a) {
+	return {$: 'FetchRepoMilestones', a: a};
+};
 var author$project$Main$FetchRepoReleases = function (a) {
 	return {$: 'FetchRepoReleases', a: a};
 };
@@ -11629,11 +11635,7 @@ var author$project$Main$update = F2(
 							'label hook received; refreshing repo',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A3(
-									author$project$Main$decodeAndFetchRepo,
-									elm$core$Basics$always(author$project$Main$Noop),
-									payload,
-									model),
+								A3(author$project$Main$decodeAndFetchRepo, author$project$Main$FetchRepoLabels, payload, model),
 								elm$core$Platform$Cmd$none));
 					case 'issues':
 						var payload = msg.b;
@@ -11687,11 +11689,7 @@ var author$project$Main$update = F2(
 							'milestone hook received; refreshing repo',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A3(
-									author$project$Main$decodeAndFetchRepo,
-									elm$core$Basics$always(author$project$Main$Noop),
-									payload,
-									model),
+								A3(author$project$Main$decodeAndFetchRepo, author$project$Main$FetchRepoMilestones, payload, model),
 								elm$core$Platform$Cmd$none));
 					case 'project':
 						var payload = msg.b;
