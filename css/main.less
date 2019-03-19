@@ -323,13 +323,11 @@ code {
     height: 16px;
     border-radius: 3px;
 
-    border: 1px solid transparent;
-
-    &.pending { border-color: @yellow; }
-    &.success { border-color: @green; }
-    &.failure { border-color: @red; }
-    &.expected { border-color: @purple; }
-    &.error { border-color: @orange; }
+    &.pending { border: 1px solid @yellow; }
+    &.success { border: 1px solid @green; }
+    &.failure { border: 1px solid @red; }
+    &.expected { border: 1px solid @purple; }
+    &.error { border: 1px solid @orange; }
   }
 
   > * {

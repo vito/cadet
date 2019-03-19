@@ -3564,6 +3564,11 @@ viewCard model card =
                 _ ->
                     Html.text ""
              ]
+                ++ List.map
+                    (\{ avatar } ->
+                        Html.img [ HA.class "status-actor", HA.src avatar ] []
+                    )
+                    card.assignees
                 ++ prIcons model card
             )
         ]

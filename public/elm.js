@@ -19387,7 +19387,22 @@ var author$project$Main$viewCard = F2(
 								}
 							}()
 							]),
-						A2(author$project$Main$prIcons, model, card)))
+						_Utils_ap(
+							A2(
+								elm$core$List$map,
+								function (_n3) {
+									var avatar = _n3.avatar;
+									return A2(
+										elm$html$Html$img,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('status-actor'),
+												elm$html$Html$Attributes$src(avatar)
+											]),
+										_List_Nil);
+								},
+								card.assignees),
+							A2(author$project$Main$prIcons, model, card))))
 				]));
 	});
 var elm_explorations$markdown$Markdown$defaultOptions = {
