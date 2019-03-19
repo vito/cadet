@@ -20175,18 +20175,19 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 						return A2(elm$core$Dict$get, id, model.openPRsByRepo);
 					},
 					A2(elm$core$Dict$get, repoName, model.reposByName))));
-		var isInbox = function (card) {
+		var lastActivityIsMe = function (card) {
 			var _n0 = model.me;
 			if (_n0.$ === 'Just') {
 				var user = _n0.a.user;
-				return !A3(author$project$Main$lastActivityIsByUser, model.cardActors, user.login, card);
+				return A3(author$project$Main$lastActivityIsByUser, model.cardActors, user.login, card);
 			} else {
 				return false;
 			}
 		};
 		var categorizeCard = F2(
 			function (card, cat) {
-				return isInbox(card) ? _Utils_update(
+				var hasLastWord = lastActivityIsMe(card);
+				return ((!_Utils_eq(model.me, elm$core$Maybe$Nothing)) && (!hasLastWord)) ? _Utils_update(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)
@@ -20206,16 +20207,20 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 					cat,
 					{
 						mergeConflict: A2(elm$core$List$cons, card, cat.mergeConflict)
+					}) : (hasLastWord ? _Utils_update(
+					cat,
+					{
+						waiting: A2(elm$core$List$cons, card, cat.waiting)
 					}) : _Utils_update(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)
-					})))));
+					}))))));
 			});
 		var categorized = A3(
 			elm$core$List$foldl,
 			categorizeCard,
-			{changesRequested: _List_Nil, failedChecks: _List_Nil, inbox: _List_Nil, mergeConflict: _List_Nil, needsTest: _List_Nil},
+			{changesRequested: _List_Nil, failedChecks: _List_Nil, inbox: _List_Nil, mergeConflict: _List_Nil, needsTest: _List_Nil, waiting: _List_Nil},
 			prCards);
 		return A2(
 			elm$html$Html$div,
@@ -20274,6 +20279,10 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 									capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
 									'Inbox',
 									categorized.inbox),
+									_Utils_Tuple3(
+									capitalist$elm_octicons$Octicons$comment(author$project$Main$octiconOpts),
+									'Waiting',
+									categorized.waiting),
 									_Utils_Tuple3(
 									capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
 									'Failed Checks',

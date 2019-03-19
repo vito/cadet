@@ -2200,16 +2200,20 @@ viewRepoPullRequestsPage model repoName =
                 |> Maybe.map (List.filterMap (\id -> Dict.get id model.cards))
                 |> Maybe.withDefault []
 
-        isInbox card =
+        lastActivityIsMe card =
             case model.me of
                 Just { user } ->
-                    not (lastActivityIsByUser model.cardActors user.login card)
+                    lastActivityIsByUser model.cardActors user.login card
 
                 Nothing ->
                     False
 
         categorizeCard card cat =
-            if isInbox card then
+            let
+                hasLastWord =
+                    lastActivityIsMe card
+            in
+            if model.me /= Nothing && not hasLastWord then
                 -- force PRs that were last active by someone else into the inbox
                 { cat | inbox = card :: cat.inbox }
 
@@ -2225,12 +2229,16 @@ viewRepoPullRequestsPage model repoName =
             else if hasMergeConflict card then
                 { cat | mergeConflict = card :: cat.mergeConflict }
 
+            else if hasLastWord then
+                { cat | waiting = card :: cat.waiting }
+
             else
                 { cat | inbox = card :: cat.inbox }
 
         categorized =
             List.foldl categorizeCard
                 { inbox = []
+                , waiting = []
                 , failedChecks = []
                 , needsTest = []
                 , mergeConflict = []
@@ -2254,6 +2262,7 @@ viewRepoPullRequestsPage model repoName =
                 .repoPullRequestsTab
                 SetRepoPullRequestsTab
                 [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
+                , ( Octicons.comment octiconOpts, "Waiting", categorized.waiting )
                 , ( Octicons.x octiconOpts, "Failed Checks", categorized.failedChecks )
                 , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
                 , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
