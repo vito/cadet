@@ -11973,7 +11973,7 @@ var author$project$Main$computeViewForPage = function (model) {
 				reset,
 				{
 					suggestedLabels: _List_fromArray(
-						['needs-test'])
+						['needs-test', 'blocked'])
 				});
 		default:
 			return reset;
@@ -20214,6 +20214,10 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 					cat,
 					{
 						needsTest: A2(elm$core$List$cons, card, cat.needsTest)
+					}) : (A3(author$project$Main$hasLabel, model, 'blocked', card) ? _Utils_update(
+					cat,
+					{
+						blocked: A2(elm$core$List$cons, card, cat.blocked)
 					}) : (A2(author$project$Main$changesRequested, model, card) ? _Utils_update(
 					cat,
 					{
@@ -20234,12 +20238,12 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)
-					}))))));
+					})))))));
 			});
 		var categorized = A3(
 			elm$core$List$foldl,
 			categorizeCard,
-			{changesRequested: _List_Nil, failedChecks: _List_Nil, inbox: _List_Nil, mergeConflict: _List_Nil, needsTest: _List_Nil, waiting: _List_Nil},
+			{blocked: _List_Nil, changesRequested: _List_Nil, failedChecks: _List_Nil, inbox: _List_Nil, mergeConflict: _List_Nil, needsTest: _List_Nil, waiting: _List_Nil},
 			prCards);
 		return A2(
 			elm$html$Html$div,
@@ -20316,6 +20320,10 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 									categorized.changesRequested),
 									_Utils_Tuple3(
 									A2(author$project$Main$viewLabelByName, model, 'needs-test'),
+									'Needs Tests',
+									categorized.needsTest),
+									_Utils_Tuple3(
+									A2(author$project$Main$viewLabelByName, model, 'blocked'),
 									'Needs Tests',
 									categorized.needsTest)
 								]))

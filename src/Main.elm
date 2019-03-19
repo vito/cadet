@@ -1173,7 +1173,10 @@ computeViewForPage model =
 
         PullRequestsRepoPage _ ->
             { reset
-                | suggestedLabels = [ "needs-test" ]
+                | suggestedLabels =
+                    [ "needs-test"
+                    , "blocked"
+                    ]
             }
 
         _ ->
@@ -2222,6 +2225,9 @@ viewRepoPullRequestsPage model repoName =
             else if hasLabel model "needs-test" card then
                 { cat | needsTest = card :: cat.needsTest }
 
+            else if hasLabel model "blocked" card then
+                { cat | blocked = card :: cat.blocked }
+
             else if changesRequested model card then
                 { cat | changesRequested = card :: cat.changesRequested }
 
@@ -2242,8 +2248,9 @@ viewRepoPullRequestsPage model repoName =
                 { inbox = []
                 , waiting = []
                 , failedChecks = []
-                , needsTest = []
                 , mergeConflict = []
+                , needsTest = []
+                , blocked = []
                 , changesRequested = []
                 }
                 prCards
@@ -2269,6 +2276,7 @@ viewRepoPullRequestsPage model repoName =
                 , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
                 , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
                 , ( viewLabelByName model "needs-test", "Needs Tests", categorized.needsTest )
+                , ( viewLabelByName model "blocked", "Needs Tests", categorized.needsTest )
                 ]
             ]
         ]
