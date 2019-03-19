@@ -18796,8 +18796,20 @@ var author$project$Main$isAnticipated = F2(
 	function (model, card) {
 		return A2(elm$core$Set$member, card.id, model.anticipatedCards) && (!A2(y0hy0h$ordered_containers$OrderedSet$member, card.id, model.selectedCards));
 	});
+var author$project$Main$lastActiveUser = F2(
+	function (model, card) {
+		return A2(
+			elm$core$Maybe$andThen,
+			function ($) {
+				return $.user;
+			},
+			A2(
+				elm$core$Maybe$andThen,
+				elm$core$List$head,
+				A2(elm$core$Dict$get, card.id, model.cardActors)));
+	});
 var author$project$Main$lastActivityIsByUser = F3(
-	function (cardEvents, login, card) {
+	function (model, login, card) {
 		return A2(
 			elm$core$Maybe$withDefault,
 			false,
@@ -18809,15 +18821,7 @@ var author$project$Main$lastActivityIsByUser = F3(
 					function ($) {
 						return $.login;
 					}),
-				A2(
-					elm$core$Maybe$andThen,
-					function ($) {
-						return $.user;
-					},
-					A2(
-						elm$core$Maybe$andThen,
-						elm$core$List$head,
-						A2(elm$core$Dict$get, card.id, cardEvents)))));
+				A2(author$project$Main$lastActiveUser, model, card)));
 	});
 var author$project$Main$prIcons = F2(
 	function (model, card) {
@@ -19139,7 +19143,7 @@ var author$project$Main$viewCard = F2(
 								var _n0 = model.me;
 								if (_n0.$ === 'Just') {
 									var user = _n0.a.user;
-									return A3(author$project$Main$lastActivityIsByUser, model.cardActors, user.login, card);
+									return A3(author$project$Main$lastActivityIsByUser, model, user.login, card);
 								} else {
 									return false;
 								}
@@ -20175,19 +20179,34 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 						return A2(elm$core$Dict$get, id, model.openPRsByRepo);
 					},
 					A2(elm$core$Dict$get, repoName, model.reposByName))));
-		var lastActivityIsMe = function (card) {
-			var _n0 = model.me;
-			if (_n0.$ === 'Just') {
-				var user = _n0.a.user;
-				return A3(author$project$Main$lastActivityIsByUser, model.cardActors, user.login, card);
-			} else {
-				return false;
-			}
-		};
 		var categorizeCard = F2(
 			function (card, cat) {
-				var hasLastWord = lastActivityIsMe(card);
-				return ((!_Utils_eq(model.me, elm$core$Maybe$Nothing)) && (!hasLastWord)) ? _Utils_update(
+				var lastWord = A2(author$project$Main$lastActiveUser, model, card);
+				var hasLastWord = function () {
+					if (lastWord.$ === 'Just') {
+						var login = lastWord.a.login;
+						return A2(
+							elm$core$List$any,
+							A2(
+								elm$core$Basics$composeL,
+								A2(
+									elm$core$Basics$composeL,
+									elm$core$Basics$eq(login),
+									function ($) {
+										return $.login;
+									}),
+								function ($) {
+									return $.author;
+								}),
+							A2(
+								elm$core$Maybe$withDefault,
+								_List_Nil,
+								A2(elm$core$Dict$get, card.id, model.prReviewers)));
+					} else {
+						return false;
+					}
+				}();
+				return (!hasLastWord) ? _Utils_update(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)

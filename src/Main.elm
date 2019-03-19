@@ -2200,20 +2200,22 @@ viewRepoPullRequestsPage model repoName =
                 |> Maybe.map (List.filterMap (\id -> Dict.get id model.cards))
                 |> Maybe.withDefault []
 
-        lastActivityIsMe card =
-            case model.me of
-                Just { user } ->
-                    lastActivityIsByUser model.cardActors user.login card
-
-                Nothing ->
-                    False
-
         categorizeCard card cat =
             let
+                lastWord =
+                    lastActiveUser model card
+
                 hasLastWord =
-                    lastActivityIsMe card
+                    case lastWord of
+                        Just { login } ->
+                            Dict.get card.id model.prReviewers
+                                |> Maybe.withDefault []
+                                |> List.any ((==) login << .login << .author)
+
+                        Nothing ->
+                            False
             in
-            if model.me /= Nothing && not hasLastWord then
+            if not hasLastWord then
                 -- force PRs that were last active by someone else into the inbox
                 { cat | inbox = card :: cat.inbox }
 
@@ -3389,11 +3391,16 @@ involvesUser model login card =
         |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
-lastActivityIsByUser : Dict GitHub.ID (List Backend.EventActor) -> String -> Card -> Bool
-lastActivityIsByUser cardEvents login card =
-    Dict.get card.id cardEvents
+lastActiveUser : Model -> Card -> Maybe GitHub.User
+lastActiveUser model card =
+    Dict.get card.id model.cardActors
         |> Maybe.andThen List.head
         |> Maybe.andThen .user
+
+
+lastActivityIsByUser : Model -> String -> Card -> Bool
+lastActivityIsByUser model login card =
+    lastActiveUser model card
         |> Maybe.map ((==) login << .login)
         |> Maybe.withDefault False
 
@@ -3444,7 +3451,7 @@ viewCard model card =
             , ( "last-activity-is-me"
               , case model.me of
                     Just { user } ->
-                        lastActivityIsByUser model.cardActors user.login card
+                        lastActivityIsByUser model user.login card
 
                     Nothing ->
                         False
