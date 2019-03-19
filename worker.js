@@ -12416,7 +12416,7 @@ var author$project$Main$update = F2(
 										case 'PullRequestReviewStatePending':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
-											return elm$core$Basics$identity;
+											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateApproved':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateChangesRequested':
