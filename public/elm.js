@@ -20182,7 +20182,7 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 		var categorizeCard = F2(
 			function (card, cat) {
 				var lastWord = A2(author$project$Main$lastActiveUser, model, card);
-				var hasLastWord = function () {
+				var reviewersHaveLastWord = function () {
 					if (lastWord.$ === 'Just') {
 						var login = lastWord.a.login;
 						return A2(
@@ -20206,7 +20206,7 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 						return false;
 					}
 				}();
-				return (!hasLastWord) ? _Utils_update(
+				return (!reviewersHaveLastWord) ? _Utils_update(
 					cat,
 					{
 						inbox: A2(elm$core$List$cons, card, cat.inbox)
@@ -20226,7 +20226,7 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 					cat,
 					{
 						mergeConflict: A2(elm$core$List$cons, card, cat.mergeConflict)
-					}) : (hasLastWord ? _Utils_update(
+					}) : (reviewersHaveLastWord ? _Utils_update(
 					cat,
 					{
 						waiting: A2(elm$core$List$cons, card, cat.waiting)

@@ -575,7 +575,7 @@ update msg model =
                                     Dict.insert r.author.id r
 
                                 GitHub.PullRequestReviewStateCommented ->
-                                    Dict.insert r.author.id r
+                                    identity
 
                                 GitHub.PullRequestReviewStateApproved ->
                                     Dict.insert r.author.id r

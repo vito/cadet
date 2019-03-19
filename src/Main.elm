@@ -2205,7 +2205,7 @@ viewRepoPullRequestsPage model repoName =
                 lastWord =
                     lastActiveUser model card
 
-                hasLastWord =
+                reviewersHaveLastWord =
                     case lastWord of
                         Just { login } ->
                             Dict.get card.id model.prReviewers
@@ -2215,7 +2215,7 @@ viewRepoPullRequestsPage model repoName =
                         Nothing ->
                             False
             in
-            if not hasLastWord then
+            if not reviewersHaveLastWord then
                 -- force PRs that were last active by someone else into the inbox
                 { cat | inbox = card :: cat.inbox }
 
@@ -2231,7 +2231,7 @@ viewRepoPullRequestsPage model repoName =
             else if hasMergeConflict card then
                 { cat | mergeConflict = card :: cat.mergeConflict }
 
-            else if hasLastWord then
+            else if reviewersHaveLastWord then
                 { cat | waiting = card :: cat.waiting }
 
             else
