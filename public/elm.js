@@ -7392,10 +7392,12 @@ var author$project$GitHub$Issue = function (id) {
 								return function (commentCount) {
 									return function (reactions) {
 										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (milestone) {
-														return {author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+											return function (assignees) {
+												return function (labels) {
+													return function (cards) {
+														return function (milestone) {
+															return {assignees: assignees, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+														};
 													};
 												};
 											};
@@ -7553,42 +7555,48 @@ var author$project$GitHub$decodeIssue = A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					elm$json$Json$Decode$field,
-					'author',
-					elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
+					'assignees',
+					elm$json$Json$Decode$list(author$project$GitHub$decodeUser)),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
 						elm$json$Json$Decode$field,
-						'reactions',
-						elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
+						'author',
+						elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
+						A2(
+							elm$json$Json$Decode$field,
+							'reactions',
+							elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
 						A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
+							A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+								A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
 								A2(
 									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
+									A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 									A2(
 										elm_community$json_extra$Json$Decode$Extra$andMap,
-										A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeIssueState),
+										A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
 										A2(
 											elm_community$json_extra$Json$Decode$Extra$andMap,
-											A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+											A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodeIssueState),
 											A2(
 												elm_community$json_extra$Json$Decode$Extra$andMap,
-												A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+												A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 												A2(
 													elm_community$json_extra$Json$Decode$Extra$andMap,
-													A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+													A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 													A2(
 														elm_community$json_extra$Json$Decode$Extra$andMap,
-														A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-														elm$json$Json$Decode$succeed(author$project$GitHub$Issue)))))))))))))));
+														A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+														A2(
+															elm_community$json_extra$Json$Decode$Extra$andMap,
+															A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+															elm$json$Json$Decode$succeed(author$project$GitHub$Issue))))))))))))))));
 var author$project$GitHub$PullRequest = function (id) {
 	return function (url) {
 		return function (createdAt) {
@@ -7600,15 +7608,17 @@ var author$project$GitHub$PullRequest = function (id) {
 								return function (commentCount) {
 									return function (reactions) {
 										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (additions) {
-														return function (deletions) {
-															return function (milestone) {
-																return function (mergeable) {
-																	return function (lastCommit) {
-																		return function (mergeCommit) {
-																			return {additions: additions, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+											return function (assignees) {
+												return function (labels) {
+													return function (cards) {
+														return function (additions) {
+															return function (deletions) {
+																return function (milestone) {
+																	return function (mergeable) {
+																		return function (lastCommit) {
+																			return function (mergeCommit) {
+																				return {additions: additions, assignees: assignees, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+																			};
 																		};
 																	};
 																};
@@ -7847,42 +7857,48 @@ var author$project$GitHub$decodePullRequest = A2(
 									elm_community$json_extra$Json$Decode$Extra$andMap,
 									A2(
 										elm$json$Json$Decode$field,
-										'author',
-										elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
+										'assignees',
+										elm$json$Json$Decode$list(author$project$GitHub$decodeUser)),
 									A2(
 										elm_community$json_extra$Json$Decode$Extra$andMap,
 										A2(
 											elm$json$Json$Decode$field,
-											'reactions',
-											elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
+											'author',
+											elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
 										A2(
 											elm_community$json_extra$Json$Decode$Extra$andMap,
-											A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
+											A2(
+												elm$json$Json$Decode$field,
+												'reactions',
+												elm$json$Json$Decode$list(author$project$GitHub$decodeReactionGroup)),
 											A2(
 												elm_community$json_extra$Json$Decode$Extra$andMap,
-												A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
+												A2(elm$json$Json$Decode$field, 'comment_count', elm$json$Json$Decode$int),
 												A2(
 													elm_community$json_extra$Json$Decode$Extra$andMap,
-													A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
+													A2(elm$json$Json$Decode$field, 'title', elm$json$Json$Decode$string),
 													A2(
 														elm_community$json_extra$Json$Decode$Extra$andMap,
-														A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
+														A2(elm$json$Json$Decode$field, 'number', elm$json$Json$Decode$int),
 														A2(
 															elm_community$json_extra$Json$Decode$Extra$andMap,
-															A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodePullRequestState),
+															A2(elm$json$Json$Decode$field, 'repo', author$project$GitHub$decodeRepoLocation),
 															A2(
 																elm_community$json_extra$Json$Decode$Extra$andMap,
-																A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+																A2(elm$json$Json$Decode$field, 'state', author$project$GitHub$decodePullRequestState),
 																A2(
 																	elm_community$json_extra$Json$Decode$Extra$andMap,
-																	A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
+																	A2(elm$json$Json$Decode$field, 'updated_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 																	A2(
 																		elm_community$json_extra$Json$Decode$Extra$andMap,
-																		A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+																		A2(elm$json$Json$Decode$field, 'created_at', elm_community$json_extra$Json$Decode$Extra$datetime),
 																		A2(
 																			elm_community$json_extra$Json$Decode$Extra$andMap,
-																			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-																			elm$json$Json$Decode$succeed(author$project$GitHub$PullRequest))))))))))))))))))));
+																			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+																			A2(
+																				elm_community$json_extra$Json$Decode$Extra$andMap,
+																				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+																				elm$json$Json$Decode$succeed(author$project$GitHub$PullRequest)))))))))))))))))))));
 var author$project$GitHub$PullRequestReview = F3(
 	function (author, state, createdAt) {
 		return {author: author, createdAt: createdAt, state: state};
@@ -9134,58 +9150,75 @@ var author$project$GitHub$issueObject = A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
-				A2(
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
-					A2(
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+					'assignees',
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'first',
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10))
+						]),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 						A3(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-							'comments',
+							'nodes',
 							_List_Nil,
-							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
+							author$project$GitHub$nullableList(author$project$GitHub$userObject)))),
+				A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 						A2(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							A3(
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+								'comments',
+								_List_Nil,
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
 							A2(
 								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 									A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A2(
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
-											'issueState',
-											A3(
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'state',
-												_List_Nil,
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$issueStates))),
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 										A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-											A3(
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'updatedAt',
-												_List_Nil,
-												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+											A2(
+												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
+												'issueState',
+												A3(
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+													'state',
+													_List_Nil,
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$issueStates))),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 												A3(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-													'createdAt',
+													'updatedAt',
 													_List_Nil,
 													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+													A3(
+														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+														'createdAt',
+														_List_Nil,
+														A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Issue)))))))))))))));
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+														A2(
+															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+															A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Issue))))))))))))))));
 var author$project$GitHub$gitActorObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
@@ -9382,58 +9415,75 @@ var author$project$GitHub$prObject = A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
-									A2(
-										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
-										A2(
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+									A3(
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+										'assignees',
+										_List_fromArray(
+											[
+												_Utils_Tuple2(
+												'first',
+												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10))
+											]),
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 											A3(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'comments',
+												'nodes',
 												_List_Nil,
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
+												author$project$GitHub$nullableList(author$project$GitHub$userObject)))),
+									A2(
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
+										A2(
+											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+											A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-												A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+												A3(
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+													'comments',
+													_List_Nil,
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 														A2(
 															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-															A2(
-																jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
-																'prState',
-																A3(
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																	'state',
-																	_List_Nil,
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestStates))),
+															A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 															A2(
 																jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																A3(
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																	'updatedAt',
-																	_List_Nil,
-																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																A2(
+																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
+																	'prState',
+																	A3(
+																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+																		'state',
+																		_List_Nil,
+																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestStates))),
 																A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																	A3(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																		'createdAt',
+																		'updatedAt',
 																		_List_Nil,
 																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																	A2(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																		A3(
+																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+																			'createdAt',
+																			_List_Nil,
+																			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																		A2(
 																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest))))))))))))))))))));
+																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																			A2(
+																				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+																				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest)))))))))))))))))))));
 var author$project$GitHub$projectColumnCardObject = function () {
 	var content = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -10882,6 +10932,7 @@ var author$project$Card$fromIssue = function (issue) {
 	var title = issue.title;
 	var updatedAt = issue.updatedAt;
 	var author = issue.author;
+	var assignees = issue.assignees;
 	var labels = issue.labels;
 	var cards = issue.cards;
 	var commentCount = issue.commentCount;
@@ -10889,6 +10940,7 @@ var author$project$Card$fromIssue = function (issue) {
 	var state = issue.state;
 	var milestone = issue.milestone;
 	return {
+		assignees: assignees,
 		author: author,
 		cards: cards,
 		commentCount: commentCount,
@@ -10929,6 +10981,7 @@ var author$project$Card$fromPR = function (pr) {
 	var title = pr.title;
 	var updatedAt = pr.updatedAt;
 	var author = pr.author;
+	var assignees = pr.assignees;
 	var labels = pr.labels;
 	var cards = pr.cards;
 	var commentCount = pr.commentCount;
@@ -10936,6 +10989,7 @@ var author$project$Card$fromPR = function (pr) {
 	var state = pr.state;
 	var milestone = pr.milestone;
 	return {
+		assignees: assignees,
 		author: author,
 		cards: cards,
 		commentCount: commentCount,
@@ -20185,23 +20239,24 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 				var reviewersHaveLastWord = function () {
 					if (lastWord.$ === 'Just') {
 						var login = lastWord.a.login;
-						return A2(
-							elm$core$List$any,
-							A2(
-								elm$core$Basics$composeL,
-								A2(
-									elm$core$Basics$composeL,
-									elm$core$Basics$eq(login),
-									function ($) {
-										return $.login;
-									}),
-								function ($) {
-									return $.author;
-								}),
+						var reviewers = A2(
+							elm$core$List$map,
+							function ($) {
+								return $.author;
+							},
 							A2(
 								elm$core$Maybe$withDefault,
 								_List_Nil,
 								A2(elm$core$Dict$get, card.id, model.prReviewers)));
+						return A2(
+							elm$core$List$any,
+							A2(
+								elm$core$Basics$composeL,
+								elm$core$Basics$eq(login),
+								function ($) {
+									return $.login;
+								}),
+							_Utils_ap(card.assignees, reviewers));
 					} else {
 						return false;
 					}

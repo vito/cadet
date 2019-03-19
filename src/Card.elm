@@ -30,6 +30,7 @@ type alias Card =
     , title : String
     , updatedAt : Time.Posix
     , author : Maybe GitHub.User
+    , assignees : List GitHub.User
     , labels : List GitHub.ID
     , cards : List GitHub.CardLocation
     , commentCount : Int
@@ -57,7 +58,7 @@ type State
 
 
 fromIssue : GitHub.Issue -> Card
-fromIssue ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as issue) =
+fromIssue ({ id, url, repo, number, title, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
     , content = GitHub.IssueCardContent issue
     , url = url
@@ -66,6 +67,7 @@ fromIssue ({ id, url, repo, number, title, updatedAt, author, labels, cards, com
     , title = title
     , updatedAt = updatedAt
     , author = author
+    , assignees = assignees
     , labels = List.map .id labels
     , cards = cards
     , commentCount = commentCount
@@ -78,7 +80,7 @@ fromIssue ({ id, url, repo, number, title, updatedAt, author, labels, cards, com
 
 
 fromPR : GitHub.PullRequest -> Card
-fromPR ({ id, url, repo, number, title, updatedAt, author, labels, cards, commentCount, reactions, state, milestone } as pr) =
+fromPR ({ id, url, repo, number, title, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as pr) =
     { id = id
     , content = GitHub.PullRequestCardContent pr
     , url = url
@@ -87,6 +89,7 @@ fromPR ({ id, url, repo, number, title, updatedAt, author, labels, cards, commen
     , title = title
     , updatedAt = updatedAt
     , author = author
+    , assignees = assignees
     , labels = List.map .id labels
     , cards = cards
     , commentCount = commentCount

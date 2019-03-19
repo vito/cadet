@@ -3846,6 +3846,9 @@ var author$project$GitHub$encodeIssue = function (record) {
 				'author',
 				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHub$encodeUser, record.author)),
 				_Utils_Tuple2(
+				'assignees',
+				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeUser, record.assignees)),
+				_Utils_Tuple2(
 				'labels',
 				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeLabel, record.labels)),
 				_Utils_Tuple2(
@@ -4077,6 +4080,9 @@ var author$project$GitHub$encodePullRequest = function (record) {
 				_Utils_Tuple2(
 				'author',
 				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHub$encodeUser, record.author)),
+				_Utils_Tuple2(
+				'assignees',
+				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeUser, record.assignees)),
 				_Utils_Tuple2(
 				'labels',
 				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeLabel, record.labels)),
@@ -7395,15 +7401,17 @@ var author$project$GitHub$PullRequest = function (id) {
 								return function (commentCount) {
 									return function (reactions) {
 										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (additions) {
-														return function (deletions) {
-															return function (milestone) {
-																return function (mergeable) {
-																	return function (lastCommit) {
-																		return function (mergeCommit) {
-																			return {additions: additions, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+											return function (assignees) {
+												return function (labels) {
+													return function (cards) {
+														return function (additions) {
+															return function (deletions) {
+																return function (milestone) {
+																	return function (mergeable) {
+																		return function (lastCommit) {
+																			return function (mergeCommit) {
+																				return {additions: additions, assignees: assignees, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, deletions: deletions, id: id, labels: labels, lastCommit: lastCommit, mergeCommit: mergeCommit, mergeable: mergeable, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+																			};
 																		};
 																	};
 																};
@@ -8790,58 +8798,75 @@ var author$project$GitHub$prObject = A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
-									A2(
-										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
-										A2(
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+									A3(
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+										'assignees',
+										_List_fromArray(
+											[
+												_Utils_Tuple2(
+												'first',
+												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10))
+											]),
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 											A3(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'comments',
+												'nodes',
 												_List_Nil,
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
+												author$project$GitHub$nullableList(author$project$GitHub$userObject)))),
+									A2(
+										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
+										A2(
+											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+											A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-												A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+												A3(
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+													'comments',
+													_List_Nil,
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 														A2(
 															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-															A2(
-																jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
-																'prState',
-																A3(
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																	'state',
-																	_List_Nil,
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestStates))),
+															A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 															A2(
 																jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																A3(
-																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																	'updatedAt',
-																	_List_Nil,
-																	A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+																A2(
+																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
+																	'prState',
+																	A3(
+																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+																		'state',
+																		_List_Nil,
+																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$pullRequestStates))),
 																A2(
 																	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																	A3(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-																		'createdAt',
+																		'updatedAt',
 																		_List_Nil,
 																		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																	A2(
 																		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																		A3(
+																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+																			'createdAt',
+																			_List_Nil,
+																			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 																		A2(
 																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest))))))))))))))))))));
+																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																			A2(
+																				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+																				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+																				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest)))))))))))))))))))));
 var elm$core$Task$fail = _Scheduler_fail;
 var elm$core$Task$onError = _Scheduler_onError;
 var elm$core$Task$mapError = F2(
@@ -9551,10 +9576,12 @@ var author$project$GitHub$Issue = function (id) {
 								return function (commentCount) {
 									return function (reactions) {
 										return function (author) {
-											return function (labels) {
-												return function (cards) {
-													return function (milestone) {
-														return {author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+											return function (assignees) {
+												return function (labels) {
+													return function (cards) {
+														return function (milestone) {
+															return {assignees: assignees, author: author, cards: cards, commentCount: commentCount, createdAt: createdAt, id: id, labels: labels, milestone: milestone, number: number, reactions: reactions, repo: repo, state: state, title: title, updatedAt: updatedAt, url: url};
+														};
 													};
 												};
 											};
@@ -9612,58 +9639,75 @@ var author$project$GitHub$issueObject = A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$labelObject)))),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
-				A2(
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
-					A2(
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+					'assignees',
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'first',
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10))
+						]),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 						A3(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-							'comments',
+							'nodes',
 							_List_Nil,
-							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
+							author$project$GitHub$nullableList(author$project$GitHub$userObject)))),
+				A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, author$project$GitHub$authorObject),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, author$project$GitHub$nonZeroReactionGroups),
 						A2(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							A3(
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+								'comments',
+								_List_Nil,
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'totalCount', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int))),
 							A2(
 								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 								A2(
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
+									A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 									A2(
 										jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-										A2(
-											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
-											'issueState',
-											A3(
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'state',
-												_List_Nil,
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$issueStates))),
+										A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'repository', _List_Nil, author$project$GitHub$repoLocationObject),
 										A2(
 											jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-											A3(
-												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-												'updatedAt',
-												_List_Nil,
-												A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
+											A2(
+												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs,
+												'issueState',
+												A3(
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+													'state',
+													_List_Nil,
+													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$issueStates))),
 											A2(
 												jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 												A3(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-													'createdAt',
+													'updatedAt',
 													_List_Nil,
 													A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 												A2(
 													jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-													A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+													A3(
+														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+														'createdAt',
+														_List_Nil,
+														A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, author$project$GitHub$DateType, elm_community$json_extra$Json$Decode$Extra$datetime)),
 													A2(
 														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-														jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Issue)))))))))))))));
+														A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+														A2(
+															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+															A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+															jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Issue))))))))))))))));
 var author$project$GitHub$projectColumnCardObject = function () {
 	var content = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,

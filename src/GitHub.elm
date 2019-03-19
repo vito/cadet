@@ -192,6 +192,7 @@ type alias Issue =
     , commentCount : Int
     , reactions : Reactions
     , author : Maybe User
+    , assignees : List User
     , labels : List Label
     , cards : List CardLocation
     , milestone : Maybe Milestone
@@ -215,6 +216,7 @@ type alias PullRequest =
     , commentCount : Int
     , reactions : Reactions
     , author : Maybe User
+    , assignees : List User
     , labels : List Label
     , cards : List CardLocation
     , additions : Int
@@ -1236,6 +1238,7 @@ issueObject =
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
         |> GB.with (GB.field "author" [] authorObject)
+        |> GB.with (GB.field "assignees" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList userObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "milestone" [] (GB.nullable milestoneObject))
@@ -1289,6 +1292,7 @@ prObject =
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
         |> GB.with (GB.field "author" [] authorObject)
+        |> GB.with (GB.field "assignees" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList userObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
         |> GB.with (GB.field "additions" [] GB.int)
@@ -1766,6 +1770,7 @@ decodeIssue =
         |> andMap (JD.field "comment_count" JD.int)
         |> andMap (JD.field "reactions" <| JD.list decodeReactionGroup)
         |> andMap (JD.field "author" (JD.maybe decodeUser))
+        |> andMap (JD.field "assignees" <| JD.list decodeUser)
         |> andMap (JD.field "labels" <| JD.list decodeLabel)
         |> andMap (JD.field "cards" <| JD.list decodeCardLocation)
         |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
@@ -1785,6 +1790,7 @@ decodePullRequest =
         |> andMap (JD.field "comment_count" JD.int)
         |> andMap (JD.field "reactions" <| JD.list decodeReactionGroup)
         |> andMap (JD.field "author" (JD.maybe decodeUser))
+        |> andMap (JD.field "assignees" <| JD.list decodeUser)
         |> andMap (JD.field "labels" <| JD.list decodeLabel)
         |> andMap (JD.field "cards" <| JD.list decodeCardLocation)
         |> andMap (JD.field "additions" JD.int)
@@ -2142,6 +2148,7 @@ encodeIssue record =
         , ( "comment_count", JE.int record.commentCount )
         , ( "reactions", JE.list encodeReactionGroup record.reactions )
         , ( "author", JEE.maybe encodeUser record.author )
+        , ( "assignees", JE.list encodeUser record.assignees )
         , ( "labels", JE.list encodeLabel record.labels )
         , ( "cards", JE.list encodeCardLocation record.cards )
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
@@ -2162,6 +2169,7 @@ encodePullRequest record =
         , ( "comment_count", JE.int record.commentCount )
         , ( "reactions", JE.list encodeReactionGroup record.reactions )
         , ( "author", JEE.maybe encodeUser record.author )
+        , ( "assignees", JE.list encodeUser record.assignees )
         , ( "labels", JE.list encodeLabel record.labels )
         , ( "cards", JE.list encodeCardLocation record.cards )
         , ( "additions", JE.int record.additions )

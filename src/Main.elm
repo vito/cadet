@@ -2211,9 +2211,13 @@ viewRepoPullRequestsPage model repoName =
                 reviewersHaveLastWord =
                     case lastWord of
                         Just { login } ->
-                            Dict.get card.id model.prReviewers
-                                |> Maybe.withDefault []
-                                |> List.any ((==) login << .login << .author)
+                            let
+                                reviewers =
+                                    Dict.get card.id model.prReviewers
+                                        |> Maybe.withDefault []
+                                        |> List.map .author
+                            in
+                            List.any ((==) login << .login) (card.assignees ++ reviewers)
 
                         Nothing ->
                             False
