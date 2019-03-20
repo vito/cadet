@@ -20394,8 +20394,8 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 									categorized.needsTest),
 									_Utils_Tuple3(
 									A2(author$project$Main$viewLabelByName, model, 'blocked'),
-									'Needs Tests',
-									categorized.needsTest)
+									'Blocked',
+									categorized.blocked)
 								]))
 						]))
 				]));

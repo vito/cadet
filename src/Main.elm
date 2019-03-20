@@ -2280,7 +2280,7 @@ viewRepoPullRequestsPage model repoName =
                 , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
                 , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
                 , ( viewLabelByName model "needs-test", "Needs Tests", categorized.needsTest )
-                , ( viewLabelByName model "blocked", "Needs Tests", categorized.needsTest )
+                , ( viewLabelByName model "blocked", "Blocked", categorized.blocked )
                 ]
             ]
         ]
