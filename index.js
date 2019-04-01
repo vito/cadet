@@ -4,7 +4,6 @@ const compression = require('compression')
 const passport = require('passport')
 const session = require('express-session')
 const bodyParser = require('body-parser')
-const enforceSsl = require('express-enforces-ssl')
 const helmet = require('helmet')
 
 const GitHubStrategy = require('passport-github').Strategy
@@ -324,7 +323,6 @@ app.use(bodyParser.json())
 
 if (app.get('env') === 'production') {
   app.set('trust proxy', true);
-  app.use(enforceSsl());
   app.use(helmet());
 }
 
