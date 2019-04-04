@@ -31,7 +31,6 @@ module GitHub exposing
     , User
     , V3Commit
     , V3Comparison
-    , V3File
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
@@ -163,20 +162,12 @@ type alias V3Comparison =
     , behindBy : Int
     , totalCommits : Int
     , commits : List V3Commit
-    , files : List V3File
     }
 
 
 type alias V3Commit =
     { url : String
     , sha : String
-    }
-
-
-type alias V3File =
-    { sha : String
-    , filename : String
-    , status : String
     }
 
 
@@ -2006,7 +1997,6 @@ decodeV3Comparison =
         |> andMap (JD.field "behind_by" JD.int)
         |> andMap (JD.field "total_commits" JD.int)
         |> andMap (JD.field "commits" (JD.list decodeV3Commit))
-        |> andMap (JD.field "files" (JD.list decodeV3File))
 
 
 decodeV3Commit : JD.Decoder V3Commit
@@ -2014,14 +2004,6 @@ decodeV3Commit =
     JD.succeed V3Commit
         |> andMap (JD.field "html_url" JD.string)
         |> andMap (JD.field "sha" JD.string)
-
-
-decodeV3File : JD.Decoder V3File
-decodeV3File =
-    JD.succeed V3File
-        |> andMap (JD.field "sha" JD.string)
-        |> andMap (JD.field "filename" JD.string)
-        |> andMap (JD.field "status" JD.string)
 
 
 decodePullRequestState : JD.Decoder PullRequestState
@@ -2116,7 +2098,6 @@ encodeV3Comparison record =
         , ( "behind_by", JE.int record.behindBy )
         , ( "total_commits", JE.int record.totalCommits )
         , ( "commits", JE.list encodeV3Commit record.commits )
-        , ( "files", JE.list encodeV3File record.files )
         ]
 
 
@@ -2125,15 +2106,6 @@ encodeV3Commit record =
     JE.object
         [ ( "html_url", JE.string record.url )
         , ( "sha", JE.string record.sha )
-        ]
-
-
-encodeV3File : V3File -> JE.Value
-encodeV3File record =
-    JE.object
-        [ ( "sha", JE.string record.sha )
-        , ( "filename", JE.string record.filename )
-        , ( "status", JE.string record.status )
         ]
 
 

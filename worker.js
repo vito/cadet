@@ -4270,21 +4270,6 @@ var author$project$GitHub$encodeV3Commit = function (record) {
 				elm$json$Json$Encode$string(record.sha))
 			]));
 };
-var author$project$GitHub$encodeV3File = function (record) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'sha',
-				elm$json$Json$Encode$string(record.sha)),
-				_Utils_Tuple2(
-				'filename',
-				elm$json$Json$Encode$string(record.filename)),
-				_Utils_Tuple2(
-				'status',
-				elm$json$Json$Encode$string(record.status))
-			]));
-};
 var author$project$GitHub$encodeV3Comparison = function (record) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -4312,10 +4297,7 @@ var author$project$GitHub$encodeV3Comparison = function (record) {
 				elm$json$Json$Encode$int(record.totalCommits)),
 				_Utils_Tuple2(
 				'commits',
-				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeV3Commit, record.commits)),
-				_Utils_Tuple2(
-				'files',
-				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeV3File, record.files))
+				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeV3Commit, record.commits))
 			]));
 };
 var elm$core$Basics$always = F2(
@@ -10598,9 +10580,9 @@ var author$project$Main$fetchPullRequestsPage = F2(
 			psel,
 			author$project$Main$PullRequestsPageFetched(psel));
 	});
-var author$project$GitHub$V3Comparison = F9(
-	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits, files) {
-		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, files: files, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
+var author$project$GitHub$V3Comparison = F8(
+	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits) {
+		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
 	});
 var author$project$GitHub$V3Commit = F2(
 	function (url, sha) {
@@ -10613,54 +10595,34 @@ var author$project$GitHub$decodeV3Commit = A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
 		elm$json$Json$Decode$succeed(author$project$GitHub$V3Commit)));
-var author$project$GitHub$V3File = F3(
-	function (sha, filename, status) {
-		return {filename: filename, sha: sha, status: status};
-	});
-var author$project$GitHub$decodeV3File = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'filename', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHub$V3File))));
 var author$project$GitHub$decodeV3Comparison = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
-		'files',
-		elm$json$Json$Decode$list(author$project$GitHub$decodeV3File)),
+		'commits',
+		elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			elm$json$Json$Decode$field,
-			'commits',
-			elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
+		A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
+			A2(elm$json$Json$Decode$field, 'behind_by', elm$json$Json$Decode$int),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'behind_by', elm$json$Json$Decode$int),
+				A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
+					A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
+						A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
 						A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
+							A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
-								A2(
-									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-									elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison))))))))));
+								A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
+								elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison)))))))));
 var lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl = F2(
 	function (method, url) {
 		return {

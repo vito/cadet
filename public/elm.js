@@ -5766,9 +5766,9 @@ var author$project$GitHub$decodeRepo = A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 					elm$json$Json$Decode$succeed(author$project$GitHub$Repo))))));
-var author$project$GitHub$V3Comparison = F9(
-	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits, files) {
-		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, files: files, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
+var author$project$GitHub$V3Comparison = F8(
+	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits) {
+		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
 	});
 var author$project$GitHub$V3Commit = F2(
 	function (url, sha) {
@@ -5781,54 +5781,34 @@ var author$project$GitHub$decodeV3Commit = A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
 		elm$json$Json$Decode$succeed(author$project$GitHub$V3Commit)));
-var author$project$GitHub$V3File = F3(
-	function (sha, filename, status) {
-		return {filename: filename, sha: sha, status: status};
-	});
-var author$project$GitHub$decodeV3File = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'filename', elm$json$Json$Decode$string),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHub$V3File))));
 var author$project$GitHub$decodeV3Comparison = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		elm$json$Json$Decode$field,
-		'files',
-		elm$json$Json$Decode$list(author$project$GitHub$decodeV3File)),
+		'commits',
+		elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			elm$json$Json$Decode$field,
-			'commits',
-			elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
+		A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
+			A2(elm$json$Json$Decode$field, 'behind_by', elm$json$Json$Decode$int),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'behind_by', elm$json$Json$Decode$int),
+				A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
+					A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
 					A2(
 						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
+						A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
 						A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
+							A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
 							A2(
 								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
-								A2(
-									elm_community$json_extra$Json$Decode$Extra$andMap,
-									A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-									elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison))))))))));
+								A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
+								elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison)))))))));
 var elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var elm$json$Json$Decode$dict = function (decoder) {
 	return A2(
