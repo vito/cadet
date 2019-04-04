@@ -1316,7 +1316,8 @@ makeReleaseRepo model repo =
             Dict.get repo.id model.repoMilestones
                 |> Maybe.withDefault []
                 |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
-                |> List.sortBy .number
+                |> List.filter (String.startsWith "v" << .title)
+                |> List.sortBy .title
                 |> List.head
 
         mcomparison =

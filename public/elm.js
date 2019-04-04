@@ -11766,20 +11766,28 @@ var author$project$Main$makeReleaseRepo = F2(
 			A2(
 				elm$core$List$sortBy,
 				function ($) {
-					return $.number;
+					return $.title;
 				},
 				A2(
 					elm$core$List$filter,
 					A2(
 						elm$core$Basics$composeL,
-						elm$core$Basics$eq(author$project$GitHub$MilestoneStateOpen),
+						elm$core$String$startsWith('v'),
 						function ($) {
-							return $.state;
+							return $.title;
 						}),
 					A2(
-						elm$core$Maybe$withDefault,
-						_List_Nil,
-						A2(elm$core$Dict$get, repo.id, model.repoMilestones)))));
+						elm$core$List$filter,
+						A2(
+							elm$core$Basics$composeL,
+							elm$core$Basics$eq(author$project$GitHub$MilestoneStateOpen),
+							function ($) {
+								return $.state;
+							}),
+						A2(
+							elm$core$Maybe$withDefault,
+							_List_Nil,
+							A2(elm$core$Dict$get, repo.id, model.repoMilestones))))));
 		var mcomparison = A2(elm$core$Dict$get, repo.id, model.repoComparison);
 		var mergedPRCards = A2(
 			elm$core$List$filterMap,
