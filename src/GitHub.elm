@@ -1540,6 +1540,9 @@ releasesQuery =
 
         pageArgs =
             [ ( "first", GA.int 10 )
+            , ( "orderBy"
+              , GA.object [ ( "field", GA.enum "CREATED_AT" ), ( "direction", GA.enum "DESC" ) ]
+              )
             , ( "after", GA.variable afterVar )
             ]
 
