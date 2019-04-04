@@ -11237,6 +11237,28 @@ var author$project$GitHub$releaseObject = A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Release)))));
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue = function (a) {
+	return {$: 'ObjectValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object = function (pairs) {
+	return A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue(
+			A2(
+				elm$core$List$map,
+				function (_n0) {
+					var k = _n0.a;
+					var _n1 = _n0.b;
+					var ast = _n1.a;
+					return _Utils_Tuple2(k, ast);
+				},
+				pairs)),
+		A3(
+			elm$core$List$foldr,
+			A2(elm$core$Basics$composeR, elm$core$Tuple$second, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep),
+			_List_Nil,
+			pairs));
+};
 var author$project$GitHub$releasesQuery = function () {
 	var repoNameVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -11296,6 +11318,18 @@ var author$project$GitHub$releasesQuery = function () {
 			_Utils_Tuple2(
 			'first',
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(10)),
+			_Utils_Tuple2(
+			'orderBy',
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'field',
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('CREATED_AT')),
+						_Utils_Tuple2(
+						'direction',
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('DESC'))
+					]))),
 			_Utils_Tuple2(
 			'after',
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar))
