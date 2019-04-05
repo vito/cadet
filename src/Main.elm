@@ -61,7 +61,7 @@ type alias Model =
     , projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
     , repos : Dict GitHub.ID GitHub.Repo
-    , repoComparison : Dict GitHub.ID GitHub.V3Comparison
+    , repoComparison : Dict GitHub.ID (List String)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -1320,16 +1320,17 @@ makeReleaseRepo model repo =
                 |> List.sortBy .title
                 |> List.head
 
-        mcomparison =
+        comparisonCommits =
             Dict.get repo.id model.repoComparison
+                |> Maybe.withDefault []
 
         mergedPRCards =
-            List.filterMap
-                (\{ sha } ->
-                    Dict.get sha model.prsByMergeCommit
-                        |> Maybe.andThen (\id -> Dict.get id model.cards)
-                )
-                (Maybe.withDefault [] (Maybe.map .commits mcomparison))
+            comparisonCommits
+                |> List.filterMap
+                    (\sha ->
+                        Dict.get sha model.prsByMergeCommit
+                            |> Maybe.andThen (\id -> Dict.get id model.cards)
+                    )
 
         issueOrOpenPR cardId =
             case Dict.get cardId model.cards of
@@ -1403,7 +1404,7 @@ makeReleaseRepo model repo =
     List.foldl categorizeCard
         { repo = repo
         , nextMilestone = nextMilestone
-        , totalCommits = Maybe.withDefault 0 (Maybe.map .totalCommits mcomparison)
+        , totalCommits = List.length comparisonCommits
         , openPRs = []
         , mergedPRs = []
         , openIssues = []

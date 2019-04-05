@@ -125,7 +125,7 @@ type Msg
     | RepoMilestonesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Milestone))
     | FetchRepoReleases GitHub.Repo
     | RepoReleasesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Release))
-    | RepoComparisonFetched GitHub.Repo (List GitHub.Release) (Result GitHub.Error GitHub.V3Comparison)
+    | RepoComparisonFetched GitHub.Repo String String (List String) (Result GitHub.Error GitHub.V3Comparison)
     | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
     | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
     | PullRequestTimelineAndReviewsFetched GitHub.ID (Result GitHub.Error ( List GitHub.TimelineEvent, List GitHub.PullRequestReview ))
@@ -473,21 +473,58 @@ update msg model =
 
         RepoReleasesFetched repo (Ok releases) ->
             Log.debug "releases fetched for" repo.url <|
+                let
+                    findNonPatchTag rs =
+                        case rs of
+                            [] ->
+                                Nothing
+
+                            release :: rest ->
+                                case release.tag of
+                                    Just t ->
+                                        if String.endsWith ".0" t.name then
+                                            Just t.name
+
+                                        else
+                                            findNonPatchTag rest
+
+                                    Nothing ->
+                                        findNonPatchTag rest
+                in
                 ( model
                 , Cmd.batch
                     [ setRepoReleases ( repo.id, JE.list GitHub.encodeRelease releases )
-                    , fetchRepoComparison model repo releases
+                    , case findNonPatchTag releases of
+                        Just base ->
+                            fetchRepoComparison model repo base "HEAD" []
+
+                        Nothing ->
+                            Cmd.none
                     ]
                 )
 
-        RepoComparisonFetched repo releases (Err err) ->
-            Log.debug "failed to fetch comparison" ( repo.url, err ) <|
-                backOff model (fetchRepoComparison model repo releases)
+        RepoComparisonFetched repo base til commitsSoFar (Err err) ->
+            Log.debug "failed to fetch comparison" ( repo.url, ( base, til ), err ) <|
+                backOff model (fetchRepoComparison model repo base til commitsSoFar)
 
-        RepoComparisonFetched repo releases (Ok comparison) ->
-            Log.debug "comparison fetched for" repo.url <|
+        RepoComparisonFetched repo base til commitsSoFar (Ok comparison) ->
+            Log.debug "comparison fetched for" ( repo.url, ( base, til ) ) <|
                 ( model
-                , setRepoComparison ( repo.id, GitHub.encodeV3Comparison comparison )
+                , let
+                    merged =
+                        -- drop 1 to de-dup (...til] ++ [til...)
+                        List.map .sha comparison.commits ++ List.drop 1 commitsSoFar
+                  in
+                  if List.length comparison.commits < 250 then
+                    setRepoComparison ( repo.id, JE.list JE.string merged )
+
+                  else
+                    case List.head comparison.commits of
+                        Just { sha } ->
+                            fetchRepoComparison model repo base sha merged
+
+                        Nothing ->
+                            Cmd.none
                 )
 
         PullRequestFetched (Ok pr) ->
@@ -663,32 +700,10 @@ fetchPullRequestsPage model psel =
     GitHub.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
 
 
-fetchRepoComparison : Model -> GitHub.Repo -> List GitHub.Release -> Cmd Msg
-fetchRepoComparison model repo releases =
-    let
-        findTag rs =
-            case rs of
-                [] ->
-                    Nothing
-
-                release :: rest ->
-                    case release.tag of
-                        Just t ->
-                            Just t.name
-
-                        Nothing ->
-                            findTag rest
-
-        mbase =
-            findTag releases
-    in
-    case mbase of
-        Just base ->
-            GitHub.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base "HEAD"
-                |> Task.attempt (RepoComparisonFetched repo releases)
-
-        Nothing ->
-            Cmd.none
+fetchRepoComparison : Model -> GitHub.Repo -> String -> String -> List String -> Cmd Msg
+fetchRepoComparison model repo base til commitsSoFar =
+    GitHub.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base til
+        |> Task.attempt (RepoComparisonFetched repo base til commitsSoFar)
 
 
 fetchRepoLabels : Model -> GitHub.Repo -> Cmd Msg

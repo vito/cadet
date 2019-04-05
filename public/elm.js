@@ -5766,49 +5766,6 @@ var author$project$GitHub$decodeRepo = A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 					elm$json$Json$Decode$succeed(author$project$GitHub$Repo))))));
-var author$project$GitHub$V3Comparison = F8(
-	function (url, status, baseCommit, mergeBaseCommit, aheadBy, behindBy, totalCommits, commits) {
-		return {aheadBy: aheadBy, baseCommit: baseCommit, behindBy: behindBy, commits: commits, mergeBaseCommit: mergeBaseCommit, status: status, totalCommits: totalCommits, url: url};
-	});
-var author$project$GitHub$V3Commit = F2(
-	function (url, sha) {
-		return {sha: sha, url: url};
-	});
-var author$project$GitHub$decodeV3Commit = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-		elm$json$Json$Decode$succeed(author$project$GitHub$V3Commit)));
-var author$project$GitHub$decodeV3Comparison = A2(
-	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		elm$json$Json$Decode$field,
-		'commits',
-		elm$json$Json$Decode$list(author$project$GitHub$decodeV3Commit)),
-	A2(
-		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'total_commits', elm$json$Json$Decode$int),
-		A2(
-			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'behind_by', elm$json$Json$Decode$int),
-			A2(
-				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'ahead_by', elm$json$Json$Decode$int),
-				A2(
-					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'merge_base_commit', author$project$GitHub$decodeV3Commit),
-					A2(
-						elm_community$json_extra$Json$Decode$Extra$andMap,
-						A2(elm$json$Json$Decode$field, 'base_commit', author$project$GitHub$decodeV3Commit),
-						A2(
-							elm_community$json_extra$Json$Decode$Extra$andMap,
-							A2(elm$json$Json$Decode$field, 'status', elm$json$Json$Decode$string),
-							A2(
-								elm_community$json_extra$Json$Decode$Extra$andMap,
-								A2(elm$json$Json$Decode$field, 'html_url', elm$json$Json$Decode$string),
-								elm$json$Json$Decode$succeed(author$project$GitHub$V3Comparison)))))))));
 var elm$json$Json$Decode$keyValuePairs = _Json_decodeKeyValuePairs;
 var elm$json$Json$Decode$dict = function (decoder) {
 	return A2(
@@ -5842,7 +5799,8 @@ var author$project$Backend$decodeData = A2(
 				A2(
 					elm$json$Json$Decode$field,
 					'repoComparison',
-					elm$json$Json$Decode$dict(author$project$GitHub$decodeV3Comparison)),
+					elm$json$Json$Decode$dict(
+						elm$json$Json$Decode$list(elm$json$Json$Decode$string))),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
@@ -11788,27 +11746,6 @@ var author$project$Main$makeReleaseRepo = F2(
 							elm$core$Maybe$withDefault,
 							_List_Nil,
 							A2(elm$core$Dict$get, repo.id, model.repoMilestones))))));
-		var mcomparison = A2(elm$core$Dict$get, repo.id, model.repoComparison);
-		var mergedPRCards = A2(
-			elm$core$List$filterMap,
-			function (_n8) {
-				var sha = _n8.sha;
-				return A2(
-					elm$core$Maybe$andThen,
-					function (id) {
-						return A2(elm$core$Dict$get, id, model.cards);
-					},
-					A2(elm$core$Dict$get, sha, model.prsByMergeCommit));
-			},
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(
-					elm$core$Maybe$map,
-					function ($) {
-						return $.commits;
-					},
-					mcomparison)));
 		var issueOrOpenPR = function (cardId) {
 			var _n7 = A2(elm$core$Dict$get, cardId, model.cards);
 			if (_n7.$ === 'Nothing') {
@@ -11832,6 +11769,21 @@ var author$project$Main$makeReleaseRepo = F2(
 						A2(elm$core$Dict$get, nm.id, model.cardsByMilestone)));
 			}
 		}();
+		var comparisonCommits = A2(
+			elm$core$Maybe$withDefault,
+			_List_Nil,
+			A2(elm$core$Dict$get, repo.id, model.repoComparison));
+		var mergedPRCards = A2(
+			elm$core$List$filterMap,
+			function (sha) {
+				return A2(
+					elm$core$Maybe$andThen,
+					function (id) {
+						return A2(elm$core$Dict$get, id, model.cards);
+					},
+					A2(elm$core$Dict$get, sha, model.prsByMergeCommit));
+			},
+			comparisonCommits);
 		var categorizeByDocumentedState = F2(
 			function (card, sir) {
 				return A3(author$project$Main$hasLabel, model, 'release/documented', card) ? _Utils_update(
@@ -11912,15 +11864,7 @@ var author$project$Main$makeReleaseRepo = F2(
 				openIssues: _List_Nil,
 				openPRs: _List_Nil,
 				repo: repo,
-				totalCommits: A2(
-					elm$core$Maybe$withDefault,
-					0,
-					A2(
-						elm$core$Maybe$map,
-						function ($) {
-							return $.totalCommits;
-						},
-						mcomparison)),
+				totalCommits: elm$core$List$length(comparisonCommits),
 				undocumentedCards: _List_Nil
 			},
 			allCards);
@@ -12238,7 +12182,10 @@ var author$project$Backend$RepoComparisonEvent = F2(
 	});
 var author$project$Backend$decodeRepoComparisonEvent = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'comparison', author$project$GitHub$decodeV3Comparison),
+	A2(
+		elm$json$Json$Decode$field,
+		'comparison',
+		elm$json$Json$Decode$list(elm$json$Json$Decode$string)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'repoId', elm$json$Json$Decode$string),

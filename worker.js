@@ -4258,48 +4258,6 @@ var author$project$GitHub$encodeRepo = function (record) {
 				elm$json$Json$Encode$bool(record.isArchived))
 			]));
 };
-var author$project$GitHub$encodeV3Commit = function (record) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'html_url',
-				elm$json$Json$Encode$string(record.url)),
-				_Utils_Tuple2(
-				'sha',
-				elm$json$Json$Encode$string(record.sha))
-			]));
-};
-var author$project$GitHub$encodeV3Comparison = function (record) {
-	return elm$json$Json$Encode$object(
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'html_url',
-				elm$json$Json$Encode$string(record.url)),
-				_Utils_Tuple2(
-				'status',
-				elm$json$Json$Encode$string(record.status)),
-				_Utils_Tuple2(
-				'base_commit',
-				author$project$GitHub$encodeV3Commit(record.baseCommit)),
-				_Utils_Tuple2(
-				'merge_base_commit',
-				author$project$GitHub$encodeV3Commit(record.mergeBaseCommit)),
-				_Utils_Tuple2(
-				'ahead_by',
-				elm$json$Json$Encode$int(record.aheadBy)),
-				_Utils_Tuple2(
-				'behind_by',
-				elm$json$Json$Encode$int(record.behindBy)),
-				_Utils_Tuple2(
-				'total_commits',
-				elm$json$Json$Encode$int(record.totalCommits)),
-				_Utils_Tuple2(
-				'commits',
-				A2(elm$json$Json$Encode$list, author$project$GitHub$encodeV3Commit, record.commits))
-			]));
-};
 var elm$core$Basics$always = F2(
 	function (a, _n0) {
 		return a;
@@ -10771,47 +10729,21 @@ var author$project$GitHub$compareRepoRefs = F4(
 						author$project$GitHub$auth(token),
 						lukewestby$elm_http_builder$HttpBuilder$get('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/compare/' + (base + ('...' + mergeBase)))))))))));
 	});
-var author$project$Main$RepoComparisonFetched = F3(
-	function (a, b, c) {
-		return {$: 'RepoComparisonFetched', a: a, b: b, c: c};
+var author$project$Main$RepoComparisonFetched = F5(
+	function (a, b, c, d, e) {
+		return {$: 'RepoComparisonFetched', a: a, b: b, c: c, d: d, e: e};
 	});
-var author$project$Main$fetchRepoComparison = F3(
-	function (model, repo, releases) {
-		var findTag = function (rs) {
-			findTag:
-			while (true) {
-				if (!rs.b) {
-					return elm$core$Maybe$Nothing;
-				} else {
-					var release = rs.a;
-					var rest = rs.b;
-					var _n1 = release.tag;
-					if (_n1.$ === 'Just') {
-						var t = _n1.a;
-						return elm$core$Maybe$Just(t.name);
-					} else {
-						var $temp$rs = rest;
-						rs = $temp$rs;
-						continue findTag;
-					}
-				}
-			}
-		};
-		var mbase = findTag(releases);
-		if (mbase.$ === 'Just') {
-			var base = mbase.a;
-			return A2(
-				elm$core$Task$attempt,
-				A2(author$project$Main$RepoComparisonFetched, repo, releases),
-				A4(
-					author$project$GitHub$compareRepoRefs,
-					model.githubToken,
-					{name: repo.name, owner: repo.owner},
-					base,
-					'HEAD'));
-		} else {
-			return elm$core$Platform$Cmd$none;
-		}
+var author$project$Main$fetchRepoComparison = F5(
+	function (model, repo, base, til, commitsSoFar) {
+		return A2(
+			elm$core$Task$attempt,
+			A4(author$project$Main$RepoComparisonFetched, repo, base, til, commitsSoFar),
+			A4(
+				author$project$GitHub$compareRepoRefs,
+				model.githubToken,
+				{name: repo.name, owner: repo.owner},
+				base,
+				til));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Int');
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$int = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$int, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$IntValue);
@@ -11553,6 +11485,27 @@ var elm$core$List$concatMap = F2(
 		return elm$core$List$concat(
 			A2(elm$core$List$map, f, list));
 	});
+var elm$core$List$drop = F2(
+	function (n, list) {
+		drop:
+		while (true) {
+			if (n <= 0) {
+				return list;
+			} else {
+				if (!list.b) {
+					return list;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs;
+					n = $temp$n;
+					list = $temp$list;
+					continue drop;
+				}
+			}
+		}
+	});
 var elm$core$List$member = F2(
 	function (x, xs) {
 		return A2(
@@ -11563,6 +11516,7 @@ var elm$core$List$member = F2(
 			xs);
 	});
 var elm$core$List$sortBy = _List_sortBy;
+var elm$core$String$endsWith = _String_endsWith;
 var author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -12317,45 +12271,110 @@ var author$project$Main$update = F2(
 						author$project$Log$debug,
 						'releases fetched for',
 						repo.url,
-						_Utils_Tuple2(
-							model,
-							elm$core$Platform$Cmd$batch(
-								_List_fromArray(
-									[
-										author$project$Main$setRepoReleases(
-										_Utils_Tuple2(
-											repo.id,
-											A2(elm$json$Json$Encode$list, author$project$GitHub$encodeRelease, releases))),
-										A3(author$project$Main$fetchRepoComparison, model, repo, releases)
-									]))));
+						function () {
+							var findNonPatchTag = function (rs) {
+								findNonPatchTag:
+								while (true) {
+									if (!rs.b) {
+										return elm$core$Maybe$Nothing;
+									} else {
+										var release = rs.a;
+										var rest = rs.b;
+										var _n11 = release.tag;
+										if (_n11.$ === 'Just') {
+											var t = _n11.a;
+											if (A2(elm$core$String$endsWith, '.0', t.name)) {
+												return elm$core$Maybe$Just(t.name);
+											} else {
+												var $temp$rs = rest;
+												rs = $temp$rs;
+												continue findNonPatchTag;
+											}
+										} else {
+											var $temp$rs = rest;
+											rs = $temp$rs;
+											continue findNonPatchTag;
+										}
+									}
+								}
+							};
+							return _Utils_Tuple2(
+								model,
+								elm$core$Platform$Cmd$batch(
+									_List_fromArray(
+										[
+											author$project$Main$setRepoReleases(
+											_Utils_Tuple2(
+												repo.id,
+												A2(elm$json$Json$Encode$list, author$project$GitHub$encodeRelease, releases))),
+											function () {
+											var _n12 = findNonPatchTag(releases);
+											if (_n12.$ === 'Just') {
+												var base = _n12.a;
+												return A5(author$project$Main$fetchRepoComparison, model, repo, base, 'HEAD', _List_Nil);
+											} else {
+												return elm$core$Platform$Cmd$none;
+											}
+										}()
+										])));
+						}());
 				}
 			case 'RepoComparisonFetched':
-				if (msg.c.$ === 'Err') {
+				if (msg.e.$ === 'Err') {
 					var repo = msg.a;
-					var releases = msg.b;
-					var err = msg.c.a;
+					var base = msg.b;
+					var til = msg.c;
+					var commitsSoFar = msg.d;
+					var err = msg.e.a;
 					return A3(
 						author$project$Log$debug,
 						'failed to fetch comparison',
-						_Utils_Tuple2(repo.url, err),
+						_Utils_Tuple3(
+							repo.url,
+							_Utils_Tuple2(base, til),
+							err),
 						A2(
 							author$project$Main$backOff,
 							model,
-							A3(author$project$Main$fetchRepoComparison, model, repo, releases)));
+							A5(author$project$Main$fetchRepoComparison, model, repo, base, til, commitsSoFar)));
 				} else {
 					var repo = msg.a;
-					var releases = msg.b;
-					var comparison = msg.c.a;
+					var base = msg.b;
+					var til = msg.c;
+					var commitsSoFar = msg.d;
+					var comparison = msg.e.a;
 					return A3(
 						author$project$Log$debug,
 						'comparison fetched for',
-						repo.url,
+						_Utils_Tuple2(
+							repo.url,
+							_Utils_Tuple2(base, til)),
 						_Utils_Tuple2(
 							model,
-							author$project$Main$setRepoComparison(
-								_Utils_Tuple2(
-									repo.id,
-									author$project$GitHub$encodeV3Comparison(comparison)))));
+							function () {
+								var merged = _Utils_ap(
+									A2(
+										elm$core$List$map,
+										function ($) {
+											return $.sha;
+										},
+										comparison.commits),
+									A2(elm$core$List$drop, 1, commitsSoFar));
+								if (elm$core$List$length(comparison.commits) < 250) {
+									return author$project$Main$setRepoComparison(
+										_Utils_Tuple2(
+											repo.id,
+											A2(elm$json$Json$Encode$list, elm$json$Json$Encode$string, merged)));
+								} else {
+									var _n13 = elm$core$List$head(comparison.commits);
+									if (_n13.$ === 'Just') {
+										var sha = _n13.a.sha;
+										return A5(author$project$Main$fetchRepoComparison, model, repo, base, sha, merged);
+									} else {
+										return elm$core$Platform$Cmd$none;
+									}
+								}
+							}()));
 				}
 			case 'PullRequestFetched':
 				if (msg.a.$ === 'Ok') {
@@ -12369,9 +12388,9 @@ var author$project$Main$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _n10 = pr.lastCommit;
-										if (_n10.$ === 'Just') {
-											var sha = _n10.a.sha;
+										var _n14 = pr.lastCommit;
+										if (_n14.$ === 'Just') {
+											var sha = _n14.a.sha;
 											return A3(elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12441,9 +12460,9 @@ var author$project$Main$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _n12 = msg.b.a;
-					var timeline = _n12.a;
-					var reviews = _n12.b;
+					var _n16 = msg.b.a;
+					var timeline = _n16.a;
+					var reviews = _n16.b;
 					var reviewers = A2(
 						elm$core$List$map,
 						author$project$GitHub$encodePullRequestReview,
@@ -12451,8 +12470,8 @@ var author$project$Main$update = F2(
 							A3(
 								elm$core$List$foldl,
 								function (r) {
-									var _n14 = r.state;
-									switch (_n14.$) {
+									var _n18 = r.state;
+									switch (_n18.$) {
 										case 'PullRequestReviewStatePending':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':

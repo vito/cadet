@@ -51,7 +51,7 @@ type alias Data =
     { projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List ColumnCard)
     , repos : Dict GitHub.ID GitHub.Repo
-    , repoComparison : Dict GitHub.ID GitHub.V3Comparison
+    , repoComparison : Dict GitHub.ID (List String)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -184,7 +184,7 @@ decodeData =
         |> andMap (JD.field "projects" <| JD.dict GitHub.decodeProject)
         |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
-        |> andMap (JD.field "repoComparison" <| JD.dict GitHub.decodeV3Comparison)
+        |> andMap (JD.field "repoComparison" <| JD.dict (JD.list JD.string))
         |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
         |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
         |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
@@ -291,7 +291,7 @@ decodeReviewersEvent =
 
 type alias RepoComparisonEvent =
     { repoId : GitHub.ID
-    , comparison : GitHub.V3Comparison
+    , comparison : List String
     }
 
 
@@ -299,7 +299,7 @@ decodeRepoComparisonEvent : JD.Decoder RepoComparisonEvent
 decodeRepoComparisonEvent =
     JD.succeed RepoComparisonEvent
         |> andMap (JD.field "repoId" JD.string)
-        |> andMap (JD.field "comparison" GitHub.decodeV3Comparison)
+        |> andMap (JD.field "comparison" (JD.list JD.string))
 
 
 type alias RepoLabelsEvent =
