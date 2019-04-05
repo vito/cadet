@@ -1,6 +1,7 @@
 module GitHub exposing
     ( CardContent(..)
     , CardLocation
+    , Commit
     , Error
     , ID
     , Issue
@@ -22,6 +23,7 @@ module GitHub exposing
     , ReactionGroup
     , ReactionType(..)
     , Reactions
+    , RefSelector
     , Release
     , Repo
     , RepoLocation
@@ -29,17 +31,15 @@ module GitHub exposing
     , StatusState(..)
     , TimelineEvent(..)
     , User
-    , V3Commit
-    , V3Comparison
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
     , addPullRequestLabels
     , closeIssue
     , closeRepoMilestone
-    , compareRepoRefs
     , createRepoLabel
     , createRepoMilestone
+    , decodeCommit
     , decodeIssue
     , decodeLabel
     , decodeMilestone
@@ -50,9 +50,9 @@ module GitHub exposing
     , decodeRelease
     , decodeRepo
     , decodeUser
-    , decodeV3Comparison
     , deleteRepoLabel
     , deleteRepoMilestone
+    , encodeCommit
     , encodeIssue
     , encodeLabel
     , encodeMilestone
@@ -63,7 +63,6 @@ module GitHub exposing
     , encodeRelease
     , encodeRepo
     , encodeUser
-    , encodeV3Comparison
     , fetchIssue
     , fetchOrgProject
     , fetchOrgProjects
@@ -72,6 +71,7 @@ module GitHub exposing
     , fetchPullRequest
     , fetchPullRequestReviews
     , fetchRepo
+    , fetchRepoCommitsPage
     , fetchRepoIssue
     , fetchRepoIssuesPage
     , fetchRepoLabels
@@ -153,24 +153,6 @@ type alias GitObject =
     }
 
 
-type alias V3Comparison =
-    { url : String
-    , status : String
-    , baseCommit : V3Commit
-    , mergeBaseCommit : V3Commit
-    , aheadBy : Int
-    , behindBy : Int
-    , totalCommits : Int
-    , commits : List V3Commit
-    }
-
-
-type alias V3Commit =
-    { url : String
-    , sha : String
-    }
-
-
 type alias Issue =
     { id : ID
     , url : String
@@ -215,7 +197,6 @@ type alias PullRequest =
     , milestone : Maybe Milestone
     , mergeable : MergeableState
     , lastCommit : Maybe Commit
-    , mergeCommit : Maybe Commit
     }
 
 
@@ -226,6 +207,7 @@ type alias Commit =
     , committer : Maybe GitActor
     , authoredAt : Time.Posix
     , committedAt : Time.Posix
+    , associatedPullRequests : List ID
     }
 
 
@@ -427,6 +409,10 @@ type alias IssueOrPRSelector =
     { owner : String, repo : String, number : Int }
 
 
+type alias RefSelector =
+    { repo : RepoSelector, qualifiedName : String }
+
+
 type alias PagedSelector a =
     { selector : a, after : Maybe ID }
 
@@ -482,15 +468,6 @@ fetchRepoIssuesPage token psel msg =
     fetchPage issuesQuery token psel msg
 
 
-compareRepoRefs : Token -> RepoSelector -> String -> String -> Task Error V3Comparison
-compareRepoRefs token repo base mergeBase =
-    HttpBuilder.get ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/compare/" ++ base ++ "..." ++ mergeBase)
-        |> HttpBuilder.withHeaders (auth token)
-        |> HttpBuilder.withExpectJson decodeV3Comparison
-        |> HttpBuilder.toTask
-        |> Task.mapError GH.HttpError
-
-
 fetchRepoIssue : Token -> IssueOrPRSelector -> Task Error Issue
 fetchRepoIssue token sel =
     issueQuery
@@ -516,6 +493,11 @@ fetchRepoMilestones token repo =
 fetchRepoReleases : Token -> RepoSelector -> Task Error (List Release)
 fetchRepoReleases token repo =
     fetchPaged releasesQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoCommitsPage : Token -> PagedSelector RefSelector -> (Result Error ( List Commit, PageInfo ) -> msg) -> Cmd msg
+fetchRepoCommitsPage token psel msg =
+    fetchPage commitsQuery token psel msg
 
 
 fetchRepoPullRequestsPage : Token -> PagedSelector RepoSelector -> (Result Error ( List PullRequest, PageInfo ) -> msg) -> Cmd msg
@@ -1297,7 +1279,6 @@ prObject =
                     GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] commitObject))))
                 )
             )
-        |> GB.with (GB.field "mergeCommit" [] (GB.nullable commitObject))
 
 
 commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
@@ -1309,6 +1290,7 @@ commitObject =
         |> GB.with (GB.field "committer" [] (GB.nullable gitActorObject))
         |> GB.with (GB.field "authoredDate" [] (GB.customScalar DateType JDE.datetime))
         |> GB.with (GB.field "committedDate" [] (GB.customScalar DateType JDE.datetime))
+        |> GB.with (GB.field "associatedPullRequests" [ ( "first", GA.int 3 ) ] (GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "id" [] GB.string))))))
 
 
 gitActorObject : GB.ValueSpec GB.NonNull GB.ObjectType GitActor vars
@@ -1435,6 +1417,52 @@ pullRequestsQuery =
                     ]
                 <|
                     GB.extract (GB.field "pullRequests" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
+commitsQuery : GB.Document GB.Query (PagedResult Commit) (PagedSelector RefSelector)
+commitsQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.owner << .repo << .selector) GV.string
+
+        repoNameVar =
+            GV.required "repoName" (.name << .repo << .selector) GV.string
+
+        refNameVar =
+            GV.required "refName" (.qualifiedName << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list commitObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract <|
+                        GB.field "ref" [ ( "qualifiedName", GA.variable refNameVar ) ] <|
+                            GB.extract <|
+                                GB.field "target" [] <|
+                                    GB.extract (GB.assume <| GB.inlineFragment (Just (GB.onType "Commit")) (GB.extract (GB.field "history" pageArgs paged)))
     in
     GB.queryDocument queryRoot
 
@@ -1792,7 +1820,6 @@ decodePullRequest =
         |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
         |> andMap (JD.field "mergeable" decodeMergeableState)
         |> andMap (JD.field "last_commit" <| JD.maybe decodeCommit)
-        |> andMap (JD.field "merge_commit" <| JD.maybe decodeCommit)
 
 
 decodeCommit : JD.Decoder Commit
@@ -1804,6 +1831,7 @@ decodeCommit =
         |> andMap (JD.field "committer" (JD.maybe decodeGitActor))
         |> andMap (JD.field "authored_at" JDE.datetime)
         |> andMap (JD.field "committed_at" JDE.datetime)
+        |> andMap (JD.field "associated_pull_requests" (JD.list JD.string))
 
 
 decodeGitActor : JD.Decoder GitActor
@@ -1986,26 +2014,6 @@ decodeOrgSelector =
         |> andMap (JD.field "name" JD.string)
 
 
-decodeV3Comparison : JD.Decoder V3Comparison
-decodeV3Comparison =
-    JD.succeed V3Comparison
-        |> andMap (JD.field "html_url" JD.string)
-        |> andMap (JD.field "status" JD.string)
-        |> andMap (JD.field "base_commit" decodeV3Commit)
-        |> andMap (JD.field "merge_base_commit" decodeV3Commit)
-        |> andMap (JD.field "ahead_by" JD.int)
-        |> andMap (JD.field "behind_by" JD.int)
-        |> andMap (JD.field "total_commits" JD.int)
-        |> andMap (JD.field "commits" (JD.list decodeV3Commit))
-
-
-decodeV3Commit : JD.Decoder V3Commit
-decodeV3Commit =
-    JD.succeed V3Commit
-        |> andMap (JD.field "html_url" JD.string)
-        |> andMap (JD.field "sha" JD.string)
-
-
 decodePullRequestState : JD.Decoder PullRequestState
 decodePullRequestState =
     let
@@ -2087,28 +2095,6 @@ encodeRepo record =
         ]
 
 
-encodeV3Comparison : V3Comparison -> JE.Value
-encodeV3Comparison record =
-    JE.object
-        [ ( "html_url", JE.string record.url )
-        , ( "status", JE.string record.status )
-        , ( "base_commit", encodeV3Commit record.baseCommit )
-        , ( "merge_base_commit", encodeV3Commit record.mergeBaseCommit )
-        , ( "ahead_by", JE.int record.aheadBy )
-        , ( "behind_by", JE.int record.behindBy )
-        , ( "total_commits", JE.int record.totalCommits )
-        , ( "commits", JE.list encodeV3Commit record.commits )
-        ]
-
-
-encodeV3Commit : V3Commit -> JE.Value
-encodeV3Commit record =
-    JE.object
-        [ ( "html_url", JE.string record.url )
-        , ( "sha", JE.string record.sha )
-        ]
-
-
 encodeIssue : Issue -> JE.Value
 encodeIssue record =
     JE.object
@@ -2152,7 +2138,6 @@ encodePullRequest record =
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         , ( "mergeable", encodeMergeableState record.mergeable )
         , ( "last_commit", JEE.maybe encodeCommit record.lastCommit )
-        , ( "merge_commit", JEE.maybe encodeCommit record.mergeCommit )
         ]
 
 
@@ -2165,6 +2150,7 @@ encodeCommit record =
         , ( "committer", JEE.maybe encodeGitActor record.author )
         , ( "authored_at", JE.string (Iso8601.fromTime record.authoredAt) )
         , ( "committed_at", JE.string (Iso8601.fromTime record.committedAt) )
+        , ( "associated_pull_requests", JE.list JE.string record.associatedPullRequests )
         ]
 
 

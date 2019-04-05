@@ -38,7 +38,7 @@ port setPullRequests : List JD.Value -> Cmd msg
 port setPullRequest : JD.Value -> Cmd msg
 
 
-port setRepoComparison : ( GitHub.ID, JD.Value ) -> Cmd msg
+port setRepoCommits : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
 port setRepoLabels : ( GitHub.ID, JD.Value ) -> Cmd msg
@@ -119,13 +119,13 @@ type Msg
     | IssuesPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.Issue, GitHub.PageInfo ))
     | IssueFetched (Result GitHub.Error GitHub.Issue)
     | PullRequestsPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.PullRequest, GitHub.PageInfo ))
+    | RepoCommitsPageFetched GitHub.Repo (GitHub.PagedSelector GitHub.RefSelector) (List GitHub.Release) (List GitHub.Commit) (Result GitHub.Error ( List GitHub.Commit, GitHub.PageInfo ))
     | FetchRepoLabels GitHub.Repo
     | RepoLabelsFetched GitHub.Repo (Result GitHub.Error (List GitHub.Label))
     | FetchRepoMilestones GitHub.Repo
     | RepoMilestonesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Milestone))
     | FetchRepoReleases GitHub.Repo
     | RepoReleasesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Release))
-    | RepoComparisonFetched GitHub.Repo String String (List String) (Result GitHub.Error GitHub.V3Comparison)
     | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
     | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
     | PullRequestTimelineAndReviewsFetched GitHub.ID (Result GitHub.Error ( List GitHub.TimelineEvent, List GitHub.PullRequestReview ))
@@ -473,58 +473,50 @@ update msg model =
 
         RepoReleasesFetched repo (Ok releases) ->
             Log.debug "releases fetched for" repo.url <|
-                let
-                    findNonPatchTag rs =
-                        case rs of
-                            [] ->
-                                Nothing
-
-                            release :: rest ->
-                                case release.tag of
-                                    Just t ->
-                                        if String.endsWith ".0" t.name then
-                                            Just t.name
-
-                                        else
-                                            findNonPatchTag rest
-
-                                    Nothing ->
-                                        findNonPatchTag rest
-                in
                 ( model
                 , Cmd.batch
                     [ setRepoReleases ( repo.id, JE.list GitHub.encodeRelease releases )
-                    , case findNonPatchTag releases of
-                        Just base ->
-                            fetchRepoComparison model repo base "HEAD" []
-
-                        Nothing ->
-                            Cmd.none
+                    , let
+                        refSel =
+                            { repo = { owner = repo.owner, name = repo.name }, qualifiedName = "refs/heads/master" }
+                      in
+                      fetchRepoCommits model repo { selector = refSel, after = Nothing } releases []
                     ]
                 )
 
-        RepoComparisonFetched repo base til commitsSoFar (Err err) ->
-            Log.debug "failed to fetch comparison" ( repo.url, ( base, til ), err ) <|
-                backOff model (fetchRepoComparison model repo base til commitsSoFar)
+        RepoCommitsPageFetched repo psel releases commitsSoFar (Err err) ->
+            Log.debug "failed to fetch commits" ( psel, err ) <|
+                backOff model (fetchRepoCommits model repo psel releases commitsSoFar)
 
-        RepoComparisonFetched repo base til commitsSoFar (Ok comparison) ->
-            Log.debug "comparison fetched for" ( repo.url, ( base, til ) ) <|
+        RepoCommitsPageFetched repo psel releases commitsSoFar (Ok ( commits, pageInfo )) ->
+            Log.debug "commits fetched for" psel <|
                 ( model
                 , let
-                    merged =
-                        -- drop 1 to de-dup (...til] ++ [til...)
-                        List.map .sha comparison.commits ++ List.drop 1 commitsSoFar
+                    isForCommit commit release =
+                        case release.tag of
+                            Nothing ->
+                                False
+
+                            Just t ->
+                                t.target.oid == commit.sha
+
+                    ( newCommitsSoFar, reachedRelease ) =
+                        List.foldl
+                            (\commit ( soFar, f ) ->
+                                if f || List.any (isForCommit commit) releases then
+                                    ( soFar, True )
+
+                                else
+                                    ( commit :: soFar, False )
+                            )
+                            ( commitsSoFar, False )
+                            commits
                   in
-                  if List.length comparison.commits < 250 then
-                    setRepoComparison ( repo.id, JE.list JE.string merged )
+                  if reachedRelease then
+                    setRepoCommits ( repo.id, JE.list GitHub.encodeCommit newCommitsSoFar )
 
                   else
-                    case List.head comparison.commits of
-                        Just { sha } ->
-                            fetchRepoComparison model repo base sha merged
-
-                        Nothing ->
-                            Cmd.none
+                    fetchRepoCommits model repo { psel | after = pageInfo.endCursor } releases newCommitsSoFar
                 )
 
         PullRequestFetched (Ok pr) ->
@@ -700,10 +692,9 @@ fetchPullRequestsPage model psel =
     GitHub.fetchRepoPullRequestsPage model.githubToken psel (PullRequestsPageFetched psel)
 
 
-fetchRepoComparison : Model -> GitHub.Repo -> String -> String -> List String -> Cmd Msg
-fetchRepoComparison model repo base til commitsSoFar =
-    GitHub.compareRepoRefs model.githubToken { owner = repo.owner, name = repo.name } base til
-        |> Task.attempt (RepoComparisonFetched repo base til commitsSoFar)
+fetchRepoCommits : Model -> GitHub.Repo -> GitHub.PagedSelector GitHub.RefSelector -> List GitHub.Release -> List GitHub.Commit -> Cmd Msg
+fetchRepoCommits model repo psel releases commitsSoFar =
+    GitHub.fetchRepoCommitsPage model.githubToken psel (RepoCommitsPageFetched repo psel releases commitsSoFar)
 
 
 fetchRepoLabels : Model -> GitHub.Repo -> Cmd Msg

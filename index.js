@@ -42,8 +42,8 @@ const data = {
   // releases by repo id
   repoReleases: {},
 
-  // repo comparison to last release, by repo id
-  repoComparison: {},
+  // commits since last release, by repo id
+  repoCommits: {},
 
   // projects by id
   projects: {},
@@ -208,11 +208,11 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   markGraphRefreshNecessary();
 });
 
-worker.ports.setRepoComparison.subscribe(function(args) {
+worker.ports.setRepoCommits.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
-  data.repoComparison[id] = val;
-  bumpIndexAndEmitUpdate("repoComparison", { repoId: id, comparison: val });
+  data.repoCommits[id] = val;
+  bumpIndexAndEmitUpdate("repoCommits", { repoId: id, commits: val });
   popPoll();
 });
 

@@ -10,7 +10,7 @@ module Backend exposing
     , decodeActorsEvent
     , decodeColumnCardsEvent
     , decodeGraphs
-    , decodeRepoComparisonEvent
+    , decodeRepoCommitsEvent
     , decodeRepoLabelsEvent
     , decodeRepoMilestonesEvent
     , decodeRepoReleasesEvent
@@ -51,7 +51,7 @@ type alias Data =
     { projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List ColumnCard)
     , repos : Dict GitHub.ID GitHub.Repo
-    , repoComparison : Dict GitHub.ID (List String)
+    , repoCommits : Dict GitHub.ID (List GitHub.Commit)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -184,7 +184,7 @@ decodeData =
         |> andMap (JD.field "projects" <| JD.dict GitHub.decodeProject)
         |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
-        |> andMap (JD.field "repoComparison" <| JD.dict (JD.list JD.string))
+        |> andMap (JD.field "repoCommits" <| JD.dict (JD.list GitHub.decodeCommit))
         |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
         |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
         |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
@@ -289,17 +289,17 @@ decodeReviewersEvent =
         |> andMap (JD.field "reviewers" (JD.list GitHub.decodePullRequestReview))
 
 
-type alias RepoComparisonEvent =
+type alias RepoCommitsEvent =
     { repoId : GitHub.ID
-    , comparison : List String
+    , commits : List GitHub.Commit
     }
 
 
-decodeRepoComparisonEvent : JD.Decoder RepoComparisonEvent
-decodeRepoComparisonEvent =
-    JD.succeed RepoComparisonEvent
+decodeRepoCommitsEvent : JD.Decoder RepoCommitsEvent
+decodeRepoCommitsEvent =
+    JD.succeed RepoCommitsEvent
         |> andMap (JD.field "repoId" JD.string)
-        |> andMap (JD.field "comparison" (JD.list JD.string))
+        |> andMap (JD.field "commits" (JD.list GitHub.decodeCommit))
 
 
 type alias RepoLabelsEvent =

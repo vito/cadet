@@ -19,6 +19,7 @@ import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode as JD
+import List.Extra as LE
 import Log
 import Markdown
 import Octicons
@@ -61,7 +62,7 @@ type alias Model =
     , projects : Dict GitHub.ID GitHub.Project
     , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
     , repos : Dict GitHub.ID GitHub.Repo
-    , repoComparison : Dict GitHub.ID (List String)
+    , repoCommits : Dict GitHub.ID (List GitHub.Commit)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -77,7 +78,6 @@ type alias Model =
     , reposByName : Dict String GitHub.ID
     , reposByLabel : Dict ( String, String ) (List GitHub.ID)
     , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
-    , prsByMergeCommit : Dict String GitHub.ID
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
     , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
     , releaseRepos : Dict GitHub.ID ReleaseRepo
@@ -373,7 +373,7 @@ init config url key =
             , repos = Dict.empty
             , projects = Dict.empty
             , columnCards = Dict.empty
-            , repoComparison = Dict.empty
+            , repoCommits = Dict.empty
             , repoLabels = Dict.empty
             , repoMilestones = Dict.empty
             , repoReleases = Dict.empty
@@ -381,7 +381,6 @@ init config url key =
             , reposByName = Dict.empty
             , labelToRepoToId = Dict.empty
             , openPRsByRepo = Dict.empty
-            , prsByMergeCommit = Dict.empty
             , cardsByMilestone = Dict.empty
             , releaseRepos = Dict.empty
             , issues = Dict.empty
@@ -681,7 +680,7 @@ update msg model =
                     , projects = value.projects
                     , columnCards = value.columnCards
                     , repos = value.repos
-                    , repoComparison = value.repoComparison
+                    , repoCommits = value.repoCommits
                     , repoLabels = value.repoLabels
                     , repoMilestones = value.repoMilestones
                     , repoReleases = value.repoReleases
@@ -1253,19 +1252,6 @@ computeCardsView model =
                 (Dict.map (always Card.fromIssue) model.issues)
                 (Dict.map (always Card.fromPR) model.prs)
 
-        prsByMergeCommit =
-            Dict.foldl
-                (\_ pr prs ->
-                    case pr.mergeCommit of
-                        Nothing ->
-                            prs
-
-                        Just { sha } ->
-                            Dict.insert sha pr.id prs
-                )
-                Dict.empty
-                model.prs
-
         openPRsByRepo =
             Dict.foldl
                 (\_ pr prs ->
@@ -1293,7 +1279,6 @@ computeCardsView model =
     in
     { model
         | cards = cards
-        , prsByMergeCommit = prsByMergeCommit
         , openPRsByRepo = openPRsByRepo
         , cardsByMilestone = cardsByMilestone
     }
@@ -1320,17 +1305,15 @@ makeReleaseRepo model repo =
                 |> List.sortBy .title
                 |> List.head
 
-        comparisonCommits =
-            Dict.get repo.id model.repoComparison
+        commitsSinceLastRelease =
+            Dict.get repo.id model.repoCommits
                 |> Maybe.withDefault []
 
         mergedPRCards =
-            comparisonCommits
-                |> List.filterMap
-                    (\sha ->
-                        Dict.get sha model.prsByMergeCommit
-                            |> Maybe.andThen (\id -> Dict.get id model.cards)
-                    )
+            commitsSinceLastRelease
+                |> List.concatMap .associatedPullRequests
+                |> LE.unique
+                |> List.filterMap (\id -> Dict.get id model.cards)
 
         issueOrOpenPR cardId =
             case Dict.get cardId model.cards of
@@ -1340,7 +1323,7 @@ makeReleaseRepo model repo =
                 Just card ->
                     if Card.isMerged card then
                         -- don't double-count merged PRs - they are collected via the
-                        -- comparison
+                        -- commits
                         Nothing
 
                     else
@@ -1404,7 +1387,7 @@ makeReleaseRepo model repo =
     List.foldl categorizeCard
         { repo = repo
         , nextMilestone = nextMilestone
-        , totalCommits = List.length comparisonCommits
+        , totalCommits = List.length commitsSinceLastRelease
         , openPRs = []
         , mergedPRs = []
         , openIssues = []
@@ -4026,10 +4009,10 @@ handleEvent event data index model =
                     { model | repos = Dict.insert val.id val model.repos }
                         |> computeDataView
 
-        "repoComparison" ->
-            withDecoded Backend.decodeRepoComparisonEvent <|
+        "repoCommits" ->
+            withDecoded Backend.decodeRepoCommitsEvent <|
                 \val ->
-                    { model | repoComparison = Dict.insert val.repoId val.comparison model.repoComparison }
+                    { model | repoCommits = Dict.insert val.repoId val.commits model.repoCommits }
 
         "repoLabels" ->
             withDecoded Backend.decodeRepoLabelsEvent <|
