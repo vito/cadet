@@ -39,7 +39,9 @@ import Svg.Lazy
 import Task
 import Time
 import Url exposing (Url)
-import Url.Parser as UP exposing ((</>))
+import Url.Builder as UB
+import Url.Parser as UP exposing ((</>), (<?>))
+import Url.Parser.Query as UQ
 
 
 port eventReceived : (( String, String, String ) -> msg) -> Sub msg
@@ -118,8 +120,6 @@ type alias Model =
 
     -- card tabbed view state
     , suggestedLabels : List String
-    , releaseRepoTab : Int
-    , repoPullRequestsTab : Int
     }
 
 
@@ -181,14 +181,6 @@ type alias ReleaseRepo =
     , undocumentedCards : List Card
     , noImpactCards : List Card
     }
-
-
-type ReleaseRepoTab
-    = ToDoTab
-    | DoneTab
-    | DocumentedTab
-    | UndocumentedTab
-    | NoImpactTab
 
 
 type GraphFilter
@@ -285,8 +277,6 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHub.Error ())
-    | SetReleaseRepoTab Int
-    | SetRepoPullRequestsTab Int
 
 
 type Page
@@ -295,9 +285,9 @@ type Page
     | ProjectPage String
     | LabelsPage
     | ReleasePage
-    | ReleaseRepoPage String
+    | ReleaseRepoPage String (Maybe Int)
     | PullRequestsPage
-    | PullRequestsRepoPage String
+    | PullRequestsRepoPage String (Maybe Int)
     | BouncePage
 
 
@@ -321,14 +311,58 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
-        , UP.map ReleaseRepoPage (UP.s "release" </> UP.string)
+        , UP.map ReleaseRepoPage (UP.s "release" </> UP.string <?> UQ.int "tab")
         , UP.map ReleasePage (UP.s "release")
         , UP.map PullRequestsPage (UP.s "pull-requests")
-        , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string)
+        , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
         ]
+
+
+pageRoute : Page -> List String
+pageRoute page =
+    case page of
+        AllProjectsPage ->
+            []
+
+        ProjectPage p ->
+            [ "projects", p ]
+
+        GlobalGraphPage ->
+            [ "graph" ]
+
+        LabelsPage ->
+            [ "labels" ]
+
+        ReleaseRepoPage r _ ->
+            [ "release", r ]
+
+        ReleasePage ->
+            [ "release" ]
+
+        PullRequestsPage ->
+            [ "pull-requests" ]
+
+        PullRequestsRepoPage r _ ->
+            [ "pull-requests", r ]
+
+        BouncePage ->
+            []
+
+
+pageTab : Page -> Int
+pageTab page =
+    case page of
+        ReleaseRepoPage _ mi ->
+            Maybe.withDefault 0 mi
+
+        PullRequestsRepoPage _ mi ->
+            Maybe.withDefault 0 mi
+
+        _ ->
+            0
 
 
 type alias CardNodeRadii =
@@ -410,8 +444,6 @@ init config url key =
             , suggestedLabels = []
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
-            , releaseRepoTab = 0
-            , repoPullRequestsTab = 0
             }
 
         ( navedModel, navedMsgs ) =
@@ -1006,12 +1038,6 @@ update msg model =
             in
             ( model, Cmd.batch (adds ++ removals) )
 
-        SetReleaseRepoTab tab ->
-            ( { model | releaseRepoTab = tab }, Cmd.none )
-
-        SetRepoPullRequestsTab tab ->
-            ( { model | repoPullRequestsTab = tab }, Cmd.none )
-
 
 searchCards : Model -> String -> Set GitHub.ID
 searchCards model str =
@@ -1160,7 +1186,7 @@ computeViewForPage model =
             reset
                 |> computeReleaseRepos
 
-        ReleaseRepoPage _ ->
+        ReleaseRepoPage _ _ ->
             { reset
                 | suggestedLabels =
                     [ "release/documented"
@@ -1170,7 +1196,7 @@ computeViewForPage model =
             }
                 |> computeReleaseRepos
 
-        PullRequestsRepoPage _ ->
+        PullRequestsRepoPage _ _ ->
             { reset
                 | suggestedLabels =
                     [ "needs-test"
@@ -1455,7 +1481,7 @@ viewPage model =
             ReleasePage ->
                 viewReleasePage model
 
-            ReleaseRepoPage repoName ->
+            ReleaseRepoPage repoName _ ->
                 case Dict.get repoName model.releaseRepos of
                     Just sir ->
                         viewReleaseRepoPage model sir
@@ -1466,7 +1492,7 @@ viewPage model =
             PullRequestsPage ->
                 viewPullRequestsPage model
 
-            PullRequestsRepoPage repoName ->
+            PullRequestsRepoPage repoName _ ->
                 viewRepoPullRequestsPage model repoName
 
             BouncePage ->
@@ -1961,8 +1987,6 @@ viewReleaseRepoPage model sir =
                     Html.text ""
             ]
         , viewTabbedCards model
-            .releaseRepoTab
-            SetReleaseRepoTab
             [ ( Octicons.inbox octiconOpts, "To Do", sir.openIssues ++ sir.openPRs )
             , ( Octicons.check octiconOpts, "Done", sir.doneCards )
             , ( viewLabelByName model "release/documented", "Documented", sir.documentedCards )
@@ -1988,18 +2012,13 @@ viewLabelByName model name =
             Html.text ("missing label: " ++ name)
 
 
-viewTabbedCards :
-    Model
-    -> (Model -> Int)
-    -> (Int -> Msg)
-    -> List ( Html Msg, String, List Card )
-    -> Html Msg
-viewTabbedCards model currentTab setTab tabs =
+viewTabbedCards : Model -> List ( Html Msg, String, List Card ) -> Html Msg
+viewTabbedCards model tabs =
     Html.div [ HA.class "tabbed-cards" ]
         [ let
             tabAttrs tab =
-                [ HA.classList [ ( "tab", True ), ( "selected", currentTab model == tab ) ]
-                , HE.onClick (setTab tab)
+                [ HA.classList [ ( "tab", True ), ( "selected", pageTab model.page == tab ) ]
+                , HA.href (UB.absolute (pageRoute model.page) [ UB.int "tab" tab ])
                 ]
 
             tabCount count =
@@ -2009,7 +2028,7 @@ viewTabbedCards model currentTab setTab tabs =
           Html.div [ HA.class "tab-row" ] <|
             List.indexedMap
                 (\idx ( icon, label, cards ) ->
-                    Html.span (tabAttrs idx)
+                    Html.a (tabAttrs idx)
                         [ icon
                         , hideLabel label
                         , tabCount (List.length cards)
@@ -2018,9 +2037,9 @@ viewTabbedCards model currentTab setTab tabs =
                 tabs
         , let
             firstTabClass =
-                HA.classList [ ( "first-tab", currentTab model == 0 ) ]
+                HA.classList [ ( "first-tab", pageTab model.page == 0 ) ]
           in
-          case List.drop (currentTab model) tabs of
+          case List.drop (pageTab model.page) tabs of
             ( _, _, cards ) :: _ ->
                 if List.isEmpty cards then
                     Html.div [ HA.class "no-tab-cards", firstTabClass ]
@@ -2257,8 +2276,6 @@ viewRepoPullRequestsPage model repoName =
             ]
         , Html.div [ HA.class "repo-pull-requests" ]
             [ viewTabbedCards model
-                .repoPullRequestsTab
-                SetRepoPullRequestsTab
                 [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
                 , ( Octicons.comment octiconOpts, "Waiting", categorized.waiting )
                 , ( Octicons.x octiconOpts, "Failed Checks", categorized.failedChecks )

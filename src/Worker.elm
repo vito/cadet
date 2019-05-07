@@ -480,7 +480,11 @@ update msg model =
                         refSel =
                             { repo = { owner = repo.owner, name = repo.name }, qualifiedName = "refs/heads/master" }
                       in
-                      fetchRepoCommits model repo { selector = refSel, after = Nothing } releases []
+                      if not (List.isEmpty releases) then
+                        fetchRepoCommits model repo { selector = refSel, after = Nothing } releases []
+
+                      else
+                        Cmd.none
                     ]
                 )
 

@@ -12205,13 +12205,13 @@ var author$project$Main$update = F2(
 											qualifiedName: 'refs/heads/master',
 											repo: {name: repo.name, owner: repo.owner}
 										};
-										return A5(
+										return (!elm$core$List$isEmpty(releases)) ? A5(
 											author$project$Main$fetchRepoCommits,
 											model,
 											repo,
 											{after: elm$core$Maybe$Nothing, selector: refSel},
 											releases,
-											_List_Nil);
+											_List_Nil) : elm$core$Platform$Cmd$none;
 									}()
 									]))));
 				}

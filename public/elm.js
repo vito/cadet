@@ -12545,13 +12545,15 @@ var author$project$Main$ProjectPage = function (a) {
 	return {$: 'ProjectPage', a: a};
 };
 var author$project$Main$PullRequestsPage = {$: 'PullRequestsPage'};
-var author$project$Main$PullRequestsRepoPage = function (a) {
-	return {$: 'PullRequestsRepoPage', a: a};
-};
+var author$project$Main$PullRequestsRepoPage = F2(
+	function (a, b) {
+		return {$: 'PullRequestsRepoPage', a: a, b: b};
+	});
 var author$project$Main$ReleasePage = {$: 'ReleasePage'};
-var author$project$Main$ReleaseRepoPage = function (a) {
-	return {$: 'ReleaseRepoPage', a: a};
-};
+var author$project$Main$ReleaseRepoPage = F2(
+	function (a, b) {
+		return {$: 'ReleaseRepoPage', a: a, b: b};
+	});
 var elm$url$Url$Parser$Parser = function (a) {
 	return {$: 'Parser', a: a};
 };
@@ -12603,6 +12605,47 @@ var elm$url$Url$Parser$oneOf = function (parsers) {
 				parsers);
 		});
 };
+var elm$url$Url$Parser$query = function (_n0) {
+	var queryParser = _n0.a;
+	return elm$url$Url$Parser$Parser(
+		function (_n1) {
+			var visited = _n1.visited;
+			var unvisited = _n1.unvisited;
+			var params = _n1.params;
+			var frag = _n1.frag;
+			var value = _n1.value;
+			return _List_fromArray(
+				[
+					A5(
+					elm$url$Url$Parser$State,
+					visited,
+					unvisited,
+					params,
+					frag,
+					value(
+						queryParser(params)))
+				]);
+		});
+};
+var elm$url$Url$Parser$slash = F2(
+	function (_n0, _n1) {
+		var parseBefore = _n0.a;
+		var parseAfter = _n1.a;
+		return elm$url$Url$Parser$Parser(
+			function (state) {
+				return A2(
+					elm$core$List$concatMap,
+					parseAfter,
+					parseBefore(state));
+			});
+	});
+var elm$url$Url$Parser$questionMark = F2(
+	function (parser, queryParser) {
+		return A2(
+			elm$url$Url$Parser$slash,
+			parser,
+			elm$url$Url$Parser$query(queryParser));
+	});
 var elm$url$Url$Parser$s = function (str) {
 	return elm$url$Url$Parser$Parser(
 		function (_n0) {
@@ -12629,18 +12672,6 @@ var elm$url$Url$Parser$s = function (str) {
 			}
 		});
 };
-var elm$url$Url$Parser$slash = F2(
-	function (_n0, _n1) {
-		var parseBefore = _n0.a;
-		var parseAfter = _n1.a;
-		return elm$url$Url$Parser$Parser(
-			function (state) {
-				return A2(
-					elm$core$List$concatMap,
-					parseAfter,
-					parseBefore(state));
-			});
-	});
 var elm$url$Url$Parser$custom = F2(
 	function (tipe, stringToSomething) {
 		return elm$url$Url$Parser$Parser(
@@ -12680,6 +12711,33 @@ var elm$url$Url$Parser$top = elm$url$Url$Parser$Parser(
 		return _List_fromArray(
 			[state]);
 	});
+var elm$url$Url$Parser$Internal$Parser = function (a) {
+	return {$: 'Parser', a: a};
+};
+var elm$url$Url$Parser$Query$custom = F2(
+	function (key, func) {
+		return elm$url$Url$Parser$Internal$Parser(
+			function (dict) {
+				return func(
+					A2(
+						elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2(elm$core$Dict$get, key, dict)));
+			});
+	});
+var elm$url$Url$Parser$Query$int = function (key) {
+	return A2(
+		elm$url$Url$Parser$Query$custom,
+		key,
+		function (stringList) {
+			if (stringList.b && (!stringList.b.b)) {
+				var str = stringList.a;
+				return elm$core$String$toInt(str);
+			} else {
+				return elm$core$Maybe$Nothing;
+			}
+		});
+};
 var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 	_List_fromArray(
 		[
@@ -12709,7 +12767,10 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			A2(
 				elm$url$Url$Parser$slash,
 				elm$url$Url$Parser$s('release'),
-				elm$url$Url$Parser$string)),
+				A2(
+					elm$url$Url$Parser$questionMark,
+					elm$url$Url$Parser$string,
+					elm$url$Url$Parser$Query$int('tab')))),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$ReleasePage,
@@ -12724,7 +12785,10 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 			A2(
 				elm$url$Url$Parser$slash,
 				elm$url$Url$Parser$s('pull-requests'),
-				elm$url$Url$Parser$string)),
+				A2(
+					elm$url$Url$Parser$questionMark,
+					elm$url$Url$Parser$string,
+					elm$url$Url$Parser$Query$int('tab')))),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$BouncePage,
@@ -13976,7 +14040,7 @@ var author$project$Main$update = F2(
 								cardLabelOperations: A2(elm$core$Dict$remove, name, model.cardLabelOperations)
 							}),
 						elm$core$Platform$Cmd$none);
-				case 'ApplyLabelOperations':
+				default:
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
@@ -14035,20 +14099,6 @@ var author$project$Main$update = F2(
 						model,
 						elm$core$Platform$Cmd$batch(
 							_Utils_ap(adds, removals)));
-				case 'SetReleaseRepoTab':
-					var tab = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{releaseRepoTab: tab}),
-						elm$core$Platform$Cmd$none);
-				default:
-					var tab = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{repoPullRequestsTab: tab}),
-						elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -14087,12 +14137,10 @@ var author$project$Main$init = F3(
 			projectDrag: author$project$Drag$init,
 			projects: elm$core$Dict$empty,
 			prs: elm$core$Dict$empty,
-			releaseRepoTab: 0,
 			releaseRepos: elm$core$Dict$empty,
 			repoCommits: elm$core$Dict$empty,
 			repoLabels: elm$core$Dict$empty,
 			repoMilestones: elm$core$Dict$empty,
-			repoPullRequestsTab: 0,
 			repoReleases: elm$core$Dict$empty,
 			repos: elm$core$Dict$empty,
 			reposByLabel: elm$core$Dict$empty,
@@ -19910,9 +19958,6 @@ var author$project$Main$viewReleasePage = function (model) {
 					repos))
 			]));
 };
-var author$project$Main$SetReleaseRepoTab = function (a) {
-	return {$: 'SetReleaseRepoTab', a: a};
-};
 var author$project$Main$viewLabelByName = F2(
 	function (model, name) {
 		var mlabel = A2(
@@ -19931,8 +19976,82 @@ var author$project$Main$viewLabelByName = F2(
 			return elm$html$Html$text('missing label: ' + name);
 		}
 	});
-var author$project$Main$viewTabbedCards = F4(
-	function (model, currentTab, setTab, tabs) {
+var author$project$Main$pageRoute = function (page) {
+	switch (page.$) {
+		case 'AllProjectsPage':
+			return _List_Nil;
+		case 'ProjectPage':
+			var p = page.a;
+			return _List_fromArray(
+				['projects', p]);
+		case 'GlobalGraphPage':
+			return _List_fromArray(
+				['graph']);
+		case 'LabelsPage':
+			return _List_fromArray(
+				['labels']);
+		case 'ReleaseRepoPage':
+			var r = page.a;
+			return _List_fromArray(
+				['release', r]);
+		case 'ReleasePage':
+			return _List_fromArray(
+				['release']);
+		case 'PullRequestsPage':
+			return _List_fromArray(
+				['pull-requests']);
+		case 'PullRequestsRepoPage':
+			var r = page.a;
+			return _List_fromArray(
+				['pull-requests', r]);
+		default:
+			return _List_Nil;
+	}
+};
+var author$project$Main$pageTab = function (page) {
+	switch (page.$) {
+		case 'ReleaseRepoPage':
+			var mi = page.b;
+			return A2(elm$core$Maybe$withDefault, 0, mi);
+		case 'PullRequestsRepoPage':
+			var mi = page.b;
+			return A2(elm$core$Maybe$withDefault, 0, mi);
+		default:
+			return 0;
+	}
+};
+var elm$url$Url$Builder$toQueryPair = function (_n0) {
+	var key = _n0.a;
+	var value = _n0.b;
+	return key + ('=' + value);
+};
+var elm$url$Url$Builder$toQuery = function (parameters) {
+	if (!parameters.b) {
+		return '';
+	} else {
+		return '?' + A2(
+			elm$core$String$join,
+			'&',
+			A2(elm$core$List$map, elm$url$Url$Builder$toQueryPair, parameters));
+	}
+};
+var elm$url$Url$Builder$absolute = F2(
+	function (pathSegments, parameters) {
+		return '/' + (A2(elm$core$String$join, '/', pathSegments) + elm$url$Url$Builder$toQuery(parameters));
+	});
+var elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 'QueryParameter', a: a, b: b};
+	});
+var elm$url$Url$Builder$int = F2(
+	function (key, value) {
+		return A2(
+			elm$url$Url$Builder$QueryParameter,
+			elm$url$Url$percentEncode(key),
+			elm$core$String$fromInt(value));
+	});
+var author$project$Main$viewTabbedCards = F2(
+	function (model, tabs) {
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -19965,11 +20084,17 @@ var author$project$Main$viewTabbedCards = F4(
 										_Utils_Tuple2(
 										'selected',
 										_Utils_eq(
-											currentTab(model),
+											author$project$Main$pageTab(model.page),
 											tab))
 									])),
-								elm$html$Html$Events$onClick(
-								setTab(tab))
+								elm$html$Html$Attributes$href(
+								A2(
+									elm$url$Url$Builder$absolute,
+									author$project$Main$pageRoute(model.page),
+									_List_fromArray(
+										[
+											A2(elm$url$Url$Builder$int, 'tab', tab)
+										])))
 							]);
 					};
 					return A2(
@@ -19986,7 +20111,7 @@ var author$project$Main$viewTabbedCards = F4(
 									var label = _n0.b;
 									var cards = _n0.c;
 									return A2(
-										elm$html$Html$span,
+										elm$html$Html$a,
 										tabAttrs(idx),
 										_List_fromArray(
 											[
@@ -20004,11 +20129,11 @@ var author$project$Main$viewTabbedCards = F4(
 							[
 								_Utils_Tuple2(
 								'first-tab',
-								!currentTab(model))
+								!author$project$Main$pageTab(model.page))
 							]));
 					var _n1 = A2(
 						elm$core$List$drop,
-						currentTab(model),
+						author$project$Main$pageTab(model.page),
 						tabs);
 					if (_n1.b) {
 						var _n2 = _n1.a;
@@ -20100,13 +20225,9 @@ var author$project$Main$viewReleaseRepoPage = F2(
 							}
 						}()
 						])),
-					A4(
+					A2(
 					author$project$Main$viewTabbedCards,
 					model,
-					function ($) {
-						return $.releaseRepoTab;
-					},
-					author$project$Main$SetReleaseRepoTab,
 					_List_fromArray(
 						[
 							_Utils_Tuple3(
@@ -20132,9 +20253,6 @@ var author$project$Main$viewReleaseRepoPage = F2(
 						]))
 				]));
 	});
-var author$project$Main$SetRepoPullRequestsTab = function (a) {
-	return {$: 'SetRepoPullRequestsTab', a: a};
-};
 var author$project$Main$changesRequested = F2(
 	function (model, card) {
 		var _n0 = A2(elm$core$Dict$get, card.id, model.prReviewers);
@@ -20327,13 +20445,9 @@ var author$project$Main$viewRepoPullRequestsPage = F2(
 						]),
 					_List_fromArray(
 						[
-							A4(
+							A2(
 							author$project$Main$viewTabbedCards,
 							model,
-							function ($) {
-								return $.repoPullRequestsTab;
-							},
-							author$project$Main$SetRepoPullRequestsTab,
 							_List_fromArray(
 								[
 									_Utils_Tuple3(
