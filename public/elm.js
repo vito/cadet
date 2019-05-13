@@ -12860,6 +12860,75 @@ var author$project$Main$searchFilter = F3(
 		}
 		return false;
 	});
+var author$project$Query$largestMatchFirst = F2(
+	function (_n0, _n1) {
+		var xi = _n0.a;
+		var xl = _n0.b;
+		var yi = _n1.a;
+		var yl = _n1.b;
+		return _Utils_eq(xi, yi) ? A2(elm$core$Basics$compare, yl, xl) : A2(elm$core$Basics$compare, xi, yi);
+	});
+var author$project$Query$simplifyResult = F2(
+	function (_n0, _n1) {
+		var i = _n0.a;
+		var l = _n0.b;
+		var ms = _n1.a;
+		var o = _n1.b;
+		return (_Utils_cmp(i + l, o) < 1) ? _Utils_Tuple2(ms, o) : ((_Utils_cmp(i, o) < 0) ? _Utils_Tuple2(
+			_Utils_ap(
+				ms,
+				_List_fromArray(
+					[
+						_Utils_Tuple2(o, l - (o - i))
+					])),
+			o + (l - (o - i))) : _Utils_Tuple2(
+			_Utils_ap(
+				ms,
+				_List_fromArray(
+					[
+						_Utils_Tuple2(i, l)
+					])),
+			i + l));
+	});
+var author$project$Query$wordMatches = F2(
+	function (lowerHaystack, lowerNeedle) {
+		var len = elm$core$String$length(lowerNeedle);
+		var indexes = (len === 1) ? A2(
+			elm$core$List$map,
+			function ($) {
+				return $.index;
+			},
+			A2(
+				elm$regex$Regex$find,
+				A2(
+					elm$core$Maybe$withDefault,
+					elm$regex$Regex$never,
+					elm$regex$Regex$fromString('\\b(' + (lowerNeedle + ')\\b'))),
+				lowerHaystack)) : A2(elm$core$String$indexes, lowerNeedle, lowerHaystack);
+		return A2(
+			elm$core$List$map,
+			function (i) {
+				return _Utils_Tuple2(i, len);
+			},
+			indexes);
+	});
+var elm$core$String$words = _String_words;
+var author$project$Query$matchWords = F2(
+	function (needle, haystack) {
+		var matches = A2(
+			elm$core$List$map,
+			author$project$Query$wordMatches(haystack),
+			elm$core$String$words(needle));
+		return A2(elm$core$List$any, elm$core$List$isEmpty, matches) ? elm$core$Maybe$Nothing : elm$core$Maybe$Just(
+			A3(
+				elm$core$List$foldl,
+				author$project$Query$simplifyResult,
+				_Utils_Tuple2(_List_Nil, 0),
+				A2(
+					elm$core$List$sortWith,
+					author$project$Query$largestMatchFirst,
+					elm$core$List$concat(matches))).a);
+	});
 var elm$core$List$partition = F2(
 	function (pred, list) {
 		var step = F2(
@@ -12898,7 +12967,9 @@ var author$project$Main$searchCards = F2(
 			A2(elm$core$String$join, ' ', rest));
 		var titleMatch = F2(
 			function (title, _n2) {
-				return A2(elm$core$String$contains, query, title);
+				return !_Utils_eq(
+					A2(author$project$Query$matchWords, query, title),
+					elm$core$Maybe$Nothing);
 			});
 		return (elm$core$String$length(query) < 2) ? elm$core$Set$empty : A3(
 			elm$core$Dict$foldl,
