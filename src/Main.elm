@@ -27,6 +27,7 @@ import OrderedSet exposing (OrderedSet)
 import ParseInt
 import Path
 import Project
+import Query
 import Random
 import Regex exposing (Regex)
 import Set exposing (Set)
@@ -1055,7 +1056,7 @@ searchCards model str =
             String.toLower (String.join " " rest)
 
         titleMatch title _ =
-            String.contains query title
+            Query.matchWords query title /= Nothing
     in
     if String.length query < 2 then
         -- don't bother querying with so few characters
@@ -1504,13 +1505,15 @@ viewSidebar : Model -> Html Msg
 viewSidebar model =
     let
         anticipatedCards =
-            List.map (viewCardEntry model) <|
-                List.filterMap (\a -> Dict.get a model.cards) <|
-                    List.filter (not << (\a -> OrderedSet.member a model.selectedCards)) (Set.toList model.anticipatedCards)
+            Set.toList model.anticipatedCards
+                |> List.filter (not << (\a -> OrderedSet.member a model.selectedCards))
+                |> List.filterMap (\a -> Dict.get a model.cards)
+                |> List.map (viewCardEntry model)
 
         selectedCards =
-            List.map (viewCardEntry model) <|
-                List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
+            OrderedSet.toList model.selectedCards
+                |> List.filterMap (\a -> Dict.get a model.cards)
+                |> List.map (viewCardEntry model)
 
         sidebarCards =
             selectedCards ++ anticipatedCards
