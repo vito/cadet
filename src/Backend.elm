@@ -1,13 +1,13 @@
 module Backend exposing
     ( CardData
+    , CardEvent
     , ColumnCard
     , ColumnCardsEvent
     , Data
-    , EventActor
     , Indexed
     , Me
     , User
-    , decodeActorsEvent
+    , decodeCardEventsEvent
     , decodeColumnCardsEvent
     , decodeGraphs
     , decodeRepoCommitsEvent
@@ -15,7 +15,7 @@ module Backend exposing
     , decodeRepoMilestonesEvent
     , decodeRepoReleasesEvent
     , decodeReviewersEvent
-    , encodeEventActor
+    , encodeCardEvent
     , fetchCardData
     , fetchData
     , fetchGraphs
@@ -61,7 +61,7 @@ type alias Data =
 type alias CardData =
     { issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
-    , cardActors : Dict GitHub.ID (List EventActor)
+    , cardEvents : Dict GitHub.ID (List CardEvent)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     }
 
@@ -80,8 +80,9 @@ type alias User =
     }
 
 
-type alias EventActor =
-    { url : String
+type alias CardEvent =
+    { event : String
+    , url : String
     , user : Maybe GitHub.User
     , avatar : String
     , createdAt : Time.Posix
@@ -196,7 +197,7 @@ decodeCardData =
     JD.succeed CardData
         |> andMap (JD.field "issues" <| JD.dict GitHub.decodeIssue)
         |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
-        |> andMap (JD.field "cardActors" <| JD.dict (JD.list decodeEventActor))
+        |> andMap (JD.field "cardEvents" <| JD.dict (JD.list decodeCardEvent))
         |> andMap (JD.field "prReviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
 
 
@@ -229,19 +230,21 @@ decodeUser =
         |> andMap (JD.field "avatar_url" JD.string)
 
 
-decodeEventActor : JD.Decoder EventActor
-decodeEventActor =
-    JD.succeed EventActor
+decodeCardEvent : JD.Decoder CardEvent
+decodeCardEvent =
+    JD.succeed CardEvent
+        |> andMap (JD.field "event" JD.string)
         |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "user" (JD.maybe GitHub.decodeUser))
         |> andMap (JD.field "avatar" JD.string)
         |> andMap (JD.field "createdAt" JDE.datetime)
 
 
-encodeEventActor : EventActor -> JE.Value
-encodeEventActor { url, user, avatar, createdAt } =
+encodeCardEvent : CardEvent -> JE.Value
+encodeCardEvent { event, url, user, avatar, createdAt } =
     JE.object
-        [ ( "url", JE.string url )
+        [ ( "event", JE.string event )
+        , ( "url", JE.string url )
         , ( "user", JEE.maybe GitHub.encodeUser user )
         , ( "avatar", JE.string avatar )
         , ( "createdAt", JE.string (Iso8601.fromTime createdAt) )
@@ -266,17 +269,17 @@ decodeColumnCardsEvent =
         |> andMap (JD.field "cards" decodeColumnCards)
 
 
-type alias ActorsEvent =
+type alias CardEventsEvent =
     { cardId : GitHub.ID
-    , actors : List EventActor
+    , events : List CardEvent
     }
 
 
-decodeActorsEvent : JD.Decoder ActorsEvent
-decodeActorsEvent =
-    JD.succeed ActorsEvent
+decodeCardEventsEvent : JD.Decoder CardEventsEvent
+decodeCardEventsEvent =
+    JD.succeed CardEventsEvent
         |> andMap (JD.field "cardId" JD.string)
-        |> andMap (JD.field "actors" (JD.list decodeEventActor))
+        |> andMap (JD.field "events" (JD.list decodeCardEvent))
 
 
 type alias ReviewersEvent =

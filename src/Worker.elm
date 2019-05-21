@@ -53,7 +53,7 @@ port setRepoReleases : ( GitHub.ID, JD.Value ) -> Cmd msg
 port setReferences : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
 
 
-port setActors : ( GitHub.ID, List JD.Value ) -> Cmd msg
+port setCardEvents : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
 port setReviewers : ( GitHub.ID, List JD.Value ) -> Cmd msg
@@ -555,17 +555,17 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
-                actors =
+                events =
                     timeline
-                        |> List.filterMap eventActor
-                        |> List.map Backend.encodeEventActor
+                        |> List.filterMap timelineEvent
+                        |> List.map Backend.encodeCardEvent
                         |> List.reverse
             in
             Log.debug "timeline fetched for" id <|
                 ( model
                 , Cmd.batch
                     [ setReferences ( id, edges )
-                    , setActors ( id, actors )
+                    , setCardEvents ( id, events )
                     ]
                 )
 
@@ -586,19 +586,35 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
-                reviewActor review =
-                    { url = review.url
+                reviewEvent review =
+                    { event =
+                        case review.state of
+                            GitHub.PullRequestReviewStatePending ->
+                                "review-pending"
+
+                            GitHub.PullRequestReviewStateCommented ->
+                                "review-comment"
+
+                            GitHub.PullRequestReviewStateApproved ->
+                                "review-approved"
+
+                            GitHub.PullRequestReviewStateChangesRequested ->
+                                "review-changes-requested"
+
+                            GitHub.PullRequestReviewStateDismissed ->
+                                "review-dismissed"
+                    , url = review.url
                     , user = Just review.author
                     , avatar = review.author.avatar
                     , createdAt = review.createdAt
                     }
 
-                actors =
-                    (List.filterMap eventActor timeline
-                        ++ List.map reviewActor reviews
+                events =
+                    (List.filterMap timelineEvent timeline
+                        ++ List.map reviewEvent reviews
                     )
                         |> List.sortBy (Time.posixToMillis << .createdAt)
-                        |> List.map Backend.encodeEventActor
+                        |> List.map Backend.encodeCardEvent
                         |> List.reverse
 
                 reviewers =
@@ -629,7 +645,7 @@ update msg model =
                 ( model
                 , Cmd.batch
                     [ setReferences ( id, edges )
-                    , setActors ( id, actors )
+                    , setCardEvents ( id, events )
                     , setReviewers ( id, reviewers )
                     ]
                 )
@@ -837,12 +853,13 @@ decodeAffectedColumnIds =
         (JD.maybe <| JD.at [ "changes", "column_id", "from" ] JD.int)
 
 
-eventActor : GitHub.TimelineEvent -> Maybe Backend.EventActor
-eventActor event =
+timelineEvent : GitHub.TimelineEvent -> Maybe Backend.CardEvent
+timelineEvent event =
     case event of
         GitHub.IssueCommentEvent comment ->
             Just
-                { url = comment.url
+                { event = "comment"
+                , url = comment.url
                 , user = comment.author
                 , avatar = Maybe.withDefault "" <| Maybe.map .avatar comment.author
                 , createdAt = comment.createdAt
@@ -853,16 +870,40 @@ eventActor event =
                 ( Just author, Just committer ) ->
                     case author.user of
                         Just _ ->
-                            Just { url = commit.url, avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+                            Just
+                                { event = "commit"
+                                , url = commit.url
+                                , avatar = author.avatar
+                                , user = author.user
+                                , createdAt = commit.committedAt
+                                }
 
                         Nothing ->
-                            Just { url = commit.url, avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
+                            Just
+                                { event = "commit"
+                                , url = commit.url
+                                , avatar = committer.avatar
+                                , user = committer.user
+                                , createdAt = commit.committedAt
+                                }
 
                 ( Nothing, Just committer ) ->
-                    Just { url = commit.url, avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
+                    Just
+                        { event = "commit"
+                        , url = commit.url
+                        , avatar = committer.avatar
+                        , user = committer.user
+                        , createdAt = commit.committedAt
+                        }
 
                 ( Just author, Nothing ) ->
-                    Just { url = commit.url, avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+                    Just
+                        { event = "commit"
+                        , url = commit.url
+                        , avatar = author.avatar
+                        , user = author.user
+                        , createdAt = commit.committedAt
+                        }
 
                 ( Nothing, Nothing ) ->
                     Nothing

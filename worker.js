@@ -3502,7 +3502,8 @@ var rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime = function (time) {
 		3,
 		A2(elm$time$Time$toMillis, elm$time$Time$utc, time)) + 'Z'))))))))))));
 };
-var author$project$Backend$encodeEventActor = function (_n0) {
+var author$project$Backend$encodeCardEvent = function (_n0) {
+	var event = _n0.event;
 	var url = _n0.url;
 	var user = _n0.user;
 	var avatar = _n0.avatar;
@@ -3510,6 +3511,9 @@ var author$project$Backend$encodeEventActor = function (_n0) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
 			[
+				_Utils_Tuple2(
+				'event',
+				elm$json$Json$Encode$string(event)),
 				_Utils_Tuple2(
 				'url',
 				elm$json$Json$Encode$string(url)),
@@ -9494,62 +9498,6 @@ var author$project$Main$decodeAndFetchRepo = F3(
 				model);
 		}
 	});
-var author$project$Main$eventActor = function (event) {
-	switch (event.$) {
-		case 'IssueCommentEvent':
-			var comment = event.a;
-			return elm$core$Maybe$Just(
-				{
-					avatar: A2(
-						elm$core$Maybe$withDefault,
-						'',
-						A2(
-							elm$core$Maybe$map,
-							function ($) {
-								return $.avatar;
-							},
-							comment.author)),
-					createdAt: comment.createdAt,
-					url: comment.url,
-					user: comment.author
-				});
-		case 'CommitEvent':
-			var commit = event.a;
-			var _n1 = _Utils_Tuple2(commit.author, commit.committer);
-			if (_n1.a.$ === 'Just') {
-				if (_n1.b.$ === 'Just') {
-					var author = _n1.a.a;
-					var committer = _n1.b.a;
-					var _n2 = author.user;
-					if (_n2.$ === 'Just') {
-						return elm$core$Maybe$Just(
-							{avatar: author.avatar, createdAt: commit.committedAt, url: commit.url, user: author.user});
-					} else {
-						return elm$core$Maybe$Just(
-							{avatar: committer.avatar, createdAt: commit.committedAt, url: commit.url, user: committer.user});
-					}
-				} else {
-					var author = _n1.a.a;
-					var _n4 = _n1.b;
-					return elm$core$Maybe$Just(
-						{avatar: author.avatar, createdAt: commit.committedAt, url: commit.url, user: author.user});
-				}
-			} else {
-				if (_n1.b.$ === 'Just') {
-					var _n3 = _n1.a;
-					var committer = _n1.b.a;
-					return elm$core$Maybe$Just(
-						{avatar: committer.avatar, createdAt: commit.committedAt, url: commit.url, user: committer.user});
-				} else {
-					var _n5 = _n1.a;
-					var _n6 = _n1.b;
-					return elm$core$Maybe$Nothing;
-				}
-			}
-		default:
-			return elm$core$Maybe$Nothing;
-	}
-};
 var author$project$GitHub$PageInfo = F2(
 	function (endCursor, hasNextPage) {
 		return {endCursor: endCursor, hasNextPage: hasNextPage};
@@ -11365,8 +11313,8 @@ var author$project$Main$fetchRepos = function (model) {
 			model.githubToken,
 			{name: model.githubOrg}));
 };
-var author$project$Main$setActors = _Platform_outgoingPort(
-	'setActors',
+var author$project$Main$setCardEvents = _Platform_outgoingPort(
+	'setCardEvents',
 	function ($) {
 		var a = $.a;
 		var b = $.b;
@@ -11493,6 +11441,63 @@ var author$project$Main$setReviewers = _Platform_outgoingPort(
 					elm$json$Json$Encode$list(elm$core$Basics$identity)(b)
 				]));
 	});
+var author$project$Main$timelineEvent = function (event) {
+	switch (event.$) {
+		case 'IssueCommentEvent':
+			var comment = event.a;
+			return elm$core$Maybe$Just(
+				{
+					avatar: A2(
+						elm$core$Maybe$withDefault,
+						'',
+						A2(
+							elm$core$Maybe$map,
+							function ($) {
+								return $.avatar;
+							},
+							comment.author)),
+					createdAt: comment.createdAt,
+					event: 'comment',
+					url: comment.url,
+					user: comment.author
+				});
+		case 'CommitEvent':
+			var commit = event.a;
+			var _n1 = _Utils_Tuple2(commit.author, commit.committer);
+			if (_n1.a.$ === 'Just') {
+				if (_n1.b.$ === 'Just') {
+					var author = _n1.a.a;
+					var committer = _n1.b.a;
+					var _n2 = author.user;
+					if (_n2.$ === 'Just') {
+						return elm$core$Maybe$Just(
+							{avatar: author.avatar, createdAt: commit.committedAt, event: 'commit', url: commit.url, user: author.user});
+					} else {
+						return elm$core$Maybe$Just(
+							{avatar: committer.avatar, createdAt: commit.committedAt, event: 'commit', url: commit.url, user: committer.user});
+					}
+				} else {
+					var author = _n1.a.a;
+					var _n4 = _n1.b;
+					return elm$core$Maybe$Just(
+						{avatar: author.avatar, createdAt: commit.committedAt, event: 'commit', url: commit.url, user: author.user});
+				}
+			} else {
+				if (_n1.b.$ === 'Just') {
+					var _n3 = _n1.a;
+					var committer = _n1.b.a;
+					return elm$core$Maybe$Just(
+						{avatar: committer.avatar, createdAt: commit.committedAt, event: 'commit', url: commit.url, user: committer.user});
+				} else {
+					var _n5 = _n1.a;
+					var _n6 = _n1.b;
+					return elm$core$Maybe$Nothing;
+				}
+			}
+		default:
+			return elm$core$Maybe$Nothing;
+	}
+};
 var elm$core$List$concatMap = F2(
 	function (f, list) {
 		return elm$core$List$concat(
@@ -12406,12 +12411,12 @@ var author$project$Main$update = F2(
 							return elm$core$Maybe$Nothing;
 						}
 					};
-					var edges = A2(elm$core$List$filterMap, findSource, timeline);
-					var actors = elm$core$List$reverse(
+					var events = elm$core$List$reverse(
 						A2(
 							elm$core$List$map,
-							author$project$Backend$encodeEventActor,
-							A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline)));
+							author$project$Backend$encodeCardEvent,
+							A2(elm$core$List$filterMap, author$project$Main$timelineEvent, timeline)));
+					var edges = A2(elm$core$List$filterMap, findSource, timeline);
 					return A3(
 						author$project$Log$debug,
 						'timeline fetched for',
@@ -12423,8 +12428,8 @@ var author$project$Main$update = F2(
 									[
 										author$project$Main$setReferences(
 										_Utils_Tuple2(id, edges)),
-										author$project$Main$setActors(
-										_Utils_Tuple2(id, actors))
+										author$project$Main$setCardEvents(
+										_Utils_Tuple2(id, events))
 									]))));
 				} else {
 					var id = msg.a;
@@ -12451,8 +12456,8 @@ var author$project$Main$update = F2(
 							A3(
 								elm$core$List$foldl,
 								function (r) {
-									var _n18 = r.state;
-									switch (_n18.$) {
+									var _n19 = r.state;
+									switch (_n19.$) {
 										case 'PullRequestReviewStatePending':
 											return A2(elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -12467,10 +12472,25 @@ var author$project$Main$update = F2(
 								},
 								elm$core$Dict$empty,
 								reviews)));
-					var reviewActor = function (review) {
+					var reviewEvent = function (review) {
 						return {
 							avatar: review.author.avatar,
 							createdAt: review.createdAt,
+							event: function () {
+								var _n18 = review.state;
+								switch (_n18.$) {
+									case 'PullRequestReviewStatePending':
+										return 'review-pending';
+									case 'PullRequestReviewStateCommented':
+										return 'review-comment';
+									case 'PullRequestReviewStateApproved':
+										return 'review-approved';
+									case 'PullRequestReviewStateChangesRequested':
+										return 'review-changes-requested';
+									default:
+										return 'review-dismissed';
+								}
+							}(),
 							url: review.url,
 							user: elm$core$Maybe$Just(review.author)
 						};
@@ -12483,11 +12503,10 @@ var author$project$Main$update = F2(
 							return elm$core$Maybe$Nothing;
 						}
 					};
-					var edges = A2(elm$core$List$filterMap, findSource, timeline);
-					var actors = elm$core$List$reverse(
+					var events = elm$core$List$reverse(
 						A2(
 							elm$core$List$map,
-							author$project$Backend$encodeEventActor,
+							author$project$Backend$encodeCardEvent,
 							A2(
 								elm$core$List$sortBy,
 								A2(
@@ -12497,8 +12516,9 @@ var author$project$Main$update = F2(
 										return $.createdAt;
 									}),
 								_Utils_ap(
-									A2(elm$core$List$filterMap, author$project$Main$eventActor, timeline),
-									A2(elm$core$List$map, reviewActor, reviews)))));
+									A2(elm$core$List$filterMap, author$project$Main$timelineEvent, timeline),
+									A2(elm$core$List$map, reviewEvent, reviews)))));
+					var edges = A2(elm$core$List$filterMap, findSource, timeline);
 					return A3(
 						author$project$Log$debug,
 						'timeline and reviews fetched for',
@@ -12510,8 +12530,8 @@ var author$project$Main$update = F2(
 									[
 										author$project$Main$setReferences(
 										_Utils_Tuple2(id, edges)),
-										author$project$Main$setActors(
-										_Utils_Tuple2(id, actors)),
+										author$project$Main$setCardEvents(
+										_Utils_Tuple2(id, events)),
 										author$project$Main$setReviewers(
 										_Utils_Tuple2(id, reviewers))
 									]))));

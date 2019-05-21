@@ -72,7 +72,7 @@ type alias Model =
     , graphs : List (ForceGraph GitHub.ID)
     , issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
-    , cardActors : Dict GitHub.ID (List Backend.EventActor)
+    , cardEvents : Dict GitHub.ID (List Backend.CardEvent)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     , archive : List ArchiveEvent
 
@@ -127,8 +127,7 @@ type alias Model =
 
 type alias ArchiveEvent =
     { cardId : GitHub.ID
-    , icon : Html Msg
-    , actor : Backend.EventActor
+    , event : Backend.CardEvent
     }
 
 
@@ -433,7 +432,7 @@ init config url key =
             , releaseRepos = Dict.empty
             , issues = Dict.empty
             , prs = Dict.empty
-            , cardActors = Dict.empty
+            , cardEvents = Dict.empty
             , prReviewers = Dict.empty
             , archive = []
             , cards = Dict.empty
@@ -750,7 +749,7 @@ update msg model =
                 ( { model
                     | issues = value.issues
                     , prs = value.prs
-                    , cardActors = value.cardActors
+                    , cardEvents = value.cardEvents
                     , prReviewers = value.prReviewers
                   }
                     |> computeCardsView
@@ -2386,25 +2385,54 @@ viewMonth month =
 
 
 viewArchiveEvent : Model -> ArchiveEvent -> Html Msg
-viewArchiveEvent model event =
-    case Dict.get event.cardId model.cards of
+viewArchiveEvent model { cardId, event } =
+    case Dict.get cardId model.cards of
         Nothing ->
             Html.text "(card missing)"
 
         Just card ->
             Html.div [ HA.class "archive-event" ]
-                [ Html.span [ HA.class "archive-event-icon", HA.title (card.repo.owner ++ "/" ++ card.repo.name ++ " #" ++ String.fromInt card.number) ]
-                    [ event.icon
+                [ Html.a
+                    [ HA.class "archive-event-card-icon"
+                    , HA.title (card.repo.owner ++ "/" ++ card.repo.name ++ " #" ++ String.fromInt card.number)
+                    , HA.target "_blank"
+                    , HA.href card.url
                     ]
+                    [ viewCardIcon card
+                    ]
+                , case event.event of
+                    "comment" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.reply grayOpts ]
+
+                    "commit" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.gitCommit grayOpts ]
+
+                    "review-pending" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.primitiveDot { octiconOpts | color = Colors.yellow } ]
+
+                    "review-comment" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.comment grayOpts ]
+
+                    "review-approved" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.check { octiconOpts | color = Colors.green } ]
+
+                    "review-changes-requested" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.comment { octiconOpts | color = Colors.red } ]
+
+                    "review-dismissed" ->
+                        Html.span [ HA.class "archive-event-icon" ] [ Octicons.x grayOpts ]
+
+                    _ ->
+                        Html.text ""
                 , Html.a
                     [ HA.class "archive-event-title"
                     , HA.target "_blank"
-                    , HA.href event.actor.url
+                    , HA.href event.url
                     ]
                     [ Html.text card.title
                     ]
                 , Html.text " by "
-                , case event.actor.user of
+                , case event.user of
                     Just user ->
                         Html.a [ HA.class "archive-event-user", HA.href user.url ]
                             [ Html.text (Maybe.withDefault user.login user.name)
@@ -2414,9 +2442,9 @@ viewArchiveEvent model event =
                         Html.text ""
                 , Html.text " at "
                 , Html.span [ HA.class "archive-event-time" ]
-                    [ Html.text (String.fromInt (Time.toHour Time.utc event.actor.createdAt))
+                    [ Html.text (String.fromInt (Time.toHour Time.utc event.createdAt))
                     , Html.text ":"
-                    , Html.text (String.padLeft 2 '0' <| String.fromInt (Time.toMinute Time.utc event.actor.createdAt))
+                    , Html.text (String.padLeft 2 '0' <| String.fromInt (Time.toMinute Time.utc event.createdAt))
                     ]
                 ]
 
@@ -2427,9 +2455,9 @@ groupEvents =
         insertEvent event acc =
             let
                 day =
-                    ( Time.toYear Time.utc event.actor.createdAt
-                    , Time.toMonth Time.utc event.actor.createdAt
-                    , Time.toDay Time.utc event.actor.createdAt
+                    ( Time.toYear Time.utc event.event.createdAt
+                    , Time.toMonth Time.utc event.event.createdAt
+                    , Time.toDay Time.utc event.event.createdAt
                     )
             in
             case acc of
@@ -3026,7 +3054,7 @@ graphAllActivityCompare model a b =
                 (\{ card } latest ->
                     let
                         mlatest =
-                            Dict.get card.id model.cardActors
+                            Dict.get card.id model.cardEvents
                                 |> Maybe.andThen List.head
                                 |> Maybe.map (.createdAt >> Time.posixToMillis)
 
@@ -3559,13 +3587,13 @@ isInProject name card =
 
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
-    Maybe.withDefault [] (Dict.get card.id model.cardActors)
+    Maybe.withDefault [] (Dict.get card.id model.cardEvents)
         |> List.any (.user >> Maybe.map .login >> (==) (Just login))
 
 
 lastActiveUser : Model -> Card -> Maybe GitHub.User
 lastActiveUser model card =
-    Dict.get card.id model.cardActors
+    Dict.get card.id model.cardEvents
         |> Maybe.andThen List.head
         |> Maybe.andThen .user
 
@@ -3635,7 +3663,7 @@ viewCard model card =
         ]
         [ Html.div [ HA.class "card-info" ]
             [ Html.div [ HA.class "card-actors" ] <|
-                List.map (viewCardActor model) (recentActors model card)
+                List.map (viewEventActor model) (recentEvents model card)
             , Html.span
                 [ HA.class "card-title"
                 , HA.draggable "false"
@@ -3867,9 +3895,9 @@ viewNoteCard model col text =
         ]
 
 
-recentActors : Model -> Card -> List Backend.EventActor
-recentActors model card =
-    Dict.get card.id model.cardActors
+recentEvents : Model -> Card -> List Backend.CardEvent
+recentEvents model card =
+    Dict.get card.id model.cardEvents
         |> Maybe.withDefault []
         |> List.take 3
         |> List.reverse
@@ -3996,8 +4024,8 @@ searchableLabel model labelId =
             Html.text ""
 
 
-viewCardActor : Model -> Backend.EventActor -> Html Msg
-viewCardActor model { createdAt, avatar } =
+viewEventActor : Model -> Backend.CardEvent -> Html Msg
+viewEventActor model { createdAt, avatar } =
     Html.img
         [ HA.class ("card-actor " ++ activityClass model.currentTime createdAt)
         , HA.src <|
@@ -4221,10 +4249,10 @@ handleEvent event data index model =
                     { model | prs = Dict.insert val.id val model.prs }
                         |> computeCardsView
 
-        "cardActors" ->
-            withDecoded Backend.decodeActorsEvent <|
+        "cardEvents" ->
+            withDecoded Backend.decodeCardEventsEvent <|
                 \val ->
-                    { model | cardActors = Dict.insert val.cardId val.actors model.cardActors }
+                    { model | cardEvents = Dict.insert val.cardId val.events model.cardEvents }
 
         "prReviewers" ->
             withDecoded Backend.decodeReviewersEvent <|
@@ -4261,22 +4289,32 @@ octiconOpts =
     Octicons.defaultOptions
 
 
+grayOpts : Octicons.Options
+grayOpts =
+    { octiconOpts | color = Colors.gray }
+
+
 computeArchive : Model -> Dict GitHub.ID Card -> List ArchiveEvent
 computeArchive model cards =
     let
+        actorEvents card =
+            Dict.get card.id model.cardEvents
+                |> Maybe.withDefault []
+                |> List.map (ArchiveEvent card.id)
+
         cardEvents card =
             { cardId = card.id
-            , icon = viewCardIcon card
-            , actor =
-                { url = card.url
+            , event =
+                { event = "created"
+                , url = card.url
                 , user = card.author
                 , avatar = Maybe.withDefault "" <| Maybe.map .avatar card.author
                 , createdAt = card.createdAt
                 }
             }
-                :: List.map (ArchiveEvent card.id (viewCardIcon card)) (Maybe.withDefault [] <| Dict.get card.id model.cardActors)
+                :: actorEvents card
     in
     cards
         |> Dict.values
         |> List.concatMap cardEvents
-        |> List.sortBy (.actor >> .createdAt >> Time.posixToMillis)
+        |> List.sortBy (.event >> .createdAt >> Time.posixToMillis)
