@@ -6,6 +6,8 @@ import Browser.Events
 import Browser.Navigation as Nav
 import Card exposing (Card)
 import Colors
+import DateFormat
+import DateFormat.Relative
 import Dict exposing (Dict)
 import Drag
 import ForceGraph exposing (ForceGraph)
@@ -59,6 +61,7 @@ type alias Model =
     , page : Page
     , me : Maybe Me
     , currentTime : Time.Posix
+    , currentZone : Time.Zone
 
     -- data from backend
     , dataIndex : Int
@@ -239,6 +242,7 @@ type Msg
     | UrlChanged Url
     | Poll
     | SetCurrentTime Time.Posix
+    | SetCurrentZone Time.Zone
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
@@ -444,6 +448,7 @@ init config url key =
             , highlightedCard = Nothing
             , highlightedNode = Nothing
             , currentTime = Time.millisToPosix config.initialTime
+            , currentZone = Time.utc
             , statefulGraphs = []
             , baseGraphFilter = Nothing
             , graphFilters = []
@@ -468,6 +473,7 @@ init config url key =
         [ Backend.fetchData DataFetched
         , Backend.fetchMe MeFetched
         , navedMsgs
+        , Task.perform SetCurrentZone Time.here
         ]
     )
 
@@ -512,6 +518,9 @@ update msg model =
 
         SetCurrentTime date ->
             ( updateGraphStates { model | currentTime = date }, Cmd.none )
+
+        SetCurrentZone zone ->
+            ( { model | currentZone = zone }, Cmd.none )
 
         ProjectDrag subMsg ->
             let
@@ -2319,7 +2328,7 @@ viewArchivePage model =
             [ Octicons.history octiconOpts
             , Html.text "Archive"
             ]
-        , groupEvents model.archive
+        , groupEvents model.currentZone model.archive
             |> List.take 7
             |> List.map (\( a, b ) -> viewArchiveDay model a b)
             |> Html.div [ HA.class "archive-columns" ]
@@ -2391,7 +2400,10 @@ viewArchiveEvent model { cardId, event } =
             Html.text "(card missing)"
 
         Just card ->
-            Html.div [ HA.class "archive-event" ]
+            Html.div
+                [ HA.class "archive-event"
+                , HE.onClick (SelectCard card.id)
+                ]
                 [ Html.a
                     [ HA.class "archive-event-card-icon"
                     , HA.title (card.repo.owner ++ "/" ++ card.repo.name ++ " #" ++ String.fromInt card.number)
@@ -2440,24 +2452,32 @@ viewArchiveEvent model { cardId, event } =
 
                     Nothing ->
                         Html.text ""
-                , Html.text " at "
+                , Html.text " "
                 , Html.span [ HA.class "archive-event-time" ]
-                    [ Html.text (String.fromInt (Time.toHour Time.utc event.createdAt))
-                    , Html.text ":"
-                    , Html.text (String.padLeft 2 '0' <| String.fromInt (Time.toMinute Time.utc event.createdAt))
+                    [ Html.text (DateFormat.format absoluteTime model.currentZone event.createdAt)
                     ]
                 ]
 
 
-groupEvents : List ArchiveEvent -> List ( ( Int, Time.Month, Int ), List ArchiveEvent )
-groupEvents =
+absoluteTime : List DateFormat.Token
+absoluteTime =
+    [ DateFormat.hourNumber
+    , DateFormat.text ":"
+    , DateFormat.minuteFixed
+    , DateFormat.text " "
+    , DateFormat.amPmUppercase
+    ]
+
+
+groupEvents : Time.Zone -> List ArchiveEvent -> List ( ( Int, Time.Month, Int ), List ArchiveEvent )
+groupEvents zone =
     let
         insertEvent event acc =
             let
                 day =
-                    ( Time.toYear Time.utc event.event.createdAt
-                    , Time.toMonth Time.utc event.event.createdAt
-                    , Time.toDay Time.utc event.event.createdAt
+                    ( Time.toYear zone event.event.createdAt
+                    , Time.toMonth zone event.event.createdAt
+                    , Time.toDay zone event.event.createdAt
                     )
             in
             case acc of

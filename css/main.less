@@ -1564,6 +1564,10 @@ a.column-title:hover, .page-header a:hover {
   padding: 8px 10px 10px 35px;
   border-width: 1px 0 0;
 
+  &:hover {
+    background: @gray-900;
+  }
+
   &:first-child {
     border-top: 0;
   }
@@ -1578,7 +1582,7 @@ a.column-title:hover, .page-header a:hover {
   color: @gray-400;
 }
 
-.archive-event-time, .archive-event-user {
+.archive-event-user {
   color: @gray-400;
 }
 
@@ -1596,4 +1600,12 @@ a.column-title:hover, .page-header a:hover {
 
 .archive-event-icon {
   margin-right: 4px;
+}
+
+.archive-event-time {
+  position: absolute;
+  width: 150px;
+  text-align: right;
+  right: 10px;
+  top: 10px;
 }
