@@ -200,8 +200,16 @@ type alias PullRequest =
     }
 
 
+type alias IssueComment =
+    { url : String
+    , author : Maybe User
+    , createdAt : Time.Posix
+    }
+
+
 type alias Commit =
-    { sha : String
+    { url : String
+    , sha : String
     , status : Maybe Status
     , author : Maybe GitActor
     , committer : Maybe GitActor
@@ -312,6 +320,7 @@ type alias User =
     , url : String
     , login : String
     , avatar : String
+    , name : Maybe String
     }
 
 
@@ -368,14 +377,14 @@ type alias CardLocation =
 
 
 type TimelineEvent
-    = IssueCommentEvent (Maybe User) Time.Posix
+    = IssueCommentEvent IssueComment
     | CrossReferencedEvent ID
     | CommitEvent Commit
-    | PullRequestReviewEvent PullRequestReview
 
 
 type alias PullRequestReview =
-    { author : User
+    { url : String
+    , author : User
     , state : PullRequestReviewState
     , createdAt : Time.Posix
     }
@@ -1157,13 +1166,25 @@ userObject =
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "login" [] GB.string)
         |> GB.with (GB.field "avatarUrl" [] GB.string)
+        |> GB.with (GB.field "name" [] (GB.nullable GB.string))
+
+
+botObject : GB.ValueSpec GB.NonNull GB.ObjectType User vars
+botObject =
+    GB.object User
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "databaseId" [] GB.int)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "login" [] GB.string)
+        |> GB.with (GB.field "avatarUrl" [] GB.string)
+        |> GB.withLocalConstant Nothing
 
 
 authorObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe User) vars
 authorObject =
     GB.object ME.or
         |> GB.with (GB.inlineFragment (Just <| GB.onType "User") userObject)
-        |> GB.with (GB.inlineFragment (Just <| GB.onType "Bot") userObject)
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "Bot") botObject)
 
 
 projectCardObject : GB.ValueSpec GB.NonNull GB.ObjectType CardLocation vars
@@ -1284,6 +1305,7 @@ prObject =
 commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
 commitObject =
     GB.object Commit
+        |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "oid" [] GB.string)
         |> GB.with (GB.field "status" [] (GB.nullable statusObject))
         |> GB.with (GB.field "author" [] (GB.nullable gitActorObject))
@@ -1305,6 +1327,7 @@ gitActorObject =
 prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
 prReviewObject =
     GB.object PullRequestReview
+        |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.assume <| GB.field "author" [] authorObject)
         |> GB.with (GB.field "state" [] (GB.enum pullRequestReviewStates))
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
@@ -1636,9 +1659,11 @@ timelineQuery =
             GV.required "after" .after (GV.nullable GV.string)
 
         issueCommentEvent =
-            GB.object IssueCommentEvent
+            GB.object IssueComment
+                |> GB.with (GB.field "url" [] GB.string)
                 |> GB.with (GB.field "author" [] authorObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
+                |> GB.map IssueCommentEvent
 
         sourceID =
             GB.object ME.or
@@ -1702,9 +1727,11 @@ prReviewQuery =
             GV.required "after" .after (GV.nullable GV.string)
 
         issueCommentEvent =
-            GB.object IssueCommentEvent
+            GB.object IssueComment
+                |> GB.with (GB.field "url" [] GB.string)
                 |> GB.with (GB.field "author" [] authorObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
+                |> GB.map IssueCommentEvent
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -1825,6 +1852,7 @@ decodePullRequest =
 decodeCommit : JD.Decoder Commit
 decodeCommit =
     JD.succeed Commit
+        |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "sha" JD.string)
         |> andMap (JD.field "status" (JD.maybe decodeStatus))
         |> andMap (JD.field "author" (JD.maybe decodeGitActor))
@@ -1846,6 +1874,7 @@ decodeGitActor =
 decodePullRequestReview : JD.Decoder PullRequestReview
 decodePullRequestReview =
     JD.succeed PullRequestReview
+        |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "author" decodeUser)
         |> andMap (JD.field "state" decodePullRequestReviewState)
         |> andMap (JD.field "created_at" JDE.datetime)
@@ -1921,6 +1950,7 @@ decodeUser =
         |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "login" JD.string)
         |> andMap (JD.field "avatar" JD.string)
+        |> andMap (JD.maybe <| JD.field "name" JD.string)
 
 
 decodeStatus : JD.Decoder Status
@@ -2144,7 +2174,8 @@ encodePullRequest record =
 encodeCommit : Commit -> JE.Value
 encodeCommit record =
     JE.object
-        [ ( "sha", JE.string record.sha )
+        [ ( "url", JE.string record.url )
+        , ( "sha", JE.string record.sha )
         , ( "status", JEE.maybe encodeStatus record.status )
         , ( "author", JEE.maybe encodeGitActor record.author )
         , ( "committer", JEE.maybe encodeGitActor record.author )
@@ -2167,7 +2198,8 @@ encodeGitActor record =
 encodePullRequestReview : PullRequestReview -> JE.Value
 encodePullRequestReview record =
     JE.object
-        [ ( "author", encodeUser record.author )
+        [ ( "url", JE.string record.url )
+        , ( "author", encodeUser record.author )
         , ( "state", encodePullRequestReviewState record.state )
         , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
         ]
@@ -2275,6 +2307,7 @@ encodeUser record =
         , ( "url", JE.string record.url )
         , ( "login", JE.string record.login )
         , ( "avatar", JE.string record.avatar )
+        , ( "name", JEE.maybe JE.string record.name )
         ]
 
 

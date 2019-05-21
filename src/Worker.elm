@@ -587,7 +587,8 @@ update msg model =
                     List.filterMap findSource timeline
 
                 reviewActor review =
-                    { user = Just review.author
+                    { url = review.url
+                    , user = Just review.author
                     , avatar = review.author.avatar
                     , createdAt = review.createdAt
                     }
@@ -839,35 +840,32 @@ decodeAffectedColumnIds =
 eventActor : GitHub.TimelineEvent -> Maybe Backend.EventActor
 eventActor event =
     case event of
-        GitHub.IssueCommentEvent muser date ->
-            case muser of
-                Just user ->
-                    Just { user = Just user, avatar = user.avatar, createdAt = date }
-
-                Nothing ->
-                    Nothing
+        GitHub.IssueCommentEvent comment ->
+            Just
+                { url = comment.url
+                , user = comment.author
+                , avatar = Maybe.withDefault "" <| Maybe.map .avatar comment.author
+                , createdAt = comment.createdAt
+                }
 
         GitHub.CommitEvent commit ->
             case ( commit.author, commit.committer ) of
                 ( Just author, Just committer ) ->
                     case author.user of
                         Just _ ->
-                            Just { avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+                            Just { url = commit.url, avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
 
                         Nothing ->
-                            Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
+                            Just { url = commit.url, avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
 
                 ( Nothing, Just committer ) ->
-                    Just { avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
+                    Just { url = commit.url, avatar = committer.avatar, user = committer.user, createdAt = commit.committedAt }
 
                 ( Just author, Nothing ) ->
-                    Just { avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
+                    Just { url = commit.url, avatar = author.avatar, user = author.user, createdAt = commit.committedAt }
 
                 ( Nothing, Nothing ) ->
                     Nothing
-
-        GitHub.PullRequestReviewEvent { author, createdAt } ->
-            Just { avatar = author.avatar, user = Just author, createdAt = createdAt }
 
         GitHub.CrossReferencedEvent _ ->
             Nothing

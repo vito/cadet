@@ -5428,35 +5428,39 @@ var author$project$Backend$decodeColumnCard = A2(
 			elm$json$Json$Decode$succeed(author$project$Backend$ColumnCard))));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Backend$decodeColumnCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
-var author$project$GitHub$Commit = F7(
-	function (sha, status, author, committer, authoredAt, committedAt, associatedPullRequests) {
-		return {associatedPullRequests: associatedPullRequests, author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status};
+var author$project$GitHub$Commit = F8(
+	function (url, sha, status, author, committer, authoredAt, committedAt, associatedPullRequests) {
+		return {associatedPullRequests: associatedPullRequests, author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status, url: url};
 	});
 var author$project$GitHub$GitActor = F4(
 	function (email, name, avatar, user) {
 		return {avatar: avatar, email: email, name: name, user: user};
 	});
-var author$project$GitHub$User = F5(
-	function (id, databaseId, url, login, avatar) {
-		return {avatar: avatar, databaseId: databaseId, id: id, login: login, url: url};
+var author$project$GitHub$User = F6(
+	function (id, databaseId, url, login, avatar, name) {
+		return {avatar: avatar, databaseId: databaseId, id: id, login: login, name: name, url: url};
 	});
 var elm$json$Json$Decode$int = _Json_decodeInt;
 var author$project$GitHub$decodeUser = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
+	elm$json$Json$Decode$maybe(
+		A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string)),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'login', elm$json$Json$Decode$string),
+		A2(elm$json$Json$Decode$field, 'avatar', elm$json$Json$Decode$string),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+			A2(elm$json$Json$Decode$field, 'login', elm$json$Json$Decode$string),
 			A2(
 				elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2(elm$json$Json$Decode$field, 'database_id', elm$json$Json$Decode$int),
+				A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
 				A2(
 					elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-					elm$json$Json$Decode$succeed(author$project$GitHub$User))))));
+					A2(elm$json$Json$Decode$field, 'database_id', elm$json$Json$Decode$int),
+					A2(
+						elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+						elm$json$Json$Decode$succeed(author$project$GitHub$User)))))));
 var author$project$GitHub$decodeGitActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
@@ -6458,7 +6462,10 @@ var author$project$GitHub$decodeCommit = A2(
 						A2(
 							elm_community$json_extra$Json$Decode$Extra$andMap,
 							A2(elm$json$Json$Decode$field, 'sha', elm$json$Json$Decode$string),
-							elm$json$Json$Decode$succeed(author$project$GitHub$Commit))))))));
+							A2(
+								elm_community$json_extra$Json$Decode$Extra$andMap,
+								A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+								elm$json$Json$Decode$succeed(author$project$GitHub$Commit)))))))));
 var author$project$GitHub$Label = F3(
 	function (id, name, color) {
 		return {color: color, id: id, name: name};
@@ -7436,9 +7443,9 @@ var author$project$Backend$CardData = F4(
 	function (issues, prs, cardActors, prReviewers) {
 		return {cardActors: cardActors, issues: issues, prReviewers: prReviewers, prs: prs};
 	});
-var author$project$Backend$EventActor = F3(
-	function (user, avatar, createdAt) {
-		return {avatar: avatar, createdAt: createdAt, user: user};
+var author$project$Backend$EventActor = F4(
+	function (url, user, avatar, createdAt) {
+		return {avatar: avatar, createdAt: createdAt, url: url, user: user};
 	});
 var author$project$Backend$decodeEventActor = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
@@ -7452,7 +7459,10 @@ var author$project$Backend$decodeEventActor = A2(
 				elm$json$Json$Decode$field,
 				'user',
 				elm$json$Json$Decode$maybe(author$project$GitHub$decodeUser)),
-			elm$json$Json$Decode$succeed(author$project$Backend$EventActor))));
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$Backend$EventActor)))));
 var author$project$GitHub$Issue = function (id) {
 	return function (url) {
 		return function (createdAt) {
@@ -7835,9 +7845,9 @@ var author$project$GitHub$decodePullRequest = A2(
 																			elm_community$json_extra$Json$Decode$Extra$andMap,
 																			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
 																			elm$json$Json$Decode$succeed(author$project$GitHub$PullRequest))))))))))))))))))));
-var author$project$GitHub$PullRequestReview = F3(
-	function (author, state, createdAt) {
-		return {author: author, createdAt: createdAt, state: state};
+var author$project$GitHub$PullRequestReview = F4(
+	function (url, author, state, createdAt) {
+		return {author: author, createdAt: createdAt, state: state, url: url};
 	});
 var author$project$GitHub$PullRequestReviewStateApproved = {$: 'PullRequestReviewStateApproved'};
 var author$project$GitHub$PullRequestReviewStateChangesRequested = {$: 'PullRequestReviewStateChangesRequested'};
@@ -7876,7 +7886,10 @@ var author$project$GitHub$decodePullRequestReview = A2(
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'author', author$project$GitHub$decodeUser),
-			elm$json$Json$Decode$succeed(author$project$GitHub$PullRequestReview))));
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'url', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHub$PullRequestReview)))));
 var author$project$Backend$decodeCardData = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
@@ -8577,22 +8590,104 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with = F2(
 			objectSpec,
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(selection));
 	});
-var author$project$GitHub$userObject = A2(
-	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 'AnyType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce = function (x) {
+	return A4(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
+		elm$core$Basics$always(
+			elm$json$Json$Decode$succeed(x)),
+		_List_Nil,
+		_List_Nil);
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant = F2(
+	function (x, objectSpec) {
+		return A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2,
+			elm$core$Basics$apL,
+			objectSpec,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce(x));
+	});
+var author$project$GitHub$botObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant,
+	elm$core$Maybe$Nothing,
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$User))))));
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$User)))))));
+var elm$json$Json$Decode$null = _Json_decodeNull;
+var elm$json$Json$Decode$nullable = function (decoder) {
+	return elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				elm$json$Json$Decode$null(elm$core$Maybe$Nothing),
+				A2(elm$json$Json$Decode$map, elm$core$Maybe$Just, decoder)
+			]));
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
+	function (nullability, coreType, join, selectionSet) {
+		return {coreType: coreType, join: join, nullability: nullability, selectionSet: selectionSet};
+	});
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = {$: 'NullableFlag'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_n0) {
+	var sourceType = _n0.a;
+	var decoder = _n0.b;
+	var vars = _n0.c;
+	var fragments = _n0.d;
+	if (sourceType.$ === 'SpecifiedType') {
+		var typeInfo = sourceType.a;
+		return A4(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
+				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.coreType, typeInfo.join, typeInfo.selectionSet)),
+			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
+			vars,
+			fragments);
+	} else {
+		return A4(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
+			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
+			vars,
+			fragments);
+	}
+};
+var author$project$GitHub$userObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'name',
+		_List_Nil,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$User)))))));
 var elm_community$maybe_extra$Maybe$Extra$or = F2(
 	function (ma, mb) {
 		if (ma.$ === 'Nothing') {
@@ -8633,7 +8728,7 @@ var author$project$GitHub$authorObject = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 		elm$core$Maybe$Just(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Bot')),
-		author$project$GitHub$userObject),
+		author$project$GitHub$botObject),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(
@@ -8787,45 +8882,6 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum = jamesmacaulay$elm_g
 				0,
 				elm$json$Json$Encode$string(label)));
 	});
-var elm$json$Json$Decode$null = _Json_decodeNull;
-var elm$json$Json$Decode$nullable = function (decoder) {
-	return elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				elm$json$Json$Decode$null(elm$core$Maybe$Nothing),
-				A2(elm$json$Json$Decode$map, elm$core$Maybe$Just, decoder)
-			]));
-};
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 'AnyType'};
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
-	function (nullability, coreType, join, selectionSet) {
-		return {coreType: coreType, join: join, nullability: nullability, selectionSet: selectionSet};
-	});
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = {$: 'NullableFlag'};
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag;
-var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_n0) {
-	var sourceType = _n0.a;
-	var decoder = _n0.b;
-	var vars = _n0.c;
-	var fragments = _n0.d;
-	if (sourceType.$ === 'SpecifiedType') {
-		var typeInfo = sourceType.a;
-		return A4(
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				A4(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.coreType, typeInfo.join, typeInfo.selectionSet)),
-			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
-			vars,
-			fragments);
-	} else {
-		return A4(
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
-			A2(elm$core$Basics$composeL, elm$json$Json$Decode$nullable, decoder),
-			vars,
-			fragments);
-	}
-};
 var author$project$GitHub$milestoneObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
@@ -9275,7 +9331,10 @@ var author$project$GitHub$commitObject = A2(
 						A2(
 							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'oid', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Commit))))))));
+							A2(
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+								A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+								jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Commit)))))))));
 var elm$core$List$head = function (list) {
 	if (list.b) {
 		var x = list.a;
@@ -10878,6 +10937,7 @@ var author$project$Card$fromIssue = function (issue) {
 	var repo = issue.repo;
 	var number = issue.number;
 	var title = issue.title;
+	var createdAt = issue.createdAt;
 	var updatedAt = issue.updatedAt;
 	var author = issue.author;
 	var assignees = issue.assignees;
@@ -10893,6 +10953,7 @@ var author$project$Card$fromIssue = function (issue) {
 		cards: cards,
 		commentCount: commentCount,
 		content: author$project$GitHub$IssueCardContent(issue),
+		createdAt: createdAt,
 		id: id,
 		labels: A2(
 			elm$core$List$map,
@@ -10927,6 +10988,7 @@ var author$project$Card$fromPR = function (pr) {
 	var repo = pr.repo;
 	var number = pr.number;
 	var title = pr.title;
+	var createdAt = pr.createdAt;
 	var updatedAt = pr.updatedAt;
 	var author = pr.author;
 	var assignees = pr.assignees;
@@ -10942,6 +11004,7 @@ var author$project$Card$fromPR = function (pr) {
 		cards: cards,
 		commentCount: commentCount,
 		content: author$project$GitHub$PullRequestCardContent(pr),
+		createdAt: createdAt,
 		id: id,
 		labels: A2(
 			elm$core$List$map,
@@ -10973,6 +11036,266 @@ var author$project$Main$addToList = F2(
 			return elm$core$Maybe$Just(
 				A2(elm$core$List$cons, x, xs));
 		}
+	});
+var author$project$Main$ArchiveEvent = F3(
+	function (cardId, icon, actor) {
+		return {actor: actor, cardId: cardId, icon: icon};
+	});
+var author$project$Card$isMerged = function (card) {
+	return _Utils_eq(
+		card.state,
+		author$project$Card$PullRequestState(author$project$GitHub$PullRequestStateMerged));
+};
+var author$project$Card$isOpen = function (card) {
+	var _n0 = card.state;
+	_n0$2:
+	while (true) {
+		if (_n0.$ === 'IssueState') {
+			if (_n0.a.$ === 'IssueStateOpen') {
+				var _n1 = _n0.a;
+				return true;
+			} else {
+				break _n0$2;
+			}
+		} else {
+			if (_n0.a.$ === 'PullRequestStateOpen') {
+				var _n2 = _n0.a;
+				return true;
+			} else {
+				break _n0$2;
+			}
+		}
+	}
+	return false;
+};
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var author$project$Colors$green500 = '#28a745';
+var author$project$Colors$green = author$project$Colors$green500;
+var author$project$Colors$purple500 = '#6f42c1';
+var author$project$Colors$purple = author$project$Colors$purple500;
+var author$project$Colors$red500 = '#d73a49';
+var author$project$Colors$red = author$project$Colors$red500;
+var author$project$Main$RefreshIssue = function (a) {
+	return {$: 'RefreshIssue', a: a};
+};
+var author$project$Main$RefreshPullRequest = function (a) {
+	return {$: 'RefreshPullRequest', a: a};
+};
+var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
+var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
+var capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
+var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
+var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
+var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var elm$svg$Svg$Attributes$style = _VirtualDom_attribute('style');
+var elm$svg$Svg$Attributes$version = _VirtualDom_attribute('version');
+var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
+var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var capitalist$elm_octicons$Octicons$Internal$iconSVG = F5(
+	function (viewBox, name, options, attributes, children) {
+		var style = function () {
+			var _n2 = options.style;
+			if (_n2.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var s = _n2.a;
+				return _List_fromArray(
+					[s]);
+			}
+		}();
+		var margin = function () {
+			var _n1 = options.margin;
+			if (_n1.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var m = _n1.a;
+				return _List_fromArray(
+					['margin: ' + m]);
+			}
+		}();
+		var styles = function () {
+			var _n0 = elm$core$List$concat(
+				_List_fromArray(
+					[style, margin]));
+			if (!_n0.b) {
+				return _List_Nil;
+			} else {
+				var lst = _n0;
+				return _List_fromArray(
+					[
+						elm$svg$Svg$Attributes$style(
+						A2(elm$core$String$join, ';', lst))
+					]);
+			}
+		}();
+		return A2(
+			elm$svg$Svg$svg,
+			elm$core$List$concat(
+				_List_fromArray(
+					[
+						_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$version('1.1'),
+							elm$svg$Svg$Attributes$class(
+							A2(elm$core$Maybe$withDefault, 'octicon ' + name, options._class)),
+							elm$svg$Svg$Attributes$width(
+							elm$core$String$fromInt(options.width)),
+							elm$svg$Svg$Attributes$height(
+							elm$core$String$fromInt(options.height)),
+							elm$svg$Svg$Attributes$viewBox(viewBox)
+						]),
+						attributes,
+						styles
+					])),
+			children);
+	});
+var elm$svg$Svg$path = elm$svg$Svg$trustedNode('path');
+var elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
+var elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
+var elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
+var capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
+	function (path, viewBox, octiconName, options) {
+		return A5(
+			capitalist$elm_octicons$Octicons$Internal$iconSVG,
+			viewBox,
+			octiconName,
+			options,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$svg$Svg$path,
+					_List_fromArray(
+						[
+							elm$svg$Svg$Attributes$d(path),
+							elm$svg$Svg$Attributes$fillRule(options.fillRule),
+							elm$svg$Svg$Attributes$fill(options.color)
+						]),
+					_List_Nil)
+				]));
+	});
+var capitalist$elm_octicons$Octicons$gitPullRequest = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
+var capitalist$elm_octicons$Octicons$issueClosed = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
+var capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
+var capitalist$elm_octicons$Octicons$issueOpened = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
+var elm$html$Html$span = _VirtualDom_node('span');
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
+	return {$: 'Normal', a: a};
+};
+var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Main$viewCardIcon = function (card) {
+	return A2(
+		elm$html$Html$span,
+		_List_fromArray(
+			[
+				elm$html$Html$Events$onClick(
+				author$project$Card$isPR(card) ? author$project$Main$RefreshPullRequest(card.id) : author$project$Main$RefreshIssue(card.id))
+			]),
+		_List_fromArray(
+			[
+				author$project$Card$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
+				_Utils_update(
+					author$project$Main$octiconOpts,
+					{
+						color: author$project$Card$isMerged(card) ? author$project$Colors$purple : (author$project$Card$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
+					})) : (author$project$Card$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
+				_Utils_update(
+					author$project$Main$octiconOpts,
+					{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
+				_Utils_update(
+					author$project$Main$octiconOpts,
+					{color: author$project$Colors$red})))
+			]));
+};
+var elm$core$Dict$values = function (dict) {
+	return A3(
+		elm$core$Dict$foldr,
+		F3(
+			function (key, value, valueList) {
+				return A2(elm$core$List$cons, value, valueList);
+			}),
+		_List_Nil,
+		dict);
+};
+var elm$core$List$concatMap = F2(
+	function (f, list) {
+		return elm$core$List$concat(
+			A2(elm$core$List$map, f, list));
+	});
+var elm$core$List$sortBy = _List_sortBy;
+var author$project$Main$computeArchive = F2(
+	function (model, cards) {
+		var cardEvents = function (card) {
+			return A2(
+				elm$core$List$cons,
+				{
+					actor: {
+						avatar: A2(
+							elm$core$Maybe$withDefault,
+							'',
+							A2(
+								elm$core$Maybe$map,
+								function ($) {
+									return $.avatar;
+								},
+								card.author)),
+						createdAt: card.createdAt,
+						url: card.url,
+						user: card.author
+					},
+					cardId: card.id,
+					icon: author$project$Main$viewCardIcon(card)
+				},
+				A2(
+					elm$core$List$map,
+					A2(
+						author$project$Main$ArchiveEvent,
+						card.id,
+						author$project$Main$viewCardIcon(card)),
+					A2(
+						elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2(elm$core$Dict$get, card.id, model.cardActors))));
+		};
+		return A2(
+			elm$core$List$sortBy,
+			A2(
+				elm$core$Basics$composeR,
+				function ($) {
+					return $.actor;
+				},
+				A2(
+					elm$core$Basics$composeR,
+					function ($) {
+						return $.createdAt;
+					},
+					elm$time$Time$posixToMillis)),
+			A2(
+				elm$core$List$concatMap,
+				cardEvents,
+				elm$core$Dict$values(cards)));
 	});
 var elm$core$Dict$map = F2(
 	function (func, dict) {
@@ -11040,7 +11363,12 @@ var author$project$Main$computeCardsView = function (model) {
 		cards);
 	return _Utils_update(
 		model,
-		{cards: cards, cardsByMilestone: cardsByMilestone, openPRsByRepo: openPRsByRepo});
+		{
+			archive: A2(author$project$Main$computeArchive, model, cards),
+			cards: cards,
+			cardsByMilestone: cardsByMilestone,
+			openPRsByRepo: openPRsByRepo
+		});
 };
 var author$project$Main$hexBrightness = function (h) {
 	var _n0 = A2(elm$core$Basics$compare, h, (255 / 2) | 0);
@@ -11445,14 +11773,6 @@ var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$Or
 var author$project$Main$baseGraphState = function (model) {
 	return {allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, currentTime: model.currentTime, highlightedNode: elm$core$Maybe$Nothing, prReviewers: model.prReviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
 };
-var author$project$Card$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
-};
 var author$project$Card$isUntriaged = function (card) {
 	return card.processState.hasTriageLabel;
 };
@@ -11673,33 +11993,6 @@ var author$project$Main$computeGraphsView = function (model) {
 var author$project$Main$InProjectFilter = function (a) {
 	return {$: 'InProjectFilter', a: a};
 };
-var author$project$Card$isMerged = function (card) {
-	return _Utils_eq(
-		card.state,
-		author$project$Card$PullRequestState(author$project$GitHub$PullRequestStateMerged));
-};
-var author$project$Card$isOpen = function (card) {
-	var _n0 = card.state;
-	_n0$2:
-	while (true) {
-		if (_n0.$ === 'IssueState') {
-			if (_n0.a.$ === 'IssueStateOpen') {
-				var _n1 = _n0.a;
-				return true;
-			} else {
-				break _n0$2;
-			}
-		} else {
-			if (_n0.a.$ === 'PullRequestStateOpen') {
-				var _n2 = _n0.a;
-				return true;
-			} else {
-				break _n0$2;
-			}
-		}
-	}
-	return false;
-};
 var author$project$Main$hasLabel = F3(
 	function (model, name, card) {
 		var mlabelId = A2(
@@ -11713,12 +12006,6 @@ var author$project$Main$hasLabel = F3(
 			return false;
 		}
 	});
-var elm$core$List$concatMap = F2(
-	function (f, list) {
-		return elm$core$List$concat(
-			A2(elm$core$List$map, f, list));
-	});
-var elm$core$List$sortBy = _List_sortBy;
 var elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
 		uniqueHelp:
@@ -12539,6 +12826,7 @@ var author$project$Main$removePullRequestLabel = F3(
 			});
 	});
 var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
+var author$project$Main$ArchivePage = {$: 'ArchivePage'};
 var author$project$Main$BouncePage = {$: 'BouncePage'};
 var author$project$Main$LabelsPage = {$: 'LabelsPage'};
 var author$project$Main$ProjectPage = function (a) {
@@ -12789,6 +13077,10 @@ var author$project$Main$routeParser = elm$url$Url$Parser$oneOf(
 					elm$url$Url$Parser$questionMark,
 					elm$url$Url$Parser$string,
 					elm$url$Url$Parser$Query$int('tab')))),
+			A2(
+			elm$url$Url$Parser$map,
+			author$project$Main$ArchivePage,
+			elm$url$Url$Parser$s('archive')),
 			A2(
 			elm$url$Url$Parser$map,
 			author$project$Main$BouncePage,
@@ -14178,6 +14470,7 @@ var author$project$Main$init = F3(
 		var model = {
 			allLabels: elm$core$Dict$empty,
 			anticipatedCards: elm$core$Set$empty,
+			archive: _List_Nil,
 			baseGraphFilter: elm$core$Maybe$Nothing,
 			cardActors: elm$core$Dict$empty,
 			cardLabelOperations: elm$core$Dict$empty,
@@ -14505,7 +14798,6 @@ var author$project$Main$subscriptions = function (model) {
 				A2(elm$time$Time$every, (60 * 60) * 1000, author$project$Main$SetCurrentTime)
 			]));
 };
-var elm$html$Html$span = _VirtualDom_node('span');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm$html$Html$Attributes$stringProperty = F2(
@@ -14528,8 +14820,6 @@ var author$project$Main$hideLabel = function (x) {
 				elm$html$Html$text(x)
 			]));
 };
-var capitalist$elm_octicons$Octicons$defaultOptions = {_class: elm$core$Maybe$Nothing, color: 'black', fillRule: 'evenodd', height: 16, margin: elm$core$Maybe$Nothing, style: elm$core$Maybe$Nothing, width: 16};
-var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
 var author$project$Main$SearchCards = function (a) {
 	return {$: 'SearchCards', a: a};
 };
@@ -14546,7 +14836,6 @@ var elm$html$Html$Events$alwaysStop = function (x) {
 var elm$virtual_dom$VirtualDom$MayStopPropagation = function (a) {
 	return {$: 'MayStopPropagation', a: a};
 };
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
 var elm$html$Html$Events$stopPropagationOn = F2(
 	function (event, decoder) {
 		return A2(
@@ -14625,100 +14914,9 @@ var author$project$Main$viewSearch = function (model) {
 			]));
 };
 var capitalist$elm_octicons$Octicons$circuitBoardPath = 'M3,5 C3,4.45 3.45,4 4,4 C4.55,4 5,4.45 5,5 C5,5.55 4.55,6 4,6 C3.45,6 3,5.55 3,5 L3,5 Z M11,5 C11,4.45 10.55,4 10,4 C9.45,4 9,4.45 9,5 C9,5.55 9.45,6 10,6 C10.55,6 11,5.55 11,5 L11,5 Z M11,11 C11,10.45 10.55,10 10,10 C9.45,10 9,10.45 9,11 C9,11.55 9.45,12 10,12 C10.55,12 11,11.55 11,11 L11,11 Z M13,1 L5,1 L5,3.17 C5.36,3.36 5.64,3.64 5.83,4 L8.17,4 C8.59,3.22 9.5,2.72 10.51,2.95 C11.26,3.14 11.87,3.75 12.04,4.5 C12.35,5.88 11.32,7.09 9.99,7.09 C9.19,7.09 8.51,6.65 8.16,6 L5.83,6 C5.41,6.8 4.5,7.28 3.49,7.03 C2.76,6.86 2.15,6.25 1.97,5.51 C1.72,4.49 2.2,3.59 3,3.17 L3,1 L1,1 C0.45,1 0,1.45 0,2 L0,14 C0,14.55 0.45,15 1,15 L6,10 L8.17,10 C8.59,9.22 9.5,8.72 10.51,8.95 C11.26,9.14 11.87,9.75 12.04,10.5 C12.35,11.88 11.32,13.09 9.99,13.09 C9.19,13.09 8.51,12.65 8.16,12 L6.99,12 L4,15 L13,15 C13.55,15 14,14.55 14,14 L14,2 C14,1.45 13.55,1 13,1 L13,1 Z';
-var elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
-var elm$svg$Svg$svg = elm$svg$Svg$trustedNode('svg');
-var elm$svg$Svg$Attributes$class = _VirtualDom_attribute('class');
-var elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
-var elm$svg$Svg$Attributes$style = _VirtualDom_attribute('style');
-var elm$svg$Svg$Attributes$version = _VirtualDom_attribute('version');
-var elm$svg$Svg$Attributes$viewBox = _VirtualDom_attribute('viewBox');
-var elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
-var capitalist$elm_octicons$Octicons$Internal$iconSVG = F5(
-	function (viewBox, name, options, attributes, children) {
-		var style = function () {
-			var _n2 = options.style;
-			if (_n2.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var s = _n2.a;
-				return _List_fromArray(
-					[s]);
-			}
-		}();
-		var margin = function () {
-			var _n1 = options.margin;
-			if (_n1.$ === 'Nothing') {
-				return _List_Nil;
-			} else {
-				var m = _n1.a;
-				return _List_fromArray(
-					['margin: ' + m]);
-			}
-		}();
-		var styles = function () {
-			var _n0 = elm$core$List$concat(
-				_List_fromArray(
-					[style, margin]));
-			if (!_n0.b) {
-				return _List_Nil;
-			} else {
-				var lst = _n0;
-				return _List_fromArray(
-					[
-						elm$svg$Svg$Attributes$style(
-						A2(elm$core$String$join, ';', lst))
-					]);
-			}
-		}();
-		return A2(
-			elm$svg$Svg$svg,
-			elm$core$List$concat(
-				_List_fromArray(
-					[
-						_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$version('1.1'),
-							elm$svg$Svg$Attributes$class(
-							A2(elm$core$Maybe$withDefault, 'octicon ' + name, options._class)),
-							elm$svg$Svg$Attributes$width(
-							elm$core$String$fromInt(options.width)),
-							elm$svg$Svg$Attributes$height(
-							elm$core$String$fromInt(options.height)),
-							elm$svg$Svg$Attributes$viewBox(viewBox)
-						]),
-						attributes,
-						styles
-					])),
-			children);
-	});
-var elm$svg$Svg$path = elm$svg$Svg$trustedNode('path');
-var elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
-var elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
-var elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
-var capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
-	function (path, viewBox, octiconName, options) {
-		return A5(
-			capitalist$elm_octicons$Octicons$Internal$iconSVG,
-			viewBox,
-			octiconName,
-			options,
-			_List_Nil,
-			_List_fromArray(
-				[
-					A2(
-					elm$svg$Svg$path,
-					_List_fromArray(
-						[
-							elm$svg$Svg$Attributes$d(path),
-							elm$svg$Svg$Attributes$fillRule(options.fillRule),
-							elm$svg$Svg$Attributes$fill(options.color)
-						]),
-					_List_Nil)
-				]));
-	});
 var capitalist$elm_octicons$Octicons$circuitBoard = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$circuitBoardPath, '0 0 14 16', 'circuitBoard');
-var capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
-var capitalist$elm_octicons$Octicons$gitPullRequest = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var capitalist$elm_octicons$Octicons$historyPath = 'M8,13 L6,13 L6,6 L11,6 L11,8 L8,8 L8,13 L8,13 Z M7,1 C4.81,1 2.87,2.02 1.59,3.59 L0,2 L0,6 L4,6 L2.5,4.5 C3.55,3.17 5.17,2.3 7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,7.66 1.33,7.33 1.39,7 L0.08,7 C0.03,7.33 0,7.66 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
+var capitalist$elm_octicons$Octicons$history = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$historyPath, '0 0 14 16', 'history');
 var capitalist$elm_octicons$Octicons$milestonePath = 'M8,2 L6,2 L6,0 L8,0 L8,2 L8,2 Z M12,7 L2,7 C1.45,7 1,6.55 1,6 L1,4 C1,3.45 1.45,3 2,3 L12,3 L14,5 L12,7 L12,7 Z M8,4 L6,4 L6,6 L8,6 L8,4 L8,4 Z M6,16 L8,16 L8,8 L6,8 L6,16 L6,16 Z';
 var capitalist$elm_octicons$Octicons$milestone = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$milestonePath, '0 0 14 16', 'milestone');
 var capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
@@ -14769,6 +14967,18 @@ var author$project$Main$viewNavBar = function (model) {
 							[
 								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
 								author$project$Main$hideLabel('Projects')
+							])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('button'),
+								elm$html$Html$Attributes$href('/archive')
+							]),
+						_List_fromArray(
+							[
+								capitalist$elm_octicons$Octicons$history(author$project$Main$octiconOpts),
+								author$project$Main$hideLabel('Archive')
 							])),
 						A2(
 						elm$html$Html$a,
@@ -14896,8 +15106,6 @@ var author$project$Main$selectStatefulProject = function (project) {
 };
 var author$project$Colors$gray500 = '#6a737d';
 var author$project$Colors$gray = author$project$Colors$gray500;
-var author$project$Colors$green500 = '#28a745';
-var author$project$Colors$green = author$project$Colors$green500;
 var author$project$Colors$yellow500 = '#ffd33d';
 var author$project$Colors$yellow = author$project$Colors$yellow500;
 var author$project$Main$onlyOpenCards = function (model) {
@@ -15056,16 +15264,6 @@ var author$project$Main$viewProject = F2(
 						]))
 				]));
 	});
-var elm$core$Dict$values = function (dict) {
-	return A3(
-		elm$core$Dict$foldr,
-		F3(
-			function (key, value, valueList) {
-				return A2(elm$core$List$cons, value, valueList);
-			}),
-		_List_Nil,
-		dict);
-};
 var author$project$Main$viewAllProjectsPage = function (model) {
 	var statefulProjects = A2(
 		elm$core$List$filterMap,
@@ -15100,6 +15298,492 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 					elm$core$List$map,
 					author$project$Main$viewProject(model),
 					statefulProjects))
+			]));
+};
+var elm$time$Time$flooredDiv = F2(
+	function (numerator, denominator) {
+		return elm$core$Basics$floor(numerator / denominator);
+	});
+var elm$time$Time$toAdjustedMinutesHelp = F3(
+	function (defaultOffset, posixMinutes, eras) {
+		toAdjustedMinutesHelp:
+		while (true) {
+			if (!eras.b) {
+				return posixMinutes + defaultOffset;
+			} else {
+				var era = eras.a;
+				var olderEras = eras.b;
+				if (_Utils_cmp(era.start, posixMinutes) < 0) {
+					return posixMinutes + era.offset;
+				} else {
+					var $temp$defaultOffset = defaultOffset,
+						$temp$posixMinutes = posixMinutes,
+						$temp$eras = olderEras;
+					defaultOffset = $temp$defaultOffset;
+					posixMinutes = $temp$posixMinutes;
+					eras = $temp$eras;
+					continue toAdjustedMinutesHelp;
+				}
+			}
+		}
+	});
+var elm$time$Time$toAdjustedMinutes = F2(
+	function (_n0, time) {
+		var defaultOffset = _n0.a;
+		var eras = _n0.b;
+		return A3(
+			elm$time$Time$toAdjustedMinutesHelp,
+			defaultOffset,
+			A2(
+				elm$time$Time$flooredDiv,
+				elm$time$Time$posixToMillis(time),
+				60000),
+			eras);
+	});
+var elm$time$Time$toCivil = function (minutes) {
+	var rawDay = A2(elm$time$Time$flooredDiv, minutes, 60 * 24) + 719468;
+	var era = (((rawDay >= 0) ? rawDay : (rawDay - 146096)) / 146097) | 0;
+	var dayOfEra = rawDay - (era * 146097);
+	var yearOfEra = ((((dayOfEra - ((dayOfEra / 1460) | 0)) + ((dayOfEra / 36524) | 0)) - ((dayOfEra / 146096) | 0)) / 365) | 0;
+	var dayOfYear = dayOfEra - (((365 * yearOfEra) + ((yearOfEra / 4) | 0)) - ((yearOfEra / 100) | 0));
+	var mp = (((5 * dayOfYear) + 2) / 153) | 0;
+	var month = mp + ((mp < 10) ? 3 : (-9));
+	var year = yearOfEra + (era * 400);
+	return {
+		day: (dayOfYear - ((((153 * mp) + 2) / 5) | 0)) + 1,
+		month: month,
+		year: year + ((month <= 2) ? 1 : 0)
+	};
+};
+var elm$time$Time$toDay = F2(
+	function (zone, time) {
+		return elm$time$Time$toCivil(
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).day;
+	});
+var elm$time$Time$Apr = {$: 'Apr'};
+var elm$time$Time$Aug = {$: 'Aug'};
+var elm$time$Time$Dec = {$: 'Dec'};
+var elm$time$Time$Feb = {$: 'Feb'};
+var elm$time$Time$Jan = {$: 'Jan'};
+var elm$time$Time$Jul = {$: 'Jul'};
+var elm$time$Time$Jun = {$: 'Jun'};
+var elm$time$Time$Mar = {$: 'Mar'};
+var elm$time$Time$May = {$: 'May'};
+var elm$time$Time$Nov = {$: 'Nov'};
+var elm$time$Time$Oct = {$: 'Oct'};
+var elm$time$Time$Sep = {$: 'Sep'};
+var elm$time$Time$toMonth = F2(
+	function (zone, time) {
+		var _n0 = elm$time$Time$toCivil(
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).month;
+		switch (_n0) {
+			case 1:
+				return elm$time$Time$Jan;
+			case 2:
+				return elm$time$Time$Feb;
+			case 3:
+				return elm$time$Time$Mar;
+			case 4:
+				return elm$time$Time$Apr;
+			case 5:
+				return elm$time$Time$May;
+			case 6:
+				return elm$time$Time$Jun;
+			case 7:
+				return elm$time$Time$Jul;
+			case 8:
+				return elm$time$Time$Aug;
+			case 9:
+				return elm$time$Time$Sep;
+			case 10:
+				return elm$time$Time$Oct;
+			case 11:
+				return elm$time$Time$Nov;
+			default:
+				return elm$time$Time$Dec;
+		}
+	});
+var elm$time$Time$toYear = F2(
+	function (zone, time) {
+		return elm$time$Time$toCivil(
+			A2(elm$time$Time$toAdjustedMinutes, zone, time)).year;
+	});
+var elm$time$Time$utc = A2(elm$time$Time$Zone, 0, _List_Nil);
+var author$project$Main$groupEvents = function () {
+	var insertEvent = F2(
+		function (event, acc) {
+			var day = _Utils_Tuple3(
+				A2(elm$time$Time$toYear, elm$time$Time$utc, event.actor.createdAt),
+				A2(elm$time$Time$toMonth, elm$time$Time$utc, event.actor.createdAt),
+				A2(elm$time$Time$toDay, elm$time$Time$utc, event.actor.createdAt));
+			if (acc.b) {
+				var _n1 = acc.a;
+				var d = _n1.a;
+				var es = _n1.b;
+				var rest = acc.b;
+				return _Utils_eq(d, day) ? A2(
+					elm$core$List$cons,
+					_Utils_Tuple2(
+						d,
+						A2(elm$core$List$cons, event, es)),
+					rest) : A2(
+					elm$core$List$cons,
+					_Utils_Tuple2(
+						day,
+						_List_fromArray(
+							[event])),
+					acc);
+			} else {
+				return _List_fromArray(
+					[
+						_Utils_Tuple2(
+						day,
+						_List_fromArray(
+							[event]))
+					]);
+			}
+		});
+	return A2(elm$core$List$foldl, insertEvent, _List_Nil);
+}();
+var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
+var elm$html$Html$Attributes$title = elm$html$Html$Attributes$stringProperty('title');
+var elm$time$Time$toHour = F2(
+	function (zone, time) {
+		return A2(
+			elm$core$Basics$modBy,
+			24,
+			A2(
+				elm$time$Time$flooredDiv,
+				A2(elm$time$Time$toAdjustedMinutes, zone, time),
+				60));
+	});
+var elm$time$Time$toMinute = F2(
+	function (zone, time) {
+		return A2(
+			elm$core$Basics$modBy,
+			60,
+			A2(elm$time$Time$toAdjustedMinutes, zone, time));
+	});
+var author$project$Main$viewArchiveEvent = F2(
+	function (model, event) {
+		var _n0 = A2(elm$core$Dict$get, event.cardId, model.cards);
+		if (_n0.$ === 'Nothing') {
+			return elm$html$Html$text('(card missing)');
+		} else {
+			var card = _n0.a;
+			return A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('archive-event')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('archive-event-icon'),
+								elm$html$Html$Attributes$title(
+								card.repo.owner + ('/' + (card.repo.name + (' #' + elm$core$String$fromInt(card.number)))))
+							]),
+						_List_fromArray(
+							[event.icon])),
+						A2(
+						elm$html$Html$a,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('archive-event-title'),
+								elm$html$Html$Attributes$target('_blank'),
+								elm$html$Html$Attributes$href(event.actor.url)
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text(card.title)
+							])),
+						elm$html$Html$text(' by '),
+						function () {
+						var _n1 = event.actor.user;
+						if (_n1.$ === 'Just') {
+							var user = _n1.a;
+							return A2(
+								elm$html$Html$a,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('archive-event-user'),
+										elm$html$Html$Attributes$href(user.url)
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text(
+										A2(elm$core$Maybe$withDefault, user.login, user.name))
+									]));
+						} else {
+							return elm$html$Html$text('');
+						}
+					}(),
+						elm$html$Html$text(' at '),
+						A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('archive-event-time')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text(
+								elm$core$String$fromInt(
+									A2(elm$time$Time$toHour, elm$time$Time$utc, event.actor.createdAt))),
+								elm$html$Html$text(':'),
+								elm$html$Html$text(
+								A3(
+									elm$core$String$padLeft,
+									2,
+									_Utils_chr('0'),
+									elm$core$String$fromInt(
+										A2(elm$time$Time$toMinute, elm$time$Time$utc, event.actor.createdAt))))
+							]))
+					]));
+		}
+	});
+var author$project$Main$viewMonth = function (month) {
+	return elm$html$Html$text(
+		function () {
+			switch (month.$) {
+				case 'Jan':
+					return 'January';
+				case 'Feb':
+					return 'February';
+				case 'Mar':
+					return 'March';
+				case 'Apr':
+					return 'April';
+				case 'May':
+					return 'May';
+				case 'Jun':
+					return 'June';
+				case 'Jul':
+					return 'July';
+				case 'Aug':
+					return 'August';
+				case 'Sep':
+					return 'September';
+				case 'Oct':
+					return 'October';
+				case 'Nov':
+					return 'November';
+				default:
+					return 'December';
+			}
+		}());
+};
+var capitalist$elm_octicons$Octicons$calendarPath = 'M13,2 L12,2 L12,3.5 C12,3.78 11.78,4 11.5,4 L9.5,4 C9.22,4 9,3.78 9,3.5 L9,2 L6,2 L6,3.5 C6,3.78 5.78,4 5.5,4 L3.5,4 C3.22,4 3,3.78 3,3.5 L3,2 L2,2 C1.45,2 1,2.45 1,3 L1,14 C1,14.55 1.45,15 2,15 L13,15 C13.55,15 14,14.55 14,14 L14,3 C14,2.45 13.55,2 13,2 L13,2 Z M13,14 L2,14 L2,5 L13,5 L13,14 L13,14 Z M5,3 L4,3 L4,1 L5,1 L5,3 L5,3 Z M11,3 L10,3 L10,1 L11,1 L11,3 L11,3 Z M6,7 L5,7 L5,6 L6,6 L6,7 L6,7 Z M8,7 L7,7 L7,6 L8,6 L8,7 L8,7 Z M10,7 L9,7 L9,6 L10,6 L10,7 L10,7 Z M12,7 L11,7 L11,6 L12,6 L12,7 L12,7 Z M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z M6,9 L5,9 L5,8 L6,8 L6,9 L6,9 Z M8,9 L7,9 L7,8 L8,8 L8,9 L8,9 Z M10,9 L9,9 L9,8 L10,8 L10,9 L10,9 Z M12,9 L11,9 L11,8 L12,8 L12,9 L12,9 Z M4,11 L3,11 L3,10 L4,10 L4,11 L4,11 Z M6,11 L5,11 L5,10 L6,10 L6,11 L6,11 Z M8,11 L7,11 L7,10 L8,10 L8,11 L8,11 Z M10,11 L9,11 L9,10 L10,10 L10,11 L10,11 Z M12,11 L11,11 L11,10 L12,10 L12,11 L12,11 Z M4,13 L3,13 L3,12 L4,12 L4,13 L4,13 Z M6,13 L5,13 L5,12 L6,12 L6,13 L6,13 Z M8,13 L7,13 L7,12 L8,12 L8,13 L8,13 Z M10,13 L9,13 L9,12 L10,12 L10,13 L10,13 Z';
+var capitalist$elm_octicons$Octicons$calendar = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$calendarPath, '0 0 14 16', 'calendar');
+var author$project$Main$viewArchiveDay = F3(
+	function (model, _n0, events) {
+		var year = _n0.a;
+		var month = _n0.b;
+		var day = _n0.c;
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('archive-day')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$span,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('column-title')
+						]),
+					_List_fromArray(
+						[
+							capitalist$elm_octicons$Octicons$calendar(author$project$Main$octiconOpts),
+							author$project$Main$viewMonth(month),
+							elm$html$Html$text(' '),
+							elm$html$Html$text(
+							elm$core$String$fromInt(day)),
+							elm$html$Html$text(', '),
+							elm$html$Html$text(
+							elm$core$String$fromInt(year))
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('archive-events')
+						]),
+					A2(
+						elm$core$List$map,
+						author$project$Main$viewArchiveEvent(model),
+						events))
+				]));
+	});
+var elm$core$List$takeReverse = F3(
+	function (n, list, kept) {
+		takeReverse:
+		while (true) {
+			if (n <= 0) {
+				return kept;
+			} else {
+				if (!list.b) {
+					return kept;
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					var $temp$n = n - 1,
+						$temp$list = xs,
+						$temp$kept = A2(elm$core$List$cons, x, kept);
+					n = $temp$n;
+					list = $temp$list;
+					kept = $temp$kept;
+					continue takeReverse;
+				}
+			}
+		}
+	});
+var elm$core$List$takeTailRec = F2(
+	function (n, list) {
+		return elm$core$List$reverse(
+			A3(elm$core$List$takeReverse, n, list, _List_Nil));
+	});
+var elm$core$List$takeFast = F3(
+	function (ctr, n, list) {
+		if (n <= 0) {
+			return _List_Nil;
+		} else {
+			var _n0 = _Utils_Tuple2(n, list);
+			_n0$1:
+			while (true) {
+				_n0$5:
+				while (true) {
+					if (!_n0.b.b) {
+						return list;
+					} else {
+						if (_n0.b.b.b) {
+							switch (_n0.a) {
+								case 1:
+									break _n0$1;
+								case 2:
+									var _n2 = _n0.b;
+									var x = _n2.a;
+									var _n3 = _n2.b;
+									var y = _n3.a;
+									return _List_fromArray(
+										[x, y]);
+								case 3:
+									if (_n0.b.b.b.b) {
+										var _n4 = _n0.b;
+										var x = _n4.a;
+										var _n5 = _n4.b;
+										var y = _n5.a;
+										var _n6 = _n5.b;
+										var z = _n6.a;
+										return _List_fromArray(
+											[x, y, z]);
+									} else {
+										break _n0$5;
+									}
+								default:
+									if (_n0.b.b.b.b && _n0.b.b.b.b.b) {
+										var _n7 = _n0.b;
+										var x = _n7.a;
+										var _n8 = _n7.b;
+										var y = _n8.a;
+										var _n9 = _n8.b;
+										var z = _n9.a;
+										var _n10 = _n9.b;
+										var w = _n10.a;
+										var tl = _n10.b;
+										return (ctr > 1000) ? A2(
+											elm$core$List$cons,
+											x,
+											A2(
+												elm$core$List$cons,
+												y,
+												A2(
+													elm$core$List$cons,
+													z,
+													A2(
+														elm$core$List$cons,
+														w,
+														A2(elm$core$List$takeTailRec, n - 4, tl))))) : A2(
+											elm$core$List$cons,
+											x,
+											A2(
+												elm$core$List$cons,
+												y,
+												A2(
+													elm$core$List$cons,
+													z,
+													A2(
+														elm$core$List$cons,
+														w,
+														A3(elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
+									} else {
+										break _n0$5;
+									}
+							}
+						} else {
+							if (_n0.a === 1) {
+								break _n0$1;
+							} else {
+								break _n0$5;
+							}
+						}
+					}
+				}
+				return list;
+			}
+			var _n1 = _n0.b;
+			var x = _n1.a;
+			return _List_fromArray(
+				[x]);
+		}
+	});
+var elm$core$List$take = F2(
+	function (n, list) {
+		return A3(elm$core$List$takeFast, 0, n, list);
+	});
+var author$project$Main$viewArchivePage = function (model) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('page-content')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('page-header')
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$history(author$project$Main$octiconOpts),
+						elm$html$Html$text('Archive')
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('archive-columns')
+					]),
+				A2(
+					elm$core$List$map,
+					function (_n0) {
+						var a = _n0.a;
+						var b = _n0.b;
+						return A3(author$project$Main$viewArchiveDay, model, a, b);
+					},
+					A2(
+						elm$core$List$take,
+						7,
+						author$project$Main$groupEvents(model.archive))))
 			]));
 };
 var author$project$Main$graphId = function (graph) {
@@ -15238,132 +15922,6 @@ var elm$core$List$drop = F2(
 				}
 			}
 		}
-	});
-var elm$core$List$takeReverse = F3(
-	function (n, list, kept) {
-		takeReverse:
-		while (true) {
-			if (n <= 0) {
-				return kept;
-			} else {
-				if (!list.b) {
-					return kept;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs,
-						$temp$kept = A2(elm$core$List$cons, x, kept);
-					n = $temp$n;
-					list = $temp$list;
-					kept = $temp$kept;
-					continue takeReverse;
-				}
-			}
-		}
-	});
-var elm$core$List$takeTailRec = F2(
-	function (n, list) {
-		return elm$core$List$reverse(
-			A3(elm$core$List$takeReverse, n, list, _List_Nil));
-	});
-var elm$core$List$takeFast = F3(
-	function (ctr, n, list) {
-		if (n <= 0) {
-			return _List_Nil;
-		} else {
-			var _n0 = _Utils_Tuple2(n, list);
-			_n0$1:
-			while (true) {
-				_n0$5:
-				while (true) {
-					if (!_n0.b.b) {
-						return list;
-					} else {
-						if (_n0.b.b.b) {
-							switch (_n0.a) {
-								case 1:
-									break _n0$1;
-								case 2:
-									var _n2 = _n0.b;
-									var x = _n2.a;
-									var _n3 = _n2.b;
-									var y = _n3.a;
-									return _List_fromArray(
-										[x, y]);
-								case 3:
-									if (_n0.b.b.b.b) {
-										var _n4 = _n0.b;
-										var x = _n4.a;
-										var _n5 = _n4.b;
-										var y = _n5.a;
-										var _n6 = _n5.b;
-										var z = _n6.a;
-										return _List_fromArray(
-											[x, y, z]);
-									} else {
-										break _n0$5;
-									}
-								default:
-									if (_n0.b.b.b.b && _n0.b.b.b.b.b) {
-										var _n7 = _n0.b;
-										var x = _n7.a;
-										var _n8 = _n7.b;
-										var y = _n8.a;
-										var _n9 = _n8.b;
-										var z = _n9.a;
-										var _n10 = _n9.b;
-										var w = _n10.a;
-										var tl = _n10.b;
-										return (ctr > 1000) ? A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A2(elm$core$List$takeTailRec, n - 4, tl))))) : A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A3(elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
-									} else {
-										break _n0$5;
-									}
-							}
-						} else {
-							if (_n0.a === 1) {
-								break _n0$1;
-							} else {
-								break _n0$5;
-							}
-						}
-					}
-				}
-				return list;
-			}
-			var _n1 = _n0.b;
-			var x = _n1.a;
-			return _List_fromArray(
-				[x]);
-		}
-	});
-var elm$core$List$take = F2(
-	function (n, list) {
-		return A3(elm$core$List$takeFast, 0, n, list);
 	});
 var folkertdev$elm_deque$Internal$rebalance = function (deque) {
 	var sizeF = deque.sizeF;
@@ -17026,16 +17584,6 @@ var elm$svg$Svg$Attributes$alignmentBaseline = _VirtualDom_attribute('alignment-
 var elm$svg$Svg$Attributes$r = _VirtualDom_attribute('r');
 var elm$svg$Svg$Attributes$textAnchor = _VirtualDom_attribute('text-anchor');
 var elm$svg$Svg$Attributes$transform = _VirtualDom_attribute('transform');
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 'Normal', a: a};
-};
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
 var elm$svg$Svg$Events$onClick = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -17117,10 +17665,6 @@ var author$project$Main$activityClass = F2(
 	});
 var author$project$Colors$orange500 = '#f66a0a';
 var author$project$Colors$orange = author$project$Colors$orange500;
-var author$project$Colors$purple500 = '#6f42c1';
-var author$project$Colors$purple = author$project$Colors$purple500;
-var author$project$Colors$red500 = '#d73a49';
-var author$project$Colors$red = author$project$Colors$red500;
 var author$project$Main$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
 var capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
 var capitalist$elm_octicons$Octicons$alert = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$alertPath, '0 0 16 16', 'alert');
@@ -17627,8 +18171,6 @@ var capitalist$elm_octicons$Octicons$flamePath = 'M5.05,0.31 C5.86,2.48 5.46,3.6
 var capitalist$elm_octicons$Octicons$flame = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$flamePath, '0 0 12 16', 'flame');
 var capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
 var capitalist$elm_octicons$Octicons$inbox = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
-var capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
-var capitalist$elm_octicons$Octicons$issueOpened = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
 var elm$html$Html$Attributes$classList = function (classes) {
 	return elm$html$Html$Attributes$class(
 		A2(
@@ -17638,12 +18180,6 @@ var elm$html$Html$Attributes$classList = function (classes) {
 				elm$core$List$map,
 				elm$core$Tuple$first,
 				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
-};
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
 };
 var author$project$Main$viewGraphControls = function (model) {
 	var labelFilters = A2(
@@ -18897,12 +19433,6 @@ var author$project$Main$LabelCard = F2(
 	function (a, b) {
 		return {$: 'LabelCard', a: a, b: b};
 	});
-var author$project$Main$RefreshIssue = function (a) {
-	return {$: 'RefreshIssue', a: a};
-};
-var author$project$Main$RefreshPullRequest = function (a) {
-	return {$: 'RefreshPullRequest', a: a};
-};
 var author$project$Main$UnhighlightNode = function (a) {
 	return {$: 'UnhighlightNode', a: a};
 };
@@ -18912,7 +19442,6 @@ var author$project$Main$UnlabelCard = F2(
 	});
 var capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
 var capitalist$elm_octicons$Octicons$linkExternal = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
-var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
 var author$project$Main$externalIcons = function (card) {
 	return A2(
 		elm$core$List$map,
@@ -19228,8 +19757,6 @@ var author$project$Main$viewSuggestedLabel = F3(
 	});
 var capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
 var capitalist$elm_octicons$Octicons$bookmark = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
-var capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
-var capitalist$elm_octicons$Octicons$issueClosed = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
 var elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -19409,28 +19936,7 @@ var author$project$Main$viewCard = F2(
 					_Utils_ap(
 						_List_fromArray(
 							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Events$onClick(
-										author$project$Card$isPR(card) ? author$project$Main$RefreshPullRequest(card.id) : author$project$Main$RefreshIssue(card.id))
-									]),
-								_List_fromArray(
-									[
-										author$project$Card$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
-										_Utils_update(
-											author$project$Main$octiconOpts,
-											{
-												color: author$project$Card$isMerged(card) ? author$project$Colors$purple : (author$project$Card$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
-											})) : (author$project$Card$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
-										_Utils_update(
-											author$project$Main$octiconOpts,
-											{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
-										_Utils_update(
-											author$project$Main$octiconOpts,
-											{color: author$project$Colors$red})))
-									])),
+								author$project$Main$viewCardIcon(card),
 								function () {
 								var _n2 = _Utils_Tuple2(
 									author$project$Card$isInFlight(card),
@@ -20075,6 +20581,9 @@ var author$project$Main$pageRoute = function (page) {
 			var r = page.a;
 			return _List_fromArray(
 				['pull-requests', r]);
+		case 'ArchivePage':
+			return _List_fromArray(
+				['archive']);
 		default:
 			return _List_Nil;
 	}
@@ -20590,6 +21099,8 @@ var author$project$Main$viewPage = function (model) {
 					case 'PullRequestsRepoPage':
 						var repoName = _n0.a;
 						return A2(author$project$Main$viewRepoPullRequestsPage, model, repoName);
+					case 'ArchivePage':
+						return author$project$Main$viewArchivePage(model);
 					default:
 						return elm$html$Html$text('you shouldn\'t see this');
 				}

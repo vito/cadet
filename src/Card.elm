@@ -28,6 +28,7 @@ type alias Card =
     , repo : GitHub.RepoLocation
     , number : Int
     , title : String
+    , createdAt : Time.Posix
     , updatedAt : Time.Posix
     , author : Maybe GitHub.User
     , assignees : List GitHub.User
@@ -58,13 +59,14 @@ type State
 
 
 fromIssue : GitHub.Issue -> Card
-fromIssue ({ id, url, repo, number, title, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as issue) =
+fromIssue ({ id, url, repo, number, title, createdAt, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as issue) =
     { id = id
     , content = GitHub.IssueCardContent issue
     , url = url
     , repo = repo
     , number = number
     , title = title
+    , createdAt = createdAt
     , updatedAt = updatedAt
     , author = author
     , assignees = assignees
@@ -80,13 +82,14 @@ fromIssue ({ id, url, repo, number, title, updatedAt, author, assignees, labels,
 
 
 fromPR : GitHub.PullRequest -> Card
-fromPR ({ id, url, repo, number, title, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as pr) =
+fromPR ({ id, url, repo, number, title, createdAt, updatedAt, author, assignees, labels, cards, commentCount, reactions, state, milestone } as pr) =
     { id = id
     , content = GitHub.PullRequestCardContent pr
     , url = url
     , repo = repo
     , number = number
     , title = title
+    , createdAt = createdAt
     , updatedAt = updatedAt
     , author = author
     , assignees = assignees

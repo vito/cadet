@@ -74,6 +74,7 @@ type alias Model =
     , prs : Dict GitHub.ID GitHub.PullRequest
     , cardActors : Dict GitHub.ID (List Backend.EventActor)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
+    , archive : List ArchiveEvent
 
     -- 'views' into data
     , allLabels : Dict GitHub.ID GitHub.Label
@@ -121,6 +122,13 @@ type alias Model =
 
     -- card tabbed view state
     , suggestedLabels : List String
+    }
+
+
+type alias ArchiveEvent =
+    { cardId : GitHub.ID
+    , icon : Html Msg
+    , actor : Backend.EventActor
     }
 
 
@@ -289,6 +297,7 @@ type Page
     | ReleaseRepoPage String (Maybe Int)
     | PullRequestsPage
     | PullRequestsRepoPage String (Maybe Int)
+    | ArchivePage
     | BouncePage
 
 
@@ -316,6 +325,7 @@ routeParser =
         , UP.map ReleasePage (UP.s "release")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
+        , UP.map ArchivePage (UP.s "archive")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -348,6 +358,9 @@ pageRoute page =
 
         PullRequestsRepoPage r _ ->
             [ "pull-requests", r ]
+
+        ArchivePage ->
+            [ "archive" ]
 
         BouncePage ->
             []
@@ -422,6 +435,7 @@ init config url key =
             , prs = Dict.empty
             , cardActors = Dict.empty
             , prReviewers = Dict.empty
+            , archive = []
             , cards = Dict.empty
             , allLabels = Dict.empty
             , colorLightnessCache = Dict.empty
@@ -1308,6 +1322,7 @@ computeCardsView model =
         | cards = cards
         , openPRsByRepo = openPRsByRepo
         , cardsByMilestone = cardsByMilestone
+        , archive = computeArchive model cards
     }
 
 
@@ -1495,6 +1510,9 @@ viewPage model =
 
             PullRequestsRepoPage repoName _ ->
                 viewRepoPullRequestsPage model repoName
+
+            ArchivePage ->
+                viewArchivePage model
 
             BouncePage ->
                 Html.text "you shouldn't see this"
@@ -1808,6 +1826,10 @@ viewNavBar model =
             [ Html.a [ HA.class "button", HA.href "/" ]
                 [ Octicons.project octiconOpts
                 , hideLabel "Projects"
+                ]
+            , Html.a [ HA.class "button", HA.href "/archive" ]
+                [ Octicons.history octiconOpts
+                , hideLabel "Archive"
                 ]
             , Html.a [ HA.class "button", HA.href "/release" ]
                 [ Octicons.milestone octiconOpts
@@ -2289,6 +2311,139 @@ viewRepoPullRequestsPage model repoName =
                 ]
             ]
         ]
+
+
+viewArchivePage : Model -> Html Msg
+viewArchivePage model =
+    Html.div [ HA.class "page-content" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.history octiconOpts
+            , Html.text "Archive"
+            ]
+        , groupEvents model.archive
+            |> List.take 7
+            |> List.map (\( a, b ) -> viewArchiveDay model a b)
+            |> Html.div [ HA.class "archive-columns" ]
+        ]
+
+
+viewArchiveDay : Model -> ( Int, Time.Month, Int ) -> List ArchiveEvent -> Html Msg
+viewArchiveDay model ( year, month, day ) events =
+    Html.div [ HA.class "archive-day" ]
+        [ Html.span [ HA.class "column-title" ]
+            [ Octicons.calendar octiconOpts
+            , viewMonth month
+            , Html.text " "
+            , Html.text (String.fromInt day)
+            , Html.text ", "
+            , Html.text (String.fromInt year)
+            ]
+        , events
+            |> List.map (viewArchiveEvent model)
+            |> Html.div [ HA.class "archive-events" ]
+        ]
+
+
+viewMonth : Time.Month -> Html Msg
+viewMonth month =
+    Html.text <|
+        case month of
+            Time.Jan ->
+                "January"
+
+            Time.Feb ->
+                "February"
+
+            Time.Mar ->
+                "March"
+
+            Time.Apr ->
+                "April"
+
+            Time.May ->
+                "May"
+
+            Time.Jun ->
+                "June"
+
+            Time.Jul ->
+                "July"
+
+            Time.Aug ->
+                "August"
+
+            Time.Sep ->
+                "September"
+
+            Time.Oct ->
+                "October"
+
+            Time.Nov ->
+                "November"
+
+            Time.Dec ->
+                "December"
+
+
+viewArchiveEvent : Model -> ArchiveEvent -> Html Msg
+viewArchiveEvent model event =
+    case Dict.get event.cardId model.cards of
+        Nothing ->
+            Html.text "(card missing)"
+
+        Just card ->
+            Html.div [ HA.class "archive-event" ]
+                [ Html.span [ HA.class "archive-event-icon", HA.title (card.repo.owner ++ "/" ++ card.repo.name ++ " #" ++ String.fromInt card.number) ]
+                    [ event.icon
+                    ]
+                , Html.a
+                    [ HA.class "archive-event-title"
+                    , HA.target "_blank"
+                    , HA.href event.actor.url
+                    ]
+                    [ Html.text card.title
+                    ]
+                , Html.text " by "
+                , case event.actor.user of
+                    Just user ->
+                        Html.a [ HA.class "archive-event-user", HA.href user.url ]
+                            [ Html.text (Maybe.withDefault user.login user.name)
+                            ]
+
+                    Nothing ->
+                        Html.text ""
+                , Html.text " at "
+                , Html.span [ HA.class "archive-event-time" ]
+                    [ Html.text (String.fromInt (Time.toHour Time.utc event.actor.createdAt))
+                    , Html.text ":"
+                    , Html.text (String.padLeft 2 '0' <| String.fromInt (Time.toMinute Time.utc event.actor.createdAt))
+                    ]
+                ]
+
+
+groupEvents : List ArchiveEvent -> List ( ( Int, Time.Month, Int ), List ArchiveEvent )
+groupEvents =
+    let
+        insertEvent event acc =
+            let
+                day =
+                    ( Time.toYear Time.utc event.actor.createdAt
+                    , Time.toMonth Time.utc event.actor.createdAt
+                    , Time.toDay Time.utc event.actor.createdAt
+                    )
+            in
+            case acc of
+                ( d, es ) :: rest ->
+                    if d == day then
+                        ( d, event :: es ) :: rest
+
+                    else
+                        ( day, [ event ] ) :: acc
+
+                [] ->
+                    [ ( day, [ event ] ) ]
+    in
+    List.foldl insertEvent []
 
 
 matchesLabel : SharedLabel -> GitHub.Label -> Bool
@@ -3520,35 +3675,7 @@ viewCard model card =
                 ]
             ]
         , Html.div [ HA.class "card-icons" ]
-            ([ Html.span
-                [ HE.onClick
-                    (if Card.isPR card then
-                        RefreshPullRequest card.id
-
-                     else
-                        RefreshIssue card.id
-                    )
-                ]
-                [ if Card.isPR card then
-                    Octicons.gitPullRequest
-                        { octiconOpts
-                            | color =
-                                if Card.isMerged card then
-                                    Colors.purple
-
-                                else if Card.isOpen card then
-                                    Colors.green
-
-                                else
-                                    Colors.red
-                        }
-
-                  else if Card.isOpen card then
-                    Octicons.issueOpened { octiconOpts | color = Colors.green }
-
-                  else
-                    Octicons.issueClosed { octiconOpts | color = Colors.red }
-                ]
+            ([ viewCardIcon card
              , case ( Card.isInFlight card, Card.isPaused card ) of
                 ( _, True ) ->
                     Html.span
@@ -3576,6 +3703,39 @@ viewCard model card =
                     card.assignees
                 ++ prIcons model card
             )
+        ]
+
+
+viewCardIcon : Card -> Html Msg
+viewCardIcon card =
+    Html.span
+        [ HE.onClick
+            (if Card.isPR card then
+                RefreshPullRequest card.id
+
+             else
+                RefreshIssue card.id
+            )
+        ]
+        [ if Card.isPR card then
+            Octicons.gitPullRequest
+                { octiconOpts
+                    | color =
+                        if Card.isMerged card then
+                            Colors.purple
+
+                        else if Card.isOpen card then
+                            Colors.green
+
+                        else
+                            Colors.red
+                }
+
+          else if Card.isOpen card then
+            Octicons.issueOpened { octiconOpts | color = Colors.green }
+
+          else
+            Octicons.issueClosed { octiconOpts | color = Colors.red }
         ]
 
 
@@ -4099,3 +4259,24 @@ emptyArc =
 octiconOpts : Octicons.Options
 octiconOpts =
     Octicons.defaultOptions
+
+
+computeArchive : Model -> Dict GitHub.ID Card -> List ArchiveEvent
+computeArchive model cards =
+    let
+        cardEvents card =
+            { cardId = card.id
+            , icon = viewCardIcon card
+            , actor =
+                { url = card.url
+                , user = card.author
+                , avatar = Maybe.withDefault "" <| Maybe.map .avatar card.author
+                , createdAt = card.createdAt
+                }
+            }
+                :: List.map (ArchiveEvent card.id (viewCardIcon card)) (Maybe.withDefault [] <| Dict.get card.id model.cardActors)
+    in
+    cards
+        |> Dict.values
+        |> List.concatMap cardEvents
+        |> List.sortBy (.actor >> .createdAt >> Time.posixToMillis)

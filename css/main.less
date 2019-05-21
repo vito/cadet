@@ -1548,3 +1548,52 @@ a.column-title:hover, .page-header a:hover {
     }
   }
 }
+
+.archive-events {
+  // background: @white;
+  color: @gray;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.archive-event {
+  position: relative;
+  border: 1px solid @gray-900;
+  display: block;
+  margin-bottom: -1px;
+  padding: 8px 10px 10px 35px;
+  border-width: 1px 0 0;
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.archive-event-title {
+  color: @white;
+  line-height: 1.5em;
+}
+
+.archive-event-title:visited {
+  color: @gray-400;
+}
+
+.archive-event-time, .archive-event-user {
+  color: @gray-400;
+}
+
+.archive-event-user .card-actor {
+  vertical-align: middle;
+  margin-left: 0;
+  margin-right: 4px;
+}
+
+.archive-event-icon .octicon {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+
+  &.comment path {
+    fill: @white;
+  }
+}

@@ -81,7 +81,8 @@ type alias User =
 
 
 type alias EventActor =
-    { user : Maybe GitHub.User
+    { url : String
+    , user : Maybe GitHub.User
     , avatar : String
     , createdAt : Time.Posix
     }
@@ -231,15 +232,17 @@ decodeUser =
 decodeEventActor : JD.Decoder EventActor
 decodeEventActor =
     JD.succeed EventActor
+        |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "user" (JD.maybe GitHub.decodeUser))
         |> andMap (JD.field "avatar" JD.string)
         |> andMap (JD.field "createdAt" JDE.datetime)
 
 
 encodeEventActor : EventActor -> JE.Value
-encodeEventActor { user, avatar, createdAt } =
+encodeEventActor { url, user, avatar, createdAt } =
     JE.object
-        [ ( "user", JEE.maybe GitHub.encodeUser user )
+        [ ( "url", JE.string url )
+        , ( "user", JEE.maybe GitHub.encodeUser user )
         , ( "avatar", JE.string avatar )
         , ( "createdAt", JE.string (Iso8601.fromTime createdAt) )
         ]
