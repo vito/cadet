@@ -14651,15 +14651,16 @@ var elm$time$Time$every = F2(
 			A2(elm$time$Time$Every, interval, tagger));
 	});
 var author$project$Main$subscriptions = function (model) {
+	var minute = 60 * 1000;
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
 			[
 				author$project$Main$eventReceived(author$project$Main$EventReceived),
 				A2(
 				elm$time$Time$every,
-				60 * 1000,
+				minute,
 				elm$core$Basics$always(author$project$Main$Poll)),
-				A2(elm$time$Time$every, (60 * 60) * 1000, author$project$Main$SetCurrentTime)
+				A2(elm$time$Time$every, 60 * minute, author$project$Main$SetCurrentTime)
 			]));
 };
 var elm$html$Html$span = _VirtualDom_node('span');
@@ -16255,28 +16256,37 @@ var author$project$Main$viewArchiveEvent = F2(
 							[
 								elm$html$Html$text(card.title)
 							])),
-						elm$html$Html$text(' by '),
-						function () {
-						var _n3 = event.user;
-						if (_n3.$ === 'Just') {
-							var user = _n3.a;
-							return A2(
-								elm$html$Html$a,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('archive-event-user'),
-										elm$html$Html$Attributes$href(user.url)
-									]),
-								_List_fromArray(
-									[
-										elm$html$Html$text(
-										A2(elm$core$Maybe$withDefault, user.login, user.name))
-									]));
-						} else {
-							return elm$html$Html$text('');
-						}
-					}(),
 						elm$html$Html$text(' '),
+						A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('archive-event-actor')
+							]),
+						_List_fromArray(
+							[
+								elm$html$Html$text('by '),
+								function () {
+								var _n3 = event.user;
+								if (_n3.$ === 'Just') {
+									var user = _n3.a;
+									return A2(
+										elm$html$Html$a,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('archive-event-user'),
+												elm$html$Html$Attributes$href(user.url)
+											]),
+										_List_fromArray(
+											[
+												elm$html$Html$text(
+												A2(elm$core$Maybe$withDefault, user.login, user.name))
+											]));
+								} else {
+									return elm$html$Html$text('');
+								}
+							}()
+							])),
 						A2(
 						elm$html$Html$span,
 						_List_fromArray(

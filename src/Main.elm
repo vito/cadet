@@ -480,10 +480,14 @@ init config url key =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
+    let
+        minute =
+            60 * 1000
+    in
     Sub.batch
         [ eventReceived EventReceived
-        , Time.every (60 * 1000) (always Poll)
-        , Time.every (60 * 60 * 1000) SetCurrentTime
+        , Time.every minute (always Poll)
+        , Time.every (60 * minute) SetCurrentTime
         ]
 
 
@@ -2443,16 +2447,18 @@ viewArchiveEvent model { cardId, event } =
                     ]
                     [ Html.text card.title
                     ]
-                , Html.text " by "
-                , case event.user of
-                    Just user ->
-                        Html.a [ HA.class "archive-event-user", HA.href user.url ]
-                            [ Html.text (Maybe.withDefault user.login user.name)
-                            ]
-
-                    Nothing ->
-                        Html.text ""
                 , Html.text " "
+                , Html.span [ HA.class "archive-event-actor" ]
+                    [ Html.text "by "
+                    , case event.user of
+                        Just user ->
+                            Html.a [ HA.class "archive-event-user", HA.href user.url ]
+                                [ Html.text (Maybe.withDefault user.login user.name)
+                                ]
+
+                        Nothing ->
+                            Html.text ""
+                    ]
                 , Html.span [ HA.class "archive-event-time" ]
                     [ Html.text (DateFormat.format absoluteTime model.currentZone event.createdAt)
                     ]
