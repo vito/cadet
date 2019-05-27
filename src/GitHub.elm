@@ -1356,6 +1356,9 @@ issuesQuery =
 
         pageArgs =
             [ ( "first", GA.int 100 )
+            , ( "orderBy"
+              , GA.object [ ( "field", GA.enum "CREATED_AT" ), ( "direction", GA.enum "DESC" ) ]
+              )
             , ( "after", GA.variable afterVar )
             ]
 
@@ -1419,6 +1422,9 @@ pullRequestsQuery =
 
         pageArgs =
             [ ( "first", GA.int 10 )
+            , ( "orderBy"
+              , GA.object [ ( "field", GA.enum "CREATED_AT" ), ( "direction", GA.enum "DESC" ) ]
+              )
             , ( "after", GA.variable afterVar )
             ]
 
