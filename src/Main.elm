@@ -1889,7 +1889,7 @@ selectStatefulProject : GitHub.Project -> Maybe ProjectState
 selectStatefulProject project =
     let
         findColumns match =
-            List.filter (match << .name) project.columns
+            List.filter match project.columns
 
         icebox =
             findColumns Project.detectColumn.icebox
@@ -3908,9 +3908,9 @@ viewNoteCard model col text =
     Html.div
         [ HA.classList
             [ ( "card", True )
-            , ( "in-flight", Project.detectColumn.inFlight col.name )
-            , ( "done", Project.detectColumn.done col.name )
-            , ( "backlog", Project.detectColumn.backlog col.name )
+            , ( "in-flight", Project.detectColumn.inFlight col )
+            , ( "done", Project.detectColumn.done col )
+            , ( "backlog", Project.detectColumn.backlog col )
             ]
         ]
         [ Html.div [ HA.class "card-info card-note" ]

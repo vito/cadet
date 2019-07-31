@@ -6529,20 +6529,47 @@ var author$project$GitHub$Project = F6(
 	function (id, url, name, number, body, columns) {
 		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
 	});
-var author$project$GitHub$ProjectColumn = F3(
-	function (id, name, databaseId) {
-		return {databaseId: databaseId, id: id, name: name};
+var author$project$GitHub$ProjectColumn = F4(
+	function (id, name, purpose, databaseId) {
+		return {databaseId: databaseId, id: id, name: name, purpose: purpose};
 	});
+var author$project$GitHub$ProjectColumnPurposeDone = {$: 'ProjectColumnPurposeDone'};
+var author$project$GitHub$ProjectColumnPurposeInProgress = {$: 'ProjectColumnPurposeInProgress'};
+var author$project$GitHub$ProjectColumnPurposeToDo = {$: 'ProjectColumnPurposeToDo'};
+var author$project$GitHub$projectColumnPurposes = _List_fromArray(
+	[
+		_Utils_Tuple2('TODO', author$project$GitHub$ProjectColumnPurposeToDo),
+		_Utils_Tuple2('IN_PROGRESS', author$project$GitHub$ProjectColumnPurposeInProgress),
+		_Utils_Tuple2('DONE', author$project$GitHub$ProjectColumnPurposeDone)
+	]);
+var author$project$GitHub$decodeProjectColumnPurpose = function () {
+	var decodeToType = function (string) {
+		var _n0 = A2(
+			elm$core$Dict$get,
+			string,
+			elm$core$Dict$fromList(author$project$GitHub$projectColumnPurposes));
+		if (_n0.$ === 'Just') {
+			var type_ = _n0.a;
+			return elm$core$Result$Ok(type_);
+		} else {
+			return elm$core$Result$Err('Not valid pattern for decoder to ProjectColumnPurpose. Pattern: ' + string);
+		}
+	};
+	return A2(author$project$GitHub$customDecoder, elm$json$Json$Decode$string, decodeToType);
+}();
 var author$project$GitHub$decodeProjectColumn = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'database_id', elm$json$Json$Decode$int),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+		A2(elm$json$Json$Decode$field, 'purpose', author$project$GitHub$decodeProjectColumnPurpose),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$GitHub$ProjectColumn))));
+			A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$GitHub$ProjectColumn)))));
 var author$project$GitHub$decodeProject = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
@@ -9012,11 +9039,18 @@ var author$project$GitHub$columnObject = A2(
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'purpose',
+			_List_Nil,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumn))));
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumn)))));
 var author$project$GitHub$projectLocationObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
@@ -10856,22 +10890,36 @@ var author$project$Card$inColumn = function (match) {
 			A2(
 				elm$core$Basics$composeL,
 				elm$core$Maybe$withDefault(false),
-				elm$core$Maybe$map(
-					A2(
-						elm$core$Basics$composeL,
-						match,
-						function ($) {
-							return $.name;
-						}))),
+				elm$core$Maybe$map(match)),
 			function ($) {
 				return $.column;
 			}));
 };
 var author$project$Project$detectColumn = {
-	backlog: elm$core$String$startsWith('Backlog'),
-	done: elm$core$Basics$eq('Done'),
-	icebox: elm$core$Basics$eq('Icebox'),
-	inFlight: elm$core$Basics$eq('In Flight')
+	backlog: A2(
+		elm$core$Basics$composeL,
+		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeToDo),
+		function ($) {
+			return $.purpose;
+		}),
+	done: A2(
+		elm$core$Basics$composeL,
+		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeDone),
+		function ($) {
+			return $.purpose;
+		}),
+	icebox: A2(
+		elm$core$Basics$composeL,
+		elm$core$Basics$eq('Icebox'),
+		function ($) {
+			return $.name;
+		}),
+	inFlight: A2(
+		elm$core$Basics$composeL,
+		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeInProgress),
+		function ($) {
+			return $.purpose;
+		})
 };
 var author$project$Card$cardProcessState = function (_n0) {
 	var cards = _n0.cards;
@@ -15034,15 +15082,7 @@ var author$project$Main$viewNavBar = function (model) {
 };
 var author$project$Main$selectStatefulProject = function (project) {
 	var findColumns = function (match) {
-		return A2(
-			elm$core$List$filter,
-			A2(
-				elm$core$Basics$composeL,
-				match,
-				function ($) {
-					return $.name;
-				}),
-			project.columns);
+		return A2(elm$core$List$filter, match, project.columns);
 	};
 	var icebox = findColumns(author$project$Project$detectColumn.icebox);
 	var inFlights = findColumns(author$project$Project$detectColumn.inFlight);
@@ -20639,13 +20679,13 @@ var author$project$Main$viewNoteCard = F3(
 							_Utils_Tuple2('card', true),
 							_Utils_Tuple2(
 							'in-flight',
-							author$project$Project$detectColumn.inFlight(col.name)),
+							author$project$Project$detectColumn.inFlight(col)),
 							_Utils_Tuple2(
 							'done',
-							author$project$Project$detectColumn.done(col.name)),
+							author$project$Project$detectColumn.done(col)),
 							_Utils_Tuple2(
 							'backlog',
-							author$project$Project$detectColumn.backlog(col.name))
+							author$project$Project$detectColumn.backlog(col))
 						]))
 				]),
 			_List_fromArray(

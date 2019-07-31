@@ -3,10 +3,10 @@ module Project exposing (detectColumn)
 import GitHub
 
 
-detectColumn : { icebox : String -> Bool, backlog : String -> Bool, inFlight : String -> Bool, done : String -> Bool }
+detectColumn : { icebox : GitHub.ProjectColumn -> Bool, backlog : GitHub.ProjectColumn -> Bool, inFlight : GitHub.ProjectColumn -> Bool, done : GitHub.ProjectColumn -> Bool }
 detectColumn =
-    { icebox = (==) "Icebox"
-    , backlog = String.startsWith "Backlog"
-    , inFlight = (==) "In Flight"
-    , done = (==) "Done"
+    { icebox = (==) "Icebox" << .name
+    , backlog = (==) GitHub.ProjectColumnPurposeToDo << .purpose
+    , inFlight = (==) GitHub.ProjectColumnPurposeInProgress << .purpose
+    , done = (==) GitHub.ProjectColumnPurposeDone << .purpose
     }

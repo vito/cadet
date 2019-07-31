@@ -142,9 +142,9 @@ isIcebox card =
     card.processState.inIceboxColumn
 
 
-inColumn : (String -> Bool) -> List GitHub.CardLocation -> Bool
+inColumn : (GitHub.ProjectColumn -> Bool) -> List GitHub.CardLocation -> Bool
 inColumn match =
-    List.any (Maybe.withDefault False << Maybe.map (match << .name) << .column)
+    List.any (Maybe.withDefault False << Maybe.map match << .column)
 
 
 isPR : Card -> Bool

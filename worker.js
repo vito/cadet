@@ -3750,6 +3750,28 @@ var author$project$GitHub$encodeCommit = function (record) {
 				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$string, record.associatedPullRequests))
 			]));
 };
+var author$project$GitHub$ProjectColumnPurposeDone = {$: 'ProjectColumnPurposeDone'};
+var author$project$GitHub$ProjectColumnPurposeInProgress = {$: 'ProjectColumnPurposeInProgress'};
+var author$project$GitHub$ProjectColumnPurposeToDo = {$: 'ProjectColumnPurposeToDo'};
+var author$project$GitHub$projectColumnPurposes = _List_fromArray(
+	[
+		_Utils_Tuple2('TODO', author$project$GitHub$ProjectColumnPurposeToDo),
+		_Utils_Tuple2('IN_PROGRESS', author$project$GitHub$ProjectColumnPurposeInProgress),
+		_Utils_Tuple2('DONE', author$project$GitHub$ProjectColumnPurposeDone)
+	]);
+var author$project$GitHub$encodeProjectColumnPurpose = function (item) {
+	return elm$json$Json$Encode$string(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, _default) {
+					var a = _n0.a;
+					var b = _n0.b;
+					return _Utils_eq(b, item) ? a : _default;
+				}),
+			'UNKNOWN',
+			author$project$GitHub$projectColumnPurposes));
+};
 var author$project$GitHub$encodeProjectColumn = function (record) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -3760,6 +3782,9 @@ var author$project$GitHub$encodeProjectColumn = function (record) {
 				_Utils_Tuple2(
 				'name',
 				elm$json$Json$Encode$string(record.name)),
+				_Utils_Tuple2(
+				'purpose',
+				author$project$GitHub$encodeProjectColumnPurpose(record.purpose)),
 				_Utils_Tuple2(
 				'database_id',
 				elm$json$Json$Encode$int(record.databaseId))
@@ -8631,20 +8656,27 @@ var author$project$GitHub$CardLocation = F4(
 	function (id, url, project, column) {
 		return {column: column, id: id, project: project, url: url};
 	});
-var author$project$GitHub$ProjectColumn = F3(
-	function (id, name, databaseId) {
-		return {databaseId: databaseId, id: id, name: name};
+var author$project$GitHub$ProjectColumn = F4(
+	function (id, name, purpose, databaseId) {
+		return {databaseId: databaseId, id: id, name: name, purpose: purpose};
 	});
 var author$project$GitHub$columnObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
 	A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'purpose',
+			_List_Nil,
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes)),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumn))));
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumn)))));
 var author$project$GitHub$ProjectLocation = F4(
 	function (id, url, name, number) {
 		return {id: id, name: name, number: number, url: url};

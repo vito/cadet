@@ -16,6 +16,7 @@ module GitHub exposing
     , Project
     , ProjectColumn
     , ProjectColumnCard
+    , ProjectColumnPurpose(..)
     , PullRequest
     , PullRequestReview
     , PullRequestReviewState(..)
@@ -45,6 +46,7 @@ module GitHub exposing
     , decodeMilestone
     , decodeProject
     , decodeProjectColumnCard
+    , decodeProjectColumnPurpose
     , decodePullRequest
     , decodePullRequestReview
     , decodeRelease
@@ -58,6 +60,7 @@ module GitHub exposing
     , encodeMilestone
     , encodeProject
     , encodeProjectColumnCard
+    , encodeProjectColumnPurpose
     , encodePullRequest
     , encodePullRequestReview
     , encodeRelease
@@ -262,6 +265,12 @@ type MergeableState
     | MergeableStateUnknown
 
 
+type ProjectColumnPurpose
+    = ProjectColumnPurposeToDo
+    | ProjectColumnPurposeInProgress
+    | ProjectColumnPurposeDone
+
+
 type PullRequestState
     = PullRequestStateOpen
     | PullRequestStateClosed
@@ -341,6 +350,7 @@ type alias Project =
 type alias ProjectColumn =
     { id : ID
     , name : String
+    , purpose : ProjectColumnPurpose
 
     -- used to cross-reference with v3 hooks API
     , databaseId : Int
@@ -930,6 +940,14 @@ reactionTypes =
     ]
 
 
+projectColumnPurposes : List ( String, ProjectColumnPurpose )
+projectColumnPurposes =
+    [ ( "TODO", ProjectColumnPurposeToDo )
+    , ( "IN_PROGRESS", ProjectColumnPurposeInProgress )
+    , ( "DONE", ProjectColumnPurposeDone )
+    ]
+
+
 repoObject : GB.ValueSpec GB.NonNull GB.ObjectType Repo vars
 repoObject =
     GB.object Repo
@@ -1155,6 +1173,7 @@ columnObject =
     GB.object ProjectColumn
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "purpose" [] (GB.enum projectColumnPurposes))
         |> GB.with (GB.field "databaseId" [] GB.int)
 
 
@@ -2008,6 +2027,7 @@ decodeProjectColumn =
     JD.succeed ProjectColumn
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "name" JD.string)
+        |> andMap (JD.field "purpose" decodeProjectColumnPurpose)
         |> andMap (JD.field "database_id" JD.int)
 
 
@@ -2048,6 +2068,20 @@ decodeOrgSelector : JD.Decoder OrgSelector
 decodeOrgSelector =
     JD.succeed OrgSelector
         |> andMap (JD.field "name" JD.string)
+
+
+decodeProjectColumnPurpose : JD.Decoder ProjectColumnPurpose
+decodeProjectColumnPurpose =
+    let
+        decodeToType string =
+            case Dict.get string (Dict.fromList projectColumnPurposes) of
+                Just type_ ->
+                    Result.Ok type_
+
+                Nothing ->
+                    Result.Err ("Not valid pattern for decoder to ProjectColumnPurpose. Pattern: " ++ string)
+    in
+    customDecoder JD.string decodeToType
 
 
 decodePullRequestState : JD.Decoder PullRequestState
@@ -2371,6 +2405,7 @@ encodeProjectColumn record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "name", JE.string record.name )
+        , ( "purpose", encodeProjectColumnPurpose record.purpose )
         , ( "database_id", JE.int record.databaseId )
         ]
 
@@ -2463,6 +2498,21 @@ encodeStatusState item =
             )
             "UNKNOWN"
             statusStates
+
+
+encodeProjectColumnPurpose : ProjectColumnPurpose -> JE.Value
+encodeProjectColumnPurpose item =
+    JE.string <|
+        List.foldl
+            (\( a, b ) default ->
+                if b == item then
+                    a
+
+                else
+                    default
+            )
+            "UNKNOWN"
+            projectColumnPurposes
 
 
 encodeMergeableState : MergeableState -> JE.Value
