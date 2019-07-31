@@ -3784,7 +3784,7 @@ var author$project$GitHub$encodeProjectColumn = function (record) {
 				elm$json$Json$Encode$string(record.name)),
 				_Utils_Tuple2(
 				'purpose',
-				author$project$GitHub$encodeProjectColumnPurpose(record.purpose)),
+				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHub$encodeProjectColumnPurpose, record.purpose)),
 				_Utils_Tuple2(
 				'database_id',
 				elm$json$Json$Encode$int(record.databaseId))
@@ -8669,7 +8669,8 @@ var author$project$GitHub$columnObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'purpose',
 			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes))),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),

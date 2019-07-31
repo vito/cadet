@@ -350,7 +350,7 @@ type alias Project =
 type alias ProjectColumn =
     { id : ID
     , name : String
-    , purpose : ProjectColumnPurpose
+    , purpose : Maybe ProjectColumnPurpose
 
     -- used to cross-reference with v3 hooks API
     , databaseId : Int
@@ -1173,7 +1173,7 @@ columnObject =
     GB.object ProjectColumn
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "name" [] GB.string)
-        |> GB.with (GB.field "purpose" [] (GB.enum projectColumnPurposes))
+        |> GB.with (GB.field "purpose" [] (GB.nullable (GB.enum projectColumnPurposes)))
         |> GB.with (GB.field "databaseId" [] GB.int)
 
 
@@ -2027,7 +2027,7 @@ decodeProjectColumn =
     JD.succeed ProjectColumn
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "name" JD.string)
-        |> andMap (JD.field "purpose" decodeProjectColumnPurpose)
+        |> andMap (JD.field "purpose" <| JD.maybe decodeProjectColumnPurpose)
         |> andMap (JD.field "database_id" JD.int)
 
 
@@ -2405,7 +2405,7 @@ encodeProjectColumn record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "name", JE.string record.name )
-        , ( "purpose", encodeProjectColumnPurpose record.purpose )
+        , ( "purpose", JEE.maybe encodeProjectColumnPurpose record.purpose )
         , ( "database_id", JE.int record.databaseId )
         ]
 

@@ -6562,7 +6562,10 @@ var author$project$GitHub$decodeProjectColumn = A2(
 	A2(elm$json$Json$Decode$field, 'database_id', elm$json$Json$Decode$int),
 	A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(elm$json$Json$Decode$field, 'purpose', author$project$GitHub$decodeProjectColumnPurpose),
+		A2(
+			elm$json$Json$Decode$field,
+			'purpose',
+			elm$json$Json$Decode$maybe(author$project$GitHub$decodeProjectColumnPurpose)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(elm$json$Json$Decode$field, 'name', elm$json$Json$Decode$string),
@@ -9043,7 +9046,8 @@ var author$project$GitHub$columnObject = A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
 			'purpose',
 			_List_Nil,
-			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum(author$project$GitHub$projectColumnPurposes))),
 		A2(
 			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -10898,25 +10902,28 @@ var author$project$Card$inColumn = function (match) {
 var author$project$Project$detectColumn = {
 	backlog: A2(
 		elm$core$Basics$composeL,
-		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeToDo),
+		elm$core$Basics$eq(
+			elm$core$Maybe$Just(author$project$GitHub$ProjectColumnPurposeToDo)),
 		function ($) {
 			return $.purpose;
 		}),
 	done: A2(
 		elm$core$Basics$composeL,
-		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeDone),
+		elm$core$Basics$eq(
+			elm$core$Maybe$Just(author$project$GitHub$ProjectColumnPurposeDone)),
 		function ($) {
 			return $.purpose;
 		}),
 	icebox: A2(
 		elm$core$Basics$composeL,
-		elm$core$Basics$eq('Icebox'),
+		elm$core$Basics$eq(elm$core$Maybe$Nothing),
 		function ($) {
-			return $.name;
+			return $.purpose;
 		}),
 	inFlight: A2(
 		elm$core$Basics$composeL,
-		elm$core$Basics$eq(author$project$GitHub$ProjectColumnPurposeInProgress),
+		elm$core$Basics$eq(
+			elm$core$Maybe$Just(author$project$GitHub$ProjectColumnPurposeInProgress)),
 		function ($) {
 			return $.purpose;
 		})
