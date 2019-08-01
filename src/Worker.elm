@@ -23,9 +23,6 @@ port setRepos : List JD.Value -> Cmd msg
 port setRepo : JD.Value -> Cmd msg
 
 
-port setProjects : List JD.Value -> Cmd msg
-
-
 port setIssues : List JD.Value -> Cmd msg
 
 
@@ -36,6 +33,9 @@ port setPullRequests : List JD.Value -> Cmd msg
 
 
 port setPullRequest : JD.Value -> Cmd msg
+
+
+port setRepoProjects : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
 port setRepoCommits : ( GitHub.ID, JD.Value ) -> Cmd msg
@@ -113,13 +113,14 @@ type Msg
     | HookReceived String JD.Value
     | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
     | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
-    | ProjectsFetched (List GitHub.Project -> Msg) (Result GitHub.Error (List GitHub.Project))
     | FetchCards (List GitHub.Project)
     | CardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
     | IssuesPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.Issue, GitHub.PageInfo ))
     | IssueFetched (Result GitHub.Error GitHub.Issue)
     | PullRequestsPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.PullRequest, GitHub.PageInfo ))
     | RepoCommitsPageFetched GitHub.Repo (GitHub.PagedSelector GitHub.RefSelector) (List GitHub.Release) (List GitHub.Commit) (Result GitHub.Error ( List GitHub.Commit, GitHub.PageInfo ))
+    | FetchRepoProjects GitHub.Repo
+    | RepoProjectsFetched GitHub.Repo (List GitHub.Project -> Msg) (Result GitHub.Error (List GitHub.Project))
     | FetchRepoLabels GitHub.Repo
     | RepoLabelsFetched GitHub.Repo (Result GitHub.Error (List GitHub.Label))
     | FetchRepoMilestones GitHub.Repo
@@ -168,7 +169,7 @@ update msg model =
             ( model, Cmd.none )
 
         Refresh ->
-            ( { model | loadQueue = fetchRepos model :: fetchProjects model FetchCards :: model.loadQueue }, Cmd.none )
+            ( { model | loadQueue = fetchRepos model :: model.loadQueue }, Cmd.none )
 
         PopQueue ->
             case model.loadQueue of
@@ -252,11 +253,11 @@ update msg model =
 
         HookReceived "project" payload ->
             Log.debug "project hook received; refreshing projects" () <|
-                ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoProjects payload model, Cmd.none )
 
         HookReceived "project_column" payload ->
             Log.debug "project_column hook received; refreshing projects" () <|
-                ( { model | loadQueue = fetchProjects model (always Noop) :: model.loadQueue }, Cmd.none )
+                ( decodeAndFetchRepo FetchRepoProjects payload model, Cmd.none )
 
         HookReceived "project_card" payload ->
             Log.debug "project_card hook received; refreshing projects and cards" () <|
@@ -316,6 +317,7 @@ update msg model =
                         , fetchRepoLabels model repo
                         , fetchRepoMilestones model repo
                         , fetchRepoReleases model repo
+                        , fetchRepoProjects model repo FetchCards
                         ]
                 in
                 ( { model | loadQueue = List.concatMap fetch activeRepos ++ model.loadQueue }
@@ -338,7 +340,10 @@ update msg model =
             Log.debug "failed to fetch repo" err <|
                 ( model, Cmd.none )
 
-        ProjectsFetched nextMsg (Ok projects) ->
+        FetchRepoProjects repo ->
+            ( { model | loadQueue = fetchRepoProjects model repo (always Noop) :: model.loadQueue }, Cmd.none )
+
+        RepoProjectsFetched repo nextMsg (Ok projects) ->
             Log.debug "projects fetched" (List.map .name projects) <|
                 let
                     ( next, cmd ) =
@@ -347,13 +352,13 @@ update msg model =
                 ( next
                 , Cmd.batch
                     [ cmd
-                    , setProjects (List.map GitHub.encodeProject projects)
+                    , setRepoProjects ( repo.id, JE.list GitHub.encodeProject projects )
                     ]
                 )
 
-        ProjectsFetched nextMsg (Err err) ->
+        RepoProjectsFetched repo nextMsg (Err err) ->
             Log.debug "failed to fetch projects" err <|
-                backOff model (fetchProjects model nextMsg)
+                backOff model (fetchRepoProjects model repo nextMsg)
 
         FetchCards projects ->
             ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue }, Cmd.none )
@@ -671,10 +676,10 @@ fetchRepos model =
         GitHub.fetchOrgRepos model.githubToken { name = model.githubOrg }
 
 
-fetchProjects : Model -> (List GitHub.Project -> Msg) -> Cmd Msg
-fetchProjects model nextMsg =
-    Task.attempt (ProjectsFetched nextMsg) <|
-        GitHub.fetchOrgProjects model.githubToken { name = model.githubOrg }
+fetchRepoProjects : Model -> GitHub.Repo -> (List GitHub.Project -> Msg) -> Cmd Msg
+fetchRepoProjects model repo nextMsg =
+    Task.attempt (RepoProjectsFetched repo nextMsg) <|
+        GitHub.fetchRepoProjects model.githubToken { owner = model.githubOrg, name = repo.name }
 
 
 fetchCards : Model -> GitHub.ID -> Cmd Msg

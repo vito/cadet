@@ -13,6 +13,7 @@ module Backend exposing
     , decodeRepoCommitsEvent
     , decodeRepoLabelsEvent
     , decodeRepoMilestonesEvent
+    , decodeRepoProjectsEvent
     , decodeRepoReleasesEvent
     , decodeReviewersEvent
     , encodeCardEvent
@@ -48,13 +49,13 @@ type alias Indexed a =
 
 
 type alias Data =
-    { projects : Dict GitHub.ID GitHub.Project
-    , columnCards : Dict GitHub.ID (List ColumnCard)
-    , repos : Dict GitHub.ID GitHub.Repo
+    { repos : Dict GitHub.ID GitHub.Repo
+    , repoProjects : Dict GitHub.ID (List GitHub.Project)
     , repoCommits : Dict GitHub.ID (List GitHub.Commit)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
+    , columnCards : Dict GitHub.ID (List ColumnCard)
     }
 
 
@@ -183,13 +184,13 @@ fetchMe f =
 decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
-        |> andMap (JD.field "projects" <| JD.dict GitHub.decodeProject)
-        |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
+        |> andMap (JD.field "repoProjects" <| JD.dict (JD.list GitHub.decodeProject))
         |> andMap (JD.field "repoCommits" <| JD.dict (JD.list GitHub.decodeCommit))
         |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
         |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
         |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
+        |> andMap (JD.field "columnCards" <| JD.dict decodeColumnCards)
 
 
 decodeCardData : JD.Decoder CardData
@@ -293,6 +294,19 @@ decodeReviewersEvent =
     JD.succeed ReviewersEvent
         |> andMap (JD.field "prId" JD.string)
         |> andMap (JD.field "reviewers" (JD.list GitHub.decodePullRequestReview))
+
+
+type alias RepoProjectsEvent =
+    { repoId : GitHub.ID
+    , projects : List GitHub.Project
+    }
+
+
+decodeRepoProjectsEvent : JD.Decoder RepoProjectsEvent
+decodeRepoProjectsEvent =
+    JD.succeed RepoProjectsEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "projects" (JD.list GitHub.decodeProject))
 
 
 type alias RepoCommitsEvent =
