@@ -79,6 +79,7 @@ module GitHub exposing
     , fetchRepoIssuesPage
     , fetchRepoLabels
     , fetchRepoMilestones
+    , fetchRepoProjects
     , fetchRepoPullRequest
     , fetchRepoPullRequests
     , fetchRepoPullRequestsPage
@@ -455,7 +456,7 @@ fetchOrgRepos token org =
 
 fetchOrgProjects : Token -> OrgSelector -> Task Error (List Project)
 fetchOrgProjects token org =
-    fetchPaged projectsQuery token { selector = org, after = Nothing }
+    fetchPaged orgProjectsQuery token { selector = org, after = Nothing }
 
 
 fetchOrgProject : Token -> ProjectSelector -> Task Error Project
@@ -475,6 +476,11 @@ fetchRepo token repo =
     repoQuery
         |> GB.request repo
         |> GH.customSendQuery (authedOptions token)
+
+
+fetchRepoProjects : Token -> RepoSelector -> Task Error (List Project)
+fetchRepoProjects token repo =
+    fetchPaged repoProjectsQuery token { selector = repo, after = Nothing }
 
 
 fetchRepoIssues : Token -> RepoSelector -> Task Error (List Issue)
@@ -1044,8 +1050,8 @@ projectQuery =
     GB.queryDocument queryRoot
 
 
-projectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector OrgSelector)
-projectsQuery =
+orgProjectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector OrgSelector)
+orgProjectsQuery =
     let
         orgNameVar =
             GV.required "orgName" (.name << .selector) GV.string
@@ -1073,6 +1079,46 @@ projectsQuery =
             GB.extract <|
                 GB.field "organization"
                     [ ( "login", GA.variable orgNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "projects" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
+repoProjectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector RepoSelector)
+repoProjectsQuery =
+    let
+        ownerVar =
+            GV.required "owner" (.owner << .selector) GV.string
+
+        nameVar =
+            GV.required "name" (.name << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            , ( "states", GA.list [ GA.enum "OPEN" ] )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list projectObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable ownerVar )
+                    , ( "name", GA.variable nameVar )
                     ]
                 <|
                     GB.extract (GB.field "projects" pageArgs paged)

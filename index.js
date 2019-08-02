@@ -45,8 +45,8 @@ const data = {
   // commits since last release, by repo id
   repoCommits: {},
 
-  // projects by id
-  projects: {},
+  // projects by repo id
+  repoProjects: {},
 
   // cards by column id
   columnCards: {}
@@ -111,16 +111,6 @@ worker.ports.setRepos.subscribe(function(repos) {
 worker.ports.setRepo.subscribe(function(repo) {
   data.repos[repo.id] = repo;
   bumpIndexAndEmitUpdate("repo", repo);
-  popPoll();
-});
-
-worker.ports.setProjects.subscribe(function(projects) {
-  for (var i = 0; i < projects.length; i++) {
-    var project = projects[i];
-    data.projects[project.id] = project;
-    bumpIndexAndEmitUpdate("project", project);
-  }
-
   popPoll();
 });
 
@@ -206,6 +196,14 @@ worker.ports.setPullRequest.subscribe(function(pr) {
   popPoll();
 
   markGraphRefreshNecessary();
+});
+
+worker.ports.setRepoProjects.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  data.repoProjects[id] = val;
+  bumpIndexAndEmitUpdate("repoProjects", { repoId: id, projects: val });
+  popPoll();
 });
 
 worker.ports.setRepoCommits.subscribe(function(args) {

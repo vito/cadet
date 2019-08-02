@@ -4,7 +4,7 @@
 @column-bg: transparent;
 
 @card-width: 300px;
-@card-margin: 8px;
+@card-margin: 10px;
 
 @sidebar-min-width: 1150px;
 
@@ -26,12 +26,12 @@ body {
   font-size: 12px;
   line-height: 1.2;
   overflow-x: hidden;
-  background: @black;
+  background: @gray-100;
   color: @gray-900;
 }
 
 a {
-  color: inherit;
+  color: @gray-dark;
 }
 
 p {
@@ -79,8 +79,12 @@ code {
 
 .main-sidebar {
   overflow-y: auto;
+  position: fixed;
+  top: @nav-bar-height;
+  right: 0;
   flex-shrink: 0;
   width: @card-width + (2 * @card-margin) + (31px - @card-margin);
+  border-bottom-left-radius: 6px;
 
   display: none;
 
@@ -88,9 +92,11 @@ code {
     display: block;
   }
 
-  background: @gray-dark;
+  background: @gray-400;
 
   .card {
+    border-color: @gray-600;
+
     &.anticipated {
       opacity: 0.5;
       box-shadow: none;
@@ -99,7 +105,7 @@ code {
 
   .no-cards {
     text-align: center;
-    color: @gray-light;
+    color: @gray-600;
     font-size: 14px;
     padding: @card-margin;
   }
@@ -226,14 +232,13 @@ code {
   justify-content: flex-end;
 
   .card-buttons {
-    margin-left: -@card-margin;
-    padding: 4px 2px 4px (@card-margin + 4px);
+    padding: 4px 0;
     flex-grow: 1;
-    background: @black;
-    border-top-right-radius: @card-margin;
-    border-bottom-right-radius: @card-margin;
-    border: 1px solid @gray-900;
+    background: @gray-400;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
     border-left: 0;
+    text-align: right;
 
     .octicon {
       cursor: pointer;
@@ -258,7 +263,8 @@ code {
 .card {
   width: @card-width;
   background: @white;
-  border-radius: 3px;
+  border: 1px solid @gray-200;
+  border-radius: 6px;
   box-sizing: border-box;
   background: #fff;
   white-space: normal;
@@ -267,6 +273,18 @@ code {
   display: flex;
   flex-direction: column;
   position: relative;
+
+  box-shadow: 0 1px 1px rgba(27,31,35,.1);
+
+  &:hover {
+    box-shadow: 0 1px 3px rgba(106,115,125,.3);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: @blue !important;
+    box-shadow: 0 0 0 .2em rgba(3,102,214,.3);
+  }
 
   &.highlighted {
     box-shadow: 0 0 0 5px @yellow;
@@ -277,11 +295,11 @@ code {
       content: " ";
       position: absolute;
       top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      border-top-left-radius: 2px;
-      border-top-right-radius: 2px;
+      left: 0.5px;
+      right: 0.5px;
+      height: 0;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
     }
   }
 
@@ -294,7 +312,7 @@ code {
   }
 
   &.in-flight::before {
-    background: @yellow;
+    background: @purple;
   }
 
   &.done::before {
@@ -316,6 +334,10 @@ code {
   .octicon {
     width: 16px;
     height: 16px;
+
+    &.project {
+      width: 15px;
+    }
   }
 
   .status-actor {
@@ -353,11 +375,11 @@ code {
 
 .card-info {
   flex-grow: 1;
-  padding: 12px;
+  padding: 10px;
   padding-bottom: 8px;
 
   .card-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: @gray-900;
     line-height: 1.25;
@@ -393,7 +415,51 @@ code {
 }
 
 .card-note {
-  font-size: 16px;
+  font-size: 14px;
+}
+
+.card.project {
+  flex-direction: row-reverse;
+
+  .card-icons {
+    flex-direction: column;
+    padding: 10px;
+    padding-right: 0;
+  }
+
+  .card-info {
+    padding-left: 8px;
+  }
+
+  .project-body {
+    margin: 5px 0;
+    font-size: 13px;
+    color: @gray;
+  }
+
+  .project-bar {
+    width: 100%;
+    height: 10px;
+    margin: 10px 0 4px;
+    display: flex;
+    flex-direction: row;
+
+    .bar-dones {
+      background: @green;
+      border-top-left-radius: 3px;
+      border-bottom-left-radius: 3px;
+    }
+
+    .bar-in-progress {
+      background: @purple;
+    }
+
+    .bar-to-do {
+      background: @gray-200;
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
+    }
+  }
 }
 
 .octicon {
@@ -666,40 +732,23 @@ code {
 .project-column {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
 }
 
 .project.single {
-  display: flex;
-  flex-direction: row;
+  // display: flex;
+  // flex-direction: column;
   flex-grow: 1;
   min-height: 100%;
 
   .project-columns {
-    flex-direction: column;
-    background: @black;
+    flex-direction: row;
+    background: @gray-100;
     flex-grow: 0;
     flex-shrink: 0;
-    overflow-y: auto;
+    justify-content: center;
 
-    .column {
-      margin-right: 0;
-      border-radius: 0;
-
-      &:last-child {
-        border-bottom: 0;
-      }
-    }
-
-    .name-column {
+    .project-column {
       width: @card-width + (2 * @card-margin);
-      background: @gray-dark;
-      border-radius: 0;
-      text-align: left;
-    }
-
-    .column-name {
-      border-radius: 0;
     }
   }
 
@@ -811,7 +860,7 @@ svg {
   }
 
   .project-status.in-flight {
-    stroke: @yellow;
+    stroke: @purple;
   }
 
   .project-status.done {
@@ -1133,22 +1182,22 @@ svg {
   position: relative;
 
   .control-knobs {
-    padding: 4px 8px;
+    padding: 4px @card-margin;
   }
 
   .controls-label {
     background: transparent;
-    color: @gray;
+    color: @gray-600;
     padding-right: 0;
   }
 
   .control-setting {
     background: transparent;
-    color: @gray;
+    color: @gray-600;
 
     .octicon {
       * {
-        fill: @gray;
+        fill: @gray-600;
       }
     }
 
@@ -1275,14 +1324,26 @@ svg {
   }
 }
 
-.pull-request-columns {
-  display: flex;
-  flex-flow: row wrap;
-  align-content: flex-start;
-  justify-content: space-between;
+.card-columns {
+  column-count: auto;
+  column-width: @card-width;
+  column-gap: 2 * @card-margin;
+
+  .repo-cards {
+    width: @card-width;
+    break-inside: avoid;
+    margin-bottom: 2 * @card-margin;
+  }
 }
 
-.repo-pull-requests .card {
+.repo-roadmap {
+  column-span: all;
+  margin-bottom: 4 * @card-margin;
+  padding-bottom: 4 * @card-margin;
+  border-bottom: 1px solid @gray-light;
+}
+
+.repo-cards .card {
   margin-left: 0;
   margin-right: 0;
 
@@ -1310,11 +1371,11 @@ svg {
 }
 
 .column-title {
-  color: @white;
+  color: @gray-dark;
   display: block;
   font-size: 16px;
   user-select: none;
-  border-bottom: 3px solid @gray-dark;
+  border-bottom: 1px solid @gray-light;
 
   .octicon {
     width: 20px;
@@ -1322,7 +1383,7 @@ svg {
     margin: 10px;
 
     * {
-      fill: @white;
+      fill: @gray-dark;
     }
   }
 }
@@ -1338,8 +1399,6 @@ a.column-title:hover, .page-header a:hover {
 .page-content {
   box-sizing: content-box;
   width: 100%;
-  max-width: 980px;
-  margin: 0 auto;
   padding: 20px;
 
   @media(min-width: @wide-min-width) {
@@ -1348,19 +1407,19 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .metrics-items {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  column-count: auto;
+  column-width: @card-width;
+  column-gap: 2 * @card-margin;
 }
 
 .metrics-item {
+  break-inside: avoid;
   margin-bottom: 50px;
   width: @card-width;
 }
 
 .metric {
-  color: @white;
+  color: @gray-dark;
   font-size: 16px;
 
   .count {
@@ -1375,10 +1434,9 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .page-header {
-  background: @black;
   padding-bottom: 25px;
   font-size: 18px;
-  color: @white;
+  color: @gray-dark;
 
   .octicon {
     margin: 0 7px 0 4px;
@@ -1391,7 +1449,7 @@ a.column-title:hover, .page-header a:hover {
     }
 
     * {
-      fill: @white;
+      fill: @gray-dark;
     }
   }
 
@@ -1412,10 +1470,10 @@ a.column-title:hover, .page-header a:hover {
 
 .tab {
   padding: 10px 10px 7px;
-  background: @black;
+  background: @gray-100;
   font-size: 14px;
   cursor: pointer;
-  color: @gray-200;
+  color: @gray-dark;
   border-radius: 3px 3px 0 0;
   position: relative;
 
@@ -1444,12 +1502,12 @@ a.column-title:hover, .page-header a:hover {
   }
 
   .octicon * {
-    fill: @gray-200;
+    fill: @gray-dark;
   }
 
   .counter {
-    background: fade(@white, 20%);
-    color: @white;
+    background: fade(@black, 20%);
+    color: @gray-dark;
     border-radius: 20px;
     display: inline-block;
     font-weight: 600;
@@ -1502,16 +1560,32 @@ a.column-title:hover, .page-header a:hover {
       background: @gray-100;
     }
 
+    &:focus {
+      box-shadow: none;
+    }
+
+    &:focus + .card {
+      border-top-color: @blue;
+    }
+
     &:first-child {
-      border-top: 0;
-      border-top-left-radius: 3px;
-      border-top-right-radius: 3px;
+      border-top-color: transparent;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+
+      &:focus {
+        border-top-color: @blue;
+      }
     }
 
     &:last-child {
-      border-bottom-left-radius: 3px;
-      border-bottom-right-radius: 3px;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
       margin-bottom: 60px;
+
+      &:focus {
+        border-bottom: 1px solid @blue;
+      }
     }
   }
 }
@@ -1521,7 +1595,7 @@ a.column-title:hover, .page-header a:hover {
   text-align: center;
   color: @gray-light;
   font-size: 14px;
-  padding: 50px 0;
+  padding: 30px 0;
 
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
@@ -1550,7 +1624,6 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .archive-events {
-  // background: @white;
   color: @gray;
   font-size: 14px;
   margin-bottom: 30px;
@@ -1558,14 +1631,15 @@ a.column-title:hover, .page-header a:hover {
 
 .archive-event {
   position: relative;
-  border: 1px solid @gray-900;
+  border: 1px solid @gray-200;
   display: block;
   margin-bottom: -1px;
   padding: 8px 80px 10px 35px;
   border-width: 1px 0 0;
+  background: @white;
 
   &:hover {
-    background: @gray-900;
+    background: @gray-100;
   }
 
   &:first-child {
@@ -1574,8 +1648,12 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .archive-event-title {
-  color: @white;
+  color: @gray-dark;
   line-height: 1.5em;
+
+  &:hover {
+    color: @blue;
+  }
 }
 
 .archive-event-title:visited {

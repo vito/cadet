@@ -65,13 +65,13 @@ type alias Model =
 
     -- data from backend
     , dataIndex : Int
-    , projects : Dict GitHub.ID GitHub.Project
-    , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
     , repos : Dict GitHub.ID GitHub.Repo
+    , repoProjects : Dict GitHub.ID (List GitHub.Project)
     , repoCommits : Dict GitHub.ID (List GitHub.Commit)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
+    , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
     , graphs : List (ForceGraph GitHub.ID)
     , issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
@@ -83,6 +83,8 @@ type alias Model =
     , allLabels : Dict GitHub.ID GitHub.Label
     , cards : Dict GitHub.ID Card
     , reposByName : Dict String GitHub.ID
+    , projects : Dict GitHub.ID GitHub.Project
+    , projectsByUrl : Dict String GitHub.Project
     , reposByLabel : Dict ( String, String ) (List GitHub.ID)
     , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
@@ -196,7 +198,7 @@ type alias ReleaseRepo =
 
 type GraphFilter
     = ExcludeAllFilter
-    | InProjectFilter String
+    | InProjectFilter GitHub.ID
     | HasLabelFilter String String
     | InvolvesUserFilter String
     | IssuesFilter
@@ -294,7 +296,7 @@ type Msg
 type Page
     = AllProjectsPage
     | GlobalGraphPage
-    | ProjectPage String
+    | ProjectPage GitHub.ID
     | LabelsPage
     | ReleasePage
     | ReleaseRepoPage String (Maybe Int)
@@ -314,6 +316,11 @@ main =
         , onUrlChange = UrlChanged
         , onUrlRequest = LinkClicked
         }
+
+
+decoded : UP.Parser (String -> a) a
+decoded =
+    UP.custom "STRING" Url.percentDecode
 
 
 routeParser : UP.Parser (Page -> a) a
@@ -341,8 +348,8 @@ pageRoute page =
         AllProjectsPage ->
             []
 
-        ProjectPage p ->
-            [ "projects", p ]
+        ProjectPage id ->
+            [ "projects", id ]
 
         GlobalGraphPage ->
             [ "graph" ]
@@ -422,14 +429,16 @@ init config url key =
             , graphs = []
             , dataIndex = 0
             , repos = Dict.empty
-            , projects = Dict.empty
-            , columnCards = Dict.empty
+            , repoProjects = Dict.empty
             , repoCommits = Dict.empty
             , repoLabels = Dict.empty
             , repoMilestones = Dict.empty
             , repoReleases = Dict.empty
             , reposByLabel = Dict.empty
             , reposByName = Dict.empty
+            , projects = Dict.empty
+            , projectsByUrl = Dict.empty
+            , columnCards = Dict.empty
             , labelToRepoToId = Dict.empty
             , openPRsByRepo = Dict.empty
             , cardsByMilestone = Dict.empty
@@ -736,13 +745,13 @@ update msg model =
             if index > model.dataIndex then
                 ( { model
                     | dataIndex = index
-                    , projects = value.projects
-                    , columnCards = value.columnCards
                     , repos = value.repos
+                    , repoProjects = value.repoProjects
                     , repoCommits = value.repoCommits
                     , repoLabels = value.repoLabels
                     , repoMilestones = value.repoMilestones
                     , repoReleases = value.repoReleases
+                    , columnCards = value.columnCards
                   }
                     |> computeDataView
                     |> computeViewForPage
@@ -1204,10 +1213,15 @@ computeViewForPage model =
                 |> computeGraphsView
                 |> updateGraphStates
 
-        ProjectPage name ->
-            { reset | baseGraphFilter = Just (InProjectFilter name) }
-                |> computeGraphsView
-                |> updateGraphStates
+        ProjectPage id ->
+            case Dict.get id model.projects of
+                Just project ->
+                    { reset | baseGraphFilter = Just (InProjectFilter project.id) }
+                        |> computeGraphsView
+                        |> updateGraphStates
+
+                Nothing ->
+                    reset
 
         ReleasePage ->
             reset
@@ -1240,6 +1254,17 @@ computeDataView model =
     let
         reposByName =
             Dict.foldl (\id { name } -> Dict.insert name id) Dict.empty model.repos
+
+        allProjects =
+            model.repoProjects
+                |> Dict.values
+                |> List.concat
+
+        projects =
+            List.foldl (\project -> Dict.insert project.id project) Dict.empty allProjects
+
+        projectsByUrl =
+            List.foldl (\project -> Dict.insert project.url project) Dict.empty allProjects
 
         allLabels =
             Dict.foldl
@@ -1290,6 +1315,8 @@ computeDataView model =
     in
     { model
         | reposByName = reposByName
+        , projects = projects
+        , projectsByUrl = projectsByUrl
         , reposByLabel = groupRepoLabels
         , labelToRepoToId = groupLabelsToRepoToId
         , allLabels = allLabels
@@ -1500,8 +1527,13 @@ viewPage model =
             GlobalGraphPage ->
                 viewGlobalGraphPage model
 
-            ProjectPage name ->
-                viewProjectPage model name
+            ProjectPage id ->
+                case Dict.get id model.projects of
+                    Just project ->
+                        viewProjectPage model project
+
+                    Nothing ->
+                        Html.text "project not found"
 
             LabelsPage ->
                 viewLabelsPage model
@@ -1548,15 +1580,14 @@ viewSidebar model =
         sidebarCards =
             selectedCards ++ anticipatedCards
     in
-    Html.div [ HA.class "main-sidebar" ]
-        [ viewSidebarControls model
-        , if List.isEmpty sidebarCards then
-            Html.div [ HA.class "no-cards" ]
-                [ Html.text "no cards selected" ]
+    if List.isEmpty sidebarCards then
+        Html.text ""
 
-          else
-            Html.div [ HA.class "cards" ] sidebarCards
-        ]
+    else
+        Html.div [ HA.class "main-sidebar" ]
+            [ viewSidebarControls model
+            , Html.div [ HA.class "cards" ] sidebarCards
+            ]
 
 
 viewSidebarControls : Model -> Html Msg
@@ -1876,60 +1907,63 @@ viewNavBar model =
         ]
 
 
-type alias ProjectState =
-    { project : GitHub.Project
-    , icebox : GitHub.ProjectColumn
-    , backlogs : List GitHub.ProjectColumn
-    , inFlight : GitHub.ProjectColumn
-    , done : GitHub.ProjectColumn
-    }
-
-
-selectStatefulProject : GitHub.Project -> Maybe ProjectState
-selectStatefulProject project =
-    let
-        findColumns match =
-            List.filter match project.columns
-
-        icebox =
-            findColumns Project.detectColumn.icebox
-
-        backlogs =
-            findColumns Project.detectColumn.backlog
-
-        inFlights =
-            findColumns Project.detectColumn.inFlight
-
-        dones =
-            findColumns Project.detectColumn.done
-    in
-    case ( backlogs, ( icebox, inFlights, dones ) ) of
-        ( (_ :: _) as bs, ( [ ib ], [ i ], [ d ] ) ) ->
-            Just
-                { project = project
-                , icebox = ib
-                , backlogs = bs
-                , inFlight = i
-                , done = d
-                }
-
-        _ ->
-            Nothing
-
-
 viewAllProjectsPage : Model -> Html Msg
 viewAllProjectsPage model =
     let
-        statefulProjects =
-            List.filterMap selectStatefulProject (Dict.values model.projects)
+        extractRoadmaps rid rps ( rms, ps ) =
+            case Dict.get rid model.repos of
+                Nothing ->
+                    ( rms, ps )
+
+                Just r ->
+                    if List.isEmpty rps then
+                        ( rms, ps )
+
+                    else
+                        case LE.find ((==) "Roadmap" << .name) rps of
+                            Nothing ->
+                                ( rms, ( r, rps ) :: ps )
+
+                            Just rm ->
+                                ( ( r, rm ) :: rms, ps )
+
+        ( roadmaps, projects ) =
+            Dict.foldl extractRoadmaps ( [], [] ) model.repoProjects
     in
-    Html.div [ HA.class "page-content" ]
+    Html.div [ HA.class "page-content" ] <|
+        List.map (\( a, b ) -> viewRepoRoadmap model a b) roadmaps
+            ++ [ Html.div [ HA.class "page-header" ]
+                    [ Octicons.project octiconOpts
+                    , Html.text "Projects"
+                    ]
+               , Html.div [ HA.class "card-columns" ] <|
+                    List.map (\( a, b ) -> viewRepoProjects model a b) projects
+               ]
+
+
+viewRepoRoadmap : Model -> GitHub.Repo -> GitHub.Project -> Html Msg
+viewRepoRoadmap model repo project =
+    Html.div [ HA.class "repo-roadmap" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.project octiconOpts
-            , Html.text "Projects"
+            , Html.text project.name
+            , Octicons.repo octiconOpts
+            , Html.text repo.name
             ]
-        , Html.div [ HA.class "metrics-items" ]
-            (List.map (viewProject model) statefulProjects)
+        , Html.div [ HA.class "project-columns" ] <|
+            List.map (viewProjectColumn model project) project.columns
+        ]
+
+
+viewRepoProjects : Model -> GitHub.Repo -> List GitHub.Project -> Html Msg
+viewRepoProjects model repo projects =
+    Html.div [ HA.class "repo-cards" ]
+        [ Html.span [ HA.class "column-title" ]
+            [ Octicons.repo octiconOpts
+            , Html.text repo.name
+            ]
+        , Html.div [ HA.class "cards" ]
+            (List.map (viewProjectCard model) projects)
         ]
 
 
@@ -2158,7 +2192,7 @@ viewPullRequestsPage model =
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
             |> List.map (\( a, b ) -> viewRepoPRs model a b)
-            |> Html.div [ HA.class "pull-request-columns" ]
+            |> Html.div [ HA.class "card-columns" ]
         ]
 
 
@@ -2175,7 +2209,7 @@ viewRepoPRs : Model -> GitHub.ID -> List GitHub.ID -> Html Msg
 viewRepoPRs model repoId prIds =
     case Dict.get repoId model.repos of
         Just repo ->
-            Html.div [ HA.class "repo-pull-requests" ]
+            Html.div [ HA.class "repo-cards" ]
                 [ Html.a [ HA.class "column-title", HA.href ("/pull-requests/" ++ repo.name) ]
                     [ Octicons.repo octiconOpts
                     , Html.text repo.name
@@ -2311,7 +2345,7 @@ viewRepoPullRequestsPage model repoName =
                 , Html.text repoName
                 ]
             ]
-        , Html.div [ HA.class "repo-pull-requests" ]
+        , Html.div [ HA.class "repo-cards" ]
             [ viewTabbedCards model
                 [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
                 , ( Octicons.comment octiconOpts, "Waiting", categorized.waiting )
@@ -2744,48 +2778,39 @@ viewMetric icon count plural singular description =
         ]
 
 
-viewProject : Model -> ProjectState -> Html Msg
-viewProject model { project, backlogs, inFlight, done } =
+viewColumnMetric : Model -> GitHub.ProjectColumn -> Html Msg
+viewColumnMetric model col =
     let
-        cardCount column =
-            Dict.get column.id model.columnCards
+        cardCount =
+            Dict.get col.id model.columnCards
                 |> Maybe.map (List.length << onlyOpenCards model)
                 |> Maybe.withDefault 0
     in
-    Html.div [ HA.class "metrics-item" ]
-        [ Html.a [ HA.class "column-title", HA.href ("/projects/" ++ project.name) ]
-            [ Octicons.project octiconOpts
-            , Html.text project.name
-            ]
-        , Html.div [ HA.class "metrics" ]
-            [ viewMetric
-                (Octicons.book { octiconOpts | color = Colors.gray })
-                (List.sum (List.map cardCount backlogs))
-                "stories"
-                "story"
-                "scheduled"
-            , viewMetric
-                (Octicons.pulse { octiconOpts | color = Colors.yellow })
-                (cardCount inFlight)
-                "stories"
-                "story"
-                "in-flight"
-            , viewMetric
-                (Octicons.check { octiconOpts | color = Colors.green })
-                (cardCount done)
-                "stories"
-                "story"
-                "done"
-            ]
-        ]
+    viewMetric (columnIcon col) cardCount "cards" "card" col.name
 
 
-viewProjectColumn : Model -> GitHub.Project -> (List Backend.ColumnCard -> List Backend.ColumnCard) -> Html Msg -> GitHub.ProjectColumn -> Html Msg
-viewProjectColumn model project mod icon col =
+columnIcon : GitHub.ProjectColumn -> Html Msg
+columnIcon col =
+    case col.purpose of
+        Nothing ->
+            Octicons.kebabHorizontal { octiconOpts | color = Colors.gray }
+
+        Just GitHub.ProjectColumnPurposeToDo ->
+            Octicons.book { octiconOpts | color = Colors.gray }
+
+        Just GitHub.ProjectColumnPurposeInProgress ->
+            Octicons.pulse { octiconOpts | color = Colors.purple }
+
+        Just GitHub.ProjectColumnPurposeDone ->
+            Octicons.check { octiconOpts | color = Colors.green }
+
+
+viewProjectColumn : Model -> GitHub.Project -> GitHub.ProjectColumn -> Html Msg
+viewProjectColumn model project col =
     let
         cards =
-            mod <|
-                Maybe.withDefault [] (Dict.get col.id model.columnCards)
+            Dict.get col.id model.columnCards
+                |> Maybe.withDefault []
 
         dropCandidate =
             { msgFunc = MoveCardAfter
@@ -2798,7 +2823,7 @@ viewProjectColumn model project mod icon col =
     in
     Html.div [ HA.class "project-column" ]
         [ Html.div [ HA.class "column-title" ]
-            [ icon
+            [ columnIcon col
             , Html.text col.name
             ]
         , if List.isEmpty cards then
@@ -2830,7 +2855,7 @@ viewProjectColumnCard model project col ghCard =
     in
     case ( ghCard.note, ghCard.contentId ) of
         ( Just n, Nothing ) ->
-            [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNoteCard model col n)
+            [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNote model col n)
             , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
             ]
 
@@ -2850,26 +2875,8 @@ viewProjectColumnCard model project col ghCard =
                 []
 
 
-viewProjectPage : Model -> String -> Html Msg
-viewProjectPage model name =
-    let
-        statefulProjects =
-            List.filterMap selectStatefulProject (Dict.values model.projects)
-
-        mproject =
-            List.head <|
-                List.filter ((==) name << .name << .project) statefulProjects
-    in
-    case mproject of
-        Just project ->
-            viewSingleProject model project
-
-        Nothing ->
-            Html.text "project not found"
-
-
-viewSingleProject : Model -> ProjectState -> Html Msg
-viewSingleProject model { project, icebox, backlogs, inFlight, done } =
+viewProjectPage : Model -> GitHub.Project -> Html Msg
+viewProjectPage model project =
     Html.div [ HA.class "project single" ]
         [ Html.div [ HA.class "icebox-graph" ]
             [ Html.div [ HA.class "column-title" ]
@@ -2877,31 +2884,9 @@ viewSingleProject model { project, icebox, backlogs, inFlight, done } =
                 , Html.text (project.name ++ " Graph")
                 ]
             , viewSpatialGraph model
-            , let
-                dropCandidate =
-                    { msgFunc = MoveCardAfter
-                    , target =
-                        { projectId = project.id
-                        , columnId = icebox.id
-                        , afterId = Nothing
-                        }
-                    }
-              in
-              Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
             ]
-        , Html.div [ HA.class "project-columns" ]
-            ([ Html.div [ HA.class "column done-column" ]
-                [ viewProjectColumn model project (onlyOpenCards model) (Octicons.check octiconOpts) done ]
-             , Html.div [ HA.class "column in-flight-column" ]
-                [ viewProjectColumn model project identity (Octicons.pulse octiconOpts) inFlight ]
-             ]
-                ++ List.map
-                    (\backlog ->
-                        Html.div [ HA.class "column backlog-column" ]
-                            [ viewProjectColumn model project identity (Octicons.book octiconOpts) backlog ]
-                    )
-                    backlogs
-            )
+        , Html.div [ HA.class "project-columns" ] <|
+            List.map (viewProjectColumn model project) project.columns
         ]
 
 
@@ -3037,8 +3022,8 @@ satisfiesFilter model filter card =
         ExcludeAllFilter ->
             False
 
-        InProjectFilter name ->
-            isInProject name card
+        InProjectFilter id ->
+            isInProject id card
 
         HasLabelFilter label color ->
             hasLabelAndColor model label color card
@@ -3606,9 +3591,13 @@ viewCardEntry model card =
         ]
 
 
-isInProject : String -> Card -> Bool
-isInProject name card =
-    List.member name (List.map (.project >> .name) card.cards)
+isInProject : GitHub.ID -> Card -> Bool
+isInProject id card =
+    let
+        matchesProject { project } =
+            project.id == id
+    in
+    List.any matchesProject card.cards
 
 
 involvesUser : Model -> String -> Card -> Bool
@@ -3683,6 +3672,7 @@ viewCard model card =
                         False
               )
             ]
+        , HA.tabindex 0
         , HE.onClick (SelectCard card.id)
         , HE.onMouseOver (HighlightNode card.id)
         , HE.onMouseOut (UnhighlightNode card.id)
@@ -3903,6 +3893,85 @@ prIcons model card =
                 :: (statusChecks ++ reviewStates)
 
 
+viewProjectCard : Model -> GitHub.Project -> Html Msg
+viewProjectCard model project =
+    Html.div [ HA.class "card project", HA.tabindex 0 ]
+        [ Html.div [ HA.class "card-info" ]
+            [ Html.span [ HA.class "card-title", HA.draggable "false" ]
+                [ Html.a [ HA.href ("/projects/" ++ project.id) ]
+                    [ Html.text project.name ]
+                ]
+            , if String.isEmpty project.body then
+                Html.text ""
+
+              else
+                Html.div [ HA.class "project-body" ]
+                    [ Markdown.toHtml [] project.body ]
+            , viewProjectBar model project
+            ]
+        , Html.div [ HA.class "card-icons" ]
+            [ Octicons.project { octiconOpts | color = Colors.gray }
+            ]
+        ]
+
+
+viewProjectBar : Model -> GitHub.Project -> Html Msg
+viewProjectBar model project =
+    let
+        cardCount col =
+            Dict.get col.id model.columnCards
+                |> Maybe.map List.length
+                |> Maybe.withDefault 0
+
+        countPurpose purpose =
+            LE.find ((==) (Just purpose) << .purpose) project.columns
+                |> Maybe.map cardCount
+                |> Maybe.withDefault 0
+
+        toDos =
+            countPurpose GitHub.ProjectColumnPurposeToDo
+
+        inProgresses =
+            countPurpose GitHub.ProjectColumnPurposeInProgress
+
+        dones =
+            countPurpose GitHub.ProjectColumnPurposeDone
+
+        total =
+            toDos + inProgresses + dones
+
+        width base =
+            let
+                pct =
+                    (toFloat base / toFloat total) * 100
+            in
+            HA.style "width" (String.fromFloat pct ++ "%")
+    in
+    if total > 0 then
+        Html.div [ HA.class "project-bar" ]
+            [ Html.div [ HA.class "bar-dones", width dones ] []
+            , Html.div [ HA.class "bar-in-progress", width inProgresses ] []
+            , Html.div [ HA.class "bar-to-do", width toDos ] []
+            ]
+
+    else
+        Html.text ""
+
+
+viewNote : Model -> GitHub.ProjectColumn -> String -> Html Msg
+viewNote model col text =
+    if String.startsWith "http" text then
+        case Dict.get text model.projectsByUrl of
+            Just project ->
+                viewProjectCard model project
+
+            Nothing ->
+                viewNoteCard model col text
+
+    else
+        viewNoteCard model col text
+
+
 viewNoteCard : Model -> GitHub.ProjectColumn -> String -> Html Msg
 viewNoteCard model col text =
     Html.div
@@ -3912,6 +3981,7 @@ viewNoteCard model col text =
             , ( "done", Project.detectColumn.done col )
             , ( "backlog", Project.detectColumn.backlog col )
             ]
+        , HA.tabindex 0
         ]
         [ Html.div [ HA.class "card-info card-note" ]
             [ Markdown.toHtml [] text ]
@@ -4227,11 +4297,6 @@ handleEvent event data index model =
                         model
     in
     case event of
-        "project" ->
-            withDecoded GitHub.decodeProject <|
-                \val ->
-                    { model | projects = Dict.insert val.id val model.projects }
-
         "columnCards" ->
             withDecoded Backend.decodeColumnCardsEvent <|
                 \val ->
@@ -4242,6 +4307,11 @@ handleEvent event data index model =
                 \val ->
                     { model | repos = Dict.insert val.id val model.repos }
                         |> computeDataView
+
+        "repoProjects" ->
+            withDecoded Backend.decodeRepoProjectsEvent <|
+                \val ->
+                    { model | repoProjects = Dict.insert val.repoId val.projects model.repoProjects }
 
         "repoCommits" ->
             withDecoded Backend.decodeRepoCommitsEvent <|
