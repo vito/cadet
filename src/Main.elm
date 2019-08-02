@@ -3819,6 +3819,47 @@ cardExternalIcons card =
         card.cards
 
 
+stateColor : GitHub.StatusState -> String
+stateColor state =
+    case state of
+        GitHub.StatusStatePending ->
+            Colors.yellow
+
+        GitHub.StatusStateSuccess ->
+            Colors.green
+
+        GitHub.StatusStateFailure ->
+            Colors.red
+
+        GitHub.StatusStateExpected ->
+            Colors.purple
+
+        GitHub.StatusStateError ->
+            Colors.orange
+
+
+summarizeContexts : List GitHub.StatusContext -> Html Msg
+summarizeContexts contexts =
+    let
+        states =
+            List.map .state contexts
+    in
+    if List.all ((==) GitHub.StatusStateSuccess) states then
+        Octicons.check { octiconOpts | color = Colors.green }
+
+    else if List.member GitHub.StatusStateFailure states then
+        Octicons.x { octiconOpts | color = Colors.red }
+
+    else if List.member GitHub.StatusStateError states then
+        Octicons.alert { octiconOpts | color = Colors.orange }
+
+    else if List.member GitHub.StatusStatePending states then
+        Octicons.primitiveDot { octiconOpts | color = Colors.yellow }
+
+    else
+        Octicons.question { octiconOpts | color = Colors.purple }
+
+
 prIcons : Model -> Card -> List (Html Msg)
 prIcons model card =
     case card.content of
@@ -3827,49 +3868,15 @@ prIcons model card =
 
         GitHub.PullRequestCardContent pr ->
             let
-                statusChecks =
+                statusCheck =
                     case Maybe.map .status pr.lastCommit of
                         Just (Just { contexts }) ->
-                            (\a -> List.map a contexts) <|
-                                \c ->
-                                    let
-                                        color =
-                                            case c.state of
-                                                GitHub.StatusStatePending ->
-                                                    Colors.yellow
-
-                                                GitHub.StatusStateSuccess ->
-                                                    Colors.green
-
-                                                GitHub.StatusStateFailure ->
-                                                    Colors.red
-
-                                                GitHub.StatusStateExpected ->
-                                                    Colors.purple
-
-                                                GitHub.StatusStateError ->
-                                                    Colors.orange
-                                    in
-                                    Html.span [ HA.class "status-icon" ]
-                                        [ case c.state of
-                                            GitHub.StatusStatePending ->
-                                                Octicons.primitiveDot { octiconOpts | color = color }
-
-                                            GitHub.StatusStateSuccess ->
-                                                Octicons.check { octiconOpts | color = color }
-
-                                            GitHub.StatusStateFailure ->
-                                                Octicons.x { octiconOpts | color = color }
-
-                                            GitHub.StatusStateExpected ->
-                                                Octicons.question { octiconOpts | color = color }
-
-                                            GitHub.StatusStateError ->
-                                                Octicons.alert { octiconOpts | color = color }
-                                        ]
+                            Html.span [ HA.class "status-icon" ]
+                                [ summarizeContexts contexts
+                                ]
 
                         _ ->
-                            []
+                            Html.text ""
 
                 reviews =
                     Maybe.withDefault [] <| Dict.get card.id model.prReviewers
@@ -3899,7 +3906,7 @@ prIcons model card =
                         )
                         reviews
             in
-            Octicons.gitMerge
+            [ Octicons.gitMerge
                 { octiconOpts
                     | color =
                         case pr.mergeable of
@@ -3912,7 +3919,9 @@ prIcons model card =
                             GitHub.MergeableStateUnknown ->
                                 Colors.yellow
                 }
-                :: (statusChecks ++ reviewStates)
+            , statusCheck
+            ]
+                ++ reviewStates
 
 
 viewProjectCard : Model -> GitHub.Project -> Html Msg

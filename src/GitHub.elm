@@ -29,6 +29,7 @@ module GitHub exposing
     , Repo
     , RepoLocation
     , RepoSelector
+    , StatusContext
     , StatusState(..)
     , TimelineEvent(..)
     , User

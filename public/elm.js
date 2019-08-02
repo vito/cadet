@@ -15852,22 +15852,49 @@ var author$project$Main$pauseIcon = function (card) {
 		}
 	}
 };
-var author$project$Colors$orange500 = '#f66a0a';
-var author$project$Colors$orange = author$project$Colors$orange500;
 var author$project$Colors$red500 = '#d73a49';
 var author$project$Colors$red = author$project$Colors$red500;
 var author$project$Colors$yellow500 = '#ffd33d';
 var author$project$Colors$yellow = author$project$Colors$yellow500;
+var author$project$Colors$orange500 = '#f66a0a';
+var author$project$Colors$orange = author$project$Colors$orange500;
 var capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
 var capitalist$elm_octicons$Octicons$alert = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$alertPath, '0 0 16 16', 'alert');
-var capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
-var capitalist$elm_octicons$Octicons$gitMerge = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
 var capitalist$elm_octicons$Octicons$primitiveDotPath = 'M0,8 C0,5.8 1.8,4 4,4 C6.2,4 8,5.8 8,8 C8,10.2 6.2,12 4,12 C1.8,12 0,10.2 0,8 L0,8 Z';
 var capitalist$elm_octicons$Octicons$primitiveDot = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$primitiveDotPath, '0 0 8 16', 'primitiveDot');
 var capitalist$elm_octicons$Octicons$questionPath = 'M6,10 L8,10 L8,12 L6,12 L6,10 L6,10 Z M10,6.5 C10,8.64 8,9 8,9 L6,9 C6,8.45 6.45,8 7,8 L7.5,8 C7.78,8 8,7.78 8,7.5 L8,6.5 C8,6.22 7.78,6 7.5,6 L6.5,6 C6.22,6 6,6.22 6,6.5 L6,7 L4,7 C4,5.5 5.5,4 7,4 C8.5,4 10,5 10,6.5 L10,6.5 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
 var capitalist$elm_octicons$Octicons$question = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$questionPath, '0 0 14 16', 'question');
 var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
 var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
+var author$project$Main$summarizeContexts = function (contexts) {
+	var states = A2(
+		elm$core$List$map,
+		function ($) {
+			return $.state;
+		},
+		contexts);
+	return A2(
+		elm$core$List$all,
+		elm$core$Basics$eq(author$project$GitHub$StatusStateSuccess),
+		states) ? capitalist$elm_octicons$Octicons$check(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$green})) : (A2(elm$core$List$member, author$project$GitHub$StatusStateFailure, states) ? capitalist$elm_octicons$Octicons$x(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$red})) : (A2(elm$core$List$member, author$project$GitHub$StatusStateError, states) ? capitalist$elm_octicons$Octicons$alert(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$orange})) : (A2(elm$core$List$member, author$project$GitHub$StatusStatePending, states) ? capitalist$elm_octicons$Octicons$primitiveDot(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$yellow})) : capitalist$elm_octicons$Octicons$question(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$purple})))));
+};
+var capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
+var capitalist$elm_octicons$Octicons$gitMerge = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
 var author$project$Main$prIcons = F2(
 	function (model, card) {
 		var _n0 = card.content;
@@ -15875,7 +15902,7 @@ var author$project$Main$prIcons = F2(
 			return _List_Nil;
 		} else {
 			var pr = _n0.a;
-			var statusChecks = function () {
+			var statusCheck = function () {
 				var _n3 = A2(
 					elm$core$Maybe$map,
 					function ($) {
@@ -15884,67 +15911,18 @@ var author$project$Main$prIcons = F2(
 					pr.lastCommit);
 				if ((_n3.$ === 'Just') && (_n3.a.$ === 'Just')) {
 					var contexts = _n3.a.a.contexts;
-					return function (a) {
-						return A2(elm$core$List$map, a, contexts);
-					}(
-						function (c) {
-							var color = function () {
-								var _n5 = c.state;
-								switch (_n5.$) {
-									case 'StatusStatePending':
-										return author$project$Colors$yellow;
-									case 'StatusStateSuccess':
-										return author$project$Colors$green;
-									case 'StatusStateFailure':
-										return author$project$Colors$red;
-									case 'StatusStateExpected':
-										return author$project$Colors$purple;
-									default:
-										return author$project$Colors$orange;
-								}
-							}();
-							return A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('status-icon')
-									]),
-								_List_fromArray(
-									[
-										function () {
-										var _n4 = c.state;
-										switch (_n4.$) {
-											case 'StatusStatePending':
-												return capitalist$elm_octicons$Octicons$primitiveDot(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: color}));
-											case 'StatusStateSuccess':
-												return capitalist$elm_octicons$Octicons$check(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: color}));
-											case 'StatusStateFailure':
-												return capitalist$elm_octicons$Octicons$x(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: color}));
-											case 'StatusStateExpected':
-												return capitalist$elm_octicons$Octicons$question(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: color}));
-											default:
-												return capitalist$elm_octicons$Octicons$alert(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: color}));
-										}
-									}()
-									]));
-						});
+					return A2(
+						elm$html$Html$span,
+						_List_fromArray(
+							[
+								elm$html$Html$Attributes$class('status-icon')
+							]),
+						_List_fromArray(
+							[
+								author$project$Main$summarizeContexts(contexts)
+							]));
 				} else {
-					return _List_Nil;
+					return elm$html$Html$text('');
 				}
 			}();
 			var reviews = A2(
@@ -15979,25 +15957,28 @@ var author$project$Main$prIcons = F2(
 						_List_Nil);
 				},
 				reviews);
-			return A2(
-				elm$core$List$cons,
-				capitalist$elm_octicons$Octicons$gitMerge(
-					_Utils_update(
-						author$project$Main$octiconOpts,
-						{
-							color: function () {
-								var _n1 = pr.mergeable;
-								switch (_n1.$) {
-									case 'MergeableStateMergeable':
-										return author$project$Colors$green;
-									case 'MergeableStateConflicting':
-										return author$project$Colors$red;
-									default:
-										return author$project$Colors$yellow;
-								}
-							}()
-						})),
-				_Utils_ap(statusChecks, reviewStates));
+			return _Utils_ap(
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$gitMerge(
+						_Utils_update(
+							author$project$Main$octiconOpts,
+							{
+								color: function () {
+									var _n1 = pr.mergeable;
+									switch (_n1.$) {
+										case 'MergeableStateMergeable':
+											return author$project$Colors$green;
+										case 'MergeableStateConflicting':
+											return author$project$Colors$red;
+										default:
+											return author$project$Colors$yellow;
+									}
+								}()
+							})),
+						statusCheck
+					]),
+				reviewStates);
 		}
 	});
 var elm$core$List$takeReverse = F3(
