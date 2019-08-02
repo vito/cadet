@@ -98,7 +98,7 @@ type alias Model =
     , noRefresh : Bool
     , loadQueue : List (Cmd Msg)
     , failedQueue : List (Cmd Msg)
-    , projects : List GitHub.Project
+    , columnIDs : Dict Int GitHub.ID
     , commitPRs : Dict String GitHub.ID
     }
 
@@ -141,7 +141,7 @@ init { githubToken, githubOrg, skipTimeline, noRefresh } =
         , noRefresh = noRefresh
         , loadQueue = []
         , failedQueue = []
-        , projects = []
+        , columnIDs = Dict.empty
         , commitPRs = Dict.empty
         }
 
@@ -266,13 +266,12 @@ update msg model =
                         Log.debug "failed to decode column ids" err <|
                             ( model, Cmd.none )
 
-                    Ok ids ->
+                    Ok databaseIDs ->
                         let
-                            affectedColumns =
-                                List.filter ((\a -> List.member a ids) << .databaseId) <|
-                                    List.concatMap .columns model.projects
+                            affectedColumnIDs =
+                                List.filterMap (\did -> Dict.get did model.columnIDs) databaseIDs
                         in
-                        ( { model | loadQueue = List.map (fetchCards model << .id) affectedColumns ++ model.loadQueue }
+                        ( { model | loadQueue = List.map (fetchCards model) affectedColumnIDs ++ model.loadQueue }
                         , Cmd.none
                         )
 
@@ -346,8 +345,12 @@ update msg model =
         RepoProjectsFetched repo nextMsg (Ok projects) ->
             Log.debug "projects fetched" (List.map .name projects) <|
                 let
+                    addColumnIDs project ids =
+                        List.foldl (\col -> Dict.insert col.databaseId col.id) ids project.columns
+
                     ( next, cmd ) =
-                        update (nextMsg projects) { model | projects = projects }
+                        update (nextMsg projects)
+                            { model | columnIDs = List.foldl addColumnIDs model.columnIDs projects }
                 in
                 ( next
                 , Cmd.batch

@@ -11589,15 +11589,6 @@ var elm$core$List$concatMap = F2(
 		return elm$core$List$concat(
 			A2(elm$core$List$map, f, list));
 	});
-var elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
 var elm$core$List$sortBy = _List_sortBy;
 var author$project$Main$update = F2(
 	function (msg, model) {
@@ -11798,23 +11789,13 @@ var author$project$Main$update = F2(
 										err,
 										_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 								} else {
-									var ids = _n4.a;
-									var affectedColumns = A2(
-										elm$core$List$filter,
-										A2(
-											elm$core$Basics$composeL,
-											function (a) {
-												return A2(elm$core$List$member, a, ids);
-											},
-											function ($) {
-												return $.databaseId;
-											}),
-										A2(
-											elm$core$List$concatMap,
-											function ($) {
-												return $.columns;
-											},
-											model.projects));
+									var databaseIDs = _n4.a;
+									var affectedColumnIDs = A2(
+										elm$core$List$filterMap,
+										function (did) {
+											return A2(elm$core$Dict$get, did, model.columnIDs);
+										},
+										databaseIDs);
 									return _Utils_Tuple2(
 										_Utils_update(
 											model,
@@ -11822,13 +11803,8 @@ var author$project$Main$update = F2(
 												loadQueue: _Utils_ap(
 													A2(
 														elm$core$List$map,
-														A2(
-															elm$core$Basics$composeL,
-															author$project$Main$fetchCards(model),
-															function ($) {
-																return $.id;
-															}),
-														affectedColumns),
+														author$project$Main$fetchCards(model),
+														affectedColumnIDs),
 													model.loadQueue)
 											}),
 										elm$core$Platform$Cmd$none);
@@ -12005,12 +11981,24 @@ var author$project$Main$update = F2(
 							},
 							projects),
 						function () {
+							var addColumnIDs = F2(
+								function (project, ids) {
+									return A3(
+										elm$core$List$foldl,
+										function (col) {
+											return A2(elm$core$Dict$insert, col.databaseId, col.id);
+										},
+										ids,
+										project.columns);
+								});
 							var _n6 = A2(
 								author$project$Main$update,
 								nextMsg(projects),
 								_Utils_update(
 									model,
-									{projects: projects}));
+									{
+										columnIDs: A3(elm$core$List$foldl, addColumnIDs, model.columnIDs, projects)
+									}));
 							var next = _n6.a;
 							var cmd = _n6.b;
 							return _Utils_Tuple2(
@@ -12641,7 +12629,7 @@ var author$project$Main$init = function (_n0) {
 	return A2(
 		author$project$Main$update,
 		author$project$Main$Refresh,
-		{commitPRs: elm$core$Dict$empty, failedQueue: _List_Nil, githubOrg: githubOrg, githubToken: githubToken, loadQueue: _List_Nil, noRefresh: noRefresh, projects: _List_Nil, skipTimeline: skipTimeline});
+		{columnIDs: elm$core$Dict$empty, commitPRs: elm$core$Dict$empty, failedQueue: _List_Nil, githubOrg: githubOrg, githubToken: githubToken, loadQueue: _List_Nil, noRefresh: noRefresh, skipTimeline: skipTimeline});
 };
 var author$project$Main$GraphRefreshRequested = F2(
 	function (a, b) {
