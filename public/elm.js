@@ -15119,6 +15119,23 @@ var author$project$Main$viewNavBar = function (model) {
 };
 var author$project$Colors$gray500 = '#6a737d';
 var author$project$Colors$gray = author$project$Colors$gray500;
+var capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
+var capitalist$elm_octicons$Octicons$linkExternal = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
+var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
+var author$project$Main$projectExternalIcon = function (project) {
+	return A2(
+		elm$html$Html$a,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$target('_blank'),
+				elm$html$Html$Attributes$class('external-link'),
+				elm$html$Html$Attributes$href(project.url)
+			]),
+		_List_fromArray(
+			[
+				capitalist$elm_octicons$Octicons$linkExternal(author$project$Main$octiconOpts)
+			]));
+};
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var elm_community$list_extra$List$Extra$find = F2(
@@ -15182,6 +15199,17 @@ var author$project$Main$viewProjectBar = F2(
 				'width',
 				elm$core$String$fromFloat(pct) + '%');
 		};
+		var segment = F2(
+			function (name, val) {
+				return (!val) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('segment ' + name),
+							width(val)
+						]),
+					_List_Nil);
+			});
 		return (total > 0) ? A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -15190,30 +15218,9 @@ var author$project$Main$viewProjectBar = F2(
 				]),
 			_List_fromArray(
 				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('bar-dones'),
-							width(dones)
-						]),
-					_List_Nil),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('bar-in-progress'),
-							width(inProgresses)
-						]),
-					_List_Nil),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('bar-to-do'),
-							width(toDos)
-						]),
-					_List_Nil)
+					A2(segment, 'done', dones),
+					A2(segment, 'in-progress', inProgresses),
+					A2(segment, 'to-do', toDos)
 				])) : elm$html$Html$text('');
 	});
 var elm$html$Html$Attributes$draggable = _VirtualDom_attribute('draggable');
@@ -15243,6 +15250,20 @@ var author$project$Main$viewProjectCard = F2(
 				]),
 			_List_fromArray(
 				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card-icons')
+						]),
+					_List_fromArray(
+						[
+							capitalist$elm_octicons$Octicons$project(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$gray})),
+							author$project$Main$projectExternalIcon(project)
+						])),
 					A2(
 					elm$html$Html$div,
 					_List_fromArray(
@@ -15282,19 +15303,6 @@ var author$project$Main$viewProjectCard = F2(
 									A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, project.body)
 								])),
 							A2(author$project$Main$viewProjectBar, model, project)
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-icons')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$project(
-							_Utils_update(
-								author$project$Main$octiconOpts,
-								{color: author$project$Colors$gray}))
 						]))
 				]));
 	});
@@ -15718,35 +15726,22 @@ var author$project$Card$isInFlight = function (card) {
 var author$project$Card$isPaused = function (card) {
 	return card.processState.hasPausedLabel;
 };
-var author$project$Colors$gray300 = '#d1d5da';
-var author$project$Colors$gray600 = '#586069';
 var author$project$Main$HighlightNode = function (a) {
 	return {$: 'HighlightNode', a: a};
 };
-var author$project$Main$LabelCard = F2(
-	function (a, b) {
-		return {$: 'LabelCard', a: a, b: b};
-	});
 var author$project$Main$SelectCard = function (a) {
 	return {$: 'SelectCard', a: a};
 };
 var author$project$Main$UnhighlightNode = function (a) {
 	return {$: 'UnhighlightNode', a: a};
 };
-var author$project$Main$UnlabelCard = F2(
-	function (a, b) {
-		return {$: 'UnlabelCard', a: a, b: b};
-	});
 var author$project$Main$activityClass = F2(
 	function (now, date) {
 		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
 		var daysSinceLastUpdate = (delta / (((24 * 60) * 60) * 1000)) | 0;
 		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
 	});
-var capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
-var capitalist$elm_octicons$Octicons$linkExternal = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
-var elm$html$Html$Attributes$target = elm$html$Html$Attributes$stringProperty('target');
-var author$project$Main$externalIcons = function (card) {
+var author$project$Main$cardExternalIcons = function (card) {
 	return A2(
 		elm$core$List$map,
 		function (_n0) {
@@ -15797,6 +15792,66 @@ var author$project$Main$lastActivityIsByUser = F3(
 					}),
 				A2(author$project$Main$lastActiveUser, model, card)));
 	});
+var author$project$Colors$gray300 = '#d1d5da';
+var author$project$Colors$gray600 = '#586069';
+var author$project$Main$LabelCard = F2(
+	function (a, b) {
+		return {$: 'LabelCard', a: a, b: b};
+	});
+var author$project$Main$UnlabelCard = F2(
+	function (a, b) {
+		return {$: 'UnlabelCard', a: a, b: b};
+	});
+var capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
+var capitalist$elm_octicons$Octicons$bookmark = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Main$pauseIcon = function (card) {
+	var _n0 = _Utils_Tuple2(
+		author$project$Card$isInFlight(card),
+		author$project$Card$isPaused(card));
+	if (_n0.b) {
+		return A2(
+			elm$html$Html$span,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('pause-toggle'),
+					elm$html$Html$Events$onClick(
+					A2(author$project$Main$UnlabelCard, card, 'paused'))
+				]),
+			_List_fromArray(
+				[
+					capitalist$elm_octicons$Octicons$bookmark(
+					_Utils_update(
+						author$project$Main$octiconOpts,
+						{color: author$project$Colors$gray300}))
+				]));
+	} else {
+		if (_n0.a) {
+			return A2(
+				elm$html$Html$span,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('pause-toggle'),
+						elm$html$Html$Events$onClick(
+						A2(author$project$Main$LabelCard, card, 'paused'))
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$bookmark(
+						_Utils_update(
+							author$project$Main$octiconOpts,
+							{color: author$project$Colors$gray600}))
+					]));
+		} else {
+			return elm$html$Html$text('');
+		}
+	}
+};
 var author$project$Colors$orange500 = '#f66a0a';
 var author$project$Colors$orange = author$project$Colors$orange500;
 var author$project$Colors$red500 = '#d73a49';
@@ -16133,12 +16188,6 @@ var author$project$Main$viewLabel = F2(
 						]))
 				]));
 	});
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
 var author$project$Main$searchableLabel = F2(
 	function (model, labelId) {
 		var _n0 = A2(elm$core$Dict$get, labelId, model.allLabels);
@@ -16270,8 +16319,6 @@ var author$project$Main$viewSuggestedLabel = F3(
 					]));
 		}
 	});
-var capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
-var capitalist$elm_octicons$Octicons$bookmark = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
 var elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -16346,20 +16393,44 @@ var author$project$Main$viewCard = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
+							elm$html$Html$Attributes$class('card-icons')
+						]),
+					elm$core$List$concat(
+						_List_fromArray(
+							[
+								_List_fromArray(
+								[
+									author$project$Main$viewCardIcon(card)
+								]),
+								author$project$Main$cardExternalIcons(card),
+								_List_fromArray(
+								[
+									author$project$Main$pauseIcon(card)
+								]),
+								A2(
+								elm$core$List$map,
+								function (_n1) {
+									var avatar = _n1.avatar;
+									return A2(
+										elm$html$Html$img,
+										_List_fromArray(
+											[
+												elm$html$Html$Attributes$class('status-actor'),
+												elm$html$Html$Attributes$src(avatar)
+											]),
+										_List_Nil);
+								},
+								card.assignees),
+								A2(author$project$Main$prIcons, model, card)
+							]))),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
 							elm$html$Html$Attributes$class('card-info')
 						]),
 					_List_fromArray(
 						[
-							A2(
-							elm$html$Html$div,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('card-actors')
-								]),
-							A2(
-								elm$core$List$map,
-								author$project$Main$viewEventActor(model),
-								A2(author$project$Main$recentEvents, model, card))),
 							A2(
 							elm$html$Html$span,
 							_List_fromArray(
@@ -16367,37 +16438,20 @@ var author$project$Main$viewCard = F2(
 									elm$html$Html$Attributes$class('card-title'),
 									elm$html$Html$Attributes$draggable('false')
 								]),
-							_Utils_ap(
-								_List_fromArray(
-									[
-										A2(
-										elm$html$Html$a,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$href(card.url),
-												elm$html$Html$Attributes$target('_blank')
-											]),
-										_List_fromArray(
-											[
-												elm$html$Html$text(card.title)
-											]))
-									]),
-								author$project$Main$externalIcons(card))),
-							A2(
-							elm$html$Html$span,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('card-labels')
-								]),
-							_Utils_ap(
-								A2(
-									elm$core$List$map,
-									author$project$Main$searchableLabel(model),
-									card.labels),
-								A2(
-									elm$core$List$map,
-									A2(author$project$Main$viewSuggestedLabel, model, card),
-									model.suggestedLabels))),
+									A2(
+									elm$html$Html$a,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$href(card.url),
+											elm$html$Html$Attributes$target('_blank')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(card.title)
+										]))
+								])),
 							A2(
 							elm$html$Html$div,
 							_List_fromArray(
@@ -16422,9 +16476,9 @@ var author$project$Main$viewCard = F2(
 									elm$html$Html$text(' '),
 									elm$html$Html$text('opened by '),
 									function () {
-									var _n1 = card.author;
-									if (_n1.$ === 'Just') {
-										var user = _n1.a;
+									var _n2 = card.author;
+									if (_n2.$ === 'Just') {
+										var user = _n2.a;
 										return A2(
 											elm$html$Html$a,
 											_List_fromArray(
@@ -16441,77 +16495,42 @@ var author$project$Main$viewCard = F2(
 										return elm$html$Html$text('(deleted user)');
 									}
 								}()
-								]))
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-icons')
-						]),
-					_Utils_ap(
-						_List_fromArray(
-							[
-								author$project$Main$viewCardIcon(card),
-								function () {
-								var _n2 = _Utils_Tuple2(
-									author$project$Card$isInFlight(card),
-									author$project$Card$isPaused(card));
-								if (_n2.b) {
-									return A2(
-										elm$html$Html$span,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('pause-toggle'),
-												elm$html$Html$Events$onClick(
-												A2(author$project$Main$UnlabelCard, card, 'paused'))
-											]),
-										_List_fromArray(
-											[
-												capitalist$elm_octicons$Octicons$bookmark(
-												_Utils_update(
-													author$project$Main$octiconOpts,
-													{color: author$project$Colors$gray300}))
-											]));
-								} else {
-									if (_n2.a) {
-										return A2(
-											elm$html$Html$span,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('pause-toggle'),
-													elm$html$Html$Events$onClick(
-													A2(author$project$Main$LabelCard, card, 'paused'))
-												]),
-											_List_fromArray(
-												[
-													capitalist$elm_octicons$Octicons$bookmark(
-													_Utils_update(
-														author$project$Main$octiconOpts,
-														{color: author$project$Colors$gray600}))
-												]));
-									} else {
-										return elm$html$Html$text('');
-									}
-								}
-							}()
-							]),
-						_Utils_ap(
+								])),
 							A2(
-								elm$core$List$map,
-								function (_n3) {
-									var avatar = _n3.avatar;
-									return A2(
-										elm$html$Html$img,
-										_List_fromArray(
-											[
-												elm$html$Html$Attributes$class('status-actor'),
-												elm$html$Html$Attributes$src(avatar)
-											]),
-										_List_Nil);
-								},
-								card.assignees),
-							A2(author$project$Main$prIcons, model, card))))
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-squares')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('card-labels')
+										]),
+									_Utils_ap(
+										A2(
+											elm$core$List$map,
+											author$project$Main$searchableLabel(model),
+											card.labels),
+										A2(
+											elm$core$List$map,
+											A2(author$project$Main$viewSuggestedLabel, model, card),
+											model.suggestedLabels))),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('card-actors')
+										]),
+									A2(
+										elm$core$List$map,
+										author$project$Main$viewEventActor(model),
+										A2(author$project$Main$recentEvents, model, card)))
+								]))
+						]))
 				]));
 	});
 var author$project$Main$viewNoteCard = F3(
@@ -16542,21 +16561,21 @@ var author$project$Main$viewNoteCard = F3(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('card-info card-note')
-						]),
-					_List_fromArray(
-						[
-							A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text)
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
 							elm$html$Html$Attributes$class('card-icons')
 						]),
 					_List_fromArray(
 						[
 							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card-info card-note')
+						]),
+					_List_fromArray(
+						[
+							A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text)
 						]))
 				]));
 	});
@@ -21063,7 +21082,7 @@ var author$project$Main$viewProjectPage = F2(
 			elm$html$Html$div,
 			_List_fromArray(
 				[
-					elm$html$Html$Attributes$class('project single')
+					elm$html$Html$Attributes$class('page-content')
 				]),
 			_List_fromArray(
 				[
@@ -21071,7 +21090,7 @@ var author$project$Main$viewProjectPage = F2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('icebox-graph')
+							elm$html$Html$Attributes$class('project single')
 						]),
 					_List_fromArray(
 						[
@@ -21079,25 +21098,45 @@ var author$project$Main$viewProjectPage = F2(
 							elm$html$Html$div,
 							_List_fromArray(
 								[
-									elm$html$Html$Attributes$class('column-title')
+									elm$html$Html$Attributes$class('page-header')
 								]),
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
-									elm$html$Html$text(project.name + ' Graph')
+									capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+									elm$html$Html$text(project.name)
 								])),
-							author$project$Main$viewSpatialGraph(model)
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('project-columns')
-						]),
-					A2(
-						elm$core$List$map,
-						A2(author$project$Main$viewProjectColumn, model, project),
-						project.columns))
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('project-columns')
+								]),
+							A2(
+								elm$core$List$map,
+								A2(author$project$Main$viewProjectColumn, model, project),
+								project.columns)),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('icebox-graph')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
+											elm$html$Html$text(project.name + ' Graph')
+										])),
+									author$project$Main$viewSpatialGraph(model)
+								]))
+						]))
 				]));
 	});
 var author$project$Main$viewRepoPRs = F3(

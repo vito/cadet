@@ -2877,16 +2877,22 @@ viewProjectColumnCard model project col ghCard =
 
 viewProjectPage : Model -> GitHub.Project -> Html Msg
 viewProjectPage model project =
-    Html.div [ HA.class "project single" ]
-        [ Html.div [ HA.class "icebox-graph" ]
-            [ Html.div [ HA.class "column-title" ]
-                [ Octicons.circuitBoard octiconOpts
-                , Html.text (project.name ++ " Graph")
+    Html.div [ HA.class "page-content" ]
+        [ Html.div [ HA.class "project single" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.project octiconOpts
+                , Html.text project.name
                 ]
-            , viewSpatialGraph model
+            , Html.div [ HA.class "project-columns" ] <|
+                List.map (viewProjectColumn model project) project.columns
+            , Html.div [ HA.class "icebox-graph" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.circuitBoard octiconOpts
+                    , Html.text (project.name ++ " Graph")
+                    ]
+                , viewSpatialGraph model
+                ]
             ]
-        , Html.div [ HA.class "project-columns" ] <|
-            List.map (viewProjectColumn model project) project.columns
         ]
 
 
@@ -3677,25 +3683,30 @@ viewCard model card =
         , HE.onMouseOver (HighlightNode card.id)
         , HE.onMouseOut (UnhighlightNode card.id)
         ]
-        [ Html.div [ HA.class "card-info" ]
-            [ Html.div [ HA.class "card-actors" ] <|
-                List.map (viewEventActor model) (recentEvents model card)
-            , Html.span
+        [ Html.div [ HA.class "card-icons" ] <|
+            List.concat
+                [ [ viewCardIcon card ]
+                , cardExternalIcons card
+                , [ pauseIcon card ]
+                , List.map
+                    (\{ avatar } ->
+                        Html.img [ HA.class "status-actor", HA.src avatar ] []
+                    )
+                    card.assignees
+                , prIcons model card
+                ]
+        , Html.div [ HA.class "card-info" ]
+            [ Html.span
                 [ HA.class "card-title"
                 , HA.draggable "false"
                 ]
-                ([ Html.a
+                [ Html.a
                     [ HA.href card.url
                     , HA.target "_blank"
                     ]
                     [ Html.text card.title
                     ]
-                 ]
-                    ++ externalIcons card
-                )
-            , Html.span [ HA.class "card-labels" ] <|
-                List.map (searchableLabel model) card.labels
-                    ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
+                ]
             , Html.div [ HA.class "card-meta" ]
                 [ Html.a
                     [ HA.href card.url
@@ -3717,37 +3728,38 @@ viewCard model card =
                     _ ->
                         Html.text "(deleted user)"
                 ]
+            , Html.div [ HA.class "card-squares" ]
+                [ Html.div [ HA.class "card-labels" ] <|
+                    List.map (searchableLabel model) card.labels
+                        ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
+                , Html.div [ HA.class "card-actors" ] <|
+                    List.map (viewEventActor model) (recentEvents model card)
+                ]
             ]
-        , Html.div [ HA.class "card-icons" ]
-            ([ viewCardIcon card
-             , case ( Card.isInFlight card, Card.isPaused card ) of
-                ( _, True ) ->
-                    Html.span
-                        [ HA.class "pause-toggle"
-                        , HE.onClick (UnlabelCard card "paused")
-                        ]
-                        [ Octicons.bookmark { octiconOpts | color = Colors.gray300 }
-                        ]
-
-                ( True, False ) ->
-                    Html.span
-                        [ HA.class "pause-toggle"
-                        , HE.onClick (LabelCard card "paused")
-                        ]
-                        [ Octicons.bookmark { octiconOpts | color = Colors.gray600 }
-                        ]
-
-                _ ->
-                    Html.text ""
-             ]
-                ++ List.map
-                    (\{ avatar } ->
-                        Html.img [ HA.class "status-actor", HA.src avatar ] []
-                    )
-                    card.assignees
-                ++ prIcons model card
-            )
         ]
+
+
+pauseIcon : Card -> Html Msg
+pauseIcon card =
+    case ( Card.isInFlight card, Card.isPaused card ) of
+        ( _, True ) ->
+            Html.span
+                [ HA.class "pause-toggle"
+                , HE.onClick (UnlabelCard card "paused")
+                ]
+                [ Octicons.bookmark { octiconOpts | color = Colors.gray300 }
+                ]
+
+        ( True, False ) ->
+            Html.span
+                [ HA.class "pause-toggle"
+                , HE.onClick (LabelCard card "paused")
+                ]
+                [ Octicons.bookmark { octiconOpts | color = Colors.gray600 }
+                ]
+
+        _ ->
+            Html.text ""
 
 
 viewCardIcon : Card -> Html Msg
@@ -3783,8 +3795,18 @@ viewCardIcon card =
         ]
 
 
-externalIcons : Card -> List (Html Msg)
-externalIcons card =
+projectExternalIcon : GitHub.Project -> Html Msg
+projectExternalIcon project =
+    Html.a
+        [ HA.target "_blank"
+        , HA.class "external-link"
+        , HA.href project.url
+        ]
+        [ Octicons.linkExternal octiconOpts ]
+
+
+cardExternalIcons : Card -> List (Html Msg)
+cardExternalIcons card =
     List.map
         (\{ url } ->
             Html.a
@@ -3896,7 +3918,11 @@ prIcons model card =
 viewProjectCard : Model -> GitHub.Project -> Html Msg
 viewProjectCard model project =
     Html.div [ HA.class "card project", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-info" ]
+        [ Html.div [ HA.class "card-icons" ]
+            [ Octicons.project { octiconOpts | color = Colors.gray }
+            , projectExternalIcon project
+            ]
+        , Html.div [ HA.class "card-info" ]
             [ Html.span [ HA.class "card-title", HA.draggable "false" ]
                 [ Html.a [ HA.href ("/projects/" ++ project.id) ]
                     [ Html.text project.name ]
@@ -3908,9 +3934,6 @@ viewProjectCard model project =
                 Html.div [ HA.class "project-body" ]
                     [ Markdown.toHtml [] project.body ]
             , viewProjectBar model project
-            ]
-        , Html.div [ HA.class "card-icons" ]
-            [ Octicons.project { octiconOpts | color = Colors.gray }
             ]
         ]
 
@@ -3946,12 +3969,19 @@ viewProjectBar model project =
                     (toFloat base / toFloat total) * 100
             in
             HA.style "width" (String.fromFloat pct ++ "%")
+
+        segment name val =
+            if val == 0 then
+                Html.text ""
+
+            else
+                Html.div [ HA.class ("segment " ++ name), width val ] []
     in
     if total > 0 then
         Html.div [ HA.class "project-bar" ]
-            [ Html.div [ HA.class "bar-dones", width dones ] []
-            , Html.div [ HA.class "bar-in-progress", width inProgresses ] []
-            , Html.div [ HA.class "bar-to-do", width toDos ] []
+            [ segment "done" dones
+            , segment "in-progress" inProgresses
+            , segment "to-do" toDos
             ]
 
     else
@@ -3983,11 +4013,11 @@ viewNoteCard model col text =
             ]
         , HA.tabindex 0
         ]
-        [ Html.div [ HA.class "card-info card-note" ]
-            [ Markdown.toHtml [] text ]
-        , Html.div [ HA.class "card-icons" ]
+        [ Html.div [ HA.class "card-icons" ]
             [ Octicons.book octiconOpts
             ]
+        , Html.div [ HA.class "card-info card-note" ]
+            [ Markdown.toHtml [] text ]
         ]
 
 

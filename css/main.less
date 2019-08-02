@@ -46,8 +46,12 @@ ol, ul {
   padding-left: 2em;
 }
 
+code, pre {
+  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
+}
+
 code {
-  background: fade(@white, 5%);
+  background: fade(@black, 5%);
   border-radius: 3px;
   font-size: 85%;
   margin: 0;
@@ -271,7 +275,8 @@ code {
   vertical-align: top;
   user-select: none;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: flex-start;
   position: relative;
 
   box-shadow: 0 1px 1px rgba(27,31,35,.1);
@@ -326,9 +331,9 @@ code {
 
 .card-icons {
   display: flex;
-  flex-direction: row;
-  padding: 12px;
-  padding-top: 0;
+  flex-direction: column;
+  padding: 10px;
+  padding-right: 0;
   border-radius: 2px;
 
   .octicon {
@@ -353,11 +358,11 @@ code {
   }
 
   > * {
-    margin-right: 10px;
+    margin-bottom: 8px;
   }
 
   > :last-child {
-    margin-right: 0;
+    margin-bottom: 0;
   }
 
   .pause-toggle {
@@ -373,10 +378,24 @@ code {
   }
 }
 
+.external-link {
+  * {
+    fill: @gray-300;
+  }
+
+  &:hover * {
+    fill: @gray-600;
+  }
+}
+
 .card-info {
   flex-grow: 1;
   padding: 10px;
-  padding-bottom: 8px;
+  padding-left: 8px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
 
   .card-title {
     font-size: 14px;
@@ -384,22 +403,6 @@ code {
     color: @gray-900;
     line-height: 1.25;
     padding: 1px 0; /* eliminate unclickable gap */
-
-    .external-link {
-      margin-left: 10px;
-
-      * {
-        fill: @gray-300;
-      }
-
-      &:hover * {
-        fill: @gray-600;
-      }
-    }
-
-    .external-link + .external-link {
-      margin-left: 5px;
-    }
   }
 
   .card-meta {
@@ -418,46 +421,40 @@ code {
   font-size: 14px;
 }
 
-.card.project {
-  flex-direction: row-reverse;
+.project-body {
+  margin: 5px 0;
+  font-size: 13px;
+  color: @gray;
+}
 
-  .card-icons {
-    flex-direction: column;
-    padding: 10px;
-    padding-right: 0;
-  }
+.project-bar {
+  width: 100%;
+  height: 10px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: row;
 
-  .card-info {
-    padding-left: 8px;
-  }
-
-  .project-body {
-    margin: 5px 0;
-    font-size: 13px;
-    color: @gray;
-  }
-
-  .project-bar {
-    width: 100%;
-    height: 10px;
-    margin: 10px 0 4px;
-    display: flex;
-    flex-direction: row;
-
-    .bar-dones {
-      background: @green;
+  .segment {
+    &:first-child {
       border-top-left-radius: 3px;
       border-bottom-left-radius: 3px;
     }
 
-    .bar-in-progress {
+    &:last-child {
+      border-top-right-radius: 3px;
+      border-bottom-right-radius: 3px;
+    }
+
+    &.done {
+      background: @green;
+    }
+
+    &.in-progress {
       background: @purple;
     }
 
-    .bar-to-do {
+    &.to-do {
       background: @gray-200;
-      border-top-right-radius: 3px;
-      border-bottom-right-radius: 3px;
     }
   }
 }
@@ -466,12 +463,12 @@ code {
   vertical-align: middle;
 }
 
-.card-labels {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  max-height: 18px;
-  text-align: right;
+.card-squares {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 4px;
+  height: 18px;
 }
 
 .label {
@@ -482,7 +479,7 @@ code {
   border-radius: 2px;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
   vertical-align: text-top;
-  margin-left: 4px;
+  margin-right: 4px;
   white-space: nowrap;
   cursor: pointer;
 
@@ -541,12 +538,6 @@ code {
       margin-left: 2px;
     }
   }
-}
-
-.card-actors {
-  float: right;
-  margin-top: -2px;
-  margin-right: -2px;
 }
 
 .card-actor {
@@ -745,7 +736,8 @@ code {
     background: @gray-100;
     flex-grow: 0;
     flex-shrink: 0;
-    justify-content: center;
+    justify-content: flex-start;
+    margin-bottom: 4 * @card-margin;
 
     .project-column {
       width: @card-width + (2 * @card-margin);
@@ -782,7 +774,7 @@ svg {
 
   .graph-edge {
     stroke-width: 4px;
-    stroke: @gray;
+    stroke: @gray-light;
   }
 
   .filtered-out {
@@ -791,11 +783,11 @@ svg {
     }
 
     &.graph-edge {
-      stroke: @gray-dark;
+      stroke: @gray-200;
     }
 
     circle {
-      fill: @gray-700;
+      fill: @gray-300;
     }
 
     .issue-number {
@@ -1328,6 +1320,7 @@ svg {
   column-count: auto;
   column-width: @card-width;
   column-gap: 2 * @card-margin;
+  margin-bottom: 4 * @card-margin;
 
   .repo-cards {
     width: @card-width;
