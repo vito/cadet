@@ -1597,7 +1597,7 @@ a.column-title:hover, .page-header a:hover {
 .tab-cards {
   .card {
     width: auto;
-    border: 0;
+    border-color: transparent;
     border-radius: 0;
     border-top: 1px solid @gray-200;
 
@@ -1607,15 +1607,12 @@ a.column-title:hover, .page-header a:hover {
     }
 
     &:hover {
+      z-index: 100;
       background: @gray-100;
     }
 
     &:focus {
-      box-shadow: none;
-    }
-
-    &:focus + .card {
-      border-top-color: @blue;
+      z-index: 100;
     }
 
     &:first-child {
