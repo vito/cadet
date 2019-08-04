@@ -6,9 +6,7 @@
 @card-width: 300px;
 @card-margin: 10px;
 
-@sidebar-min-width: 1150px;
-
-@wide-min-width: 850px;
+@wide-min-width: 950px;
 
 * {
   box-sizing: border-box;
@@ -94,12 +92,6 @@ h4 {
   flex-shrink: 0;
   width: @card-width + (2 * @card-margin) + (31px - @card-margin);
   border-bottom-left-radius: 6px;
-
-  display: none;
-
-  @media(min-width: @sidebar-min-width) {
-    display: block;
-  }
 
   background: @gray-400;
 
@@ -197,11 +189,7 @@ h4 {
 
 .card-search {
   flex-direction: row;
-
-  display: none;
-  @media(min-width: @sidebar-min-width) {
-    display: flex;
-  }
+  display: flex;
 
   input {
     font-size: 14px;
@@ -1395,6 +1383,7 @@ svg {
   color: @gray-dark;
   display: flex;
   flex-direction: row;
+  align-items: center;
   font-size: 16px;
   user-select: none;
   border-bottom: 1px solid @gray-light;
