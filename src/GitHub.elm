@@ -36,6 +36,8 @@ module GitHub exposing
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
+    , addNoteCard
+    , addNoteCardAfter
     , addPullRequestLabels
     , closeIssue
     , closeRepoMilestone
@@ -571,7 +573,7 @@ moveCardAfter token columnID cardID mafterID =
 
 addContentCard : Token -> ID -> ID -> Task Error ProjectColumnCard
 addContentCard token columnID contentID =
-    addCardMutation
+    addContentCardMutation
         |> GB.request { columnId = columnID, contentId = contentID }
         |> GH.customSendMutation (authedOptions token)
 
@@ -579,6 +581,19 @@ addContentCard token columnID contentID =
 addContentCardAfter : Token -> ID -> ID -> Maybe ID -> Task Error ProjectColumnCard
 addContentCardAfter token columnID contentID mafterID =
     addContentCard token columnID contentID
+        |> Task.andThen (\{ id } -> moveCardAfter token columnID id mafterID)
+
+
+addNoteCard : Token -> ID -> String -> Task Error ProjectColumnCard
+addNoteCard token columnID note =
+    addNoteCardMutation
+        |> GB.request { columnId = columnID, note = note }
+        |> GH.customSendMutation (authedOptions token)
+
+
+addNoteCardAfter : Token -> ID -> String -> Maybe ID -> Task Error ProjectColumnCard
+addNoteCardAfter token columnID note mafterID =
+    addNoteCard token columnID note
         |> Task.andThen (\{ id } -> moveCardAfter token columnID id mafterID)
 
 
@@ -744,8 +759,8 @@ moveCardMutation =
                 )
 
 
-addCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, contentId : ID }
-addCardMutation =
+addContentCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, contentId : ID }
+addContentCardMutation =
     let
         columnIDVar =
             GV.required "columnId" .columnId GV.id
@@ -760,6 +775,34 @@ addCardMutation =
                   , GA.object
                         [ ( "projectColumnId", GA.variable columnIDVar )
                         , ( "contentId", GA.variable contentIDVar )
+                        ]
+                  )
+                ]
+                (GB.extract <|
+                    GB.field "cardEdge"
+                        []
+                        (GB.extract <|
+                            GB.field "node" [] projectColumnCardObject
+                        )
+                )
+
+
+addNoteCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, note : String }
+addNoteCardMutation =
+    let
+        columnIDVar =
+            GV.required "columnId" .columnId GV.id
+
+        noteVar =
+            GV.required "note" .note GV.string
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "addProjectCard"
+                [ ( "input"
+                  , GA.object
+                        [ ( "projectColumnId", GA.variable columnIDVar )
+                        , ( "note", GA.variable noteVar )
                         ]
                   )
                 ]

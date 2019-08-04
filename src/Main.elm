@@ -2,6 +2,7 @@ port module Main exposing (main)
 
 import Backend exposing (Data, Me)
 import Browser
+import Browser.Dom
 import Browser.Events
 import Browser.Navigation as Nav
 import Card exposing (Card)
@@ -21,6 +22,8 @@ import Html.Lazy
 import Http
 import IntDict exposing (IntDict)
 import Json.Decode as JD
+import Keyboard.Event
+import Keyboard.Key
 import List.Extra as LE
 import Log
 import Markdown
@@ -127,6 +130,9 @@ type alias Model =
 
     -- card tabbed view state
     , suggestedLabels : List String
+
+    -- column note adding state
+    , addingColumnNotes : Dict GitHub.ID String
     }
 
 
@@ -240,7 +246,8 @@ type CardSource
 
 
 type Msg
-    = LinkClicked Browser.UrlRequest
+    = Noop
+    | LinkClicked Browser.UrlRequest
     | UrlChanged Url
     | Poll
     | SetCurrentTime Time.Posix
@@ -291,6 +298,9 @@ type Msg
     | UnsetLabelOperation String
     | ApplyLabelOperations
     | DataChanged (Cmd Msg) (Result GitHub.Error ())
+    | SetCreatingColumnNote GitHub.ID String
+    | CancelCreatingColumnNote GitHub.ID
+    | CreateColumnNote GitHub.ID
 
 
 type Page
@@ -472,6 +482,7 @@ init config url key =
             , suggestedLabels = []
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
+            , addingColumnNotes = Dict.empty
             }
 
         ( navedModel, navedMsgs ) =
@@ -503,6 +514,9 @@ subscriptions model =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Noop ->
+            ( model, Cmd.none )
+
         Poll ->
             ( model, Backend.fetchData DataFetched )
 
@@ -1073,6 +1087,24 @@ update msg model =
                         labelsToRemove
             in
             ( model, Cmd.batch (adds ++ removals) )
+
+        SetCreatingColumnNote id note ->
+            ( { model | addingColumnNotes = Dict.insert id note model.addingColumnNotes }
+            , Task.attempt (always Noop) (Browser.Dom.focus (addNoteTextareaId id))
+            )
+
+        CancelCreatingColumnNote id ->
+            ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }, Cmd.none )
+
+        CreateColumnNote id ->
+            ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }
+            , case Maybe.withDefault "" <| Dict.get id model.addingColumnNotes of
+                "" ->
+                    Cmd.none
+
+                note ->
+                    addNoteCard model id note
+            )
 
 
 searchCards : Model -> String -> Set GitHub.ID
@@ -2805,6 +2837,11 @@ columnIcon col =
             Octicons.check { octiconOpts | color = Colors.green }
 
 
+addNoteTextareaId : GitHub.ID -> String
+addNoteTextareaId colId =
+    "add-note-" ++ colId
+
+
 viewProjectColumn : Model -> GitHub.Project -> GitHub.ProjectColumn -> Html Msg
 viewProjectColumn model project col =
     let
@@ -2824,8 +2861,43 @@ viewProjectColumn model project col =
     Html.div [ HA.class "project-column" ]
         [ Html.div [ HA.class "column-title" ]
             [ columnIcon col
-            , Html.text col.name
+            , Html.span [ HA.class "column-name" ]
+                [ Html.text col.name ]
+            , Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
+                [ Octicons.plus octiconOpts ]
             ]
+        , case Dict.get col.id model.addingColumnNotes of
+            Just val ->
+                Html.form [ HA.class "add-note-form", HE.onSubmit (CreateColumnNote col.id) ]
+                    [ Html.textarea
+                        [ HA.placeholder "Enter a note"
+                        , HA.rows 3
+                        , HA.id (addNoteTextareaId col.id)
+                        , HE.onInput (SetCreatingColumnNote col.id)
+                        , onCtrlEnter (CreateColumnNote col.id)
+                        ]
+                        [ Html.text val ]
+                    , Html.div [ HA.class "buttons" ]
+                        [ Html.button
+                            [ HA.class "button cancel"
+                            , HA.type_ "reset"
+                            , HE.onClick (CancelCreatingColumnNote col.id)
+                            ]
+                            [ Octicons.x octiconOpts
+                            , Html.text "cancel"
+                            ]
+                        , Html.button
+                            [ HA.class "button apply"
+                            , HA.type_ "submit"
+                            ]
+                            [ Octicons.check octiconOpts
+                            , Html.text "add"
+                            ]
+                        ]
+                    ]
+
+            Nothing ->
+                Html.text ""
         , if List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
                 [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
@@ -2836,6 +2908,19 @@ viewProjectColumn model project col =
                 Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
                     :: List.concatMap (viewProjectColumnCard model project col) cards
         ]
+
+
+onCtrlEnter : Msg -> Html.Attribute Msg
+onCtrlEnter msg =
+    HE.on "keydown"
+        << Keyboard.Event.considerKeyboardEvent
+    <|
+        \event ->
+            if (event.ctrlKey || event.metaKey) && event.keyCode == Keyboard.Key.Enter then
+                Just msg
+
+            else
+                Nothing
 
 
 viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
@@ -4275,6 +4360,15 @@ addIssueLabels model issue labels =
         \token ->
             GitHub.addIssueLabels token issue labels
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
+
+
+addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg
+addNoteCard model colId note =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.addNoteCard token colId note
+                |> Task.map (always ())
+                |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
 
 
 removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg

@@ -8315,6 +8315,7 @@ var author$project$Main$GraphsFetched = function (a) {
 var author$project$Main$MirrorLabel = function (a) {
 	return {$: 'MirrorLabel', a: a};
 };
+var author$project$Main$Noop = {$: 'Noop'};
 var author$project$Main$RefreshQueued = function (a) {
 	return {$: 'RefreshQueued', a: a};
 };
@@ -10077,7 +10078,7 @@ var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required = F3(
 			typeRef,
 			A2(elm$core$Basics$composeR, extract, convert));
 	});
-var author$project$GitHub$addCardMutation = function () {
+var author$project$GitHub$addContentCardMutation = function () {
 	var contentIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'contentId',
@@ -10476,7 +10477,7 @@ var author$project$GitHub$addContentCard = F3(
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
 				{columnId: columnID, contentId: contentID},
-				author$project$GitHub$addCardMutation));
+				author$project$GitHub$addContentCardMutation));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_n0) {
@@ -10857,6 +10858,80 @@ var author$project$Main$addIssueLabels = F3(
 					A3(author$project$GitHub$addIssueLabels, token, issue, labels));
 			});
 	});
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
+var author$project$GitHub$addNoteCardMutation = function () {
+	var noteVar = A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'note',
+		function ($) {
+			return $.note;
+		},
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var columnIDVar = A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'columnId',
+		function ($) {
+			return $.columnId;
+		},
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
+	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'addProjectCard',
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'input',
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'projectColumnId',
+									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(columnIDVar)),
+									_Utils_Tuple2(
+									'note',
+									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(noteVar))
+								])))
+					]),
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+					A3(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+						'cardEdge',
+						_List_Nil,
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, author$project$GitHub$projectColumnCardObject)))))));
+}();
+var author$project$GitHub$addNoteCard = F3(
+	function (token, columnID, note) {
+		return A2(
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
+			author$project$GitHub$authedOptions(token),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
+				{columnId: columnID, note: note},
+				author$project$GitHub$addNoteCardMutation));
+	});
+var author$project$Main$addNoteCard = F3(
+	function (model, colId, note) {
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					elm$core$Task$attempt,
+					author$project$Main$DataChanged(
+						A2(author$project$Backend$refreshCards, colId, author$project$Main$RefreshQueued)),
+					A2(
+						elm$core$Task$map,
+						elm$core$Basics$always(_Utils_Tuple0),
+						A3(author$project$GitHub$addNoteCard, token, colId, note)));
+			});
+	});
+var author$project$Main$addNoteTextareaId = function (colId) {
+	return 'add-note-' + colId;
+};
 var author$project$GitHub$addPullRequestLabels = F3(
 	function (token, issue, names) {
 		return A2(
@@ -13237,6 +13312,7 @@ var author$project$Main$updateLabel = F4(
 					A5(author$project$GitHub$updateRepoLabel, token, repo, label1, label2.name, label2.color));
 			});
 	});
+var elm$browser$Browser$Dom$focus = _Browser_call('focus');
 var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var elm$core$Basics$ge = _Utils_ge;
 var elm$core$Dict$sizeHelp = F2(
@@ -13483,6 +13559,8 @@ var author$project$Main$update = F2(
 		update:
 		while (true) {
 			switch (msg.$) {
+				case 'Noop':
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 				case 'Poll':
 					return _Utils_Tuple2(
 						model,
@@ -14346,7 +14424,7 @@ var author$project$Main$update = F2(
 								cardLabelOperations: A2(elm$core$Dict$remove, name, model.cardLabelOperations)
 							}),
 						elm$core$Platform$Cmd$none);
-				default:
+				case 'ApplyLabelOperations':
 					var cards = A2(
 						elm$core$List$filterMap,
 						function (a) {
@@ -14405,6 +14483,49 @@ var author$project$Main$update = F2(
 						model,
 						elm$core$Platform$Cmd$batch(
 							_Utils_ap(adds, removals)));
+				case 'SetCreatingColumnNote':
+					var id = msg.a;
+					var note = msg.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								addingColumnNotes: A3(elm$core$Dict$insert, id, note, model.addingColumnNotes)
+							}),
+						A2(
+							elm$core$Task$attempt,
+							elm$core$Basics$always(author$project$Main$Noop),
+							elm$browser$Browser$Dom$focus(
+								author$project$Main$addNoteTextareaId(id))));
+				case 'CancelCreatingColumnNote':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								addingColumnNotes: A2(elm$core$Dict$remove, id, model.addingColumnNotes)
+							}),
+						elm$core$Platform$Cmd$none);
+				default:
+					var id = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								addingColumnNotes: A2(elm$core$Dict$remove, id, model.addingColumnNotes)
+							}),
+						function () {
+							var _n29 = A2(
+								elm$core$Maybe$withDefault,
+								'',
+								A2(elm$core$Dict$get, id, model.addingColumnNotes));
+							if (_n29 === '') {
+								return elm$core$Platform$Cmd$none;
+							} else {
+								var note = _n29;
+								return A3(author$project$Main$addNoteCard, model, id, note);
+							}
+						}());
 			}
 		}
 	});
@@ -14413,6 +14534,7 @@ var elm$time$Time$utc = A2(elm$time$Time$Zone, 0, _List_Nil);
 var author$project$Main$init = F3(
 	function (config, url, key) {
 		var model = {
+			addingColumnNotes: elm$core$Dict$empty,
 			allLabels: elm$core$Dict$empty,
 			anticipatedCards: elm$core$Set$empty,
 			archive: _List_Nil,
@@ -15509,6 +15631,12 @@ var author$project$Drag$viewDropArea = F4(
 			_List_fromArray(
 				[droppedElement]));
 	});
+var author$project$Main$CancelCreatingColumnNote = function (a) {
+	return {$: 'CancelCreatingColumnNote', a: a};
+};
+var author$project$Main$CreateColumnNote = function (a) {
+	return {$: 'CreateColumnNote', a: a};
+};
 var author$project$Main$MoveCardAfter = F2(
 	function (a, b) {
 		return {$: 'MoveCardAfter', a: a, b: b};
@@ -15516,6 +15644,10 @@ var author$project$Main$MoveCardAfter = F2(
 var author$project$Main$ProjectDrag = function (a) {
 	return {$: 'ProjectDrag', a: a};
 };
+var author$project$Main$SetCreatingColumnNote = F2(
+	function (a, b) {
+		return {$: 'SetCreatingColumnNote', a: a, b: b};
+	});
 var author$project$Colors$green500 = '#28a745';
 var author$project$Colors$green = author$project$Colors$green500;
 var author$project$Colors$purple500 = '#6f42c1';
@@ -15580,6 +15712,346 @@ var author$project$Main$columnIcon = function (col) {
 						{color: author$project$Colors$green}));
 		}
 	}
+};
+var Gizra$elm_keyboard_event$Keyboard$Event$KeyboardEvent = F7(
+	function (altKey, ctrlKey, key, keyCode, metaKey, repeat, shiftKey) {
+		return {altKey: altKey, ctrlKey: ctrlKey, key: key, keyCode: keyCode, metaKey: metaKey, repeat: repeat, shiftKey: shiftKey};
+	});
+var Gizra$elm_keyboard_event$Keyboard$Event$decodeKey = elm$json$Json$Decode$maybe(
+	A2(
+		elm$json$Json$Decode$andThen,
+		function (key) {
+			return elm$core$String$isEmpty(key) ? elm$json$Json$Decode$fail('empty key') : elm$json$Json$Decode$succeed(key);
+		},
+		A2(elm$json$Json$Decode$field, 'key', elm$json$Json$Decode$string)));
+var Gizra$elm_keyboard_event$Keyboard$Event$decodeNonZero = A2(
+	elm$json$Json$Decode$andThen,
+	function (code) {
+		return (!code) ? elm$json$Json$Decode$fail('code was zero') : elm$json$Json$Decode$succeed(code);
+	},
+	elm$json$Json$Decode$int);
+var Gizra$elm_keyboard_event$Keyboard$Event$decodeKeyCode = elm$json$Json$Decode$oneOf(
+	_List_fromArray(
+		[
+			A2(elm$json$Json$Decode$field, 'keyCode', Gizra$elm_keyboard_event$Keyboard$Event$decodeNonZero),
+			A2(elm$json$Json$Decode$field, 'which', Gizra$elm_keyboard_event$Keyboard$Event$decodeNonZero),
+			A2(elm$json$Json$Decode$field, 'charCode', Gizra$elm_keyboard_event$Keyboard$Event$decodeNonZero),
+			elm$json$Json$Decode$succeed(0)
+		]));
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$A = {$: 'A'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Add = {$: 'Add'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Alt = {$: 'Alt'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Ambiguous = function (a) {
+	return {$: 'Ambiguous', a: a};
+};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$B = {$: 'B'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Backspace = {$: 'Backspace'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$C = {$: 'C'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$CapsLock = {$: 'CapsLock'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$ChromeSearch = {$: 'ChromeSearch'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Command = {$: 'Command'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Ctrl = function (a) {
+	return {$: 'Ctrl', a: a};
+};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$D = {$: 'D'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Decimal = {$: 'Decimal'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Delete = {$: 'Delete'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Divide = {$: 'Divide'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Down = {$: 'Down'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$E = {$: 'E'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Eight = {$: 'Eight'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$End = {$: 'End'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter = {$: 'Enter'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Escape = {$: 'Escape'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F = {$: 'F'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F1 = {$: 'F1'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F10 = {$: 'F10'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F11 = {$: 'F11'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F12 = {$: 'F12'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F2 = {$: 'F2'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F3 = {$: 'F3'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F4 = {$: 'F4'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F5 = {$: 'F5'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F6 = {$: 'F6'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F7 = {$: 'F7'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F8 = {$: 'F8'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$F9 = {$: 'F9'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Five = {$: 'Five'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Four = {$: 'Four'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$G = {$: 'G'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$H = {$: 'H'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Home = {$: 'Home'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$I = {$: 'I'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Insert = {$: 'Insert'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$J = {$: 'J'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$K = {$: 'K'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$L = {$: 'L'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Left = {$: 'Left'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$M = {$: 'M'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Multiply = {$: 'Multiply'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$N = {$: 'N'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Nine = {$: 'Nine'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumLock = {$: 'NumLock'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadEight = {$: 'NumpadEight'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadFive = {$: 'NumpadFive'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadFour = {$: 'NumpadFour'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadNine = {$: 'NumpadNine'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadOne = {$: 'NumpadOne'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadSeven = {$: 'NumpadSeven'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadSix = {$: 'NumpadSix'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadThree = {$: 'NumpadThree'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadTwo = {$: 'NumpadTwo'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadZero = {$: 'NumpadZero'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$O = {$: 'O'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$One = {$: 'One'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$P = {$: 'P'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$PageDown = {$: 'PageDown'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$PageUp = {$: 'PageUp'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$PauseBreak = {$: 'PauseBreak'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$PrintScreen = {$: 'PrintScreen'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Q = {$: 'Q'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$R = {$: 'R'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Right = {$: 'Right'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$S = {$: 'S'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$ScrollLock = {$: 'ScrollLock'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Seven = {$: 'Seven'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Shift = function (a) {
+	return {$: 'Shift', a: a};
+};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Six = {$: 'Six'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Spacebar = {$: 'Spacebar'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Subtract = {$: 'Subtract'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$T = {$: 'T'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Tab = {$: 'Tab'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Three = {$: 'Three'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Two = {$: 'Two'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$U = {$: 'U'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Unknown = function (a) {
+	return {$: 'Unknown', a: a};
+};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Up = {$: 'Up'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$V = {$: 'V'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$W = {$: 'W'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Windows = {$: 'Windows'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$X = {$: 'X'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Y = {$: 'Y'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Z = {$: 'Z'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$Zero = {$: 'Zero'};
+var SwiftsNamesake$proper_keyboard$Keyboard$Key$fromCode = function (keyCode) {
+	switch (keyCode) {
+		case 8:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Backspace;
+		case 9:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Tab;
+		case 13:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter;
+		case 16:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Shift(elm$core$Maybe$Nothing);
+		case 17:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Ctrl(elm$core$Maybe$Nothing);
+		case 18:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Alt;
+		case 19:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$PauseBreak;
+		case 20:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$CapsLock;
+		case 27:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Escape;
+		case 32:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Spacebar;
+		case 33:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$PageUp;
+		case 34:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$PageDown;
+		case 35:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$End;
+		case 36:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Home;
+		case 37:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Left;
+		case 38:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Up;
+		case 39:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Right;
+		case 40:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Down;
+		case 44:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$PrintScreen;
+		case 45:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Insert;
+		case 46:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Delete;
+		case 48:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Zero;
+		case 49:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$One;
+		case 50:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Two;
+		case 51:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Three;
+		case 52:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Four;
+		case 53:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Five;
+		case 54:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Six;
+		case 55:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Seven;
+		case 56:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Eight;
+		case 57:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Nine;
+		case 65:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$A;
+		case 66:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$B;
+		case 67:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$C;
+		case 68:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$D;
+		case 69:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$E;
+		case 70:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F;
+		case 71:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$G;
+		case 72:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$H;
+		case 73:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$I;
+		case 74:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$J;
+		case 75:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$K;
+		case 76:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$L;
+		case 77:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$M;
+		case 78:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$N;
+		case 79:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$O;
+		case 80:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$P;
+		case 81:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Q;
+		case 82:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$R;
+		case 83:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$S;
+		case 84:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$T;
+		case 85:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$U;
+		case 86:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$V;
+		case 87:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$W;
+		case 88:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$X;
+		case 89:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Y;
+		case 90:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Z;
+		case 91:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Ambiguous(
+				_List_fromArray(
+					[SwiftsNamesake$proper_keyboard$Keyboard$Key$Windows, SwiftsNamesake$proper_keyboard$Keyboard$Key$Command, SwiftsNamesake$proper_keyboard$Keyboard$Key$ChromeSearch]));
+		case 96:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadZero;
+		case 97:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadOne;
+		case 98:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadTwo;
+		case 99:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadThree;
+		case 100:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadFour;
+		case 101:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadFive;
+		case 102:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadSix;
+		case 103:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadSeven;
+		case 104:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadEight;
+		case 105:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumpadNine;
+		case 106:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Multiply;
+		case 107:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Add;
+		case 109:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Subtract;
+		case 110:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Decimal;
+		case 111:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Divide;
+		case 112:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F1;
+		case 113:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F2;
+		case 114:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F3;
+		case 115:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F4;
+		case 116:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F5;
+		case 117:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F6;
+		case 118:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F7;
+		case 119:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F8;
+		case 120:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F9;
+		case 121:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F10;
+		case 122:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F11;
+		case 123:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$F12;
+		case 144:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$NumLock;
+		case 145:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$ScrollLock;
+		default:
+			return SwiftsNamesake$proper_keyboard$Keyboard$Key$Unknown(keyCode);
+	}
+};
+var elm$json$Json$Decode$map7 = _Json_map7;
+var Gizra$elm_keyboard_event$Keyboard$Event$decodeKeyboardEvent = A8(
+	elm$json$Json$Decode$map7,
+	Gizra$elm_keyboard_event$Keyboard$Event$KeyboardEvent,
+	A2(elm$json$Json$Decode$field, 'altKey', elm$json$Json$Decode$bool),
+	A2(elm$json$Json$Decode$field, 'ctrlKey', elm$json$Json$Decode$bool),
+	Gizra$elm_keyboard_event$Keyboard$Event$decodeKey,
+	A2(elm$json$Json$Decode$map, SwiftsNamesake$proper_keyboard$Keyboard$Key$fromCode, Gizra$elm_keyboard_event$Keyboard$Event$decodeKeyCode),
+	A2(elm$json$Json$Decode$field, 'metaKey', elm$json$Json$Decode$bool),
+	A2(elm$json$Json$Decode$field, 'repeat', elm$json$Json$Decode$bool),
+	A2(elm$json$Json$Decode$field, 'shiftKey', elm$json$Json$Decode$bool));
+var Gizra$elm_keyboard_event$Keyboard$Event$considerKeyboardEvent = function (func) {
+	return A2(
+		elm$json$Json$Decode$andThen,
+		function (event) {
+			var _n0 = func(event);
+			if (_n0.$ === 'Just') {
+				var msg = _n0.a;
+				return elm$json$Json$Decode$succeed(msg);
+			} else {
+				return elm$json$Json$Decode$fail('Ignoring keyboard event');
+			}
+		},
+		Gizra$elm_keyboard_event$Keyboard$Event$decodeKeyboardEvent);
+};
+var author$project$Main$onCtrlEnter = function (msg) {
+	return A3(
+		elm$core$Basics$composeL,
+		elm$html$Html$Events$on('keydown'),
+		Gizra$elm_keyboard_event$Keyboard$Event$considerKeyboardEvent,
+		function (event) {
+			return ((event.ctrlKey || event.metaKey) && _Utils_eq(event.keyCode, SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter)) ? elm$core$Maybe$Just(msg) : elm$core$Maybe$Nothing;
+		});
 };
 var author$project$Drag$Start = F2(
 	function (a, b) {
@@ -16643,6 +17115,15 @@ var author$project$Main$viewProjectColumnCard = F4(
 		}
 		return A3(author$project$Log$debug, 'impossible?: card has no note or content', ghCard, _List_Nil);
 	});
+var elm$html$Html$button = _VirtualDom_node('button');
+var elm$html$Html$textarea = _VirtualDom_node('textarea');
+var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
+var elm$html$Html$Attributes$rows = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'rows',
+		elm$core$String$fromInt(n));
+};
 var author$project$Main$viewProjectColumn = F3(
 	function (model, project, col) {
 		var dropCandidate = {
@@ -16670,8 +17151,100 @@ var author$project$Main$viewProjectColumn = F3(
 					_List_fromArray(
 						[
 							author$project$Main$columnIcon(col),
-							elm$html$Html$text(col.name)
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('column-name')
+								]),
+							_List_fromArray(
+								[
+									elm$html$Html$text(col.name)
+								])),
+							A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('add-card'),
+									elm$html$Html$Events$onClick(
+									A2(author$project$Main$SetCreatingColumnNote, col.id, ''))
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$plus(author$project$Main$octiconOpts)
+								]))
 						])),
+					function () {
+					var _n0 = A2(elm$core$Dict$get, col.id, model.addingColumnNotes);
+					if (_n0.$ === 'Just') {
+						var val = _n0.a;
+						return A2(
+							elm$html$Html$form,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('add-note-form'),
+									elm$html$Html$Events$onSubmit(
+									author$project$Main$CreateColumnNote(col.id))
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$textarea,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$placeholder('Enter a note'),
+											elm$html$Html$Attributes$rows(3),
+											elm$html$Html$Attributes$id(
+											author$project$Main$addNoteTextareaId(col.id)),
+											elm$html$Html$Events$onInput(
+											author$project$Main$SetCreatingColumnNote(col.id)),
+											author$project$Main$onCtrlEnter(
+											author$project$Main$CreateColumnNote(col.id))
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(val)
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('buttons')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button cancel'),
+													elm$html$Html$Attributes$type_('reset'),
+													elm$html$Html$Events$onClick(
+													author$project$Main$CancelCreatingColumnNote(col.id))
+												]),
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
+													elm$html$Html$text('cancel')
+												])),
+											A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button apply'),
+													elm$html$Html$Attributes$type_('submit')
+												]),
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
+													elm$html$Html$text('add')
+												]))
+										]))
+								]));
+					} else {
+						return elm$html$Html$text('');
+					}
+				}(),
 					elm$core$List$isEmpty(cards) ? A2(
 					elm$html$Html$div,
 					_List_fromArray(

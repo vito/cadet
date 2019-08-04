@@ -35,6 +35,7 @@ a {
 }
 
 p {
+  line-height: 1.5;
   margin-bottom: 1em;
 
   &:last-child {
@@ -56,6 +57,10 @@ code {
   font-size: 85%;
   margin: 0;
   padding: .2em .4em;
+}
+
+h4 {
+  font-size: 16px;
 }
 
 .cadet {
@@ -288,7 +293,7 @@ code {
   &:focus {
     outline: none;
     border-color: @blue !important;
-    box-shadow: 0 0 0 .2em rgba(3,102,214,.3);
+    box-shadow: 0 0 0 .2em fade(@blue, 30%);
   }
 
   &.highlighted {
@@ -723,6 +728,8 @@ code {
 .project-column {
   display: flex;
   flex-direction: column;
+
+  min-width: @card-width + (2 * @card-margin);
 }
 
 .project.single {
@@ -1244,11 +1251,15 @@ svg {
       }
     }
 
-    input, .buttons {
+    input {
       border: 0;
       background: @white;
       width: 100%;
       padding: 8px;
+    }
+
+    .buttons {
+      background: @white;
     }
 
     .label-operation {
@@ -1284,11 +1295,16 @@ svg {
     }
   }
 
-  .buttons {
-    text-align: right;
-  }
+}
+
+.buttons {
+  text-align: right;
+  width: 100%;
+  padding: @card-margin;
 
   .button {
+    border: 0;
+
     display: inline-block;
     color: @white;
     padding: 0 8px;
@@ -1296,6 +1312,11 @@ svg {
     border-radius: 3px;
     margin-left: 8px;
     cursor: pointer;
+
+    .octicon {
+      margin-right: 3px;
+      margin-left: -2px;
+    }
 
     &.apply {
       background: @green;
@@ -1309,12 +1330,19 @@ svg {
       background: @white;
       color: @gray;
 
+      .octicon {
+        * {
+          fill: @gray;
+        }
+      }
+
       &:hover {
         background: @gray-200;
       }
     }
   }
 }
+
 
 .card-columns {
   column-count: auto;
@@ -1365,7 +1393,8 @@ svg {
 
 .column-title {
   color: @gray-dark;
-  display: block;
+  display: flex;
+  flex-direction: row;
   font-size: 16px;
   user-select: none;
   border-bottom: 1px solid @gray-light;
@@ -1378,6 +1407,45 @@ svg {
     * {
       fill: @gray-dark;
     }
+  }
+
+  .column-name {
+    flex-grow: 1;
+    margin: 10px 0;
+  }
+
+  .add-card {
+    .octicon {
+      width: 16px;
+      height: 16px;
+      margin: 12px 10px;
+    }
+  }
+}
+
+.add-note-form {
+  textarea {
+    margin: @card-margin;
+    margin-bottom: 5px;
+    width: @card-width;
+    padding: 6px 8px;
+    border: 1px solid @gray-300;
+    resize: vertical;
+    font-size: 14px;
+    color: @gray-900;
+    line-height: 20px;
+    font-family: inherit;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 2px fade(@black, 7.5%);
+
+    &:focus {
+      border-color: @blue;
+      box-shadow: 0 0 0 .2em fade(@blue, 30%);
+    }
+  }
+
+  .buttons {
+    padding-top: 0;
   }
 }
 
