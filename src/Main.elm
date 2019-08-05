@@ -1,5 +1,8 @@
 port module Main exposing (main)
 
+-- TODO: archive button on 'done' column
+-- TODO: note editing
+
 import Backend exposing (Data, Me)
 import Browser
 import Browser.Dom
@@ -133,6 +136,9 @@ type alias Model =
 
     -- column note adding state
     , addingColumnNotes : Dict GitHub.ID String
+
+    -- cards being deleted from a project
+    , deletingCards : Set GitHub.ID
     }
 
 
@@ -288,6 +294,7 @@ type Msg
     | UnlabelCard Card String
     | RefreshIssue GitHub.ID
     | RefreshPullRequest GitHub.ID
+    | RefreshColumn GitHub.ID
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
@@ -301,6 +308,9 @@ type Msg
     | SetCreatingColumnNote GitHub.ID String
     | CancelCreatingColumnNote GitHub.ID
     | CreateColumnNote GitHub.ID
+    | ConfirmDeleteCard GitHub.ID
+    | CancelDeleteCard GitHub.ID
+    | DeleteCard GitHub.ID GitHub.ID
 
 
 type Page
@@ -483,6 +493,7 @@ init config url key =
             , showLabelOperations = False
             , cardLabelOperations = Dict.empty
             , addingColumnNotes = Dict.empty
+            , deletingCards = Set.empty
             }
 
         ( navedModel, navedMsgs ) =
@@ -1001,6 +1012,9 @@ update msg model =
         RefreshPullRequest id ->
             ( model, Backend.refreshPR id RefreshQueued )
 
+        RefreshColumn id ->
+            ( model, Backend.refreshCards id RefreshQueued )
+
         AddFilter filter ->
             ( computeGraphsView { model | graphFilters = filter :: model.graphFilters }
             , Cmd.none
@@ -1104,6 +1118,17 @@ update msg model =
 
                 note ->
                     addNoteCard model id note
+            )
+
+        ConfirmDeleteCard id ->
+            ( { model | deletingCards = Set.insert id model.deletingCards }, Cmd.none )
+
+        CancelDeleteCard id ->
+            ( { model | deletingCards = Set.remove id model.deletingCards }, Cmd.none )
+
+        DeleteCard id ghCardId ->
+            ( { model | deletingCards = Set.remove id model.deletingCards }
+            , deleteProjectCard model ghCardId
             )
 
 
@@ -2152,7 +2177,7 @@ viewTabbedCards model tabs =
                     cards
                         |> List.sortBy (.updatedAt >> Time.posixToMillis)
                         |> List.reverse
-                        |> List.map (viewCard model)
+                        |> List.map (viewCard model [])
                         |> Html.div [ HA.class "tab-cards", firstTabClass ]
 
             _ ->
@@ -2250,7 +2275,7 @@ viewRepoPRs model repoId prIds =
                     |> List.filterMap (\id -> Dict.get id model.cards)
                     |> List.sortBy (.updatedAt >> Time.posixToMillis)
                     |> List.reverse
-                    |> List.map (viewCard model)
+                    |> List.map (viewCard model [])
                     |> Html.div [ HA.class "cards" ]
                 ]
 
@@ -2863,8 +2888,12 @@ viewProjectColumn model project col =
             [ columnIcon col
             , Html.span [ HA.class "column-name" ]
                 [ Html.text col.name ]
-            , Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
-                [ Octicons.plus octiconOpts ]
+            , Html.div [ HA.class "column-controls" ]
+                [ Html.span [ HA.class "refresh-column", HE.onClick (RefreshColumn col.id) ]
+                    [ Octicons.sync octiconOpts ]
+                , Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
+                    [ Octicons.plus octiconOpts ]
+                ]
             ]
         , case Dict.get col.id model.addingColumnNotes of
             Just val ->
@@ -2923,6 +2952,33 @@ onCtrlEnter msg =
                 Nothing
 
 
+deleteCardControls : Model -> GitHub.ID -> GitHub.ID -> Html Msg
+deleteCardControls model selfId deleteId =
+    if Set.member selfId model.deletingCards then
+        Html.div [ HA.class "with-confirm" ]
+            [ Html.span
+                [ HA.class "cancel-delete-card"
+                , onClickNoBubble (CancelDeleteCard selfId)
+                ]
+                [ Octicons.x octiconOpts
+                ]
+            , Html.span
+                [ HA.class "inline-confirm"
+                , onClickNoBubble (DeleteCard selfId deleteId)
+                ]
+                [ Octicons.check octiconOpts
+                ]
+            ]
+
+    else
+        Html.span
+            [ HA.class "delete-card"
+            , onClickNoBubble (ConfirmDeleteCard selfId)
+            ]
+            [ Octicons.trashcan octiconOpts
+            ]
+
+
 viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
 viewProjectColumnCard model project col ghCard =
     let
@@ -2937,27 +2993,35 @@ viewProjectColumnCard model project col ghCard =
                 , afterId = Just ghCard.id
                 }
             }
+
+        card =
+            case ( ghCard.note, ghCard.contentId ) of
+                ( Just n, Nothing ) ->
+                    viewNote model ghCard.id col n
+
+                ( Nothing, Just contentId ) ->
+                    case Dict.get contentId model.cards of
+                        Just c ->
+                            viewCard model [ deleteCardControls model c.id ghCard.id ] c
+
+                        Nothing ->
+                            viewLoadingCard
+
+                _ ->
+                    Html.text "impossible: card is neither note nor content"
     in
-    case ( ghCard.note, ghCard.contentId ) of
-        ( Just n, Nothing ) ->
-            [ Drag.draggable model.projectDrag ProjectDrag dragId (viewNote model col n)
-            , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-            ]
+    [ Drag.draggable model.projectDrag ProjectDrag dragId card
+    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+    ]
 
-        ( Nothing, Just contentId ) ->
-            case Dict.get contentId model.cards of
-                Just card ->
-                    [ Drag.draggable model.projectDrag ProjectDrag dragId (viewCard model card)
-                    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-                    ]
 
-                Nothing ->
-                    Log.debug "impossible: content has no card" contentId <|
-                        []
-
-        _ ->
-            Log.debug "impossible?: card has no note or content" ghCard <|
-                []
+viewLoadingCard : Html Msg
+viewLoadingCard =
+    Html.div [ HA.class "card loading" ]
+        [ Html.div [ HA.class "card-icons" ] [ Octicons.sync octiconOpts ]
+        , Html.div [ HA.class "card-info" ]
+            [ Html.span [ HA.class "loading-text" ] [ Html.text "loading..." ] ]
+        ]
 
 
 viewProjectPage : Model -> GitHub.Project -> Html Msg
@@ -3654,32 +3718,41 @@ activityClass now date =
         "active-long-ago"
 
 
+onClickNoBubble : msg -> Html.Attribute msg
+onClickNoBubble msg =
+    HE.custom "click" <|
+        JD.succeed
+            { message = msg
+            , stopPropagation = True
+            , preventDefault = True
+            }
+
+
 viewCardEntry : Model -> Card -> Html Msg
 viewCardEntry model card =
     let
         anticipated =
             isAnticipated model card
 
+        controls =
+            if not anticipated then
+                [ Html.span
+                    [ onClickNoBubble (DeselectCard card.id)
+                    ]
+                    [ Octicons.x octiconOpts ]
+                ]
+
+            else
+                []
+
         cardView =
-            viewCard model card
+            viewCard model controls card
 
         dragSource =
             NewContentCardSource { contentId = card.id }
     in
-    Html.div [ HA.class "card-controls" ]
-        [ Drag.draggable model.projectDrag ProjectDrag dragSource <|
-            cardView
-        , Html.div [ HA.class "card-buttons" ]
-            [ if not anticipated then
-                Html.span
-                    [ HE.onClick (DeselectCard card.id)
-                    ]
-                    [ Octicons.x octiconOpts ]
-
-              else
-                Html.text ""
-            ]
-        ]
+    Drag.draggable model.projectDrag ProjectDrag dragSource <|
+        cardView
 
 
 isInProject : GitHub.ID -> Card -> Bool
@@ -3741,12 +3814,13 @@ hasLabelAndColor model name color card =
     List.any (\a -> Dict.member a matchingLabels) card.labels
 
 
-viewCard : Model -> Card -> Html Msg
-viewCard model card =
+viewCard : Model -> List (Html Msg) -> Card -> Html Msg
+viewCard model controls card =
     Html.div
-        [ HA.classList
-            [ ( "card", True )
-            , ( "in-flight", Card.isInFlight card )
+        [ HA.class "card"
+        , HA.tabindex 0
+        , HA.classList
+            [ ( "in-flight", Card.isInFlight card )
             , ( "done", Card.isDone card )
             , ( "icebox", Card.isIcebox card )
             , ( "backlog", Card.isBacklog card )
@@ -3763,7 +3837,6 @@ viewCard model card =
                         False
               )
             ]
-        , HA.tabindex 0
         , HE.onClick (SelectCard card.id)
         , HE.onMouseOver (HighlightNode card.id)
         , HE.onMouseOut (UnhighlightNode card.id)
@@ -3781,46 +3854,164 @@ viewCard model card =
                 , prIcons model card
                 ]
         , Html.div [ HA.class "card-info" ]
-            [ Html.span
-                [ HA.class "card-title"
-                , HA.draggable "false"
-                ]
+            [ Html.span [ HA.class "card-title", HA.draggable "false" ] <|
                 [ Html.a
-                    [ HA.href card.url
+                    [ HA.class "title-link"
+                    , HA.href card.url
                     , HA.target "_blank"
                     ]
                     [ Html.text card.title
                     ]
                 ]
-            , Html.div [ HA.class "card-meta" ]
-                [ Html.a
-                    [ HA.href card.url
+            , viewCardMeta card
+            , viewCardSquares model card
+            ]
+        , Html.div [ HA.class "card-controls" ] controls
+        ]
+
+
+viewNote : Model -> GitHub.ID -> GitHub.ProjectColumn -> String -> Html Msg
+viewNote model cardId col text =
+    if String.startsWith "http" text then
+        case Dict.get text model.projectsByUrl of
+            Just project ->
+                viewProjectCard model project
+
+            Nothing ->
+                viewNoteCard model cardId col text
+
+    else
+        viewNoteCard model cardId col text
+
+
+viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> String -> Html Msg
+viewNoteCard model cardId col text =
+    Html.div
+        [ HA.class "card note"
+        , HA.tabindex 0
+        , HA.classList
+            [ ( "in-flight", Project.detectColumn.inFlight col )
+            , ( "done", Project.detectColumn.done col )
+            , ( "backlog", Project.detectColumn.backlog col )
+            ]
+        ]
+        [ Html.div [ HA.class "card-icons" ]
+            [ Octicons.book octiconOpts
+            ]
+        , Html.div [ HA.class "card-info card-note" ]
+            [ Markdown.toHtml [] text ]
+        , Html.div [ HA.class "card-controls" ]
+            [ deleteCardControls model cardId cardId
+            ]
+        ]
+
+
+viewProjectCard : Model -> GitHub.Project -> Html Msg
+viewProjectCard model project =
+    Html.div [ HA.class "card project", HA.tabindex 0 ]
+        [ Html.div [ HA.class "card-icons" ]
+            [ Octicons.project { octiconOpts | color = Colors.gray }
+            , projectExternalIcon project
+            ]
+        , Html.div [ HA.class "card-info" ]
+            [ Html.span [ HA.class "card-title", HA.draggable "false" ]
+                [ Html.a [ HA.href ("/projects/" ++ project.id) ]
+                    [ Html.text project.name ]
+                ]
+            , if String.isEmpty project.body then
+                Html.text ""
+
+              else
+                Html.div [ HA.class "project-body" ]
+                    [ Markdown.toHtml [] project.body ]
+            , viewProjectBar model project
+            ]
+        ]
+
+
+viewProjectBar : Model -> GitHub.Project -> Html Msg
+viewProjectBar model project =
+    let
+        cardCount col =
+            Dict.get col.id model.columnCards
+                |> Maybe.map List.length
+                |> Maybe.withDefault 0
+
+        countPurpose purpose =
+            LE.find ((==) (Just purpose) << .purpose) project.columns
+                |> Maybe.map cardCount
+                |> Maybe.withDefault 0
+
+        toDos =
+            countPurpose GitHub.ProjectColumnPurposeToDo
+
+        inProgresses =
+            countPurpose GitHub.ProjectColumnPurposeInProgress
+
+        dones =
+            countPurpose GitHub.ProjectColumnPurposeDone
+
+        total =
+            toDos + inProgresses + dones
+
+        width base =
+            let
+                pct =
+                    (toFloat base / toFloat total) * 100
+            in
+            HA.style "width" (String.fromFloat pct ++ "%")
+
+        segment name val =
+            if val == 0 then
+                Html.text ""
+
+            else
+                Html.div [ HA.class ("segment " ++ name), width val ] []
+    in
+    if total > 0 then
+        Html.div [ HA.class "project-bar" ]
+            [ segment "done" dones
+            , segment "in-progress" inProgresses
+            , segment "to-do" toDos
+            ]
+
+    else
+        Html.text ""
+
+
+viewCardMeta : Card -> Html Msg
+viewCardMeta card =
+    Html.div [ HA.class "card-meta" ]
+        [ Html.a
+            [ HA.href card.url
+            , HA.target "_blank"
+            , HA.draggable "false"
+            ]
+            [ Html.text ("#" ++ String.fromInt card.number) ]
+        , Html.text " "
+        , Html.text "opened by "
+        , case card.author of
+            Just user ->
+                Html.a
+                    [ HA.href user.url
                     , HA.target "_blank"
                     , HA.draggable "false"
                     ]
-                    [ Html.text ("#" ++ String.fromInt card.number) ]
-                , Html.text " "
-                , Html.text "opened by "
-                , case card.author of
-                    Just user ->
-                        Html.a
-                            [ HA.href user.url
-                            , HA.target "_blank"
-                            , HA.draggable "false"
-                            ]
-                            [ Html.text user.login ]
+                    [ Html.text user.login ]
 
-                    _ ->
-                        Html.text "(deleted user)"
-                ]
-            , Html.div [ HA.class "card-squares" ]
-                [ Html.div [ HA.class "card-labels" ] <|
-                    List.map (searchableLabel model) card.labels
-                        ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
-                , Html.div [ HA.class "card-actors" ] <|
-                    List.map (viewEventActor model) (recentEvents model card)
-                ]
-            ]
+            _ ->
+                Html.text "(deleted user)"
+        ]
+
+
+viewCardSquares : Model -> Card -> Html Msg
+viewCardSquares model card =
+    Html.div [ HA.class "card-squares" ]
+        [ Html.div [ HA.class "card-labels" ] <|
+            List.map (searchableLabel model) card.labels
+                ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
+        , Html.div [ HA.class "card-actors" ] <|
+            List.map (viewEventActor model) (recentEvents model card)
         ]
 
 
@@ -4007,112 +4198,6 @@ prIcons model card =
             , statusCheck
             ]
                 ++ reviewStates
-
-
-viewProjectCard : Model -> GitHub.Project -> Html Msg
-viewProjectCard model project =
-    Html.div [ HA.class "card project", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.project { octiconOpts | color = Colors.gray }
-            , projectExternalIcon project
-            ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "card-title", HA.draggable "false" ]
-                [ Html.a [ HA.href ("/projects/" ++ project.id) ]
-                    [ Html.text project.name ]
-                ]
-            , if String.isEmpty project.body then
-                Html.text ""
-
-              else
-                Html.div [ HA.class "project-body" ]
-                    [ Markdown.toHtml [] project.body ]
-            , viewProjectBar model project
-            ]
-        ]
-
-
-viewProjectBar : Model -> GitHub.Project -> Html Msg
-viewProjectBar model project =
-    let
-        cardCount col =
-            Dict.get col.id model.columnCards
-                |> Maybe.map List.length
-                |> Maybe.withDefault 0
-
-        countPurpose purpose =
-            LE.find ((==) (Just purpose) << .purpose) project.columns
-                |> Maybe.map cardCount
-                |> Maybe.withDefault 0
-
-        toDos =
-            countPurpose GitHub.ProjectColumnPurposeToDo
-
-        inProgresses =
-            countPurpose GitHub.ProjectColumnPurposeInProgress
-
-        dones =
-            countPurpose GitHub.ProjectColumnPurposeDone
-
-        total =
-            toDos + inProgresses + dones
-
-        width base =
-            let
-                pct =
-                    (toFloat base / toFloat total) * 100
-            in
-            HA.style "width" (String.fromFloat pct ++ "%")
-
-        segment name val =
-            if val == 0 then
-                Html.text ""
-
-            else
-                Html.div [ HA.class ("segment " ++ name), width val ] []
-    in
-    if total > 0 then
-        Html.div [ HA.class "project-bar" ]
-            [ segment "done" dones
-            , segment "in-progress" inProgresses
-            , segment "to-do" toDos
-            ]
-
-    else
-        Html.text ""
-
-
-viewNote : Model -> GitHub.ProjectColumn -> String -> Html Msg
-viewNote model col text =
-    if String.startsWith "http" text then
-        case Dict.get text model.projectsByUrl of
-            Just project ->
-                viewProjectCard model project
-
-            Nothing ->
-                viewNoteCard model col text
-
-    else
-        viewNoteCard model col text
-
-
-viewNoteCard : Model -> GitHub.ProjectColumn -> String -> Html Msg
-viewNoteCard model col text =
-    Html.div
-        [ HA.classList
-            [ ( "card", True )
-            , ( "in-flight", Project.detectColumn.inFlight col )
-            , ( "done", Project.detectColumn.done col )
-            , ( "backlog", Project.detectColumn.backlog col )
-            ]
-        , HA.tabindex 0
-        ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.book octiconOpts
-            ]
-        , Html.div [ HA.class "card-info card-note" ]
-            [ Markdown.toHtml [] text ]
-        ]
 
 
 recentEvents : Model -> Card -> List Backend.CardEvent
@@ -4369,6 +4454,26 @@ addNoteCard model colId note =
             GitHub.addNoteCard token colId note
                 |> Task.map (always ())
                 |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
+
+
+deleteProjectCard : Model -> GitHub.ID -> Cmd Msg
+deleteProjectCard model cardId =
+    withTokenOrLogIn model <|
+        \token ->
+            let
+                refreshColumn res =
+                    case res of
+                        Ok (Just colId) ->
+                            DataChanged (Backend.refreshCards colId RefreshQueued) (Ok ())
+
+                        Ok Nothing ->
+                            DataChanged Cmd.none (Ok ())
+
+                        Err msg ->
+                            DataChanged Cmd.none (Err msg)
+            in
+            GitHub.deleteProjectCard token cardId
+                |> Task.attempt refreshColumn
 
 
 removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg

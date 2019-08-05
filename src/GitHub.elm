@@ -55,6 +55,7 @@ module GitHub exposing
     , decodeRelease
     , decodeRepo
     , decodeUser
+    , deleteProjectCard
     , deleteRepoLabel
     , deleteRepoMilestone
     , encodeCommit
@@ -597,6 +598,13 @@ addNoteCardAfter token columnID note mafterID =
         |> Task.andThen (\{ id } -> moveCardAfter token columnID id mafterID)
 
 
+deleteProjectCard : Token -> ID -> Task Error (Maybe ID)
+deleteProjectCard token cardID =
+    deleteProjectCardMutation
+        |> GB.request { cardId = cardID }
+        |> GH.customSendMutation (authedOptions token)
+
+
 createRepoLabel : Token -> Repo -> String -> String -> Task Error ()
 createRepoLabel token repo name color =
     HttpBuilder.post ("https://api.github.com/repos/" ++ repo.owner ++ "/" ++ repo.name ++ "/labels")
@@ -812,6 +820,30 @@ addNoteCardMutation =
                         (GB.extract <|
                             GB.field "node" [] projectColumnCardObject
                         )
+                )
+
+
+deleteProjectCardMutation : GB.Document GB.Mutation (Maybe ID) { cardId : ID }
+deleteProjectCardMutation =
+    let
+        cardIDVar =
+            GV.required "cardId" .cardId GV.id
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "deleteProjectCard"
+                [ ( "input"
+                  , GA.object
+                        [ ( "cardId", GA.variable cardIDVar )
+                        ]
+                  )
+                ]
+                (GB.nullable
+                    << GB.extract
+                 <|
+                    GB.field "column"
+                        []
+                        (GB.extract <| GB.field "id" [] GB.string)
                 )
 
 

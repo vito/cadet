@@ -84,13 +84,86 @@ h4 {
   display: flex;
 }
 
+.card {
+  width: @card-width;
+  background: @white;
+  border: 1px solid @gray-200;
+  border-radius: 6px;
+  box-sizing: border-box;
+  background: #fff;
+  white-space: normal;
+  vertical-align: top;
+  user-select: none;
+  display: flex;
+  flex-direction: row;
+  position: relative;
+
+  box-shadow: 0 1px 1px rgba(27,31,35,.1);
+
+  &:hover {
+    box-shadow: 0 1px 3px rgba(106,115,125,.3);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: @blue !important;
+    box-shadow: 0 0 0 .2em fade(@blue, 30%);
+  }
+
+  &.highlighted {
+    box-shadow: 0 0 0 5px @yellow;
+  }
+
+  &.in-flight, &.done, &.backlog, &.icebox {
+    &::before {
+      content: " ";
+      position: absolute;
+      top: 0;
+      left: 0.5px;
+      right: 0.5px;
+      height: 0;
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+    }
+  }
+
+  &.paused {
+    opacity: 0.5;
+  }
+
+  &.icebox::before {
+    background: @gray;
+  }
+
+  &.in-flight::before {
+    background: @purple;
+  }
+
+  &.done::before {
+    background: @green;
+  }
+
+  &.backlog::before {
+    background: @blue;
+  }
+
+  &.loading {
+    animation: pulse 1s infinite;
+
+    .loading-text {
+      font-size: 16px;
+      color: @gray;
+    }
+  }
+}
+
 .main-sidebar {
   overflow-y: auto;
   position: fixed;
   top: @nav-bar-height;
   right: 0;
   flex-shrink: 0;
-  width: @card-width + (2 * @card-margin) + (31px - @card-margin);
+  width: @card-width + (2 * @card-margin);
   border-bottom-left-radius: 6px;
 
   background: @gray-400;
@@ -198,7 +271,7 @@ h4 {
     background: fade(#fff, 20%);
     border: 0;
     color: @white;
-    width: @card-width + (2 * @card-margin) + (31px - @card-margin);
+    width: @card-width + (2 * @card-margin);
 
     &::placeholder {
       color: @white;
@@ -223,103 +296,8 @@ h4 {
   }
 }
 
-.card-controls {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
-
-  .card-buttons {
-    padding: 4px 0;
-    flex-grow: 1;
-    background: @gray-400;
-    border-top-right-radius: 6px;
-    border-bottom-right-radius: 6px;
-    border-left: 0;
-    text-align: right;
-
-    .octicon {
-      cursor: pointer;
-
-      * {
-        fill: @white-fade-50;
-      }
-
-      &:hover {
-        * {
-          fill: @white;
-        }
-      }
-    }
-  }
-}
-
 .draggable {
   cursor: move;
-}
-
-.card {
-  width: @card-width;
-  background: @white;
-  border: 1px solid @gray-200;
-  border-radius: 6px;
-  box-sizing: border-box;
-  background: #fff;
-  white-space: normal;
-  vertical-align: top;
-  user-select: none;
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  position: relative;
-
-  box-shadow: 0 1px 1px rgba(27,31,35,.1);
-
-  &:hover {
-    box-shadow: 0 1px 3px rgba(106,115,125,.3);
-  }
-
-  &:focus {
-    outline: none;
-    border-color: @blue !important;
-    box-shadow: 0 0 0 .2em fade(@blue, 30%);
-  }
-
-  &.highlighted {
-    box-shadow: 0 0 0 5px @yellow;
-  }
-
-  &.in-flight, &.done, &.backlog, &.icebox {
-    &::before {
-      content: " ";
-      position: absolute;
-      top: 0;
-      left: 0.5px;
-      right: 0.5px;
-      height: 0;
-      border-top-left-radius: 5px;
-      border-top-right-radius: 5px;
-    }
-  }
-
-  &.paused {
-    opacity: 0.5;
-  }
-
-  &.icebox::before {
-    background: @gray;
-  }
-
-  &.in-flight::before {
-    background: @purple;
-  }
-
-  &.done::before {
-    background: @green;
-  }
-
-  &.backlog::before {
-    background: @blue;
-  }
 }
 
 .card-icons {
@@ -327,7 +305,6 @@ h4 {
   flex-direction: column;
   padding: 10px;
   padding-right: 0;
-  border-radius: 2px;
 
   .octicon {
     width: 16px;
@@ -371,6 +348,31 @@ h4 {
   }
 }
 
+.card-controls {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  padding-left: 0;
+
+  .octicon {
+    cursor: pointer;
+  }
+
+  .octicon * {
+    fill: @gray-light;
+  }
+
+  .octicon:hover * {
+    fill: @gray-900;
+  }
+
+  .delete-card {
+    .octicon:hover * {
+      fill: @red;
+    }
+  }
+}
+
 .external-link {
   * {
     fill: @gray-300;
@@ -394,8 +396,12 @@ h4 {
     font-size: 14px;
     font-weight: 600;
     color: @gray-900;
-    line-height: 1.25;
-    padding: 1px 0; /* eliminate unclickable gap */
+    display: flex;
+    flex-direction: row;
+
+    .title-link {
+      flex-grow: 1;
+    }
   }
 
   .card-meta {
@@ -403,6 +409,7 @@ h4 {
     font-size: 12px;
     color: @gray-600;
     line-height: 1.4;
+    flex-grow: 1;
   }
 
   a:hover {
@@ -412,6 +419,9 @@ h4 {
 
 .card-note {
   font-size: 14px;
+  overflow-wrap: break-word;
+  width: 0;
+  flex-grow: 1;
 }
 
 .project-body {
@@ -531,6 +541,13 @@ h4 {
       margin-left: 2px;
     }
   }
+}
+
+.card-actors {
+  height: 18px;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
 }
 
 .card-actor {
@@ -1403,11 +1420,21 @@ svg {
     margin: 10px 0;
   }
 
-  .add-card {
+  .column-controls {
     .octicon {
+      cursor: pointer;
       width: 16px;
       height: 16px;
       margin: 12px 10px;
+      margin-left: 0;
+
+      * {
+        fill: @gray-light;
+      }
+
+      &:hover * {
+        fill: @gray-dark;
+      }
     }
   }
 }
@@ -1737,4 +1764,44 @@ a.column-title:hover, .page-header a:hover {
   text-align: right;
   right: 10px;
   top: 10px;
+}
+
+.with-confirm {
+  position: relative;
+
+  .inline-confirm {
+    padding: 12px;
+    z-index: 100;
+    position: absolute;
+    top: -48px;
+    left: -12px;
+    background: @gray;
+    border-radius: 3px;
+
+    &:after {
+      top: 100%;
+      left: 50%;
+      content: " ";
+      height: 0;
+      width: 0;
+      position: absolute;
+      pointer-events: none;
+      border: 5px solid transparent;
+      border-top-color: @gray;
+      margin-left: -5px;
+    }
+
+    &:hover {
+      background: @red;
+      cursor: pointer;
+
+      .octicon * {
+        fill: @white !important;
+      }
+
+      &:after {
+        border-top-color: @red;
+      }
+    }
+  }
 }
