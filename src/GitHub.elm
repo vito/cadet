@@ -39,6 +39,7 @@ module GitHub exposing
     , addNoteCard
     , addNoteCardAfter
     , addPullRequestLabels
+    , setCardArchived
     , closeIssue
     , closeRepoMilestone
     , createRepoLabel
@@ -367,6 +368,7 @@ type alias ProjectColumnCard =
     { id : ID
     , url : String
     , columnId : String
+    , isArchived : Bool
     , content : Maybe CardContent
     , note : Maybe String
     }
@@ -597,7 +599,14 @@ addNoteCard token columnID note =
 updateCardNote : Token -> ID -> String -> Task Error ProjectColumnCard
 updateCardNote token cardID note =
     updateProjectCardMutation
-        |> GB.request { cardId = cardID, note = note }
+        |> GB.request { cardId = cardID, note = Just note, isArchived = Nothing }
+        |> GH.customSendMutation (authedOptions token)
+
+
+setCardArchived : Token -> ID -> Bool -> Task Error ProjectColumnCard
+setCardArchived token cardID archived =
+    updateProjectCardMutation
+        |> GB.request { cardId = cardID, note = Nothing, isArchived = Just archived }
         |> GH.customSendMutation (authedOptions token)
 
 
@@ -832,14 +841,17 @@ addNoteCardMutation =
                 )
 
 
-updateProjectCardMutation : GB.Document GB.Mutation ProjectColumnCard { cardId : ID, note : String }
+updateProjectCardMutation : GB.Document GB.Mutation ProjectColumnCard { cardId : ID, note : Maybe String, isArchived : Maybe Bool }
 updateProjectCardMutation =
     let
         cardIDVar =
             GV.required "cardId" .cardId GV.id
 
         noteVar =
-            GV.required "note" .note GV.string
+            GV.required "note" .note (GV.nullable GV.string)
+
+        isArchivedVar =
+            GV.required "isArchived" .isArchived (GV.nullable GV.bool)
     in
     GB.mutationDocument <|
         GB.extract <|
@@ -848,6 +860,7 @@ updateProjectCardMutation =
                   , GA.object
                         [ ( "projectCardId", GA.variable cardIDVar )
                         , ( "note", GA.variable noteVar )
+                        , ( "isArchived", GA.variable isArchivedVar )
                         ]
                   )
                 ]
@@ -1380,6 +1393,7 @@ projectColumnCardObject =
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
         |> GB.with (GB.field "column" [] (GB.extract (GB.field "id" [] GB.string)))
+        |> GB.with (GB.field "isArchived" [] GB.bool)
         |> GB.with (GB.field "content" [] content)
         |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
@@ -2191,6 +2205,7 @@ decodeProjectColumnCard =
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "url" JD.string)
         |> andMap (JD.field "column_id" JD.string)
+        |> andMap (JD.field "is_archived" JD.bool)
         |> andMap (JD.field "content" <| JD.maybe decodeCardContent)
         |> andMap (JD.field "note" <| JD.maybe JD.string)
 
@@ -2571,6 +2586,7 @@ encodeProjectColumnCard record =
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
         , ( "column_id", JE.string record.columnId )
+        , ( "is_archived", JE.bool record.isArchived )
         , ( "content"
           , case record.content of
                 Just (IssueCardContent issue) ->

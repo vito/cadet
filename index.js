@@ -278,6 +278,7 @@ worker.ports.setCards.subscribe(function(args) {
 
         newColumnCards.push({
           id: card.id,
+          isArchived: card.is_archived,
           contentId: issue.id
         });
       }
@@ -289,12 +290,14 @@ worker.ports.setCards.subscribe(function(args) {
 
         newColumnCards.push({
           id: card.id,
+          isArchived: card.is_archived,
           contentId: pr.id
         });
       }
     } else {
       newColumnCards.push({
         id: card.id,
+        isArchived: card.is_archived,
         note: card.note
       });
     }

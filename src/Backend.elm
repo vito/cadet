@@ -90,8 +90,10 @@ type alias CardEvent =
     }
 
 
+-- a type smaller than GitHub.ProjectColumnCard so issue/PR stuff isn't duplicated
 type alias ColumnCard =
     { id : GitHub.ID
+    , isArchived : Bool
     , contentId : Maybe GitHub.ID
     , note : Maybe String
     }
@@ -211,6 +213,7 @@ decodeColumnCard : JD.Decoder ColumnCard
 decodeColumnCard =
     JD.succeed ColumnCard
         |> andMap (JD.field "id" JD.string)
+        |> andMap (JD.field "isArchived" JD.bool)
         |> andMap (JD.maybe <| JD.field "contentId" JD.string)
         |> andMap (JD.maybe <| JD.field "note" JD.string)
 

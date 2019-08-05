@@ -4920,9 +4920,9 @@ var author$project$Backend$Data = F7(
 	function (repos, repoProjects, repoCommits, repoLabels, repoMilestones, repoReleases, columnCards) {
 		return {columnCards: columnCards, repoCommits: repoCommits, repoLabels: repoLabels, repoMilestones: repoMilestones, repoProjects: repoProjects, repoReleases: repoReleases, repos: repos};
 	});
-var author$project$Backend$ColumnCard = F3(
-	function (id, contentId, note) {
-		return {contentId: contentId, id: id, note: note};
+var author$project$Backend$ColumnCard = F4(
+	function (id, isArchived, contentId, note) {
+		return {contentId: contentId, id: id, isArchived: isArchived, note: note};
 	});
 var elm$core$Basics$apL = F2(
 	function (f, x) {
@@ -5399,6 +5399,7 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
+var elm$json$Json$Decode$bool = _Json_decodeBool;
 var elm$json$Json$Decode$field = _Json_decodeField;
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$oneOf = _Json_oneOf;
@@ -5424,8 +5425,11 @@ var author$project$Backend$decodeColumnCard = A2(
 			A2(elm$json$Json$Decode$field, 'contentId', elm$json$Json$Decode$string)),
 		A2(
 			elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
-			elm$json$Json$Decode$succeed(author$project$Backend$ColumnCard))));
+			A2(elm$json$Json$Decode$field, 'isArchived', elm$json$Json$Decode$bool),
+			A2(
+				elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2(elm$json$Json$Decode$field, 'id', elm$json$Json$Decode$string),
+				elm$json$Json$Decode$succeed(author$project$Backend$ColumnCard)))));
 var elm$json$Json$Decode$list = _Json_decodeList;
 var author$project$Backend$decodeColumnCards = elm$json$Json$Decode$list(author$project$Backend$decodeColumnCard);
 var author$project$GitHub$Commit = F8(
@@ -6644,7 +6648,6 @@ var author$project$GitHub$Repo = F5(
 	function (id, url, owner, name, isArchived) {
 		return {id: id, isArchived: isArchived, name: name, owner: owner, url: url};
 	});
-var elm$json$Json$Decode$bool = _Json_decodeBool;
 var author$project$GitHub$decodeRepo = A2(
 	elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(elm$json$Json$Decode$field, 'is_archived', elm$json$Json$Decode$bool),
@@ -8322,9 +8325,9 @@ var author$project$Main$RefreshQueued = function (a) {
 var author$project$GitHub$IssueCardContent = function (a) {
 	return {$: 'IssueCardContent', a: a};
 };
-var author$project$GitHub$ProjectColumnCard = F5(
-	function (id, url, columnId, content, note) {
-		return {columnId: columnId, content: content, id: id, note: note, url: url};
+var author$project$GitHub$ProjectColumnCard = F6(
+	function (id, url, columnId, isArchived, content, note) {
+		return {columnId: columnId, content: content, id: id, isArchived: isArchived, note: note, url: url};
 	});
 var author$project$GitHub$PullRequestCardContent = function (a) {
 	return {$: 'PullRequestCardContent', a: a};
@@ -9537,6 +9540,8 @@ var author$project$GitHub$prObject = A2(
 																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 																			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 																			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PullRequest))))))))))))))))))));
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$BooleanType = {$: 'BooleanType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool = A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$BooleanType, elm$json$Json$Decode$bool);
 var author$project$GitHub$projectColumnCardObject = function () {
 	var content = A2(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -9565,19 +9570,22 @@ var author$project$GitHub$projectColumnCardObject = function () {
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'content', _List_Nil, content),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-					'column',
-					_List_Nil,
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string))),
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'isArchived', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+					A3(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+						'column',
+						_List_Nil,
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string))),
 					A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumnCard))))));
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						A2(
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumnCard)))))));
 }();
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation = function (a) {
 	return {$: 'Operation', a: a};
@@ -13376,6 +13384,11 @@ var author$project$Main$searchCards = F2(
 				titleMatch,
 				A2(author$project$Main$filteredCardsByTitle, model, filters)));
 	});
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Boolean');
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue = function (a) {
+	return {$: 'BooleanValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue);
 var author$project$GitHub$updateProjectCardMutation = function () {
 	var noteVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -13383,7 +13396,14 @@ var author$project$GitHub$updateProjectCardMutation = function () {
 		function ($) {
 			return $.note;
 		},
-		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
+	var isArchivedVar = A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'isArchived',
+		function ($) {
+			return $.isArchived;
+		},
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool));
 	var cardIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'cardId',
@@ -13408,12 +13428,56 @@ var author$project$GitHub$updateProjectCardMutation = function () {
 									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(cardIDVar)),
 									_Utils_Tuple2(
 									'note',
-									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(noteVar))
+									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(noteVar)),
+									_Utils_Tuple2(
+									'isArchived',
+									jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(isArchivedVar))
 								])))
 					]),
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'projectCard', _List_Nil, author$project$GitHub$projectColumnCardObject)))));
 }();
+var author$project$GitHub$setCardArchived = F3(
+	function (token, cardID, archived) {
+		return A2(
+			jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
+			author$project$GitHub$authedOptions(token),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
+				{
+					cardId: cardID,
+					isArchived: elm$core$Maybe$Just(archived),
+					note: elm$core$Maybe$Nothing
+				},
+				author$project$GitHub$updateProjectCardMutation));
+	});
+var author$project$Main$setProjectCardArchived = F3(
+	function (model, cardId, archived) {
+		return A2(
+			author$project$Main$withTokenOrLogIn,
+			model,
+			function (token) {
+				var refreshColumn = function (res) {
+					if (res.$ === 'Ok') {
+						var columnId = res.a.columnId;
+						return A2(
+							author$project$Main$DataChanged,
+							A2(author$project$Backend$refreshCards, columnId, author$project$Main$RefreshQueued),
+							elm$core$Result$Ok(_Utils_Tuple0));
+					} else {
+						var msg = res.a;
+						return A2(
+							author$project$Main$DataChanged,
+							elm$core$Platform$Cmd$none,
+							elm$core$Result$Err(msg));
+					}
+				};
+				return A2(
+					elm$core$Task$attempt,
+					refreshColumn,
+					A3(author$project$GitHub$setCardArchived, token, cardId, archived));
+			});
+	});
 var author$project$GitHub$updateCardNote = F3(
 	function (token, cardID, note) {
 		return A2(
@@ -13421,7 +13485,11 @@ var author$project$GitHub$updateCardNote = F3(
 			author$project$GitHub$authedOptions(token),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{cardId: cardID, note: note},
+				{
+					cardId: cardID,
+					isArchived: elm$core$Maybe$Nothing,
+					note: elm$core$Maybe$Just(note)
+				},
 				author$project$GitHub$updateProjectCardMutation));
 	});
 var author$project$Main$updateCardNote = F3(
@@ -13875,6 +13943,7 @@ var author$project$Main$update = F2(
 									}
 								}(),
 								id: card.id,
+								isArchived: card.isArchived,
 								note: card.note
 							};
 							var insertCard = function (cards) {
@@ -14723,6 +14792,13 @@ var author$project$Main$update = F2(
 								deletingCards: A2(elm$core$Set$remove, id, model.deletingCards)
 							}),
 						A2(author$project$Main$deleteProjectCard, model, ghCardId));
+				case 'SetCardArchived':
+					var id = msg.a;
+					var ghCardId = msg.b;
+					var archived = msg.c;
+					return _Utils_Tuple2(
+						model,
+						A3(author$project$Main$setProjectCardArchived, model, ghCardId, archived));
 				case 'SetEditingCardNote':
 					var id = msg.a;
 					var val = msg.b;
@@ -14742,7 +14818,7 @@ var author$project$Main$update = F2(
 								editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						elm$core$Platform$Cmd$none);
-				default:
+				case 'UpdateCardNote':
 					var id = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
@@ -14762,6 +14838,15 @@ var author$project$Main$update = F2(
 								return A3(author$project$Main$updateCardNote, model, id, note);
 							}
 						}());
+				default:
+					var id = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								showArchivedCards: A2(elm$core$Set$member, id, model.showArchivedCards) ? A2(elm$core$Set$remove, id, model.showArchivedCards) : A2(elm$core$Set$insert, id, model.showArchivedCards)
+							}),
+						elm$core$Platform$Cmd$none);
 			}
 		}
 	});
@@ -14818,6 +14903,7 @@ var author$project$Main$init = F3(
 			reposByLabel: elm$core$Dict$empty,
 			reposByName: elm$core$Dict$empty,
 			selectedCards: y0hy0h$ordered_containers$OrderedSet$empty,
+			showArchivedCards: elm$core$Set$empty,
 			showLabelFilters: false,
 			showLabelOperations: false,
 			statefulGraphs: _List_Nil,
@@ -15889,6 +15975,9 @@ var author$project$Main$SetCreatingColumnNote = F2(
 	function (a, b) {
 		return {$: 'SetCreatingColumnNote', a: a, b: b};
 	});
+var author$project$Main$ToggleShowArchivedCards = function (a) {
+	return {$: 'ToggleShowArchivedCards', a: a};
+};
 var author$project$Colors$green500 = '#28a745';
 var author$project$Colors$green = author$project$Colors$green500;
 var author$project$Colors$purple500 = '#6f42c1';
@@ -16294,6 +16383,9 @@ var author$project$Main$onCtrlEnter = function (msg) {
 			return ((event.ctrlKey || event.metaKey) && _Utils_eq(event.keyCode, SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter)) ? elm$core$Maybe$Just(msg) : elm$core$Maybe$Nothing;
 		});
 };
+var author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
 var author$project$Drag$Start = F2(
 	function (a, b) {
 		return {$: 'Start', a: a, b: b};
@@ -16424,15 +16516,9 @@ var author$project$Drag$draggable = F4(
 var author$project$Main$FromColumnCardSource = function (a) {
 	return {$: 'FromColumnCardSource', a: a};
 };
-var author$project$Main$CancelDeleteCard = function (a) {
-	return {$: 'CancelDeleteCard', a: a};
-};
-var author$project$Main$ConfirmDeleteCard = function (a) {
-	return {$: 'ConfirmDeleteCard', a: a};
-};
-var author$project$Main$DeleteCard = F2(
-	function (a, b) {
-		return {$: 'DeleteCard', a: a, b: b};
+var author$project$Main$SetCardArchived = F3(
+	function (a, b, c) {
+		return {$: 'SetCardArchived', a: a, b: b, c: c};
 	});
 var elm$virtual_dom$VirtualDom$Custom = function (a) {
 	return {$: 'Custom', a: a};
@@ -16451,11 +16537,37 @@ var author$project$Main$onClickNoBubble = function (msg) {
 		elm$json$Json$Decode$succeed(
 			{message: msg, preventDefault: true, stopPropagation: true}));
 };
+var capitalist$elm_octicons$Octicons$archivePath = 'M13 2H1v2h12V2zM0 4a1 1 0 0 0 1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v2zm2 1h10v9H2V5zm2 3h6V7H4v1z';
+var capitalist$elm_octicons$Octicons$archive = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$archivePath, '0 0 14 16', 'archive');
+var author$project$Main$archiveCardControl = F3(
+	function (model, selfId, archiveId) {
+		return A2(
+			elm$html$Html$span,
+			_List_fromArray(
+				[
+					author$project$Main$onClickNoBubble(
+					A3(author$project$Main$SetCardArchived, selfId, archiveId, true))
+				]),
+			_List_fromArray(
+				[
+					capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
+				]));
+	});
+var author$project$Main$CancelDeleteCard = function (a) {
+	return {$: 'CancelDeleteCard', a: a};
+};
+var author$project$Main$ConfirmDeleteCard = function (a) {
+	return {$: 'ConfirmDeleteCard', a: a};
+};
+var author$project$Main$DeleteCard = F2(
+	function (a, b) {
+		return {$: 'DeleteCard', a: a, b: b};
+	});
 var capitalist$elm_octicons$Octicons$trashcanPath = 'M11,2 L9,2 C9,1.45 8.55,1 8,1 L5,1 C4.45,1 4,1.45 4,2 L2,2 C1.45,2 1,2.45 1,3 L1,4 C1,4.55 1.45,5 2,5 L2,14 C2,14.55 2.45,15 3,15 L10,15 C10.55,15 11,14.55 11,14 L11,5 C11.55,5 12,4.55 12,4 L12,3 C12,2.45 11.55,2 11,2 L11,2 Z M10,14 L3,14 L3,5 L4,5 L4,13 L5,13 L5,5 L6,5 L6,13 L7,13 L7,5 L8,5 L8,13 L9,13 L9,5 L10,5 L10,14 L10,14 Z M11,4 L2,4 L2,3 L11,3 L11,4 L11,4 Z';
 var capitalist$elm_octicons$Octicons$trashcan = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$trashcanPath, '0 0 12 16', 'trashcan');
 var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
 var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
-var author$project$Main$deleteCardControls = F3(
+var author$project$Main$deleteCardControl = F3(
 	function (model, selfId, deleteId) {
 		return A2(elm$core$Set$member, selfId, model.deletingCards) ? A2(
 			elm$html$Html$div,
@@ -16502,11 +16614,23 @@ var author$project$Main$deleteCardControls = F3(
 					capitalist$elm_octicons$Octicons$trashcan(author$project$Main$octiconOpts)
 				]));
 	});
+var author$project$Main$unarchiveCardControl = F3(
+	function (model, selfId, archiveId) {
+		return A2(
+			elm$html$Html$span,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('unarchive'),
+					author$project$Main$onClickNoBubble(
+					A3(author$project$Main$SetCardArchived, selfId, archiveId, false))
+				]),
+			_List_fromArray(
+				[
+					capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
+				]));
+	});
 var author$project$Card$isBacklog = function (card) {
 	return card.processState.inBacklogColumn;
-};
-var author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
 };
 var author$project$Card$isIcebox = function (card) {
 	return card.processState.inIceboxColumn;
@@ -17504,7 +17628,7 @@ var author$project$Main$viewNoteCard = F4(
 						]),
 					_List_fromArray(
 						[
-							A3(author$project$Main$deleteCardControls, model, cardId, cardId),
+							A3(author$project$Main$deleteCardControl, model, cardId, cardId),
 							A2(
 							elm$html$Html$span,
 							_List_fromArray(
@@ -17565,14 +17689,15 @@ var author$project$Main$viewProjectColumnCard = F4(
 						var _n3 = A2(elm$core$Dict$get, contentId, model.cards);
 						if (_n3.$ === 'Just') {
 							var c = _n3.a;
-							return A3(
-								author$project$Main$viewCard,
-								model,
-								_List_fromArray(
-									[
-										A3(author$project$Main$deleteCardControls, model, c.id, ghCard.id)
-									]),
-								c);
+							var controls = author$project$Card$isDone(c) ? _List_fromArray(
+								[
+									A3(author$project$Main$deleteCardControl, model, c.id, ghCard.id),
+									ghCard.isArchived ? A3(author$project$Main$unarchiveCardControl, model, c.id, ghCard.id) : A3(author$project$Main$archiveCardControl, model, c.id, ghCard.id)
+								]) : _List_fromArray(
+								[
+									A3(author$project$Main$deleteCardControl, model, c.id, ghCard.id)
+								]);
+							return A3(author$project$Main$viewCard, model, controls, c);
 						} else {
 							return author$project$Main$viewLoadingCard;
 						}
@@ -17604,6 +17729,14 @@ var author$project$Main$viewProjectColumn = F3(
 			elm$core$Maybe$withDefault,
 			_List_Nil,
 			A2(elm$core$Dict$get, col.id, model.columnCards));
+		var _n0 = A2(
+			elm$core$List$partition,
+			function ($) {
+				return $.isArchived;
+			},
+			cards);
+		var archived = _n0.a;
+		var unarchived = _n0.b;
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -17666,9 +17799,9 @@ var author$project$Main$viewProjectColumn = F3(
 								]))
 						])),
 					function () {
-					var _n0 = A2(elm$core$Dict$get, col.id, model.addingColumnNotes);
-					if (_n0.$ === 'Just') {
-						var val = _n0.a;
+					var _n1 = A2(elm$core$Dict$get, col.id, model.addingColumnNotes);
+					if (_n1.$ === 'Just') {
+						var val = _n1.a;
 						return A2(
 							elm$html$Html$form,
 							_List_fromArray(
@@ -17759,7 +17892,61 @@ var author$project$Main$viewProjectColumn = F3(
 						A2(
 							elm$core$List$concatMap,
 							A3(author$project$Main$viewProjectColumnCard, model, project, col),
-							cards)))
+							unarchived))),
+					elm$core$List$isEmpty(archived) ? elm$html$Html$text('') : A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('archived-cards')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('archived-cards-header'),
+									elm$html$Html$Attributes$classList(
+									_List_fromArray(
+										[
+											_Utils_Tuple2(
+											'showing',
+											A2(elm$core$Set$member, col.id, model.showArchivedCards))
+										])),
+									elm$html$Html$Events$onClick(
+									author$project$Main$ToggleShowArchivedCards(col.id))
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('counter')
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(
+											elm$core$String$fromInt(
+												elm$core$List$length(archived)))
+										])),
+									elm$html$Html$text(' '),
+									elm$html$Html$text('archived cards')
+								])),
+							A2(elm$core$Set$member, col.id, model.showArchivedCards) ? A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('cards')
+								]),
+							A2(
+								elm$core$List$cons,
+								A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Main$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
+								A2(
+									elm$core$List$concatMap,
+									A3(author$project$Main$viewProjectColumnCard, model, project, col),
+									archived))) : elm$html$Html$text('')
+						]))
 				]));
 	});
 var author$project$Main$viewRepoRoadmap = F3(

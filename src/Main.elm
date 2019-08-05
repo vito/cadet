@@ -1,8 +1,5 @@
 port module Main exposing (main)
 
--- TODO: archive button on 'done' column
--- TODO: note editing
-
 import Backend exposing (Data, Me)
 import Browser
 import Browser.Dom
@@ -142,6 +139,7 @@ type alias Model =
 
     -- card note editing state
     , editingCardNotes : Dict GitHub.ID String
+    , showArchivedCards : Set GitHub.ID
     }
 
 
@@ -317,6 +315,8 @@ type Msg
     | SetEditingCardNote GitHub.ID String
     | CancelEditingCardNote GitHub.ID
     | UpdateCardNote GitHub.ID
+    | SetCardArchived GitHub.ID GitHub.ID Bool
+    | ToggleShowArchivedCards GitHub.ID
 
 
 type Page
@@ -501,6 +501,7 @@ init config url key =
             , addingColumnNotes = Dict.empty
             , deletingCards = Set.empty
             , editingCardNotes = Dict.empty
+            , showArchivedCards = Set.empty
             }
 
         ( navedModel, navedMsgs ) =
@@ -596,6 +597,7 @@ update msg model =
                     let
                         colCard =
                             { id = card.id
+                            , isArchived = card.isArchived
                             , contentId =
                                 case card.content of
                                     Just (GitHub.IssueCardContent { id }) ->
@@ -1138,6 +1140,9 @@ update msg model =
             , deleteProjectCard model ghCardId
             )
 
+        SetCardArchived id ghCardId archived ->
+            (model, setProjectCardArchived model ghCardId archived)
+
         SetEditingCardNote id val ->
             ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }, Cmd.none )
 
@@ -1152,6 +1157,18 @@ update msg model =
 
                 note ->
                     updateCardNote model id note
+            )
+
+        ToggleShowArchivedCards id ->
+            ( { model
+                | showArchivedCards =
+                    if Set.member id model.showArchivedCards then
+                        Set.remove id model.showArchivedCards
+
+                    else
+                        Set.insert id model.showArchivedCards
+              }
+            , Cmd.none
             )
 
 
@@ -2897,6 +2914,9 @@ viewProjectColumn model project col =
             Dict.get col.id model.columnCards
                 |> Maybe.withDefault []
 
+        ( archived, unarchived ) =
+            List.partition .isArchived cards
+
         dropCandidate =
             { msgFunc = MoveCardAfter
             , target =
@@ -2958,7 +2978,29 @@ viewProjectColumn model project col =
           else
             Html.div [ HA.class "cards" ] <|
                 Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
-                    :: List.concatMap (viewProjectColumnCard model project col) cards
+                    :: List.concatMap (viewProjectColumnCard model project col) unarchived
+        , if List.isEmpty archived then
+            Html.text ""
+
+          else
+            Html.div [ HA.class "archived-cards" ]
+                [ Html.div
+                    [ HA.class "archived-cards-header"
+                    , HA.classList [ ( "showing", Set.member col.id model.showArchivedCards ) ]
+                    , HE.onClick (ToggleShowArchivedCards col.id)
+                    ]
+                    [ Html.span [ HA.class "counter" ] [ Html.text (String.fromInt (List.length archived)) ]
+                    , Html.text " "
+                    , Html.text "archived cards"
+                    ]
+                , if Set.member col.id model.showArchivedCards then
+                    Html.div [ HA.class "cards" ] <|
+                        Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+                            :: List.concatMap (viewProjectColumnCard model project col) archived
+
+                  else
+                    Html.text ""
+                ]
         ]
 
 
@@ -2975,8 +3017,8 @@ onCtrlEnter msg =
                 Nothing
 
 
-deleteCardControls : Model -> GitHub.ID -> GitHub.ID -> Html Msg
-deleteCardControls model selfId deleteId =
+deleteCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
+deleteCardControl model selfId deleteId =
     if Set.member selfId model.deletingCards then
         Html.div [ HA.class "with-confirm" ]
             [ Html.span
@@ -3002,6 +3044,25 @@ deleteCardControls model selfId deleteId =
             ]
 
 
+archiveCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
+archiveCardControl model selfId archiveId =
+    Html.span
+        [ onClickNoBubble (SetCardArchived selfId archiveId True)
+        ]
+        [ Octicons.archive octiconOpts
+        ]
+
+
+unarchiveCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
+unarchiveCardControl model selfId archiveId =
+    Html.span
+        [ HA.class "unarchive"
+        , onClickNoBubble (SetCardArchived selfId archiveId False)
+        ]
+        [ Octicons.archive octiconOpts
+        ]
+
+
 viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
 viewProjectColumnCard model project col ghCard =
     let
@@ -3025,7 +3086,21 @@ viewProjectColumnCard model project col ghCard =
                 ( Nothing, Just contentId ) ->
                     case Dict.get contentId model.cards of
                         Just c ->
-                            viewCard model [ deleteCardControls model c.id ghCard.id ] c
+                            let
+                                controls =
+                                    if Card.isDone c then
+                                        [ deleteCardControl model c.id ghCard.id
+                                        , if ghCard.isArchived then
+                                            unarchiveCardControl model c.id ghCard.id
+
+                                          else
+                                            archiveCardControl model c.id ghCard.id
+                                        ]
+
+                                    else
+                                        [ deleteCardControl model c.id ghCard.id ]
+                            in
+                            viewCard model controls c
 
                         Nothing ->
                             viewLoadingCard
@@ -3956,7 +4031,7 @@ viewNoteCard model cardId col text =
                         ]
             ]
         , Html.div [ HA.class "card-controls" ]
-            [ deleteCardControls model cardId cardId
+            [ deleteCardControl model cardId cardId
             , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote cardId text) ]
                 [ Octicons.pencil octiconOpts
                 ]
@@ -4528,6 +4603,23 @@ updateCardNote model cardId note =
                             DataChanged Cmd.none (Err msg)
             in
             GitHub.updateCardNote token cardId note
+                |> Task.attempt refreshColumn
+
+
+setProjectCardArchived : Model -> GitHub.ID -> Bool -> Cmd Msg
+setProjectCardArchived model cardId archived =
+    withTokenOrLogIn model <|
+        \token ->
+            let
+                refreshColumn res =
+                    case res of
+                        Ok { columnId } ->
+                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
+
+                        Err msg ->
+                            DataChanged Cmd.none (Err msg)
+            in
+            GitHub.setCardArchived token cardId archived
                 |> Task.attempt refreshColumn
 
 

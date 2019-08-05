@@ -372,6 +372,12 @@ h4 {
       fill: @red;
     }
   }
+
+  .unarchive {
+    .octicon * {
+      fill: @gray-900;
+    }
+  }
 }
 
 .external-link {
@@ -581,7 +587,6 @@ h4 {
 .cards {
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
   padding-bottom: @card-margin;
 
   > * {
@@ -1552,6 +1557,17 @@ a.column-title:hover, .page-header a:hover {
   flex-direction: row;
 }
 
+.counter {
+  background: fade(@black, 20%);
+  color: @gray-dark;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 5px;
+  font-size: 12px;
+}
+
 .tab {
   padding: 10px 10px 7px;
   background: @gray-100;
@@ -1590,15 +1606,7 @@ a.column-title:hover, .page-header a:hover {
   }
 
   .counter {
-    background: fade(@black, 20%);
-    color: @gray-dark;
-    border-radius: 20px;
-    display: inline-block;
-    font-weight: 600;
-    line-height: 1;
-    padding: 2px 5px;
     margin-left: 7px;
-    font-size: 12px;
   }
 
   &.selected {
@@ -1808,6 +1816,31 @@ a.column-title:hover, .page-header a:hover {
 
       &:after {
         border-top-color: @red;
+      }
+    }
+  }
+}
+
+.archived-cards {
+  margin-top: @card-margin;
+  color: @gray;
+
+  .archived-cards-header {
+    font-size: 14px;
+    text-align: center;
+    cursor: pointer;
+
+    .counter {
+      color: @gray;
+      background-color: fade(@black, 10%);
+    }
+
+    &.showing {
+      color: @gray-dark;
+
+      .counter {
+        color: @gray-dark;
+        background-color: fade(@black, 20%);
       }
     }
   }
