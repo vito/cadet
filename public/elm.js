@@ -11289,7 +11289,7 @@ var author$project$Main$computeCardsView = function (model) {
 	var openPRsByRepo = A3(
 		elm$core$Dict$foldl,
 		F3(
-			function (_n1, pr, prs) {
+			function (_n3, pr, prs) {
 				return _Utils_eq(pr.state, author$project$GitHub$PullRequestStateOpen) ? A3(
 					elm$core$Dict$update,
 					pr.repo.id,
@@ -11312,9 +11312,9 @@ var author$project$Main$computeCardsView = function (model) {
 		elm$core$Dict$foldl,
 		F3(
 			function (id, card, cbm) {
-				var _n0 = card.milestone;
-				if (_n0.$ === 'Just') {
-					var milestone = _n0.a;
+				var _n2 = card.milestone;
+				if (_n2.$ === 'Just') {
+					var milestone = _n2.a;
 					return A3(
 						elm$core$Dict$update,
 						milestone.id,
@@ -11326,12 +11326,23 @@ var author$project$Main$computeCardsView = function (model) {
 			}),
 		elm$core$Dict$empty,
 		cards);
+	var idsByUrl = A3(
+		elm$core$Dict$foldl,
+		F2(
+			function (_n0, _n1) {
+				var id = _n1.id;
+				var url = _n1.url;
+				return A2(elm$core$Dict$insert, url, id);
+			}),
+		model.idsByUrl,
+		cards);
 	return _Utils_update(
 		model,
 		{
 			archive: A2(author$project$Main$computeArchive, model, cards),
 			cards: cards,
 			cardsByMilestone: cardsByMilestone,
+			idsByUrl: idsByUrl,
 			openPRsByRepo: openPRsByRepo
 		});
 };
@@ -11525,8 +11536,8 @@ var author$project$Main$computeDataView = function (model) {
 	var reposByName = A3(
 		elm$core$Dict$foldl,
 		F2(
-			function (id, _n2) {
-				var name = _n2.name;
+			function (id, _n3) {
+				var name = _n3.name;
 				return A2(elm$core$Dict$insert, name, id);
 			}),
 		elm$core$Dict$empty,
@@ -11569,17 +11580,19 @@ var author$project$Main$computeDataView = function (model) {
 		model.repoLabels);
 	var allProjects = elm$core$List$concat(
 		elm$core$Dict$values(model.repoProjects));
+	var idsByUrl = A3(
+		elm$core$List$foldl,
+		function (_n2) {
+			var id = _n2.id;
+			var url = _n2.url;
+			return A2(elm$core$Dict$insert, url, id);
+		},
+		model.idsByUrl,
+		allProjects);
 	var projects = A3(
 		elm$core$List$foldl,
 		function (project) {
 			return A2(elm$core$Dict$insert, project.id, project);
-		},
-		elm$core$Dict$empty,
-		allProjects);
-	var projectsByUrl = A3(
-		elm$core$List$foldl,
-		function (project) {
-			return A2(elm$core$Dict$insert, project.url, project);
 		},
 		elm$core$Dict$empty,
 		allProjects);
@@ -11617,7 +11630,7 @@ var author$project$Main$computeDataView = function (model) {
 		allLabels);
 	return _Utils_update(
 		model,
-		{allLabels: allLabels, colorLightnessCache: colorLightnessCache, labelToRepoToId: groupLabelsToRepoToId, projects: projects, projectsByUrl: projectsByUrl, reposByLabel: groupRepoLabels, reposByName: reposByName});
+		{allLabels: allLabels, colorLightnessCache: colorLightnessCache, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, reposByLabel: groupRepoLabels, reposByName: reposByName});
 };
 var author$project$Main$graphAllActivityCompare = F3(
 	function (model, a, b) {
@@ -14879,6 +14892,7 @@ var author$project$Main$init = F3(
 			graphs: _List_Nil,
 			highlightedCard: elm$core$Maybe$Nothing,
 			highlightedNode: elm$core$Maybe$Nothing,
+			idsByUrl: elm$core$Dict$empty,
 			issues: elm$core$Dict$empty,
 			key: key,
 			labelSearch: '',
@@ -14891,7 +14905,6 @@ var author$project$Main$init = F3(
 			prReviewers: elm$core$Dict$empty,
 			projectDrag: author$project$Drag$init,
 			projects: elm$core$Dict$empty,
-			projectsByUrl: elm$core$Dict$empty,
 			prs: elm$core$Dict$empty,
 			releaseRepos: elm$core$Dict$empty,
 			repoCommits: elm$core$Dict$empty,
@@ -15685,8 +15698,8 @@ var elm_explorations$markdown$Markdown$defaultOptions = {
 };
 var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
 var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
-var author$project$Main$viewProjectCard = F2(
-	function (model, project) {
+var author$project$Main$viewProjectCard = F3(
+	function (model, controls, project) {
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -15749,7 +15762,14 @@ var author$project$Main$viewProjectCard = F2(
 									A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, project.body)
 								])),
 							A2(author$project$Main$viewProjectBar, model, project)
-						]))
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card-controls')
+						]),
+					controls)
 				]));
 	});
 var capitalist$elm_octicons$Octicons$repoPath = 'M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z M4,6 L3,6 L3,7 L4,7 L4,6 L4,6 Z M4,4 L3,4 L3,5 L4,5 L4,4 L4,4 Z M4,2 L3,2 L3,3 L4,3 L4,2 L4,2 Z M12,1 L12,13 C12,13.55 11.55,14 11,14 L6,14 L6,16 L4.5,14.5 L3,16 L3,14 L1,14 C0.45,14 0,13.55 0,13 L0,1 C0,0.45 0.45,0 1,0 L11,0 C11.55,0 12,0.45 12,1 L12,1 Z M11,11 L1,11 L1,13 L3,13 L3,12 L6,12 L6,13 L11,13 L11,11 L11,11 Z M11,1 L2,1 L2,10 L11,10 L11,1 L11,1 Z';
@@ -15783,7 +15803,7 @@ var author$project$Main$viewRepoProjects = F3(
 						]),
 					A2(
 						elm$core$List$map,
-						author$project$Main$viewProjectCard(model),
+						A2(author$project$Main$viewProjectCard, model, _List_Nil),
 						projects))
 				]));
 	});
@@ -17482,18 +17502,34 @@ var author$project$Main$viewLoadingCard = A2(
 						]))
 				]))
 		]));
-var author$project$Main$CancelEditingCardNote = function (a) {
-	return {$: 'CancelEditingCardNote', a: a};
-};
 var author$project$Main$SetEditingCardNote = F2(
 	function (a, b) {
 		return {$: 'SetEditingCardNote', a: a, b: b};
 	});
+var author$project$Main$cardByUrl = F2(
+	function (model, url) {
+		return A2(
+			elm$core$Maybe$andThen,
+			function (id) {
+				return A2(elm$core$Dict$get, id, model.cards);
+			},
+			A2(elm$core$Dict$get, url, model.idsByUrl));
+	});
+var author$project$Main$projectByUrl = F2(
+	function (model, url) {
+		return A2(
+			elm$core$Maybe$andThen,
+			function (id) {
+				return A2(elm$core$Dict$get, id, model.projects);
+			},
+			A2(elm$core$Dict$get, url, model.idsByUrl));
+	});
+var author$project$Main$CancelEditingCardNote = function (a) {
+	return {$: 'CancelEditingCardNote', a: a};
+};
 var author$project$Main$UpdateCardNote = function (a) {
 	return {$: 'UpdateCardNote', a: a};
 };
-var capitalist$elm_octicons$Octicons$pencilPath = 'M0,12 L0,15 L3,15 L11,7 L8,4 L0,12 L0,12 Z M3,14 L1,14 L1,12 L2,12 L2,13 L3,13 L3,14 L3,14 Z M13.3,4.7 L12,6 L9,3 L10.3,1.7 C10.69,1.31 11.32,1.31 11.71,1.7 L13.3,3.29 C13.69,3.68 13.69,4.31 13.3,4.7 L13.3,4.7 Z';
-var capitalist$elm_octicons$Octicons$pencil = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$pencilPath, '0 0 14 16', 'pencil');
 var elm$core$String$lines = _String_lines;
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
@@ -17504,8 +17540,8 @@ var elm$html$Html$Attributes$rows = function (n) {
 		'rows',
 		elm$core$String$fromInt(n));
 };
-var author$project$Main$viewNoteCard = F4(
-	function (model, cardId, col, text) {
+var author$project$Main$viewNoteCard = F5(
+	function (model, cardId, col, controls, text) {
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
@@ -17626,37 +17662,52 @@ var author$project$Main$viewNoteCard = F4(
 						[
 							elm$html$Html$Attributes$class('card-controls')
 						]),
-					_List_fromArray(
-						[
-							A3(author$project$Main$deleteCardControl, model, cardId, cardId),
-							A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('edit-note'),
-									author$project$Main$onClickNoBubble(
-									A2(author$project$Main$SetEditingCardNote, cardId, text))
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$pencil(author$project$Main$octiconOpts)
-								]))
-						]))
+					controls)
 				]));
+	});
+var capitalist$elm_octicons$Octicons$pencilPath = 'M0,12 L0,15 L3,15 L11,7 L8,4 L0,12 L0,12 Z M3,14 L1,14 L1,12 L2,12 L2,13 L3,13 L3,14 L3,14 Z M13.3,4.7 L12,6 L9,3 L10.3,1.7 C10.69,1.31 11.32,1.31 11.71,1.7 L13.3,3.29 C13.69,3.68 13.69,4.31 13.3,4.7 L13.3,4.7 Z';
+var capitalist$elm_octicons$Octicons$pencil = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$pencilPath, '0 0 14 16', 'pencil');
+var elm_community$maybe_extra$Maybe$Extra$orElseLazy = F2(
+	function (fma, mb) {
+		if (mb.$ === 'Nothing') {
+			return fma(_Utils_Tuple0);
+		} else {
+			return mb;
+		}
 	});
 var author$project$Main$viewNote = F4(
 	function (model, cardId, col, text) {
-		if (A2(elm$core$String$startsWith, 'http', text)) {
-			var _n0 = A2(elm$core$Dict$get, text, model.projectsByUrl);
-			if (_n0.$ === 'Just') {
-				var project = _n0.a;
-				return A2(author$project$Main$viewProjectCard, model, project);
-			} else {
-				return A4(author$project$Main$viewNoteCard, model, cardId, col, text);
-			}
-		} else {
-			return A4(author$project$Main$viewNoteCard, model, cardId, col, text);
-		}
+		var controls = _List_fromArray(
+			[
+				A3(author$project$Main$deleteCardControl, model, cardId, cardId),
+				A2(
+				elm$html$Html$span,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('edit-note'),
+						author$project$Main$onClickNoBubble(
+						A2(author$project$Main$SetEditingCardNote, cardId, text))
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$pencil(author$project$Main$octiconOpts)
+					]))
+			]);
+		return A2(elm$core$Dict$member, cardId, model.editingCardNotes) ? A5(author$project$Main$viewNoteCard, model, cardId, col, controls, text) : (A2(elm$core$String$startsWith, 'http', text) ? A2(
+			elm$core$Maybe$withDefault,
+			A5(author$project$Main$viewNoteCard, model, cardId, col, controls, text),
+			A2(
+				elm_community$maybe_extra$Maybe$Extra$orElseLazy,
+				function (_n0) {
+					return A2(
+						elm$core$Maybe$map,
+						A2(author$project$Main$viewCard, model, controls),
+						A2(author$project$Main$cardByUrl, model, text));
+				},
+				A2(
+					elm$core$Maybe$map,
+					A2(author$project$Main$viewProjectCard, model, controls),
+					A2(author$project$Main$projectByUrl, model, text)))) : A5(author$project$Main$viewNoteCard, model, cardId, col, controls, text));
 	});
 var author$project$Main$viewProjectColumnCard = F4(
 	function (model, project, col, ghCard) {

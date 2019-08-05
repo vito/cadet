@@ -27,6 +27,7 @@ import Keyboard.Key
 import List.Extra as LE
 import Log
 import Markdown
+import Maybe.Extra as ME
 import Octicons
 import OrderedSet exposing (OrderedSet)
 import ParseInt
@@ -87,7 +88,7 @@ type alias Model =
     , cards : Dict GitHub.ID Card
     , reposByName : Dict String GitHub.ID
     , projects : Dict GitHub.ID GitHub.Project
-    , projectsByUrl : Dict String GitHub.Project
+    , idsByUrl : Dict String GitHub.ID
     , reposByLabel : Dict ( String, String ) (List GitHub.ID)
     , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
@@ -463,7 +464,6 @@ init config url key =
             , reposByLabel = Dict.empty
             , reposByName = Dict.empty
             , projects = Dict.empty
-            , projectsByUrl = Dict.empty
             , columnCards = Dict.empty
             , labelToRepoToId = Dict.empty
             , openPRsByRepo = Dict.empty
@@ -473,6 +473,7 @@ init config url key =
             , prs = Dict.empty
             , cardEvents = Dict.empty
             , prReviewers = Dict.empty
+            , idsByUrl = Dict.empty
             , archive = []
             , cards = Dict.empty
             , allLabels = Dict.empty
@@ -1141,7 +1142,7 @@ update msg model =
             )
 
         SetCardArchived id ghCardId archived ->
-            (model, setProjectCardArchived model ghCardId archived)
+            ( model, setProjectCardArchived model ghCardId archived )
 
         SetEditingCardNote id val ->
             ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }, Cmd.none )
@@ -1360,8 +1361,8 @@ computeDataView model =
         projects =
             List.foldl (\project -> Dict.insert project.id project) Dict.empty allProjects
 
-        projectsByUrl =
-            List.foldl (\project -> Dict.insert project.url project) Dict.empty allProjects
+        idsByUrl =
+            List.foldl (\{ id, url } -> Dict.insert url id) model.idsByUrl allProjects
 
         allLabels =
             Dict.foldl
@@ -1413,7 +1414,7 @@ computeDataView model =
     { model
         | reposByName = reposByName
         , projects = projects
-        , projectsByUrl = projectsByUrl
+        , idsByUrl = idsByUrl
         , reposByLabel = groupRepoLabels
         , labelToRepoToId = groupLabelsToRepoToId
         , allLabels = allLabels
@@ -1428,6 +1429,9 @@ computeCardsView model =
             Dict.union
                 (Dict.map (always Card.fromIssue) model.issues)
                 (Dict.map (always Card.fromPR) model.prs)
+
+        idsByUrl =
+            Dict.foldl (\_ { id, url } -> Dict.insert url id) model.idsByUrl cards
 
         openPRsByRepo =
             Dict.foldl
@@ -1456,6 +1460,7 @@ computeCardsView model =
     in
     { model
         | cards = cards
+        , idsByUrl = idsByUrl
         , openPRsByRepo = openPRsByRepo
         , cardsByMilestone = cardsByMilestone
         , archive = computeArchive model cards
@@ -2060,7 +2065,7 @@ viewRepoProjects model repo projects =
             , Html.text repo.name
             ]
         , Html.div [ HA.class "cards" ]
-            (List.map (viewProjectCard model) projects)
+            (List.map (viewProjectCard model []) projects)
         ]
 
 
@@ -3970,20 +3975,40 @@ viewCard model controls card =
 
 viewNote : Model -> GitHub.ID -> GitHub.ProjectColumn -> String -> Html Msg
 viewNote model cardId col text =
-    if String.startsWith "http" text then
-        case Dict.get text model.projectsByUrl of
-            Just project ->
-                viewProjectCard model project
+    let
+        controls =
+            [ deleteCardControl model cardId cardId
+            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote cardId text) ]
+                [ Octicons.pencil octiconOpts
+                ]
+            ]
+    in
+    if Dict.member cardId model.editingCardNotes then
+        viewNoteCard model cardId col controls text
 
-            Nothing ->
-                viewNoteCard model cardId col text
+    else if String.startsWith "http" text then
+        Maybe.map (viewProjectCard model controls) (projectByUrl model text)
+            |> ME.orElseLazy (\_ -> Maybe.map (viewCard model controls) (cardByUrl model text))
+            |> Maybe.withDefault (viewNoteCard model cardId col controls text)
 
     else
-        viewNoteCard model cardId col text
+        viewNoteCard model cardId col controls text
 
 
-viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> String -> Html Msg
-viewNoteCard model cardId col text =
+projectByUrl : Model -> String -> Maybe GitHub.Project
+projectByUrl model url =
+    Dict.get url model.idsByUrl
+        |> Maybe.andThen (\id -> Dict.get id model.projects)
+
+
+cardByUrl : Model -> String -> Maybe Card
+cardByUrl model url =
+    Dict.get url model.idsByUrl
+        |> Maybe.andThen (\id -> Dict.get id model.cards)
+
+
+viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> List (Html Msg) -> String -> Html Msg
+viewNoteCard model cardId col controls text =
     Html.div
         [ HA.class "card note"
         , HA.tabindex 0
@@ -4030,17 +4055,12 @@ viewNoteCard model cardId col text =
                             ]
                         ]
             ]
-        , Html.div [ HA.class "card-controls" ]
-            [ deleteCardControl model cardId cardId
-            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote cardId text) ]
-                [ Octicons.pencil octiconOpts
-                ]
-            ]
+        , Html.div [ HA.class "card-controls" ] controls
         ]
 
 
-viewProjectCard : Model -> GitHub.Project -> Html Msg
-viewProjectCard model project =
+viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
+viewProjectCard model controls project =
     Html.div [ HA.class "card project", HA.tabindex 0 ]
         [ Html.div [ HA.class "card-icons" ]
             [ Octicons.project { octiconOpts | color = Colors.gray }
@@ -4059,6 +4079,7 @@ viewProjectCard model project =
                     [ Markdown.toHtml [] project.body ]
             , viewProjectBar model project
             ]
+        , Html.div [ HA.class "card-controls" ] controls
         ]
 
 
