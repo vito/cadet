@@ -99,6 +99,7 @@ module GitHub exposing
     , reopenIssue
     , setIssueMilestone
     , setPullRequestMilestone
+    , updateCardNote
     , updateRepoLabel
     )
 
@@ -365,6 +366,7 @@ type alias ProjectColumn =
 type alias ProjectColumnCard =
     { id : ID
     , url : String
+    , columnId : String
     , content : Maybe CardContent
     , note : Maybe String
     }
@@ -589,6 +591,13 @@ addNoteCard : Token -> ID -> String -> Task Error ProjectColumnCard
 addNoteCard token columnID note =
     addNoteCardMutation
         |> GB.request { columnId = columnID, note = note }
+        |> GH.customSendMutation (authedOptions token)
+
+
+updateCardNote : Token -> ID -> String -> Task Error ProjectColumnCard
+updateCardNote token cardID note =
+    updateProjectCardMutation
+        |> GB.request { cardId = cardID, note = note }
         |> GH.customSendMutation (authedOptions token)
 
 
@@ -821,6 +830,28 @@ addNoteCardMutation =
                             GB.field "node" [] projectColumnCardObject
                         )
                 )
+
+
+updateProjectCardMutation : GB.Document GB.Mutation ProjectColumnCard { cardId : ID, note : String }
+updateProjectCardMutation =
+    let
+        cardIDVar =
+            GV.required "cardId" .cardId GV.id
+
+        noteVar =
+            GV.required "note" .note GV.string
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "updateProjectCard"
+                [ ( "input"
+                  , GA.object
+                        [ ( "projectCardId", GA.variable cardIDVar )
+                        , ( "note", GA.variable noteVar )
+                        ]
+                  )
+                ]
+                (GB.extract <| GB.field "projectCard" [] projectColumnCardObject)
 
 
 deleteProjectCardMutation : GB.Document GB.Mutation (Maybe ID) { cardId : ID }
@@ -1348,6 +1379,7 @@ projectColumnCardObject =
     GB.object ProjectColumnCard
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "column" [] (GB.extract (GB.field "id" [] GB.string)))
         |> GB.with (GB.field "content" [] content)
         |> GB.with (GB.field "note" [] (GB.nullable GB.string))
 
@@ -2158,6 +2190,7 @@ decodeProjectColumnCard =
     JD.succeed ProjectColumnCard
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "column_id" JD.string)
         |> andMap (JD.field "content" <| JD.maybe decodeCardContent)
         |> andMap (JD.field "note" <| JD.maybe JD.string)
 
@@ -2537,6 +2570,7 @@ encodeProjectColumnCard record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
+        , ( "column_id", JE.string record.columnId )
         , ( "content"
           , case record.content of
                 Just (IssueCardContent issue) ->

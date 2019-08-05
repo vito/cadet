@@ -4159,6 +4159,9 @@ var author$project$GitHub$encodeProjectColumnCard = function (record) {
 				'url',
 				elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
+				'column_id',
+				elm$json$Json$Encode$string(record.columnId)),
+				_Utils_Tuple2(
 				'content',
 				function () {
 					var _n0 = record.content;
@@ -9545,9 +9548,9 @@ var author$project$GitHub$PagedResult = F2(
 var author$project$GitHub$IssueCardContent = function (a) {
 	return {$: 'IssueCardContent', a: a};
 };
-var author$project$GitHub$ProjectColumnCard = F4(
-	function (id, url, content, note) {
-		return {content: content, id: id, note: note, url: url};
+var author$project$GitHub$ProjectColumnCard = F5(
+	function (id, url, columnId, content, note) {
+		return {columnId: columnId, content: content, id: id, note: note, url: url};
 	});
 var author$project$GitHub$PullRequestCardContent = function (a) {
 	return {$: 'PullRequestCardContent', a: a};
@@ -9723,11 +9726,19 @@ var author$project$GitHub$projectColumnCardObject = function () {
 			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'content', _List_Nil, content),
 			A2(
 				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A3(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+					'column',
+					_List_Nil,
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string))),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumnCard)))));
+					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$ProjectColumnCard))))));
 }();
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_n0) {

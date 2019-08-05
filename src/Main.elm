@@ -139,6 +139,9 @@ type alias Model =
 
     -- cards being deleted from a project
     , deletingCards : Set GitHub.ID
+
+    -- card note editing state
+    , editingCardNotes : Dict GitHub.ID String
     }
 
 
@@ -311,6 +314,9 @@ type Msg
     | ConfirmDeleteCard GitHub.ID
     | CancelDeleteCard GitHub.ID
     | DeleteCard GitHub.ID GitHub.ID
+    | SetEditingCardNote GitHub.ID String
+    | CancelEditingCardNote GitHub.ID
+    | UpdateCardNote GitHub.ID
 
 
 type Page
@@ -494,6 +500,7 @@ init config url key =
             , cardLabelOperations = Dict.empty
             , addingColumnNotes = Dict.empty
             , deletingCards = Set.empty
+            , editingCardNotes = Dict.empty
             }
 
         ( navedModel, navedMsgs ) =
@@ -1129,6 +1136,22 @@ update msg model =
         DeleteCard id ghCardId ->
             ( { model | deletingCards = Set.remove id model.deletingCards }
             , deleteProjectCard model ghCardId
+            )
+
+        SetEditingCardNote id val ->
+            ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }, Cmd.none )
+
+        CancelEditingCardNote id ->
+            ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }, Cmd.none )
+
+        UpdateCardNote id ->
+            ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }
+            , case Maybe.withDefault "" <| Dict.get id model.editingCardNotes of
+                "" ->
+                    Cmd.none
+
+                note ->
+                    updateCardNote model id note
             )
 
 
@@ -2900,7 +2923,7 @@ viewProjectColumn model project col =
                 Html.form [ HA.class "add-note-form", HE.onSubmit (CreateColumnNote col.id) ]
                     [ Html.textarea
                         [ HA.placeholder "Enter a note"
-                        , HA.rows 3
+                        , HA.rows (List.length <| String.lines val)
                         , HA.id (addNoteTextareaId col.id)
                         , HE.onInput (SetCreatingColumnNote col.id)
                         , onCtrlEnter (CreateColumnNote col.id)
@@ -3899,9 +3922,44 @@ viewNoteCard model cardId col text =
             [ Octicons.book octiconOpts
             ]
         , Html.div [ HA.class "card-info card-note" ]
-            [ Markdown.toHtml [] text ]
+            [ case Dict.get cardId model.editingCardNotes of
+                Nothing ->
+                    Markdown.toHtml [] text
+
+                Just val ->
+                    Html.form [ HA.class "add-note-form", HE.onSubmit (UpdateCardNote cardId) ]
+                        [ Html.textarea
+                            [ HA.placeholder "Enter a note"
+                            , HA.rows (List.length <| String.lines val)
+                            , HA.id (addNoteTextareaId cardId)
+                            , HE.onInput (SetEditingCardNote cardId)
+                            , onCtrlEnter (UpdateCardNote cardId)
+                            ]
+                            [ Html.text val ]
+                        , Html.div [ HA.class "buttons" ]
+                            [ Html.button
+                                [ HA.class "button cancel"
+                                , HA.type_ "reset"
+                                , HE.onClick (CancelEditingCardNote cardId)
+                                ]
+                                [ Octicons.x octiconOpts
+                                , Html.text "cancel"
+                                ]
+                            , Html.button
+                                [ HA.class "button apply"
+                                , HA.type_ "submit"
+                                ]
+                                [ Octicons.check octiconOpts
+                                , Html.text "save"
+                                ]
+                            ]
+                        ]
+            ]
         , Html.div [ HA.class "card-controls" ]
             [ deleteCardControls model cardId cardId
+            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote cardId text) ]
+                [ Octicons.pencil octiconOpts
+                ]
             ]
         ]
 
@@ -4454,6 +4512,23 @@ addNoteCard model colId note =
             GitHub.addNoteCard token colId note
                 |> Task.map (always ())
                 |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
+
+
+updateCardNote : Model -> GitHub.ID -> String -> Cmd Msg
+updateCardNote model cardId note =
+    withTokenOrLogIn model <|
+        \token ->
+            let
+                refreshColumn res =
+                    case res of
+                        Ok { columnId } ->
+                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
+
+                        Err msg ->
+                            DataChanged Cmd.none (Err msg)
+            in
+            GitHub.updateCardNote token cardId note
+                |> Task.attempt refreshColumn
 
 
 deleteProjectCard : Model -> GitHub.ID -> Cmd Msg

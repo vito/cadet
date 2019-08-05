@@ -300,11 +300,18 @@ h4 {
   cursor: move;
 }
 
-.card-icons {
+.card-icons, .card-controls {
   display: flex;
   flex-direction: column;
   padding: 10px;
-  padding-right: 0;
+
+  > * {
+    margin-bottom: 8px;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
 
   .octicon {
     width: 16px;
@@ -314,6 +321,11 @@ h4 {
       width: 15px;
     }
   }
+
+}
+
+.card-icons {
+  padding-right: 0;
 
   .status-actor {
     width: 16px;
@@ -325,14 +337,6 @@ h4 {
     &.failure { border: 1px solid @red; }
     &.expected { border: 1px solid @purple; }
     &.error { border: 1px solid @orange; }
-  }
-
-  > * {
-    margin-bottom: 8px;
-  }
-
-  > :last-child {
-    margin-bottom: 0;
   }
 
   .pause-toggle {
@@ -349,9 +353,6 @@ h4 {
 }
 
 .card-controls {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
   padding-left: 0;
 
   .octicon {
@@ -390,7 +391,7 @@ h4 {
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: space-between;
 
   .card-title {
     font-size: 14px;
@@ -1440,10 +1441,12 @@ svg {
 }
 
 .add-note-form {
+  display: flex;
+  flex-direction: column;
+
   textarea {
     margin: @card-margin;
     margin-bottom: 5px;
-    width: @card-width;
     padding: 6px 8px;
     border: 1px solid @gray-300;
     resize: vertical;
@@ -1463,6 +1466,10 @@ svg {
   .buttons {
     padding-top: 0;
   }
+}
+
+.card .add-note-form {
+  margin: -10px;
 }
 
 a.column-title:hover, .page-header a:hover {
