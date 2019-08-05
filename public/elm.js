@@ -16383,9 +16383,6 @@ var author$project$Main$onCtrlEnter = function (msg) {
 			return ((event.ctrlKey || event.metaKey) && _Utils_eq(event.keyCode, SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter)) ? elm$core$Maybe$Just(msg) : elm$core$Maybe$Nothing;
 		});
 };
-var author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
-};
 var author$project$Drag$Start = F2(
 	function (a, b) {
 		return {$: 'Start', a: a, b: b};
@@ -16631,6 +16628,9 @@ var author$project$Main$unarchiveCardControl = F3(
 	});
 var author$project$Card$isBacklog = function (card) {
 	return card.processState.inBacklogColumn;
+};
+var author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
 };
 var author$project$Card$isIcebox = function (card) {
 	return card.processState.inIceboxColumn;
@@ -17689,7 +17689,7 @@ var author$project$Main$viewProjectColumnCard = F4(
 						var _n3 = A2(elm$core$Dict$get, contentId, model.cards);
 						if (_n3.$ === 'Just') {
 							var c = _n3.a;
-							var controls = author$project$Card$isDone(c) ? _List_fromArray(
+							var controls = (!author$project$Card$isOpen(c)) ? _List_fromArray(
 								[
 									A3(author$project$Main$deleteCardControl, model, c.id, ghCard.id),
 									ghCard.isArchived ? A3(author$project$Main$unarchiveCardControl, model, c.id, ghCard.id) : A3(author$project$Main$archiveCardControl, model, c.id, ghCard.id)

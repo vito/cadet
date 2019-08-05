@@ -3088,7 +3088,7 @@ viewProjectColumnCard model project col ghCard =
                         Just c ->
                             let
                                 controls =
-                                    if Card.isDone c then
+                                    if not (Card.isOpen c) then
                                         [ deleteCardControl model c.id ghCard.id
                                         , if ghCard.isArchived then
                                             unarchiveCardControl model c.id ghCard.id
