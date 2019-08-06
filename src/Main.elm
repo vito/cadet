@@ -4019,7 +4019,7 @@ viewNoteCard model cardId col controls text =
             ]
         ]
         [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.book octiconOpts
+            [ Octicons.note octiconOpts
             ]
         , Html.div [ HA.class "card-info card-note" ]
             [ case Dict.get cardId model.editingCardNotes of
