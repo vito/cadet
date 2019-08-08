@@ -11,6 +11,7 @@ import DateFormat
 import DateFormat.Relative
 import Dict exposing (Dict)
 import Drag
+import Effects
 import ForceGraph exposing (ForceGraph)
 import GitHub
 import Hash
@@ -28,6 +29,7 @@ import List.Extra as LE
 import Log
 import Markdown
 import Maybe.Extra as ME
+import Model exposing (Model, Msg(..), Page(..))
 import Octicons
 import OrderedSet exposing (OrderedSet)
 import ParseInt
@@ -59,135 +61,6 @@ type alias Config =
     }
 
 
-type Progress
-    = ProgressLoading
-    | ProgressFailed String
-
-
-type alias Model =
-    -- nav/user/global state
-    { key : Nav.Key
-    , page : Page
-    , me : Maybe Backend.Me
-    , currentTime : Time.Posix
-    , currentZone : Time.Zone
-
-    -- progress for a given object
-    , progress : Dict GitHub.ID Progress
-
-    -- data from backend
-    , dataIndex : Int
-    , repos : Dict GitHub.ID GitHub.Repo
-    , repoProjects : Dict GitHub.ID (List GitHub.Project)
-    , repoCommits : Dict GitHub.ID (List GitHub.Commit)
-    , repoLabels : Dict GitHub.ID (List GitHub.Label)
-    , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
-    , repoReleases : Dict GitHub.ID (List GitHub.Release)
-    , columnCards : Dict GitHub.ID (List Backend.ColumnCard)
-    , graphs : List (ForceGraph GitHub.ID)
-    , issues : Dict GitHub.ID GitHub.Issue
-    , prs : Dict GitHub.ID GitHub.PullRequest
-    , cardEvents : Dict GitHub.ID (List Backend.CardEvent)
-    , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
-    , archive : List ArchiveEvent
-
-    -- 'views' into data
-    , allLabels : Dict GitHub.ID GitHub.Label
-    , cards : Dict GitHub.ID Card
-    , reposByName : Dict String GitHub.ID
-    , projects : Dict GitHub.ID GitHub.Project
-    , idsByUrl : Dict String GitHub.ID
-    , reposByLabel : Dict ( String, String ) (List GitHub.ID)
-    , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
-    , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
-    , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
-    , releaseRepos : Dict GitHub.ID ReleaseRepo
-
-    -- cache of computed lightness values for each color; used for determining
-    -- whether label text should be white or dark
-    , colorLightnessCache : Dict String Bool
-
-    -- card dragging in projects
-    , projectDrag : Drag.Model CardSource CardDestination Msg
-
-    -- sidebar card search/selecting state
-    , cardSearch : String
-    , selectedCards : OrderedSet GitHub.ID
-    , anticipatedCards : Set GitHub.ID
-
-    -- sidebar label operations
-    , labelSearch : String
-    , showLabelOperations : Bool
-    , cardLabelOperations : Dict String CardLabelOperation
-
-    -- card/node hover state
-    , highlightedCard : Maybe GitHub.ID
-    , highlightedNode : Maybe GitHub.ID
-
-    -- card graph state
-    , statefulGraphs : List StatefulGraph
-    , baseGraphFilter : Maybe GraphFilter
-    , graphFilters : List GraphFilter
-    , graphSort : GraphSort
-    , showLabelFilters : Bool
-
-    -- label crud state
-    , deletingLabels : Set ( String, String )
-    , editingLabels : Dict ( String, String ) SharedLabel
-    , newLabel : SharedLabel
-    , newLabelColored : Bool
-
-    -- card tabbed view state
-    , suggestedLabels : List String
-
-    -- column note adding state
-    , addingColumnNotes : Dict GitHub.ID String
-
-    -- cards being deleted from a project
-    , deletingCards : Set GitHub.ID
-
-    -- card note editing state
-    , editingCardNotes : Dict GitHub.ID String
-    , showArchivedCards : Set GitHub.ID
-    }
-
-
-type alias ArchiveEvent =
-    { cardId : GitHub.ID
-    , event : Backend.CardEvent
-    }
-
-
-type alias StatefulGraph =
-    { state : CardNodeState
-    , nodes : List CardNode
-    , edges : List CardEdge
-    , matches : Set Int
-    }
-
-
-type alias CardNode =
-    { card : Card
-    , x : Float
-    , y : Float
-    , mass : Float
-    , filteredOut : Bool
-    }
-
-
-type alias CardEdge =
-    { source : CardEdgePoint
-    , target : CardEdgePoint
-    , filteredOut : Bool
-    }
-
-
-type alias CardEdgePoint =
-    { x : Float
-    , y : Float
-    }
-
-
 type alias ProjectDragRefresh =
     { contentId : Maybe GitHub.ID
     , content : Maybe GitHub.CardContent
@@ -196,149 +69,6 @@ type alias ProjectDragRefresh =
     , targetId : Maybe GitHub.ID
     , targetCards : Maybe (List Backend.ColumnCard)
     }
-
-
-type CardLabelOperation
-    = AddLabelOperation
-    | RemoveLabelOperation
-
-
-type alias ReleaseRepo =
-    { repo : GitHub.Repo
-    , nextMilestone : Maybe GitHub.Milestone
-    , totalCommits : Int
-    , openPRs : List Card
-    , mergedPRs : List Card
-    , openIssues : List Card
-    , closedIssues : List Card
-    , doneCards : List Card
-    , documentedCards : List Card
-    , undocumentedCards : List Card
-    , noImpactCards : List Card
-    }
-
-
-type GraphFilter
-    = ExcludeAllFilter
-    | InProjectFilter GitHub.ID
-    | HasLabelFilter String String
-    | InvolvesUserFilter String
-    | IssuesFilter
-    | PullRequestsFilter
-    | UntriagedFilter
-
-
-type GraphSort
-    = ImpactSort
-    | AllActivitySort
-
-
-type alias SharedLabel =
-    { name : String
-    , color : String
-    }
-
-
-type alias CardNodeState =
-    { allLabels : Dict GitHub.ID GitHub.Label
-    , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
-    , currentTime : Time.Posix
-    , selectedCards : OrderedSet GitHub.ID
-    , anticipatedCards : Set GitHub.ID
-    , highlightedNode : Maybe GitHub.ID
-    }
-
-
-type alias CardDestination =
-    { projectId : GitHub.ID
-    , columnId : GitHub.ID
-    , afterId : Maybe GitHub.ID
-    }
-
-
-type CardSource
-    = FromColumnCardSource { columnId : GitHub.ID, cardId : GitHub.ID }
-    | NewContentCardSource { contentId : GitHub.ID }
-
-
-type Msg
-    = Noop
-    | LinkClicked Browser.UrlRequest
-    | UrlChanged Url
-    | Poll
-    | SetCurrentTime Time.Posix
-    | SetCurrentZone Time.Zone
-    | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
-    | MoveCardAfter CardSource CardDestination
-    | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
-    | RefreshQueued (Result Http.Error ())
-    | MeFetched (Result Http.Error (Maybe Backend.Me))
-    | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
-    | EventReceived ( String, String, String )
-    | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
-    | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHub.ID))))
-    | SelectCard GitHub.ID
-    | DeselectCard GitHub.ID
-    | HighlightNode GitHub.ID
-    | UnhighlightNode GitHub.ID
-    | AnticipateCardFromNode GitHub.ID
-    | UnanticipateCardFromNode GitHub.ID
-    | SearchCards String
-    | SelectAnticipatedCards
-    | ClearSelectedCards
-    | MirrorLabel SharedLabel
-    | StartDeletingLabel SharedLabel
-    | StopDeletingLabel SharedLabel
-    | DeleteLabel SharedLabel
-    | StartEditingLabel SharedLabel
-    | StopEditingLabel SharedLabel
-    | SetLabelName SharedLabel String
-    | SetLabelColor String
-    | RandomizeLabelColor SharedLabel
-    | EditLabel SharedLabel
-    | CreateLabel
-    | RandomizeNewLabelColor
-    | SetNewLabelName String
-    | LabelChanged GitHub.Repo (Result GitHub.Error ())
-    | LabelCard Card String
-    | UnlabelCard Card String
-    | RefreshIssue GitHub.ID
-    | RefreshPullRequest GitHub.ID
-    | RefreshColumn GitHub.ID
-    | AddFilter GraphFilter
-    | RemoveFilter GraphFilter
-    | SetGraphSort GraphSort
-    | ToggleLabelFilters
-    | SetLabelSearch String
-    | ToggleLabelOperations
-    | SetLabelOperation String CardLabelOperation
-    | UnsetLabelOperation String
-    | ApplyLabelOperations
-    | DataChanged (Cmd Msg) (Result GitHub.Error ())
-    | SetCreatingColumnNote GitHub.ID String
-    | CancelCreatingColumnNote GitHub.ID
-    | CreateColumnNote GitHub.ID
-    | ConfirmDeleteCard GitHub.ID
-    | CancelDeleteCard GitHub.ID
-    | DeleteCard GitHub.ID GitHub.ID
-    | SetEditingCardNote GitHub.ID String
-    | CancelEditingCardNote GitHub.ID
-    | UpdateCardNote GitHub.ID
-    | SetCardArchived GitHub.ID GitHub.ID Bool
-    | ToggleShowArchivedCards GitHub.ID
-
-
-type Page
-    = AllProjectsPage
-    | GlobalGraphPage
-    | ProjectPage GitHub.ID
-    | LabelsPage
-    | ReleasePage
-    | ReleaseRepoPage String (Maybe Int)
-    | PullRequestsPage
-    | PullRequestsRepoPage String (Maybe Int)
-    | ArchivePage
-    | BouncePage
 
 
 main : Program Config Model Msg
@@ -351,6 +81,25 @@ main =
         , onUrlChange = UrlChanged
         , onUrlRequest = LinkClicked
         }
+
+
+init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
+init config url key =
+    let
+        model =
+            Model.empty key
+
+        ( navedModel, navedMsgs ) =
+            update (UrlChanged url) model
+    in
+    ( { navedModel | currentTime = Time.millisToPosix config.initialTime }
+    , Cmd.batch
+        [ Backend.fetchData DataFetched
+        , Backend.fetchMe MeFetched
+        , navedMsgs
+        , Task.perform SetCurrentZone Time.here
+        ]
+    )
 
 
 routeParser : UP.Parser (Page -> a) a
@@ -449,79 +198,6 @@ type alias Node a =
     }
 
 
-init : Config -> Url -> Nav.Key -> ( Model, Cmd Msg )
-init config url key =
-    let
-        model =
-            { key = key
-            , page = GlobalGraphPage
-            , me = Nothing
-            , progress = Dict.empty
-            , graphs = []
-            , dataIndex = 0
-            , repos = Dict.empty
-            , repoProjects = Dict.empty
-            , repoCommits = Dict.empty
-            , repoLabels = Dict.empty
-            , repoMilestones = Dict.empty
-            , repoReleases = Dict.empty
-            , reposByLabel = Dict.empty
-            , reposByName = Dict.empty
-            , projects = Dict.empty
-            , columnCards = Dict.empty
-            , labelToRepoToId = Dict.empty
-            , openPRsByRepo = Dict.empty
-            , cardsByMilestone = Dict.empty
-            , releaseRepos = Dict.empty
-            , issues = Dict.empty
-            , prs = Dict.empty
-            , cardEvents = Dict.empty
-            , prReviewers = Dict.empty
-            , idsByUrl = Dict.empty
-            , archive = []
-            , cards = Dict.empty
-            , allLabels = Dict.empty
-            , colorLightnessCache = Dict.empty
-            , cardSearch = "is:open "
-            , selectedCards = OrderedSet.empty
-            , anticipatedCards = Set.empty
-            , highlightedCard = Nothing
-            , highlightedNode = Nothing
-            , currentTime = Time.millisToPosix config.initialTime
-            , currentZone = Time.utc
-            , statefulGraphs = []
-            , baseGraphFilter = Nothing
-            , graphFilters = []
-            , graphSort = ImpactSort
-            , projectDrag = Drag.init
-            , deletingLabels = Set.empty
-            , editingLabels = Dict.empty
-            , newLabel = { name = "", color = "ffffff" }
-            , newLabelColored = False
-            , showLabelFilters = False
-            , labelSearch = ""
-            , suggestedLabels = []
-            , showLabelOperations = False
-            , cardLabelOperations = Dict.empty
-            , addingColumnNotes = Dict.empty
-            , deletingCards = Set.empty
-            , editingCardNotes = Dict.empty
-            , showArchivedCards = Set.empty
-            }
-
-        ( navedModel, navedMsgs ) =
-            update (UrlChanged url) model
-    in
-    ( navedModel
-    , Cmd.batch
-        [ Backend.fetchData DataFetched
-        , Backend.fetchMe MeFetched
-        , navedMsgs
-        , Task.perform SetCurrentZone Time.here
-        ]
-    )
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
@@ -590,13 +266,13 @@ update msg model =
 
         MoveCardAfter source dest ->
             case source of
-                FromColumnCardSource { cardId } ->
+                Model.FromColumnCardSource { cardId } ->
                     -- TODO: progress
-                    ( model, moveCard model dest cardId )
+                    ( model, Effects.moveCard model dest cardId )
 
-                NewContentCardSource { contentId } ->
+                Model.NewContentCardSource { contentId } ->
                     -- TODO: progress
-                    ( model, addCard model dest contentId )
+                    ( model, Effects.addCard model dest contentId )
 
         CardMoved targetCol (Ok card) ->
             case model.projectDrag of
@@ -623,10 +299,10 @@ update msg model =
 
                         removeCardFromOldColumn =
                             case drag.source of
-                                FromColumnCardSource cs ->
+                                Model.FromColumnCardSource cs ->
                                     Dict.update cs.columnId (Maybe.map removeCard)
 
-                                NewContentCardSource _ ->
+                                Model.NewContentCardSource _ ->
                                     identity
 
                         insertAfter id new cards =
@@ -669,14 +345,14 @@ update msg model =
                             Nothing ->
                                 Cmd.none
                         , case drag.source of
-                            FromColumnCardSource cs ->
+                            Model.FromColumnCardSource cs ->
                                 if cs.columnId == targetCol then
                                     Cmd.none
 
                                 else
                                     Backend.refreshCards cs.columnId RefreshQueued
 
-                            NewContentCardSource _ ->
+                            Model.NewContentCardSource _ ->
                                 Cmd.none
                         ]
                     )
@@ -850,14 +526,14 @@ update msg model =
                             in
                             case List.filter ((==) newLabel.name << .name) labels of
                                 [] ->
-                                    createLabel model r newLabel :: acc
+                                    Effects.createLabel model r newLabel :: acc
 
                                 label :: _ ->
                                     if label.color == newLabel.color then
                                         acc
 
                                     else
-                                        updateLabel model r label newLabel :: acc
+                                        Effects.updateLabel model r label newLabel :: acc
                         )
                         []
                         model.repos
@@ -884,7 +560,7 @@ update msg model =
                                     acc
 
                                 repoLabel :: _ ->
-                                    deleteLabel model r repoLabel :: acc
+                                    Effects.deleteLabel model r repoLabel :: acc
                         )
                         []
                         model.repos
@@ -953,7 +629,7 @@ update msg model =
                                     in
                                     case List.filter (matchesLabel oldLabel) labels of
                                         repoLabel :: _ ->
-                                            updateLabel model r repoLabel newLabel :: acc
+                                            Effects.updateLabel model r repoLabel newLabel :: acc
 
                                         _ ->
                                             acc
@@ -1006,18 +682,18 @@ update msg model =
         LabelCard card label ->
             case card.content of
                 GitHub.IssueCardContent issue ->
-                    ( model, addIssueLabels model issue [ label ] )
+                    ( model, Effects.addIssueLabels model issue [ label ] )
 
                 GitHub.PullRequestCardContent pr ->
-                    ( model, addPullRequestLabels model pr [ label ] )
+                    ( model, Effects.addPullRequestLabels model pr [ label ] )
 
         UnlabelCard card label ->
             case card.content of
                 GitHub.IssueCardContent issue ->
-                    ( model, removeIssueLabel model issue label )
+                    ( model, Effects.removeIssueLabel model issue label )
 
                 GitHub.PullRequestCardContent pr ->
-                    ( model, removePullRequestLabel model pr label )
+                    ( model, Effects.removePullRequestLabel model pr label )
 
         DataChanged cb (Ok ()) ->
             ( model, cb )
@@ -1092,7 +768,7 @@ update msg model =
                     Cmd.none
 
                 note ->
-                    addNoteCard model id note
+                    Effects.addNoteCard model id note
             )
 
         ConfirmDeleteCard id ->
@@ -1104,11 +780,11 @@ update msg model =
         DeleteCard id ghCardId ->
             -- TODO: progress
             ( { model | deletingCards = Set.remove id model.deletingCards }
-            , deleteProjectCard model ghCardId
+            , Effects.deleteProjectCard model ghCardId
             )
 
         SetCardArchived id ghCardId archived ->
-            ( model, setProjectCardArchived model ghCardId archived )
+            ( model, Effects.setProjectCardArchived model ghCardId archived )
 
         SetEditingCardNote id val ->
             ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }, Cmd.none )
@@ -1123,7 +799,7 @@ update msg model =
                     Cmd.none
 
                 note ->
-                    updateCardNote model id note
+                    Effects.updateCardNote model id note
             )
 
         ToggleShowArchivedCards id ->
@@ -1147,7 +823,7 @@ performLabelOperations model =
 
         ( addPairs, removePairs ) =
             Dict.toList model.cardLabelOperations
-                |> List.partition ((==) AddLabelOperation << Tuple.second)
+                |> List.partition ((==) Model.AddLabelOperation << Tuple.second)
 
         labelsToAdd =
             List.map Tuple.first addPairs
@@ -1160,10 +836,10 @@ performLabelOperations model =
                 (\card ->
                     case card.content of
                         GitHub.IssueCardContent issue ->
-                            addIssueLabels model issue labelsToAdd
+                            Effects.addIssueLabels model issue labelsToAdd
 
                         GitHub.PullRequestCardContent pr ->
-                            addPullRequestLabels model pr labelsToAdd
+                            Effects.addPullRequestLabels model pr labelsToAdd
                 )
                 cards
 
@@ -1175,10 +851,10 @@ performLabelOperations model =
                             if hasLabel model name card then
                                 case card.content of
                                     GitHub.IssueCardContent issue ->
-                                        Just (removeIssueLabel model issue name)
+                                        Just (Effects.removeIssueLabel model issue name)
 
                                     GitHub.PullRequestCardContent pr ->
-                                        Just (removePullRequestLabel model pr name)
+                                        Just (Effects.removePullRequestLabel model pr name)
 
                             else
                                 Nothing
@@ -1295,7 +971,7 @@ updateGraphStates model =
     }
 
 
-isBaseGraphState : Model -> CardNodeState -> Bool
+isBaseGraphState : Model -> Model.CardNodeState -> Bool
 isBaseGraphState model state =
     (state.currentTime == model.currentTime)
         && Set.isEmpty state.anticipatedCards
@@ -1331,7 +1007,7 @@ computeViewForPage model =
         ProjectPage id ->
             case Dict.get id model.projects of
                 Just project ->
-                    { reset | baseGraphFilter = Just (InProjectFilter project.id) }
+                    { reset | baseGraphFilter = Just (Model.InProjectFilter project.id) }
                         |> computeGraphsView
                         |> updateGraphStates
 
@@ -1494,7 +1170,7 @@ warmColorLightnessCache color mb =
             mb
 
 
-makeReleaseRepo : Model -> GitHub.Repo -> ReleaseRepo
+makeReleaseRepo : Model -> GitHub.Repo -> Model.ReleaseRepo
 makeReleaseRepo model repo =
     let
         nextMilestone =
@@ -1716,10 +1392,10 @@ viewSidebarControls model =
             let
                 ( checkClass, icon, clickOperation ) =
                     case Dict.get name model.cardLabelOperations of
-                        Just AddLabelOperation ->
-                            ( "checked", Octicons.check octiconOpts, SetLabelOperation name RemoveLabelOperation )
+                        Just Model.AddLabelOperation ->
+                            ( "checked", Octicons.check octiconOpts, SetLabelOperation name Model.RemoveLabelOperation )
 
-                        Just RemoveLabelOperation ->
+                        Just Model.RemoveLabelOperation ->
                             ( "unhecked", Octicons.plus octiconOpts, UnsetLabelOperation name )
 
                         Nothing ->
@@ -1728,20 +1404,20 @@ viewSidebarControls model =
                                     List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
                             in
                             if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
-                                ( "checked", Octicons.check octiconOpts, SetLabelOperation name RemoveLabelOperation )
+                                ( "checked", Octicons.check octiconOpts, SetLabelOperation name Model.RemoveLabelOperation )
 
                             else if List.any (hasLabel model name) cards then
-                                ( "mixed", Octicons.dash octiconOpts, SetLabelOperation name AddLabelOperation )
+                                ( "mixed", Octicons.dash octiconOpts, SetLabelOperation name Model.AddLabelOperation )
 
                             else
-                                ( "unchecked", Octicons.plus octiconOpts, SetLabelOperation name AddLabelOperation )
+                                ( "unchecked", Octicons.plus octiconOpts, SetLabelOperation name Model.AddLabelOperation )
             in
             Html.div [ HA.class "label-operation" ]
                 [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ]
                     [ icon ]
                 , Html.span
                     ([ HA.class "label"
-                     , HE.onClick (AddFilter (HasLabelFilter name color))
+                     , HE.onClick (AddFilter (Model.HasLabelFilter name color))
                      ]
                         ++ labelColorStyles model color
                     )
@@ -1813,7 +1489,7 @@ viewSpatialGraph model =
         ]
 
 
-graphId : StatefulGraph -> String
+graphId : Model.StatefulGraph -> String
 graphId graph =
     List.foldl (\{ card } acc -> max card.id acc) "" graph.nodes
 
@@ -1825,7 +1501,7 @@ viewGraphControls model =
             List.filterMap
                 (\filter ->
                     case filter of
-                        HasLabelFilter name color ->
+                        Model.HasLabelFilter name color ->
                             Just <|
                                 Html.div
                                     ([ HA.class "control-setting"
@@ -1850,7 +1526,7 @@ viewGraphControls model =
                             Html.div [ HA.class "label-filter" ]
                                 [ Html.div
                                     ([ HA.class "label"
-                                     , HE.onClick (AddFilter (HasLabelFilter name color))
+                                     , HE.onClick (AddFilter (Model.HasLabelFilter name color))
                                      ]
                                         ++ labelColorStyles model color
                                     )
@@ -1867,7 +1543,7 @@ viewGraphControls model =
             ([ Html.span [ HA.class "controls-label" ] [ Html.text "filter:" ]
              , let
                 filter =
-                    UntriagedFilter
+                    Model.UntriagedFilter
                in
                Html.div
                 [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
@@ -1883,7 +1559,7 @@ viewGraphControls model =
                 ]
              , let
                 filter =
-                    IssuesFilter
+                    Model.IssuesFilter
                in
                Html.div
                 [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
@@ -1899,7 +1575,7 @@ viewGraphControls model =
                 ]
              , let
                 filter =
-                    PullRequestsFilter
+                    Model.PullRequestsFilter
                in
                Html.div
                 [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
@@ -1917,7 +1593,7 @@ viewGraphControls model =
                 Just { user } ->
                     let
                         filter =
-                            InvolvesUserFilter user.login
+                            Model.InvolvesUserFilter user.login
                     in
                     Html.div
                         [ HA.classList [ ( "control-setting", True ), ( "active", hasFilter model filter ) ]
@@ -1954,15 +1630,15 @@ viewGraphControls model =
         , Html.div [ HA.class "control-group" ]
             [ Html.span [ HA.class "controls-label" ] [ Html.text "sort:" ]
             , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == ImpactSort ) ]
-                , HE.onClick (SetGraphSort ImpactSort)
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == Model.ImpactSort ) ]
+                , HE.onClick (SetGraphSort Model.ImpactSort)
                 ]
                 [ Octicons.flame octiconOpts
                 , Html.text "impact"
                 ]
             , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == AllActivitySort ) ]
-                , HE.onClick (SetGraphSort AllActivitySort)
+                [ HA.classList [ ( "control-setting", True ), ( "active", model.graphSort == Model.AllActivitySort ) ]
+                , HE.onClick (SetGraphSort Model.AllActivitySort)
                 ]
                 [ Octicons.clock octiconOpts
                 , Html.text "all activity"
@@ -1971,7 +1647,7 @@ viewGraphControls model =
         ]
 
 
-hasFilter : Model -> GraphFilter -> Bool
+hasFilter : Model -> Model.GraphFilter -> Bool
 hasFilter model filter =
     List.member filter model.graphFilters
 
@@ -2156,7 +1832,7 @@ viewReleasePage model =
         ]
 
 
-viewReleaseRepoPage : Model -> ReleaseRepo -> Html Msg
+viewReleaseRepoPage : Model -> Model.ReleaseRepo -> Html Msg
 viewReleaseRepoPage model sir =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
@@ -2247,7 +1923,7 @@ viewTabbedCards model tabs =
         ]
 
 
-viewReleaseRepo : Model -> ReleaseRepo -> Html Msg
+viewReleaseRepo : Model -> Model.ReleaseRepo -> Html Msg
 viewReleaseRepo model sir =
     Html.div [ HA.class "metrics-item" ]
         [ Html.a [ HA.class "column-title", HA.href ("/release/" ++ sir.repo.name) ]
@@ -2492,7 +2168,7 @@ viewArchivePage model =
         ]
 
 
-viewArchiveDay : Model -> ( Int, Time.Month, Int ) -> List ArchiveEvent -> Html Msg
+viewArchiveDay : Model -> ( Int, Time.Month, Int ) -> List Model.ArchiveEvent -> Html Msg
 viewArchiveDay model ( year, month, day ) events =
     Html.div [ HA.class "archive-day" ]
         [ Html.span [ HA.class "column-title" ]
@@ -2550,7 +2226,7 @@ viewMonth month =
                 "December"
 
 
-viewArchiveEvent : Model -> ArchiveEvent -> Html Msg
+viewArchiveEvent : Model -> Model.ArchiveEvent -> Html Msg
 viewArchiveEvent model { cardId, event } =
     case Dict.get cardId model.cards of
         Nothing ->
@@ -2628,7 +2304,7 @@ absoluteTime =
     ]
 
 
-groupEvents : Time.Zone -> List ArchiveEvent -> List ( ( Int, Time.Month, Int ), List ArchiveEvent )
+groupEvents : Time.Zone -> List Model.ArchiveEvent -> List ( ( Int, Time.Month, Int ), List Model.ArchiveEvent )
 groupEvents zone =
     let
         insertEvent event acc =
@@ -2653,12 +2329,12 @@ groupEvents zone =
     List.foldl insertEvent []
 
 
-matchesLabel : SharedLabel -> GitHub.Label -> Bool
+matchesLabel : Model.SharedLabel -> GitHub.Label -> Bool
 matchesLabel sl l =
     l.name == sl.name && String.toLower l.color == String.toLower sl.color
 
 
-includesLabel : Model -> SharedLabel -> List GitHub.ID -> Bool
+includesLabel : Model -> Model.SharedLabel -> List GitHub.ID -> Bool
 includesLabel model label labelIds =
     List.any
         (\id ->
@@ -2672,7 +2348,7 @@ includesLabel model label labelIds =
         labelIds
 
 
-viewLabelRow : Model -> SharedLabel -> List GitHub.ID -> Html Msg
+viewLabelRow : Model -> Model.SharedLabel -> List GitHub.ID -> Html Msg
 viewLabelRow model label repoIds =
     let
         stateKey =
@@ -3092,7 +2768,7 @@ viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backe
 viewProjectColumnCard model project col ghCard =
     let
         dragId =
-            FromColumnCardSource { columnId = col.id, cardId = ghCard.id }
+            Model.FromColumnCardSource { columnId = col.id, cardId = ghCard.id }
 
         dropCandidate =
             { msgFunc = MoveCardAfter
@@ -3183,7 +2859,7 @@ viewSearch model =
         ]
 
 
-statefulGraph : Model -> ForceGraph GitHub.ID -> StatefulGraph
+statefulGraph : Model -> ForceGraph GitHub.ID -> Model.StatefulGraph
 statefulGraph model fg =
     let
         allFilters =
@@ -3264,10 +2940,10 @@ computeGraphsView model =
 
         sortFunc a b =
             case model.graphSort of
-                ImpactSort ->
+                Model.ImpactSort ->
                     graphImpactCompare model a.nodes b.nodes
 
-                AllActivitySort ->
+                Model.AllActivitySort ->
                     graphAllActivityCompare model a.nodes b.nodes
     in
     { model
@@ -3278,7 +2954,7 @@ computeGraphsView model =
     }
 
 
-baseGraphState : Model -> CardNodeState
+baseGraphState : Model -> Model.CardNodeState
 baseGraphState model =
     { allLabels = model.allLabels
     , prReviewers = model.prReviewers
@@ -3289,37 +2965,37 @@ baseGraphState model =
     }
 
 
-satisfiesFilters : Model -> List GraphFilter -> Card -> Bool
+satisfiesFilters : Model -> List Model.GraphFilter -> Card -> Bool
 satisfiesFilters model filters card =
     List.all (\a -> satisfiesFilter model a card) filters
 
 
-satisfiesFilter : Model -> GraphFilter -> Card -> Bool
+satisfiesFilter : Model -> Model.GraphFilter -> Card -> Bool
 satisfiesFilter model filter card =
     case filter of
-        ExcludeAllFilter ->
+        Model.ExcludeAllFilter ->
             False
 
-        InProjectFilter id ->
+        Model.InProjectFilter id ->
             isInProject id card
 
-        HasLabelFilter label color ->
+        Model.HasLabelFilter label color ->
             hasLabelAndColor model label color card
 
-        InvolvesUserFilter login ->
+        Model.InvolvesUserFilter login ->
             involvesUser model login card
 
-        PullRequestsFilter ->
+        Model.PullRequestsFilter ->
             Card.isPR card
 
-        IssuesFilter ->
+        Model.IssuesFilter ->
             not (Card.isPR card)
 
-        UntriagedFilter ->
+        Model.UntriagedFilter ->
             Card.isUntriaged card
 
 
-graphImpactCompare : Model -> List CardNode -> List CardNode -> Order
+graphImpactCompare : Model -> List Model.CardNode -> List Model.CardNode -> Order
 graphImpactCompare model a b =
     case compare (List.length a) (List.length b) of
         EQ ->
@@ -3335,7 +3011,7 @@ graphImpactCompare model a b =
             x
 
 
-graphAllActivityCompare : Model -> List CardNode -> List CardNode -> Order
+graphAllActivityCompare : Model -> List Model.CardNode -> List Model.CardNode -> Order
 graphAllActivityCompare model a b =
     let
         latestActivity =
@@ -3362,7 +3038,7 @@ graphAllActivityCompare model a b =
     compare (latestActivity a) (latestActivity b)
 
 
-viewGraph : StatefulGraph -> Html Msg
+viewGraph : Model.StatefulGraph -> Html Msg
 viewGraph graph =
     let
         ( flairs, nodes, bounds ) =
@@ -3404,8 +3080,8 @@ viewGraph graph =
 
 
 viewNodeLowerUpper :
-    CardNodeState
-    -> CardNode
+    Model.CardNodeState
+    -> Model.CardNode
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
     -> ( List ( String, Svg Msg ), List ( String, Svg Msg ), List NodeBounds )
 viewNodeLowerUpper state node ( fs, ns, bs ) =
@@ -3433,7 +3109,7 @@ viewNodeLowerUpper state node ( fs, ns, bs ) =
     )
 
 
-viewCardFlair : CardNode -> Time.Posix -> Bool -> Dict GitHub.ID (List GitHub.PullRequestReview) -> Svg Msg
+viewCardFlair : Model.CardNode -> Time.Posix -> Bool -> Dict GitHub.ID (List GitHub.PullRequestReview) -> Svg Msg
 viewCardFlair node currentTime isHighlighted prReviewers =
     let
         flairArcs =
@@ -3490,7 +3166,7 @@ viewCardFlair node currentTime isHighlighted prReviewers =
         (flairArcs ++ [ anticipatedHalo ])
 
 
-viewCardCircle : CardNode -> Dict GitHub.ID GitHub.Label -> Bool -> Bool -> Svg Msg
+viewCardCircle : Model.CardNode -> Dict GitHub.ID GitHub.Label -> Bool -> Bool -> Svg Msg
 viewCardCircle node labels isHighlighted isSelected =
     let
         labelArcs =
@@ -3565,7 +3241,7 @@ viewCardCircle node labels isHighlighted isSelected =
         (circle :: labelArcs)
 
 
-linkPath : CardNodeState -> CardEdge -> Svg Msg
+linkPath : Model.CardNodeState -> Model.CardEdge -> Svg Msg
 linkPath state { source, target, filteredOut } =
     Svg.line
         [ SA.class "graph-edge"
@@ -3872,7 +3548,7 @@ viewCardEntry model card =
             viewCard model controls card
 
         dragSource =
-            NewContentCardSource { contentId = card.id }
+            Model.NewContentCardSource { contentId = card.id }
     in
     Drag.draggable model.projectDrag ProjectDrag dragSource <|
         cardView
@@ -4524,192 +4200,7 @@ isOrgMember users user =
     List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
 
 
-withTokenOrLogIn : Model -> (String -> Cmd Msg) -> Cmd Msg
-withTokenOrLogIn model f =
-    case model.me of
-        Just { token } ->
-            f token
-
-        Nothing ->
-            Nav.load "/auth/github"
-
-
-moveCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
-moveCard model { columnId, afterId } cardId =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.moveCardAfter token columnId cardId afterId
-                |> Task.attempt (CardMoved columnId)
-
-
-addCard : Model -> CardDestination -> GitHub.ID -> Cmd Msg
-addCard model { projectId, columnId, afterId } contentId =
-    withTokenOrLogIn model <|
-        \token ->
-            case contentCardId model projectId contentId of
-                Just cardId ->
-                    GitHub.moveCardAfter token columnId cardId afterId
-                        |> Task.attempt (CardMoved columnId)
-
-                Nothing ->
-                    GitHub.addContentCardAfter token columnId contentId afterId
-                        |> Task.attempt (CardMoved columnId)
-
-
-contentCardId : Model -> GitHub.ID -> GitHub.ID -> Maybe GitHub.ID
-contentCardId model projectId contentId =
-    case Dict.get contentId model.cards of
-        Just card ->
-            case List.filter ((==) projectId << .id << .project) card.cards of
-                [ c ] ->
-                    Just c.id
-
-                _ ->
-                    Nothing
-
-        Nothing ->
-            Nothing
-
-
-findCardColumns : Model -> GitHub.ID -> List GitHub.ID
-findCardColumns model cardId =
-    Dict.foldl
-        (\columnId cards columnIds ->
-            if List.any ((==) cardId << .id) cards then
-                columnId :: columnIds
-
-            else
-                columnIds
-        )
-        []
-        model.columnCards
-
-
-labelKey : SharedLabel -> ( String, String )
-labelKey label =
-    ( label.name, String.toLower label.color )
-
-
-createLabel : Model -> GitHub.Repo -> SharedLabel -> Cmd Msg
-createLabel model repo label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.createRepoLabel token repo label.name label.color
-                |> Task.attempt (LabelChanged repo)
-
-
-updateLabel : Model -> GitHub.Repo -> GitHub.Label -> SharedLabel -> Cmd Msg
-updateLabel model repo label1 label2 =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.updateRepoLabel token repo label1 label2.name label2.color
-                |> Task.attempt (LabelChanged repo)
-
-
-deleteLabel : Model -> GitHub.Repo -> GitHub.Label -> Cmd Msg
-deleteLabel model repo label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.deleteRepoLabel token repo label.name
-                |> Task.attempt (LabelChanged repo)
-
-
-addIssueLabels : Model -> GitHub.Issue -> List String -> Cmd Msg
-addIssueLabels model issue labels =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.addIssueLabels token issue labels
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
-
-
-addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg
-addNoteCard model colId note =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.addNoteCard token colId note
-                |> Task.map (always ())
-                |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
-
-
-updateCardNote : Model -> GitHub.ID -> String -> Cmd Msg
-updateCardNote model cardId note =
-    withTokenOrLogIn model <|
-        \token ->
-            let
-                refreshColumn res =
-                    case res of
-                        Ok { columnId } ->
-                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
-
-                        Err msg ->
-                            DataChanged Cmd.none (Err msg)
-            in
-            GitHub.updateCardNote token cardId note
-                |> Task.attempt refreshColumn
-
-
-setProjectCardArchived : Model -> GitHub.ID -> Bool -> Cmd Msg
-setProjectCardArchived model cardId archived =
-    withTokenOrLogIn model <|
-        \token ->
-            let
-                refreshColumn res =
-                    case res of
-                        Ok { columnId } ->
-                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
-
-                        Err msg ->
-                            DataChanged Cmd.none (Err msg)
-            in
-            GitHub.setCardArchived token cardId archived
-                |> Task.attempt refreshColumn
-
-
-deleteProjectCard : Model -> GitHub.ID -> Cmd Msg
-deleteProjectCard model cardId =
-    withTokenOrLogIn model <|
-        \token ->
-            let
-                refreshColumn res =
-                    case res of
-                        Ok (Just colId) ->
-                            DataChanged (Backend.refreshCards colId RefreshQueued) (Ok ())
-
-                        Ok Nothing ->
-                            DataChanged Cmd.none (Ok ())
-
-                        Err msg ->
-                            DataChanged Cmd.none (Err msg)
-            in
-            GitHub.deleteProjectCard token cardId
-                |> Task.attempt refreshColumn
-
-
-removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg
-removeIssueLabel model issue label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.removeIssueLabel token issue label
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
-
-
-addPullRequestLabels : Model -> GitHub.PullRequest -> List String -> Cmd Msg
-addPullRequestLabels model pr labels =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.addPullRequestLabels token pr labels
-                |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
-
-
-removePullRequestLabel : Model -> GitHub.PullRequest -> String -> Cmd Msg
-removePullRequestLabel model pr label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.removePullRequestLabel token pr label
-                |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
-
-
-randomizeColor : SharedLabel -> SharedLabel
+randomizeColor : Model.SharedLabel -> Model.SharedLabel
 randomizeColor label =
     let
         currentColor =
@@ -4841,13 +4332,13 @@ grayOpts =
     { octiconOpts | color = Colors.gray }
 
 
-computeArchive : Model -> Dict GitHub.ID Card -> List ArchiveEvent
+computeArchive : Model -> Dict GitHub.ID Card -> List Model.ArchiveEvent
 computeArchive model cards =
     let
         actorEvents card =
             Dict.get card.id model.cardEvents
                 |> Maybe.withDefault []
-                |> List.map (ArchiveEvent card.id)
+                |> List.map (Model.ArchiveEvent card.id)
 
         cardEvents card =
             { cardId = card.id
@@ -4869,7 +4360,7 @@ computeArchive model cards =
 
 setLoading : List GitHub.ID -> Model -> Model
 setLoading ids model =
-    { model | progress = List.foldl (\id -> Dict.insert id ProgressLoading) model.progress ids }
+    { model | progress = List.foldl (\id -> Dict.insert id Model.ProgressLoading) model.progress ids }
 
 
 finishProgress : GitHub.ID -> Model -> Model
@@ -4877,7 +4368,7 @@ finishProgress id model =
     { model | progress = Dict.remove id model.progress }
 
 
-finishLoadingData : Backend.Data -> Dict GitHub.ID Progress -> Dict GitHub.ID Progress
+finishLoadingData : Backend.Data -> Dict GitHub.ID Model.Progress -> Dict GitHub.ID Model.Progress
 finishLoadingData data =
     let
         hasLoaded id _ =
@@ -4886,7 +4377,7 @@ finishLoadingData data =
     Dict.filter (\id p -> not (hasLoaded id p))
 
 
-finishLoadingCardData : Backend.CardData -> Dict GitHub.ID Progress -> Dict GitHub.ID Progress
+finishLoadingCardData : Backend.CardData -> Dict GitHub.ID Model.Progress -> Dict GitHub.ID Model.Progress
 finishLoadingCardData data =
     let
         hasLoaded id _ =
@@ -4897,4 +4388,9 @@ finishLoadingCardData data =
 
 failProgress : GitHub.ID -> String -> Model -> Model
 failProgress id err model =
-    { model | progress = Dict.insert id (ProgressFailed err) model.progress }
+    { model | progress = Dict.insert id (Model.ProgressFailed err) model.progress }
+
+
+labelKey : Model.SharedLabel -> ( String, String )
+labelKey label =
+    ( label.name, String.toLower label.color )
