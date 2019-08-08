@@ -7,8 +7,10 @@ module Effects exposing
     , createLabel
     , deleteLabel
     , deleteProjectCard
-    , findCardColumns
     , moveCard
+    , refreshColumnCards
+    , refreshIssue
+    , refreshPR
     , removeIssueLabel
     , removePullRequestLabel
     , setProjectCardArchived
@@ -34,12 +36,36 @@ withTokenOrLogIn model f =
             Nav.load "/auth/github"
 
 
+withSetLoading : List GitHub.ID -> Cmd Msg -> Cmd Msg
+withSetLoading ids cmd =
+    Task.perform (SetLoading ids) (Task.succeed cmd)
+
+
+refreshColumnCards : GitHub.ID -> Cmd Msg
+refreshColumnCards id =
+    Backend.refreshCards id RefreshQueued
+        |> withSetLoading [ id ]
+
+
+refreshIssue : GitHub.ID -> Cmd Msg
+refreshIssue id =
+    Backend.refreshIssue id RefreshQueued
+        |> withSetLoading [ id ]
+
+
+refreshPR : GitHub.ID -> Cmd Msg
+refreshPR id =
+    Backend.refreshPR id RefreshQueued
+        |> withSetLoading [ id ]
+
+
 moveCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg
 moveCard model { columnId, afterId } cardId =
     withTokenOrLogIn model <|
         \token ->
             GitHub.moveCardAfter token columnId cardId afterId
                 |> Task.attempt (CardMoved columnId)
+                |> withSetLoading [ columnId ]
 
 
 addCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg
@@ -50,39 +76,12 @@ addCard model { projectId, columnId, afterId } contentId =
                 Just cardId ->
                     GitHub.moveCardAfter token columnId cardId afterId
                         |> Task.attempt (CardMoved columnId)
+                        |> withSetLoading [ columnId ]
 
                 Nothing ->
                     GitHub.addContentCardAfter token columnId contentId afterId
                         |> Task.attempt (CardMoved columnId)
-
-
-contentCardId : Model -> GitHub.ID -> GitHub.ID -> Maybe GitHub.ID
-contentCardId model projectId contentId =
-    case Dict.get contentId model.cards of
-        Just card ->
-            case List.filter ((==) projectId << .id << .project) card.cards of
-                [ c ] ->
-                    Just c.id
-
-                _ ->
-                    Nothing
-
-        Nothing ->
-            Nothing
-
-
-findCardColumns : Model -> GitHub.ID -> List GitHub.ID
-findCardColumns model cardId =
-    Dict.foldl
-        (\columnId cards columnIds ->
-            if List.any ((==) cardId << .id) cards then
-                columnId :: columnIds
-
-            else
-                columnIds
-        )
-        []
-        model.columnCards
+                        |> withSetLoading [ columnId ]
 
 
 createLabel : Model -> GitHub.Repo -> Model.SharedLabel -> Cmd Msg
@@ -109,14 +108,6 @@ deleteLabel model repo label =
                 |> Task.attempt (LabelChanged repo)
 
 
-addIssueLabels : Model -> GitHub.Issue -> List String -> Cmd Msg
-addIssueLabels model issue labels =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.addIssueLabels token issue labels
-                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
-
-
 addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg
 addNoteCard model colId note =
     withTokenOrLogIn model <|
@@ -124,6 +115,7 @@ addNoteCard model colId note =
             GitHub.addNoteCard token colId note
                 |> Task.map (always ())
                 |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
+                |> withSetLoading [ colId ]
 
 
 updateCardNote : Model -> GitHub.ID -> String -> Cmd Msg
@@ -134,13 +126,14 @@ updateCardNote model cardId note =
                 refreshColumn res =
                     case res of
                         Ok { columnId } ->
-                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
+                            DataChanged (refreshColumnCards columnId) (Ok ())
 
                         Err msg ->
                             DataChanged Cmd.none (Err msg)
             in
             GitHub.updateCardNote token cardId note
                 |> Task.attempt refreshColumn
+                |> withSetLoading [ cardId ]
 
 
 setProjectCardArchived : Model -> GitHub.ID -> Bool -> Cmd Msg
@@ -151,13 +144,14 @@ setProjectCardArchived model cardId archived =
                 refreshColumn res =
                     case res of
                         Ok { columnId } ->
-                            DataChanged (Backend.refreshCards columnId RefreshQueued) (Ok ())
+                            DataChanged (refreshColumnCards columnId) (Ok ())
 
                         Err msg ->
                             DataChanged Cmd.none (Err msg)
             in
             GitHub.setCardArchived token cardId archived
                 |> Task.attempt refreshColumn
+                |> withSetLoading [ cardId ]
 
 
 deleteProjectCard : Model -> GitHub.ID -> Cmd Msg
@@ -168,7 +162,7 @@ deleteProjectCard model cardId =
                 refreshColumn res =
                     case res of
                         Ok (Just colId) ->
-                            DataChanged (Backend.refreshCards colId RefreshQueued) (Ok ())
+                            DataChanged (refreshColumnCards colId) (Ok ())
 
                         Ok Nothing ->
                             DataChanged Cmd.none (Ok ())
@@ -178,6 +172,16 @@ deleteProjectCard model cardId =
             in
             GitHub.deleteProjectCard token cardId
                 |> Task.attempt refreshColumn
+                |> withSetLoading [ cardId ]
+
+
+addIssueLabels : Model -> GitHub.Issue -> List String -> Cmd Msg
+addIssueLabels model issue labels =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.addIssueLabels token issue labels
+                |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
+                |> withSetLoading [ issue.id ]
 
 
 removeIssueLabel : Model -> GitHub.Issue -> String -> Cmd Msg
@@ -186,6 +190,7 @@ removeIssueLabel model issue label =
         \token ->
             GitHub.removeIssueLabel token issue label
                 |> Task.attempt (DataChanged (Backend.refreshIssue issue.id RefreshQueued))
+                |> withSetLoading [ issue.id ]
 
 
 addPullRequestLabels : Model -> GitHub.PullRequest -> List String -> Cmd Msg
@@ -194,6 +199,7 @@ addPullRequestLabels model pr labels =
         \token ->
             GitHub.addPullRequestLabels token pr labels
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
+                |> withSetLoading [ pr.id ]
 
 
 removePullRequestLabel : Model -> GitHub.PullRequest -> String -> Cmd Msg
@@ -202,3 +208,19 @@ removePullRequestLabel model pr label =
         \token ->
             GitHub.removePullRequestLabel token pr label
                 |> Task.attempt (DataChanged (Backend.refreshPR pr.id RefreshQueued))
+                |> withSetLoading [ pr.id ]
+
+
+contentCardId : Model -> GitHub.ID -> GitHub.ID -> Maybe GitHub.ID
+contentCardId model projectId contentId =
+    case Dict.get contentId model.cards of
+        Just card ->
+            case List.filter ((==) projectId << .id << .project) card.cards of
+                [ c ] ->
+                    Just c.id
+
+                _ ->
+                    Nothing
+
+        Nothing ->
+            Nothing

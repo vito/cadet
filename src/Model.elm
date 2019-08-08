@@ -12,6 +12,7 @@ module Model exposing
     , Msg(..)
     , Page(..)
     , Progress(..)
+    , ProgressState
     , ReleaseRepo
     , SharedLabel
     , StatefulGraph
@@ -42,7 +43,7 @@ type alias Model =
     , currentZone : Time.Zone
 
     -- progress for a given object
-    , progress : Dict GitHub.ID Progress
+    , progress : ProgressState
 
     -- data from backend
     , dataIndex : Int
@@ -186,6 +187,7 @@ type Msg
     | UpdateCardNote GitHub.ID
     | SetCardArchived GitHub.ID GitHub.ID Bool
     | ToggleShowArchivedCards GitHub.ID
+    | SetLoading (List GitHub.ID) (Cmd Msg)
 
 
 type Page
@@ -204,6 +206,10 @@ type Page
 type Progress
     = ProgressLoading
     | ProgressFailed String
+
+
+type alias ProgressState =
+    Dict GitHub.ID Progress
 
 
 type CardLabelOperation

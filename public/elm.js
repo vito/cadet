@@ -8174,30 +8174,6 @@ var author$project$Backend$fetchGraphs = function (f) {
 				author$project$Backend$expectJsonWithIndex(author$project$Backend$decodeGraphs),
 				lukewestby$elm_http_builder$HttpBuilder$get('/graphs'))));
 };
-var author$project$Backend$refreshCards = F2(
-	function (col, f) {
-		return A2(
-			elm$core$Task$attempt,
-			f,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?columnCards=' + col)));
-	});
-var author$project$Backend$refreshIssue = F2(
-	function (id, f) {
-		return A2(
-			elm$core$Task$attempt,
-			f,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?issue=' + id)));
-	});
-var author$project$Backend$refreshPR = F2(
-	function (id, f) {
-		return A2(
-			elm$core$Task$attempt,
-			f,
-			lukewestby$elm_http_builder$HttpBuilder$toTask(
-				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?pr=' + id)));
-	});
 var author$project$Backend$refreshRepo = F2(
 	function (repo, f) {
 		return A2(
@@ -8313,6 +8289,23 @@ var author$project$Effects$contentCardId = F3(
 			return elm$core$Maybe$Nothing;
 		}
 	});
+var author$project$Model$SetLoading = F2(
+	function (a, b) {
+		return {$: 'SetLoading', a: a, b: b};
+	});
+var elm$core$Task$perform = F2(
+	function (toMessage, task) {
+		return elm$core$Task$command(
+			elm$core$Task$Perform(
+				A2(elm$core$Task$map, toMessage, task)));
+	});
+var author$project$Effects$withSetLoading = F2(
+	function (ids, cmd) {
+		return A2(
+			elm$core$Task$perform,
+			author$project$Model$SetLoading(ids),
+			elm$core$Task$succeed(cmd));
+	});
 var elm$browser$Browser$External = function (a) {
 	return {$: 'External', a: a};
 };
@@ -8331,12 +8324,6 @@ var elm$core$Basics$never = function (_n0) {
 		continue never;
 	}
 };
-var elm$core$Task$perform = F2(
-	function (toMessage, task) {
-		return elm$core$Task$command(
-			elm$core$Task$Perform(
-				A2(elm$core$Task$map, toMessage, task)));
-	});
 var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	switch (handler.$) {
 		case 'Normal':
@@ -10754,16 +10741,32 @@ var author$project$Effects$addCard = F3(
 				if (_n1.$ === 'Just') {
 					var cardId = _n1.a;
 					return A2(
-						elm$core$Task$attempt,
-						author$project$Model$CardMoved(columnId),
-						A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
+						author$project$Effects$withSetLoading,
+						_List_fromArray(
+							[columnId]),
+						A2(
+							elm$core$Task$attempt,
+							author$project$Model$CardMoved(columnId),
+							A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId)));
 				} else {
 					return A2(
-						elm$core$Task$attempt,
-						author$project$Model$CardMoved(columnId),
-						A4(author$project$GitHub$addContentCardAfter, token, columnId, contentId, afterId));
+						author$project$Effects$withSetLoading,
+						_List_fromArray(
+							[columnId]),
+						A2(
+							elm$core$Task$attempt,
+							author$project$Model$CardMoved(columnId),
+							A4(author$project$GitHub$addContentCardAfter, token, columnId, contentId, afterId)));
 				}
 			});
+	});
+var author$project$Backend$refreshIssue = F2(
+	function (id, f) {
+		return A2(
+			elm$core$Task$attempt,
+			f,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?issue=' + id)));
 	});
 var lukewestby$elm_http_builder$HttpBuilder$post = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
 var lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
@@ -10822,11 +10825,23 @@ var author$project$Effects$addIssueLabels = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$DataChanged(
-						A2(author$project$Backend$refreshIssue, issue.id, author$project$Model$RefreshQueued)),
-					A3(author$project$GitHub$addIssueLabels, token, issue, labels));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[issue.id]),
+					A2(
+						elm$core$Task$attempt,
+						author$project$Model$DataChanged(
+							A2(author$project$Backend$refreshIssue, issue.id, author$project$Model$RefreshQueued)),
+						A3(author$project$GitHub$addIssueLabels, token, issue, labels)));
 			});
+	});
+var author$project$Backend$refreshCards = F2(
+	function (col, f) {
+		return A2(
+			elm$core$Task$attempt,
+			f,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?columnCards=' + col)));
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
@@ -10890,14 +10905,26 @@ var author$project$Effects$addNoteCard = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$DataChanged(
-						A2(author$project$Backend$refreshCards, colId, author$project$Model$RefreshQueued)),
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[colId]),
 					A2(
-						elm$core$Task$map,
-						elm$core$Basics$always(_Utils_Tuple0),
-						A3(author$project$GitHub$addNoteCard, token, colId, note)));
+						elm$core$Task$attempt,
+						author$project$Model$DataChanged(
+							A2(author$project$Backend$refreshCards, colId, author$project$Model$RefreshQueued)),
+						A2(
+							elm$core$Task$map,
+							elm$core$Basics$always(_Utils_Tuple0),
+							A3(author$project$GitHub$addNoteCard, token, colId, note))));
 			});
+	});
+var author$project$Backend$refreshPR = F2(
+	function (id, f) {
+		return A2(
+			elm$core$Task$attempt,
+			f,
+			lukewestby$elm_http_builder$HttpBuilder$toTask(
+				lukewestby$elm_http_builder$HttpBuilder$get('/refresh?pr=' + id)));
 	});
 var author$project$GitHub$addPullRequestLabels = F3(
 	function (token, issue, names) {
@@ -10921,10 +10948,14 @@ var author$project$Effects$addPullRequestLabels = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$DataChanged(
-						A2(author$project$Backend$refreshPR, pr.id, author$project$Model$RefreshQueued)),
-					A3(author$project$GitHub$addPullRequestLabels, token, pr, labels));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[pr.id]),
+					A2(
+						elm$core$Task$attempt,
+						author$project$Model$DataChanged(
+							A2(author$project$Backend$refreshPR, pr.id, author$project$Model$RefreshQueued)),
+						A3(author$project$GitHub$addPullRequestLabels, token, pr, labels)));
 			});
 	});
 var author$project$GitHub$encodeLabelPatch = F2(
@@ -10994,6 +11025,13 @@ var author$project$Effects$deleteLabel = F3(
 					A3(author$project$GitHub$deleteRepoLabel, token, repo, label.name));
 			});
 	});
+var author$project$Effects$refreshColumnCards = function (id) {
+	return A2(
+		author$project$Effects$withSetLoading,
+		_List_fromArray(
+			[id]),
+		A2(author$project$Backend$refreshCards, id, author$project$Model$RefreshQueued));
+};
 var author$project$GitHub$deleteProjectCardMutation = function () {
 	var cardIDVar = A3(
 		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -11054,7 +11092,7 @@ var author$project$Effects$deleteProjectCard = F2(
 							var colId = res.a.a;
 							return A2(
 								author$project$Model$DataChanged,
-								A2(author$project$Backend$refreshCards, colId, author$project$Model$RefreshQueued),
+								author$project$Effects$refreshColumnCards(colId),
 								elm$core$Result$Ok(_Utils_Tuple0));
 						} else {
 							var _n1 = res.a;
@@ -11072,9 +11110,13 @@ var author$project$Effects$deleteProjectCard = F2(
 					}
 				};
 				return A2(
-					elm$core$Task$attempt,
-					refreshColumn,
-					A2(author$project$GitHub$deleteProjectCard, token, cardId));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[cardId]),
+					A2(
+						elm$core$Task$attempt,
+						refreshColumn,
+						A2(author$project$GitHub$deleteProjectCard, token, cardId)));
 			});
 	});
 var author$project$Effects$moveCard = F3(
@@ -11086,11 +11128,29 @@ var author$project$Effects$moveCard = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$CardMoved(columnId),
-					A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[columnId]),
+					A2(
+						elm$core$Task$attempt,
+						author$project$Model$CardMoved(columnId),
+						A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId)));
 			});
 	});
+var author$project$Effects$refreshIssue = function (id) {
+	return A2(
+		author$project$Effects$withSetLoading,
+		_List_fromArray(
+			[id]),
+		A2(author$project$Backend$refreshIssue, id, author$project$Model$RefreshQueued));
+};
+var author$project$Effects$refreshPR = function (id) {
+	return A2(
+		author$project$Effects$withSetLoading,
+		_List_fromArray(
+			[id]),
+		A2(author$project$Backend$refreshPR, id, author$project$Model$RefreshQueued));
+};
 var author$project$GitHub$removeIssueLabel = F3(
 	function (token, issue, name) {
 		return A2(
@@ -11110,10 +11170,14 @@ var author$project$Effects$removeIssueLabel = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$DataChanged(
-						A2(author$project$Backend$refreshIssue, issue.id, author$project$Model$RefreshQueued)),
-					A3(author$project$GitHub$removeIssueLabel, token, issue, label));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[issue.id]),
+					A2(
+						elm$core$Task$attempt,
+						author$project$Model$DataChanged(
+							A2(author$project$Backend$refreshIssue, issue.id, author$project$Model$RefreshQueued)),
+						A3(author$project$GitHub$removeIssueLabel, token, issue, label)));
 			});
 	});
 var author$project$GitHub$removePullRequestLabel = F3(
@@ -11135,10 +11199,14 @@ var author$project$Effects$removePullRequestLabel = F3(
 			model,
 			function (token) {
 				return A2(
-					elm$core$Task$attempt,
-					author$project$Model$DataChanged(
-						A2(author$project$Backend$refreshPR, pr.id, author$project$Model$RefreshQueued)),
-					A3(author$project$GitHub$removePullRequestLabel, token, pr, label));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[pr.id]),
+					A2(
+						elm$core$Task$attempt,
+						author$project$Model$DataChanged(
+							A2(author$project$Backend$refreshPR, pr.id, author$project$Model$RefreshQueued)),
+						A3(author$project$GitHub$removePullRequestLabel, token, pr, label)));
 			});
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Boolean');
@@ -11219,7 +11287,7 @@ var author$project$Effects$setProjectCardArchived = F3(
 						var columnId = res.a.columnId;
 						return A2(
 							author$project$Model$DataChanged,
-							A2(author$project$Backend$refreshCards, columnId, author$project$Model$RefreshQueued),
+							author$project$Effects$refreshColumnCards(columnId),
 							elm$core$Result$Ok(_Utils_Tuple0));
 					} else {
 						var msg = res.a;
@@ -11230,9 +11298,13 @@ var author$project$Effects$setProjectCardArchived = F3(
 					}
 				};
 				return A2(
-					elm$core$Task$attempt,
-					refreshColumn,
-					A3(author$project$GitHub$setCardArchived, token, cardId, archived));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[cardId]),
+					A2(
+						elm$core$Task$attempt,
+						refreshColumn,
+						A3(author$project$GitHub$setCardArchived, token, cardId, archived)));
 			});
 	});
 var author$project$GitHub$updateCardNote = F3(
@@ -11260,7 +11332,7 @@ var author$project$Effects$updateCardNote = F3(
 						var columnId = res.a.columnId;
 						return A2(
 							author$project$Model$DataChanged,
-							A2(author$project$Backend$refreshCards, columnId, author$project$Model$RefreshQueued),
+							author$project$Effects$refreshColumnCards(columnId),
 							elm$core$Result$Ok(_Utils_Tuple0));
 					} else {
 						var msg = res.a;
@@ -11271,9 +11343,13 @@ var author$project$Effects$updateCardNote = F3(
 					}
 				};
 				return A2(
-					elm$core$Task$attempt,
-					refreshColumn,
-					A3(author$project$GitHub$updateCardNote, token, cardId, note));
+					author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[cardId]),
+					A2(
+						elm$core$Task$attempt,
+						refreshColumn,
+						A3(author$project$GitHub$updateCardNote, token, cardId, note)));
 			});
 	});
 var lukewestby$elm_http_builder$HttpBuilder$patch = lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
@@ -12914,13 +12990,18 @@ var author$project$Backend$decodeReviewersEvent = A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'prId', elm$json$Json$Decode$string),
 		elm$json$Json$Decode$succeed(author$project$Backend$ReviewersEvent)));
-var author$project$Main$finishProgress = F2(
-	function (id, model) {
-		return _Utils_update(
-			model,
-			{
-				progress: A2(elm$core$Dict$remove, id, model.progress)
-			});
+var author$project$Main$finishProgress = elm$core$Dict$remove;
+var author$project$Main$finishLoadingColumnCards = F2(
+	function (cards, state) {
+		return A3(
+			elm$core$List$foldl,
+			function (_n0) {
+				var id = _n0.id;
+				var contentId = _n0.contentId;
+				return author$project$Main$finishProgress(id);
+			},
+			state,
+			cards);
 	});
 var author$project$Main$handleEvent = F4(
 	function (event, data, index, model) {
@@ -12945,14 +13026,15 @@ var author$project$Main$handleEvent = F4(
 					withDecoded,
 					author$project$Backend$decodeColumnCardsEvent,
 					function (val) {
-						return A2(
-							author$project$Main$finishProgress,
-							val.columnId,
-							_Utils_update(
-								model,
-								{
-									columnCards: A3(elm$core$Dict$insert, val.columnId, val.cards, model.columnCards)
-								}));
+						return _Utils_update(
+							model,
+							{
+								columnCards: A3(elm$core$Dict$insert, val.columnId, val.cards, model.columnCards),
+								progress: A2(
+									author$project$Main$finishProgress,
+									val.columnId,
+									A2(author$project$Main$finishLoadingColumnCards, val.cards, model.progress))
+							});
 					});
 			case 'repo':
 				return A2(
@@ -12960,14 +13042,12 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodeRepo,
 					function (val) {
 						return author$project$Main$computeDataView(
-							A2(
-								author$project$Main$finishProgress,
-								val.id,
-								_Utils_update(
-									model,
-									{
-										repos: A3(elm$core$Dict$insert, val.id, val, model.repos)
-									})));
+							_Utils_update(
+								model,
+								{
+									progress: A2(author$project$Main$finishProgress, val.id, model.progress),
+									repos: A3(elm$core$Dict$insert, val.id, val, model.repos)
+								}));
 					});
 			case 'repoProjects':
 				return A2(
@@ -13030,14 +13110,12 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodeIssue,
 					function (val) {
 						return author$project$Main$computeCardsView(
-							A2(
-								author$project$Main$finishProgress,
-								val.id,
-								_Utils_update(
-									model,
-									{
-										issues: A3(elm$core$Dict$insert, val.id, val, model.issues)
-									})));
+							_Utils_update(
+								model,
+								{
+									issues: A3(elm$core$Dict$insert, val.id, val, model.issues),
+									progress: A2(author$project$Main$finishProgress, val.id, model.progress)
+								}));
 					});
 			case 'pr':
 				return A2(
@@ -13045,14 +13123,12 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodePullRequest,
 					function (val) {
 						return author$project$Main$computeCardsView(
-							A2(
-								author$project$Main$finishProgress,
-								val.id,
-								_Utils_update(
-									model,
-									{
-										prs: A3(elm$core$Dict$insert, val.id, val, model.prs)
-									})));
+							_Utils_update(
+								model,
+								{
+									progress: A2(author$project$Main$finishProgress, val.id, model.progress),
+									prs: A3(elm$core$Dict$insert, val.id, val, model.prs)
+								}));
 					});
 			case 'cardEvents':
 				return A2(
@@ -13964,6 +14040,12 @@ var author$project$Main$update = F2(
 							model,
 							{currentZone: zone}),
 						elm$core$Platform$Cmd$none);
+				case 'SetLoading':
+					var ids = msg.a;
+					var cmd = msg.b;
+					return _Utils_Tuple2(
+						A2(author$project$Main$setLoading, ids, model),
+						cmd);
 				case 'ProjectDrag':
 					var subMsg = msg.a;
 					var dragModel = A2(author$project$Drag$update, subMsg, model.projectDrag);
@@ -14088,16 +14170,16 @@ var author$project$Main$update = F2(
 								elm$core$Platform$Cmd$batch(
 									_List_fromArray(
 										[
-											A2(author$project$Backend$refreshCards, targetCol, author$project$Model$RefreshQueued),
+											author$project$Effects$refreshColumnCards(targetCol),
 											function () {
 											var _n8 = card.content;
 											if (_n8.$ === 'Just') {
 												if (_n8.a.$ === 'IssueCardContent') {
 													var issue = _n8.a.a;
-													return A2(author$project$Backend$refreshIssue, issue.id, author$project$Model$RefreshQueued);
+													return author$project$Effects$refreshIssue(issue.id);
 												} else {
 													var pr = _n8.a.a;
-													return A2(author$project$Backend$refreshPR, pr.id, author$project$Model$RefreshQueued);
+													return author$project$Effects$refreshPR(pr.id);
 												}
 											} else {
 												return elm$core$Platform$Cmd$none;
@@ -14107,7 +14189,7 @@ var author$project$Main$update = F2(
 											var _n9 = drag.source;
 											if (_n9.$ === 'FromColumnCardSource') {
 												var cs = _n9.a;
-												return _Utils_eq(cs.columnId, targetCol) ? elm$core$Platform$Cmd$none : A2(author$project$Backend$refreshCards, cs.columnId, author$project$Model$RefreshQueued);
+												return _Utils_eq(cs.columnId, targetCol) ? elm$core$Platform$Cmd$none : author$project$Effects$refreshColumnCards(cs.columnId);
 											} else {
 												return elm$core$Platform$Cmd$none;
 											}
@@ -14708,30 +14790,18 @@ var author$project$Main$update = F2(
 				case 'RefreshIssue':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						A2(
-							author$project$Main$setLoading,
-							_List_fromArray(
-								[id]),
-							model),
-						A2(author$project$Backend$refreshIssue, id, author$project$Model$RefreshQueued));
+						model,
+						author$project$Effects$refreshIssue(id));
 				case 'RefreshPullRequest':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						A2(
-							author$project$Main$setLoading,
-							_List_fromArray(
-								[id]),
-							model),
-						A2(author$project$Backend$refreshPR, id, author$project$Model$RefreshQueued));
+						model,
+						author$project$Effects$refreshPR(id));
 				case 'RefreshColumn':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						A2(
-							author$project$Main$setLoading,
-							_List_fromArray(
-								[id]),
-							model),
-						A2(author$project$Backend$refreshCards, id, author$project$Model$RefreshQueued));
+						model,
+						author$project$Effects$refreshColumnCards(id));
 				case 'AddFilter':
 					var filter = msg.a;
 					return _Utils_Tuple2(
@@ -14908,15 +14978,11 @@ var author$project$Main$update = F2(
 				case 'UpdateCardNote':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						A2(
-							author$project$Main$setLoading,
-							_List_fromArray(
-								[id]),
-							_Utils_update(
-								model,
-								{
-									editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
-								})),
+						_Utils_update(
+							model,
+							{
+								editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
+							}),
 						function () {
 							var _n27 = A2(
 								elm$core$Maybe$withDefault,
@@ -16976,39 +17042,23 @@ var author$project$Main$prIcons = F2(
 				reviewStates);
 		}
 	});
-var author$project$Model$RefreshIssue = function (a) {
-	return {$: 'RefreshIssue', a: a};
-};
-var author$project$Model$RefreshPullRequest = function (a) {
-	return {$: 'RefreshPullRequest', a: a};
-};
 var capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
 var capitalist$elm_octicons$Octicons$issueClosed = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
 var capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
 var capitalist$elm_octicons$Octicons$issueOpened = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
 var author$project$Main$viewCardIcon = function (card) {
-	return A2(
-		elm$html$Html$span,
-		_List_fromArray(
-			[
-				elm$html$Html$Events$onClick(
-				author$project$Card$isPR(card) ? author$project$Model$RefreshPullRequest(card.id) : author$project$Model$RefreshIssue(card.id))
-			]),
-		_List_fromArray(
-			[
-				author$project$Card$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
-				_Utils_update(
-					author$project$Main$octiconOpts,
-					{
-						color: author$project$Card$isMerged(card) ? author$project$Colors$purple : (author$project$Card$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
-					})) : (author$project$Card$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
-				_Utils_update(
-					author$project$Main$octiconOpts,
-					{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
-				_Utils_update(
-					author$project$Main$octiconOpts,
-					{color: author$project$Colors$red})))
-			]));
+	return author$project$Card$isPR(card) ? capitalist$elm_octicons$Octicons$gitPullRequest(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{
+				color: author$project$Card$isMerged(card) ? author$project$Colors$purple : (author$project$Card$isOpen(card) ? author$project$Colors$green : author$project$Colors$red)
+			})) : (author$project$Card$isOpen(card) ? capitalist$elm_octicons$Octicons$issueOpened(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$green})) : capitalist$elm_octicons$Octicons$issueClosed(
+		_Utils_update(
+			author$project$Main$octiconOpts,
+			{color: author$project$Colors$red})));
 };
 var author$project$Main$viewCardMeta = function (card) {
 	return A2(
@@ -17381,12 +17431,20 @@ var author$project$Main$viewCardSquares = F2(
 var author$project$Model$HighlightNode = function (a) {
 	return {$: 'HighlightNode', a: a};
 };
+var author$project$Model$RefreshIssue = function (a) {
+	return {$: 'RefreshIssue', a: a};
+};
+var author$project$Model$RefreshPullRequest = function (a) {
+	return {$: 'RefreshPullRequest', a: a};
+};
 var author$project$Model$SelectCard = function (a) {
 	return {$: 'SelectCard', a: a};
 };
 var author$project$Model$UnhighlightNode = function (a) {
 	return {$: 'UnhighlightNode', a: a};
 };
+var capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
+var capitalist$elm_octicons$Octicons$sync = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
 var elm$html$Html$Events$onMouseOut = function (msg) {
 	return A2(
 		elm$html$Html$Events$on,
@@ -17537,11 +17595,22 @@ var author$project$Main$viewCard = F3(
 						[
 							elm$html$Html$Attributes$class('card-controls')
 						]),
-					controls)
+					A2(
+						elm$core$List$cons,
+						A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Events$onClick(
+									author$project$Card$isPR(card) ? author$project$Model$RefreshPullRequest(card.id) : author$project$Model$RefreshIssue(card.id))
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
+								])),
+						controls))
 				]));
 	});
-var capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
-var capitalist$elm_octicons$Octicons$sync = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
 var author$project$Main$viewLoadingCard = A2(
 	elm$html$Html$div,
 	_List_fromArray(
@@ -17601,6 +17670,9 @@ var author$project$Main$projectByUrl = F2(
 var author$project$Model$CancelEditingCardNote = function (a) {
 	return {$: 'CancelEditingCardNote', a: a};
 };
+var author$project$Model$RefreshColumn = function (a) {
+	return {$: 'RefreshColumn', a: a};
+};
 var author$project$Model$SetEditingCardNote = F2(
 	function (a, b) {
 		return {$: 'SetEditingCardNote', a: a, b: b};
@@ -17627,6 +17699,13 @@ var author$project$Main$viewNoteCard = F5(
 			_List_fromArray(
 				[
 					elm$html$Html$Attributes$class('card note'),
+					elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'loading',
+							A2(elm$core$Dict$member, cardId, model.progress))
+						])),
 					elm$html$Html$Attributes$tabindex(0),
 					elm$html$Html$Attributes$classList(
 					_List_fromArray(
@@ -17742,7 +17821,21 @@ var author$project$Main$viewNoteCard = F5(
 						[
 							elm$html$Html$Attributes$class('card-controls')
 						]),
-					controls)
+					A2(
+						elm$core$List$cons,
+						A2(
+							elm$html$Html$span,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('spin-on-column-refresh'),
+									elm$html$Html$Events$onClick(
+									author$project$Model$RefreshColumn(col.id))
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
+								])),
+						controls))
 				]));
 	});
 var capitalist$elm_octicons$Octicons$pencilPath = 'M0,12 L0,15 L3,15 L11,7 L8,4 L0,12 L0,12 Z M3,14 L1,14 L1,12 L2,12 L2,13 L3,13 L3,14 L3,14 Z M13.3,4.7 L12,6 L9,3 L10.3,1.7 C10.69,1.31 11.32,1.31 11.71,1.7 L13.3,3.29 C13.69,3.68 13.69,4.31 13.3,4.7 L13.3,4.7 Z';
@@ -17866,9 +17959,6 @@ var author$project$Model$CancelCreatingColumnNote = function (a) {
 var author$project$Model$CreateColumnNote = function (a) {
 	return {$: 'CreateColumnNote', a: a};
 };
-var author$project$Model$RefreshColumn = function (a) {
-	return {$: 'RefreshColumn', a: a};
-};
 var author$project$Model$SetCreatingColumnNote = F2(
 	function (a, b) {
 		return {$: 'SetCreatingColumnNote', a: a, b: b};
@@ -17940,7 +18030,7 @@ var author$project$Main$viewProjectColumn = F3(
 									elm$html$Html$span,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('refresh-column'),
+											elm$html$Html$Attributes$class('refresh-column spin-on-column-refresh'),
 											elm$html$Html$Events$onClick(
 											author$project$Model$RefreshColumn(col.id))
 										]),

@@ -249,6 +249,9 @@ update msg model =
         SetCurrentZone zone ->
             ( { model | currentZone = zone }, Cmd.none )
 
+        SetLoading ids cmd ->
+            ( setLoading ids model, cmd )
+
         ProjectDrag subMsg ->
             let
                 dragModel =
@@ -267,11 +270,9 @@ update msg model =
         MoveCardAfter source dest ->
             case source of
                 Model.FromColumnCardSource { cardId } ->
-                    -- TODO: progress
                     ( model, Effects.moveCard model dest cardId )
 
                 Model.NewContentCardSource { contentId } ->
-                    -- TODO: progress
                     ( model, Effects.addCard model dest contentId )
 
         CardMoved targetCol (Ok card) ->
@@ -334,13 +335,13 @@ update msg model =
                     in
                     ( { movedOptimistically | projectDrag = Drag.complete model.projectDrag }
                     , Cmd.batch
-                        [ Backend.refreshCards targetCol RefreshQueued
+                        [ Effects.refreshColumnCards targetCol
                         , case card.content of
                             Just (GitHub.IssueCardContent issue) ->
-                                Backend.refreshIssue issue.id RefreshQueued
+                                Effects.refreshIssue issue.id
 
                             Just (GitHub.PullRequestCardContent pr) ->
-                                Backend.refreshPR pr.id RefreshQueued
+                                Effects.refreshPR pr.id
 
                             Nothing ->
                                 Cmd.none
@@ -350,7 +351,7 @@ update msg model =
                                     Cmd.none
 
                                 else
-                                    Backend.refreshCards cs.columnId RefreshQueued
+                                    Effects.refreshColumnCards cs.columnId
 
                             Model.NewContentCardSource _ ->
                                 Cmd.none
@@ -703,13 +704,13 @@ update msg model =
                 ( model, Cmd.none )
 
         RefreshIssue id ->
-            ( setLoading [ id ] model, Backend.refreshIssue id RefreshQueued )
+            ( model, Effects.refreshIssue id )
 
         RefreshPullRequest id ->
-            ( setLoading [ id ] model, Backend.refreshPR id RefreshQueued )
+            ( model, Effects.refreshPR id )
 
         RefreshColumn id ->
-            ( setLoading [ id ] model, Backend.refreshCards id RefreshQueued )
+            ( model, Effects.refreshColumnCards id )
 
         AddFilter filter ->
             ( computeGraphsView { model | graphFilters = filter :: model.graphFilters }
@@ -793,7 +794,7 @@ update msg model =
             ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }, Cmd.none )
 
         UpdateCardNote id ->
-            ( setLoading [ id ] { model | editingCardNotes = Dict.remove id model.editingCardNotes }
+            ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }
             , case Maybe.withDefault "" <| Dict.get id model.editingCardNotes of
                 "" ->
                     Cmd.none
@@ -2633,7 +2634,7 @@ viewProjectColumn model project col =
             , Html.span [ HA.class "column-name" ]
                 [ Html.text col.name ]
             , Html.div [ HA.class "column-controls" ]
-                [ Html.span [ HA.class "refresh-column", HE.onClick (RefreshColumn col.id) ]
+                [ Html.span [ HA.class "refresh-column spin-on-column-refresh", HE.onClick (RefreshColumn col.id) ]
                     [ Octicons.sync octiconOpts ]
                 , Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
                     [ Octicons.plus octiconOpts ]
@@ -3666,7 +3667,18 @@ viewCard model controls card =
             , viewCardMeta card
             , viewCardSquares model card
             ]
-        , Html.div [ HA.class "card-controls" ] controls
+        , Html.div [ HA.class "card-controls" ] <|
+            Html.span
+                [ HE.onClick
+                    (if Card.isPR card then
+                        RefreshPullRequest card.id
+
+                     else
+                        RefreshIssue card.id
+                    )
+                ]
+                [ Octicons.sync octiconOpts ]
+                :: controls
         ]
 
 
@@ -3708,6 +3720,7 @@ viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> List (Html Msg) -> 
 viewNoteCard model cardId col controls text =
     Html.div
         [ HA.class "card note"
+        , HA.classList [ ( "loading", Dict.member cardId model.progress ) ]
         , HA.tabindex 0
         , HA.classList
             [ ( "in-flight", Project.detectColumn.inFlight col )
@@ -3752,7 +3765,13 @@ viewNoteCard model cardId col controls text =
                             ]
                         ]
             ]
-        , Html.div [ HA.class "card-controls" ] controls
+        , Html.div [ HA.class "card-controls" ] <|
+            Html.span
+                [ HA.class "spin-on-column-refresh"
+                , HE.onClick (RefreshColumn col.id)
+                ]
+                [ Octicons.sync octiconOpts ]
+                :: controls
         ]
 
 
@@ -3891,35 +3910,25 @@ pauseIcon card =
 
 viewCardIcon : Card -> Html Msg
 viewCardIcon card =
-    Html.span
-        [ HE.onClick
-            (if Card.isPR card then
-                RefreshPullRequest card.id
+    if Card.isPR card then
+        Octicons.gitPullRequest
+            { octiconOpts
+                | color =
+                    if Card.isMerged card then
+                        Colors.purple
 
-             else
-                RefreshIssue card.id
-            )
-        ]
-        [ if Card.isPR card then
-            Octicons.gitPullRequest
-                { octiconOpts
-                    | color =
-                        if Card.isMerged card then
-                            Colors.purple
+                    else if Card.isOpen card then
+                        Colors.green
 
-                        else if Card.isOpen card then
-                            Colors.green
+                    else
+                        Colors.red
+            }
 
-                        else
-                            Colors.red
-                }
+    else if Card.isOpen card then
+        Octicons.issueOpened { octiconOpts | color = Colors.green }
 
-          else if Card.isOpen card then
-            Octicons.issueOpened { octiconOpts | color = Colors.green }
-
-          else
-            Octicons.issueClosed { octiconOpts | color = Colors.red }
-        ]
+    else
+        Octicons.issueClosed { octiconOpts | color = Colors.red }
 
 
 projectExternalIcon : GitHub.Project -> Html Msg
@@ -4238,14 +4247,18 @@ handleEvent event data index model =
         "columnCards" ->
             withDecoded Backend.decodeColumnCardsEvent <|
                 \val ->
-                    finishProgress val.columnId
-                        { model | columnCards = Dict.insert val.columnId val.cards model.columnCards }
+                    { model
+                        | columnCards = Dict.insert val.columnId val.cards model.columnCards
+                        , progress = finishProgress val.columnId (finishLoadingColumnCards val.cards model.progress)
+                    }
 
         "repo" ->
             withDecoded GitHub.decodeRepo <|
                 \val ->
-                    finishProgress val.id
-                        { model | repos = Dict.insert val.id val model.repos }
+                    { model
+                        | repos = Dict.insert val.id val model.repos
+                        , progress = finishProgress val.id model.progress
+                    }
                         |> computeDataView
 
         "repoProjects" ->
@@ -4276,15 +4289,19 @@ handleEvent event data index model =
         "issue" ->
             withDecoded GitHub.decodeIssue <|
                 \val ->
-                    finishProgress val.id
-                        { model | issues = Dict.insert val.id val model.issues }
+                    { model
+                        | issues = Dict.insert val.id val model.issues
+                        , progress = finishProgress val.id model.progress
+                    }
                         |> computeCardsView
 
         "pr" ->
             withDecoded GitHub.decodePullRequest <|
                 \val ->
-                    finishProgress val.id
-                        { model | prs = Dict.insert val.id val model.prs }
+                    { model
+                        | prs = Dict.insert val.id val model.prs
+                        , progress = finishProgress val.id model.progress
+                    }
                         |> computeCardsView
 
         "cardEvents" ->
@@ -4363,27 +4380,33 @@ setLoading ids model =
     { model | progress = List.foldl (\id -> Dict.insert id Model.ProgressLoading) model.progress ids }
 
 
-finishProgress : GitHub.ID -> Model -> Model
-finishProgress id model =
-    { model | progress = Dict.remove id model.progress }
+finishProgress : GitHub.ID -> Model.ProgressState -> Model.ProgressState
+finishProgress =
+    Dict.remove
 
 
-finishLoadingData : Backend.Data -> Dict GitHub.ID Model.Progress -> Dict GitHub.ID Model.Progress
+finishLoadingData : Backend.Data -> Model.ProgressState -> Model.ProgressState
 finishLoadingData data =
     let
+        -- TODO: column cards? labels?
         hasLoaded id _ =
             Dict.member id data.repos || Dict.member id data.columnCards
     in
     Dict.filter (\id p -> not (hasLoaded id p))
 
 
-finishLoadingCardData : Backend.CardData -> Dict GitHub.ID Model.Progress -> Dict GitHub.ID Model.Progress
+finishLoadingCardData : Backend.CardData -> Model.ProgressState -> Model.ProgressState
 finishLoadingCardData data =
     let
         hasLoaded id _ =
             Dict.member id data.issues || Dict.member id data.prs
     in
     Dict.filter (\id p -> not (hasLoaded id p))
+
+
+finishLoadingColumnCards : List Backend.ColumnCard -> Model.ProgressState -> Model.ProgressState
+finishLoadingColumnCards cards state =
+    List.foldl (\{ id, contentId } -> finishProgress id) state cards
 
 
 failProgress : GitHub.ID -> String -> Model -> Model

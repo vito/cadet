@@ -84,11 +84,13 @@ h4 {
   display: flex;
 }
 
+@card-border-radius: 6px;
+
 .card {
   width: @card-width;
   background: @white;
   border: 1px solid @gray-200;
-  border-radius: 6px;
+  border-radius: @card-border-radius;
   box-sizing: border-box;
   background: #fff;
   white-space: normal;
@@ -148,8 +150,6 @@ h4 {
   }
 
   &.loading {
-    animation: pulse 1s infinite;
-
     .loading-text {
       font-size: 16px;
       color: @gray;
@@ -648,12 +648,6 @@ h4 {
   }
 }
 
-@keyframes pulse {
-  0% { opacity: 0.5; }
-  50% { opacity: 1; }
-  100% { opacity: 0.5; }
-}
-
 .drop-area {
   box-sizing: content-box;
   min-height: 0;
@@ -682,7 +676,6 @@ h4 {
   }
 
   .card {
-    animation: pulse 2s infinite;
     margin: 0 @card-margin;
   }
 
@@ -741,10 +734,6 @@ h4 {
   flex-direction: column;
 
   min-width: @card-width + (2 * @card-margin);
-
-  &.loading {
-    animation: pulse 1s infinite;
-  }
 }
 
 .project.single {
@@ -1406,6 +1395,11 @@ svg {
   100% { -webkit-transform: rotate(10deg); }
 }
 
+@keyframes spin {
+  0% { -webkit-transform: rotate(0deg); }
+  100% { -webkit-transform: rotate(360deg); }
+}
+
 .column-title {
   color: @gray-dark;
   display: flex;
@@ -1850,6 +1844,14 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.loading {
-  background: blue !important;
+.card.loading,
+.drop-area .card,
+.loading .spin-on-column-refresh {
+  .octicon.sync {
+    animation: spin 1s linear infinite;
+
+    * {
+      fill: @purple;
+    }
+  }
 }
