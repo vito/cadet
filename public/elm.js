@@ -8308,7 +8308,6 @@ var author$project$Log$debug = F3(
 			a,
 			A2(elm$core$Debug$log, ctx, thing));
 	});
-var author$project$Main$AddLabelOperation = {$: 'AddLabelOperation'};
 var author$project$Main$CardDataFetched = function (a) {
 	return {$: 'CardDataFetched', a: a};
 };
@@ -12467,6 +12466,28 @@ var author$project$Main$deleteProjectCard = F2(
 					A2(author$project$GitHub$deleteProjectCard, token, cardId));
 			});
 	});
+var author$project$Main$finishLoadingCardData = function (data) {
+	var hasLoaded = F2(
+		function (id, _n0) {
+			return A2(elm$core$Dict$member, id, data.issues) || A2(elm$core$Dict$member, id, data.prs);
+		});
+	return elm$core$Dict$filter(
+		F2(
+			function (id, p) {
+				return !A2(hasLoaded, id, p);
+			}));
+};
+var author$project$Main$finishLoadingData = function (data) {
+	var hasLoaded = F2(
+		function (id, _n0) {
+			return A2(elm$core$Dict$member, id, data.repos) || A2(elm$core$Dict$member, id, data.columnCards);
+		});
+	return elm$core$Dict$filter(
+		F2(
+			function (id, p) {
+				return !A2(hasLoaded, id, p);
+			}));
+};
 var elm$core$String$cons = _String_cons;
 var elm$core$String$fromChar = function (_char) {
 	return A2(elm$core$String$cons, _char, '');
@@ -12695,6 +12716,14 @@ var author$project$Backend$decodeReviewersEvent = A2(
 		elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2(elm$json$Json$Decode$field, 'prId', elm$json$Json$Decode$string),
 		elm$json$Json$Decode$succeed(author$project$Backend$ReviewersEvent)));
+var author$project$Main$finishProgress = F2(
+	function (id, model) {
+		return _Utils_update(
+			model,
+			{
+				progress: A2(elm$core$Dict$remove, id, model.progress)
+			});
+	});
 var author$project$Main$handleEvent = F4(
 	function (event, data, index, model) {
 		var withDecoded = F2(
@@ -12718,11 +12747,14 @@ var author$project$Main$handleEvent = F4(
 					withDecoded,
 					author$project$Backend$decodeColumnCardsEvent,
 					function (val) {
-						return _Utils_update(
-							model,
-							{
-								columnCards: A3(elm$core$Dict$insert, val.columnId, val.cards, model.columnCards)
-							});
+						return A2(
+							author$project$Main$finishProgress,
+							val.columnId,
+							_Utils_update(
+								model,
+								{
+									columnCards: A3(elm$core$Dict$insert, val.columnId, val.cards, model.columnCards)
+								}));
 					});
 			case 'repo':
 				return A2(
@@ -12730,11 +12762,14 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodeRepo,
 					function (val) {
 						return author$project$Main$computeDataView(
-							_Utils_update(
-								model,
-								{
-									repos: A3(elm$core$Dict$insert, val.id, val, model.repos)
-								}));
+							A2(
+								author$project$Main$finishProgress,
+								val.id,
+								_Utils_update(
+									model,
+									{
+										repos: A3(elm$core$Dict$insert, val.id, val, model.repos)
+									})));
 					});
 			case 'repoProjects':
 				return A2(
@@ -12797,11 +12832,14 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodeIssue,
 					function (val) {
 						return author$project$Main$computeCardsView(
-							_Utils_update(
-								model,
-								{
-									issues: A3(elm$core$Dict$insert, val.id, val, model.issues)
-								}));
+							A2(
+								author$project$Main$finishProgress,
+								val.id,
+								_Utils_update(
+									model,
+									{
+										issues: A3(elm$core$Dict$insert, val.id, val, model.issues)
+									})));
 					});
 			case 'pr':
 				return A2(
@@ -12809,11 +12847,14 @@ var author$project$Main$handleEvent = F4(
 					author$project$GitHub$decodePullRequest,
 					function (val) {
 						return author$project$Main$computeCardsView(
-							_Utils_update(
-								model,
-								{
-									prs: A3(elm$core$Dict$insert, val.id, val, model.prs)
-								}));
+							A2(
+								author$project$Main$finishProgress,
+								val.id,
+								_Utils_update(
+									model,
+									{
+										prs: A3(elm$core$Dict$insert, val.id, val, model.prs)
+									})));
 					});
 			case 'cardEvents':
 				return A2(
@@ -12879,25 +12920,7 @@ var author$project$Main$moveCard = F3(
 					A4(author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId));
 			});
 	});
-var elm$core$Result$toMaybe = function (result) {
-	if (result.$ === 'Ok') {
-		var v = result.a;
-		return elm$core$Maybe$Just(v);
-	} else {
-		return elm$core$Maybe$Nothing;
-	}
-};
-var author$project$Main$randomizeColor = function (label) {
-	var currentColor = A2(
-		elm$core$Maybe$withDefault,
-		0,
-		elm$core$Result$toMaybe(
-			fredcy$elm_parseint$ParseInt$parseIntHex(label.color)));
-	var randomHex = author$project$Main$generateColor(currentColor);
-	return _Utils_update(
-		label,
-		{color: randomHex});
-};
+var author$project$Main$AddLabelOperation = {$: 'AddLabelOperation'};
 var author$project$GitHub$removeIssueLabel = F3(
 	function (token, issue, name) {
 		return A2(
@@ -12948,6 +12971,105 @@ var author$project$Main$removePullRequestLabel = F3(
 					A3(author$project$GitHub$removePullRequestLabel, token, pr, label));
 			});
 	});
+var elm$core$List$partition = F2(
+	function (pred, list) {
+		var step = F2(
+			function (x, _n0) {
+				var trues = _n0.a;
+				var falses = _n0.b;
+				return pred(x) ? _Utils_Tuple2(
+					A2(elm$core$List$cons, x, trues),
+					falses) : _Utils_Tuple2(
+					trues,
+					A2(elm$core$List$cons, x, falses));
+			});
+		return A3(
+			elm$core$List$foldr,
+			step,
+			_Utils_Tuple2(_List_Nil, _List_Nil),
+			list);
+	});
+var y0hy0h$ordered_containers$OrderedSet$toList = function (_n0) {
+	var list = _n0.a;
+	return list;
+};
+var author$project$Main$performLabelOperations = function (model) {
+	var cards = A2(
+		elm$core$List$filterMap,
+		function (a) {
+			return A2(elm$core$Dict$get, a, model.cards);
+		},
+		y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
+	var _n0 = A2(
+		elm$core$List$partition,
+		A2(
+			elm$core$Basics$composeL,
+			elm$core$Basics$eq(author$project$Main$AddLabelOperation),
+			elm$core$Tuple$second),
+		elm$core$Dict$toList(model.cardLabelOperations));
+	var addPairs = _n0.a;
+	var removePairs = _n0.b;
+	var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
+	var adds = A2(
+		elm$core$List$map,
+		function (card) {
+			var _n2 = card.content;
+			if (_n2.$ === 'IssueCardContent') {
+				var issue = _n2.a;
+				return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
+			} else {
+				var pr = _n2.a;
+				return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
+			}
+		},
+		cards);
+	var labelsToRemove = A2(elm$core$List$map, elm$core$Tuple$first, removePairs);
+	var removals = A2(
+		elm$core$List$concatMap,
+		function (name) {
+			return A2(
+				elm$core$List$filterMap,
+				function (card) {
+					if (A3(author$project$Main$hasLabel, model, name, card)) {
+						var _n1 = card.content;
+						if (_n1.$ === 'IssueCardContent') {
+							var issue = _n1.a;
+							return elm$core$Maybe$Just(
+								A3(author$project$Main$removeIssueLabel, model, issue, name));
+						} else {
+							var pr = _n1.a;
+							return elm$core$Maybe$Just(
+								A3(author$project$Main$removePullRequestLabel, model, pr, name));
+						}
+					} else {
+						return elm$core$Maybe$Nothing;
+					}
+				},
+				cards);
+		},
+		labelsToRemove);
+	return elm$core$Platform$Cmd$batch(
+		_Utils_ap(adds, removals));
+};
+var elm$core$Result$toMaybe = function (result) {
+	if (result.$ === 'Ok') {
+		var v = result.a;
+		return elm$core$Maybe$Just(v);
+	} else {
+		return elm$core$Maybe$Nothing;
+	}
+};
+var author$project$Main$randomizeColor = function (label) {
+	var currentColor = A2(
+		elm$core$Maybe$withDefault,
+		0,
+		elm$core$Result$toMaybe(
+			fredcy$elm_parseint$ParseInt$parseIntHex(label.color)));
+	var randomHex = author$project$Main$generateColor(currentColor);
+	return _Utils_update(
+		label,
+		{color: randomHex});
+};
 var author$project$Main$AllProjectsPage = {$: 'AllProjectsPage'};
 var author$project$Main$ArchivePage = {$: 'ArchivePage'};
 var author$project$Main$BouncePage = {$: 'BouncePage'};
@@ -13344,24 +13466,6 @@ var author$project$Query$matchWords = F2(
 					author$project$Query$largestMatchFirst,
 					elm$core$List$concat(matches))).a);
 	});
-var elm$core$List$partition = F2(
-	function (pred, list) {
-		var step = F2(
-			function (x, _n0) {
-				var trues = _n0.a;
-				var falses = _n0.b;
-				return pred(x) ? _Utils_Tuple2(
-					A2(elm$core$List$cons, x, trues),
-					falses) : _Utils_Tuple2(
-					trues,
-					A2(elm$core$List$cons, x, falses));
-			});
-		return A3(
-			elm$core$List$foldr,
-			step,
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			list);
-	});
 var author$project$Main$searchCards = F2(
 	function (model, str) {
 		var tokens = A2(elm$core$String$split, ' ', str);
@@ -13396,6 +13500,21 @@ var author$project$Main$searchCards = F2(
 				elm$core$Dict$filter,
 				titleMatch,
 				A2(author$project$Main$filteredCardsByTitle, model, filters)));
+	});
+var author$project$Main$ProgressLoading = {$: 'ProgressLoading'};
+var author$project$Main$setLoading = F2(
+	function (ids, model) {
+		return _Utils_update(
+			model,
+			{
+				progress: A3(
+					elm$core$List$foldl,
+					function (id) {
+						return A2(elm$core$Dict$insert, id, author$project$Main$ProgressLoading);
+					},
+					model.progress,
+					ids)
+			});
 	});
 var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Boolean');
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue = function (a) {
@@ -13795,10 +13914,6 @@ var y0hy0h$ordered_containers$OrderedSet$remove = F2(
 			return A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, list, dict);
 		}
 	});
-var y0hy0h$ordered_containers$OrderedSet$toList = function (_n0) {
-	var list = _n0.a;
-	return list;
-};
 var author$project$Main$update = F2(
 	function (msg, model) {
 		update:
@@ -14187,7 +14302,17 @@ var author$project$Main$update = F2(
 								author$project$Main$computeDataView(
 									_Utils_update(
 										model,
-										{columnCards: value.columnCards, dataIndex: index, repoCommits: value.repoCommits, repoLabels: value.repoLabels, repoMilestones: value.repoMilestones, repoProjects: value.repoProjects, repoReleases: value.repoReleases, repos: value.repos}))),
+										{
+											columnCards: value.columnCards,
+											dataIndex: index,
+											progress: A2(author$project$Main$finishLoadingData, value, model.progress),
+											repoCommits: value.repoCommits,
+											repoLabels: value.repoLabels,
+											repoMilestones: value.repoMilestones,
+											repoProjects: value.repoProjects,
+											repoReleases: value.repoReleases,
+											repos: value.repos
+										}))),
 							author$project$Backend$fetchCardData(author$project$Main$CardDataFetched)) : A3(
 							author$project$Log$debug,
 							'ignoring stale index',
@@ -14216,7 +14341,13 @@ var author$project$Main$update = F2(
 									author$project$Main$computeCardsView(
 										_Utils_update(
 											model,
-											{cardEvents: value.cardEvents, issues: value.issues, prReviewers: value.prReviewers, prs: value.prs}))),
+											{
+												cardEvents: value.cardEvents,
+												issues: value.issues,
+												prReviewers: value.prReviewers,
+												progress: A2(author$project$Main$finishLoadingCardData, value, model.progress),
+												prs: value.prs
+											}))),
 								author$project$Backend$fetchGraphs(author$project$Main$GraphsFetched)));
 					} else {
 						var err = msg.a.a;
@@ -14591,17 +14722,29 @@ var author$project$Main$update = F2(
 				case 'RefreshIssue':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						model,
+						A2(
+							author$project$Main$setLoading,
+							_List_fromArray(
+								[id]),
+							model),
 						A2(author$project$Backend$refreshIssue, id, author$project$Main$RefreshQueued));
 				case 'RefreshPullRequest':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						model,
+						A2(
+							author$project$Main$setLoading,
+							_List_fromArray(
+								[id]),
+							model),
 						A2(author$project$Backend$refreshPR, id, author$project$Main$RefreshQueued));
 				case 'RefreshColumn':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						model,
+						A2(
+							author$project$Main$setLoading,
+							_List_fromArray(
+								[id]),
+							model),
 						A2(author$project$Backend$refreshCards, id, author$project$Main$RefreshQueued));
 				case 'AddFilter':
 					var filter = msg.a;
@@ -14676,64 +14819,9 @@ var author$project$Main$update = F2(
 							}),
 						elm$core$Platform$Cmd$none);
 				case 'ApplyLabelOperations':
-					var cards = A2(
-						elm$core$List$filterMap,
-						function (a) {
-							return A2(elm$core$Dict$get, a, model.cards);
-						},
-						y0hy0h$ordered_containers$OrderedSet$toList(model.selectedCards));
-					var _n26 = A2(
-						elm$core$List$partition,
-						A2(
-							elm$core$Basics$composeL,
-							elm$core$Basics$eq(author$project$Main$AddLabelOperation),
-							elm$core$Tuple$second),
-						elm$core$Dict$toList(model.cardLabelOperations));
-					var addPairs = _n26.a;
-					var removePairs = _n26.b;
-					var labelsToAdd = A2(elm$core$List$map, elm$core$Tuple$first, addPairs);
-					var adds = A2(
-						elm$core$List$map,
-						function (card) {
-							var _n28 = card.content;
-							if (_n28.$ === 'IssueCardContent') {
-								var issue = _n28.a;
-								return A3(author$project$Main$addIssueLabels, model, issue, labelsToAdd);
-							} else {
-								var pr = _n28.a;
-								return A3(author$project$Main$addPullRequestLabels, model, pr, labelsToAdd);
-							}
-						},
-						cards);
-					var labelsToRemove = A2(elm$core$List$map, elm$core$Tuple$first, removePairs);
-					var removals = A2(
-						elm$core$List$concatMap,
-						function (name) {
-							return A2(
-								elm$core$List$filterMap,
-								function (card) {
-									if (A3(author$project$Main$hasLabel, model, name, card)) {
-										var _n27 = card.content;
-										if (_n27.$ === 'IssueCardContent') {
-											var issue = _n27.a;
-											return elm$core$Maybe$Just(
-												A3(author$project$Main$removeIssueLabel, model, issue, name));
-										} else {
-											var pr = _n27.a;
-											return elm$core$Maybe$Just(
-												A3(author$project$Main$removePullRequestLabel, model, pr, name));
-										}
-									} else {
-										return elm$core$Maybe$Nothing;
-									}
-								},
-								cards);
-						},
-						labelsToRemove);
 					return _Utils_Tuple2(
 						model,
-						elm$core$Platform$Cmd$batch(
-							_Utils_ap(adds, removals)));
+						author$project$Main$performLabelOperations(model));
 				case 'SetCreatingColumnNote':
 					var id = msg.a;
 					var note = msg.b;
@@ -14766,14 +14854,14 @@ var author$project$Main$update = F2(
 								addingColumnNotes: A2(elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _n29 = A2(
+							var _n26 = A2(
 								elm$core$Maybe$withDefault,
 								'',
 								A2(elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_n29 === '') {
+							if (_n26 === '') {
 								return elm$core$Platform$Cmd$none;
 							} else {
-								var note = _n29;
+								var note = _n26;
 								return A3(author$project$Main$addNoteCard, model, id, note);
 							}
 						}());
@@ -14834,20 +14922,24 @@ var author$project$Main$update = F2(
 				case 'UpdateCardNote':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
-							}),
+						A2(
+							author$project$Main$setLoading,
+							_List_fromArray(
+								[id]),
+							_Utils_update(
+								model,
+								{
+									editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
+								})),
 						function () {
-							var _n30 = A2(
+							var _n27 = A2(
 								elm$core$Maybe$withDefault,
 								'',
 								A2(elm$core$Dict$get, id, model.editingCardNotes));
-							if (_n30 === '') {
+							if (_n27 === '') {
 								return elm$core$Platform$Cmd$none;
 							} else {
-								var note = _n30;
+								var note = _n27;
 								return A3(author$project$Main$updateCardNote, model, id, note);
 							}
 						}());
@@ -14903,6 +14995,7 @@ var author$project$Main$init = F3(
 			openPRsByRepo: elm$core$Dict$empty,
 			page: author$project$Main$GlobalGraphPage,
 			prReviewers: elm$core$Dict$empty,
+			progress: elm$core$Dict$empty,
 			projectDrag: author$project$Drag$init,
 			projects: elm$core$Dict$empty,
 			prs: elm$core$Dict$empty,
@@ -17335,6 +17428,13 @@ var author$project$Main$viewCard = F3(
 			_List_fromArray(
 				[
 					elm$html$Html$Attributes$class('card'),
+					elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'loading',
+							A2(elm$core$Dict$member, card.id, model.progress))
+						])),
 					elm$html$Html$Attributes$tabindex(0),
 					elm$html$Html$Attributes$classList(
 					_List_fromArray(
@@ -17530,6 +17630,8 @@ var author$project$Main$CancelEditingCardNote = function (a) {
 var author$project$Main$UpdateCardNote = function (a) {
 	return {$: 'UpdateCardNote', a: a};
 };
+var capitalist$elm_octicons$Octicons$notePath = 'M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M3,8 L9,8 L9,7 L3,7 L3,8 L3,8 Z M3,6 L11,6 L11,5 L3,5 L3,6 L3,6 Z M13,12 L1,12 L1,3 L13,3 L13,12 L13,12 Z M1,2 C0.45,2 0,2.45 0,3 L0,12 C0,12.55 0.45,13 1,13 L13,13 C13.55,13 14,12.55 14,12 L14,3 C14,2.45 13.55,2 13,2 L1,2 L1,2 Z';
+var capitalist$elm_octicons$Octicons$note = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$notePath, '0 0 14 16', 'note');
 var elm$core$String$lines = _String_lines;
 var elm$html$Html$button = _VirtualDom_node('button');
 var elm$html$Html$textarea = _VirtualDom_node('textarea');
@@ -17572,7 +17674,7 @@ var author$project$Main$viewNoteCard = F5(
 						]),
 					_List_fromArray(
 						[
-							capitalist$elm_octicons$Octicons$book(author$project$Main$octiconOpts)
+							capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
 						])),
 					A2(
 					elm$html$Html$div,
@@ -17792,7 +17894,14 @@ var author$project$Main$viewProjectColumn = F3(
 			elm$html$Html$div,
 			_List_fromArray(
 				[
-					elm$html$Html$Attributes$class('project-column')
+					elm$html$Html$Attributes$class('project-column'),
+					elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'loading',
+							A2(elm$core$Dict$member, col.id, model.progress))
+						]))
 				]),
 			_List_fromArray(
 				[

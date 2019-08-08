@@ -1,6 +1,6 @@
 port module Main exposing (main)
 
-import Backend exposing (Data, Me)
+import Backend
 import Browser
 import Browser.Dom
 import Browser.Events
@@ -59,13 +59,21 @@ type alias Config =
     }
 
 
+type Progress
+    = ProgressLoading
+    | ProgressFailed String
+
+
 type alias Model =
     -- nav/user/global state
     { key : Nav.Key
     , page : Page
-    , me : Maybe Me
+    , me : Maybe Backend.Me
     , currentTime : Time.Posix
     , currentZone : Time.Zone
+
+    -- progress for a given object
+    , progress : Dict GitHub.ID Progress
 
     -- data from backend
     , dataIndex : Int
@@ -264,8 +272,8 @@ type Msg
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
     | RefreshQueued (Result Http.Error ())
-    | MeFetched (Result Http.Error (Maybe Me))
-    | DataFetched (Result Http.Error (Backend.Indexed Data))
+    | MeFetched (Result Http.Error (Maybe Backend.Me))
+    | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
     | EventReceived ( String, String, String )
     | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
     | GraphsFetched (Result Http.Error (Backend.Indexed (List (ForceGraph GitHub.ID))))
@@ -343,11 +351,6 @@ main =
         , onUrlChange = UrlChanged
         , onUrlRequest = LinkClicked
         }
-
-
-decoded : UP.Parser (String -> a) a
-decoded =
-    UP.custom "STRING" Url.percentDecode
 
 
 routeParser : UP.Parser (Page -> a) a
@@ -453,6 +456,7 @@ init config url key =
             { key = key
             , page = GlobalGraphPage
             , me = Nothing
+            , progress = Dict.empty
             , graphs = []
             , dataIndex = 0
             , repos = Dict.empty
@@ -587,9 +591,11 @@ update msg model =
         MoveCardAfter source dest ->
             case source of
                 FromColumnCardSource { cardId } ->
+                    -- TODO: progress
                     ( model, moveCard model dest cardId )
 
                 NewContentCardSource { contentId } ->
+                    -- TODO: progress
                     ( model, addCard model dest contentId )
 
         CardMoved targetCol (Ok card) ->
@@ -679,6 +685,7 @@ update msg model =
                     ( model, Cmd.none )
 
         CardMoved col (Err err) ->
+            -- TODO: update progress
             Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
 
@@ -787,6 +794,7 @@ update msg model =
                     , repoMilestones = value.repoMilestones
                     , repoReleases = value.repoReleases
                     , columnCards = value.columnCards
+                    , progress = finishLoadingData value model.progress
                   }
                     |> computeDataView
                     |> computeViewForPage
@@ -808,6 +816,7 @@ update msg model =
                     , prs = value.prs
                     , cardEvents = value.cardEvents
                     , prReviewers = value.prReviewers
+                    , progress = finishLoadingCardData value model.progress
                   }
                     |> computeCardsView
                     |> computeViewForPage
@@ -983,6 +992,7 @@ update msg model =
             ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
 
         LabelChanged repo (Ok ()) ->
+            -- TODO: progress
             let
                 repoSel =
                     { owner = repo.owner, name = repo.name }
@@ -1017,13 +1027,13 @@ update msg model =
                 ( model, Cmd.none )
 
         RefreshIssue id ->
-            ( model, Backend.refreshIssue id RefreshQueued )
+            ( setLoading [ id ] model, Backend.refreshIssue id RefreshQueued )
 
         RefreshPullRequest id ->
-            ( model, Backend.refreshPR id RefreshQueued )
+            ( setLoading [ id ] model, Backend.refreshPR id RefreshQueued )
 
         RefreshColumn id ->
-            ( model, Backend.refreshCards id RefreshQueued )
+            ( setLoading [ id ] model, Backend.refreshCards id RefreshQueued )
 
         AddFilter filter ->
             ( computeGraphsView { model | graphFilters = filter :: model.graphFilters }
@@ -1064,53 +1074,7 @@ update msg model =
             ( { model | cardLabelOperations = Dict.remove name model.cardLabelOperations }, Cmd.none )
 
         ApplyLabelOperations ->
-            let
-                cards =
-                    List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
-
-                ( addPairs, removePairs ) =
-                    Dict.toList model.cardLabelOperations
-                        |> List.partition ((==) AddLabelOperation << Tuple.second)
-
-                labelsToAdd =
-                    List.map Tuple.first addPairs
-
-                labelsToRemove =
-                    List.map Tuple.first removePairs
-
-                adds =
-                    List.map
-                        (\card ->
-                            case card.content of
-                                GitHub.IssueCardContent issue ->
-                                    addIssueLabels model issue labelsToAdd
-
-                                GitHub.PullRequestCardContent pr ->
-                                    addPullRequestLabels model pr labelsToAdd
-                        )
-                        cards
-
-                removals =
-                    List.concatMap
-                        (\name ->
-                            List.filterMap
-                                (\card ->
-                                    if hasLabel model name card then
-                                        case card.content of
-                                            GitHub.IssueCardContent issue ->
-                                                Just (removeIssueLabel model issue name)
-
-                                            GitHub.PullRequestCardContent pr ->
-                                                Just (removePullRequestLabel model pr name)
-
-                                    else
-                                        Nothing
-                                )
-                                cards
-                        )
-                        labelsToRemove
-            in
-            ( model, Cmd.batch (adds ++ removals) )
+            ( model, performLabelOperations model )
 
         SetCreatingColumnNote id note ->
             ( { model | addingColumnNotes = Dict.insert id note model.addingColumnNotes }
@@ -1121,6 +1085,7 @@ update msg model =
             ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }, Cmd.none )
 
         CreateColumnNote id ->
+            -- TODO: progress
             ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }
             , case Maybe.withDefault "" <| Dict.get id model.addingColumnNotes of
                 "" ->
@@ -1137,6 +1102,7 @@ update msg model =
             ( { model | deletingCards = Set.remove id model.deletingCards }, Cmd.none )
 
         DeleteCard id ghCardId ->
+            -- TODO: progress
             ( { model | deletingCards = Set.remove id model.deletingCards }
             , deleteProjectCard model ghCardId
             )
@@ -1151,7 +1117,7 @@ update msg model =
             ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }, Cmd.none )
 
         UpdateCardNote id ->
-            ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }
+            ( setLoading [ id ] { model | editingCardNotes = Dict.remove id model.editingCardNotes }
             , case Maybe.withDefault "" <| Dict.get id model.editingCardNotes of
                 "" ->
                     Cmd.none
@@ -1171,6 +1137,57 @@ update msg model =
               }
             , Cmd.none
             )
+
+
+performLabelOperations : Model -> Cmd Msg
+performLabelOperations model =
+    let
+        cards =
+            List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
+
+        ( addPairs, removePairs ) =
+            Dict.toList model.cardLabelOperations
+                |> List.partition ((==) AddLabelOperation << Tuple.second)
+
+        labelsToAdd =
+            List.map Tuple.first addPairs
+
+        labelsToRemove =
+            List.map Tuple.first removePairs
+
+        adds =
+            List.map
+                (\card ->
+                    case card.content of
+                        GitHub.IssueCardContent issue ->
+                            addIssueLabels model issue labelsToAdd
+
+                        GitHub.PullRequestCardContent pr ->
+                            addPullRequestLabels model pr labelsToAdd
+                )
+                cards
+
+        removals =
+            List.concatMap
+                (\name ->
+                    List.filterMap
+                        (\card ->
+                            if hasLabel model name card then
+                                case card.content of
+                                    GitHub.IssueCardContent issue ->
+                                        Just (removeIssueLabel model issue name)
+
+                                    GitHub.PullRequestCardContent pr ->
+                                        Just (removePullRequestLabel model pr name)
+
+                            else
+                                Nothing
+                        )
+                        cards
+                )
+                labelsToRemove
+    in
+    Cmd.batch (adds ++ removals)
 
 
 searchCards : Model -> String -> Set GitHub.ID
@@ -2931,7 +2948,10 @@ viewProjectColumn model project col =
                 }
             }
     in
-    Html.div [ HA.class "project-column" ]
+    Html.div
+        [ HA.class "project-column"
+        , HA.classList [ ( "loading", Dict.member col.id model.progress ) ]
+        ]
         [ Html.div [ HA.class "column-title" ]
             [ columnIcon col
             , Html.span [ HA.class "column-name" ]
@@ -3921,6 +3941,7 @@ viewCard : Model -> List (Html Msg) -> Card -> Html Msg
 viewCard model controls card =
     Html.div
         [ HA.class "card"
+        , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
         , HA.tabindex 0
         , HA.classList
             [ ( "in-flight", Card.isInFlight card )
@@ -4726,12 +4747,14 @@ handleEvent event data index model =
         "columnCards" ->
             withDecoded Backend.decodeColumnCardsEvent <|
                 \val ->
-                    { model | columnCards = Dict.insert val.columnId val.cards model.columnCards }
+                    finishProgress val.columnId
+                        { model | columnCards = Dict.insert val.columnId val.cards model.columnCards }
 
         "repo" ->
             withDecoded GitHub.decodeRepo <|
                 \val ->
-                    { model | repos = Dict.insert val.id val model.repos }
+                    finishProgress val.id
+                        { model | repos = Dict.insert val.id val model.repos }
                         |> computeDataView
 
         "repoProjects" ->
@@ -4762,13 +4785,15 @@ handleEvent event data index model =
         "issue" ->
             withDecoded GitHub.decodeIssue <|
                 \val ->
-                    { model | issues = Dict.insert val.id val model.issues }
+                    finishProgress val.id
+                        { model | issues = Dict.insert val.id val model.issues }
                         |> computeCardsView
 
         "pr" ->
             withDecoded GitHub.decodePullRequest <|
                 \val ->
-                    { model | prs = Dict.insert val.id val model.prs }
+                    finishProgress val.id
+                        { model | prs = Dict.insert val.id val model.prs }
                         |> computeCardsView
 
         "cardEvents" ->
@@ -4840,3 +4865,36 @@ computeArchive model cards =
         |> Dict.values
         |> List.concatMap cardEvents
         |> List.sortBy (.event >> .createdAt >> Time.posixToMillis)
+
+
+setLoading : List GitHub.ID -> Model -> Model
+setLoading ids model =
+    { model | progress = List.foldl (\id -> Dict.insert id ProgressLoading) model.progress ids }
+
+
+finishProgress : GitHub.ID -> Model -> Model
+finishProgress id model =
+    { model | progress = Dict.remove id model.progress }
+
+
+finishLoadingData : Backend.Data -> Dict GitHub.ID Progress -> Dict GitHub.ID Progress
+finishLoadingData data =
+    let
+        hasLoaded id _ =
+            Dict.member id data.repos || Dict.member id data.columnCards
+    in
+    Dict.filter (\id p -> not (hasLoaded id p))
+
+
+finishLoadingCardData : Backend.CardData -> Dict GitHub.ID Progress -> Dict GitHub.ID Progress
+finishLoadingCardData data =
+    let
+        hasLoaded id _ =
+            Dict.member id data.issues || Dict.member id data.prs
+    in
+    Dict.filter (\id p -> not (hasLoaded id p))
+
+
+failProgress : GitHub.ID -> String -> Model -> Model
+failProgress id err model =
+    { model | progress = Dict.insert id (ProgressFailed err) model.progress }

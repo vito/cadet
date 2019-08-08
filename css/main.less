@@ -741,6 +741,10 @@ h4 {
   flex-direction: column;
 
   min-width: @card-width + (2 * @card-margin);
+
+  &.loading {
+    animation: pulse 1s infinite;
+  }
 }
 
 .project.single {
@@ -1844,4 +1848,8 @@ a.column-title:hover, .page-header a:hover {
       }
     }
   }
+}
+
+.loading {
+  background: blue !important;
 }
