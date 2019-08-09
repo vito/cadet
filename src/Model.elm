@@ -141,7 +141,7 @@ type Msg
     | SelectCard GitHub.ID
     | DeselectCard GitHub.ID
     | HighlightNode GitHub.ID
-    | UnhighlightNode GitHub.ID
+    | UnhighlightNode
     | AnticipateCardFromNode GitHub.ID
     | UnanticipateCardFromNode GitHub.ID
     | SearchCards String
@@ -185,7 +185,7 @@ type Msg
     | SetEditingCardNote GitHub.ID String
     | CancelEditingCardNote GitHub.ID
     | UpdateCardNote GitHub.ID
-    | SetCardArchived GitHub.ID GitHub.ID Bool
+    | SetCardArchived GitHub.ID Bool
     | ToggleShowArchivedCards GitHub.ID
     | SetLoading (List GitHub.ID) (Cmd Msg)
 

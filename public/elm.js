@@ -12088,8 +12088,8 @@ var author$project$Main$graphAllActivityCompare = F3(
 			latestActivity(a),
 			latestActivity(b));
 	});
-var author$project$Main$graphImpactCompare = F3(
-	function (model, a, b) {
+var author$project$Main$graphImpactCompare = F2(
+	function (a, b) {
 		var _n0 = A2(
 			elm$core$Basics$compare,
 			elm$core$List$length(a),
@@ -12376,7 +12376,7 @@ var author$project$Main$computeGraphsView = function (model) {
 		function (a, b) {
 			var _n0 = model.graphSort;
 			if (_n0.$ === 'ImpactSort') {
-				return A3(author$project$Main$graphImpactCompare, model, a.nodes, b.nodes);
+				return A2(author$project$Main$graphImpactCompare, a.nodes, b.nodes);
 			} else {
 				return A3(author$project$Main$graphAllActivityCompare, model, a.nodes, b.nodes);
 			}
@@ -12637,7 +12637,7 @@ var author$project$Main$makeReleaseRepo = F2(
 	});
 var author$project$Main$computeReleaseRepos = function (model) {
 	var addReleaseRepo = F3(
-		function (repoId, repo, acc) {
+		function (_n2, repo, acc) {
 			var releaseRepo = A2(author$project$Main$makeReleaseRepo, model, repo);
 			var _n0 = _Utils_Tuple2(releaseRepo.nextMilestone, releaseRepo.totalCommits);
 			if ((_n0.a.$ === 'Nothing') && (!_n0.b)) {
@@ -12997,7 +12997,6 @@ var author$project$Main$finishLoadingColumnCards = F2(
 			elm$core$List$foldl,
 			function (_n0) {
 				var id = _n0.id;
-				var contentId = _n0.contentId;
 				return author$project$Main$finishProgress(id);
 			},
 			state,
@@ -14199,7 +14198,6 @@ var author$project$Main$update = F2(
 							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 						}
 					} else {
-						var col = msg.a;
 						var err = msg.b.a;
 						return A3(
 							author$project$Log$debug,
@@ -14281,7 +14279,6 @@ var author$project$Main$update = F2(
 								})),
 						elm$core$Platform$Cmd$none);
 				case 'UnhighlightNode':
-					var id = msg.a;
 					return _Utils_Tuple2(
 						author$project$Main$updateGraphStates(
 							_Utils_update(
@@ -14726,7 +14723,6 @@ var author$project$Main$update = F2(
 							model,
 							A2(author$project$Backend$refreshRepo, repoSel, author$project$Model$RefreshQueued));
 					} else {
-						var repo = msg.a;
 						var err = msg.b.a;
 						return A3(
 							author$project$Log$debug,
@@ -14779,7 +14775,6 @@ var author$project$Main$update = F2(
 						var cb = msg.a;
 						return _Utils_Tuple2(model, cb);
 					} else {
-						var cb = msg.a;
 						var err = msg.b.a;
 						return A3(
 							author$project$Log$debug,
@@ -14950,9 +14945,8 @@ var author$project$Main$update = F2(
 							}),
 						A2(author$project$Effects$deleteProjectCard, model, ghCardId));
 				case 'SetCardArchived':
-					var id = msg.a;
-					var ghCardId = msg.b;
-					var archived = msg.c;
+					var ghCardId = msg.a;
+					var archived = msg.b;
 					return _Utils_Tuple2(
 						model,
 						A3(author$project$Effects$setProjectCardArchived, model, ghCardId, archived));
@@ -15357,7 +15351,7 @@ var elm$time$Time$every = F2(
 		return elm$time$Time$subscription(
 			A2(elm$time$Time$Every, interval, tagger));
 	});
-var author$project$Main$subscriptions = function (model) {
+var author$project$Main$subscriptions = function (_n0) {
 	var minute = 60 * 1000;
 	return elm$core$Platform$Sub$batch(
 		_List_fromArray(
@@ -16687,26 +16681,25 @@ var author$project$Main$onClickNoBubble = function (msg) {
 		elm$json$Json$Decode$succeed(
 			{message: msg, preventDefault: true, stopPropagation: true}));
 };
-var author$project$Model$SetCardArchived = F3(
-	function (a, b, c) {
-		return {$: 'SetCardArchived', a: a, b: b, c: c};
+var author$project$Model$SetCardArchived = F2(
+	function (a, b) {
+		return {$: 'SetCardArchived', a: a, b: b};
 	});
 var capitalist$elm_octicons$Octicons$archivePath = 'M13 2H1v2h12V2zM0 4a1 1 0 0 0 1 1v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1a1 1 0 0 0-1 1v2zm2 1h10v9H2V5zm2 3h6V7H4v1z';
 var capitalist$elm_octicons$Octicons$archive = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$archivePath, '0 0 14 16', 'archive');
-var author$project$Main$archiveCardControl = F3(
-	function (model, selfId, archiveId) {
-		return A2(
-			elm$html$Html$span,
-			_List_fromArray(
-				[
-					author$project$Main$onClickNoBubble(
-					A3(author$project$Model$SetCardArchived, selfId, archiveId, true))
-				]),
-			_List_fromArray(
-				[
-					capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
-				]));
-	});
+var author$project$Main$archiveCardControl = function (archiveId) {
+	return A2(
+		elm$html$Html$span,
+		_List_fromArray(
+			[
+				author$project$Main$onClickNoBubble(
+				A2(author$project$Model$SetCardArchived, archiveId, true))
+			]),
+		_List_fromArray(
+			[
+				capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
+			]));
+};
 var author$project$Model$CancelDeleteCard = function (a) {
 	return {$: 'CancelDeleteCard', a: a};
 };
@@ -16768,21 +16761,20 @@ var author$project$Main$deleteCardControl = F3(
 					capitalist$elm_octicons$Octicons$trashcan(author$project$Main$octiconOpts)
 				]));
 	});
-var author$project$Main$unarchiveCardControl = F3(
-	function (model, selfId, archiveId) {
-		return A2(
-			elm$html$Html$span,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('unarchive'),
-					author$project$Main$onClickNoBubble(
-					A3(author$project$Model$SetCardArchived, selfId, archiveId, false))
-				]),
-			_List_fromArray(
-				[
-					capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
-				]));
-	});
+var author$project$Main$unarchiveCardControl = function (archiveId) {
+	return A2(
+		elm$html$Html$span,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('unarchive'),
+				author$project$Main$onClickNoBubble(
+				A2(author$project$Model$SetCardArchived, archiveId, false))
+			]),
+		_List_fromArray(
+			[
+				capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
+			]));
+};
 var author$project$Card$isBacklog = function (card) {
 	return card.processState.inBacklogColumn;
 };
@@ -17274,11 +17266,9 @@ var author$project$Main$viewLabel = F2(
 	function (model, label) {
 		return A2(
 			elm$html$Html$span,
-			_Utils_ap(
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('label')
-					]),
+			A2(
+				elm$core$List$cons,
+				elm$html$Html$Attributes$class('label'),
 				A2(author$project$Main$labelColorStyles, model, label.color)),
 			_List_fromArray(
 				[
@@ -17440,9 +17430,7 @@ var author$project$Model$RefreshPullRequest = function (a) {
 var author$project$Model$SelectCard = function (a) {
 	return {$: 'SelectCard', a: a};
 };
-var author$project$Model$UnhighlightNode = function (a) {
-	return {$: 'UnhighlightNode', a: a};
-};
+var author$project$Model$UnhighlightNode = {$: 'UnhighlightNode'};
 var capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
 var capitalist$elm_octicons$Octicons$sync = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
 var elm$html$Html$Events$onMouseOut = function (msg) {
@@ -17517,8 +17505,7 @@ var author$project$Main$viewCard = F3(
 					author$project$Model$SelectCard(card.id)),
 					elm$html$Html$Events$onMouseOver(
 					author$project$Model$HighlightNode(card.id)),
-					elm$html$Html$Events$onMouseOut(
-					author$project$Model$UnhighlightNode(card.id))
+					elm$html$Html$Events$onMouseOut(author$project$Model$UnhighlightNode)
 				]),
 			_List_fromArray(
 				[
@@ -17926,7 +17913,7 @@ var author$project$Main$viewProjectColumnCard = F4(
 							var controls = (!author$project$Card$isOpen(c)) ? _List_fromArray(
 								[
 									A3(author$project$Main$deleteCardControl, model, c.id, ghCard.id),
-									ghCard.isArchived ? A3(author$project$Main$unarchiveCardControl, model, c.id, ghCard.id) : A3(author$project$Main$archiveCardControl, model, c.id, ghCard.id)
+									ghCard.isArchived ? author$project$Main$unarchiveCardControl(ghCard.id) : author$project$Main$archiveCardControl(ghCard.id)
 								]) : _List_fromArray(
 								[
 									A3(author$project$Main$deleteCardControl, model, c.id, ghCard.id)
@@ -19309,28 +19296,27 @@ var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = F2(
-	function (state, _n0) {
-		var source = _n0.source;
-		var target = _n0.target;
-		var filteredOut = _n0.filteredOut;
-		return A2(
-			elm$svg$Svg$line,
-			_List_fromArray(
-				[
-					elm$svg$Svg$Attributes$class('graph-edge'),
-					filteredOut ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
-					elm$svg$Svg$Attributes$x1(
-					elm$core$String$fromFloat(source.x)),
-					elm$svg$Svg$Attributes$y1(
-					elm$core$String$fromFloat(source.y)),
-					elm$svg$Svg$Attributes$x2(
-					elm$core$String$fromFloat(target.x)),
-					elm$svg$Svg$Attributes$y2(
-					elm$core$String$fromFloat(target.y))
-				]),
-			_List_Nil);
-	});
+var author$project$Main$linkPath = function (_n0) {
+	var source = _n0.source;
+	var target = _n0.target;
+	var filteredOut = _n0.filteredOut;
+	return A2(
+		elm$svg$Svg$line,
+		_List_fromArray(
+			[
+				elm$svg$Svg$Attributes$class('graph-edge'),
+				filteredOut ? elm$svg$Svg$Attributes$class('filtered-out') : elm$svg$Svg$Attributes$class('filtered-in'),
+				elm$svg$Svg$Attributes$x1(
+				elm$core$String$fromFloat(source.x)),
+				elm$svg$Svg$Attributes$y1(
+				elm$core$String$fromFloat(source.y)),
+				elm$svg$Svg$Attributes$x2(
+				elm$core$String$fromFloat(target.x)),
+				elm$svg$Svg$Attributes$y2(
+				elm$core$String$fromFloat(target.y))
+			]),
+		_List_Nil);
+};
 var author$project$Main$flairRadiusBase = 20;
 var author$project$Main$cardRadiusWithFlair = F2(
 	function (card, mass) {
@@ -21347,7 +21333,6 @@ var author$project$Main$reactionFlairArcs = F3(
 				1));
 		var reactionSegment = F2(
 			function (i, _n2) {
-				var count = _n2.c;
 				var _n1 = A2(
 					elm$core$List$take,
 					1,
@@ -21496,10 +21481,7 @@ var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
 var elm$svg$Svg$Keyed$node = elm$virtual_dom$VirtualDom$keyedNodeNS('http://www.w3.org/2000/svg');
 var author$project$Main$viewGraph = function (graph) {
 	var padding = 10;
-	var links = A2(
-		elm$core$List$map,
-		author$project$Main$linkPath(graph.state),
-		graph.edges);
+	var links = A2(elm$core$List$map, author$project$Main$linkPath, graph.edges);
 	var _n0 = A3(
 		elm$core$List$foldl,
 		author$project$Main$viewNodeLowerUpper(graph.state),
@@ -22744,95 +22726,94 @@ var author$project$Main$viewMetric = F5(
 					elm$html$Html$text(description)
 				]));
 	});
-var author$project$Main$viewReleaseRepo = F2(
-	function (model, sir) {
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('metrics-item')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$a,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('column-title'),
-							elm$html$Html$Attributes$href('/release/' + sir.repo.name)
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
-							elm$html$Html$text(sir.repo.name),
-							function () {
-							var _n0 = sir.nextMilestone;
-							if (_n0.$ === 'Just') {
-								var nm = _n0.a;
-								return A2(
-									elm$html$Html$span,
-									_List_Nil,
-									_List_fromArray(
-										[
-											capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
-											elm$html$Html$text(nm.title)
-										]));
-							} else {
-								return elm$html$Html$text('');
-							}
-						}()
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('metrics')
-						]),
-					_List_fromArray(
-						[
-							A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$gitCommit(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$gray})),
-							sir.totalCommits,
-							'commits',
-							'commit',
-							'since last release'),
-							A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$gitPullRequest(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$purple})),
-							elm$core$List$length(sir.mergedPRs),
-							'merged PRs',
-							'merged PRs',
-							'since last release'),
-							elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$check(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$green})),
-							elm$core$List$length(sir.closedIssues),
-							'closed issues',
-							'closed issue',
-							'in milestone'),
-							elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A5(
-							author$project$Main$viewMetric,
-							capitalist$elm_octicons$Octicons$issueOpened(
-								_Utils_update(
-									author$project$Main$octiconOpts,
-									{color: author$project$Colors$yellow})),
-							elm$core$List$length(sir.openIssues),
-							'open issues',
-							'open issue',
-							'in milestone')
-						]))
-				]));
-	});
+var author$project$Main$viewReleaseRepo = function (sir) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('metrics-item')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$a,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('column-title'),
+						elm$html$Html$Attributes$href('/release/' + sir.repo.name)
+					]),
+				_List_fromArray(
+					[
+						capitalist$elm_octicons$Octicons$repo(author$project$Main$octiconOpts),
+						elm$html$Html$text(sir.repo.name),
+						function () {
+						var _n0 = sir.nextMilestone;
+						if (_n0.$ === 'Just') {
+							var nm = _n0.a;
+							return A2(
+								elm$html$Html$span,
+								_List_Nil,
+								_List_fromArray(
+									[
+										capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
+										elm$html$Html$text(nm.title)
+									]));
+						} else {
+							return elm$html$Html$text('');
+						}
+					}()
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('metrics')
+					]),
+				_List_fromArray(
+					[
+						A5(
+						author$project$Main$viewMetric,
+						capitalist$elm_octicons$Octicons$gitCommit(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$gray})),
+						sir.totalCommits,
+						'commits',
+						'commit',
+						'since last release'),
+						A5(
+						author$project$Main$viewMetric,
+						capitalist$elm_octicons$Octicons$gitPullRequest(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$purple})),
+						elm$core$List$length(sir.mergedPRs),
+						'merged PRs',
+						'merged PRs',
+						'since last release'),
+						elm$core$List$isEmpty(sir.closedIssues) ? elm$html$Html$text('') : A5(
+						author$project$Main$viewMetric,
+						capitalist$elm_octicons$Octicons$check(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$green})),
+						elm$core$List$length(sir.closedIssues),
+						'closed issues',
+						'closed issue',
+						'in milestone'),
+						elm$core$List$isEmpty(sir.openIssues) ? elm$html$Html$text('') : A5(
+						author$project$Main$viewMetric,
+						capitalist$elm_octicons$Octicons$issueOpened(
+							_Utils_update(
+								author$project$Main$octiconOpts,
+								{color: author$project$Colors$yellow})),
+						elm$core$List$length(sir.openIssues),
+						'open issues',
+						'open issue',
+						'in milestone')
+					]))
+			]));
+};
 var author$project$Main$viewReleasePage = function (model) {
 	var repos = elm$core$List$reverse(
 		A2(
@@ -22866,10 +22847,7 @@ var author$project$Main$viewReleasePage = function (model) {
 					[
 						elm$html$Html$Attributes$class('metrics-items')
 					]),
-				A2(
-					elm$core$List$map,
-					author$project$Main$viewReleaseRepo(model),
-					repos))
+				A2(elm$core$List$map, author$project$Main$viewReleaseRepo, repos))
 			]));
 };
 var author$project$Main$viewLabelByName = F2(

@@ -3,12 +3,10 @@ port module Main exposing (main)
 import Backend
 import Browser
 import Browser.Dom
-import Browser.Events
 import Browser.Navigation as Nav
 import Card exposing (Card)
 import Colors
 import DateFormat
-import DateFormat.Relative
 import Dict exposing (Dict)
 import Drag
 import Effects
@@ -20,8 +18,6 @@ import Html.Attributes as HA
 import Html.Events as HE
 import Html.Keyed
 import Html.Lazy
-import Http
-import IntDict exposing (IntDict)
 import Json.Decode as JD
 import Keyboard.Event
 import Keyboard.Key
@@ -31,7 +27,7 @@ import Markdown
 import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
 import Octicons
-import OrderedSet exposing (OrderedSet)
+import OrderedSet
 import ParseInt
 import Path
 import Project
@@ -58,16 +54,6 @@ port eventReceived : (( String, String, String ) -> msg) -> Sub msg
 
 type alias Config =
     { initialTime : Int
-    }
-
-
-type alias ProjectDragRefresh =
-    { contentId : Maybe GitHub.ID
-    , content : Maybe GitHub.CardContent
-    , sourceId : Maybe GitHub.ID
-    , sourceCards : Maybe (List Backend.ColumnCard)
-    , targetId : Maybe GitHub.ID
-    , targetCards : Maybe (List Backend.ColumnCard)
     }
 
 
@@ -168,13 +154,6 @@ pageTab page =
             0
 
 
-type alias CardNodeRadii =
-    { base : Float
-    , withoutFlair : Float
-    , withFlair : Float
-    }
-
-
 type alias NodeBounds =
     { x1 : Float
     , y1 : Float
@@ -183,23 +162,8 @@ type alias NodeBounds =
     }
 
 
-type alias Position =
-    { x : Float
-    , y : Float
-    }
-
-
-type alias Node a =
-    { card : Card
-    , viewLower : Position -> a -> Svg Msg
-    , viewUpper : Position -> a -> Svg Msg
-    , bounds : Position -> NodeBounds
-    , score : Int
-    }
-
-
 subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions _ =
     let
         minute =
             60 * 1000
@@ -361,7 +325,7 @@ update msg model =
                 _ ->
                     ( model, Cmd.none )
 
-        CardMoved col (Err err) ->
+        CardMoved _ (Err err) ->
             -- TODO: update progress
             Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
@@ -409,7 +373,7 @@ update msg model =
         HighlightNode id ->
             ( updateGraphStates { model | highlightedNode = Just id }, Cmd.none )
 
-        UnhighlightNode id ->
+        UnhighlightNode ->
             ( updateGraphStates { model | highlightedNode = Nothing }, Cmd.none )
 
         AnticipateCardFromNode id ->
@@ -676,7 +640,7 @@ update msg model =
             in
             ( model, Backend.refreshRepo repoSel RefreshQueued )
 
-        LabelChanged repo (Err err) ->
+        LabelChanged _ (Err err) ->
             Log.debug "failed to modify labels" err <|
                 ( model, Cmd.none )
 
@@ -699,7 +663,7 @@ update msg model =
         DataChanged cb (Ok ()) ->
             ( model, cb )
 
-        DataChanged cb (Err err) ->
+        DataChanged _ (Err err) ->
             Log.debug "failed to change data" err <|
                 ( model, Cmd.none )
 
@@ -784,7 +748,7 @@ update msg model =
             , Effects.deleteProjectCard model ghCardId
             )
 
-        SetCardArchived id ghCardId archived ->
+        SetCardArchived ghCardId archived ->
             ( model, Effects.setProjectCardArchived model ghCardId archived )
 
         SetEditingCardNote id val ->
@@ -1280,7 +1244,7 @@ makeReleaseRepo model repo =
 computeReleaseRepos : Model -> Model
 computeReleaseRepos model =
     let
-        addReleaseRepo repoId repo acc =
+        addReleaseRepo _ repo acc =
             let
                 releaseRepo =
                     makeReleaseRepo model repo
@@ -1829,7 +1793,7 @@ viewReleasePage model =
             , Html.text "Release"
             ]
         , Html.div [ HA.class "metrics-items" ]
-            (List.map (viewReleaseRepo model) repos)
+            (List.map viewReleaseRepo repos)
         ]
 
 
@@ -1924,8 +1888,8 @@ viewTabbedCards model tabs =
         ]
 
 
-viewReleaseRepo : Model -> Model.ReleaseRepo -> Html Msg
-viewReleaseRepo model sir =
+viewReleaseRepo : Model.ReleaseRepo -> Html Msg
+viewReleaseRepo sir =
     Html.div [ HA.class "metrics-item" ]
         [ Html.a [ HA.class "column-title", HA.href ("/release/" ++ sir.repo.name) ]
             [ Octicons.repo octiconOpts
@@ -1991,14 +1955,6 @@ viewPullRequestsPage model =
             |> Html.div [ HA.class "card-columns" ]
         ]
 
-
-type alias CategorizedRepoPRs =
-    { inbox : List Card
-    , failedChecks : List Card
-    , needsTest : List Card
-    , mergeConflict : List Card
-    , changesRequested : List Card
-    }
 
 
 viewRepoPRs : Model -> GitHub.ID -> List GitHub.ID -> Html Msg
@@ -2540,22 +2496,6 @@ labelColorStyles model color =
     ]
 
 
-onlyOpenCards : Model -> List Backend.ColumnCard -> List Backend.ColumnCard
-onlyOpenCards model =
-    List.filter <|
-        \{ contentId } ->
-            case contentId of
-                Just id ->
-                    case Dict.get id model.cards of
-                        Just card ->
-                            Card.isOpen card
-
-                        Nothing ->
-                            False
-
-                Nothing ->
-                    False
-
 
 viewMetric : Html Msg -> Int -> String -> String -> String -> Html Msg
 viewMetric icon count plural singular description =
@@ -2573,16 +2513,6 @@ viewMetric icon count plural singular description =
         , Html.text description
         ]
 
-
-viewColumnMetric : Model -> GitHub.ProjectColumn -> Html Msg
-viewColumnMetric model col =
-    let
-        cardCount =
-            Dict.get col.id model.columnCards
-                |> Maybe.map (List.length << onlyOpenCards model)
-                |> Maybe.withDefault 0
-    in
-    viewMetric (columnIcon col) cardCount "cards" "card" col.name
 
 
 columnIcon : GitHub.ProjectColumn -> Html Msg
@@ -2746,20 +2676,20 @@ deleteCardControl model selfId deleteId =
             ]
 
 
-archiveCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
-archiveCardControl model selfId archiveId =
+archiveCardControl : GitHub.ID -> Html Msg
+archiveCardControl archiveId =
     Html.span
-        [ onClickNoBubble (SetCardArchived selfId archiveId True)
+        [ onClickNoBubble (SetCardArchived archiveId True)
         ]
         [ Octicons.archive octiconOpts
         ]
 
 
-unarchiveCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
-unarchiveCardControl model selfId archiveId =
+unarchiveCardControl : GitHub.ID -> Html Msg
+unarchiveCardControl archiveId =
     Html.span
         [ HA.class "unarchive"
-        , onClickNoBubble (SetCardArchived selfId archiveId False)
+        , onClickNoBubble (SetCardArchived archiveId False)
         ]
         [ Octicons.archive octiconOpts
         ]
@@ -2793,10 +2723,10 @@ viewProjectColumnCard model project col ghCard =
                                     if not (Card.isOpen c) then
                                         [ deleteCardControl model c.id ghCard.id
                                         , if ghCard.isArchived then
-                                            unarchiveCardControl model c.id ghCard.id
+                                            unarchiveCardControl ghCard.id
 
                                           else
-                                            archiveCardControl model c.id ghCard.id
+                                            archiveCardControl ghCard.id
                                         ]
 
                                     else
@@ -2942,7 +2872,7 @@ computeGraphsView model =
         sortFunc a b =
             case model.graphSort of
                 Model.ImpactSort ->
-                    graphImpactCompare model a.nodes b.nodes
+                    graphImpactCompare a.nodes b.nodes
 
                 Model.AllActivitySort ->
                     graphAllActivityCompare model a.nodes b.nodes
@@ -2996,8 +2926,8 @@ satisfiesFilter model filter card =
             Card.isUntriaged card
 
 
-graphImpactCompare : Model -> List Model.CardNode -> List Model.CardNode -> Order
-graphImpactCompare model a b =
+graphImpactCompare : List Model.CardNode -> List Model.CardNode -> Order
+graphImpactCompare a b =
     case compare (List.length a) (List.length b) of
         EQ ->
             let
@@ -3067,7 +2997,7 @@ viewGraph graph =
             maxY - minY
 
         links =
-            List.map (linkPath graph.state) graph.edges
+            List.map linkPath graph.edges
     in
     Svg.svg
         [ SA.width (String.fromFloat width ++ "px")
@@ -3242,8 +3172,8 @@ viewCardCircle node labels isHighlighted isSelected =
         (circle :: labelArcs)
 
 
-linkPath : Model.CardNodeState -> Model.CardEdge -> Svg Msg
-linkPath state { source, target, filteredOut } =
+linkPath : Model.CardEdge -> Svg Msg
+linkPath { source, target, filteredOut } =
     Svg.line
         [ SA.class "graph-edge"
         , if filteredOut then
@@ -3257,11 +3187,6 @@ linkPath state { source, target, filteredOut } =
         , SA.y2 (String.fromFloat target.y)
         ]
         []
-
-
-cardRadiusWithLabels : Float -> Float
-cardRadiusWithLabels mass =
-    mass + 3
 
 
 flairRadiusBase : Float
@@ -3423,7 +3348,7 @@ reactionFlairArcs reviews card radius =
                 }
                 (List.repeat (List.length flairs) 1)
 
-        reactionSegment i ( _, _, count ) =
+        reactionSegment i ( _, _, _ ) =
             case List.take 1 (List.drop i segments) of
                 [ s ] ->
                     s
@@ -3640,7 +3565,7 @@ viewCard model controls card =
             ]
         , HE.onClick (SelectCard card.id)
         , HE.onMouseOver (HighlightNode card.id)
-        , HE.onMouseOut (UnhighlightNode card.id)
+        , HE.onMouseOut UnhighlightNode
         ]
         [ Html.div [ HA.class "card-icons" ] <|
             List.concat
@@ -3955,25 +3880,6 @@ cardExternalIcons card =
         card.cards
 
 
-stateColor : GitHub.StatusState -> String
-stateColor state =
-    case state of
-        GitHub.StatusStatePending ->
-            Colors.yellow
-
-        GitHub.StatusStateSuccess ->
-            Colors.green
-
-        GitHub.StatusStateFailure ->
-            Colors.red
-
-        GitHub.StatusStateExpected ->
-            Colors.purple
-
-        GitHub.StatusStateError ->
-            Colors.orange
-
-
 summarizeContexts : List GitHub.StatusContext -> Html Msg
 summarizeContexts contexts =
     let
@@ -4171,7 +4077,7 @@ viewSuggestedLabel model card name =
 viewLabel : Model -> GitHub.Label -> Html Msg
 viewLabel model label =
     Html.span
-        ([ HA.class "label" ] ++ labelColorStyles model label.color)
+        (HA.class "label" :: labelColorStyles model label.color)
         [ Html.span [ HA.class "label-text" ]
             [ Html.text label.name ]
         ]
@@ -4202,11 +4108,6 @@ viewEventActor model { createdAt, avatar } =
         , HA.draggable "false"
         ]
         []
-
-
-isOrgMember : Maybe (List GitHub.User) -> GitHub.User -> Bool
-isOrgMember users user =
-    List.any (\x -> x.id == user.id) (Maybe.withDefault [] users)
 
 
 randomizeColor : Model.SharedLabel -> Model.SharedLabel
@@ -4406,12 +4307,7 @@ finishLoadingCardData data =
 
 finishLoadingColumnCards : List Backend.ColumnCard -> Model.ProgressState -> Model.ProgressState
 finishLoadingColumnCards cards state =
-    List.foldl (\{ id, contentId } -> finishProgress id) state cards
-
-
-failProgress : GitHub.ID -> String -> Model -> Model
-failProgress id err model =
-    { model | progress = Dict.insert id (Model.ProgressFailed err) model.progress }
+    List.foldl (\{ id } -> finishProgress id) state cards
 
 
 labelKey : Model.SharedLabel -> ( String, String )
