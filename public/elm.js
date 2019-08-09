@@ -13695,9 +13695,9 @@ var author$project$Main$searchCards = F2(
 		var query = elm$core$String$toLower(
 			A2(elm$core$String$join, ' ', rest));
 		var titleMatch = F2(
-			function (title, _n2) {
+			function (t, _n2) {
 				return !_Utils_eq(
-					A2(author$project$Query$matchWords, query, title),
+					A2(author$project$Query$matchWords, query, t),
 					elm$core$Maybe$Nothing);
 			});
 		return (elm$core$String$length(query) < 2) ? elm$core$Set$empty : A3(
@@ -15363,6 +15363,48 @@ var author$project$Main$subscriptions = function (_n0) {
 				elm$core$Basics$always(author$project$Model$Poll)),
 				A2(elm$time$Time$every, 60 * minute, author$project$Model$SetCurrentTime)
 			]));
+};
+var author$project$Main$titleSuffix = function (s) {
+	return s + ' - Cadet';
+};
+var author$project$Main$title = function (model) {
+	return author$project$Main$titleSuffix(
+		function () {
+			var _n0 = model.page;
+			switch (_n0.$) {
+				case 'AllProjectsPage':
+					return 'Projects';
+				case 'GlobalGraphPage':
+					return 'Graph';
+				case 'ProjectPage':
+					var id = _n0.a;
+					return A2(
+						elm$core$Maybe$withDefault,
+						'Unknown Project',
+						A2(
+							elm$core$Maybe$map,
+							function ($) {
+								return $.name;
+							},
+							A2(elm$core$Dict$get, id, model.projects)));
+				case 'LabelsPage':
+					return 'Labels';
+				case 'ReleasePage':
+					return 'Releases';
+				case 'ReleaseRepoPage':
+					var repoName = _n0.a;
+					return repoName + ' Release';
+				case 'PullRequestsPage':
+					return 'Pull Requests';
+				case 'PullRequestsRepoPage':
+					var repoName = _n0.a;
+					return repoName + 'Pull Requests';
+				case 'ArchivePage':
+					return 'Archive';
+				default:
+					return 'Bounce';
+			}
+		}());
 };
 var elm$html$Html$span = _VirtualDom_node('span');
 var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
@@ -23763,7 +23805,7 @@ var author$project$Main$view = function (model) {
 			[
 				author$project$Main$viewCadet(model)
 			]),
-		title: 'Cadet'
+		title: author$project$Main$title(model)
 	};
 };
 var author$project$Model$LinkClicked = function (a) {

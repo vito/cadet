@@ -846,8 +846,8 @@ searchCards model str =
         query =
             String.toLower (String.join " " rest)
 
-        titleMatch title _ =
-            Query.matchWords query title /= Nothing
+        titleMatch t _ =
+            Query.matchWords query t /= Nothing
     in
     if String.length query < 2 then
         -- don't bother querying with so few characters
@@ -1261,9 +1261,51 @@ computeReleaseRepos model =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = "Cadet"
+    { title = title model
     , body = [ viewCadet model ]
     }
+
+
+titleSuffix : String -> String
+titleSuffix s =
+    s ++ " - Cadet"
+
+
+title : Model -> String
+title model =
+    titleSuffix <|
+        case model.page of
+            AllProjectsPage ->
+                "Projects"
+
+            GlobalGraphPage ->
+                "Graph"
+
+            ProjectPage id ->
+                Dict.get id model.projects
+                    |> Maybe.map .name
+                    |> Maybe.withDefault "Unknown Project"
+
+            LabelsPage ->
+                "Labels"
+
+            ReleasePage ->
+                "Releases"
+
+            ReleaseRepoPage repoName _ ->
+                repoName ++ " Release"
+
+            PullRequestsPage ->
+                "Pull Requests"
+
+            PullRequestsRepoPage repoName _ ->
+                repoName ++ "Pull Requests"
+
+            ArchivePage ->
+                "Archive"
+
+            BouncePage ->
+                "Bounce"
 
 
 viewCadet : Model -> Html Msg
@@ -1956,7 +1998,6 @@ viewPullRequestsPage model =
         ]
 
 
-
 viewRepoPRs : Model -> GitHub.ID -> List GitHub.ID -> Html Msg
 viewRepoPRs model repoId prIds =
     case Dict.get repoId model.repos of
@@ -2496,7 +2537,6 @@ labelColorStyles model color =
     ]
 
 
-
 viewMetric : Html Msg -> Int -> String -> String -> String -> Html Msg
 viewMetric icon count plural singular description =
     Html.div [ HA.class "metric" ]
@@ -2512,7 +2552,6 @@ viewMetric icon count plural singular description =
         , Html.text " "
         , Html.text description
         ]
-
 
 
 columnIcon : GitHub.ProjectColumn -> Html Msg
