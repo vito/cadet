@@ -49,12 +49,19 @@ code, pre {
   font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
 }
 
-code {
+pre, code {
   background: fade(@black, 5%);
   border-radius: 3px;
   font-size: 85%;
   margin: 0;
   padding: .2em .4em;
+  overflow-x: scroll;
+}
+
+pre code {
+  background: transparent;
+  padding: 0;
+  font-size: 100%;
 }
 
 h4 {
@@ -100,10 +107,10 @@ h4 {
   flex-direction: row;
   position: relative;
 
-  box-shadow: 0 1px 1px rgba(27,31,35,.1);
+  box-shadow: 0 1px 1px fade(@black, 10%);
 
   &:hover {
-    box-shadow: 0 1px 3px rgba(106,115,125,.3);
+    box-shadow: 0 1px 3px fade(@gray, 30%);
   }
 
   &:focus {
@@ -1443,38 +1450,6 @@ svg {
   }
 }
 
-.add-note-form {
-  display: flex;
-  flex-direction: column;
-
-  textarea {
-    margin: @card-margin;
-    margin-bottom: 5px;
-    padding: 6px 8px;
-    border: 1px solid @gray-300;
-    resize: vertical;
-    font-size: 14px;
-    color: @gray-900;
-    line-height: 20px;
-    font-family: inherit;
-    border-radius: 3px;
-    box-shadow: inset 0 1px 2px fade(@black, 7.5%);
-
-    &:focus {
-      border-color: @blue;
-      box-shadow: 0 0 0 .2em fade(@blue, 30%);
-    }
-  }
-
-  .buttons {
-    padding-top: 0;
-  }
-}
-
-.card .add-note-form {
-  margin: -10px;
-}
-
 a.column-title:hover, .page-header a:hover {
   color: @gray-light;
 
@@ -1779,45 +1754,7 @@ a.column-title:hover, .page-header a:hover {
   top: 10px;
 }
 
-.with-confirm {
-  position: relative;
-
-  .inline-confirm {
-    padding: 12px;
-    z-index: 100;
-    position: absolute;
-    top: -48px;
-    left: -12px;
-    background: @gray;
-    border-radius: 3px;
-
-    &:after {
-      top: 100%;
-      left: 50%;
-      content: " ";
-      height: 0;
-      width: 0;
-      position: absolute;
-      pointer-events: none;
-      border: 5px solid transparent;
-      border-top-color: @gray;
-      margin-left: -5px;
-    }
-
-    &:hover {
-      background: @red;
-      cursor: pointer;
-
-      .octicon * {
-        fill: @white !important;
-      }
-
-      &:after {
-        border-top-color: @red;
-      }
-    }
-  }
-}
+@import "bubble.less";
 
 .archived-cards {
   margin-top: @card-margin;

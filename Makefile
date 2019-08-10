@@ -14,5 +14,5 @@ worker.js: $(ELM_FILES)
 public/elm.js: $(ELM_FILES)
 	yarn run elm make --output $@ src/Main.elm
 
-public/main.css: css/main.less
+public/main.css: $(LESS_FILES)
 	yarn run lessc --autoprefix='last 2 Chrome versions, last 2 Firefox versions' --clean-css="--advanced" css/main.less $@

@@ -15,7 +15,7 @@ import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing (andMap)
+import Json.Decode.Extra exposing (andMap)
 
 
 type alias StartState msg =

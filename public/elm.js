@@ -16579,6 +16579,178 @@ var author$project$Main$onCtrlEnter = function (msg) {
 			return ((event.ctrlKey || event.metaKey) && _Utils_eq(event.keyCode, SwiftsNamesake$proper_keyboard$Keyboard$Key$Enter)) ? elm$core$Maybe$Just(msg) : elm$core$Maybe$Nothing;
 		});
 };
+var author$project$Model$CancelCreatingColumnNote = function (a) {
+	return {$: 'CancelCreatingColumnNote', a: a};
+};
+var author$project$Model$CreateColumnNote = function (a) {
+	return {$: 'CreateColumnNote', a: a};
+};
+var author$project$Model$SetCreatingColumnNote = F2(
+	function (a, b) {
+		return {$: 'SetCreatingColumnNote', a: a, b: b};
+	});
+var capitalist$elm_octicons$Octicons$notePath = 'M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M3,8 L9,8 L9,7 L3,7 L3,8 L3,8 Z M3,6 L11,6 L11,5 L3,5 L3,6 L3,6 Z M13,12 L1,12 L1,3 L13,3 L13,12 L13,12 Z M1,2 C0.45,2 0,2.45 0,3 L0,12 C0,12.55 0.45,13 1,13 L13,13 C13.55,13 14,12.55 14,12 L14,3 C14,2.45 13.55,2 13,2 L1,2 L1,2 Z';
+var capitalist$elm_octicons$Octicons$note = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$notePath, '0 0 14 16', 'note');
+var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
+var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
+var elm$html$Html$button = _VirtualDom_node('button');
+var elm$html$Html$textarea = _VirtualDom_node('textarea');
+var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
+var elm$virtual_dom$VirtualDom$Custom = function (a) {
+	return {$: 'Custom', a: a};
+};
+var elm$html$Html$Events$custom = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Custom(decoder));
+	});
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Main$viewAddingNote = F2(
+	function (col, val) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('editable-card')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('card note'),
+							elm$html$Html$Attributes$tabindex(0),
+							elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'in-flight',
+									author$project$Project$detectColumn.inFlight(col)),
+									_Utils_Tuple2(
+									'done',
+									author$project$Project$detectColumn.done(col)),
+									_Utils_Tuple2(
+									'backlog',
+									author$project$Project$detectColumn.backlog(col))
+								]))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-icons')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-info card-note')
+								]),
+							_List_fromArray(
+								[
+									A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, val)
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-controls')
+								]),
+							_List_Nil)
+						])),
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('edit-bubble add-note'),
+							elm$html$Html$Attributes$draggable('true'),
+							A2(
+							elm$html$Html$Events$custom,
+							'dragstart',
+							elm$json$Json$Decode$succeed(
+								{message: author$project$Model$Noop, preventDefault: true, stopPropagation: true}))
+						]),
+					_List_fromArray(
+						[
+							A2(
+							elm$html$Html$form,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('write-note-form'),
+									elm$html$Html$Events$onSubmit(
+									author$project$Model$CreateColumnNote(col.id))
+								]),
+							_List_fromArray(
+								[
+									A2(
+									elm$html$Html$textarea,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$placeholder('Enter a note'),
+											elm$html$Html$Attributes$id(
+											author$project$Main$addNoteTextareaId(col.id)),
+											elm$html$Html$Events$onInput(
+											author$project$Model$SetCreatingColumnNote(col.id)),
+											author$project$Main$onCtrlEnter(
+											author$project$Model$CreateColumnNote(col.id))
+										]),
+									_List_fromArray(
+										[
+											elm$html$Html$text(val)
+										])),
+									A2(
+									elm$html$Html$div,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('buttons')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button cancel'),
+													elm$html$Html$Attributes$type_('reset'),
+													elm$html$Html$Events$onClick(
+													author$project$Model$CancelCreatingColumnNote(col.id))
+												]),
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
+													elm$html$Html$text('cancel')
+												])),
+											A2(
+											elm$html$Html$button,
+											_List_fromArray(
+												[
+													elm$html$Html$Attributes$class('button apply'),
+													elm$html$Html$Attributes$type_('submit')
+												]),
+											_List_fromArray(
+												[
+													capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
+													elm$html$Html$text('add')
+												]))
+										]))
+								]))
+						]))
+				]));
+	});
 var author$project$Drag$Start = F2(
 	function (a, b) {
 		return {$: 'Start', a: a, b: b};
@@ -16706,16 +16878,6 @@ var author$project$Drag$draggable = F4(
 			_List_fromArray(
 				[view]));
 	});
-var elm$virtual_dom$VirtualDom$Custom = function (a) {
-	return {$: 'Custom', a: a};
-};
-var elm$html$Html$Events$custom = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Custom(decoder));
-	});
 var author$project$Main$onClickNoBubble = function (msg) {
 	return A2(
 		elm$html$Html$Events$custom,
@@ -16754,8 +16916,6 @@ var author$project$Model$DeleteCard = F2(
 	});
 var capitalist$elm_octicons$Octicons$trashcanPath = 'M11,2 L9,2 C9,1.45 8.55,1 8,1 L5,1 C4.45,1 4,1.45 4,2 L2,2 C1.45,2 1,2.45 1,3 L1,4 C1,4.55 1.45,5 2,5 L2,14 C2,14.55 2.45,15 3,15 L10,15 C10.55,15 11,14.55 11,14 L11,5 C11.55,5 12,4.55 12,4 L12,3 C12,2.45 11.55,2 11,2 L11,2 Z M10,14 L3,14 L3,5 L4,5 L4,13 L5,13 L5,5 L6,5 L6,13 L7,13 L7,5 L8,5 L8,13 L9,13 L9,5 L10,5 L10,14 L10,14 Z M11,4 L2,4 L2,3 L11,3 L11,4 L11,4 Z';
 var capitalist$elm_octicons$Octicons$trashcan = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$trashcanPath, '0 0 12 16', 'trashcan');
-var capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
-var capitalist$elm_octicons$Octicons$x = A3(capitalist$elm_octicons$Octicons$polygonIconWithOptions, capitalist$elm_octicons$Octicons$xPolygon, '0 0 12 16', 'x');
 var author$project$Main$deleteCardControl = F3(
 	function (model, selfId, deleteId) {
 		return A2(elm$core$Set$member, selfId, model.deletingCards) ? A2(
@@ -16901,12 +17061,6 @@ var author$project$Model$UnlabelCard = F2(
 	});
 var capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
 var capitalist$elm_octicons$Octicons$bookmark = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
 var author$project$Main$pauseIcon = function (card) {
 	var _n0 = _Utils_Tuple2(
 		author$project$Card$isInFlight(card),
@@ -17709,46 +17863,13 @@ var author$project$Model$SetEditingCardNote = F2(
 var author$project$Model$UpdateCardNote = function (a) {
 	return {$: 'UpdateCardNote', a: a};
 };
-var capitalist$elm_octicons$Octicons$notePath = 'M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M3,8 L9,8 L9,7 L3,7 L3,8 L3,8 Z M3,6 L11,6 L11,5 L3,5 L3,6 L3,6 Z M13,12 L1,12 L1,3 L13,3 L13,12 L13,12 Z M1,2 C0.45,2 0,2.45 0,3 L0,12 C0,12.55 0.45,13 1,13 L13,13 C13.55,13 14,12.55 14,12 L14,3 C14,2.45 13.55,2 13,2 L1,2 L1,2 Z';
-var capitalist$elm_octicons$Octicons$note = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$notePath, '0 0 14 16', 'note');
-var elm$core$String$lines = _String_lines;
-var elm$html$Html$button = _VirtualDom_node('button');
-var elm$html$Html$textarea = _VirtualDom_node('textarea');
-var elm$html$Html$Attributes$id = elm$html$Html$Attributes$stringProperty('id');
-var elm$html$Html$Attributes$rows = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'rows',
-		elm$core$String$fromInt(n));
-};
 var author$project$Main$viewNoteCard = F5(
 	function (model, cardId, col, controls, text) {
 		return A2(
 			elm$html$Html$div,
 			_List_fromArray(
 				[
-					elm$html$Html$Attributes$class('card note'),
-					elm$html$Html$Attributes$classList(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'loading',
-							A2(elm$core$Dict$member, cardId, model.progress))
-						])),
-					elm$html$Html$Attributes$tabindex(0),
-					elm$html$Html$Attributes$classList(
-					_List_fromArray(
-						[
-							_Utils_Tuple2(
-							'in-flight',
-							author$project$Project$detectColumn.inFlight(col)),
-							_Utils_Tuple2(
-							'done',
-							author$project$Project$detectColumn.done(col)),
-							_Utils_Tuple2(
-							'backlog',
-							author$project$Project$detectColumn.backlog(col))
-						]))
+					elm$html$Html$Attributes$class('editable-card')
 				]),
 			_List_fromArray(
 				[
@@ -17756,31 +17877,106 @@ var author$project$Main$viewNoteCard = F5(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
-							elm$html$Html$Attributes$class('card-icons')
+							elm$html$Html$Attributes$class('card note'),
+							elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'loading',
+									A2(elm$core$Dict$member, cardId, model.progress))
+								])),
+							elm$html$Html$Attributes$tabindex(0),
+							elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'in-flight',
+									author$project$Project$detectColumn.inFlight(col)),
+									_Utils_Tuple2(
+									'done',
+									author$project$Project$detectColumn.done(col)),
+									_Utils_Tuple2(
+									'backlog',
+									author$project$Project$detectColumn.backlog(col))
+								]))
 						]),
 					_List_fromArray(
 						[
-							capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-icons')
+								]),
+							_List_fromArray(
+								[
+									capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-info card-note')
+								]),
+							_List_fromArray(
+								[
+									function () {
+									var _n0 = A2(elm$core$Dict$get, cardId, model.editingCardNotes);
+									if (_n0.$ === 'Nothing') {
+										return A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text);
+									} else {
+										var val = _n0.a;
+										return A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, val);
+									}
+								}()
+								])),
+							A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('card-controls')
+								]),
+							A2(
+								elm$core$List$cons,
+								A2(
+									elm$html$Html$span,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('spin-on-column-refresh'),
+											elm$html$Html$Events$onClick(
+											author$project$Model$RefreshColumn(col.id))
+										]),
+									_List_fromArray(
+										[
+											capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
+										])),
+								controls))
 						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-info card-note')
-						]),
-					_List_fromArray(
-						[
-							function () {
-							var _n0 = A2(elm$core$Dict$get, cardId, model.editingCardNotes);
-							if (_n0.$ === 'Nothing') {
-								return A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text);
-							} else {
-								var val = _n0.a;
-								return A2(
+					function () {
+					var _n1 = A2(elm$core$Dict$get, cardId, model.editingCardNotes);
+					if (_n1.$ === 'Nothing') {
+						return elm$html$Html$text('');
+					} else {
+						var val = _n1.a;
+						return A2(
+							elm$html$Html$div,
+							_List_fromArray(
+								[
+									elm$html$Html$Attributes$class('edit-bubble'),
+									elm$html$Html$Attributes$draggable('true'),
+									A2(
+									elm$html$Html$Events$custom,
+									'dragstart',
+									elm$json$Json$Decode$succeed(
+										{message: author$project$Model$Noop, preventDefault: true, stopPropagation: true}))
+								]),
+							_List_fromArray(
+								[
+									A2(
 									elm$html$Html$form,
 									_List_fromArray(
 										[
-											elm$html$Html$Attributes$class('add-note-form'),
+											elm$html$Html$Attributes$class('write-note-form'),
 											elm$html$Html$Events$onSubmit(
 											author$project$Model$UpdateCardNote(cardId))
 										]),
@@ -17791,9 +17987,6 @@ var author$project$Main$viewNoteCard = F5(
 											_List_fromArray(
 												[
 													elm$html$Html$Attributes$placeholder('Enter a note'),
-													elm$html$Html$Attributes$rows(
-													elm$core$List$length(
-														elm$core$String$lines(val))),
 													elm$html$Html$Attributes$id(
 													author$project$Main$addNoteTextareaId(cardId)),
 													elm$html$Html$Events$onInput(
@@ -17840,31 +18033,10 @@ var author$project$Main$viewNoteCard = F5(
 															elm$html$Html$text('save')
 														]))
 												]))
-										]));
-							}
-						}()
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-controls')
-						]),
-					A2(
-						elm$core$List$cons,
-						A2(
-							elm$html$Html$span,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('spin-on-column-refresh'),
-									elm$html$Html$Events$onClick(
-									author$project$Model$RefreshColumn(col.id))
-								]),
-							_List_fromArray(
-								[
-									capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
-								])),
-						controls))
+										]))
+								]));
+					}
+				}()
 				]));
 	});
 var capitalist$elm_octicons$Octicons$pencilPath = 'M0,12 L0,15 L3,15 L11,7 L8,4 L0,12 L0,12 Z M3,14 L1,14 L1,12 L2,12 L2,13 L3,13 L3,14 L3,14 Z M13.3,4.7 L12,6 L9,3 L10.3,1.7 C10.69,1.31 11.32,1.31 11.71,1.7 L13.3,3.29 C13.69,3.68 13.69,4.31 13.3,4.7 L13.3,4.7 Z';
@@ -17982,16 +18154,6 @@ var author$project$Main$viewProjectColumnCard = F4(
 				elm$core$Maybe$Just(dragId))
 			]);
 	});
-var author$project$Model$CancelCreatingColumnNote = function (a) {
-	return {$: 'CancelCreatingColumnNote', a: a};
-};
-var author$project$Model$CreateColumnNote = function (a) {
-	return {$: 'CreateColumnNote', a: a};
-};
-var author$project$Model$SetCreatingColumnNote = F2(
-	function (a, b) {
-		return {$: 'SetCreatingColumnNote', a: a, b: b};
-	});
 var author$project$Model$ToggleShowArchivedCards = function (a) {
 	return {$: 'ToggleShowArchivedCards', a: a};
 };
@@ -18005,6 +18167,7 @@ var author$project$Main$viewProjectColumn = F3(
 			elm$core$Maybe$withDefault,
 			_List_Nil,
 			A2(elm$core$Dict$get, col.id, model.columnCards));
+		var addingNote = A2(elm$core$Dict$get, col.id, model.addingColumnNotes);
 		var _n0 = A2(
 			elm$core$List$partition,
 			function ($) {
@@ -18081,80 +18244,7 @@ var author$project$Main$viewProjectColumn = F3(
 										]))
 								]))
 						])),
-					function () {
-					var _n1 = A2(elm$core$Dict$get, col.id, model.addingColumnNotes);
-					if (_n1.$ === 'Just') {
-						var val = _n1.a;
-						return A2(
-							elm$html$Html$form,
-							_List_fromArray(
-								[
-									elm$html$Html$Attributes$class('add-note-form'),
-									elm$html$Html$Events$onSubmit(
-									author$project$Model$CreateColumnNote(col.id))
-								]),
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$textarea,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$placeholder('Enter a note'),
-											elm$html$Html$Attributes$rows(
-											elm$core$List$length(
-												elm$core$String$lines(val))),
-											elm$html$Html$Attributes$id(
-											author$project$Main$addNoteTextareaId(col.id)),
-											elm$html$Html$Events$onInput(
-											author$project$Model$SetCreatingColumnNote(col.id)),
-											author$project$Main$onCtrlEnter(
-											author$project$Model$CreateColumnNote(col.id))
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(val)
-										])),
-									A2(
-									elm$html$Html$div,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('buttons')
-										]),
-									_List_fromArray(
-										[
-											A2(
-											elm$html$Html$button,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('button cancel'),
-													elm$html$Html$Attributes$type_('reset'),
-													elm$html$Html$Events$onClick(
-													author$project$Model$CancelCreatingColumnNote(col.id))
-												]),
-											_List_fromArray(
-												[
-													capitalist$elm_octicons$Octicons$x(author$project$Main$octiconOpts),
-													elm$html$Html$text('cancel')
-												])),
-											A2(
-											elm$html$Html$button,
-											_List_fromArray(
-												[
-													elm$html$Html$Attributes$class('button apply'),
-													elm$html$Html$Attributes$type_('submit')
-												]),
-											_List_fromArray(
-												[
-													capitalist$elm_octicons$Octicons$check(author$project$Main$octiconOpts),
-													elm$html$Html$text('add')
-												]))
-										]))
-								]));
-					} else {
-						return elm$html$Html$text('');
-					}
-				}(),
-					elm$core$List$isEmpty(cards) ? A2(
+					(_Utils_eq(addingNote, elm$core$Maybe$Nothing) && elm$core$List$isEmpty(cards)) ? A2(
 					elm$html$Html$div,
 					_List_fromArray(
 						[
@@ -18169,13 +18259,29 @@ var author$project$Main$viewProjectColumn = F3(
 						[
 							elm$html$Html$Attributes$class('cards')
 						]),
-					A2(
-						elm$core$List$cons,
-						A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
-						A2(
-							elm$core$List$concatMap,
-							A3(author$project$Main$viewProjectColumnCard, model, project, col),
-							unarchived))),
+					elm$core$List$concat(
+						_List_fromArray(
+							[
+								_List_fromArray(
+								[
+									A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
+								]),
+								function () {
+								if (addingNote.$ === 'Nothing') {
+									return _List_Nil;
+								} else {
+									var note = addingNote.a;
+									return _List_fromArray(
+										[
+											A2(author$project$Main$viewAddingNote, col, note)
+										]);
+								}
+							}(),
+								A2(
+								elm$core$List$concatMap,
+								A3(author$project$Main$viewProjectColumnCard, model, project, col),
+								unarchived)
+							]))),
 					elm$core$List$isEmpty(archived) ? elm$html$Html$text('') : A2(
 					elm$html$Html$div,
 					_List_fromArray(

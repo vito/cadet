@@ -2593,6 +2593,9 @@ viewProjectColumn model project col =
                 , afterId = Nothing
                 }
             }
+
+        addingNote =
+            Dict.get col.id model.addingColumnNotes
     in
     Html.div
         [ HA.class "project-column"
@@ -2609,47 +2612,23 @@ viewProjectColumn model project col =
                     [ Octicons.plus octiconOpts ]
                 ]
             ]
-        , case Dict.get col.id model.addingColumnNotes of
-            Just val ->
-                Html.form [ HA.class "add-note-form", HE.onSubmit (CreateColumnNote col.id) ]
-                    [ Html.textarea
-                        [ HA.placeholder "Enter a note"
-                        , HA.rows (List.length <| String.lines val)
-                        , HA.id (addNoteTextareaId col.id)
-                        , HE.onInput (SetCreatingColumnNote col.id)
-                        , onCtrlEnter (CreateColumnNote col.id)
-                        ]
-                        [ Html.text val ]
-                    , Html.div [ HA.class "buttons" ]
-                        [ Html.button
-                            [ HA.class "button cancel"
-                            , HA.type_ "reset"
-                            , HE.onClick (CancelCreatingColumnNote col.id)
-                            ]
-                            [ Octicons.x octiconOpts
-                            , Html.text "cancel"
-                            ]
-                        , Html.button
-                            [ HA.class "button apply"
-                            , HA.type_ "submit"
-                            ]
-                            [ Octicons.check octiconOpts
-                            , Html.text "add"
-                            ]
-                        ]
-                    ]
-
-            Nothing ->
-                Html.text ""
-        , if List.isEmpty cards then
+        , if addingNote == Nothing && List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
                 [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
                 ]
 
           else
             Html.div [ HA.class "cards" ] <|
-                Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
-                    :: List.concatMap (viewProjectColumnCard model project col) unarchived
+                List.concat
+                    [ [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing ]
+                    , case addingNote of
+                        Nothing ->
+                            []
+
+                        Just note ->
+                            [ viewAddingNote col note ]
+                    , List.concatMap (viewProjectColumnCard model project col) unarchived
+                    ]
         , if List.isEmpty archived then
             Html.text ""
 
@@ -2672,6 +2651,61 @@ viewProjectColumn model project col =
                   else
                     Html.text ""
                 ]
+        ]
+
+
+viewAddingNote : GitHub.ProjectColumn -> String -> Html Msg
+viewAddingNote col val =
+    Html.div [ HA.class "editable-card" ]
+        [ Html.div
+            [ HA.class "card note"
+            , HA.tabindex 0
+            , HA.classList
+                [ ( "in-flight", Project.detectColumn.inFlight col )
+                , ( "done", Project.detectColumn.done col )
+                , ( "backlog", Project.detectColumn.backlog col )
+                ]
+            ]
+            [ Html.div [ HA.class "card-icons" ]
+                [ Octicons.note octiconOpts
+                ]
+            , Html.div [ HA.class "card-info card-note" ]
+                [ Markdown.toHtml [] val
+                ]
+            , Html.div [ HA.class "card-controls" ] []
+            ]
+        , Html.div
+            [ HA.class "edit-bubble add-note"
+            , HA.draggable "true"
+            , HE.custom "dragstart" (JD.succeed { message = Noop, stopPropagation = True, preventDefault = True })
+            ]
+            [ Html.form [ HA.class "write-note-form", HE.onSubmit (CreateColumnNote col.id) ]
+                [ Html.textarea
+                    [ HA.placeholder "Enter a note"
+                    , HA.id (addNoteTextareaId col.id)
+                    , HE.onInput (SetCreatingColumnNote col.id)
+                    , onCtrlEnter (CreateColumnNote col.id)
+                    ]
+                    [ Html.text val ]
+                , Html.div [ HA.class "buttons" ]
+                    [ Html.button
+                        [ HA.class "button cancel"
+                        , HA.type_ "reset"
+                        , HE.onClick (CancelCreatingColumnNote col.id)
+                        ]
+                        [ Octicons.x octiconOpts
+                        , Html.text "cancel"
+                        ]
+                    , Html.button
+                        [ HA.class "button apply"
+                        , HA.type_ "submit"
+                        ]
+                        [ Octicons.check octiconOpts
+                        , Html.text "add"
+                        ]
+                    ]
+                ]
+            ]
         ]
 
 
@@ -3682,29 +3716,49 @@ cardByUrl model url =
 
 viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> List (Html Msg) -> String -> Html Msg
 viewNoteCard model cardId col controls text =
-    Html.div
-        [ HA.class "card note"
-        , HA.classList [ ( "loading", Dict.member cardId model.progress ) ]
-        , HA.tabindex 0
-        , HA.classList
-            [ ( "in-flight", Project.detectColumn.inFlight col )
-            , ( "done", Project.detectColumn.done col )
-            , ( "backlog", Project.detectColumn.backlog col )
+    Html.div [ HA.class "editable-card" ]
+        [ Html.div
+            [ HA.class "card note"
+            , HA.classList [ ( "loading", Dict.member cardId model.progress ) ]
+            , HA.tabindex 0
+            , HA.classList
+                [ ( "in-flight", Project.detectColumn.inFlight col )
+                , ( "done", Project.detectColumn.done col )
+                , ( "backlog", Project.detectColumn.backlog col )
+                ]
             ]
-        ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.note octiconOpts
-            ]
-        , Html.div [ HA.class "card-info card-note" ]
-            [ case Dict.get cardId model.editingCardNotes of
-                Nothing ->
-                    Markdown.toHtml [] text
+            [ Html.div [ HA.class "card-icons" ]
+                [ Octicons.note octiconOpts
+                ]
+            , Html.div [ HA.class "card-info card-note" ]
+                [ case Dict.get cardId model.editingCardNotes of
+                    Nothing ->
+                        Markdown.toHtml [] text
 
-                Just val ->
-                    Html.form [ HA.class "add-note-form", HE.onSubmit (UpdateCardNote cardId) ]
+                    Just val ->
+                        Markdown.toHtml [] val
+                ]
+            , Html.div [ HA.class "card-controls" ] <|
+                Html.span
+                    [ HA.class "spin-on-column-refresh"
+                    , HE.onClick (RefreshColumn col.id)
+                    ]
+                    [ Octicons.sync octiconOpts ]
+                    :: controls
+            ]
+        , case Dict.get cardId model.editingCardNotes of
+            Nothing ->
+                Html.text ""
+
+            Just val ->
+                Html.div
+                    [ HA.class "edit-bubble"
+                    , HA.draggable "true"
+                    , HE.custom "dragstart" (JD.succeed { message = Noop, stopPropagation = True, preventDefault = True })
+                    ]
+                    [ Html.form [ HA.class "write-note-form", HE.onSubmit (UpdateCardNote cardId) ]
                         [ Html.textarea
                             [ HA.placeholder "Enter a note"
-                            , HA.rows (List.length <| String.lines val)
                             , HA.id (addNoteTextareaId cardId)
                             , HE.onInput (SetEditingCardNote cardId)
                             , onCtrlEnter (UpdateCardNote cardId)
@@ -3728,14 +3782,7 @@ viewNoteCard model cardId col controls text =
                                 ]
                             ]
                         ]
-            ]
-        , Html.div [ HA.class "card-controls" ] <|
-            Html.span
-                [ HA.class "spin-on-column-refresh"
-                , HE.onClick (RefreshColumn col.id)
-                ]
-                [ Octicons.sync octiconOpts ]
-                :: controls
+                    ]
         ]
 
 
