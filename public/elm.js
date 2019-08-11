@@ -16105,15 +16105,12 @@ var author$project$Main$viewProjectCard = F3(
 										]))
 								])),
 							elm$core$String$isEmpty(project.body) ? elm$html$Html$text('') : A2(
-							elm$html$Html$div,
+							elm_explorations$markdown$Markdown$toHtml,
 							_List_fromArray(
 								[
 									elm$html$Html$Attributes$class('project-body')
 								]),
-							_List_fromArray(
-								[
-									A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, project.body)
-								])),
+							project.body),
 							A2(author$project$Main$viewProjectBar, model, project)
 						])),
 					A2(
@@ -16809,15 +16806,12 @@ var author$project$Main$viewAddingNote = F2(
 									capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
 								])),
 							A2(
-							elm$html$Html$div,
+							elm_explorations$markdown$Markdown$toHtml,
 							_List_fromArray(
 								[
 									elm$html$Html$Attributes$class('card-info card-note')
 								]),
-							_List_fromArray(
-								[
-									A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, val)
-								])),
+							val),
 							A2(
 							elm$html$Html$div,
 							_List_fromArray(
@@ -18071,23 +18065,15 @@ var author$project$Main$viewNoteCard = F6(
 									capitalist$elm_octicons$Octicons$note(author$project$Main$octiconOpts)
 								])),
 							A2(
-							elm$html$Html$div,
+							elm_explorations$markdown$Markdown$toHtml,
 							_List_fromArray(
 								[
 									elm$html$Html$Attributes$class('card-info card-note')
 								]),
-							_List_fromArray(
-								[
-									function () {
-									var _n0 = A2(elm$core$Dict$get, card.id, model.editingCardNotes);
-									if (_n0.$ === 'Nothing') {
-										return A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, text);
-									} else {
-										var val = _n0.a;
-										return A2(elm_explorations$markdown$Markdown$toHtml, _List_Nil, val);
-									}
-								}()
-								])),
+							A2(
+								elm$core$Maybe$withDefault,
+								text,
+								A2(elm$core$Dict$get, card.id, model.editingCardNotes))),
 							A2(
 							elm$html$Html$div,
 							_List_fromArray(
@@ -18111,11 +18097,11 @@ var author$project$Main$viewNoteCard = F6(
 								controls))
 						])),
 					function () {
-					var _n1 = A2(elm$core$Dict$get, card.id, model.editingCardNotes);
-					if (_n1.$ === 'Nothing') {
+					var _n0 = A2(elm$core$Dict$get, card.id, model.editingCardNotes);
+					if (_n0.$ === 'Nothing') {
 						return elm$html$Html$text('');
 					} else {
-						var val = _n1.a;
+						var val = _n0.a;
 						return A2(
 							elm$html$Html$div,
 							_List_fromArray(
@@ -18179,9 +18165,9 @@ var author$project$Main$viewNoteCard = F6(
 															elm$html$Html$text('cancel')
 														])),
 													function () {
-													var _n2 = project.owner;
-													if (_n2.$ === 'ProjectOwnerRepo') {
-														var repoId = _n2.a;
+													var _n1 = project.owner;
+													if (_n1.$ === 'ProjectOwnerRepo') {
+														var repoId = _n1.a;
 														return A2(
 															elm$html$Html$button,
 															_List_fromArray(

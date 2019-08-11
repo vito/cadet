@@ -2690,9 +2690,7 @@ viewAddingNote col val =
             [ Html.div [ HA.class "card-icons" ]
                 [ Octicons.note octiconOpts
                 ]
-            , Html.div [ HA.class "card-info card-note" ]
-                [ Markdown.toHtml [] val
-                ]
+            , Markdown.toHtml [ HA.class "card-info card-note" ] val
             , Html.div [ HA.class "card-controls" ] []
             ]
         , Html.div
@@ -3751,14 +3749,9 @@ viewNoteCard model project col card controls text =
             [ Html.div [ HA.class "card-icons" ]
                 [ Octicons.note octiconOpts
                 ]
-            , Html.div [ HA.class "card-info card-note" ]
-                [ case Dict.get card.id model.editingCardNotes of
-                    Nothing ->
-                        Markdown.toHtml [] text
-
-                    Just val ->
-                        Markdown.toHtml [] val
-                ]
+            , Dict.get card.id model.editingCardNotes
+                |> Maybe.withDefault text
+                |> Markdown.toHtml [ HA.class "card-info card-note" ]
             , Html.div [ HA.class "card-controls" ] <|
                 Html.span
                     [ HA.class "spin-on-column-refresh"
@@ -3804,9 +3797,9 @@ viewNoteCard model project col card controls text =
                                         [ Octicons.issueOpened octiconOpts
                                         , Html.text "convert to issue"
                                         ]
+
                                 _ ->
                                     Html.text ""
-
                             , Html.button
                                 [ HA.class "button apply"
                                 , HA.type_ "submit"
@@ -3836,8 +3829,7 @@ viewProjectCard model controls project =
                 Html.text ""
 
               else
-                Html.div [ HA.class "project-body" ]
-                    [ Markdown.toHtml [] project.body ]
+                    Markdown.toHtml [HA.class "project-body"] project.body
             , viewProjectBar model project
             ]
         , Html.div [ HA.class "card-controls" ] controls
