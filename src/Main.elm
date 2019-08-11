@@ -3829,7 +3829,7 @@ viewProjectCard model controls project =
                 Html.text ""
 
               else
-                    Markdown.toHtml [HA.class "project-body"] project.body
+                Markdown.toHtml [ HA.class "project-body" ] project.body
             , viewProjectBar model project
             ]
         , Html.div [ HA.class "card-controls" ] controls
