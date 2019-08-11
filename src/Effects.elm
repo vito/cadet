@@ -4,6 +4,7 @@ module Effects exposing
     , addNoteCard
     , addPullRequestLabels
     , contentCardId
+    , convertNoteToIssue
     , createLabel
     , deleteLabel
     , deleteProjectCard
@@ -132,6 +133,24 @@ updateCardNote model cardId note =
                             DataChanged Cmd.none (Err msg)
             in
             GitHub.updateCardNote token cardId note
+                |> Task.attempt refreshColumn
+                |> withSetLoading [ cardId ]
+
+
+convertNoteToIssue : Model -> GitHub.ID -> GitHub.ID -> String -> String -> Cmd Msg
+convertNoteToIssue model cardId repoId title body =
+    withTokenOrLogIn model <|
+        \token ->
+            let
+                refreshColumn res =
+                    case res of
+                        Ok { columnId } ->
+                            DataChanged (refreshColumnCards columnId) (Ok ())
+
+                        Err msg ->
+                            DataChanged Cmd.none (Err msg)
+            in
+            GitHub.convertCardToIssue token cardId repoId title body
                 |> Task.attempt refreshColumn
                 |> withSetLoading [ cardId ]
 

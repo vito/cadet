@@ -95,8 +95,7 @@
   .buttons {
     padding: 0;
 
-    .cancel {
-      background: @gray-600;
+    .button {
       color: @white;
 
       .octicon {
@@ -104,6 +103,10 @@
           fill: @white;
         }
       }
+    }
+
+    .cancel {
+      background: @gray-600;
 
       &:hover {
         background: @gray-700;
@@ -111,6 +114,18 @@
 
       &:active {
         background: @gray-dark;
+      }
+    }
+
+    .convert-to-issue {
+      background: @purple;
+
+      &:hover {
+        background: @purple-600;
+      }
+
+      &:active {
+        background: @purple-900;
       }
     }
   }

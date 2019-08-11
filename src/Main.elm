@@ -767,6 +767,27 @@ update msg model =
                     Effects.updateCardNote model id note
             )
 
+        ConvertEditingCardNoteToIssue id repoId ->
+            ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }
+            , let
+                note =
+                    Maybe.withDefault "" <| Dict.get id model.editingCardNotes
+
+                lines =
+                    String.lines note
+              in
+              case lines of
+                [] ->
+                    Cmd.none
+
+                title :: rest ->
+                    let
+                        body =
+                            String.trim (String.join "\n" rest)
+                    in
+                    Effects.convertNoteToIssue model id repoId title body
+            )
+
         ToggleShowArchivedCards id ->
             ( { model
                 | showArchivedCards =
@@ -1261,7 +1282,7 @@ computeReleaseRepos model =
 
 view : Model -> Browser.Document Msg
 view model =
-    { title = title model
+    { title = pageTitle model
     , body = [ viewCadet model ]
     }
 
@@ -1271,8 +1292,8 @@ titleSuffix s =
     s ++ " - Cadet"
 
 
-title : Model -> String
-title model =
+pageTitle : Model -> String
+pageTitle model =
     titleSuffix <|
         case model.page of
             AllProjectsPage ->
@@ -2786,7 +2807,7 @@ viewProjectColumnCard model project col ghCard =
         card =
             case ( ghCard.note, ghCard.contentId ) of
                 ( Just n, Nothing ) ->
-                    viewNote model ghCard.id col n
+                    viewNote model project col ghCard n
 
                 ( Nothing, Just contentId ) ->
                     case Dict.get contentId model.cards of
@@ -3680,26 +3701,26 @@ viewCard model controls card =
         ]
 
 
-viewNote : Model -> GitHub.ID -> GitHub.ProjectColumn -> String -> Html Msg
-viewNote model cardId col text =
+viewNote : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> String -> Html Msg
+viewNote model project col card text =
     let
         controls =
-            [ deleteCardControl model cardId cardId
-            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote cardId text) ]
+            [ deleteCardControl model card.id card.id
+            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote card.id text) ]
                 [ Octicons.pencil octiconOpts
                 ]
             ]
     in
-    if Dict.member cardId model.editingCardNotes then
-        viewNoteCard model cardId col controls text
+    if Dict.member card.id model.editingCardNotes then
+        viewNoteCard model project col card controls text
 
     else if String.startsWith "http" text then
         Maybe.map (viewProjectCard model controls) (projectByUrl model text)
             |> ME.orElseLazy (\_ -> Maybe.map (viewCard model controls) (cardByUrl model text))
-            |> Maybe.withDefault (viewNoteCard model cardId col controls text)
+            |> Maybe.withDefault (viewNoteCard model project col card controls text)
 
     else
-        viewNoteCard model cardId col controls text
+        viewNoteCard model project col card controls text
 
 
 projectByUrl : Model -> String -> Maybe GitHub.Project
@@ -3714,12 +3735,12 @@ cardByUrl model url =
         |> Maybe.andThen (\id -> Dict.get id model.cards)
 
 
-viewNoteCard : Model -> GitHub.ID -> GitHub.ProjectColumn -> List (Html Msg) -> String -> Html Msg
-viewNoteCard model cardId col controls text =
+viewNoteCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg) -> String -> Html Msg
+viewNoteCard model project col card controls text =
     Html.div [ HA.class "editable-card" ]
         [ Html.div
             [ HA.class "card note"
-            , HA.classList [ ( "loading", Dict.member cardId model.progress ) ]
+            , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
             , HA.tabindex 0
             , HA.classList
                 [ ( "in-flight", Project.detectColumn.inFlight col )
@@ -3731,7 +3752,7 @@ viewNoteCard model cardId col controls text =
                 [ Octicons.note octiconOpts
                 ]
             , Html.div [ HA.class "card-info card-note" ]
-                [ case Dict.get cardId model.editingCardNotes of
+                [ case Dict.get card.id model.editingCardNotes of
                     Nothing ->
                         Markdown.toHtml [] text
 
@@ -3746,7 +3767,7 @@ viewNoteCard model cardId col controls text =
                     [ Octicons.sync octiconOpts ]
                     :: controls
             ]
-        , case Dict.get cardId model.editingCardNotes of
+        , case Dict.get card.id model.editingCardNotes of
             Nothing ->
                 Html.text ""
 
@@ -3756,23 +3777,36 @@ viewNoteCard model cardId col controls text =
                     , HA.draggable "true"
                     , HE.custom "dragstart" (JD.succeed { message = Noop, stopPropagation = True, preventDefault = True })
                     ]
-                    [ Html.form [ HA.class "write-note-form", HE.onSubmit (UpdateCardNote cardId) ]
+                    [ Html.form [ HA.class "write-note-form", HE.onSubmit (UpdateCardNote card.id) ]
                         [ Html.textarea
                             [ HA.placeholder "Enter a note"
-                            , HA.id (addNoteTextareaId cardId)
-                            , HE.onInput (SetEditingCardNote cardId)
-                            , onCtrlEnter (UpdateCardNote cardId)
+                            , HA.id (addNoteTextareaId card.id)
+                            , HE.onInput (SetEditingCardNote card.id)
+                            , onCtrlEnter (UpdateCardNote card.id)
                             ]
                             [ Html.text val ]
                         , Html.div [ HA.class "buttons" ]
                             [ Html.button
                                 [ HA.class "button cancel"
                                 , HA.type_ "reset"
-                                , HE.onClick (CancelEditingCardNote cardId)
+                                , HE.onClick (CancelEditingCardNote card.id)
                                 ]
                                 [ Octicons.x octiconOpts
                                 , Html.text "cancel"
                                 ]
+                            , case project.owner of
+                                GitHub.ProjectOwnerRepo repoId ->
+                                    Html.button
+                                        [ HA.class "button convert-to-issue"
+                                        , HA.type_ "button"
+                                        , HE.onClick (ConvertEditingCardNoteToIssue card.id repoId)
+                                        ]
+                                        [ Octicons.issueOpened octiconOpts
+                                        , Html.text "convert to issue"
+                                        ]
+                                _ ->
+                                    Html.text ""
+
                             , Html.button
                                 [ HA.class "button apply"
                                 , HA.type_ "submit"

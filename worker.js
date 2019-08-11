@@ -4016,6 +4016,37 @@ var author$project$GitHub$encodeIssue = function (record) {
 				A2(elm_community$json_extra$Json$Encode$Extra$maybe, author$project$GitHub$encodeMilestone, record.milestone))
 			]));
 };
+var author$project$GitHub$encodeProjectOwner = function (owner) {
+	switch (owner.$) {
+		case 'ProjectOwnerRepo':
+			var id = owner.a;
+			return elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'repository_id',
+						elm$json$Json$Encode$string(id))
+					]));
+		case 'ProjectOwnerOrg':
+			var id = owner.a;
+			return elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'organization_id',
+						elm$json$Json$Encode$string(id))
+					]));
+		default:
+			var id = owner.a;
+			return elm$json$Json$Encode$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'user_id',
+						elm$json$Json$Encode$string(id))
+					]));
+	}
+};
 var author$project$GitHub$encodeProject = function (record) {
 	return elm$json$Json$Encode$object(
 		_List_fromArray(
@@ -4026,6 +4057,9 @@ var author$project$GitHub$encodeProject = function (record) {
 				_Utils_Tuple2(
 				'url',
 				elm$json$Json$Encode$string(record.url)),
+				_Utils_Tuple2(
+				'owner',
+				author$project$GitHub$encodeProjectOwner(record.owner)),
 				_Utils_Tuple2(
 				'name',
 				elm$json$Json$Encode$string(record.name)),
@@ -10997,10 +11031,43 @@ var author$project$Main$fetchRepoMilestones = F2(
 				model.githubToken,
 				{name: repo.name, owner: repo.owner}));
 	});
-var author$project$GitHub$Project = F6(
-	function (id, url, name, number, body, columns) {
-		return {body: body, columns: columns, id: id, name: name, number: number, url: url};
+var author$project$GitHub$Project = F7(
+	function (id, url, owner, name, number, body, columns) {
+		return {body: body, columns: columns, id: id, name: name, number: number, owner: owner, url: url};
 	});
+var author$project$GitHub$ProjectOwnerOrg = function (a) {
+	return {$: 'ProjectOwnerOrg', a: a};
+};
+var author$project$GitHub$ProjectOwnerRepo = function (a) {
+	return {$: 'ProjectOwnerRepo', a: a};
+};
+var author$project$GitHub$ProjectOwnerUser = function (a) {
+	return {$: 'ProjectOwnerUser', a: a};
+};
+var author$project$GitHub$idObject = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
+var author$project$GitHub$projectOwnerObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+		elm$core$Maybe$Just(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerUser, author$project$GitHub$idObject)),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			elm$core$Maybe$Just(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Organization')),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerOrg, author$project$GitHub$idObject)),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+				elm$core$Maybe$Just(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Repository')),
+				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerRepo, author$project$GitHub$idObject)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$maybeOr3))));
 var author$project$GitHub$projectObject = A2(
 	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
@@ -11029,11 +11096,15 @@ var author$project$GitHub$projectObject = A2(
 				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				A2(
 					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'owner', _List_Nil, author$project$GitHub$projectOwnerObject)),
 					A2(
 						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Project)))))));
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						A2(
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Project))))))));
 var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
 	return {$: 'ListValue', a: a};
 };

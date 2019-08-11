@@ -17,6 +17,7 @@ module GitHub exposing
     , ProjectColumn
     , ProjectColumnCard
     , ProjectColumnPurpose(..)
+    , ProjectOwner(..)
     , PullRequest
     , PullRequestReview
     , PullRequestReviewState(..)
@@ -39,9 +40,9 @@ module GitHub exposing
     , addNoteCard
     , addNoteCardAfter
     , addPullRequestLabels
-    , setCardArchived
     , closeIssue
     , closeRepoMilestone
+    , convertCardToIssue
     , createRepoLabel
     , createRepoMilestone
     , decodeCommit
@@ -98,6 +99,7 @@ module GitHub exposing
     , removeIssueLabel
     , removePullRequestLabel
     , reopenIssue
+    , setCardArchived
     , setIssueMilestone
     , setPullRequestMilestone
     , updateCardNote
@@ -347,11 +349,18 @@ type alias Reactions =
 type alias Project =
     { id : ID
     , url : String
+    , owner : ProjectOwner
     , name : String
     , number : Int
     , body : String
     , columns : List ProjectColumn
     }
+
+
+type ProjectOwner
+    = ProjectOwnerRepo ID
+    | ProjectOwnerOrg ID
+    | ProjectOwnerUser ID
 
 
 type alias ProjectColumn =
@@ -600,6 +609,13 @@ updateCardNote : Token -> ID -> String -> Task Error ProjectColumnCard
 updateCardNote token cardID note =
     updateProjectCardMutation
         |> GB.request { cardId = cardID, note = Just note, isArchived = Nothing }
+        |> GH.customSendMutation (authedOptions token)
+
+
+convertCardToIssue : Token -> ID -> ID -> String -> String -> Task Error ProjectColumnCard
+convertCardToIssue token cardID repoID title body =
+    convertProjectCardNoteToIssueMutation
+        |> GB.request { cardId = cardID, repoId = repoID, title = title, body = body }
         |> GH.customSendMutation (authedOptions token)
 
 
@@ -861,6 +877,36 @@ updateProjectCardMutation =
                         [ ( "projectCardId", GA.variable cardIDVar )
                         , ( "note", GA.variable noteVar )
                         , ( "isArchived", GA.variable isArchivedVar )
+                        ]
+                  )
+                ]
+                (GB.extract <| GB.field "projectCard" [] projectColumnCardObject)
+
+
+convertProjectCardNoteToIssueMutation : GB.Document GB.Mutation ProjectColumnCard { cardId : ID, repoId : ID, title : String, body : String }
+convertProjectCardNoteToIssueMutation =
+    let
+        cardIDVar =
+            GV.required "cardId" .cardId GV.id
+
+        repoIDVar =
+            GV.required "repoId" .repoId GV.id
+
+        titleVar =
+            GV.required "title" .title GV.string
+
+        bodyVar =
+            GV.required "body" .body GV.string
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "convertProjectCardNoteToIssue"
+                [ ( "input"
+                  , GA.object
+                        [ ( "projectCardId", GA.variable cardIDVar )
+                        , ( "repositoryId", GA.variable repoIDVar )
+                        , ( "title", GA.variable titleVar )
+                        , ( "body", GA.variable bodyVar )
                         ]
                   )
                 ]
@@ -1144,10 +1190,23 @@ projectObject =
     GB.object Project
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.assume <| GB.field "owner" [] projectOwnerObject)
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "number" [] GB.int)
         |> GB.with (GB.field "body" [] GB.string)
         |> GB.with (GB.field "columns" [ ( "first", GA.int 50 ) ] (GB.extract (GB.field "nodes" [] (GB.list columnObject))))
+
+
+projectOwnerObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe ProjectOwner) vars
+projectOwnerObject =
+    GB.object maybeOr3
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "Repository") (GB.map ProjectOwnerRepo idObject))
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "Organization") (GB.map ProjectOwnerOrg idObject))
+        |> GB.with (GB.inlineFragment (Just <| GB.onType "User") (GB.map ProjectOwnerUser idObject))
+
+
+idObject =
+    GB.extract (GB.field "id" [] GB.string)
 
 
 projectQuery : GB.Document GB.Query Project ProjectSelector
@@ -2175,10 +2234,20 @@ decodeProject =
     JD.succeed Project
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "owner" decodeProjectOwner)
         |> andMap (JD.field "name" JD.string)
         |> andMap (JD.field "number" JD.int)
         |> andMap (JD.field "body" JD.string)
         |> andMap (JD.field "columns" <| JD.list decodeProjectColumn)
+
+
+decodeProjectOwner : JD.Decoder ProjectOwner
+decodeProjectOwner =
+    JD.oneOf
+        [ JD.field "repository_id" (JD.map ProjectOwnerRepo JD.string)
+        , JD.field "organization_id" (JD.map ProjectOwnerOrg JD.string)
+        , JD.field "user_id" (JD.map ProjectOwnerUser JD.string)
+        ]
 
 
 decodeProjectLocation : JD.Decoder ProjectLocation
@@ -2553,11 +2622,25 @@ encodeProject record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
+        , ( "owner", encodeProjectOwner record.owner )
         , ( "name", JE.string record.name )
         , ( "number", JE.int record.number )
         , ( "body", JE.string record.body )
         , ( "columns", JE.list encodeProjectColumn record.columns )
         ]
+
+
+encodeProjectOwner : ProjectOwner -> JE.Value
+encodeProjectOwner owner =
+    case owner of
+        ProjectOwnerRepo id ->
+            JE.object [ ( "repository_id", JE.string id ) ]
+
+        ProjectOwnerOrg id ->
+            JE.object [ ( "organization_id", JE.string id ) ]
+
+        ProjectOwnerUser id ->
+            JE.object [ ( "user_id", JE.string id ) ]
 
 
 encodeProjectLocation : ProjectLocation -> JE.Value

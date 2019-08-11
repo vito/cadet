@@ -184,6 +184,7 @@ type Msg
     | DeleteCard GitHub.ID GitHub.ID
     | SetEditingCardNote GitHub.ID String
     | CancelEditingCardNote GitHub.ID
+    | ConvertEditingCardNoteToIssue GitHub.ID GitHub.ID
     | UpdateCardNote GitHub.ID
     | SetCardArchived GitHub.ID Bool
     | ToggleShowArchivedCards GitHub.ID
