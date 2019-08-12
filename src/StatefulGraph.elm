@@ -1,10 +1,10 @@
 module StatefulGraph exposing (init, update, view)
 
 import Activity
-import ForceGraph exposing (ForceGraph)
 import Card exposing (Card)
 import Colors
 import Dict exposing (Dict)
+import ForceGraph exposing (ForceGraph)
 import GitHub
 import Html exposing (Html)
 import Html.Attributes as HA
@@ -25,6 +25,7 @@ import Svg.Events as SE
 import Svg.Keyed
 import Svg.Lazy
 import Time
+
 
 init : Model -> Model
 init model =
@@ -91,6 +92,7 @@ update model =
                 model.statefulGraphs
     }
 
+
 view : Model -> Html Msg
 view model =
     Html.div [ HA.class "spatial-graph" ]
@@ -100,12 +102,14 @@ view model =
             |> Html.Keyed.node "div" [ HA.class "graphs" ]
         ]
 
+
 isBaseGraphState : Model -> Model.CardNodeState -> Bool
 isBaseGraphState model state =
     (state.currentTime == model.currentTime)
         && Set.isEmpty state.anticipatedCards
         && OrderedSet.isEmpty state.selectedCards
         && (state.highlightedNode == Nothing)
+
 
 statefulGraph : Model -> ForceGraph GitHub.ID -> Model.StatefulGraph
 statefulGraph model fg =
@@ -176,6 +180,7 @@ statefulGraph model fg =
     , matches = matches
     }
 
+
 baseGraphState : Model -> Model.CardNodeState
 baseGraphState model =
     { allLabels = model.allLabels
@@ -185,6 +190,7 @@ baseGraphState model =
     , anticipatedCards = Set.empty
     , highlightedNode = Nothing
     }
+
 
 involvesUser : Model -> String -> Card -> Bool
 involvesUser model login card =
@@ -221,6 +227,7 @@ satisfiesFilter model filter card =
         Model.UntriagedFilter ->
             Card.isUntriaged card
 
+
 hasLabelAndColor : Model -> String -> String -> Card -> Bool
 hasLabelAndColor model name color card =
     let
@@ -229,6 +236,7 @@ hasLabelAndColor model name color card =
                 |> Dict.filter (\_ l -> l.name == name && l.color == color)
     in
     List.any (\a -> Dict.member a matchingLabels) card.labels
+
 
 isInProject : GitHub.ID -> Card -> Bool
 isInProject id card =
@@ -282,10 +290,6 @@ graphAllActivityCompare model a b =
     compare (latestActivity a) (latestActivity b)
 
 
-
-
-
-
 type alias NodeBounds =
     { x1 : Float
     , y1 : Float
@@ -297,7 +301,6 @@ type alias NodeBounds =
 octiconOpts : Octicons.Options
 octiconOpts =
     Octicons.defaultOptions
-
 
 
 graphId : Model.StatefulGraph -> String

@@ -90,7 +90,10 @@ type alias CardEvent =
     }
 
 
+
 -- a type smaller than GitHub.ProjectColumnCard so issue/PR stuff isn't duplicated
+
+
 type alias ColumnCard =
     { id : GitHub.ID
     , isArchived : Bool

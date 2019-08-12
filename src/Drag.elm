@@ -1,5 +1,7 @@
 module Drag exposing
-    ( Model(..)
+    ( DragState
+    , DropState
+    , Model(..)
     , Msg(..)
     , complete
     , draggable

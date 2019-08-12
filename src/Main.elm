@@ -1,40 +1,34 @@
 port module Main exposing (main)
 
-import Activity
 import Backend
 import Browser
 import Browser.Dom
 import Browser.Navigation as Nav
 import Card exposing (Card)
+import CardOperations
+import CardView
 import Colors
 import DateFormat
 import Dict exposing (Dict)
 import Drag
 import Effects
-import ForceGraph exposing (ForceGraph)
+import Events
 import GitHub
 import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
-import Keyboard.Event
-import Keyboard.Key
 import Label
 import List.Extra as LE
 import Log
 import Markdown
-import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
 import Octicons
-import OrderedSet
-import ParseInt
 import Project
 import Query
-import Random
-import Regex exposing (Regex)
+import ReleaseRepo
 import Set exposing (Set)
-import Shape
 import StatefulGraph
 import Task
 import Time
@@ -81,6 +75,13 @@ init config url key =
         , Task.perform SetCurrentZone Time.here
         ]
     )
+
+
+view : Model -> Browser.Document Msg
+view model =
+    { title = pageTitle model
+    , body = [ viewCadet model ]
+    }
 
 
 routeParser : UP.Parser (Page -> a) a
@@ -228,86 +229,8 @@ update msg model =
 
         CardMoved targetCol (Ok card) ->
             case model.projectDrag of
-                Drag.Dropped drag ->
-                    let
-                        colCard =
-                            { id = card.id
-                            , isArchived = card.isArchived
-                            , contentId =
-                                case card.content of
-                                    Just (GitHub.IssueCardContent { id }) ->
-                                        Just id
-
-                                    Just (GitHub.PullRequestCardContent { id }) ->
-                                        Just id
-
-                                    Nothing ->
-                                        Nothing
-                            , note = card.note
-                            }
-
-                        removeCard =
-                            List.filter ((/=) card.id << .id)
-
-                        removeCardFromOldColumn =
-                            case drag.source of
-                                Model.FromColumnCardSource cs ->
-                                    Dict.update cs.columnId (Maybe.map removeCard)
-
-                                Model.NewContentCardSource _ ->
-                                    identity
-
-                        insertAfter id new cards =
-                            case cards of
-                                c :: rest ->
-                                    if c.id == id then
-                                        c :: new :: rest
-
-                                    else
-                                        c :: insertAfter id new rest
-
-                                [] ->
-                                    -- this shouldn't really happen
-                                    [ new ]
-
-                        insertCard cards =
-                            case drag.target.afterId of
-                                Nothing ->
-                                    colCard :: cards
-
-                                Just cardId ->
-                                    insertAfter cardId colCard cards
-
-                        addCardToNewColumn =
-                            Dict.update targetCol (Maybe.map insertCard)
-
-                        movedOptimistically =
-                            { model | columnCards = addCardToNewColumn (removeCardFromOldColumn model.columnCards) }
-                    in
-                    ( { movedOptimistically | projectDrag = Drag.complete model.projectDrag }
-                    , Cmd.batch
-                        [ Effects.refreshColumnCards targetCol
-                        , case card.content of
-                            Just (GitHub.IssueCardContent issue) ->
-                                Effects.refreshIssue issue.id
-
-                            Just (GitHub.PullRequestCardContent pr) ->
-                                Effects.refreshPR pr.id
-
-                            Nothing ->
-                                Cmd.none
-                        , case drag.source of
-                            Model.FromColumnCardSource cs ->
-                                if cs.columnId == targetCol then
-                                    Cmd.none
-
-                                else
-                                    Effects.refreshColumnCards cs.columnId
-
-                            Model.NewContentCardSource _ ->
-                                Cmd.none
-                        ]
-                    )
+                Drag.Dropped drop ->
+                    CardOperations.dropCard model targetCol card drop
 
                 _ ->
                     ( model, Cmd.none )
@@ -334,26 +257,26 @@ update msg model =
             )
 
         SelectAnticipatedCards ->
-            ( StatefulGraph.update
-                { model
-                    | anticipatedCards = Set.empty
-                    , selectedCards = Set.foldl OrderedSet.insert model.selectedCards model.anticipatedCards
-                }
+            ( CardOperations.selectAnticipatedCards model
+                |> StatefulGraph.update
             , Cmd.none
             )
 
         SelectCard id ->
-            ( StatefulGraph.update { model | selectedCards = OrderedSet.insert id model.selectedCards }
+            ( CardOperations.selectCard id model
+                |> StatefulGraph.update
             , Cmd.none
             )
 
         ClearSelectedCards ->
-            ( StatefulGraph.update { model | selectedCards = OrderedSet.empty }
+            ( CardOperations.clearSelectedCards model
+                |> StatefulGraph.update
             , Cmd.none
             )
 
         DeselectCard id ->
-            ( StatefulGraph.update { model | selectedCards = OrderedSet.remove id model.selectedCards }
+            ( CardOperations.deselectCard id model
+                |> StatefulGraph.update
             , Cmd.none
             )
 
@@ -560,7 +483,7 @@ update msg model =
                 Just newLabel ->
                     ( { model
                         | editingLabels =
-                            Dict.insert (labelKey label) (randomizeColor newLabel) model.editingLabels
+                            Dict.insert (labelKey label) (Label.randomizeColor newLabel) model.editingLabels
                       }
                     , Cmd.none
                     )
@@ -603,7 +526,12 @@ update msg model =
                     }
 
         RandomizeNewLabelColor ->
-            ( { model | newLabel = randomizeColor model.newLabel, newLabelColored = True }, Cmd.none )
+            ( { model
+                | newLabel = Label.randomizeColor model.newLabel
+                , newLabelColored = True
+              }
+            , Cmd.none
+            )
 
         SetNewLabelName name ->
             let
@@ -615,7 +543,7 @@ update msg model =
                         model.newLabel.color
 
                     else
-                        generateColor (Hash.hash name)
+                        Label.generateColor (Hash.hash name)
             in
             ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
 
@@ -702,11 +630,11 @@ update msg model =
             ( { model | cardLabelOperations = Dict.remove name model.cardLabelOperations }, Cmd.none )
 
         ApplyLabelOperations ->
-            ( model, performLabelOperations model )
+            ( model, CardOperations.applyLabelOperations model )
 
         SetCreatingColumnNote id note ->
             ( { model | addingColumnNotes = Dict.insert id note model.addingColumnNotes }
-            , Task.attempt (always Noop) (Browser.Dom.focus (addNoteTextareaId id))
+            , Task.attempt (always Noop) (Browser.Dom.focus (focusId id))
             )
 
         CancelCreatingColumnNote id ->
@@ -739,7 +667,9 @@ update msg model =
             ( model, Effects.setProjectCardArchived model ghCardId archived )
 
         SetEditingCardNote id val ->
-            ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }, Cmd.none )
+            ( { model | editingCardNotes = Dict.insert id val model.editingCardNotes }
+            , CardView.focusEditNote id
+            )
 
         CancelEditingCardNote id ->
             ( { model | editingCardNotes = Dict.remove id model.editingCardNotes }, Cmd.none )
@@ -788,64 +718,6 @@ update msg model =
             )
 
 
-view : Model -> Browser.Document Msg
-view model =
-    { title = pageTitle model
-    , body = [ viewCadet model ]
-    }
-
-
-performLabelOperations : Model -> Cmd Msg
-performLabelOperations model =
-    let
-        cards =
-            List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
-
-        ( addPairs, removePairs ) =
-            Dict.toList model.cardLabelOperations
-                |> List.partition ((==) Model.AddLabelOperation << Tuple.second)
-
-        labelsToAdd =
-            List.map Tuple.first addPairs
-
-        labelsToRemove =
-            List.map Tuple.first removePairs
-
-        adds =
-            List.map
-                (\card ->
-                    case card.content of
-                        GitHub.IssueCardContent issue ->
-                            Effects.addIssueLabels model issue labelsToAdd
-
-                        GitHub.PullRequestCardContent pr ->
-                            Effects.addPullRequestLabels model pr labelsToAdd
-                )
-                cards
-
-        removals =
-            List.concatMap
-                (\name ->
-                    List.filterMap
-                        (\card ->
-                            if hasLabel model name card then
-                                case card.content of
-                                    GitHub.IssueCardContent issue ->
-                                        Just (Effects.removeIssueLabel model issue name)
-
-                                    GitHub.PullRequestCardContent pr ->
-                                        Just (Effects.removePullRequestLabel model pr name)
-
-                            else
-                                Nothing
-                        )
-                        cards
-                )
-                labelsToRemove
-    in
-    Cmd.batch (adds ++ removals)
-
-
 searchCards : Model -> String -> Set GitHub.ID
 searchCards model str =
     let
@@ -878,7 +750,7 @@ searchFilter : Model -> List String -> Card -> Bool
 searchFilter model filter card =
     case filter of
         [ "label", name ] ->
-            hasLabel model name card
+            Label.cardHasLabel model name card
 
         [ "is", "pr" ] ->
             Card.isPR card
@@ -969,6 +841,24 @@ computeViewForPage model =
 
         _ ->
             reset
+
+
+computeReleaseRepos : Model -> Model
+computeReleaseRepos model =
+    let
+        addReleaseRepo _ repo acc =
+            let
+                releaseRepo =
+                    ReleaseRepo.init model repo
+            in
+            case ( releaseRepo.nextMilestone, releaseRepo.totalCommits ) of
+                ( Nothing, 0 ) ->
+                    acc
+
+                _ ->
+                    Dict.insert repo.name releaseRepo acc
+    in
+    { model | releaseRepos = Dict.foldl addReleaseRepo Dict.empty model.repos }
 
 
 computeDataView : Model -> Model
@@ -1085,130 +975,6 @@ computeCardsView model =
     }
 
 
-makeReleaseRepo : Model -> GitHub.Repo -> Model.ReleaseRepo
-makeReleaseRepo model repo =
-    let
-        nextMilestone =
-            Dict.get repo.id model.repoMilestones
-                |> Maybe.withDefault []
-                |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
-                |> List.filter (String.startsWith "v" << .title)
-                |> List.sortBy .title
-                |> List.head
-
-        commitsSinceLastRelease =
-            Dict.get repo.id model.repoCommits
-                |> Maybe.withDefault []
-
-        mergedPRCards =
-            commitsSinceLastRelease
-                |> List.concatMap .associatedPullRequests
-                |> LE.unique
-                |> List.filterMap (\id -> Dict.get id model.cards)
-
-        issueOrOpenPR cardId =
-            case Dict.get cardId model.cards of
-                Nothing ->
-                    Nothing
-
-                Just card ->
-                    if Card.isMerged card then
-                        -- don't double-count merged PRs - they are collected via the
-                        -- commits
-                        Nothing
-
-                    else
-                        Just card
-
-        milestoneCards =
-            case nextMilestone of
-                Nothing ->
-                    []
-
-                Just nm ->
-                    Dict.get nm.id model.cardsByMilestone
-                        |> Maybe.withDefault []
-                        |> List.filterMap issueOrOpenPR
-
-        allCards =
-            milestoneCards ++ mergedPRCards
-
-        categorizeByDocumentedState card sir =
-            if hasLabel model "release/documented" card then
-                { sir | documentedCards = card :: sir.documentedCards }
-
-            else if hasLabel model "release/undocumented" card then
-                { sir | undocumentedCards = card :: sir.undocumentedCards }
-
-            else if hasLabel model "release/no-impact" card then
-                { sir | noImpactCards = card :: sir.noImpactCards }
-
-            else
-                { sir | doneCards = card :: sir.doneCards }
-
-        categorizeByCardState card sir =
-            case card.state of
-                Card.IssueState GitHub.IssueStateOpen ->
-                    { sir | openIssues = card :: sir.openIssues }
-
-                Card.IssueState GitHub.IssueStateClosed ->
-                    { sir | closedIssues = card :: sir.closedIssues }
-
-                Card.PullRequestState GitHub.PullRequestStateOpen ->
-                    { sir | openPRs = card :: sir.openPRs }
-
-                Card.PullRequestState GitHub.PullRequestStateMerged ->
-                    { sir | mergedPRs = card :: sir.mergedPRs }
-
-                Card.PullRequestState GitHub.PullRequestStateClosed ->
-                    -- ignored
-                    sir
-
-        categorizeCard card sir =
-            let
-                byState =
-                    categorizeByCardState card sir
-            in
-            if Card.isOpen card then
-                byState
-
-            else
-                categorizeByDocumentedState card byState
-    in
-    List.foldl categorizeCard
-        { repo = repo
-        , nextMilestone = nextMilestone
-        , totalCommits = List.length commitsSinceLastRelease
-        , openPRs = []
-        , mergedPRs = []
-        , openIssues = []
-        , closedIssues = []
-        , doneCards = []
-        , documentedCards = []
-        , undocumentedCards = []
-        , noImpactCards = []
-        }
-        allCards
-
-
-computeReleaseRepos : Model -> Model
-computeReleaseRepos model =
-    let
-        addReleaseRepo _ repo acc =
-            let
-                releaseRepo =
-                    makeReleaseRepo model repo
-            in
-            case ( releaseRepo.nextMilestone, releaseRepo.totalCommits ) of
-                ( Nothing, 0 ) ->
-                    acc
-
-                _ ->
-                    Dict.insert repo.name releaseRepo acc
-    in
-    { model | releaseRepos = Dict.foldl addReleaseRepo Dict.empty model.repos }
-
-
 titleSuffix : String -> String
 titleSuffix s =
     s ++ " - Cadet"
@@ -1257,7 +1023,7 @@ viewCadet model =
         [ viewNavBar model
         , Html.div [ HA.class "side-by-side" ]
             [ viewPage model
-            , viewSidebar model
+            , CardOperations.view model
             ]
         ]
 
@@ -1305,116 +1071,6 @@ viewPage model =
 
             BouncePage ->
                 Html.text "you shouldn't see this"
-        ]
-
-
-viewSidebar : Model -> Html Msg
-viewSidebar model =
-    let
-        anticipatedCards =
-            Set.toList model.anticipatedCards
-                |> List.filter (not << (\a -> OrderedSet.member a model.selectedCards))
-                |> List.filterMap (\a -> Dict.get a model.cards)
-                |> List.map (viewCardEntry model)
-
-        selectedCards =
-            OrderedSet.toList model.selectedCards
-                |> List.filterMap (\a -> Dict.get a model.cards)
-                |> List.map (viewCardEntry model)
-
-        sidebarCards =
-            selectedCards ++ anticipatedCards
-    in
-    if List.isEmpty sidebarCards then
-        Html.text ""
-
-    else
-        Html.div [ HA.class "main-sidebar" ]
-            [ viewSidebarControls model
-            , Html.div [ HA.class "cards" ] sidebarCards
-            ]
-
-
-viewSidebarControls : Model -> Html Msg
-viewSidebarControls model =
-    let
-        viewLabelOperation name color =
-            let
-                ( checkClass, icon, clickOperation ) =
-                    case Dict.get name model.cardLabelOperations of
-                        Just Model.AddLabelOperation ->
-                            ( "checked", Octicons.check octiconOpts, SetLabelOperation name Model.RemoveLabelOperation )
-
-                        Just Model.RemoveLabelOperation ->
-                            ( "unhecked", Octicons.plus octiconOpts, UnsetLabelOperation name )
-
-                        Nothing ->
-                            let
-                                cards =
-                                    List.filterMap (\a -> Dict.get a model.cards) (OrderedSet.toList model.selectedCards)
-                            in
-                            if not (List.isEmpty cards) && List.all (hasLabel model name) cards then
-                                ( "checked", Octicons.check octiconOpts, SetLabelOperation name Model.RemoveLabelOperation )
-
-                            else if List.any (hasLabel model name) cards then
-                                ( "mixed", Octicons.dash octiconOpts, SetLabelOperation name Model.AddLabelOperation )
-
-                            else
-                                ( "unchecked", Octicons.plus octiconOpts, SetLabelOperation name Model.AddLabelOperation )
-            in
-            Html.div [ HA.class "label-operation" ]
-                [ Html.span [ HA.class ("checkbox " ++ checkClass), HE.onClick clickOperation ]
-                    [ icon ]
-                , Html.span
-                    ([ HA.class "label"
-                     , HE.onClick (AddFilter (Model.HasLabelFilter name color))
-                     ]
-                        ++ Label.colorStyles model color
-                    )
-                    [ Html.span [ HA.class "label-text" ]
-                        [ Html.text name ]
-                    ]
-                ]
-
-        labelOptions =
-            if model.showLabelOperations then
-                Dict.keys model.reposByLabel
-                    |> List.filter (String.contains model.labelSearch << Tuple.first)
-                    |> List.map (\( a, b ) -> viewLabelOperation a b)
-
-            else
-                []
-    in
-    Html.div [ HA.class "sidebar-controls" ]
-        [ Html.div [ HA.class "control-knobs" ]
-            [ Html.span [ HA.class "controls-label" ] [ Html.text "change:" ]
-            , Html.div
-                [ HA.classList [ ( "control-setting", True ), ( "active", model.showLabelOperations ) ]
-                , HE.onClick ToggleLabelOperations
-                ]
-                [ Octicons.tag octiconOpts
-                , Html.text "labels"
-                ]
-            , Html.span
-                [ HE.onClick ClearSelectedCards
-                , HA.class "clear-selected"
-                ]
-                [ Octicons.x octiconOpts ]
-            ]
-        , Html.div [ HA.classList [ ( "label-operations", True ), ( "visible", model.showLabelOperations ) ] ]
-            [ Html.input [ HA.type_ "text", HA.placeholder "search labels", HE.onInput SetLabelSearch ] []
-            , Html.div [ HA.class "label-options" ] labelOptions
-            , Html.div [ HA.class "buttons" ]
-                [ Html.div [ HA.class "button cancel", HE.onClick ToggleLabelOperations ]
-                    [ Octicons.x octiconOpts
-                    , Html.text "cancel"
-                    ]
-                , Html.div [ HA.class "button apply", HE.onClick ApplyLabelOperations ]
-                    [ Octicons.check octiconOpts
-                    , Html.text "apply"
-                    ]
-                ]
-            ]
         ]
 
 
@@ -1535,7 +1191,7 @@ viewRepoProjects model repo projects =
             , Html.text repo.name
             ]
         , Html.div [ HA.class "cards" ]
-            (List.map (viewProjectCard model []) projects)
+            (List.map (CardView.viewProjectCard model []) projects)
         ]
 
 
@@ -1605,7 +1261,7 @@ viewReleasePage model =
             , Html.text "Release"
             ]
         , Html.div [ HA.class "metrics-items" ]
-            (List.map viewReleaseRepo repos)
+            (List.map ReleaseRepo.view repos)
         ]
 
 
@@ -1649,7 +1305,7 @@ viewLabelByName model name =
     in
     case mlabel of
         Just label ->
-            viewLabel model label
+            Label.view model label
 
         Nothing ->
             Html.text ("missing label: " ++ name)
@@ -1692,64 +1348,11 @@ viewTabbedCards model tabs =
                     cards
                         |> List.sortBy (.updatedAt >> Time.posixToMillis)
                         |> List.reverse
-                        |> List.map (viewCard model [])
+                        |> List.map (CardView.viewCard model [])
                         |> Html.div [ HA.class "tab-cards", firstTabClass ]
 
             _ ->
                 Html.text ""
-        ]
-
-
-viewReleaseRepo : Model.ReleaseRepo -> Html Msg
-viewReleaseRepo sir =
-    Html.div [ HA.class "metrics-item" ]
-        [ Html.a [ HA.class "column-title", HA.href ("/release/" ++ sir.repo.name) ]
-            [ Octicons.repo octiconOpts
-            , Html.text sir.repo.name
-            , case sir.nextMilestone of
-                Just nm ->
-                    Html.span []
-                        [ Octicons.milestone octiconOpts
-                        , Html.text nm.title
-                        ]
-
-                Nothing ->
-                    Html.text ""
-            ]
-        , Html.div [ HA.class "metrics" ]
-            [ viewMetric
-                (Octicons.gitCommit { octiconOpts | color = Colors.gray })
-                sir.totalCommits
-                "commits"
-                "commit"
-                "since last release"
-            , viewMetric
-                (Octicons.gitPullRequest { octiconOpts | color = Colors.purple })
-                (List.length sir.mergedPRs)
-                "merged PRs"
-                "merged PRs"
-                "since last release"
-            , if List.isEmpty sir.closedIssues then
-                Html.text ""
-
-              else
-                viewMetric
-                    (Octicons.check { octiconOpts | color = Colors.green })
-                    (List.length sir.closedIssues)
-                    "closed issues"
-                    "closed issue"
-                    "in milestone"
-            , if List.isEmpty sir.openIssues then
-                Html.text ""
-
-              else
-                viewMetric
-                    (Octicons.issueOpened { octiconOpts | color = Colors.yellow })
-                    (List.length sir.openIssues)
-                    "open issues"
-                    "open issue"
-                    "in milestone"
-            ]
         ]
 
 
@@ -1781,7 +1384,7 @@ viewRepoPRs model repoId prIds =
                     |> List.filterMap (\id -> Dict.get id model.cards)
                     |> List.sortBy (.updatedAt >> Time.posixToMillis)
                     |> List.reverse
-                    |> List.map (viewCard model [])
+                    |> List.map (CardView.viewCard model [])
                     |> Html.div [ HA.class "cards" ]
                 ]
 
@@ -1864,10 +1467,10 @@ viewRepoPullRequestsPage model repoName =
                 -- force PRs that were last active by someone else into the inbox
                 { cat | inbox = card :: cat.inbox }
 
-            else if hasLabel model "needs-test" card then
+            else if Label.cardHasLabel model "needs-test" card then
                 { cat | needsTest = card :: cat.needsTest }
 
-            else if hasLabel model "blocked" card then
+            else if Label.cardHasLabel model "blocked" card then
                 { cat | blocked = card :: cat.blocked }
 
             else if changesRequested model card then
@@ -2011,7 +1614,7 @@ viewArchiveEvent model { cardId, event } =
                     , HA.target "_blank"
                     , HA.href card.url
                     ]
-                    [ viewCardIcon card
+                    [ CardView.viewCardIcon card
                     ]
                 , case event.event of
                     "comment" ->
@@ -2147,7 +1750,7 @@ viewLabelRow model label repoIds =
                             [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                 Html.span
                                     ([ HA.class "label-icon"
-                                     , HE.onClick (searchLabel model label.name)
+                                     , HE.onClick (Label.search model label.name)
                                      ]
                                         ++ Label.colorStyles model label.color
                                     )
@@ -2163,7 +1766,7 @@ viewLabelRow model label repoIds =
                                     [ Octicons.paintcan octiconOpts ]
                             , Html.span
                                 ([ HA.class "label big"
-                                 , HE.onClick (searchLabel model label.name)
+                                 , HE.onClick (Label.search model label.name)
                                  ]
                                     ++ Label.colorStyles model label.color
                                 )
@@ -2286,33 +1889,6 @@ viewLabelRow model label repoIds =
         ]
 
 
-searchLabel : Model -> String -> Msg
-searchLabel model name =
-    SearchCards <|
-        if String.isEmpty model.cardSearch then
-            "label:" ++ name
-
-        else
-            model.cardSearch ++ " label:" ++ name
-
-
-viewMetric : Html Msg -> Int -> String -> String -> String -> Html Msg
-viewMetric icon count plural singular description =
-    Html.div [ HA.class "metric" ]
-        [ icon
-        , Html.span [ HA.class "count" ] [ Html.text (String.fromInt count) ]
-        , Html.text " "
-        , Html.text <|
-            if count == 1 then
-                singular
-
-            else
-                plural
-        , Html.text " "
-        , Html.text description
-        ]
-
-
 columnIcon : GitHub.ProjectColumn -> Html Msg
 columnIcon col =
     case col.purpose of
@@ -2329,8 +1905,8 @@ columnIcon col =
             Octicons.check { octiconOpts | color = Colors.green }
 
 
-addNoteTextareaId : GitHub.ID -> String
-addNoteTextareaId colId =
+focusId : GitHub.ID -> String
+focusId colId =
     "add-note-" ++ colId
 
 
@@ -2355,6 +1931,16 @@ viewProjectColumn model project col =
 
         addingNote =
             Dict.get col.id model.addingColumnNotes
+
+        draggableCard card =
+            let
+                dragId =
+                    Model.FromColumnCardSource { columnId = col.id, cardId = card.id }
+            in
+            [ CardView.viewProjectColumnCard model project col card
+                |> Drag.draggable model.projectDrag ProjectDrag dragId
+            , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+            ]
     in
     Html.div
         [ HA.class "project-column"
@@ -2386,7 +1972,7 @@ viewProjectColumn model project col =
 
                         Just note ->
                             [ viewAddingNote col note ]
-                    , List.concatMap (viewProjectColumnCard model project col) unarchived
+                    , List.concatMap draggableCard unarchived
                     ]
         , if List.isEmpty archived then
             Html.text ""
@@ -2405,7 +1991,7 @@ viewProjectColumn model project col =
                 , if Set.member col.id model.showArchivedCards then
                     Html.div [ HA.class "cards" ] <|
                         Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
-                            :: List.concatMap (viewProjectColumnCard model project col) archived
+                            :: List.concatMap draggableCard archived
 
                   else
                     Html.text ""
@@ -2439,9 +2025,9 @@ viewAddingNote col val =
             [ Html.form [ HA.class "write-note-form", HE.onSubmit (CreateColumnNote col.id) ]
                 [ Html.textarea
                     [ HA.placeholder "Enter a note"
-                    , HA.id (addNoteTextareaId col.id)
+                    , HA.id (focusId col.id)
                     , HE.onInput (SetCreatingColumnNote col.id)
-                    , onCtrlEnter (CreateColumnNote col.id)
+                    , Events.onCtrlEnter (CreateColumnNote col.id)
                     ]
                     [ Html.text val ]
                 , Html.div [ HA.class "buttons" ]
@@ -2463,124 +2049,6 @@ viewAddingNote col val =
                     ]
                 ]
             ]
-        ]
-
-
-onCtrlEnter : Msg -> Html.Attribute Msg
-onCtrlEnter msg =
-    HE.on "keydown"
-        << Keyboard.Event.considerKeyboardEvent
-    <|
-        \event ->
-            if (event.ctrlKey || event.metaKey) && event.keyCode == Keyboard.Key.Enter then
-                Just msg
-
-            else
-                Nothing
-
-
-deleteCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
-deleteCardControl model selfId deleteId =
-    if Set.member selfId model.deletingCards then
-        Html.div [ HA.class "with-confirm" ]
-            [ Html.span
-                [ HA.class "cancel-delete-card"
-                , onClickNoBubble (CancelDeleteCard selfId)
-                ]
-                [ Octicons.x octiconOpts
-                ]
-            , Html.span
-                [ HA.class "inline-confirm"
-                , onClickNoBubble (DeleteCard selfId deleteId)
-                ]
-                [ Octicons.check octiconOpts
-                ]
-            ]
-
-    else
-        Html.span
-            [ HA.class "delete-card"
-            , onClickNoBubble (ConfirmDeleteCard selfId)
-            ]
-            [ Octicons.trashcan octiconOpts
-            ]
-
-
-archiveCardControl : GitHub.ID -> Html Msg
-archiveCardControl archiveId =
-    Html.span
-        [ onClickNoBubble (SetCardArchived archiveId True)
-        ]
-        [ Octicons.archive octiconOpts
-        ]
-
-
-unarchiveCardControl : GitHub.ID -> Html Msg
-unarchiveCardControl archiveId =
-    Html.span
-        [ HA.class "unarchive"
-        , onClickNoBubble (SetCardArchived archiveId False)
-        ]
-        [ Octicons.archive octiconOpts
-        ]
-
-
-viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg)
-viewProjectColumnCard model project col ghCard =
-    let
-        dragId =
-            Model.FromColumnCardSource { columnId = col.id, cardId = ghCard.id }
-
-        dropCandidate =
-            { msgFunc = MoveCardAfter
-            , target =
-                { projectId = project.id
-                , columnId = col.id
-                , afterId = Just ghCard.id
-                }
-            }
-
-        card =
-            case ( ghCard.note, ghCard.contentId ) of
-                ( Just n, Nothing ) ->
-                    viewNote model project col ghCard n
-
-                ( Nothing, Just contentId ) ->
-                    case Dict.get contentId model.cards of
-                        Just c ->
-                            let
-                                controls =
-                                    if not (Card.isOpen c) then
-                                        [ deleteCardControl model c.id ghCard.id
-                                        , if ghCard.isArchived then
-                                            unarchiveCardControl ghCard.id
-
-                                          else
-                                            archiveCardControl ghCard.id
-                                        ]
-
-                                    else
-                                        [ deleteCardControl model c.id ghCard.id ]
-                            in
-                            viewCard model controls c
-
-                        Nothing ->
-                            viewLoadingCard
-
-                _ ->
-                    Html.text "impossible: card is neither note nor content"
-    in
-    [ Drag.draggable model.projectDrag ProjectDrag dragId card
-    , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
-    ]
-
-
-viewLoadingCard : Html Msg
-viewLoadingCard =
-    Html.div [ HA.class "card loading" ]
-        [ Html.div [ HA.class "card-icons" ] [ Octicons.sync octiconOpts ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "loading-text" ] [ Html.text "loading..." ] ]
         ]
 
 
@@ -2620,632 +2088,11 @@ viewSearch model =
         ]
 
 
-onClickNoBubble : msg -> Html.Attribute msg
-onClickNoBubble msg =
-    HE.custom "click" <|
-        JD.succeed
-            { message = msg
-            , stopPropagation = True
-            , preventDefault = True
-            }
-
-
-viewCardEntry : Model -> Card -> Html Msg
-viewCardEntry model card =
-    let
-        anticipated =
-            isAnticipated model card
-
-        controls =
-            if not anticipated then
-                [ Html.span
-                    [ onClickNoBubble (DeselectCard card.id)
-                    ]
-                    [ Octicons.x octiconOpts ]
-                ]
-
-            else
-                []
-
-        cardView =
-            viewCard model controls card
-
-        dragSource =
-            Model.NewContentCardSource { contentId = card.id }
-    in
-    Drag.draggable model.projectDrag ProjectDrag dragSource <|
-        cardView
-
-
 lastActiveUser : Model -> Card -> Maybe GitHub.User
 lastActiveUser model card =
     Dict.get card.id model.cardEvents
         |> Maybe.andThen List.head
         |> Maybe.andThen .user
-
-
-lastActivityIsByUser : Model -> String -> Card -> Bool
-lastActivityIsByUser model login card =
-    lastActiveUser model card
-        |> Maybe.map ((==) login << .login)
-        |> Maybe.withDefault False
-
-
-isAnticipated : Model -> Card -> Bool
-isAnticipated model card =
-    Set.member card.id model.anticipatedCards && not (OrderedSet.member card.id model.selectedCards)
-
-
-hasLabel : Model -> String -> Card -> Bool
-hasLabel model name card =
-    let
-        mlabelId =
-            Dict.get name model.labelToRepoToId
-                |> Maybe.andThen (Dict.get card.repo.id)
-    in
-    case mlabelId of
-        Just id ->
-            List.member id card.labels
-
-        Nothing ->
-            False
-
-
-viewCard : Model -> List (Html Msg) -> Card -> Html Msg
-viewCard model controls card =
-    Html.div
-        [ HA.class "card"
-        , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
-        , HA.tabindex 0
-        , HA.classList
-            [ ( "in-flight", Card.isInFlight card )
-            , ( "done", Card.isDone card )
-            , ( "icebox", Card.isIcebox card )
-            , ( "backlog", Card.isBacklog card )
-            , ( "paused", Card.isPaused card )
-            , ( "anticipated", isAnticipated model card )
-            , ( "highlighted", model.highlightedCard == Just card.id )
-            , ( Activity.class model.currentTime card.updatedAt, Card.isPR card )
-            , ( "last-activity-is-me"
-              , case model.me of
-                    Just { user } ->
-                        lastActivityIsByUser model user.login card
-
-                    Nothing ->
-                        False
-              )
-            ]
-        , HE.onClick (SelectCard card.id)
-        , HE.onMouseOver (HighlightNode card.id)
-        , HE.onMouseOut UnhighlightNode
-        ]
-        [ Html.div [ HA.class "card-icons" ] <|
-            List.concat
-                [ [ viewCardIcon card ]
-                , cardExternalIcons card
-                , [ pauseIcon card ]
-                , List.map
-                    (\{ avatar } ->
-                        Html.img [ HA.class "status-actor", HA.src avatar ] []
-                    )
-                    card.assignees
-                , prIcons model card
-                ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "card-title", HA.draggable "false" ] <|
-                [ Html.a
-                    [ HA.class "title-link"
-                    , HA.href card.url
-                    , HA.target "_blank"
-                    ]
-                    [ Html.text card.title
-                    ]
-                ]
-            , viewCardMeta card
-            , viewCardSquares model card
-            ]
-        , Html.div [ HA.class "card-controls" ] <|
-            Html.span
-                [ HE.onClick
-                    (if Card.isPR card then
-                        RefreshPullRequest card.id
-
-                     else
-                        RefreshIssue card.id
-                    )
-                ]
-                [ Octicons.sync octiconOpts ]
-                :: controls
-        ]
-
-
-viewNote : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> String -> Html Msg
-viewNote model project col card text =
-    let
-        controls =
-            [ deleteCardControl model card.id card.id
-            , Html.span [ HA.class "edit-note", onClickNoBubble (SetEditingCardNote card.id text) ]
-                [ Octicons.pencil octiconOpts
-                ]
-            ]
-    in
-    if Dict.member card.id model.editingCardNotes then
-        viewNoteCard model project col card controls text
-
-    else if String.startsWith "http" text then
-        Maybe.map (viewProjectCard model controls) (projectByUrl model text)
-            |> ME.orElseLazy (\_ -> Maybe.map (viewCard model controls) (cardByUrl model text))
-            |> Maybe.withDefault (viewNoteCard model project col card controls text)
-
-    else
-        viewNoteCard model project col card controls text
-
-
-projectByUrl : Model -> String -> Maybe GitHub.Project
-projectByUrl model url =
-    Dict.get url model.idsByUrl
-        |> Maybe.andThen (\id -> Dict.get id model.projects)
-
-
-cardByUrl : Model -> String -> Maybe Card
-cardByUrl model url =
-    Dict.get url model.idsByUrl
-        |> Maybe.andThen (\id -> Dict.get id model.cards)
-
-
-viewNoteCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> List (Html Msg) -> String -> Html Msg
-viewNoteCard model project col card controls text =
-    Html.div [ HA.class "editable-card" ]
-        [ Html.div
-            [ HA.class "card note"
-            , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
-            , HA.tabindex 0
-            , HA.classList
-                [ ( "in-flight", Project.detectColumn.inFlight col )
-                , ( "done", Project.detectColumn.done col )
-                , ( "backlog", Project.detectColumn.backlog col )
-                ]
-            ]
-            [ Html.div [ HA.class "card-icons" ]
-                [ Octicons.note octiconOpts
-                ]
-            , Dict.get card.id model.editingCardNotes
-                |> Maybe.withDefault text
-                |> Markdown.toHtml [ HA.class "card-info card-note" ]
-            , Html.div [ HA.class "card-controls" ] <|
-                Html.span
-                    [ HA.class "spin-on-column-refresh"
-                    , HE.onClick (RefreshColumn col.id)
-                    ]
-                    [ Octicons.sync octiconOpts ]
-                    :: controls
-            ]
-        , case Dict.get card.id model.editingCardNotes of
-            Nothing ->
-                Html.text ""
-
-            Just val ->
-                Html.div
-                    [ HA.class "edit-bubble"
-                    , HA.draggable "true"
-                    , HE.custom "dragstart" (JD.succeed { message = Noop, stopPropagation = True, preventDefault = True })
-                    ]
-                    [ Html.form [ HA.class "write-note-form", HE.onSubmit (UpdateCardNote card.id) ]
-                        [ Html.textarea
-                            [ HA.placeholder "Enter a note"
-                            , HA.id (addNoteTextareaId card.id)
-                            , HE.onInput (SetEditingCardNote card.id)
-                            , onCtrlEnter (UpdateCardNote card.id)
-                            ]
-                            [ Html.text val ]
-                        , Html.div [ HA.class "buttons" ]
-                            [ Html.button
-                                [ HA.class "button cancel"
-                                , HA.type_ "reset"
-                                , HE.onClick (CancelEditingCardNote card.id)
-                                ]
-                                [ Octicons.x octiconOpts
-                                , Html.text "cancel"
-                                ]
-                            , case project.owner of
-                                GitHub.ProjectOwnerRepo repoId ->
-                                    Html.button
-                                        [ HA.class "button convert-to-issue"
-                                        , HA.type_ "button"
-                                        , HE.onClick (ConvertEditingCardNoteToIssue card.id repoId)
-                                        ]
-                                        [ Octicons.issueOpened octiconOpts
-                                        , Html.text "convert to issue"
-                                        ]
-
-                                _ ->
-                                    Html.text ""
-                            , Html.button
-                                [ HA.class "button apply"
-                                , HA.type_ "submit"
-                                ]
-                                [ Octicons.check octiconOpts
-                                , Html.text "save"
-                                ]
-                            ]
-                        ]
-                    ]
-        ]
-
-
-viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
-viewProjectCard model controls project =
-    Html.div [ HA.class "card project", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.project { octiconOpts | color = Colors.gray }
-            , projectExternalIcon project
-            ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "card-title", HA.draggable "false" ]
-                [ Html.a [ HA.href ("/projects/" ++ project.id) ]
-                    [ Html.text project.name ]
-                ]
-            , if String.isEmpty project.body then
-                Html.text ""
-
-              else
-                Markdown.toHtml [ HA.class "project-body" ] project.body
-            , viewProjectBar model project
-            ]
-        , Html.div [ HA.class "card-controls" ] controls
-        ]
-
-
-viewProjectBar : Model -> GitHub.Project -> Html Msg
-viewProjectBar model project =
-    let
-        cardCount col =
-            Dict.get col.id model.columnCards
-                |> Maybe.map List.length
-                |> Maybe.withDefault 0
-
-        countPurpose purpose =
-            LE.find ((==) (Just purpose) << .purpose) project.columns
-                |> Maybe.map cardCount
-                |> Maybe.withDefault 0
-
-        toDos =
-            countPurpose GitHub.ProjectColumnPurposeToDo
-
-        inProgresses =
-            countPurpose GitHub.ProjectColumnPurposeInProgress
-
-        dones =
-            countPurpose GitHub.ProjectColumnPurposeDone
-
-        total =
-            toDos + inProgresses + dones
-
-        width base =
-            let
-                pct =
-                    (toFloat base / toFloat total) * 100
-            in
-            HA.style "width" (String.fromFloat pct ++ "%")
-
-        segment name val =
-            if val == 0 then
-                Html.text ""
-
-            else
-                Html.div [ HA.class ("segment " ++ name), width val ] []
-    in
-    if total > 0 then
-        Html.div [ HA.class "project-bar" ]
-            [ segment "done" dones
-            , segment "in-progress" inProgresses
-            , segment "to-do" toDos
-            ]
-
-    else
-        Html.text ""
-
-
-viewCardMeta : Card -> Html Msg
-viewCardMeta card =
-    Html.div [ HA.class "card-meta" ]
-        [ Html.a
-            [ HA.href card.url
-            , HA.target "_blank"
-            , HA.draggable "false"
-            ]
-            [ Html.text ("#" ++ String.fromInt card.number) ]
-        , Html.text " "
-        , Html.text "opened by "
-        , case card.author of
-            Just user ->
-                Html.a
-                    [ HA.href user.url
-                    , HA.target "_blank"
-                    , HA.draggable "false"
-                    ]
-                    [ Html.text user.login ]
-
-            _ ->
-                Html.text "(deleted user)"
-        ]
-
-
-viewCardSquares : Model -> Card -> Html Msg
-viewCardSquares model card =
-    Html.div [ HA.class "card-squares" ]
-        [ Html.div [ HA.class "card-labels" ] <|
-            List.map (searchableLabel model) card.labels
-                ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
-        , Html.div [ HA.class "card-actors" ] <|
-            List.map (viewEventActor model) (recentEvents model card)
-        ]
-
-
-pauseIcon : Card -> Html Msg
-pauseIcon card =
-    case ( Card.isInFlight card, Card.isPaused card ) of
-        ( _, True ) ->
-            Html.span
-                [ HA.class "pause-toggle"
-                , HE.onClick (UnlabelCard card "paused")
-                ]
-                [ Octicons.bookmark { octiconOpts | color = Colors.gray300 }
-                ]
-
-        ( True, False ) ->
-            Html.span
-                [ HA.class "pause-toggle"
-                , HE.onClick (LabelCard card "paused")
-                ]
-                [ Octicons.bookmark { octiconOpts | color = Colors.gray600 }
-                ]
-
-        _ ->
-            Html.text ""
-
-
-viewCardIcon : Card -> Html Msg
-viewCardIcon card =
-    if Card.isPR card then
-        Octicons.gitPullRequest
-            { octiconOpts
-                | color =
-                    if Card.isMerged card then
-                        Colors.purple
-
-                    else if Card.isOpen card then
-                        Colors.green
-
-                    else
-                        Colors.red
-            }
-
-    else if Card.isOpen card then
-        Octicons.issueOpened { octiconOpts | color = Colors.green }
-
-    else
-        Octicons.issueClosed { octiconOpts | color = Colors.red }
-
-
-projectExternalIcon : GitHub.Project -> Html Msg
-projectExternalIcon project =
-    Html.a
-        [ HA.target "_blank"
-        , HA.class "external-link"
-        , HA.href project.url
-        ]
-        [ Octicons.linkExternal octiconOpts ]
-
-
-cardExternalIcons : Card -> List (Html Msg)
-cardExternalIcons card =
-    List.map
-        (\{ url } ->
-            Html.a
-                [ HA.target "_blank"
-                , HA.class "external-link"
-                , HA.href url
-                ]
-                [ Octicons.linkExternal octiconOpts ]
-        )
-        card.cards
-
-
-summarizeContexts : List GitHub.StatusContext -> Html Msg
-summarizeContexts contexts =
-    let
-        states =
-            List.map .state contexts
-    in
-    if List.all ((==) GitHub.StatusStateSuccess) states then
-        Octicons.check { octiconOpts | color = Colors.green }
-
-    else if List.member GitHub.StatusStateFailure states then
-        Octicons.x { octiconOpts | color = Colors.red }
-
-    else if List.member GitHub.StatusStateError states then
-        Octicons.alert { octiconOpts | color = Colors.orange }
-
-    else if List.member GitHub.StatusStatePending states then
-        Octicons.primitiveDot { octiconOpts | color = Colors.yellow }
-
-    else
-        Octicons.question { octiconOpts | color = Colors.purple }
-
-
-prIcons : Model -> Card -> List (Html Msg)
-prIcons model card =
-    case card.content of
-        GitHub.IssueCardContent _ ->
-            []
-
-        GitHub.PullRequestCardContent pr ->
-            let
-                statusCheck =
-                    case Maybe.map .status pr.lastCommit of
-                        Just (Just { contexts }) ->
-                            Html.span [ HA.class "status-icon" ]
-                                [ summarizeContexts contexts
-                                ]
-
-                        _ ->
-                            Html.text ""
-
-                reviews =
-                    Maybe.withDefault [] <| Dict.get card.id model.prReviewers
-
-                reviewStates =
-                    List.map
-                        (\r ->
-                            let
-                                reviewClass =
-                                    case r.state of
-                                        GitHub.PullRequestReviewStatePending ->
-                                            "pending"
-
-                                        GitHub.PullRequestReviewStateApproved ->
-                                            "success"
-
-                                        GitHub.PullRequestReviewStateChangesRequested ->
-                                            "failure"
-
-                                        GitHub.PullRequestReviewStateCommented ->
-                                            "commented"
-
-                                        GitHub.PullRequestReviewStateDismissed ->
-                                            "dismissed"
-                            in
-                            Html.img [ HA.class ("status-actor " ++ reviewClass), HA.src r.author.avatar ] []
-                        )
-                        reviews
-            in
-            [ Octicons.gitMerge
-                { octiconOpts
-                    | color =
-                        case pr.mergeable of
-                            GitHub.MergeableStateMergeable ->
-                                Colors.green
-
-                            GitHub.MergeableStateConflicting ->
-                                Colors.red
-
-                            GitHub.MergeableStateUnknown ->
-                                Colors.yellow
-                }
-            , statusCheck
-            ]
-                ++ reviewStates
-
-
-recentEvents : Model -> Card -> List Backend.CardEvent
-recentEvents model card =
-    Dict.get card.id model.cardEvents
-        |> Maybe.withDefault []
-        |> List.take 3
-        |> List.reverse
-
-
-viewSuggestedLabel : Model -> Card -> String -> Html Msg
-viewSuggestedLabel model card name =
-    let
-        mlabelId =
-            Dict.get name model.labelToRepoToId
-                |> Maybe.andThen (Dict.get card.repo.id)
-
-        mlabel =
-            mlabelId
-                |> Maybe.andThen (\id -> Dict.get id model.allLabels)
-
-        has =
-            case mlabelId of
-                Just id ->
-                    List.member id card.labels
-
-                Nothing ->
-                    False
-    in
-    case mlabel of
-        Nothing ->
-            Html.text ""
-
-        Just { color } ->
-            Html.span
-                ([ HA.class "label suggested"
-                 , HE.onClick <|
-                    if has then
-                        UnlabelCard card name
-
-                    else
-                        LabelCard card name
-                 ]
-                    ++ Label.colorStyles model color
-                )
-                [ if has then
-                    Octicons.dash { octiconOpts | color = Colors.white }
-
-                  else
-                    Octicons.plus { octiconOpts | color = Colors.white }
-                , Html.span [ HA.class "label-text" ]
-                    [ Html.text name ]
-                ]
-
-
-viewLabel : Model -> GitHub.Label -> Html Msg
-viewLabel model label =
-    Html.span
-        (HA.class "label" :: Label.colorStyles model label.color)
-        [ Html.span [ HA.class "label-text" ]
-            [ Html.text label.name ]
-        ]
-
-
-searchableLabel : Model -> GitHub.ID -> Html Msg
-searchableLabel model labelId =
-    case Dict.get labelId model.allLabels of
-        Just label ->
-            Html.span [ HE.onClick (searchLabel model label.name) ]
-                [ viewLabel model label
-                ]
-
-        Nothing ->
-            Html.text ""
-
-
-viewEventActor : Model -> Backend.CardEvent -> Html Msg
-viewEventActor model { createdAt, avatar } =
-    Html.img
-        [ HA.class ("card-actor " ++ Activity.class model.currentTime createdAt)
-        , HA.src <|
-            if String.contains "?" avatar then
-                avatar ++ "&s=88"
-
-            else
-                avatar ++ "?s=88"
-        , HA.draggable "false"
-        ]
-        []
-
-
-randomizeColor : Model.SharedLabel -> Model.SharedLabel
-randomizeColor label =
-    let
-        currentColor =
-            Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex label.color
-
-        randomHex =
-            generateColor currentColor
-    in
-    { label | color = randomHex }
-
-
-generateColor : Int -> String
-generateColor seed =
-    let
-        ( randomColor, _ ) =
-            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed seed)
-    in
-    String.padLeft 6 '0' (ParseInt.toHex randomColor)
 
 
 handleEvent : String -> String -> Int -> Model -> Model

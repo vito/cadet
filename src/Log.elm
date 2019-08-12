@@ -10,7 +10,9 @@ debug ctx thing a =
 
 dump : String -> thing -> a -> a
 dump ctx thing a =
-    always a (Debug.log ctx (thing, a))
+    always a (Debug.log ctx ( thing, a ))
+
+
 
 -- debug : String -> err -> a -> a
 -- debug ctx err a =
