@@ -11896,7 +11896,7 @@ var author$project$Main$computeCardsView = function (model) {
 			openPRsByRepo: openPRsByRepo
 		});
 };
-var author$project$Main$hexBrightness = function (h) {
+var author$project$Label$hexBrightness = function (h) {
 	var _n0 = A2(elm$core$Basics$compare, h, (255 / 2) | 0);
 	switch (_n0.$) {
 		case 'LT':
@@ -11919,7 +11919,7 @@ var elm$regex$Regex$fromString = function (string) {
 		string);
 };
 var elm$regex$Regex$never = _Regex_never;
-var author$project$Main$hexRegex = A2(
+var author$project$Label$hexRegex = A2(
 	elm$core$Maybe$withDefault,
 	elm$regex$Regex$never,
 	elm$regex$Regex$fromString('([0-9a-fA-F]{2})([0-9a-fA-F]{2})([0-9a-fA-F]{2})'));
@@ -12022,9 +12022,9 @@ var fredcy$elm_parseint$ParseInt$parseIntRadix = F2(
 			fredcy$elm_parseint$ParseInt$InvalidRadix(radix));
 	});
 var fredcy$elm_parseint$ParseInt$parseIntHex = fredcy$elm_parseint$ParseInt$parseIntRadix(16);
-var author$project$Main$computeColorIsLight = function (hex) {
+var author$project$Label$computeColorIsLight = function (hex) {
 	var matches = elm$core$List$head(
-		A2(elm$regex$Regex$find, author$project$Main$hexRegex, hex));
+		A2(elm$regex$Regex$find, author$project$Label$hexRegex, hex));
 	var _n0 = A2(
 		elm$core$Maybe$map,
 		function ($) {
@@ -12049,7 +12049,7 @@ var author$project$Main$computeColorIsLight = function (hex) {
 			var h2 = _n5.a.a;
 			var _n6 = _n5.b;
 			var h3 = _n6.a.a;
-			return (((author$project$Main$hexBrightness(h1) + author$project$Main$hexBrightness(h2)) + author$project$Main$hexBrightness(h3)) > 0) ? true : false;
+			return (((author$project$Label$hexBrightness(h1) + author$project$Label$hexBrightness(h2)) + author$project$Label$hexBrightness(h3)) > 0) ? true : false;
 		} else {
 			return A3(author$project$Log$debug, 'invalid hex', hex, false);
 		}
@@ -12057,15 +12057,32 @@ var author$project$Main$computeColorIsLight = function (hex) {
 		return A3(author$project$Log$debug, 'invalid hex', hex, false);
 	}
 };
-var author$project$Main$warmColorLightnessCache = F2(
+var author$project$Label$warmColorLightnessCache = F2(
 	function (color, mb) {
 		if (mb.$ === 'Nothing') {
 			return elm$core$Maybe$Just(
-				author$project$Main$computeColorIsLight(color));
+				author$project$Label$computeColorIsLight(color));
 		} else {
 			return mb;
 		}
 	});
+var author$project$Label$cacheColorLightness = function (model) {
+	return _Utils_update(
+		model,
+		{
+			colorLightnessCache: A3(
+				elm$core$Dict$foldl,
+				F2(
+					function (_n0, label) {
+						return A2(
+							elm$core$Dict$update,
+							label.color,
+							author$project$Label$warmColorLightnessCache(label.color));
+					}),
+				model.colorLightnessCache,
+				model.allLabels)
+		});
+};
 var elm$core$Dict$singleton = F2(
 	function (key, value) {
 		return A5(elm$core$Dict$RBNode_elm_builtin, elm$core$Dict$Black, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
@@ -12086,8 +12103,8 @@ var author$project$Main$computeDataView = function (model) {
 	var reposByName = A3(
 		elm$core$Dict$foldl,
 		F2(
-			function (id, _n3) {
-				var name = _n3.name;
+			function (id, _n2) {
+				var name = _n2.name;
 				return A2(elm$core$Dict$insert, name, id);
 			}),
 		elm$core$Dict$empty,
@@ -12132,9 +12149,9 @@ var author$project$Main$computeDataView = function (model) {
 		elm$core$Dict$values(model.repoProjects));
 	var idsByUrl = A3(
 		elm$core$List$foldl,
-		function (_n2) {
-			var id = _n2.id;
-			var url = _n2.url;
+		function (_n1) {
+			var id = _n1.id;
+			var url = _n1.url;
 			return A2(elm$core$Dict$insert, url, id);
 		},
 		model.idsByUrl,
@@ -12149,7 +12166,7 @@ var author$project$Main$computeDataView = function (model) {
 	var allLabels = A3(
 		elm$core$Dict$foldl,
 		F3(
-			function (_n1, labels, als) {
+			function (_n0, labels, als) {
 				return A3(
 					elm$core$List$foldl,
 					function (label) {
@@ -12167,362 +12184,10 @@ var author$project$Main$computeDataView = function (model) {
 			}),
 		elm$core$Dict$empty,
 		model.repoLabels);
-	var colorLightnessCache = A3(
-		elm$core$Dict$foldl,
-		F2(
-			function (_n0, label) {
-				return A2(
-					elm$core$Dict$update,
-					label.color,
-					author$project$Main$warmColorLightnessCache(label.color));
-			}),
-		model.colorLightnessCache,
-		allLabels);
-	return _Utils_update(
-		model,
-		{allLabels: allLabels, colorLightnessCache: colorLightnessCache, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, reposByLabel: groupRepoLabels, reposByName: reposByName});
-};
-var author$project$Main$graphAllActivityCompare = F3(
-	function (model, a, b) {
-		var latestActivity = A2(
-			elm$core$List$foldl,
-			F2(
-				function (_n0, latest) {
-					var card = _n0.card;
-					var updated = elm$time$Time$posixToMillis(card.updatedAt);
-					var mlatest = A2(
-						elm$core$Maybe$map,
-						A2(
-							elm$core$Basics$composeR,
-							function ($) {
-								return $.createdAt;
-							},
-							elm$time$Time$posixToMillis),
-						A2(
-							elm$core$Maybe$andThen,
-							elm$core$List$head,
-							A2(elm$core$Dict$get, card.id, model.cardEvents)));
-					if (mlatest.$ === 'Just') {
-						var activity = mlatest.a;
-						return A2(elm$core$Basics$max, activity, latest);
-					} else {
-						return A2(elm$core$Basics$max, updated, latest);
-					}
-				}),
-			0);
-		return A2(
-			elm$core$Basics$compare,
-			latestActivity(a),
-			latestActivity(b));
-	});
-var author$project$Main$graphImpactCompare = F2(
-	function (a, b) {
-		var _n0 = A2(
-			elm$core$Basics$compare,
-			elm$core$List$length(a),
-			elm$core$List$length(b));
-		if (_n0.$ === 'EQ') {
-			var graphScore = A2(
-				elm$core$List$foldl,
-				F2(
-					function (_n1, sum) {
-						var card = _n1.card;
-						return card.score + sum;
-					}),
-				0);
-			return A2(
-				elm$core$Basics$compare,
-				graphScore(a),
-				graphScore(b));
-		} else {
-			var x = _n0;
-			return x;
-		}
-	});
-var elm_community$intdict$IntDict$foldl = F3(
-	function (f, acc, dict) {
-		foldl:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return acc;
-				case 'Leaf':
-					var l = dict.a;
-					return A3(f, l.key, l.value, acc);
-				default:
-					var i = dict.a;
-					var $temp$f = f,
-						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.left),
-						$temp$dict = i.right;
-					f = $temp$f;
-					acc = $temp$acc;
-					dict = $temp$dict;
-					continue foldl;
-			}
-		}
-	});
-var author$project$ForceGraph$fold = F3(
-	function (f, init, _n0) {
-		var nodes = _n0.nodes;
-		return A3(
-			elm_community$intdict$IntDict$foldl,
-			function (_n1) {
-				return f;
-			},
-			init,
-			nodes);
-	});
-var elm_community$intdict$IntDict$get = F2(
-	function (key, dict) {
-		get:
-		while (true) {
-			switch (dict.$) {
-				case 'Empty':
-					return elm$core$Maybe$Nothing;
-				case 'Leaf':
-					var l = dict.a;
-					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
-				default:
-					var i = dict.a;
-					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
-						return elm$core$Maybe$Nothing;
-					} else {
-						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
-							var $temp$key = key,
-								$temp$dict = i.right;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						} else {
-							var $temp$key = key,
-								$temp$dict = i.left;
-							key = $temp$key;
-							dict = $temp$dict;
-							continue get;
-						}
-					}
-			}
-		}
-	});
-var author$project$ForceGraph$get = F2(
-	function (id, _n0) {
-		var nodes = _n0.nodes;
-		return A2(elm_community$intdict$IntDict$get, id, nodes);
-	});
-var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
-	function (a, b) {
-		return {$: 'OrderedSet', a: a, b: b};
-	});
-var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
-var author$project$Main$baseGraphState = function (model) {
-	return {allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, currentTime: model.currentTime, highlightedNode: elm$core$Maybe$Nothing, prReviewers: model.prReviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
-};
-var author$project$Card$isPR = function (card) {
-	var _n0 = card.state;
-	if (_n0.$ === 'PullRequestState') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var author$project$Card$isUntriaged = function (card) {
-	return card.processState.hasTriageLabel;
-};
-var author$project$Main$hasLabelAndColor = F4(
-	function (model, name, color, card) {
-		var matchingLabels = A2(
-			elm$core$Dict$filter,
-			F2(
-				function (_n0, l) {
-					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
-				}),
-			model.allLabels);
-		return A2(
-			elm$core$List$any,
-			function (a) {
-				return A2(elm$core$Dict$member, a, matchingLabels);
-			},
-			card.labels);
-	});
-var author$project$Main$involvesUser = F3(
-	function (model, login, card) {
-		return A2(
-			elm$core$List$any,
-			A2(
-				elm$core$Basics$composeR,
-				function ($) {
-					return $.user;
-				},
-				A2(
-					elm$core$Basics$composeR,
-					elm$core$Maybe$map(
-						function ($) {
-							return $.login;
-						}),
-					elm$core$Basics$eq(
-						elm$core$Maybe$Just(login)))),
-			A2(
-				elm$core$Maybe$withDefault,
-				_List_Nil,
-				A2(elm$core$Dict$get, card.id, model.cardEvents)));
-	});
-var author$project$Main$isInProject = F2(
-	function (id, card) {
-		var matchesProject = function (_n0) {
-			var project = _n0.project;
-			return _Utils_eq(project.id, id);
-		};
-		return A2(elm$core$List$any, matchesProject, card.cards);
-	});
-var author$project$Main$satisfiesFilter = F3(
-	function (model, filter, card) {
-		switch (filter.$) {
-			case 'ExcludeAllFilter':
-				return false;
-			case 'InProjectFilter':
-				var id = filter.a;
-				return A2(author$project$Main$isInProject, id, card);
-			case 'HasLabelFilter':
-				var label = filter.a;
-				var color = filter.b;
-				return A4(author$project$Main$hasLabelAndColor, model, label, color, card);
-			case 'InvolvesUserFilter':
-				var login = filter.a;
-				return A3(author$project$Main$involvesUser, model, login, card);
-			case 'PullRequestsFilter':
-				return author$project$Card$isPR(card);
-			case 'IssuesFilter':
-				return !author$project$Card$isPR(card);
-			default:
-				return author$project$Card$isUntriaged(card);
-		}
-	});
-var elm$core$List$all = F2(
-	function (isOkay, list) {
-		return !A2(
-			elm$core$List$any,
-			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
-			list);
-	});
-var author$project$Main$satisfiesFilters = F3(
-	function (model, filters, card) {
-		return A2(
-			elm$core$List$all,
-			function (a) {
-				return A3(author$project$Main$satisfiesFilter, model, a, card);
-			},
-			filters);
-	});
-var elm$core$Set$member = F2(
-	function (key, _n0) {
-		var dict = _n0.a;
-		return A2(elm$core$Dict$member, key, dict);
-	});
-var author$project$Main$statefulGraph = F2(
-	function (model, fg) {
-		var allFilters = function () {
-			var _n5 = model.baseGraphFilter;
-			if (_n5.$ === 'Just') {
-				var f = _n5.a;
-				return A2(elm$core$List$cons, f, model.graphFilters);
-			} else {
-				return model.graphFilters;
-			}
-		}();
-		var _n0 = A3(
-			author$project$ForceGraph$fold,
-			F2(
-				function (node, _n1) {
-					var ns = _n1.a;
-					var ms = _n1.b;
-					var _n2 = A2(elm$core$Dict$get, node.value, model.cards);
-					if (_n2.$ === 'Just') {
-						var card = _n2.a;
-						var satisfies = A3(author$project$Main$satisfiesFilters, model, allFilters, card);
-						return _Utils_Tuple2(
-							A2(
-								elm$core$List$cons,
-								{card: card, filteredOut: !satisfies, mass: node.mass, x: node.x, y: node.y},
-								ns),
-							satisfies ? A2(elm$core$Set$insert, node.id, ms) : ms);
-					} else {
-						return _Utils_Tuple2(ns, ms);
-					}
-				}),
-			_Utils_Tuple2(_List_Nil, elm$core$Set$empty),
-			fg);
-		var nodes = _n0.a;
-		var matches = _n0.b;
-		var edges = A2(
-			elm$core$List$filterMap,
-			function (_n3) {
-				var from = _n3.a;
-				var to = _n3.b;
-				var _n4 = _Utils_Tuple2(
-					A2(author$project$ForceGraph$get, from, fg),
-					A2(author$project$ForceGraph$get, to, fg));
-				if ((_n4.a.$ === 'Just') && (_n4.b.$ === 'Just')) {
-					var fromNode = _n4.a.a;
-					var toNode = _n4.b.a;
-					return elm$core$Maybe$Just(
-						{
-							filteredOut: !(A2(elm$core$Set$member, from, matches) && A2(elm$core$Set$member, to, matches)),
-							source: {x: fromNode.x, y: fromNode.y},
-							target: {x: toNode.x, y: toNode.y}
-						});
-				} else {
-					return elm$core$Maybe$Nothing;
-				}
-			},
-			fg.edges);
-		return {
-			edges: edges,
-			matches: matches,
-			nodes: nodes,
-			state: author$project$Main$baseGraphState(model)
-		};
-	});
-var elm$core$List$sortWith = _List_sortWith;
-var elm$core$Dict$isEmpty = function (dict) {
-	if (dict.$ === 'RBEmpty_elm_builtin') {
-		return true;
-	} else {
-		return false;
-	}
-};
-var elm$core$Set$isEmpty = function (_n0) {
-	var dict = _n0.a;
-	return elm$core$Dict$isEmpty(dict);
-};
-var author$project$Main$computeGraphsView = function (model) {
-	var statefulGraphs = A2(
-		elm$core$List$map,
-		author$project$Main$statefulGraph(model),
-		model.graphs);
-	var sortFunc = F2(
-		function (a, b) {
-			var _n0 = model.graphSort;
-			if (_n0.$ === 'ImpactSort') {
-				return A2(author$project$Main$graphImpactCompare, a.nodes, b.nodes);
-			} else {
-				return A3(author$project$Main$graphAllActivityCompare, model, a.nodes, b.nodes);
-			}
-		});
-	var filteredGraphs = A2(
-		elm$core$List$filter,
-		A2(
-			elm$core$Basics$composeL,
-			A2(elm$core$Basics$composeL, elm$core$Basics$not, elm$core$Set$isEmpty),
-			function ($) {
-				return $.matches;
-			}),
-		statefulGraphs);
-	return _Utils_update(
-		model,
-		{
-			statefulGraphs: elm$core$List$reverse(
-				A2(elm$core$List$sortWith, sortFunc, filteredGraphs))
-		});
+	return author$project$Label$cacheColorLightness(
+		_Utils_update(
+			model,
+			{allLabels: allLabels, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, reposByLabel: groupRepoLabels, reposByName: reposByName}));
 };
 var author$project$Card$isMerged = function (card) {
 	return _Utils_eq(
@@ -12572,6 +12237,11 @@ var author$project$Main$hasLabel = F3(
 		} else {
 			return false;
 		}
+	});
+var elm$core$Set$member = F2(
+	function (key, _n0) {
+		var dict = _n0.a;
+		return A2(elm$core$Dict$member, key, dict);
 	});
 var elm_community$list_extra$List$Extra$uniqueHelp = F4(
 	function (f, existing, remaining, accumulator) {
@@ -12780,10 +12450,350 @@ var author$project$Main$computeReleaseRepos = function (model) {
 			releaseRepos: A3(elm$core$Dict$foldl, addReleaseRepo, elm$core$Dict$empty, model.repos)
 		});
 };
+var author$project$Model$InProjectFilter = function (a) {
+	return {$: 'InProjectFilter', a: a};
+};
+var author$project$StatefulGraph$graphAllActivityCompare = F3(
+	function (model, a, b) {
+		var latestActivity = A2(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, latest) {
+					var card = _n0.card;
+					var updated = elm$time$Time$posixToMillis(card.updatedAt);
+					var mlatest = A2(
+						elm$core$Maybe$map,
+						A2(
+							elm$core$Basics$composeR,
+							function ($) {
+								return $.createdAt;
+							},
+							elm$time$Time$posixToMillis),
+						A2(
+							elm$core$Maybe$andThen,
+							elm$core$List$head,
+							A2(elm$core$Dict$get, card.id, model.cardEvents)));
+					if (mlatest.$ === 'Just') {
+						var activity = mlatest.a;
+						return A2(elm$core$Basics$max, activity, latest);
+					} else {
+						return A2(elm$core$Basics$max, updated, latest);
+					}
+				}),
+			0);
+		return A2(
+			elm$core$Basics$compare,
+			latestActivity(a),
+			latestActivity(b));
+	});
+var author$project$StatefulGraph$graphImpactCompare = F2(
+	function (a, b) {
+		var _n0 = A2(
+			elm$core$Basics$compare,
+			elm$core$List$length(a),
+			elm$core$List$length(b));
+		if (_n0.$ === 'EQ') {
+			var graphScore = A2(
+				elm$core$List$foldl,
+				F2(
+					function (_n1, sum) {
+						var card = _n1.card;
+						return card.score + sum;
+					}),
+				0);
+			return A2(
+				elm$core$Basics$compare,
+				graphScore(a),
+				graphScore(b));
+		} else {
+			var x = _n0;
+			return x;
+		}
+	});
+var elm_community$intdict$IntDict$foldl = F3(
+	function (f, acc, dict) {
+		foldl:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return acc;
+				case 'Leaf':
+					var l = dict.a;
+					return A3(f, l.key, l.value, acc);
+				default:
+					var i = dict.a;
+					var $temp$f = f,
+						$temp$acc = A3(elm_community$intdict$IntDict$foldl, f, acc, i.left),
+						$temp$dict = i.right;
+					f = $temp$f;
+					acc = $temp$acc;
+					dict = $temp$dict;
+					continue foldl;
+			}
+		}
+	});
+var author$project$ForceGraph$fold = F3(
+	function (f, init, _n0) {
+		var nodes = _n0.nodes;
+		return A3(
+			elm_community$intdict$IntDict$foldl,
+			function (_n1) {
+				return f;
+			},
+			init,
+			nodes);
+	});
+var elm_community$intdict$IntDict$get = F2(
+	function (key, dict) {
+		get:
+		while (true) {
+			switch (dict.$) {
+				case 'Empty':
+					return elm$core$Maybe$Nothing;
+				case 'Leaf':
+					var l = dict.a;
+					return _Utils_eq(l.key, key) ? elm$core$Maybe$Just(l.value) : elm$core$Maybe$Nothing;
+				default:
+					var i = dict.a;
+					if (!A2(elm_community$intdict$IntDict$prefixMatches, i.prefix, key)) {
+						return elm$core$Maybe$Nothing;
+					} else {
+						if (A2(elm_community$intdict$IntDict$isBranchingBitSet, i.prefix, key)) {
+							var $temp$key = key,
+								$temp$dict = i.right;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						} else {
+							var $temp$key = key,
+								$temp$dict = i.left;
+							key = $temp$key;
+							dict = $temp$dict;
+							continue get;
+						}
+					}
+			}
+		}
+	});
+var author$project$ForceGraph$get = F2(
+	function (id, _n0) {
+		var nodes = _n0.nodes;
+		return A2(elm_community$intdict$IntDict$get, id, nodes);
+	});
+var y0hy0h$ordered_containers$OrderedSet$OrderedSet = F2(
+	function (a, b) {
+		return {$: 'OrderedSet', a: a, b: b};
+	});
+var y0hy0h$ordered_containers$OrderedSet$empty = A2(y0hy0h$ordered_containers$OrderedSet$OrderedSet, _List_Nil, elm$core$Dict$empty);
+var author$project$StatefulGraph$baseGraphState = function (model) {
+	return {allLabels: model.allLabels, anticipatedCards: elm$core$Set$empty, currentTime: model.currentTime, highlightedNode: elm$core$Maybe$Nothing, prReviewers: model.prReviewers, selectedCards: y0hy0h$ordered_containers$OrderedSet$empty};
+};
+var author$project$Card$isPR = function (card) {
+	var _n0 = card.state;
+	if (_n0.$ === 'PullRequestState') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var author$project$Card$isUntriaged = function (card) {
+	return card.processState.hasTriageLabel;
+};
+var author$project$StatefulGraph$hasLabelAndColor = F4(
+	function (model, name, color, card) {
+		var matchingLabels = A2(
+			elm$core$Dict$filter,
+			F2(
+				function (_n0, l) {
+					return _Utils_eq(l.name, name) && _Utils_eq(l.color, color);
+				}),
+			model.allLabels);
+		return A2(
+			elm$core$List$any,
+			function (a) {
+				return A2(elm$core$Dict$member, a, matchingLabels);
+			},
+			card.labels);
+	});
+var author$project$StatefulGraph$involvesUser = F3(
+	function (model, login, card) {
+		return A2(
+			elm$core$List$any,
+			A2(
+				elm$core$Basics$composeR,
+				function ($) {
+					return $.user;
+				},
+				A2(
+					elm$core$Basics$composeR,
+					elm$core$Maybe$map(
+						function ($) {
+							return $.login;
+						}),
+					elm$core$Basics$eq(
+						elm$core$Maybe$Just(login)))),
+			A2(
+				elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2(elm$core$Dict$get, card.id, model.cardEvents)));
+	});
+var author$project$StatefulGraph$isInProject = F2(
+	function (id, card) {
+		var matchesProject = function (_n0) {
+			var project = _n0.project;
+			return _Utils_eq(project.id, id);
+		};
+		return A2(elm$core$List$any, matchesProject, card.cards);
+	});
+var author$project$StatefulGraph$satisfiesFilter = F3(
+	function (model, filter, card) {
+		switch (filter.$) {
+			case 'ExcludeAllFilter':
+				return false;
+			case 'InProjectFilter':
+				var id = filter.a;
+				return A2(author$project$StatefulGraph$isInProject, id, card);
+			case 'HasLabelFilter':
+				var label = filter.a;
+				var color = filter.b;
+				return A4(author$project$StatefulGraph$hasLabelAndColor, model, label, color, card);
+			case 'InvolvesUserFilter':
+				var login = filter.a;
+				return A3(author$project$StatefulGraph$involvesUser, model, login, card);
+			case 'PullRequestsFilter':
+				return author$project$Card$isPR(card);
+			case 'IssuesFilter':
+				return !author$project$Card$isPR(card);
+			default:
+				return author$project$Card$isUntriaged(card);
+		}
+	});
+var elm$core$List$all = F2(
+	function (isOkay, list) {
+		return !A2(
+			elm$core$List$any,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, isOkay),
+			list);
+	});
+var author$project$StatefulGraph$satisfiesFilters = F3(
+	function (model, filters, card) {
+		return A2(
+			elm$core$List$all,
+			function (a) {
+				return A3(author$project$StatefulGraph$satisfiesFilter, model, a, card);
+			},
+			filters);
+	});
+var author$project$StatefulGraph$statefulGraph = F2(
+	function (model, fg) {
+		var allFilters = function () {
+			var _n5 = model.baseGraphFilter;
+			if (_n5.$ === 'Just') {
+				var f = _n5.a;
+				return A2(elm$core$List$cons, f, model.graphFilters);
+			} else {
+				return model.graphFilters;
+			}
+		}();
+		var _n0 = A3(
+			author$project$ForceGraph$fold,
+			F2(
+				function (node, _n1) {
+					var ns = _n1.a;
+					var ms = _n1.b;
+					var _n2 = A2(elm$core$Dict$get, node.value, model.cards);
+					if (_n2.$ === 'Just') {
+						var card = _n2.a;
+						var satisfies = A3(author$project$StatefulGraph$satisfiesFilters, model, allFilters, card);
+						return _Utils_Tuple2(
+							A2(
+								elm$core$List$cons,
+								{card: card, filteredOut: !satisfies, mass: node.mass, x: node.x, y: node.y},
+								ns),
+							satisfies ? A2(elm$core$Set$insert, node.id, ms) : ms);
+					} else {
+						return _Utils_Tuple2(ns, ms);
+					}
+				}),
+			_Utils_Tuple2(_List_Nil, elm$core$Set$empty),
+			fg);
+		var nodes = _n0.a;
+		var matches = _n0.b;
+		var edges = A2(
+			elm$core$List$filterMap,
+			function (_n3) {
+				var from = _n3.a;
+				var to = _n3.b;
+				var _n4 = _Utils_Tuple2(
+					A2(author$project$ForceGraph$get, from, fg),
+					A2(author$project$ForceGraph$get, to, fg));
+				if ((_n4.a.$ === 'Just') && (_n4.b.$ === 'Just')) {
+					var fromNode = _n4.a.a;
+					var toNode = _n4.b.a;
+					return elm$core$Maybe$Just(
+						{
+							filteredOut: !(A2(elm$core$Set$member, from, matches) && A2(elm$core$Set$member, to, matches)),
+							source: {x: fromNode.x, y: fromNode.y},
+							target: {x: toNode.x, y: toNode.y}
+						});
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			},
+			fg.edges);
+		return {
+			edges: edges,
+			matches: matches,
+			nodes: nodes,
+			state: author$project$StatefulGraph$baseGraphState(model)
+		};
+	});
+var elm$core$List$sortWith = _List_sortWith;
+var elm$core$Dict$isEmpty = function (dict) {
+	if (dict.$ === 'RBEmpty_elm_builtin') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var elm$core$Set$isEmpty = function (_n0) {
+	var dict = _n0.a;
+	return elm$core$Dict$isEmpty(dict);
+};
+var author$project$StatefulGraph$init = function (model) {
+	var statefulGraphs = A2(
+		elm$core$List$map,
+		author$project$StatefulGraph$statefulGraph(model),
+		model.graphs);
+	var sortFunc = F2(
+		function (a, b) {
+			var _n0 = model.graphSort;
+			if (_n0.$ === 'ImpactSort') {
+				return A2(author$project$StatefulGraph$graphImpactCompare, a.nodes, b.nodes);
+			} else {
+				return A3(author$project$StatefulGraph$graphAllActivityCompare, model, a.nodes, b.nodes);
+			}
+		});
+	var filteredGraphs = A2(
+		elm$core$List$filter,
+		A2(
+			elm$core$Basics$composeL,
+			A2(elm$core$Basics$composeL, elm$core$Basics$not, elm$core$Set$isEmpty),
+			function ($) {
+				return $.matches;
+			}),
+		statefulGraphs);
+	return _Utils_update(
+		model,
+		{
+			statefulGraphs: elm$core$List$reverse(
+				A2(elm$core$List$sortWith, sortFunc, filteredGraphs))
+		});
+};
 var y0hy0h$ordered_containers$OrderedSet$isEmpty = function (oset) {
 	return _Utils_eq(oset, y0hy0h$ordered_containers$OrderedSet$empty);
 };
-var author$project$Main$isBaseGraphState = F2(
+var author$project$StatefulGraph$isBaseGraphState = F2(
 	function (model, state) {
 		return _Utils_eq(state.currentTime, model.currentTime) && (elm$core$Set$isEmpty(state.anticipatedCards) && (y0hy0h$ordered_containers$OrderedSet$isEmpty(state.selectedCards) && _Utils_eq(state.highlightedNode, elm$core$Maybe$Nothing)));
 	});
@@ -12792,7 +12802,7 @@ var y0hy0h$ordered_containers$OrderedSet$member = F2(
 		var dict = _n0.b;
 		return A2(elm$core$Dict$member, key, dict);
 	});
-var author$project$Main$updateGraphStates = function (model) {
+var author$project$StatefulGraph$update = function (model) {
 	var newState = {allLabels: model.allLabels, anticipatedCards: model.anticipatedCards, currentTime: model.currentTime, highlightedNode: model.highlightedNode, prReviewers: model.prReviewers, selectedCards: model.selectedCards};
 	var affectedByState = elm$core$List$any(
 		function (_n0) {
@@ -12809,17 +12819,14 @@ var author$project$Main$updateGraphStates = function (model) {
 				function (sg) {
 					return affectedByState(sg.nodes) ? _Utils_update(
 						sg,
-						{state: newState}) : (A2(author$project$Main$isBaseGraphState, model, sg.state) ? sg : _Utils_update(
+						{state: newState}) : (A2(author$project$StatefulGraph$isBaseGraphState, model, sg.state) ? sg : _Utils_update(
 						sg,
 						{
-							state: author$project$Main$baseGraphState(model)
+							state: author$project$StatefulGraph$baseGraphState(model)
 						}));
 				},
 				model.statefulGraphs)
 		});
-};
-var author$project$Model$InProjectFilter = function (a) {
-	return {$: 'InProjectFilter', a: a};
 };
 var author$project$Main$computeViewForPage = function (model) {
 	var reset = _Utils_update(
@@ -12828,15 +12835,15 @@ var author$project$Main$computeViewForPage = function (model) {
 	var _n0 = model.page;
 	switch (_n0.$) {
 		case 'GlobalGraphPage':
-			return author$project$Main$updateGraphStates(
-				author$project$Main$computeGraphsView(reset));
+			return author$project$StatefulGraph$update(
+				author$project$StatefulGraph$init(reset));
 		case 'ProjectPage':
 			var id = _n0.a;
 			var _n1 = A2(elm$core$Dict$get, id, model.projects);
 			if (_n1.$ === 'Just') {
 				var project = _n1.a;
-				return author$project$Main$updateGraphStates(
-					author$project$Main$computeGraphsView(
+				return author$project$StatefulGraph$update(
+					author$project$StatefulGraph$init(
 						_Utils_update(
 							reset,
 							{
@@ -14156,7 +14163,7 @@ var author$project$Main$update = F2(
 				case 'SetCurrentTime':
 					var date = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{currentTime: date})),
@@ -14352,7 +14359,7 @@ var author$project$Main$update = F2(
 				case 'SearchCards':
 					var str = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14362,7 +14369,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'SelectAnticipatedCards':
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14373,7 +14380,7 @@ var author$project$Main$update = F2(
 				case 'SelectCard':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14382,7 +14389,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'ClearSelectedCards':
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{selectedCards: y0hy0h$ordered_containers$OrderedSet$empty})),
@@ -14390,7 +14397,7 @@ var author$project$Main$update = F2(
 				case 'DeselectCard':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14400,7 +14407,7 @@ var author$project$Main$update = F2(
 				case 'HighlightNode':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14409,7 +14416,7 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'UnhighlightNode':
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{highlightedNode: elm$core$Maybe$Nothing})),
@@ -14417,7 +14424,7 @@ var author$project$Main$update = F2(
 				case 'AnticipateCardFromNode':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14428,7 +14435,7 @@ var author$project$Main$update = F2(
 				case 'UnanticipateCardFromNode':
 					var id = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$updateGraphStates(
+						author$project$StatefulGraph$update(
 							_Utils_update(
 								model,
 								{
@@ -14440,7 +14447,7 @@ var author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						var me = msg.a.a;
 						return _Utils_Tuple2(
-							author$project$Main$updateGraphStates(
+							author$project$StatefulGraph$update(
 								_Utils_update(
 									model,
 									{me: me})),
@@ -14563,7 +14570,7 @@ var author$project$Main$update = F2(
 								elm$core$List$length(value)),
 							_Utils_Tuple2(
 								author$project$Main$computeViewForPage(
-									author$project$Main$computeGraphsView(
+									author$project$StatefulGraph$init(
 										_Utils_update(
 											model,
 											{graphs: value}))),
@@ -14929,7 +14936,7 @@ var author$project$Main$update = F2(
 				case 'AddFilter':
 					var filter = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$computeGraphsView(
+						author$project$StatefulGraph$init(
 							_Utils_update(
 								model,
 								{
@@ -14939,7 +14946,7 @@ var author$project$Main$update = F2(
 				case 'RemoveFilter':
 					var filter = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$computeGraphsView(
+						author$project$StatefulGraph$init(
 							_Utils_update(
 								model,
 								{
@@ -14952,14 +14959,14 @@ var author$project$Main$update = F2(
 				case 'SetGraphSort':
 					var sort = msg.a;
 					return _Utils_Tuple2(
-						author$project$Main$computeGraphsView(
+						author$project$StatefulGraph$init(
 							_Utils_update(
 								model,
 								{graphSort: sort})),
 						elm$core$Platform$Cmd$none);
 				case 'ToggleLabelFilters':
 					return _Utils_Tuple2(
-						author$project$Main$computeGraphsView(
+						author$project$StatefulGraph$init(
 							_Utils_update(
 								model,
 								{showLabelFilters: !model.showLabelFilters})),
@@ -17125,6 +17132,12 @@ var author$project$Main$unarchiveCardControl = function (archiveId) {
 				capitalist$elm_octicons$Octicons$archive(author$project$Main$octiconOpts)
 			]));
 };
+var author$project$Activity$class = F2(
+	function (now, date) {
+		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
+		var daysSinceLastUpdate = (delta / (((24 * 60) * 60) * 1000)) | 0;
+		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
+	});
 var author$project$Card$isBacklog = function (card) {
 	return card.processState.inBacklogColumn;
 };
@@ -17140,12 +17153,6 @@ var author$project$Card$isInFlight = function (card) {
 var author$project$Card$isPaused = function (card) {
 	return card.processState.hasPausedLabel;
 };
-var author$project$Main$activityClass = F2(
-	function (now, date) {
-		var delta = elm$time$Time$posixToMillis(now) - elm$time$Time$posixToMillis(date);
-		var daysSinceLastUpdate = (delta / (((24 * 60) * 60) * 1000)) | 0;
-		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
-	});
 var author$project$Main$cardExternalIcons = function (card) {
 	return A2(
 		elm$core$List$map,
@@ -17584,7 +17591,7 @@ var author$project$Main$searchLabel = F2(
 		return author$project$Model$SearchCards(
 			elm$core$String$isEmpty(model.cardSearch) ? ('label:' + name) : (model.cardSearch + (' label:' + name)));
 	});
-var author$project$Main$colorIsLight = F2(
+var author$project$Label$colorIsLight = F2(
 	function (model, hex) {
 		var _n0 = A2(elm$core$Dict$get, hex, model.colorLightnessCache);
 		if (_n0.$ === 'Just') {
@@ -17595,15 +17602,15 @@ var author$project$Main$colorIsLight = F2(
 				author$project$Log$debug,
 				'color lightness cache miss',
 				hex,
-				author$project$Main$computeColorIsLight(hex));
+				author$project$Label$computeColorIsLight(hex));
 		}
 	});
-var author$project$Main$labelColorStyles = F2(
+var author$project$Label$colorStyles = F2(
 	function (model, color) {
 		return _List_fromArray(
 			[
 				A2(elm$html$Html$Attributes$style, 'background-color', '#' + color),
-				A2(author$project$Main$colorIsLight, model, color) ? elm$html$Html$Attributes$class('light-label') : elm$html$Html$Attributes$class('dark-label')
+				A2(author$project$Label$colorIsLight, model, color) ? elm$html$Html$Attributes$class('light-label') : elm$html$Html$Attributes$class('dark-label')
 			]);
 	});
 var author$project$Main$viewLabel = F2(
@@ -17613,7 +17620,7 @@ var author$project$Main$viewLabel = F2(
 			A2(
 				elm$core$List$cons,
 				elm$html$Html$Attributes$class('label'),
-				A2(author$project$Main$labelColorStyles, model, label.color)),
+				A2(author$project$Label$colorStyles, model, label.color)),
 			_List_fromArray(
 				[
 					A2(
@@ -17657,7 +17664,7 @@ var author$project$Main$viewEventActor = F2(
 			_List_fromArray(
 				[
 					elm$html$Html$Attributes$class(
-					'card-actor ' + A2(author$project$Main$activityClass, model.currentTime, createdAt)),
+					'card-actor ' + A2(author$project$Activity$class, model.currentTime, createdAt)),
 					elm$html$Html$Attributes$src(
 					A2(elm$core$String$contains, '?', avatar) ? (avatar + '&s=88') : (avatar + '?s=88')),
 					elm$html$Html$Attributes$draggable('false')
@@ -17702,7 +17709,7 @@ var author$project$Main$viewSuggestedLabel = F3(
 							elm$html$Html$Events$onClick(
 							has ? A2(author$project$Model$UnlabelCard, card, name) : A2(author$project$Model$LabelCard, card, name))
 						]),
-					A2(author$project$Main$labelColorStyles, model, color)),
+					A2(author$project$Label$colorStyles, model, color)),
 				_List_fromArray(
 					[
 						has ? capitalist$elm_octicons$Octicons$dash(
@@ -17831,7 +17838,7 @@ var author$project$Main$viewCard = F3(
 								model.highlightedCard,
 								elm$core$Maybe$Just(card.id))),
 							_Utils_Tuple2(
-							A2(author$project$Main$activityClass, model.currentTime, card.updatedAt),
+							A2(author$project$Activity$class, model.currentTime, card.updatedAt),
 							author$project$Card$isPR(card)),
 							_Utils_Tuple2(
 							'last-activity-is-me',
@@ -19594,7 +19601,7 @@ var author$project$Main$viewArchivePage = function (model) {
 						A2(author$project$Main$groupEvents, model.currentZone, model.archive))))
 			]));
 };
-var author$project$Main$graphId = function (graph) {
+var author$project$StatefulGraph$graphId = function (graph) {
 	return A3(
 		elm$core$List$foldl,
 		F2(
@@ -19610,7 +19617,7 @@ var elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
 var elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
 var elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
 var elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
-var author$project$Main$linkPath = function (_n0) {
+var author$project$StatefulGraph$linkPath = function (_n0) {
 	var source = _n0.source;
 	var target = _n0.target;
 	var filteredOut = _n0.filteredOut;
@@ -19631,8 +19638,8 @@ var author$project$Main$linkPath = function (_n0) {
 			]),
 		_List_Nil);
 };
-var author$project$Main$flairRadiusBase = 20;
-var author$project$Main$cardRadiusWithFlair = F2(
+var author$project$StatefulGraph$flairRadiusBase = 20;
+var author$project$StatefulGraph$cardRadiusWithFlair = F2(
 	function (card, mass) {
 		var reactionCounts = A2(
 			elm$core$List$map,
@@ -19648,8 +19655,17 @@ var author$project$Main$cardRadiusWithFlair = F2(
 				}),
 			0,
 			A2(elm$core$List$cons, card.commentCount, reactionCounts));
-		return (mass + author$project$Main$flairRadiusBase) + highestFlair;
+		return (mass + author$project$StatefulGraph$flairRadiusBase) + highestFlair;
 	});
+var author$project$Model$AnticipateCardFromNode = function (a) {
+	return {$: 'AnticipateCardFromNode', a: a};
+};
+var author$project$Model$DeselectCard = function (a) {
+	return {$: 'DeselectCard', a: a};
+};
+var author$project$Model$UnanticipateCardFromNode = function (a) {
+	return {$: 'UnanticipateCardFromNode', a: a};
+};
 var elm$core$Basics$pi = _Basics_pi;
 var elm$core$List$repeatHelp = F3(
 	function (result, n, value) {
@@ -21316,7 +21332,7 @@ var gampleman$elm_visualization$Shape$Pie$pie = F2(
 				sortedIndices(data)).b);
 	});
 var gampleman$elm_visualization$Shape$pie = gampleman$elm_visualization$Shape$Pie$pie;
-var author$project$Main$cardLabelArcs = F3(
+var author$project$StatefulGraph$cardLabelArcs = F3(
 	function (allLabels, card, radius) {
 		var labelSegments = A2(
 			gampleman$elm_visualization$Shape$pie,
@@ -21359,15 +21375,6 @@ var author$project$Main$cardLabelArcs = F3(
 				},
 				card.labels));
 	});
-var author$project$Model$AnticipateCardFromNode = function (a) {
-	return {$: 'AnticipateCardFromNode', a: a};
-};
-var author$project$Model$DeselectCard = function (a) {
-	return {$: 'DeselectCard', a: a};
-};
-var author$project$Model$UnanticipateCardFromNode = function (a) {
-	return {$: 'UnanticipateCardFromNode', a: a};
-};
 var elm$svg$Svg$circle = elm$svg$Svg$trustedNode('circle');
 var elm$svg$Svg$g = elm$svg$Svg$trustedNode('g');
 var elm$svg$Svg$text = elm$virtual_dom$VirtualDom$text;
@@ -21394,15 +21401,15 @@ var elm$svg$Svg$Events$onMouseOver = function (msg) {
 		'mouseover',
 		elm$json$Json$Decode$succeed(msg));
 };
-var author$project$Main$viewCardCircle = F4(
+var author$project$StatefulGraph$viewCardCircle = F4(
 	function (node, labels, isHighlighted, isSelected) {
 		var scale = isHighlighted ? '1.1' : (node.filteredOut ? '0.5' : '1');
 		var radii = {
 			base: node.mass,
-			withFlair: A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass),
+			withFlair: A2(author$project$StatefulGraph$cardRadiusWithFlair, node.card, node.mass),
 			withoutFlair: node.mass
 		};
-		var labelArcs = A3(author$project$Main$cardLabelArcs, labels, node.card, node.mass);
+		var labelArcs = A3(author$project$StatefulGraph$cardLabelArcs, labels, node.card, node.mass);
 		var circle = A2(
 			elm$svg$Svg$g,
 			_List_Nil,
@@ -21449,9 +21456,10 @@ var author$project$Main$viewCardCircle = F4(
 				]),
 			A2(elm$core$List$cons, circle, labelArcs));
 	});
-var author$project$Main$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
+var author$project$StatefulGraph$emptyArc = {cornerRadius: 0, endAngle: 0, innerRadius: 0, outerRadius: 0, padAngle: 0, padRadius: 0, startAngle: 0};
+var author$project$StatefulGraph$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
 var elm$svg$Svg$foreignObject = elm$svg$Svg$trustedNode('foreignObject');
-var author$project$Main$reactionFlairArcs = F3(
+var author$project$StatefulGraph$reactionFlairArcs = F3(
 	function (reviews, card, radius) {
 		var reactionTypeEmoji = function (type_) {
 			switch (type_.$) {
@@ -21507,27 +21515,27 @@ var author$project$Main$reactionFlairArcs = F3(
 													case 'StatusStatePending':
 														return capitalist$elm_octicons$Octicons$primitiveDot(
 															_Utils_update(
-																author$project$Main$octiconOpts,
+																author$project$StatefulGraph$octiconOpts,
 																{color: author$project$Colors$yellow}));
 													case 'StatusStateSuccess':
 														return capitalist$elm_octicons$Octicons$check(
 															_Utils_update(
-																author$project$Main$octiconOpts,
+																author$project$StatefulGraph$octiconOpts,
 																{color: author$project$Colors$green}));
 													case 'StatusStateFailure':
 														return capitalist$elm_octicons$Octicons$x(
 															_Utils_update(
-																author$project$Main$octiconOpts,
+																author$project$StatefulGraph$octiconOpts,
 																{color: author$project$Colors$red}));
 													case 'StatusStateExpected':
 														return capitalist$elm_octicons$Octicons$question(
 															_Utils_update(
-																author$project$Main$octiconOpts,
+																author$project$StatefulGraph$octiconOpts,
 																{color: author$project$Colors$purple}));
 													default:
 														return capitalist$elm_octicons$Octicons$alert(
 															_Utils_update(
-																author$project$Main$octiconOpts,
+																author$project$StatefulGraph$octiconOpts,
 																{color: author$project$Colors$orange}));
 												}
 											}()
@@ -21594,7 +21602,7 @@ var author$project$Main$reactionFlairArcs = F3(
 								]),
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$gitMerge(author$project$Main$octiconOpts)
+									capitalist$elm_octicons$Octicons$gitMerge(author$project$StatefulGraph$octiconOpts)
 								])),
 						function () {
 							var _n6 = pr.mergeable;
@@ -21634,13 +21642,13 @@ var author$project$Main$reactionFlairArcs = F3(
 				A2(
 					elm$core$List$cons,
 					_Utils_Tuple3(
-						capitalist$elm_octicons$Octicons$comment(author$project$Main$octiconOpts),
+						capitalist$elm_octicons$Octicons$comment(author$project$StatefulGraph$octiconOpts),
 						'comments',
 						card.commentCount),
 					emojiReactions)));
 		var segments = A2(
 			gampleman$elm_visualization$Shape$pie,
-			{cornerRadius: 3, endAngle: 2 * elm$core$Basics$pi, innerRadius: radius, outerRadius: radius + author$project$Main$flairRadiusBase, padAngle: 3.0e-2, padRadius: 0, sortingFn: elm$core$Basics$compare, startAngle: 0, valueFn: elm$core$Basics$identity},
+			{cornerRadius: 3, endAngle: 2 * elm$core$Basics$pi, innerRadius: radius, outerRadius: radius + author$project$StatefulGraph$flairRadiusBase, padAngle: 3.0e-2, padRadius: 0, sortingFn: elm$core$Basics$compare, startAngle: 0, valueFn: elm$core$Basics$identity},
 			A2(
 				elm$core$List$repeat,
 				elm$core$List$length(flairs),
@@ -21659,7 +21667,7 @@ var author$project$Main$reactionFlairArcs = F3(
 						author$project$Log$debug,
 						'impossible: empty segments',
 						_Utils_Tuple2(i, segments),
-						author$project$Main$emptyArc);
+						author$project$StatefulGraph$emptyArc);
 				}
 			});
 		return function (a) {
@@ -21711,16 +21719,16 @@ var author$project$Main$reactionFlairArcs = F3(
 							]));
 				}));
 	});
-var author$project$Main$viewCardFlair = F4(
+var author$project$StatefulGraph$viewCardFlair = F4(
 	function (node, currentTime, isHighlighted, prReviewers) {
 		var scale = isHighlighted ? '1.1' : (node.filteredOut ? '0.5' : '1');
 		var radii = {
 			base: node.mass,
-			withFlair: A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass),
+			withFlair: A2(author$project$StatefulGraph$cardRadiusWithFlair, node.card, node.mass),
 			withoutFlair: node.mass
 		};
 		var flairArcs = A3(
-			author$project$Main$reactionFlairArcs,
+			author$project$StatefulGraph$reactionFlairArcs,
 			A2(
 				elm$core$Maybe$withDefault,
 				_List_Nil,
@@ -21730,7 +21738,7 @@ var author$project$Main$viewCardFlair = F4(
 		var classes = _List_fromArray(
 			[
 				'flair',
-				A2(author$project$Main$activityClass, currentTime, node.card.updatedAt),
+				A2(author$project$Activity$class, currentTime, node.card.updatedAt),
 				node.filteredOut ? 'filtered-out' : 'filtered-in'
 			]);
 		var anticipateRadius = elm$core$List$isEmpty(node.card.labels) ? (radii.base + 5) : (radii.withoutFlair + 5);
@@ -21759,12 +21767,12 @@ var author$project$Main$viewCardFlair = F4(
 	});
 var elm$virtual_dom$VirtualDom$lazy4 = _VirtualDom_lazy4;
 var elm$svg$Svg$Lazy$lazy4 = elm$virtual_dom$VirtualDom$lazy4;
-var author$project$Main$viewNodeLowerUpper = F3(
+var author$project$StatefulGraph$viewNodeLowerUpper = F3(
 	function (state, node, _n0) {
 		var fs = _n0.a;
 		var ns = _n0.b;
 		var bs = _n0.c;
-		var radiiWithFlair = A2(author$project$Main$cardRadiusWithFlair, node.card, node.mass);
+		var radiiWithFlair = A2(author$project$StatefulGraph$cardRadiusWithFlair, node.card, node.mass);
 		var isSelected = A2(y0hy0h$ordered_containers$OrderedSet$member, node.card.id, state.selectedCards);
 		var isHighlighted = A2(elm$core$Set$member, node.card.id, state.anticipatedCards) || _Utils_eq(
 			state.highlightedNode,
@@ -21775,13 +21783,13 @@ var author$project$Main$viewNodeLowerUpper = F3(
 				elm$core$List$cons,
 				_Utils_Tuple2(
 					node.card.id,
-					A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardFlair, node, state.currentTime, isHighlighted, state.prReviewers)),
+					A5(elm$svg$Svg$Lazy$lazy4, author$project$StatefulGraph$viewCardFlair, node, state.currentTime, isHighlighted, state.prReviewers)),
 				fs),
 			A2(
 				elm$core$List$cons,
 				_Utils_Tuple2(
 					node.card.id,
-					A5(elm$svg$Svg$Lazy$lazy4, author$project$Main$viewCardCircle, node, state.allLabels, isHighlighted, isSelected)),
+					A5(elm$svg$Svg$Lazy$lazy4, author$project$StatefulGraph$viewCardCircle, node, state.allLabels, isHighlighted, isSelected)),
 				ns),
 			A2(elm$core$List$cons, bounds, bs));
 	});
@@ -21793,12 +21801,12 @@ var elm$virtual_dom$VirtualDom$keyedNodeNS = F2(
 			_VirtualDom_noScript(tag));
 	});
 var elm$svg$Svg$Keyed$node = elm$virtual_dom$VirtualDom$keyedNodeNS('http://www.w3.org/2000/svg');
-var author$project$Main$viewGraph = function (graph) {
+var author$project$StatefulGraph$viewGraph = function (graph) {
 	var padding = 10;
-	var links = A2(elm$core$List$map, author$project$Main$linkPath, graph.edges);
+	var links = A2(elm$core$List$map, author$project$StatefulGraph$linkPath, graph.edges);
 	var _n0 = A3(
 		elm$core$List$foldl,
-		author$project$Main$viewNodeLowerUpper(graph.state),
+		author$project$StatefulGraph$viewNodeLowerUpper(graph.state),
 		_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
 		graph.nodes);
 	var flairs = _n0.a;
@@ -21879,10 +21887,6 @@ var author$project$Main$viewGraph = function (graph) {
 				nodes)
 			]));
 };
-var author$project$Main$hasFilter = F2(
-	function (model, filter) {
-		return A2(elm$core$List$member, filter, model.graphFilters);
-	});
 var author$project$Model$AddFilter = function (a) {
 	return {$: 'AddFilter', a: a};
 };
@@ -21907,6 +21911,10 @@ var author$project$Model$SetLabelSearch = function (a) {
 };
 var author$project$Model$ToggleLabelFilters = {$: 'ToggleLabelFilters'};
 var author$project$Model$UntriagedFilter = {$: 'UntriagedFilter'};
+var author$project$StatefulGraph$hasFilter = F2(
+	function (model, filter) {
+		return A2(elm$core$List$member, filter, model.graphFilters);
+	});
 var capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
 var capitalist$elm_octicons$Octicons$clock = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
 var capitalist$elm_octicons$Octicons$commentDiscussionPath = 'M15,1 L6,1 C5.45,1 5,1.45 5,2 L5,4 L1,4 C0.45,4 0,4.45 0,5 L0,11 C0,11.55 0.45,12 1,12 L2,12 L2,15 L5,12 L9,12 C9.55,12 10,11.55 10,11 L10,9 L11,9 L14,12 L14,9 L15,9 C15.55,9 16,8.55 16,8 L16,2 C16,1.45 15.55,1 15,1 L15,1 Z M9,11 L4.5,11 L3,12.5 L3,11 L1,11 L1,5 L5,5 L5,8 C5,8.55 5.45,9 6,9 L9,9 L9,11 L9,11 Z M15,8 L13,8 L13,9.5 L11.5,8 L6,8 L6,2 L15,2 L15,8 L15,8 Z';
@@ -21915,7 +21923,7 @@ var capitalist$elm_octicons$Octicons$flamePath = 'M5.05,0.31 C5.86,2.48 5.46,3.6
 var capitalist$elm_octicons$Octicons$flame = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$flamePath, '0 0 12 16', 'flame');
 var capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
 var capitalist$elm_octicons$Octicons$inbox = A3(capitalist$elm_octicons$Octicons$pathIconWithOptions, capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
-var author$project$Main$viewGraphControls = function (model) {
+var author$project$StatefulGraph$viewGraphControls = function (model) {
 	var labelFilters = A2(
 		elm$core$List$filterMap,
 		function (filter) {
@@ -21932,10 +21940,10 @@ var author$project$Main$viewGraphControls = function (model) {
 									elm$html$Html$Events$onClick(
 									author$project$Model$RemoveFilter(filter))
 								]),
-							A2(author$project$Main$labelColorStyles, model, color)),
+							A2(author$project$Label$colorStyles, model, color)),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+								capitalist$elm_octicons$Octicons$tag(author$project$StatefulGraph$octiconOpts),
 								elm$html$Html$text(name)
 							])));
 			} else {
@@ -21972,10 +21980,10 @@ var author$project$Main$viewGraphControls = function (model) {
 										author$project$Model$AddFilter(
 											A2(author$project$Model$HasLabelFilter, name, color)))
 									]),
-								A2(author$project$Main$labelColorStyles, model, color)),
+								A2(author$project$Label$colorStyles, model, color)),
 							_List_fromArray(
 								[
-									capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+									capitalist$elm_octicons$Octicons$tag(author$project$StatefulGraph$octiconOpts),
 									elm$html$Html$text(name)
 								]))
 						]))) : elm$core$Maybe$Nothing;
@@ -22019,14 +22027,14 @@ var author$project$Main$viewGraphControls = function (model) {
 												_Utils_Tuple2('control-setting', true),
 												_Utils_Tuple2(
 												'active',
-												A2(author$project$Main$hasFilter, model, filter))
+												A2(author$project$StatefulGraph$hasFilter, model, filter))
 											])),
 										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
+										A2(author$project$StatefulGraph$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
 									]),
 								_List_fromArray(
 									[
-										capitalist$elm_octicons$Octicons$inbox(author$project$Main$octiconOpts),
+										capitalist$elm_octicons$Octicons$inbox(author$project$StatefulGraph$octiconOpts),
 										elm$html$Html$text('untriaged')
 									]));
 						}(),
@@ -22042,14 +22050,14 @@ var author$project$Main$viewGraphControls = function (model) {
 												_Utils_Tuple2('control-setting', true),
 												_Utils_Tuple2(
 												'active',
-												A2(author$project$Main$hasFilter, model, filter))
+												A2(author$project$StatefulGraph$hasFilter, model, filter))
 											])),
 										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
+										A2(author$project$StatefulGraph$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
 									]),
 								_List_fromArray(
 									[
-										capitalist$elm_octicons$Octicons$issueOpened(author$project$Main$octiconOpts),
+										capitalist$elm_octicons$Octicons$issueOpened(author$project$StatefulGraph$octiconOpts),
 										elm$html$Html$text('issues')
 									]));
 						}(),
@@ -22065,14 +22073,14 @@ var author$project$Main$viewGraphControls = function (model) {
 												_Utils_Tuple2('control-setting', true),
 												_Utils_Tuple2(
 												'active',
-												A2(author$project$Main$hasFilter, model, filter))
+												A2(author$project$StatefulGraph$hasFilter, model, filter))
 											])),
 										elm$html$Html$Events$onClick(
-										A2(author$project$Main$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
+										A2(author$project$StatefulGraph$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
 									]),
 								_List_fromArray(
 									[
-										capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
+										capitalist$elm_octicons$Octicons$gitPullRequest(author$project$StatefulGraph$octiconOpts),
 										elm$html$Html$text('pull requests')
 									]));
 						}(),
@@ -22091,14 +22099,14 @@ var author$project$Main$viewGraphControls = function (model) {
 													_Utils_Tuple2('control-setting', true),
 													_Utils_Tuple2(
 													'active',
-													A2(author$project$Main$hasFilter, model, filter))
+													A2(author$project$StatefulGraph$hasFilter, model, filter))
 												])),
 											elm$html$Html$Events$onClick(
-											A2(author$project$Main$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
+											A2(author$project$StatefulGraph$hasFilter, model, filter) ? author$project$Model$RemoveFilter(filter) : author$project$Model$AddFilter(filter))
 										]),
 									_List_fromArray(
 										[
-											capitalist$elm_octicons$Octicons$commentDiscussion(author$project$Main$octiconOpts),
+											capitalist$elm_octicons$Octicons$commentDiscussion(author$project$StatefulGraph$octiconOpts),
 											elm$html$Html$text('involving me')
 										]));
 							} else {
@@ -22156,7 +22164,7 @@ var author$project$Main$viewGraphControls = function (model) {
 										]),
 									_List_fromArray(
 										[
-											capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
+											capitalist$elm_octicons$Octicons$tag(author$project$StatefulGraph$octiconOpts),
 											elm$html$Html$text('label')
 										]))
 								]))
@@ -22197,7 +22205,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$flame(author$project$Main$octiconOpts),
+								capitalist$elm_octicons$Octicons$flame(author$project$StatefulGraph$octiconOpts),
 								elm$html$Html$text('impact')
 							])),
 						A2(
@@ -22217,7 +22225,7 @@ var author$project$Main$viewGraphControls = function (model) {
 							]),
 						_List_fromArray(
 							[
-								capitalist$elm_octicons$Octicons$clock(author$project$Main$octiconOpts),
+								capitalist$elm_octicons$Octicons$clock(author$project$StatefulGraph$octiconOpts),
 								elm$html$Html$text('all activity')
 							]))
 					]))
@@ -22230,7 +22238,7 @@ var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
 var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
 var elm$virtual_dom$VirtualDom$lazy = _VirtualDom_lazy;
 var elm$html$Html$Lazy$lazy = elm$virtual_dom$VirtualDom$lazy;
-var author$project$Main$viewSpatialGraph = function (model) {
+var author$project$StatefulGraph$view = function (model) {
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
@@ -22239,7 +22247,7 @@ var author$project$Main$viewSpatialGraph = function (model) {
 			]),
 		_List_fromArray(
 			[
-				author$project$Main$viewGraphControls(model),
+				author$project$StatefulGraph$viewGraphControls(model),
 				A3(
 				elm$html$Html$Keyed$node,
 				'div',
@@ -22251,8 +22259,8 @@ var author$project$Main$viewSpatialGraph = function (model) {
 					elm$core$List$map,
 					function (graph) {
 						return _Utils_Tuple2(
-							author$project$Main$graphId(graph),
-							A2(elm$html$Html$Lazy$lazy, author$project$Main$viewGraph, graph));
+							author$project$StatefulGraph$graphId(graph),
+							A2(elm$html$Html$Lazy$lazy, author$project$StatefulGraph$viewGraph, graph));
 					},
 					model.statefulGraphs))
 			]));
@@ -22277,7 +22285,7 @@ var author$project$Main$viewGlobalGraphPage = function (model) {
 						capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
 						elm$html$Html$text('Issue Graph')
 					])),
-				author$project$Main$viewSpatialGraph(model)
+				author$project$StatefulGraph$view(model)
 			]));
 };
 var author$project$Main$includesLabel = F3(
@@ -22390,7 +22398,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																A2(author$project$Main$searchLabel, model, label.name))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.color)),
+														A2(author$project$Label$colorStyles, model, label.color)),
 													_List_fromArray(
 														[
 															capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts)
@@ -22403,7 +22411,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																author$project$Model$SetLabelColor(label.color))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.color)),
+														A2(author$project$Label$colorStyles, model, label.color)),
 													_List_fromArray(
 														[
 															capitalist$elm_octicons$Octicons$paintcan(author$project$Main$octiconOpts)
@@ -22417,7 +22425,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																A2(author$project$Main$searchLabel, model, label.name))
 															]),
-														A2(author$project$Main$labelColorStyles, model, label.color)),
+														A2(author$project$Label$colorStyles, model, label.color)),
 													_List_fromArray(
 														[
 															A2(
@@ -22453,7 +22461,7 @@ var author$project$Main$viewLabelRow = F3(
 																elm$html$Html$Events$onClick(
 																author$project$Model$RandomizeLabelColor(label))
 															]),
-														A2(author$project$Main$labelColorStyles, model, newLabel.color)),
+														A2(author$project$Label$colorStyles, model, newLabel.color)),
 													_List_fromArray(
 														[
 															capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
@@ -22467,7 +22475,7 @@ var author$project$Main$viewLabelRow = F3(
 																author$project$Model$SetLabelName(label)),
 																elm$html$Html$Attributes$value(newLabel.name)
 															]),
-														A2(author$project$Main$labelColorStyles, model, newLabel.color)),
+														A2(author$project$Label$colorStyles, model, newLabel.color)),
 													_List_Nil)
 												]));
 									}
@@ -22760,7 +22768,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 													elm$html$Html$Attributes$class('label-icon'),
 													elm$html$Html$Events$onClick(author$project$Model$RandomizeNewLabelColor)
 												]),
-											A2(author$project$Main$labelColorStyles, model, model.newLabel.color)),
+											A2(author$project$Label$colorStyles, model, model.newLabel.color)),
 										_List_fromArray(
 											[
 												capitalist$elm_octicons$Octicons$sync(author$project$Main$octiconOpts)
@@ -22773,7 +22781,7 @@ var author$project$Main$viewLabelsPage = function (model) {
 													elm$html$Html$Events$onInput(author$project$Model$SetNewLabelName),
 													elm$html$Html$Attributes$value(model.newLabel.name)
 												]),
-											A2(author$project$Main$labelColorStyles, model, model.newLabel.color)),
+											A2(author$project$Label$colorStyles, model, model.newLabel.color)),
 										_List_Nil)
 									]))
 							]))
@@ -22912,7 +22920,7 @@ var author$project$Main$viewProjectPage = F2(
 											capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
 											elm$html$Html$text(project.name + ' Graph')
 										])),
-									author$project$Main$viewSpatialGraph(model)
+									author$project$StatefulGraph$view(model)
 								]))
 						]))
 				]));
@@ -23852,7 +23860,7 @@ var author$project$Main$viewSidebarControls = function (model) {
 									author$project$Model$AddFilter(
 										A2(author$project$Model$HasLabelFilter, name, color)))
 								]),
-							A2(author$project$Main$labelColorStyles, model, color)),
+							A2(author$project$Label$colorStyles, model, color)),
 						_List_fromArray(
 							[
 								A2(
