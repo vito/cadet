@@ -1098,30 +1098,12 @@ viewNavBar : Model -> Html Msg
 viewNavBar model =
     Html.div [ HA.class "nav-bar" ]
         [ Html.div [ HA.class "nav" ]
-            [ Html.a [ HA.class "button", HA.href "/" ]
-                [ Octicons.project octiconOpts
-                , hideLabel "Projects"
-                ]
-            , Html.a [ HA.class "button", HA.href "/archive" ]
-                [ Octicons.history octiconOpts
-                , hideLabel "Archive"
-                ]
-            , Html.a [ HA.class "button", HA.href "/release" ]
-                [ Octicons.milestone octiconOpts
-                , hideLabel "Release"
-                ]
-            , Html.a [ HA.class "button", HA.href "/pull-requests" ]
-                [ Octicons.gitPullRequest octiconOpts
-                , hideLabel "PRs"
-                ]
-            , Html.a [ HA.class "button", HA.href "/graph" ]
-                [ Octicons.circuitBoard octiconOpts
-                , hideLabel "Graph"
-                ]
-            , Html.a [ HA.class "button", HA.href "/labels" ]
-                [ Octicons.tag octiconOpts
-                , hideLabel "Labels"
-                ]
+            [ navButton model Octicons.project "Projects" "/projects"
+            , navButton model Octicons.history "Archive" "/archive"
+            , navButton model Octicons.milestone "Release" "/release"
+            , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
+            , navButton model Octicons.circuitBoard "Graph" "/graph"
+            , navButton model Octicons.tag "Labels" "/labels"
             ]
         , case model.me of
             Nothing ->
@@ -1136,6 +1118,47 @@ viewNavBar model =
                     , hideLabel user.login
                     ]
         , viewSearch model
+        ]
+
+
+navButton : Model -> (Octicons.Options -> Html Msg) -> String -> String -> Html Msg
+navButton model icon label route =
+    let
+        active =
+            case model.page of
+                AllProjectsPage ->
+                    label == "Projects"
+
+                ProjectPage _ ->
+                    label == "Projects"
+
+                GlobalGraphPage ->
+                    label == "Graph"
+
+                ArchivePage ->
+                    label == "Archive"
+
+                LabelsPage ->
+                    label == "Labels"
+
+                ReleasePage ->
+                    label == "Release"
+
+                ReleaseRepoPage _ _ ->
+                    label == "Release"
+
+                PullRequestsPage ->
+                    label == "PRs"
+
+                PullRequestsRepoPage _ _ ->
+                    label == "PRs"
+
+                BouncePage ->
+                    False
+    in
+    Html.a [ HA.class "button", HA.classList [ ( "active", active ) ], HA.href route ]
+        [ icon octiconOpts
+        , hideLabel label
         ]
 
 

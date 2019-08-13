@@ -17116,6 +17116,51 @@ var author$project$Main$hideLabel = function (x) {
 			]));
 };
 var author$project$Main$octiconOpts = capitalist$elm_octicons$Octicons$defaultOptions;
+var author$project$Main$navButton = F4(
+	function (model, icon, label, route) {
+		var active = function () {
+			var _n0 = model.page;
+			switch (_n0.$) {
+				case 'AllProjectsPage':
+					return label === 'Projects';
+				case 'ProjectPage':
+					return label === 'Projects';
+				case 'GlobalGraphPage':
+					return label === 'Graph';
+				case 'ArchivePage':
+					return label === 'Archive';
+				case 'LabelsPage':
+					return label === 'Labels';
+				case 'ReleasePage':
+					return label === 'Release';
+				case 'ReleaseRepoPage':
+					return label === 'Release';
+				case 'PullRequestsPage':
+					return label === 'PRs';
+				case 'PullRequestsRepoPage':
+					return label === 'PRs';
+				default:
+					return false;
+			}
+		}();
+		return A2(
+			elm$html$Html$a,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('button'),
+					elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('active', active)
+						])),
+					elm$html$Html$Attributes$href(route)
+				]),
+			_List_fromArray(
+				[
+					icon(author$project$Main$octiconOpts),
+					author$project$Main$hideLabel(label)
+				]));
+	});
 var author$project$Model$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
 var elm$html$Html$form = _VirtualDom_node('form');
 var elm$html$Html$Attributes$value = elm$html$Html$Attributes$stringProperty('value');
@@ -17198,78 +17243,12 @@ var author$project$Main$viewNavBar = function (model) {
 					]),
 				_List_fromArray(
 					[
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('Projects')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/archive')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$history(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('Archive')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/release')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$milestone(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('Release')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/pull-requests')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$gitPullRequest(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('PRs')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/graph')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$circuitBoard(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('Graph')
-							])),
-						A2(
-						elm$html$Html$a,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('button'),
-								elm$html$Html$Attributes$href('/labels')
-							]),
-						_List_fromArray(
-							[
-								capitalist$elm_octicons$Octicons$tag(author$project$Main$octiconOpts),
-								author$project$Main$hideLabel('Labels')
-							]))
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$project, 'Projects', '/projects'),
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$history, 'Archive', '/archive'),
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$milestone, 'Release', '/release'),
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$gitPullRequest, 'PRs', '/pull-requests'),
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$circuitBoard, 'Graph', '/graph'),
+						A4(author$project$Main$navButton, model, capitalist$elm_octicons$Octicons$tag, 'Labels', '/labels')
 					])),
 				function () {
 				var _n0 = model.me;

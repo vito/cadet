@@ -237,9 +237,16 @@ h4 {
       }
     }
 
-    &:hover, &:hover .octicon * {
+    &:hover:not(.active) {
       color: @gray-light;
-      fill: @gray-light;
+
+      .octicon * {
+        fill: @gray-light;
+      }
+    }
+
+    &.active {
+      background: @gray;
     }
   }
 
