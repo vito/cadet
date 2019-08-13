@@ -15554,7 +15554,7 @@ var author$project$Main$subscriptions = function (_n0) {
 			]));
 };
 var author$project$Main$titleSuffix = function (s) {
-	return s + ' - Cadet';
+	return elm$core$String$isEmpty(s) ? 'Cadet' : (s + ' - Cadet');
 };
 var author$project$Main$pageTitle = function (model) {
 	return author$project$Main$titleSuffix(
@@ -15569,7 +15569,7 @@ var author$project$Main$pageTitle = function (model) {
 					var id = _n0.a;
 					return A2(
 						elm$core$Maybe$withDefault,
-						'Unknown Project',
+						'',
 						A2(
 							elm$core$Maybe$map,
 							function ($) {

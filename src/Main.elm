@@ -977,7 +977,11 @@ computeCardsView model =
 
 titleSuffix : String -> String
 titleSuffix s =
-    s ++ " - Cadet"
+    if String.isEmpty s then
+        "Cadet"
+
+    else
+        s ++ " - Cadet"
 
 
 pageTitle : Model -> String
@@ -993,7 +997,7 @@ pageTitle model =
             ProjectPage id ->
                 Dict.get id model.projects
                     |> Maybe.map .name
-                    |> Maybe.withDefault "Unknown Project"
+                    |> Maybe.withDefault ""
 
             LabelsPage ->
                 "Labels"
