@@ -15587,7 +15587,7 @@ var author$project$Main$pageTitle = function (model) {
 					return 'Pull Requests';
 				case 'PullRequestsRepoPage':
 					var repoName = _n0.a;
-					return repoName + 'Pull Requests';
+					return repoName + ' Pull Requests';
 				case 'ArchivePage':
 					return 'Archive';
 				default:

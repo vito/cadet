@@ -1012,7 +1012,7 @@ pageTitle model =
                 "Pull Requests"
 
             PullRequestsRepoPage repoName _ ->
-                repoName ++ "Pull Requests"
+                repoName ++ " Pull Requests"
 
             ArchivePage ->
                 "Archive"
