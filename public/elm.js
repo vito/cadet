@@ -18636,13 +18636,21 @@ var author$project$Model$ToggleShowArchivedCards = function (a) {
 };
 var author$project$Main$viewProjectColumn = F3(
 	function (model, project, col) {
-		var dropCandidate = {
+		var firstDropCandidate = {
 			msgFunc: author$project$Model$MoveCardAfter,
 			target: {afterId: elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
 		};
 		var draggableCard = function (card) {
 			var dragId = author$project$Model$FromColumnCardSource(
 				{cardId: card.id, columnId: col.id});
+			var afterDropCandidate = {
+				msgFunc: author$project$Model$MoveCardAfter,
+				target: {
+					afterId: elm$core$Maybe$Just(card.id),
+					columnId: col.id,
+					projectId: project.id
+				}
+			};
 			return _List_fromArray(
 				[
 					A4(
@@ -18655,7 +18663,7 @@ var author$project$Main$viewProjectColumn = F3(
 					author$project$Drag$viewDropArea,
 					model.projectDrag,
 					author$project$Model$ProjectDrag,
-					dropCandidate,
+					afterDropCandidate,
 					elm$core$Maybe$Just(dragId))
 				]);
 		};
@@ -18748,7 +18756,7 @@ var author$project$Main$viewProjectColumn = F3(
 						]),
 					_List_fromArray(
 						[
-							A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
+							A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, firstDropCandidate, elm$core$Maybe$Nothing)
 						])) : A2(
 					elm$html$Html$div,
 					_List_fromArray(
@@ -18760,7 +18768,7 @@ var author$project$Main$viewProjectColumn = F3(
 							[
 								_List_fromArray(
 								[
-									A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing)
+									A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, firstDropCandidate, elm$core$Maybe$Nothing)
 								]),
 								function () {
 								if (addingNote.$ === 'Nothing') {
@@ -18823,7 +18831,7 @@ var author$project$Main$viewProjectColumn = F3(
 								]),
 							A2(
 								elm$core$List$cons,
-								A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, dropCandidate, elm$core$Maybe$Nothing),
+								A4(author$project$Drag$viewDropArea, model.projectDrag, author$project$Model$ProjectDrag, firstDropCandidate, elm$core$Maybe$Nothing),
 								A2(elm$core$List$concatMap, draggableCard, archived))) : elm$html$Html$text('')
 						]))
 				]));

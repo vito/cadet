@@ -1947,7 +1947,7 @@ viewProjectColumn model project col =
         ( archived, unarchived ) =
             List.partition .isArchived cards
 
-        dropCandidate =
+        firstDropCandidate =
             { msgFunc = MoveCardAfter
             , target =
                 { projectId = project.id
@@ -1963,10 +1963,19 @@ viewProjectColumn model project col =
             let
                 dragId =
                     Model.FromColumnCardSource { columnId = col.id, cardId = card.id }
+
+                afterDropCandidate =
+                    { msgFunc = MoveCardAfter
+                    , target =
+                        { projectId = project.id
+                        , columnId = col.id
+                        , afterId = Just card.id
+                        }
+                    }
             in
             [ CardView.viewProjectColumnCard model project col card
                 |> Drag.draggable model.projectDrag ProjectDrag dragId
-            , Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate (Just dragId)
+            , Drag.viewDropArea model.projectDrag ProjectDrag afterDropCandidate (Just dragId)
             ]
     in
     Html.div
@@ -1986,13 +1995,13 @@ viewProjectColumn model project col =
             ]
         , if addingNote == Nothing && List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
-                [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+                [ Drag.viewDropArea model.projectDrag ProjectDrag firstDropCandidate Nothing
                 ]
 
           else
             Html.div [ HA.class "cards" ] <|
                 List.concat
-                    [ [ Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing ]
+                    [ [ Drag.viewDropArea model.projectDrag ProjectDrag firstDropCandidate Nothing ]
                     , case addingNote of
                         Nothing ->
                             []
@@ -2017,7 +2026,7 @@ viewProjectColumn model project col =
                     ]
                 , if Set.member col.id model.showArchivedCards then
                     Html.div [ HA.class "cards" ] <|
-                        Drag.viewDropArea model.projectDrag ProjectDrag dropCandidate Nothing
+                        Drag.viewDropArea model.projectDrag ProjectDrag firstDropCandidate Nothing
                             :: List.concatMap draggableCard archived
 
                   else
