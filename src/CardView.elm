@@ -9,42 +9,25 @@ module CardView exposing
 
 import Activity
 import Backend
-import Browser
 import Browser.Dom
-import Browser.Navigation as Nav
 import Card exposing (Card)
 import Colors
-import DateFormat
-import Dict exposing (Dict)
-import Drag
-import Effects
+import Dict
 import Events
 import GitHub
-import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
 import Json.Decode as JD
-import Keyboard.Event
-import Keyboard.Key
 import Label
 import List.Extra as LE
-import Log
 import Markdown
 import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
 import Octicons
 import Project
-import Query
-import ReleaseRepo
-import Set exposing (Set)
-import StatefulGraph
+import Set
 import Task
-import Time
-import Url exposing (Url)
-import Url.Builder as UB
-import Url.Parser as UP exposing ((</>), (<?>))
-import Url.Parser.Query as UQ
 
 
 viewCard : Model -> List (Html Msg) -> Card -> Html Msg

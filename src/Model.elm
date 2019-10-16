@@ -35,12 +35,16 @@ import Url exposing (Url)
 
 
 type alias Model =
-    -- nav/user/global state
+    -- nav/global state
     { key : Nav.Key
     , page : Page
-    , me : Maybe Backend.Me
     , currentTime : Time.Posix
     , currentZone : Time.Zone
+
+    -- user state
+    , me : Maybe Backend.Me
+    , myProjects : Dict GitHub.ID GitHub.Project
+    , myColumnCards : Dict GitHub.ID (List GitHub.ProjectColumnCard)
 
     -- progress for a given object
     , progress : ProgressState
@@ -134,6 +138,8 @@ type Msg
     | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Backend.Me))
+    | MyProjectsFetched (Result GitHub.Error (List GitHub.Project))
+    | MyProjectColumnCardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
     | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
     | EventReceived ( String, String, String )
     | CardDataFetched (Result Http.Error (Backend.Indexed Backend.CardData))
@@ -317,6 +323,8 @@ empty key =
     { key = key
     , page = GlobalGraphPage
     , me = Nothing
+    , myProjects = Dict.empty
+    , myColumnCards = Dict.empty
     , progress = Dict.empty
     , graphs = []
     , dataIndex = 0

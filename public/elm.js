@@ -13255,20 +13255,14 @@ var author$project$Main$computeViewForPage = function (model) {
 				author$project$StatefulGraph$init(reset));
 		case 'ProjectPage':
 			var id = _n0.a;
-			var _n1 = A2(elm$core$Dict$get, id, model.projects);
-			if (_n1.$ === 'Just') {
-				var project = _n1.a;
-				return author$project$StatefulGraph$update(
-					author$project$StatefulGraph$init(
-						_Utils_update(
-							reset,
-							{
-								baseGraphFilter: elm$core$Maybe$Just(
-									author$project$Model$InProjectFilter(project.id))
-							})));
-			} else {
-				return reset;
-			}
+			return author$project$StatefulGraph$update(
+				author$project$StatefulGraph$init(
+					_Utils_update(
+						reset,
+						{
+							baseGraphFilter: elm$core$Maybe$Just(
+								author$project$Model$InProjectFilter(id))
+						})));
 		case 'ReleasePage':
 			return author$project$Main$computeReleaseRepos(reset);
 		case 'ReleaseRepoPage':
@@ -13289,6 +13283,260 @@ var author$project$Main$computeViewForPage = function (model) {
 		default:
 			return reset;
 	}
+};
+var jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery = jamesmacaulay$elm_graphql$GraphQL$Client$Http$send;
+var author$project$GitHub$fetchPaged = F3(
+	function (doc, token, psel) {
+		var fetchNextPage = function (_n0) {
+			var content = _n0.content;
+			var pageInfo = _n0.pageInfo;
+			return pageInfo.hasNextPage ? A3(
+				author$project$Log$debug,
+				'has next page',
+				psel,
+				A2(
+					elm$core$Task$map,
+					elm$core$Basics$append(content),
+					A3(
+						author$project$GitHub$fetchPaged,
+						doc,
+						token,
+						_Utils_update(
+							psel,
+							{after: pageInfo.endCursor})))) : elm$core$Task$succeed(content);
+		};
+		return A2(
+			elm$core$Task$andThen,
+			fetchNextPage,
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery,
+				author$project$GitHub$authedOptions(token),
+				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, psel, doc)));
+	});
+var author$project$GitHub$PageInfo = F2(
+	function (endCursor, hasNextPage) {
+		return {endCursor: endCursor, hasNextPage: hasNextPage};
+	});
+var author$project$GitHub$PagedResult = F2(
+	function (content, pageInfo) {
+		return {content: content, pageInfo: pageInfo};
+	});
+var author$project$GitHub$idObject = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+	A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
+var author$project$GitHub$maybeOr3 = F3(
+	function (ma, mb, mc) {
+		return A2(
+			elm_community$maybe_extra$Maybe$Extra$or,
+			ma,
+			A2(elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
+	});
+var author$project$GitHub$projectOwnerObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+		elm$core$Maybe$Just(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
+		A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerUser, author$project$GitHub$idObject)),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			elm$core$Maybe$Just(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Organization')),
+			A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerOrg, author$project$GitHub$idObject)),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+				elm$core$Maybe$Just(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Repository')),
+				A2(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, author$project$GitHub$ProjectOwnerRepo, author$project$GitHub$idObject)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$maybeOr3))));
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume = function (_n0) {
+	var ast = _n0.a;
+	var decoder = _n0.b;
+	var vars = _n0.c;
+	var fragments = _n0.d;
+	return A4(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
+		ast,
+		A2(
+			elm$core$Basics$composeR,
+			decoder,
+			elm$json$Json$Decode$andThen(
+				function (maybeValue) {
+					if (maybeValue.$ === 'Just') {
+						var value = maybeValue.a;
+						return elm$json$Json$Decode$succeed(value);
+					} else {
+						return elm$json$Json$Decode$fail('Expected a selection to be present in the response with `assume`, but found `Nothing`');
+					}
+				})),
+		vars,
+		fragments);
+};
+var author$project$GitHub$projectObject = A2(
+	jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'columns',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'first',
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(50))
+			]),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$columnObject)))),
+	A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'body', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+			A2(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'owner', _List_Nil, author$project$GitHub$projectOwnerObject)),
+					A2(
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						A2(
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+							A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$Project))))))));
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$QueryOperationType = {$: 'QueryOperationType'};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$QueryOperationType;
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument = function (spec) {
+	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$document(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Operation(
+			{directives: _List_Nil, name: elm$core$Maybe$Nothing, operationType: jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryOperationType, spec: spec}));
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue = function (a) {
+	return {$: 'EnumValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum = function (symbol) {
+	return A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue(symbol),
+		_List_Nil);
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
+	return {$: 'ListValue', a: a};
+};
+var jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list = function (values) {
+	return A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue(
+			A2(
+				elm$core$List$map,
+				function (_n0) {
+					var ast = _n0.a;
+					return ast;
+				},
+				values)),
+		A3(elm$core$List$foldr, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep, _List_Nil, values));
+};
+var author$project$GitHub$userProjectsQuery = function () {
+	var userLoginVar = A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'userLogin',
+		A2(
+			elm$core$Basics$composeL,
+			function ($) {
+				return $.login;
+			},
+			function ($) {
+				return $.selector;
+			}),
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var pageInfo = A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'hasNextPage', _List_Nil, jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'endCursor',
+				_List_Nil,
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PageInfo)));
+	var paged = A2(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
+		A2(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(author$project$GitHub$projectObject)),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(author$project$GitHub$PagedResult)));
+	var afterVar = A3(
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'after',
+		function ($) {
+			return $.after;
+		},
+		jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
+	var pageArgs = _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'first',
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100)),
+			_Utils_Tuple2(
+			'after',
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar)),
+			_Utils_Tuple2(
+			'states',
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list(
+				_List_fromArray(
+					[
+						jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('OPEN')
+					])))
+		]);
+	var queryRoot = jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+		A3(
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'user',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'login',
+					jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(userLoginVar))
+				]),
+			jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+				A3(jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'projects', pageArgs, paged))));
+	return jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
+}();
+var author$project$GitHub$fetchUserProjects = F2(
+	function (token, user) {
+		return A3(
+			author$project$GitHub$fetchPaged,
+			author$project$GitHub$userProjectsQuery,
+			token,
+			{after: elm$core$Maybe$Nothing, selector: user});
+	});
+var author$project$Model$MyProjectsFetched = function (a) {
+	return {$: 'MyProjectsFetched', a: a};
+};
+var author$project$Main$fetchMyProjects = function (_n0) {
+	var token = _n0.token;
+	var user = _n0.user;
+	return A2(
+		elm$core$Task$attempt,
+		author$project$Model$MyProjectsFetched,
+		A2(
+			author$project$GitHub$fetchUserProjects,
+			token,
+			{login: user.login}));
 };
 var author$project$Main$finishLoadingCardData = function (data) {
 	var hasLoaded = F2(
@@ -14473,13 +14721,20 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'MeFetched':
 					if (msg.a.$ === 'Ok') {
-						var me = msg.a.a;
+						var mme = msg.a.a;
 						return _Utils_Tuple2(
 							author$project$StatefulGraph$update(
 								_Utils_update(
 									model,
-									{me: me})),
-							elm$core$Platform$Cmd$none);
+									{me: mme})),
+							function () {
+								if (mme.$ === 'Just') {
+									var me = mme.a;
+									return author$project$Main$fetchMyProjects(me);
+								} else {
+									return elm$core$Platform$Cmd$none;
+								}
+							}());
 					} else {
 						var err = msg.a.a;
 						return A3(
@@ -14488,14 +14743,58 @@ var author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
 					}
+				case 'MyProjectsFetched':
+					if (msg.a.$ === 'Ok') {
+						var projects = msg.a.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									myProjects: A3(
+										elm$core$List$foldl,
+										F2(
+											function (p, ps) {
+												return A3(elm$core$Dict$insert, p.id, p, ps);
+											}),
+										elm$core$Dict$empty,
+										projects)
+								}),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.a.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching user projects',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
+				case 'MyProjectColumnCardsFetched':
+					if (msg.b.$ === 'Ok') {
+						var colId = msg.a;
+						var cards = msg.b.a;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									myProjectColumnCards: A3(elm$core$Dict$insert, colId, cards, model.myProjectColumnCards)
+								}),
+							elm$core$Platform$Cmd$none);
+					} else {
+						var err = msg.b.a;
+						return A3(
+							author$project$Log$debug,
+							'error fetching user project column cards',
+							err,
+							_Utils_Tuple2(model, elm$core$Platform$Cmd$none));
+					}
 				case 'EventReceived':
-					var _n7 = msg.a;
-					var event = _n7.a;
-					var data = _n7.b;
-					var indexStr = _n7.c;
-					var _n8 = elm$core$String$toInt(indexStr);
-					if (_n8.$ === 'Just') {
-						var index = _n8.a;
+					var _n8 = msg.a;
+					var event = _n8.a;
+					var data = _n8.b;
+					var indexStr = _n8.c;
+					var _n9 = elm$core$String$toInt(indexStr);
+					if (_n9.$ === 'Just') {
+						var index = _n9.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? _Utils_Tuple2(
 							author$project$Main$computeViewForPage(
 								A4(
@@ -14616,12 +14915,12 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n9, r, acc) {
+							function (_n10, r, acc) {
 								var labels = A2(
 									elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2(elm$core$Dict$get, r.id, model.repoLabels));
-								var _n10 = A2(
+								var _n11 = A2(
 									elm$core$List$filter,
 									A2(
 										elm$core$Basics$composeL,
@@ -14630,13 +14929,13 @@ var author$project$Main$update = F2(
 											return $.name;
 										}),
 									labels);
-								if (!_n10.b) {
+								if (!_n11.b) {
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Effects$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _n10.a;
+									var label = _n11.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										elm$core$List$cons,
 										A4(author$project$Effects$updateLabel, model, r, label, newLabel),
@@ -14677,19 +14976,19 @@ var author$project$Main$update = F2(
 					var cmds = A3(
 						elm$core$Dict$foldl,
 						F3(
-							function (_n11, r, acc) {
+							function (_n12, r, acc) {
 								var labels = A2(
 									elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2(elm$core$Dict$get, r.id, model.repoLabels));
-								var _n12 = A2(
+								var _n13 = A2(
 									elm$core$List$filter,
 									author$project$Main$matchesLabel(label),
 									labels);
-								if (!_n12.b) {
+								if (!_n13.b) {
 									return acc;
 								} else {
-									var repoLabel = _n12.a;
+									var repoLabel = _n13.a;
 									return A2(
 										elm$core$List$cons,
 										A3(author$project$Effects$deleteLabel, model, r, repoLabel),
@@ -14762,7 +15061,7 @@ var author$project$Main$update = F2(
 								editingLabels: A2(
 									elm$core$Dict$map,
 									F2(
-										function (_n13, label) {
+										function (_n14, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -14776,14 +15075,14 @@ var author$project$Main$update = F2(
 						elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _n14 = A2(
+					var _n15 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_n14.$ === 'Nothing') {
+					if (_n15.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n14.a;
+						var newLabel = _n15.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -14798,28 +15097,28 @@ var author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _n15 = A2(
+					var _n16 = A2(
 						elm$core$Dict$get,
 						author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_n15.$ === 'Nothing') {
+					if (_n16.$ === 'Nothing') {
 						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _n15.a;
+						var newLabel = _n16.a;
 						var cmds = A3(
 							elm$core$Dict$foldl,
 							F3(
-								function (_n16, r, acc) {
+								function (_n17, r, acc) {
 									var labels = A2(
 										elm$core$Maybe$withDefault,
 										_List_Nil,
 										A2(elm$core$Dict$get, r.id, model.repoLabels));
-									var _n17 = A2(
+									var _n18 = A2(
 										elm$core$List$filter,
 										author$project$Main$matchesLabel(oldLabel),
 										labels);
-									if (_n17.b) {
-										var repoLabel = _n17.a;
+									if (_n18.b) {
+										var repoLabel = _n18.a;
 										return A2(
 											elm$core$List$cons,
 											A4(author$project$Effects$updateLabel, model, r, repoLabel, newLabel),
@@ -14897,9 +15196,9 @@ var author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n18 = card.content;
-					if (_n18.$ === 'IssueCardContent') {
-						var issue = _n18.a;
+					var _n19 = card.content;
+					if (_n19.$ === 'IssueCardContent') {
+						var issue = _n19.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -14909,7 +15208,7 @@ var author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _n18.a;
+						var pr = _n19.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -14922,14 +15221,14 @@ var author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _n19 = card.content;
-					if (_n19.$ === 'IssueCardContent') {
-						var issue = _n19.a;
+					var _n20 = card.content;
+					if (_n20.$ === 'IssueCardContent') {
+						var issue = _n20.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _n19.a;
+						var pr = _n20.a;
 						return _Utils_Tuple2(
 							model,
 							A3(author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -15069,14 +15368,14 @@ var author$project$Main$update = F2(
 								addingColumnNotes: A2(elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _n20 = A2(
+							var _n21 = A2(
 								elm$core$Maybe$withDefault,
 								'',
 								A2(elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_n20 === '') {
+							if (_n21 === '') {
 								return elm$core$Platform$Cmd$none;
 							} else {
-								var note = _n20;
+								var note = _n21;
 								return A3(author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -15142,14 +15441,14 @@ var author$project$Main$update = F2(
 								editingCardNotes: A2(elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _n21 = A2(
+							var _n22 = A2(
 								elm$core$Maybe$withDefault,
 								'',
 								A2(elm$core$Dict$get, id, model.editingCardNotes));
-							if (_n21 === '') {
+							if (_n22 === '') {
 								return elm$core$Platform$Cmd$none;
 							} else {
-								var note = _n21;
+								var note = _n22;
 								return A3(author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -15234,6 +15533,8 @@ var author$project$Model$empty = function (key) {
 		labelSearch: '',
 		labelToRepoToId: elm$core$Dict$empty,
 		me: elm$core$Maybe$Nothing,
+		myProjectColumnCards: elm$core$Dict$empty,
+		myProjects: elm$core$Dict$empty,
 		newLabel: {color: 'ffffff', name: ''},
 		newLabelColored: false,
 		openPRsByRepo: elm$core$Dict$empty,
@@ -15553,6 +15854,13 @@ var author$project$Main$subscriptions = function (_n0) {
 				A2(elm$time$Time$every, 60 * minute, author$project$Model$SetCurrentTime)
 			]));
 };
+var author$project$Main$findProject = F2(
+	function (model, id) {
+		return A2(
+			elm_community$maybe_extra$Maybe$Extra$or,
+			A2(elm$core$Dict$get, id, model.myProjects),
+			A2(elm$core$Dict$get, id, model.projects));
+	});
 var author$project$Main$titleSuffix = function (s) {
 	return elm$core$String$isEmpty(s) ? 'Cadet' : (s + ' - Cadet');
 };
@@ -15575,7 +15883,7 @@ var author$project$Main$pageTitle = function (model) {
 							function ($) {
 								return $.name;
 							},
-							A2(elm$core$Dict$get, id, model.projects)));
+							A2(author$project$Main$findProject, model, id)));
 				case 'LabelsPage':
 					return 'Labels';
 				case 'ReleasePage':
@@ -18872,6 +19180,30 @@ var author$project$Main$viewRepoRoadmap = F3(
 				]));
 	});
 var author$project$Main$viewAllProjectsPage = function (model) {
+	var userProjects = elm$core$Dict$isEmpty(model.myProjects) ? _List_Nil : _List_fromArray(
+		[
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('page-header')
+				]),
+			_List_fromArray(
+				[
+					capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+					elm$html$Html$text('User Projects')
+				])),
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('cards')
+				]),
+			A2(
+				elm$core$List$map,
+				A2(author$project$CardView$viewProjectCard, model, _List_Nil),
+				elm$core$Dict$values(model.myProjects)))
+		]);
 	var extractRoadmaps = F3(
 		function (rid, rps, _n5) {
 			var rms = _n5.a;
@@ -18918,7 +19250,35 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 		_Utils_Tuple2(_List_Nil, _List_Nil),
 		model.repoProjects);
 	var roadmaps = _n0.a;
-	var projects = _n0.b;
+	var repoProjects = _n0.b;
+	var repoProjectColumns = _List_fromArray(
+		[
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('page-header')
+				]),
+			_List_fromArray(
+				[
+					capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
+					elm$html$Html$text('Repo Projects')
+				])),
+			A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('card-columns')
+				]),
+			A2(
+				elm$core$List$map,
+				function (_n2) {
+					var a = _n2.a;
+					var b = _n2.b;
+					return A3(author$project$Main$viewRepoProjects, model, a, b);
+				},
+				repoProjects))
+		]);
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
@@ -18934,34 +19294,7 @@ var author$project$Main$viewAllProjectsPage = function (model) {
 					return A3(author$project$Main$viewRepoRoadmap, model, a, b);
 				},
 				roadmaps),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('page-header')
-						]),
-					_List_fromArray(
-						[
-							capitalist$elm_octicons$Octicons$project(author$project$Main$octiconOpts),
-							elm$html$Html$text('Projects')
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('card-columns')
-						]),
-					A2(
-						elm$core$List$map,
-						function (_n2) {
-							var a = _n2.a;
-							var b = _n2.b;
-							return A3(author$project$Main$viewRepoProjects, model, a, b);
-						},
-						projects))
-				])));
+			_Utils_ap(repoProjectColumns, userProjects)));
 };
 var elm$time$Time$flooredDiv = F2(
 	function (numerator, denominator) {
@@ -24042,7 +24375,7 @@ var author$project$Main$viewPage = function (model) {
 						return author$project$Main$viewGlobalGraphPage(model);
 					case 'ProjectPage':
 						var id = _n0.a;
-						var _n1 = A2(elm$core$Dict$get, id, model.projects);
+						var _n1 = A2(author$project$Main$findProject, model, id);
 						if (_n1.$ === 'Just') {
 							var project = _n1.a;
 							return A2(author$project$Main$viewProjectPage, model, project);

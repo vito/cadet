@@ -90,6 +90,7 @@ module GitHub exposing
     , fetchRepoPullRequests
     , fetchRepoPullRequestsPage
     , fetchRepoReleases
+    , fetchUserProjects
     , fetchTimeline
     , issueScore
     , labelEq
@@ -376,7 +377,7 @@ type alias ProjectColumn =
 type alias ProjectColumnCard =
     { id : ID
     , url : String
-    , columnId : String
+    , columnId : ID
     , isArchived : Bool
     , content : Maybe CardContent
     , note : Maybe String
@@ -429,6 +430,9 @@ type PullRequestReviewState
 type alias OrgSelector =
     { name : String }
 
+type alias UserSelector =
+    { login : String }
+
 
 type alias RepoSelector =
     { owner : String, name : String }
@@ -474,6 +478,10 @@ fetchOrgRepos token org =
 fetchOrgProjects : Token -> OrgSelector -> Task Error (List Project)
 fetchOrgProjects token org =
     fetchPaged orgProjectsQuery token { selector = org, after = Nothing }
+
+fetchUserProjects : Token -> UserSelector -> Task Error (List Project)
+fetchUserProjects token user =
+    fetchPaged userProjectsQuery token { selector = user, after = Nothing }
 
 
 fetchOrgProject : Token -> ProjectSelector -> Task Error Project
@@ -1258,6 +1266,41 @@ orgProjectsQuery =
             GB.extract <|
                 GB.field "organization"
                     [ ( "login", GA.variable orgNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "projects" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+userProjectsQuery : GB.Document GB.Query (PagedResult Project) (PagedSelector UserSelector)
+userProjectsQuery =
+    let
+        userLoginVar =
+            GV.required "userLogin" (.login << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            , ( "states", GA.list [ GA.enum "OPEN" ] )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list projectObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "user"
+                    [ ( "login", GA.variable userLoginVar )
                     ]
                 <|
                     GB.extract (GB.field "projects" pageArgs paged)

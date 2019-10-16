@@ -23,6 +23,7 @@ import Label
 import List.Extra as LE
 import Log
 import Markdown
+import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
 import Octicons
 import Project
@@ -304,11 +305,36 @@ update msg model =
             , Cmd.none
             )
 
-        MeFetched (Ok me) ->
-            ( StatefulGraph.update { model | me = me }, Cmd.none )
+        MeFetched (Ok mme) ->
+            ( StatefulGraph.update { model | me = mme }
+            , case mme of
+                Just me ->
+                    fetchMyProjects me
+
+                Nothing ->
+                    Cmd.none
+            )
 
         MeFetched (Err err) ->
             Log.debug "error fetching self" err <|
+                ( model, Cmd.none )
+
+        MyProjectsFetched (Ok projects) ->
+            ( { model | myProjects = List.foldl (\p ps -> Dict.insert p.id p ps) Dict.empty projects }
+            , Cmd.none
+            )
+
+        MyProjectsFetched (Err err) ->
+            Log.debug "error fetching user projects" err <|
+                ( model, Cmd.none )
+
+        MyProjectColumnCardsFetched colId (Ok cards) ->
+            ( { model | myColumnCards = Dict.insert colId cards model.myColumnCards }
+            , Cmd.none
+            )
+
+        MyProjectColumnCardsFetched _ (Err err) ->
+            Log.debug "error fetching user project column cards" err <|
                 ( model, Cmd.none )
 
         EventReceived ( event, data, indexStr ) ->
@@ -808,14 +834,9 @@ computeViewForPage model =
                 |> StatefulGraph.update
 
         ProjectPage id ->
-            case Dict.get id model.projects of
-                Just project ->
-                    { reset | baseGraphFilter = Just (Model.InProjectFilter project.id) }
-                        |> StatefulGraph.init
-                        |> StatefulGraph.update
-
-                Nothing ->
-                    reset
+            { reset | baseGraphFilter = Just (Model.InProjectFilter id) }
+                |> StatefulGraph.init
+                |> StatefulGraph.update
 
         ReleasePage ->
             reset
@@ -995,7 +1016,7 @@ pageTitle model =
                 "Graph"
 
             ProjectPage id ->
-                Dict.get id model.projects
+                findProject model id
                     |> Maybe.map .name
                     |> Maybe.withDefault ""
 
@@ -1043,7 +1064,7 @@ viewPage model =
                 viewGlobalGraphPage model
 
             ProjectPage id ->
-                case Dict.get id model.projects of
+                case findProject model id of
                     Just project ->
                         viewProjectPage model project
 
@@ -1182,18 +1203,35 @@ viewAllProjectsPage model =
                             Just rm ->
                                 ( ( r, rm ) :: rms, ps )
 
-        ( roadmaps, projects ) =
+        ( roadmaps, repoProjects ) =
             Dict.foldl extractRoadmaps ( [], [] ) model.repoProjects
+
+        repoProjectColumns =
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.project octiconOpts
+                , Html.text "Repo Projects"
+                ]
+            , Html.div [ HA.class "card-columns" ] <|
+                List.map (\( a, b ) -> viewRepoProjects model a b) repoProjects
+            ]
+
+        userProjects =
+            if Dict.isEmpty model.myProjects then
+                []
+
+            else
+                [ Html.div [ HA.class "page-header" ]
+                    [ Octicons.project octiconOpts
+                    , Html.text "User Projects"
+                    ]
+                , Html.div [ HA.class "cards" ]
+                    (List.map (CardView.viewProjectCard model []) (Dict.values model.myProjects))
+                ]
     in
     Html.div [ HA.class "page-content" ] <|
         List.map (\( a, b ) -> viewRepoRoadmap model a b) roadmaps
-            ++ [ Html.div [ HA.class "page-header" ]
-                    [ Octicons.project octiconOpts
-                    , Html.text "Projects"
-                    ]
-               , Html.div [ HA.class "card-columns" ] <|
-                    List.map (\( a, b ) -> viewRepoProjects model a b) projects
-               ]
+            ++ repoProjectColumns
+            ++ userProjects
 
 
 viewRepoRoadmap : Model -> GitHub.Repo -> GitHub.Project -> Html Msg
@@ -2301,3 +2339,31 @@ finishLoadingColumnCards cards state =
 labelKey : Model.SharedLabel -> ( String, String )
 labelKey label =
     ( label.name, String.toLower label.color )
+
+
+fetchMyProjects : Backend.Me -> Cmd Msg
+fetchMyProjects { token, user } =
+    Task.attempt MyProjectsFetched <|
+        GitHub.fetchUserProjects token { login = user.login }
+
+
+fetchMyProjectColumnCards : Model -> GitHub.ID -> Cmd Msg
+fetchMyProjectColumnCards model colId =
+    case model.me of
+        Just { token } ->
+            Task.attempt (MyProjectColumnCardsFetched colId) <|
+                GitHub.fetchProjectColumnCards token { id = colId }
+
+        Nothing ->
+            Cmd.none
+
+
+findProject : Model -> GitHub.ID -> Maybe GitHub.Project
+findProject model id =
+    Dict.get id model.projects
+        |> ME.or (Dict.get id model.myProjects)
+
+findProjectColumnCards : Model -> GitHub.ID -> Maybe (List GitHub.ProjectColumnCard)
+findProjectColumnCards model id =
+    Dict.get id model.columnCards
+        |> ME.or (Dict.get id model.myColumnCards)
