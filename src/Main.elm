@@ -97,6 +97,7 @@ routeParser =
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
+        , UP.map LeaderboardPage (UP.s "leaderboard")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -132,6 +133,9 @@ pageRoute page =
 
         ArchivePage ->
             [ "archive" ]
+
+        LeaderboardPage ->
+            [ "leaderboard" ]
 
         BouncePage ->
             []
@@ -1017,6 +1021,9 @@ pageTitle model =
             ArchivePage ->
                 "Archive"
 
+            LeaderboardPage ->
+                "Leaderboard"
+
             BouncePage ->
                 "Bounce"
 
@@ -1073,6 +1080,9 @@ viewPage model =
             ArchivePage ->
                 viewArchivePage model
 
+            LeaderboardPage ->
+                viewLeaderboardPage model
+
             BouncePage ->
                 Html.text "you shouldn't see this"
         ]
@@ -1104,6 +1114,7 @@ viewNavBar model =
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
             , navButton model Octicons.tag "Labels" "/labels"
+            , navButton model Octicons.flame "Leaderboard" "/leaderboard"
             ]
         , case model.me of
             Nothing ->
@@ -1137,6 +1148,9 @@ navButton model icon label route =
 
                 ArchivePage ->
                     label == "Archive"
+
+                LeaderboardPage ->
+                    label == "Leaderboard"
 
                 LabelsPage ->
                     label == "Labels"
@@ -1566,8 +1580,80 @@ viewArchivePage model =
         ]
 
 
-viewArchiveDay : Model -> ( Int, Time.Month, Int ) -> List Model.ArchiveEvent -> Html Msg
-viewArchiveDay model ( year, month, day ) events =
+viewLeaderboardPage : Model -> Html Msg
+viewLeaderboardPage model =
+    let
+        eventCounts event =
+            case event of
+                "review-comment" ->
+                    True
+
+                "review-approved" ->
+                    True
+
+                "review-changes-requested" ->
+                    True
+
+                _ ->
+                    False
+
+        events =
+            groupEvents model.currentZone model.archive
+                |> eventsThisWeek
+                |> List.filter (.event >> .event >> eventCounts)
+
+        bumpLeaderboard user entry =
+            case entry of
+                Nothing ->
+                    Just ( user, 1 )
+
+                Just ( _, count ) ->
+                    Just ( user, count + 1 )
+
+        countUserEvent event byUser =
+            case event.user of
+                Nothing ->
+                    byUser
+
+                Just user ->
+                    Dict.update user.id (bumpLeaderboard user) byUser
+
+        leaderboard =
+            List.foldl
+                (\{ event } -> countUserEvent event)
+                Dict.empty
+                events
+                |> Dict.values
+                |> List.sortBy Tuple.second
+                |> List.reverse
+    in
+    Html.div [ HA.class "page-content" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.flame octiconOpts
+            , Html.text "Review Leaderboard"
+            ]
+        , Html.div [ HA.class "leaderboard" ]
+            (List.map viewLeaderboardEntry leaderboard)
+        ]
+
+
+viewLeaderboardEntry : ( GitHub.User, Int ) -> Html Msg
+viewLeaderboardEntry ( user, count ) =
+    Html.div [ HA.class "leaderboard-entry" ]
+        [ Html.div [ HA.class "leaderboard-person" ]
+            [ Html.img [ HA.class "leaderboard-avatar", HA.src user.avatar ] []
+            , Html.text (Maybe.withDefault user.login user.name)
+            ]
+        , Html.div [ HA.class "leaderboard-count" ]
+            [ Html.span [ HA.class "leaderboard-count-number" ]
+                [ Html.text (String.fromInt count)
+                ]
+            ]
+        ]
+
+
+viewArchiveDay : Model -> ArchiveDay -> List Model.ArchiveEvent -> Html Msg
+viewArchiveDay model { year, month, day } events =
     Html.div [ HA.class "archive-day" ]
         [ Html.span [ HA.class "column-title" ]
             [ Octicons.calendar octiconOpts
@@ -1702,16 +1788,25 @@ absoluteTime =
     ]
 
 
-groupEvents : Time.Zone -> List Model.ArchiveEvent -> List ( ( Int, Time.Month, Int ), List Model.ArchiveEvent )
+type alias ArchiveDay =
+    { year : Int
+    , month : Time.Month
+    , day : Int
+    , weekday : Time.Weekday
+    }
+
+
+groupEvents : Time.Zone -> List Model.ArchiveEvent -> List ( ArchiveDay, List Model.ArchiveEvent )
 groupEvents zone =
     let
         insertEvent event acc =
             let
                 day =
-                    ( Time.toYear zone event.event.createdAt
-                    , Time.toMonth zone event.event.createdAt
-                    , Time.toDay zone event.event.createdAt
-                    )
+                    { year = Time.toYear zone event.event.createdAt
+                    , month = Time.toMonth zone event.event.createdAt
+                    , day = Time.toDay zone event.event.createdAt
+                    , weekday = Time.toWeekday zone event.event.createdAt
+                    }
             in
             case acc of
                 ( d, es ) :: rest ->
@@ -1725,6 +1820,12 @@ groupEvents zone =
                     [ ( day, [ event ] ) ]
     in
     List.foldl insertEvent []
+
+
+eventsThisWeek : List ( ArchiveDay, List Model.ArchiveEvent ) -> List Model.ArchiveEvent
+eventsThisWeek =
+    LE.takeWhile (Tuple.first >> .weekday >> (/=) Time.Sun)
+        >> List.concatMap Tuple.second
 
 
 matchesLabel : Model.SharedLabel -> GitHub.Label -> Bool

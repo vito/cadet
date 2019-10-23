@@ -1800,3 +1800,70 @@ a.column-title:hover, .page-header a:hover {
     }
   }
 }
+
+.leaderboard {
+  width: 25vw;
+  height: 80vh;
+  overflow: hidden;
+  position: relative;
+
+  &:after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    background-image: linear-gradient(to bottom, fade(@gray-100, 0%), @gray-100 90%);
+    height: 4em;
+  }
+}
+
+.leaderboard-entry {
+  display: flex;
+  flex-direction: row;
+  border-radius: 10px;
+
+  &:nth-child(odd) {
+    background: @gray-200;
+  }
+}
+
+.leaderboard-entry {
+  font-size: 32px;
+}
+
+.leaderboard-person {
+  color: @gray;
+}
+
+.leaderboard-person, .leaderboard-count {
+  padding: 16px;
+  flex-grow: 1;
+}
+
+.leaderboard-count {
+  .leaderboard-count-number {
+    background: @gray-800;
+    color: @white;
+    line-height: 48px;
+    border-radius: 5px;
+    width: 48px;
+    text-align: center;
+    display: inline-block;
+  }
+}
+
+.leaderboard-avatar {
+  width: 48px;
+  height: 48px;
+  vertical-align: middle;
+  border-radius: 5px;
+  margin-right: 16px;
+}
+
+.leaderboard-count {
+  font-weight: bold;
+  text-align: right;
+}
