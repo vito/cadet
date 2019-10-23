@@ -12,7 +12,7 @@ const SSE = require('express-sse')
 global.XMLHttpRequest = require("xhr2")
 
 const elmApp = require('./worker');
-const worker = elmApp.Elm.Main.init({
+const worker = elmApp.Elm.Worker.init({
   flags: {
     githubOrg: process.env.GITHUB_ORG,
     githubToken: process.env.GITHUB_TOKEN,

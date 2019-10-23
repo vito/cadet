@@ -1,14 +1,13 @@
-port module Main exposing (main)
+port module Worker exposing (main)
 
 import Backend
-import Card exposing (Card)
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
 import GitHub
 import Hash
-import IntDict exposing (IntDict)
+import IntDict
 import Json.Decode as JD
-import Json.Decode.Extra as JDE exposing (andMap)
+import Json.Decode.Extra exposing (andMap)
 import Json.Encode as JE
 import Log
 import Platform
