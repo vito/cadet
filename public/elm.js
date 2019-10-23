@@ -13565,8 +13565,8 @@ var $elm$core$Set$remove = F2(
 var $author$project$Model$AllProjectsPage = {$: 'AllProjectsPage'};
 var $author$project$Model$ArchivePage = {$: 'ArchivePage'};
 var $author$project$Model$BouncePage = {$: 'BouncePage'};
+var $author$project$Model$DashboardPage = {$: 'DashboardPage'};
 var $author$project$Model$LabelsPage = {$: 'LabelsPage'};
-var $author$project$Model$LeaderboardPage = {$: 'LeaderboardPage'};
 var $author$project$Model$ProjectPage = function (a) {
 	return {$: 'ProjectPage', a: a};
 };
@@ -13817,8 +13817,8 @@ var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
 			$elm$url$Url$Parser$s('archive')),
 			A2(
 			$elm$url$Url$Parser$map,
-			$author$project$Model$LeaderboardPage,
-			$elm$url$Url$Parser$s('leaderboard')),
+			$author$project$Model$DashboardPage,
+			$elm$url$Url$Parser$s('dashboard')),
 			A2(
 			$elm$url$Url$Parser$map,
 			$author$project$Model$BouncePage,
@@ -15599,8 +15599,8 @@ var $author$project$Main$pageTitle = function (model) {
 					return repoName + ' Pull Requests';
 				case 'ArchivePage':
 					return 'Archive';
-				case 'LeaderboardPage':
-					return 'Leaderboard';
+				case 'DashboardPage':
+					return 'Dashboard';
 				default:
 					return 'Bounce';
 			}
@@ -17148,8 +17148,8 @@ var $author$project$Main$navButton = F4(
 					return label === 'Graph';
 				case 'ArchivePage':
 					return label === 'Archive';
-				case 'LeaderboardPage':
-					return label === 'Leaderboard';
+				case 'DashboardPage':
+					return label === 'Dashboard';
 				case 'LabelsPage':
 					return label === 'Labels';
 				case 'ReleasePage':
@@ -17264,7 +17264,7 @@ var $author$project$Main$viewNavBar = function (model) {
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$gitPullRequest, 'PRs', '/pull-requests'),
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$circuitBoard, 'Graph', '/graph'),
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$tag, 'Labels', '/labels'),
-						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$flame, 'Leaderboard', '/leaderboard')
+						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$flame, 'Dashboard', '/dashboard')
 					])),
 				function () {
 				var _v0 = model.me;
@@ -19944,6 +19944,336 @@ var $author$project$Main$viewArchivePage = function (model) {
 						A2($author$project$Main$groupEvents, model.currentZone, model.archive))))
 			]));
 };
+var $capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
+var $capitalist$elm_octicons$Octicons$clock = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
+var $elm_community$list_extra$List$Extra$takeWhile = function (predicate) {
+	var takeWhileMemo = F2(
+		function (memo, list) {
+			takeWhileMemo:
+			while (true) {
+				if (!list.b) {
+					return $elm$core$List$reverse(memo);
+				} else {
+					var x = list.a;
+					var xs = list.b;
+					if (predicate(x)) {
+						var $temp$memo = A2($elm$core$List$cons, x, memo),
+							$temp$list = xs;
+						memo = $temp$memo;
+						list = $temp$list;
+						continue takeWhileMemo;
+					} else {
+						return $elm$core$List$reverse(memo);
+					}
+				}
+			}
+		});
+	return takeWhileMemo(_List_Nil);
+};
+var $author$project$Main$eventsThisWeek = A2(
+	$elm$core$Basics$composeR,
+	$elm_community$list_extra$List$Extra$takeWhile(
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Tuple$first,
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.weekday;
+				},
+				$elm$core$Basics$neq($elm$time$Time$Sun)))),
+	$elm$core$List$concatMap($elm$core$Tuple$second));
+var $capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
+var $capitalist$elm_octicons$Octicons$inbox = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
+var $author$project$Main$lastActiveUser = F2(
+	function (model, cardId) {
+		return A2(
+			$elm$core$Maybe$andThen,
+			function ($) {
+				return $.user;
+			},
+			A2(
+				$elm$core$Maybe$andThen,
+				$elm$core$List$head,
+				A2($elm$core$Dict$get, cardId, model.cardEvents)));
+	});
+var $author$project$Main$viewLeaderboardEntry = function (_v0) {
+	var user = _v0.a;
+	var count = _v0.b;
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('leaderboard-entry')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('leaderboard-person')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$img,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('leaderboard-avatar'),
+								$elm$html$Html$Attributes$src(user.avatar)
+							]),
+						_List_Nil),
+						$elm$html$Html$text(
+						A2($elm$core$Maybe$withDefault, user.login, user.name))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('leaderboard-count')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('leaderboard-count-number')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(
+								$elm$core$String$fromInt(count))
+							]))
+					]))
+			]));
+};
+var $author$project$Main$viewDashboardPage = function (model) {
+	var prLastActivityIsAuthor = function (prId) {
+		var _v5 = _Utils_Tuple2(
+			A2($author$project$Main$lastActiveUser, model, prId),
+			A2($elm$core$Dict$get, prId, model.prs));
+		if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
+			var user = _v5.a.a;
+			var pr = _v5.b.a;
+			return _Utils_eq(
+				user.id,
+				A2(
+					$elm$core$Maybe$withDefault,
+					'',
+					A2(
+						$elm$core$Maybe$map,
+						function ($) {
+							return $.id;
+						},
+						pr.author)));
+		} else {
+			return false;
+		}
+	};
+	var prsWaitingReply = $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.number;
+			},
+			A2(
+				$elm$core$List$filterMap,
+				function (id) {
+					return A2($elm$core$Dict$get, id, model.cards);
+				},
+				A2(
+					$elm$core$List$filter,
+					prLastActivityIsAuthor,
+					$elm$core$List$concat(
+						$elm$core$Dict$values(model.openPRsByRepo))))));
+	var prHasReviewers = function (prId) {
+		return !$elm$core$List$isEmpty(
+			A2(
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2($elm$core$Dict$get, prId, model.prReviewers)));
+	};
+	var prsNeedingAttention = $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortBy,
+			function ($) {
+				return $.number;
+			},
+			A2(
+				$elm$core$List$filterMap,
+				function (id) {
+					return A2($elm$core$Dict$get, id, model.cards);
+				},
+				A2(
+					$elm$core$List$filter,
+					A2($elm$core$Basics$composeL, $elm$core$Basics$not, prHasReviewers),
+					$elm$core$List$concat(
+						$elm$core$Dict$values(model.openPRsByRepo))))));
+	var eventCounts = function (event) {
+		switch (event) {
+			case 'review-comment':
+				return true;
+			case 'review-approved':
+				return true;
+			case 'review-changes-requested':
+				return true;
+			default:
+				return false;
+		}
+	};
+	var events = A2(
+		$elm$core$List$filter,
+		A2(
+			$elm$core$Basics$composeR,
+			function ($) {
+				return $.event;
+			},
+			A2(
+				$elm$core$Basics$composeR,
+				function ($) {
+					return $.event;
+				},
+				eventCounts)),
+		$author$project$Main$eventsThisWeek(
+			A2($author$project$Main$groupEvents, model.currentZone, model.archive)));
+	var bumpLeaderboard = F2(
+		function (user, entry) {
+			if (entry.$ === 'Nothing') {
+				return $elm$core$Maybe$Just(
+					_Utils_Tuple2(user, 1));
+			} else {
+				var _v3 = entry.a;
+				var count = _v3.b;
+				return $elm$core$Maybe$Just(
+					_Utils_Tuple2(user, count + 1));
+			}
+		});
+	var countUserEvent = F2(
+		function (event, byUser) {
+			var _v1 = event.user;
+			if (_v1.$ === 'Nothing') {
+				return byUser;
+			} else {
+				var user = _v1.a;
+				return A3(
+					$elm$core$Dict$update,
+					user.id,
+					bumpLeaderboard(user),
+					byUser);
+			}
+		});
+	var leaderboard = $elm$core$List$reverse(
+		A2(
+			$elm$core$List$sortBy,
+			$elm$core$Tuple$second,
+			$elm$core$Dict$values(
+				A3(
+					$elm$core$List$foldl,
+					function (_v0) {
+						var event = _v0.event;
+						return countUserEvent(event);
+					},
+					$elm$core$Dict$empty,
+					events))));
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('page-content dashboard')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('dashboard-pane leaderboard-pane')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('page-header')
+							]),
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$flame($author$project$Main$octiconOpts),
+								$elm$html$Html$text('Review Leaderboard')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('leaderboard')
+							]),
+						A2($elm$core$List$map, $author$project$Main$viewLeaderboardEntry, leaderboard))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('dashboard-pane review-inbox-pane')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('page-header')
+							]),
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$inbox($author$project$Main$octiconOpts),
+								$elm$html$Html$text('Review Inbox')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('dashboard-cards')
+							]),
+						A2(
+							$elm$core$List$map,
+							A2($author$project$CardView$viewCard, model, _List_Nil),
+							prsNeedingAttention))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('dashboard-pane author-waiting-pane')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('page-header')
+							]),
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$clock($author$project$Main$octiconOpts),
+								$elm$html$Html$text('Author Waiting')
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('dashboard-cards')
+							]),
+						A2(
+							$elm$core$List$map,
+							A2($author$project$CardView$viewCard, model, _List_Nil),
+							prsWaitingReply))
+					]))
+			]));
+};
 var $author$project$StatefulGraph$graphId = function (graph) {
 	return A3(
 		$elm$core$List$foldl,
@@ -22248,16 +22578,12 @@ var $author$project$Model$SetGraphSort = function (a) {
 };
 var $author$project$Model$ToggleLabelFilters = {$: 'ToggleLabelFilters'};
 var $author$project$Model$UntriagedFilter = {$: 'UntriagedFilter'};
-var $capitalist$elm_octicons$Octicons$clockPath = 'M8,8 L11,8 L11,10 L7,10 C6.45,10 6,9.55 6,9 L6,4 L8,4 L8,8 L8,8 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
-var $capitalist$elm_octicons$Octicons$clock = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$clockPath, '0 0 14 16', 'clock');
 var $capitalist$elm_octicons$Octicons$commentDiscussionPath = 'M15,1 L6,1 C5.45,1 5,1.45 5,2 L5,4 L1,4 C0.45,4 0,4.45 0,5 L0,11 C0,11.55 0.45,12 1,12 L2,12 L2,15 L5,12 L9,12 C9.55,12 10,11.55 10,11 L10,9 L11,9 L14,12 L14,9 L15,9 C15.55,9 16,8.55 16,8 L16,2 C16,1.45 15.55,1 15,1 L15,1 Z M9,11 L4.5,11 L3,12.5 L3,11 L1,11 L1,5 L5,5 L5,8 C5,8.55 5.45,9 6,9 L9,9 L9,11 L9,11 Z M15,8 L13,8 L13,9.5 L11.5,8 L6,8 L6,2 L15,2 L15,8 L15,8 Z';
 var $capitalist$elm_octicons$Octicons$commentDiscussion = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$commentDiscussionPath, '0 0 16 16', 'commentDiscussion');
 var $author$project$StatefulGraph$hasFilter = F2(
 	function (model, filter) {
 		return A2($elm$core$List$member, filter, model.graphFilters);
 	});
-var $capitalist$elm_octicons$Octicons$inboxPath = 'M14,9 L12.87,1.86 C12.79,1.38 12.37,1 11.87,1 L2.13,1 C1.63,1 1.21,1.38 1.13,1.86 L0,9 L0,14 C0,14.55 0.45,15 1,15 L13,15 C13.55,15 14,14.55 14,14 L14,9 L14,9 Z M10.72,9.55 L10.28,10.44 C10.11,10.78 9.76,11 9.37,11 L4.61,11 C4.23,11 3.89,10.78 3.72,10.45 L3.28,9.54 C3.11,9.21 2.76,8.99 2.39,8.99 L1,8.99 L2,1.99 L12,1.99 L13,8.99 L11.62,8.99 C11.23,8.99 10.89,9.21 10.71,9.54 L10.72,9.55 Z';
-var $capitalist$elm_octicons$Octicons$inbox = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$inboxPath, '0 0 14 16', 'inbox');
 var $author$project$StatefulGraph$viewGraphControls = function (model) {
 	var labelFilters = A2(
 		$elm$core$List$filterMap,
@@ -23190,190 +23516,6 @@ var $author$project$Main$viewLabelsPage = function (model) {
 				labelRows)
 			]));
 };
-var $elm_community$list_extra$List$Extra$takeWhile = function (predicate) {
-	var takeWhileMemo = F2(
-		function (memo, list) {
-			takeWhileMemo:
-			while (true) {
-				if (!list.b) {
-					return $elm$core$List$reverse(memo);
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					if (predicate(x)) {
-						var $temp$memo = A2($elm$core$List$cons, x, memo),
-							$temp$list = xs;
-						memo = $temp$memo;
-						list = $temp$list;
-						continue takeWhileMemo;
-					} else {
-						return $elm$core$List$reverse(memo);
-					}
-				}
-			}
-		});
-	return takeWhileMemo(_List_Nil);
-};
-var $author$project$Main$eventsThisWeek = A2(
-	$elm$core$Basics$composeR,
-	$elm_community$list_extra$List$Extra$takeWhile(
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Tuple$first,
-			A2(
-				$elm$core$Basics$composeR,
-				function ($) {
-					return $.weekday;
-				},
-				$elm$core$Basics$neq($elm$time$Time$Sun)))),
-	$elm$core$List$concatMap($elm$core$Tuple$second));
-var $author$project$Main$viewLeaderboardEntry = function (_v0) {
-	var user = _v0.a;
-	var count = _v0.b;
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('leaderboard-entry')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('leaderboard-person')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('leaderboard-avatar'),
-								$elm$html$Html$Attributes$src(user.avatar)
-							]),
-						_List_Nil),
-						$elm$html$Html$text(
-						A2($elm$core$Maybe$withDefault, user.login, user.name))
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('leaderboard-count')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('leaderboard-count-number')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$elm$core$String$fromInt(count))
-							]))
-					]))
-			]));
-};
-var $author$project$Main$viewLeaderboardPage = function (model) {
-	var eventCounts = function (event) {
-		switch (event) {
-			case 'review-comment':
-				return true;
-			case 'review-approved':
-				return true;
-			case 'review-changes-requested':
-				return true;
-			default:
-				return false;
-		}
-	};
-	var events = A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeR,
-			function ($) {
-				return $.event;
-			},
-			A2(
-				$elm$core$Basics$composeR,
-				function ($) {
-					return $.event;
-				},
-				eventCounts)),
-		$author$project$Main$eventsThisWeek(
-			A2($author$project$Main$groupEvents, model.currentZone, model.archive)));
-	var bumpLeaderboard = F2(
-		function (user, entry) {
-			if (entry.$ === 'Nothing') {
-				return $elm$core$Maybe$Just(
-					_Utils_Tuple2(user, 1));
-			} else {
-				var _v3 = entry.a;
-				var count = _v3.b;
-				return $elm$core$Maybe$Just(
-					_Utils_Tuple2(user, count + 1));
-			}
-		});
-	var countUserEvent = F2(
-		function (event, byUser) {
-			var _v1 = event.user;
-			if (_v1.$ === 'Nothing') {
-				return byUser;
-			} else {
-				var user = _v1.a;
-				return A3(
-					$elm$core$Dict$update,
-					user.id,
-					bumpLeaderboard(user),
-					byUser);
-			}
-		});
-	var leaderboard = $elm$core$List$reverse(
-		A2(
-			$elm$core$List$sortBy,
-			$elm$core$Tuple$second,
-			$elm$core$Dict$values(
-				A3(
-					$elm$core$List$foldl,
-					function (_v0) {
-						var event = _v0.event;
-						return countUserEvent(event);
-					},
-					$elm$core$Dict$empty,
-					events))));
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('page-content')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('page-header')
-					]),
-				_List_fromArray(
-					[
-						$capitalist$elm_octicons$Octicons$flame($author$project$Main$octiconOpts),
-						$elm$html$Html$text('Review Leaderboard')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('leaderboard')
-					]),
-				A2($elm$core$List$map, $author$project$Main$viewLeaderboardEntry, leaderboard))
-			]));
-};
 var $author$project$Main$viewProjectPage = F2(
 	function (model, project) {
 		return A2(
@@ -23764,9 +23906,9 @@ var $author$project$Main$pageRoute = function (page) {
 		case 'ArchivePage':
 			return _List_fromArray(
 				['archive']);
-		case 'LeaderboardPage':
+		case 'DashboardPage':
 			return _List_fromArray(
-				['leaderboard']);
+				['dashboard']);
 		default:
 			return _List_Nil;
 	}
@@ -24048,18 +24190,6 @@ var $author$project$Main$hasMergeConflict = function (card) {
 		return false;
 	}
 };
-var $author$project$Main$lastActiveUser = F2(
-	function (model, card) {
-		return A2(
-			$elm$core$Maybe$andThen,
-			function ($) {
-				return $.user;
-			},
-			A2(
-				$elm$core$Maybe$andThen,
-				$elm$core$List$head,
-				A2($elm$core$Dict$get, card.id, model.cardEvents)));
-	});
 var $capitalist$elm_octicons$Octicons$lawPath = 'M7,4 C6.17,4 5.5,3.33 5.5,2.5 C5.5,1.67 6.17,1 7,1 C7.83,1 8.5,1.67 8.5,2.5 C8.5,3.33 7.83,4 7,4 L7,4 Z M14,10 C14,11.11 13.11,12 12,12 L11,12 C9.89,12 9,11.11 9,10 L11,6 L10,6 C9.45,6 9,5.55 9,5 L8,5 L8,13 C8.42,13 9,13.45 9,14 L10,14 C10.42,14 11,14.45 11,15 L3,15 C3,14.45 3.58,14 4,14 L5,14 C5,13.45 5.58,13 6,13 L6.03,13 L6,5 L5,5 C5,5.55 4.55,6 4,6 L3,6 L5,10 C5,11.11 4.11,12 3,12 L2,12 C0.89,12 0,11.11 0,10 L2,6 L1,6 L1,5 L4,5 C4,4.45 4.45,4 5,4 L9,4 C9.55,4 10,4.45 10,5 L13,5 L13,6 L12,6 L14,10 L14,10 Z M2.5,7 L1,10 L4,10 L2.5,7 L2.5,7 Z M13,10 L11.5,7 L10,10 L13,10 L13,10 Z';
 var $capitalist$elm_octicons$Octicons$law = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$lawPath, '0 0 14 16', 'law');
 var $author$project$Main$viewRepoPullRequestsPage = F2(
@@ -24081,7 +24211,7 @@ var $author$project$Main$viewRepoPullRequestsPage = F2(
 					A2($elm$core$Dict$get, repoName, model.reposByName))));
 		var categorizeCard = F2(
 			function (card, cat) {
-				var lastWord = A2($author$project$Main$lastActiveUser, model, card);
+				var lastWord = A2($author$project$Main$lastActiveUser, model, card.id);
 				var reviewersHaveLastWord = function () {
 					if (lastWord.$ === 'Just') {
 						var login = lastWord.a.login;
@@ -24272,8 +24402,8 @@ var $author$project$Main$viewPage = function (model) {
 						return A2($author$project$Main$viewRepoPullRequestsPage, model, repoName);
 					case 'ArchivePage':
 						return $author$project$Main$viewArchivePage(model);
-					case 'LeaderboardPage':
-						return $author$project$Main$viewLeaderboardPage(model);
+					case 'DashboardPage':
+						return $author$project$Main$viewDashboardPage(model);
 					default:
 						return $elm$html$Html$text('you shouldn\'t see this');
 				}

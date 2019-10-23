@@ -97,7 +97,7 @@ routeParser =
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
-        , UP.map LeaderboardPage (UP.s "leaderboard")
+        , UP.map DashboardPage (UP.s "dashboard")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -134,8 +134,8 @@ pageRoute page =
         ArchivePage ->
             [ "archive" ]
 
-        LeaderboardPage ->
-            [ "leaderboard" ]
+        DashboardPage ->
+            [ "dashboard" ]
 
         BouncePage ->
             []
@@ -1021,8 +1021,8 @@ pageTitle model =
             ArchivePage ->
                 "Archive"
 
-            LeaderboardPage ->
-                "Leaderboard"
+            DashboardPage ->
+                "Dashboard"
 
             BouncePage ->
                 "Bounce"
@@ -1080,8 +1080,8 @@ viewPage model =
             ArchivePage ->
                 viewArchivePage model
 
-            LeaderboardPage ->
-                viewLeaderboardPage model
+            DashboardPage ->
+                viewDashboardPage model
 
             BouncePage ->
                 Html.text "you shouldn't see this"
@@ -1114,7 +1114,7 @@ viewNavBar model =
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
             , navButton model Octicons.tag "Labels" "/labels"
-            , navButton model Octicons.flame "Leaderboard" "/leaderboard"
+            , navButton model Octicons.flame "Dashboard" "/dashboard"
             ]
         , case model.me of
             Nothing ->
@@ -1149,8 +1149,8 @@ navButton model icon label route =
                 ArchivePage ->
                     label == "Archive"
 
-                LeaderboardPage ->
-                    label == "Leaderboard"
+                DashboardPage ->
+                    label == "Dashboard"
 
                 LabelsPage ->
                     label == "Labels"
@@ -1488,7 +1488,7 @@ viewRepoPullRequestsPage model repoName =
         categorizeCard card cat =
             let
                 lastWord =
-                    lastActiveUser model card
+                    lastActiveUser model card.id
 
                 reviewersHaveLastWord =
                     case lastWord of
@@ -1580,8 +1580,8 @@ viewArchivePage model =
         ]
 
 
-viewLeaderboardPage : Model -> Html Msg
-viewLeaderboardPage model =
+viewDashboardPage : Model -> Html Msg
+viewDashboardPage model =
     let
         eventCounts event =
             case event of
@@ -1626,14 +1626,60 @@ viewLeaderboardPage model =
                 |> Dict.values
                 |> List.sortBy Tuple.second
                 |> List.reverse
+
+        prHasReviewers prId =
+            Dict.get prId model.prReviewers
+                |> Maybe.withDefault []
+                |> List.isEmpty
+                |> not
+
+        prLastActivityIsAuthor prId =
+            case ( lastActiveUser model prId, Dict.get prId model.prs ) of
+                ( Just user, Just pr ) ->
+                    user.id == Maybe.withDefault "" (Maybe.map .id pr.author)
+
+                _ ->
+                    False
+
+        prsNeedingAttention =
+            List.concat (Dict.values model.openPRsByRepo)
+                |> List.filter (not << prHasReviewers)
+                |> List.filterMap (\id -> Dict.get id model.cards)
+                |> List.sortBy .number
+                |> List.reverse
+
+        prsWaitingReply =
+            List.concat (Dict.values model.openPRsByRepo)
+                |> List.filter prLastActivityIsAuthor
+                |> List.filterMap (\id -> Dict.get id model.cards)
+                |> List.sortBy .number
+                |> List.reverse
     in
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Octicons.flame octiconOpts
-            , Html.text "Review Leaderboard"
+    Html.div [ HA.class "page-content dashboard" ]
+        [ Html.div [ HA.class "dashboard-pane leaderboard-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.flame octiconOpts
+                , Html.text "Review Leaderboard"
+                ]
+            , Html.div [ HA.class "leaderboard" ]
+                (List.map viewLeaderboardEntry leaderboard)
             ]
-        , Html.div [ HA.class "leaderboard" ]
-            (List.map viewLeaderboardEntry leaderboard)
+        , Html.div [ HA.class "dashboard-pane review-inbox-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.inbox octiconOpts
+                , Html.text "Review Inbox"
+                ]
+            , Html.div [ HA.class "dashboard-cards" ] <|
+                List.map (CardView.viewCard model []) prsNeedingAttention
+            ]
+        , Html.div [ HA.class "dashboard-pane author-waiting-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.clock octiconOpts
+                , Html.text "Author Waiting"
+                ]
+            , Html.div [ HA.class "dashboard-cards" ] <|
+                List.map (CardView.viewCard model []) prsWaitingReply
+            ]
         ]
 
 
@@ -2225,9 +2271,9 @@ viewSearch model =
         ]
 
 
-lastActiveUser : Model -> Card -> Maybe GitHub.User
-lastActiveUser model card =
-    Dict.get card.id model.cardEvents
+lastActiveUser : Model -> GitHub.ID -> Maybe GitHub.User
+lastActiveUser model cardId =
+    Dict.get cardId model.cardEvents
         |> Maybe.andThen List.head
         |> Maybe.andThen .user
 

@@ -94,9 +94,13 @@ h4 {
 @card-border-radius: 6px;
 
 .card {
+  // reset base font size to 10px so we can use em for everything and scale the
+  // entire card
+  font-size: 10px;
+
   width: @card-width;
   background: @white;
-  border: 1px solid @gray-200;
+  border: 0.1em solid @gray-200;
   border-radius: @card-border-radius;
   box-sizing: border-box;
   background: #fff;
@@ -107,10 +111,10 @@ h4 {
   flex-direction: row;
   position: relative;
 
-  box-shadow: 0 1px 1px fade(@black, 10%);
+  box-shadow: 0 0.1em 0.1em fade(@black, 10%);
 
   &:hover {
-    box-shadow: 0 1px 3px fade(@gray, 30%);
+    box-shadow: 0 0.1em 0.3em fade(@gray, 30%);
   }
 
   &:focus {
@@ -120,7 +124,7 @@ h4 {
   }
 
   &.highlighted {
-    box-shadow: 0 0 0 5px @yellow;
+    box-shadow: 0 0 0 0.5em @yellow;
   }
 
   &.in-flight, &.done, &.backlog, &.icebox {
@@ -128,11 +132,11 @@ h4 {
       content: " ";
       position: absolute;
       top: 0;
-      left: 0.5px;
-      right: 0.5px;
+      left: 0.05em;
+      right: 0.05em;
       height: 0;
-      border-top-left-radius: 5px;
-      border-top-right-radius: 5px;
+      border-top-left-radius: 0.5em;
+      border-top-right-radius: 0.5em;
     }
   }
 
@@ -158,9 +162,163 @@ h4 {
 
   &.loading {
     .loading-text {
-      font-size: 16px;
+      font-size: 1.6em;
       color: @gray;
     }
+  }
+}
+
+.card-info {
+  flex-grow: 1;
+  padding: 1em;
+  padding-left: 0.8em;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  .card-title {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: @gray-900;
+    display: flex;
+    flex-direction: row;
+
+    .title-link {
+      flex-grow: 1;
+    }
+  }
+
+  .card-meta {
+    margin-top: 0.4em;
+    font-size: 1.2em;
+    color: @gray-600;
+    line-height: 1.4;
+    flex-grow: 1;
+  }
+
+  a:hover {
+    color: @blue;
+  }
+}
+
+.card-note {
+  font-size: 1.4em;
+  overflow-wrap: break-word;
+  width: 0;
+  flex-grow: 1;
+}
+
+.card-icons, .card-controls {
+  display: flex;
+  flex-direction: column;
+  padding: 1em;
+
+  > * {
+    margin-bottom: 0.8em;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+
+  .octicon {
+    width: 1.6em;
+    height: 1.6em;
+
+    &.project {
+      width: 1.5em;
+    }
+  }
+}
+
+.card-icons {
+  padding-right: 0;
+
+  .status-actor {
+    width: 1.6em;
+    height: 1.6em;
+    border-radius: 0.3em;
+
+    &.pending { border: 0.1em solid @yellow; }
+    &.success { border: 0.1em solid @green; }
+    &.failure { border: 0.1em solid @red; }
+    &.expected { border: 0.1em solid @purple; }
+    &.error { border: 0.1em solid @orange; }
+  }
+
+  .pause-toggle {
+    cursor: pointer;
+
+    * {
+      fill: @gray-300;
+    }
+
+    &.paused *, &:hover * {
+      fill: @gray-600;
+    }
+  }
+}
+
+.card-controls {
+  padding-left: 0;
+
+  .octicon {
+    cursor: pointer;
+  }
+
+  .octicon * {
+    fill: @gray-light;
+  }
+
+  .octicon:hover * {
+    fill: @gray-900;
+  }
+
+  .delete-card {
+    .octicon:hover * {
+      fill: @red;
+    }
+  }
+
+  .unarchive {
+    .octicon * {
+      fill: @gray-900;
+    }
+  }
+}
+
+.card-actors {
+  height: 1.8em;
+  position: absolute;
+  bottom: 1em;
+  right: 1em;
+}
+
+.card-actor {
+  position: relative;
+  display: inline-block;
+  width: 1.8em;
+  height: 1.8em;
+  box-sizing: content-box;
+  margin-left: 0.4em;
+  background-color: #fff;
+  border-radius: 0.3em;
+
+  &.active-today {
+    opacity: 1;
+  }
+
+  &.active-yesterday {
+    opacity: 0.75;
+  }
+
+  &.active-this-week {
+    opacity: 0.5;
+  }
+
+  &.active-long-ago {
+    opacity: 0.25;
   }
 }
 
@@ -314,86 +472,6 @@ h4 {
   cursor: move;
 }
 
-.card-icons, .card-controls {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-
-  > * {
-    margin-bottom: 8px;
-  }
-
-  > :last-child {
-    margin-bottom: 0;
-  }
-
-  .octicon {
-    width: 16px;
-    height: 16px;
-
-    &.project {
-      width: 15px;
-    }
-  }
-
-}
-
-.card-icons {
-  padding-right: 0;
-
-  .status-actor {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-
-    &.pending { border: 1px solid @yellow; }
-    &.success { border: 1px solid @green; }
-    &.failure { border: 1px solid @red; }
-    &.expected { border: 1px solid @purple; }
-    &.error { border: 1px solid @orange; }
-  }
-
-  .pause-toggle {
-    cursor: pointer;
-
-    * {
-      fill: @gray-300;
-    }
-
-    &.paused *, &:hover * {
-      fill: @gray-600;
-    }
-  }
-}
-
-.card-controls {
-  padding-left: 0;
-
-  .octicon {
-    cursor: pointer;
-  }
-
-  .octicon * {
-    fill: @gray-light;
-  }
-
-  .octicon:hover * {
-    fill: @gray-900;
-  }
-
-  .delete-card {
-    .octicon:hover * {
-      fill: @red;
-    }
-  }
-
-  .unarchive {
-    .octicon * {
-      fill: @gray-900;
-    }
-  }
-}
-
 .external-link {
   * {
     fill: @gray-300;
@@ -402,47 +480,6 @@ h4 {
   &:hover * {
     fill: @gray-600;
   }
-}
-
-.card-info {
-  flex-grow: 1;
-  padding: 10px;
-  padding-left: 8px;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-
-  .card-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: @gray-900;
-    display: flex;
-    flex-direction: row;
-
-    .title-link {
-      flex-grow: 1;
-    }
-  }
-
-  .card-meta {
-    margin-top: 4px;
-    font-size: 12px;
-    color: @gray-600;
-    line-height: 1.4;
-    flex-grow: 1;
-  }
-
-  a:hover {
-    color: @blue;
-  }
-}
-
-.card-note {
-  font-size: 14px;
-  overflow-wrap: break-word;
-  width: 0;
-  flex-grow: 1;
 }
 
 .project-body {
@@ -561,40 +598,6 @@ h4 {
     &.octicon-dash {
       margin-left: 2px;
     }
-  }
-}
-
-.card-actors {
-  height: 18px;
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-}
-
-.card-actor {
-  position: relative;
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  box-sizing: content-box;
-  margin-left: 4px;
-  background-color: #fff;
-  border-radius: 3px;
-
-  &.active-today {
-    opacity: 1;
-  }
-
-  &.active-yesterday {
-    opacity: 0.75;
-  }
-
-  &.active-this-week {
-    opacity: 0.5;
-  }
-
-  &.active-long-ago {
-    opacity: 0.25;
   }
 }
 
@@ -1801,9 +1804,16 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.leaderboard {
-  width: 25vw;
-  height: 80vh;
+.dashboard {
+  display: grid;
+  grid-template-columns: 5fr 10fr 10fr;
+  grid-template-rows: 90vh;
+  grid-template-areas:
+    "leaderboard review-inbox author-waiting";
+  grid-gap: 24px;
+}
+
+.dashboard-pane {
   overflow: hidden;
   position: relative;
 
@@ -1818,6 +1828,18 @@ a.column-title:hover, .page-header a:hover {
     background-image: linear-gradient(to bottom, fade(@gray-100, 0%), @gray-100 90%);
     height: 4em;
   }
+}
+
+.leaderboard-pane {
+  grid-area: leaderboard;
+}
+
+.review-inbox-pane {
+  grid-area: review-inbox;
+}
+
+.author-waiting-pane {
+  grid-area: author-waiting;
 }
 
 .leaderboard-entry {
@@ -1836,6 +1858,7 @@ a.column-title:hover, .page-header a:hover {
 
 .leaderboard-person {
   color: @gray;
+  font-weight: bold;
 }
 
 .leaderboard-person, .leaderboard-count {
@@ -1843,16 +1866,14 @@ a.column-title:hover, .page-header a:hover {
   flex-grow: 1;
 }
 
-.leaderboard-count {
-  .leaderboard-count-number {
-    background: @gray-800;
-    color: @white;
-    line-height: 48px;
-    border-radius: 5px;
-    width: 48px;
-    text-align: center;
-    display: inline-block;
-  }
+.leaderboard-count-number {
+  background: @gray-800;
+  color: @white;
+  line-height: 48px;
+  border-radius: 5px;
+  width: 48px;
+  text-align: center;
+  display: inline-block;
 }
 
 .leaderboard-avatar {
@@ -1866,4 +1887,14 @@ a.column-title:hover, .page-header a:hover {
 .leaderboard-count {
   font-weight: bold;
   text-align: right;
+}
+
+.dashboard-cards {
+  .card {
+    font-size: 15px;
+
+    margin-bottom: 10px;
+
+    width: auto;
+  }
 }
