@@ -29,6 +29,7 @@
             "fredcy/elm-parseint": "2.0.1",
             "gampleman/elm-visualization": "2.0.0",
             "jamesmacaulay/elm-graphql": "2.0.0",
+            "justinmimbs/time-extra": "1.1.0",
             "lukewestby/elm-http-builder": "6.0.0",
             "rtfeldman/elm-iso8601-date-strings": "1.1.2",
             "ryannhg/date-format": "2.3.0",
@@ -45,8 +46,7 @@
             "ianmackenzie/elm-geometry": "1.2.1",
             "ianmackenzie/elm-interval": "1.0.1",
             "ianmackenzie/elm-triangular-mesh": "1.0.2",
-            "justinmimbs/date": "3.1.2",
-            "justinmimbs/time-extra": "1.1.0"
+            "justinmimbs/date": "3.1.2"
         }
     },
     "test-dependencies": {

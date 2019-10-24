@@ -32,6 +32,7 @@ import Set exposing (Set)
 import StatefulGraph
 import Task
 import Time
+import Time.Extra as TE
 import Url exposing (Url)
 import Url.Builder as UB
 import Url.Parser as UP exposing ((</>), (<?>))
@@ -1575,8 +1576,8 @@ viewArchivePage model =
             [ Octicons.history octiconOpts
             , Html.text "Archive"
             ]
-        , groupEvents model.currentZone model.archive
-            |> List.take 7
+        , eventsThisWeek model
+            |> groupEvents model.currentZone
             |> List.map (\( a, b ) -> viewArchiveDay model a b)
             |> Html.div [ HA.class "archive-columns" ]
         ]
@@ -1600,8 +1601,7 @@ viewDashboardPage model =
                     False
 
         events =
-            groupEvents model.currentZone model.archive
-                |> eventsThisWeek
+            eventsThisWeek model
                 |> List.filter (.event >> .event >> eventCounts)
 
         bumpLeaderboard user entry =
@@ -1887,13 +1887,17 @@ groupEvents zone =
                 [] ->
                     [ ( day, [ event ] ) ]
     in
-    List.foldl insertEvent []
+    List.foldr insertEvent []
 
 
-eventsThisWeek : List ( ArchiveDay, List Model.ArchiveEvent ) -> List Model.ArchiveEvent
-eventsThisWeek =
-    LE.takeWhile (Tuple.first >> .weekday >> (/=) Time.Sun)
-        >> List.concatMap Tuple.second
+eventsThisWeek : Model -> List Model.ArchiveEvent
+eventsThisWeek model =
+    let
+        startOfWeek =
+            TE.floor TE.Week model.currentZone model.currentTime
+                |> Time.posixToMillis
+    in
+    LE.takeWhile (eventMillis >> (<) startOfWeek) model.archive
 
 
 matchesLabel : Model.SharedLabel -> GitHub.Label -> Bool
@@ -2426,11 +2430,27 @@ computeArchive model cards =
                 }
             }
                 :: actorEvents card
+
+        latestFirst e1 e2 =
+            case compare (eventMillis e1) (eventMillis e2) of
+                EQ ->
+                    EQ
+
+                LT ->
+                    GT
+
+                GT ->
+                    LT
     in
     cards
         |> Dict.values
         |> List.concatMap cardEvents
-        |> List.sortBy (.event >> .createdAt >> Time.posixToMillis)
+        |> List.sortWith latestFirst
+
+
+eventMillis : Model.ArchiveEvent -> Int
+eventMillis =
+    .event >> .createdAt >> Time.posixToMillis
 
 
 setLoading : List GitHub.ID -> Model -> Model
