@@ -1643,6 +1643,11 @@ viewDashboardPage model =
                 _ ->
                     False
 
+        prIsReadyToMerge prId =
+            Dict.get prId model.prReviewers
+                |> Maybe.withDefault []
+                |> (\rs -> not (List.isEmpty rs) && List.all (.state >> (==) GitHub.PullRequestReviewStateApproved) rs)
+
         prsNeedingAttention =
             List.concat (Dict.values model.openPRsByRepo)
                 |> List.filter (not << prHasReviewers)
@@ -1653,6 +1658,13 @@ viewDashboardPage model =
         prsWaitingReply =
             List.concat (Dict.values model.openPRsByRepo)
                 |> List.filter prLastActivityIsAuthor
+                |> List.filterMap (\id -> Dict.get id model.cards)
+                |> List.sortBy .number
+                |> List.reverse
+
+        prsWaitingMerge =
+            List.concat (Dict.values model.openPRsByRepo)
+                |> List.filter prIsReadyToMerge
                 |> List.filterMap (\id -> Dict.get id model.cards)
                 |> List.sortBy .number
                 |> List.reverse
@@ -1681,6 +1693,14 @@ viewDashboardPage model =
                 ]
             , Html.div [ HA.class "dashboard-cards" ] <|
                 List.map (CardView.viewCard model []) prsWaitingReply
+            ]
+        , Html.div [ HA.class "dashboard-pane approved-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.check octiconOpts
+                , Html.text "Approved"
+                ]
+            , Html.div [ HA.class "dashboard-cards" ] <|
+                List.map (CardView.viewCard model []) prsWaitingMerge
             ]
         ]
 

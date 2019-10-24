@@ -1811,10 +1811,10 @@ a.column-title:hover, .page-header a:hover {
 
 .dashboard {
   display: grid;
-  grid-template-columns: 2fr 3fr 3fr;
+  grid-template-columns: 2fr 3fr 3fr 3fr;
   grid-template-rows: 90vh;
   grid-template-areas:
-    "leaderboard review-inbox author-waiting";
+    "leaderboard review-inbox author-waiting approved";
   grid-gap: 24px;
 }
 
@@ -1845,6 +1845,10 @@ a.column-title:hover, .page-header a:hover {
 
 .author-waiting-pane {
   grid-area: author-waiting;
+}
+
+.approved-pane {
+  grid-area: approved;
 }
 
 .leaderboard-entry {
