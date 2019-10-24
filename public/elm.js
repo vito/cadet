@@ -20421,7 +20421,7 @@ var $author$project$Main$viewArchivePage = function (model) {
 				_List_fromArray(
 					[
 						$capitalist$elm_octicons$Octicons$history($author$project$Main$octiconOpts),
-						$elm$html$Html$text('Archive')
+						$elm$html$Html$text('Weekly Archive')
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -20695,7 +20695,7 @@ var $author$project$Main$viewDashboardPage = function (model) {
 						_List_fromArray(
 							[
 								$capitalist$elm_octicons$Octicons$flame($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Review Leaderboard')
+								$elm$html$Html$text('Weekly Review Leaderboard')
 							])),
 						A2(
 						$elm$html$Html$div,

@@ -1574,7 +1574,7 @@ viewArchivePage model =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.history octiconOpts
-            , Html.text "Archive"
+            , Html.text "Weekly Archive"
             ]
         , eventsThisWeek model
             |> groupEvents model.currentZone
@@ -1673,7 +1673,7 @@ viewDashboardPage model =
         [ Html.div [ HA.class "dashboard-pane leaderboard-pane" ]
             [ Html.div [ HA.class "page-header" ]
                 [ Octicons.flame octiconOpts
-                , Html.text "Review Leaderboard"
+                , Html.text "Weekly Review Leaderboard"
                 ]
             , Html.div [ HA.class "leaderboard" ]
                 (List.map viewLeaderboardEntry leaderboard)
