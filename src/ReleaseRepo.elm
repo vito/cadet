@@ -1,8 +1,8 @@
 module ReleaseRepo exposing (init, view)
 
-import Card exposing (Card)
+import Card
 import Colors
-import Dict exposing (Dict)
+import Dict
 import GitHub
 import Html exposing (Html)
 import Html.Attributes as HA

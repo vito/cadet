@@ -209,6 +209,8 @@ type alias PullRequest =
     , milestone : Maybe Milestone
     , mergeable : MergeableState
     , lastCommit : Maybe Commit
+    , baseRefName : String
+    , headRefName : String
     }
 
 
@@ -1546,6 +1548,8 @@ prObject =
                     GB.extract (GB.field "nodes" [] (GB.list (GB.extract (GB.field "commit" [] commitObject))))
                 )
             )
+        |> GB.with (GB.field "baseRefName" [] GB.string)
+        |> GB.with (GB.field "headRefName" [] GB.string)
 
 
 commitObject : GB.ValueSpec GB.NonNull GB.ObjectType Commit vars
@@ -2099,6 +2103,8 @@ decodePullRequest =
         |> andMap (JD.field "milestone" <| JD.maybe decodeMilestone)
         |> andMap (JD.field "mergeable" decodeMergeableState)
         |> andMap (JD.field "last_commit" <| JD.maybe decodeCommit)
+        |> andMap (JD.field "base_ref_name" <| JD.string)
+        |> andMap (JD.field "head_ref_name" <| JD.string)
 
 
 decodeCommit : JD.Decoder Commit
@@ -2447,6 +2453,8 @@ encodePullRequest record =
         , ( "milestone", JEE.maybe encodeMilestone record.milestone )
         , ( "mergeable", encodeMergeableState record.mergeable )
         , ( "last_commit", JEE.maybe encodeCommit record.lastCommit )
+        , ( "base_ref_name", JE.string record.baseRefName )
+        , ( "head_ref_name", JE.string record.headRefName )
         ]
 
 
