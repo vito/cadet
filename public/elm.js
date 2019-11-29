@@ -25093,8 +25093,7 @@ var $author$project$ReleaseStatus$view = F2(
 												]),
 											_List_fromArray(
 												[
-													$capitalist$elm_octicons$Octicons$clock($author$project$ReleaseStatus$octiconOpts),
-													$elm$html$Html$text('due '),
+													$capitalist$elm_octicons$Octicons$calendar($author$project$ReleaseStatus$octiconOpts),
 													$elm$html$Html$text(
 													A3($ryannhg$date_format$DateFormat$format, $author$project$ReleaseStatus$dueDate, $elm$time$Time$utc, dueOn))
 												]));

@@ -287,8 +287,7 @@ view model sir =
                                   )
                                 ]
                             ]
-                            [ Octicons.clock octiconOpts
-                            , Html.text "due "
+                            [ Octicons.calendar octiconOpts
 
                             -- Value from GitHub is UTC; ignore current zone
                             , Html.text (DateFormat.format dueDate Time.utc dueOn)
