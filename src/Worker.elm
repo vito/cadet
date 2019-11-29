@@ -37,7 +37,7 @@ port setPullRequest : JD.Value -> Cmd msg
 port setRepoProjects : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
-port setRepoCommits : ( GitHub.ID, JD.Value ) -> Cmd msg
+port setRepoCommits : ( GitHub.ID, ( String, JD.Value ) ) -> Cmd msg
 
 
 port setRepoLabels : ( GitHub.ID, JD.Value ) -> Cmd msg
@@ -129,6 +129,7 @@ type Msg
     | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
     | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
     | PullRequestTimelineAndReviewsFetched GitHub.ID (Result GitHub.Error ( List GitHub.TimelineEvent, List GitHub.PullRequestReview ))
+    | RepoRefsFetched GitHub.Repo (List GitHub.Release) (Result GitHub.Error (List GitHub.Ref))
 
 
 init : Flags -> ( Model, Cmd Msg )
@@ -483,16 +484,53 @@ update msg model =
                 ( model
                 , Cmd.batch
                     [ setRepoReleases ( repo.id, JE.list GitHub.encodeRelease releases )
-                    , let
-                        refSel =
-                            { repo = { owner = repo.owner, name = repo.name }, qualifiedName = "refs/heads/master" }
-                      in
-                      if not (List.isEmpty releases) then
-                        fetchRepoCommits model repo { selector = refSel, after = Nothing } releases []
+
+                    -- if there are no releases, technically *all* commits are
+                    -- "since last release" - which would just be noise for
+                    -- repos that we don't plan to ship, so don't bother.
+                    , if not (List.isEmpty releases) then
+                        let
+                            nextMinorRefSel =
+                                { repo = { owner = repo.owner, name = repo.name }
+                                , qualifiedName = "refs/heads/master"
+                                }
+                        in
+                        Cmd.batch
+                            [ fetchRepoCommits model repo { selector = nextMinorRefSel, after = Nothing } releases []
+                            , fetchRepoReleaseRefs model repo releases
+                            ]
 
                       else
                         Cmd.none
                     ]
+                )
+
+        RepoRefsFetched repo releases (Err err) ->
+            Log.debug "failed to fetch refs" ( repo.name, err ) <|
+                backOff model (fetchRepoReleaseRefs model repo releases)
+
+        RepoRefsFetched repo releases (Ok refs) ->
+            Log.debug "refs fetched for" repo.url <|
+                ( model
+                , Cmd.batch <|
+                    let
+                        releaseRefs =
+                            List.filter (String.endsWith ".x" << .name) refs
+                    in
+                    List.map
+                        (\{ name } ->
+                            fetchRepoCommits model
+                                repo
+                                { selector =
+                                    { repo = { owner = repo.owner, name = repo.name }
+                                    , qualifiedName = "refs/heads/release/" ++ name
+                                    }
+                                , after = Nothing
+                                }
+                                releases
+                                []
+                        )
+                        releaseRefs
                 )
 
         RepoCommitsPageFetched repo psel releases commitsSoFar (Err err) ->
@@ -524,10 +562,18 @@ update msg model =
                             commits
                   in
                   if reachedRelease then
-                    setRepoCommits ( repo.id, JE.list GitHub.encodeCommit newCommitsSoFar )
+                    setRepoCommits
+                        ( repo.id
+                        , ( psel.selector.qualifiedName
+                          , JE.list GitHub.encodeCommit newCommitsSoFar
+                          )
+                        )
+
+                  else if pageInfo.hasNextPage then
+                    fetchRepoCommits model repo { psel | after = pageInfo.endCursor } releases newCommitsSoFar
 
                   else
-                    fetchRepoCommits model repo { psel | after = pageInfo.endCursor } releases newCommitsSoFar
+                    Cmd.none
                 )
 
         PullRequestFetched (Ok pr) ->
@@ -747,6 +793,12 @@ fetchRepoPullRequest : Model -> GitHub.IssueOrPRSelector -> Cmd Msg
 fetchRepoPullRequest model sel =
     GitHub.fetchRepoPullRequest model.githubToken sel
         |> Task.attempt PullRequestFetched
+
+
+fetchRepoReleaseRefs : Model -> GitHub.Repo -> List GitHub.Release -> Cmd Msg
+fetchRepoReleaseRefs model repo releases =
+    GitHub.fetchRepoRefs model.githubToken { repo = { owner = repo.owner, name = repo.name }, refPrefix = "refs/heads/release/" }
+        |> Task.attempt (RepoRefsFetched repo releases)
 
 
 fetchPullRequest : Model -> GitHub.ID -> Cmd Msg

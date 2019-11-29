@@ -9595,6 +9595,7 @@ var $author$project$GitHub$encodeRepo = function (record) {
 				$elm$json$Json$Encode$bool(record.isArchived))
 			]));
 };
+var $elm$core$String$endsWith = _String_endsWith;
 var $author$project$Worker$CardsFetched = F2(
 	function (a, b) {
 		return {$: 'CardsFetched', a: a, b: b};
@@ -11251,17 +11252,13 @@ var $author$project$Worker$fetchRepoProjects = F3(
 				model.githubToken,
 				{name: repo.name, owner: model.githubOrg}));
 	});
-var $author$project$Worker$RepoReleasesFetched = F2(
-	function (a, b) {
-		return {$: 'RepoReleasesFetched', a: a, b: b};
+var $author$project$Worker$RepoRefsFetched = F3(
+	function (a, b, c) {
+		return {$: 'RepoRefsFetched', a: a, b: b, c: c};
 	});
-var $author$project$GitHub$Release = F4(
-	function (id, url, name, tag) {
-		return {id: id, name: name, tag: tag, url: url};
-	});
-var $author$project$GitHub$Tag = F2(
-	function (name, target) {
-		return {name: name, target: target};
+var $author$project$GitHub$Ref = F3(
+	function (name, prefix, target) {
+		return {name: name, prefix: prefix, target: target};
 	});
 var $author$project$GitHub$GitObject = F2(
 	function (url, oid) {
@@ -11274,6 +11271,166 @@ var $author$project$GitHub$gitObjectObject = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'commitUrl', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$GitObject)));
+var $author$project$GitHub$refObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'target', _List_Nil, $author$project$GitHub$gitObjectObject),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'prefix', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Ref))));
+var $author$project$GitHub$refsQuery = function () {
+	var repoNameVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'repoName',
+		A2(
+			$elm$core$Basics$composeL,
+			A2(
+				$elm$core$Basics$composeL,
+				function ($) {
+					return $.name;
+				},
+				function ($) {
+					return $.repo;
+				}),
+			function ($) {
+				return $.selector;
+			}),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var refPrefixVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'refPrefix',
+		A2(
+			$elm$core$Basics$composeL,
+			function ($) {
+				return $.refPrefix;
+			},
+			function ($) {
+				return $.selector;
+			}),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var pageInfo = A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'hasNextPage', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'endCursor',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PageInfo)));
+	var paged = A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$refObject)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PagedResult)));
+	var orgNameVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'orgName',
+		A2(
+			$elm$core$Basics$composeL,
+			A2(
+				$elm$core$Basics$composeL,
+				function ($) {
+					return $.owner;
+				},
+				function ($) {
+					return $.repo;
+				}),
+			function ($) {
+				return $.selector;
+			}),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var afterVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'after',
+		function ($) {
+			return $.after;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
+	var pageArgs = _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'refPrefix',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(refPrefixVar)),
+			_Utils_Tuple2(
+			'first',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100)),
+			_Utils_Tuple2(
+			'orderBy',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'field',
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('ALPHABETICAL')),
+						_Utils_Tuple2(
+						'direction',
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('DESC'))
+					]))),
+			_Utils_Tuple2(
+			'after',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar))
+		]);
+	var queryRoot = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+		A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'repository',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'owner',
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(orgNameVar)),
+					_Utils_Tuple2(
+					'name',
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(repoNameVar))
+				]),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'refs', pageArgs, paged))));
+	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
+}();
+var $author$project$GitHub$fetchRepoRefs = F2(
+	function (token, refs) {
+		return A3(
+			$author$project$GitHub$fetchPaged,
+			$author$project$GitHub$refsQuery,
+			token,
+			{after: $elm$core$Maybe$Nothing, selector: refs});
+	});
+var $author$project$Worker$fetchRepoReleaseRefs = F3(
+	function (model, repo, releases) {
+		return A2(
+			$elm$core$Task$attempt,
+			A2($author$project$Worker$RepoRefsFetched, repo, releases),
+			A2(
+				$author$project$GitHub$fetchRepoRefs,
+				model.githubToken,
+				{
+					refPrefix: 'refs/heads/release/',
+					repo: {name: repo.name, owner: repo.owner}
+				}));
+	});
+var $author$project$Worker$RepoReleasesFetched = F2(
+	function (a, b) {
+		return {$: 'RepoReleasesFetched', a: a, b: b};
+	});
+var $author$project$GitHub$Release = F4(
+	function (id, url, name, tag) {
+		return {id: id, name: name, tag: tag, url: url};
+	});
+var $author$project$GitHub$Tag = F2(
+	function (name, target) {
+		return {name: name, target: target};
+	});
 var $author$project$GitHub$tagObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'target', _List_Nil, $author$project$GitHub$gitObjectObject),
@@ -11560,7 +11717,18 @@ var $author$project$Worker$setRepoCommits = _Platform_outgoingPort(
 			_List_fromArray(
 				[
 					$elm$json$Json$Encode$string(a),
-					$elm$core$Basics$identity(b)
+					function ($) {
+					var a = $.a;
+					var b = $.b;
+					return A2(
+						$elm$json$Json$Encode$list,
+						$elm$core$Basics$identity,
+						_List_fromArray(
+							[
+								$elm$json$Json$Encode$string(a),
+								$elm$core$Basics$identity(b)
+							]));
+				}(b)
 				]));
 	});
 var $author$project$Worker$setRepoLabels = _Platform_outgoingPort(
@@ -12453,19 +12621,83 @@ var $author$project$Worker$update = F2(
 											repo.id,
 											A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeRelease, releases))),
 										function () {
-										var refSel = {
-											qualifiedName: 'refs/heads/master',
-											repo: {name: repo.name, owner: repo.owner}
-										};
-										return (!$elm$core$List$isEmpty(releases)) ? A5(
-											$author$project$Worker$fetchRepoCommits,
-											model,
-											repo,
-											{after: $elm$core$Maybe$Nothing, selector: refSel},
-											releases,
-											_List_Nil) : $elm$core$Platform$Cmd$none;
+										if (!$elm$core$List$isEmpty(releases)) {
+											var nextMinorRefSel = {
+												qualifiedName: 'refs/heads/master',
+												repo: {name: repo.name, owner: repo.owner}
+											};
+											return $elm$core$Platform$Cmd$batch(
+												_List_fromArray(
+													[
+														A5(
+														$author$project$Worker$fetchRepoCommits,
+														model,
+														repo,
+														{after: $elm$core$Maybe$Nothing, selector: nextMinorRefSel},
+														releases,
+														_List_Nil),
+														A3($author$project$Worker$fetchRepoReleaseRefs, model, repo, releases)
+													]));
+										} else {
+											return $elm$core$Platform$Cmd$none;
+										}
 									}()
 									]))));
+				}
+			case 'RepoRefsFetched':
+				if (msg.c.$ === 'Err') {
+					var repo = msg.a;
+					var releases = msg.b;
+					var err = msg.c.a;
+					return A3(
+						$author$project$Log$debug,
+						'failed to fetch refs',
+						_Utils_Tuple2(repo.name, err),
+						A2(
+							$author$project$Worker$backOff,
+							model,
+							A3($author$project$Worker$fetchRepoReleaseRefs, model, repo, releases)));
+				} else {
+					var repo = msg.a;
+					var releases = msg.b;
+					var refs = msg.c.a;
+					return A3(
+						$author$project$Log$debug,
+						'refs fetched for',
+						repo.url,
+						_Utils_Tuple2(
+							model,
+							$elm$core$Platform$Cmd$batch(
+								function () {
+									var releaseRefs = A2(
+										$elm$core$List$filter,
+										A2(
+											$elm$core$Basics$composeL,
+											$elm$core$String$endsWith('.x'),
+											function ($) {
+												return $.name;
+											}),
+										refs);
+									return A2(
+										$elm$core$List$map,
+										function (_v10) {
+											var name = _v10.name;
+											return A5(
+												$author$project$Worker$fetchRepoCommits,
+												model,
+												repo,
+												{
+													after: $elm$core$Maybe$Nothing,
+													selector: {
+														qualifiedName: 'refs/heads/release/' + name,
+														repo: {name: repo.name, owner: repo.owner}
+													}
+												},
+												releases,
+												_List_Nil);
+										},
+										releaseRefs);
+								}())));
 				}
 			case 'RepoCommitsPageFetched':
 				if (msg.e.$ === 'Err') {
@@ -12487,9 +12719,9 @@ var $author$project$Worker$update = F2(
 					var psel = msg.b;
 					var releases = msg.c;
 					var commitsSoFar = msg.d;
-					var _v10 = msg.e.a;
-					var commits = _v10.a;
-					var pageInfo = _v10.b;
+					var _v11 = msg.e.a;
+					var commits = _v11.a;
+					var pageInfo = _v11.b;
 					return A3(
 						$author$project$Log$debug,
 						'commits fetched for',
@@ -12499,20 +12731,20 @@ var $author$project$Worker$update = F2(
 							function () {
 								var isForCommit = F2(
 									function (commit, release) {
-										var _v13 = release.tag;
-										if (_v13.$ === 'Nothing') {
+										var _v14 = release.tag;
+										if (_v14.$ === 'Nothing') {
 											return false;
 										} else {
-											var t = _v13.a;
+											var t = _v14.a;
 											return _Utils_eq(t.target.oid, commit.sha);
 										}
 									});
-								var _v11 = A3(
+								var _v12 = A3(
 									$elm$core$List$foldl,
 									F2(
-										function (commit, _v12) {
-											var soFar = _v12.a;
-											var f = _v12.b;
+										function (commit, _v13) {
+											var soFar = _v13.a;
+											var f = _v13.b;
 											return (f || A2(
 												$elm$core$List$any,
 												isForCommit(commit),
@@ -12522,12 +12754,14 @@ var $author$project$Worker$update = F2(
 										}),
 									_Utils_Tuple2(commitsSoFar, false),
 									commits);
-								var newCommitsSoFar = _v11.a;
-								var reachedRelease = _v11.b;
+								var newCommitsSoFar = _v12.a;
+								var reachedRelease = _v12.b;
 								return reachedRelease ? $author$project$Worker$setRepoCommits(
 									_Utils_Tuple2(
 										repo.id,
-										A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeCommit, newCommitsSoFar))) : A5(
+										_Utils_Tuple2(
+											psel.selector.qualifiedName,
+											A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeCommit, newCommitsSoFar)))) : (pageInfo.hasNextPage ? A5(
 									$author$project$Worker$fetchRepoCommits,
 									model,
 									repo,
@@ -12535,7 +12769,7 @@ var $author$project$Worker$update = F2(
 										psel,
 										{after: pageInfo.endCursor}),
 									releases,
-									newCommitsSoFar);
+									newCommitsSoFar) : $elm$core$Platform$Cmd$none);
 							}()));
 				}
 			case 'PullRequestFetched':
@@ -12550,9 +12784,9 @@ var $author$project$Worker$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _v14 = pr.lastCommit;
-										if (_v14.$ === 'Just') {
-											var sha = _v14.a.sha;
+										var _v15 = pr.lastCommit;
+										if (_v15.$ === 'Just') {
+											var sha = _v15.a.sha;
 											return A3($elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12622,9 +12856,9 @@ var $author$project$Worker$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _v16 = msg.b.a;
-					var timeline = _v16.a;
-					var reviews = _v16.b;
+					var _v17 = msg.b.a;
+					var timeline = _v17.a;
+					var reviews = _v17.b;
 					var reviewers = A2(
 						$elm$core$List$map,
 						$author$project$GitHub$encodePullRequestReview,
@@ -12632,8 +12866,8 @@ var $author$project$Worker$update = F2(
 							A3(
 								$elm$core$List$foldl,
 								function (r) {
-									var _v19 = r.state;
-									switch (_v19.$) {
+									var _v20 = r.state;
+									switch (_v20.$) {
 										case 'PullRequestReviewStatePending':
 											return A2($elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -12653,8 +12887,8 @@ var $author$project$Worker$update = F2(
 							avatar: review.author.avatar,
 							createdAt: review.createdAt,
 							event: function () {
-								var _v18 = review.state;
-								switch (_v18.$) {
+								var _v19 = review.state;
+								switch (_v19.$) {
 									case 'PullRequestReviewStatePending':
 										return 'review-pending';
 									case 'PullRequestReviewStateCommented':

@@ -51,7 +51,7 @@ type alias Indexed a =
 type alias Data =
     { repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
-    , repoCommits : Dict GitHub.ID (List GitHub.Commit)
+    , repoCommits : Dict GitHub.ID (Dict String (List GitHub.Commit))
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -191,7 +191,7 @@ decodeData =
     JD.succeed Data
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
         |> andMap (JD.field "repoProjects" <| JD.dict (JD.list GitHub.decodeProject))
-        |> andMap (JD.field "repoCommits" <| JD.dict (JD.list GitHub.decodeCommit))
+        |> andMap (JD.field "repoCommits" <| JD.dict (JD.dict (JD.list GitHub.decodeCommit)))
         |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
         |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
         |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
@@ -317,6 +317,7 @@ decodeRepoProjectsEvent =
 
 type alias RepoCommitsEvent =
     { repoId : GitHub.ID
+    , ref : String
     , commits : List GitHub.Commit
     }
 
@@ -325,6 +326,7 @@ decodeRepoCommitsEvent : JD.Decoder RepoCommitsEvent
 decodeRepoCommitsEvent =
     JD.succeed RepoCommitsEvent
         |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "ref" JD.string)
         |> andMap (JD.field "commits" (JD.list GitHub.decodeCommit))
 
 

@@ -27,7 +27,7 @@ import Model exposing (Model, Msg(..), Page(..))
 import Octicons
 import Project
 import Query
-import ReleaseRepo
+import ReleaseStatus
 import Set exposing (Set)
 import StatefulGraph
 import Task
@@ -93,8 +93,8 @@ routeParser =
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
         , UP.map LabelsPage (UP.s "labels")
-        , UP.map ReleaseRepoPage (UP.s "release" </> UP.string <?> UQ.int "tab")
-        , UP.map ReleasePage (UP.s "release")
+        , UP.map ReleasesPage (UP.s "releases")
+        , UP.map ReleasePage (UP.s "releases" </> UP.string <?> UQ.string "ref" <?> UQ.string "milestone" <?> UQ.int "tab")
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
@@ -105,47 +105,56 @@ routeParser =
         ]
 
 
-pageRoute : Page -> List String
-pageRoute page =
+pageUrl : Page -> List UB.QueryParameter -> String
+pageUrl page query =
     case page of
         AllProjectsPage ->
-            []
+            UB.absolute [] query
 
         ProjectPage id ->
-            [ "projects", id ]
+            UB.absolute [ "projects", id ] query
 
         GlobalGraphPage ->
-            [ "graph" ]
+            UB.absolute [ "graph" ] query
 
         LabelsPage ->
-            [ "labels" ]
+            UB.absolute [ "labels" ] query
 
-        ReleaseRepoPage r _ ->
-            [ "release", r ]
+        ReleasePage repo mref mmilestone _ ->
+            UB.absolute [ "releases", repo ] <|
+                case ( mref, mmilestone ) of
+                    ( Just ref, _ ) ->
+                        UB.string "ref" ref :: query
 
-        ReleasePage ->
-            [ "release" ]
+                    ( Nothing, Just milestone ) ->
+                        UB.string "milestone" milestone :: query
+
+                    ( Nothing, Nothing ) ->
+                        query
+
+        ReleasesPage ->
+            UB.absolute [ "releases" ] query
 
         PullRequestsPage ->
-            [ "pull-requests" ]
+            UB.absolute [ "pull-requests" ] query
 
         PullRequestsRepoPage r _ ->
-            [ "pull-requests", r ]
+            UB.absolute [ "pull-requests", r ] query
 
         ArchivePage ->
-            [ "archive" ]
+            UB.absolute [ "archive" ] query
 
         DashboardPage ->
-            [ "dashboard" ]
+            UB.absolute [ "dashboard" ] query
 
         BouncePage ->
-            []
+            UB.absolute [] query
 
 
 pageTab : Page -> Int
 pageTab page =
     case page of
-        ReleaseRepoPage _ mi ->
+        ReleasePage _ _ _ mi ->
             Maybe.withDefault 0 mi
 
         PullRequestsRepoPage _ mi ->
@@ -824,11 +833,11 @@ computeViewForPage model =
                 Nothing ->
                     reset
 
-        ReleasePage ->
+        ReleasesPage ->
             reset
-                |> computeReleaseRepos
+                |> computeRepoStatuses
 
-        ReleaseRepoPage _ _ ->
+        ReleasePage _ _ _ _ ->
             { reset
                 | suggestedLabels =
                     [ "release/documented"
@@ -836,7 +845,7 @@ computeViewForPage model =
                     , "release/no-impact"
                     ]
             }
-                |> computeReleaseRepos
+                |> computeRepoStatuses
 
         PullRequestsRepoPage _ _ ->
             { reset
@@ -850,22 +859,21 @@ computeViewForPage model =
             reset
 
 
-computeReleaseRepos : Model -> Model
-computeReleaseRepos model =
+computeRepoStatuses : Model -> Model
+computeRepoStatuses model =
     let
-        addReleaseRepo _ repo acc =
+        add _ repo acc =
             let
-                releaseRepo =
-                    ReleaseRepo.init model repo
+                releaseStatuses =
+                    ReleaseStatus.init model repo
             in
-            case ( releaseRepo.nextMilestone, releaseRepo.totalCommits ) of
-                ( Nothing, 0 ) ->
-                    acc
+            if List.isEmpty releaseStatuses then
+                acc
 
-                _ ->
-                    Dict.insert repo.name releaseRepo acc
+            else
+                Dict.insert repo.name releaseStatuses acc
     in
-    { model | releaseRepos = Dict.foldl addReleaseRepo Dict.empty model.repos }
+    { model | repoReleaseStatuses = Dict.foldl add Dict.empty model.repos }
 
 
 computeDataView : Model -> Model
@@ -1009,11 +1017,11 @@ pageTitle model =
             LabelsPage ->
                 "Labels"
 
-            ReleasePage ->
+            ReleasesPage ->
                 "Releases"
 
-            ReleaseRepoPage repoName _ ->
-                repoName ++ " Release"
+            ReleasePage repoName _ _ _ ->
+                repoName ++ "  Release"
 
             PullRequestsPage ->
                 "Pull Requests"
@@ -1042,6 +1050,31 @@ viewCadet model =
         ]
 
 
+matchesRelease : Maybe String -> Maybe String -> Model.ReleaseStatus -> Bool
+matchesRelease mref mmilestone rel =
+    let
+        milestoneMatches milestone =
+            case rel.milestone of
+                Nothing ->
+                    milestone == "none"
+
+                Just { title } ->
+                    milestone == title
+    in
+    case ( mref, mmilestone ) of
+        ( Just ref, Just milestone ) ->
+            rel.ref == ref && milestoneMatches milestone
+
+        ( Just ref, Nothing ) ->
+            rel.ref == ref
+
+        ( Nothing, Just milestone ) ->
+            milestoneMatches milestone
+
+        _ ->
+            False
+
+
 viewPage : Model -> Html Msg
 viewPage model =
     Html.div [ HA.class "main-content" ]
@@ -1063,16 +1096,14 @@ viewPage model =
             LabelsPage ->
                 viewLabelsPage model
 
-            ReleasePage ->
-                viewReleasePage model
+            ReleasesPage ->
+                viewReleasesPage model
 
-            ReleaseRepoPage repoName _ ->
-                case Dict.get repoName model.releaseRepos of
-                    Just sir ->
-                        viewReleaseRepoPage model sir
-
-                    Nothing ->
-                        Html.text "repo not found"
+            ReleasePage repoName mref mmilestone _ ->
+                Dict.get repoName model.repoReleaseStatuses
+                    |> Maybe.andThen (LE.find (matchesRelease mref mmilestone))
+                    |> Maybe.map (viewReleasePage model)
+                    |> Maybe.withDefault (Html.text "release not found")
 
             PullRequestsPage ->
                 viewPullRequestsPage model
@@ -1113,7 +1144,7 @@ viewNavBar model =
         [ Html.div [ HA.class "nav" ]
             [ navButton model Octicons.project "Projects" "/projects"
             , navButton model Octicons.history "Archive" "/archive"
-            , navButton model Octicons.milestone "Release" "/release"
+            , navButton model Octicons.milestone "Release" "/releases"
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
             , navButton model Octicons.tag "Labels" "/labels"
@@ -1158,10 +1189,10 @@ navButton model icon label route =
                 LabelsPage ->
                     label == "Labels"
 
-                ReleasePage ->
-                    label == "Release"
+                ReleasesPage ->
+                    label == "Releases"
 
-                ReleaseRepoPage _ _ ->
+                ReleasePage _ _ _ _ ->
                     label == "Release"
 
                 PullRequestsPage ->
@@ -1291,26 +1322,31 @@ viewLabelsPage model =
         ]
 
 
-viewReleasePage : Model -> Html Msg
-viewReleasePage model =
+viewReleasesPage : Model -> Html Msg
+viewReleasesPage model =
     let
-        repos =
-            Dict.values model.releaseRepos
-                |> List.sortBy .totalCommits
-                |> List.reverse
+        viewRepoReleases repoName releases =
+            Html.div [ HA.class "repo-cards" ]
+                [ Html.span [ HA.class "column-title" ]
+                    [ Octicons.repo octiconOpts
+                    , Html.text repoName
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map ReleaseStatus.view releases
+                ]
     in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.milestone octiconOpts
-            , Html.text "Release"
+            , Html.text "Releases"
             ]
-        , Html.div [ HA.class "metrics-items" ]
-            (List.map ReleaseRepo.view repos)
+        , Html.div [ HA.class "card-columns" ] <|
+            Dict.values (Dict.map viewRepoReleases model.repoReleaseStatuses)
         ]
 
 
-viewReleaseRepoPage : Model -> Model.ReleaseRepo -> Html Msg
-viewReleaseRepoPage model sir =
+viewReleasePage : Model -> Model.ReleaseStatus -> Html Msg
+viewReleasePage model sir =
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
             [ Html.a [ HA.href "/release" ]
@@ -1319,7 +1355,7 @@ viewReleaseRepoPage model sir =
                 ]
             , Octicons.repo octiconOpts
             , Html.text sir.repo.name
-            , case sir.nextMilestone of
+            , case sir.milestone of
                 Just nm ->
                     Html.span [ HA.class "release-next-milestone" ]
                         [ Octicons.milestone octiconOpts
@@ -1361,7 +1397,7 @@ viewTabbedCards model tabs =
         [ let
             tabAttrs tab =
                 [ HA.classList [ ( "tab", True ), ( "selected", pageTab model.page == tab ) ]
-                , HA.href (UB.absolute (pageRoute model.page) [ UB.int "tab" tab ])
+                , HA.href (pageUrl model.page [ UB.int "tab" tab ])
                 ]
 
             tabCount count =
@@ -2343,7 +2379,18 @@ handleEvent event data index model =
         "repoCommits" ->
             withDecoded Backend.decodeRepoCommitsEvent <|
                 \val ->
-                    { model | repoCommits = Dict.insert val.repoId val.commits model.repoCommits }
+                    let
+                        setRefCommits =
+                            Maybe.withDefault Dict.empty
+                                >> Dict.insert val.ref val.commits
+                                >> Just
+                    in
+                    { model
+                        | repoCommits =
+                            Dict.update val.repoId
+                                setRefCommits
+                                model.repoCommits
+                    }
 
         "repoLabels" ->
             withDecoded Backend.decodeRepoLabelsEvent <|

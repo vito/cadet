@@ -25,7 +25,9 @@ module GitHub exposing
     , ReactionGroup
     , ReactionType(..)
     , Reactions
+    , Ref
     , RefSelector
+    , RefsSelector
     , Release
     , Repo
     , RepoLocation
@@ -89,6 +91,7 @@ module GitHub exposing
     , fetchRepoPullRequest
     , fetchRepoPullRequests
     , fetchRepoPullRequestsPage
+    , fetchRepoRefs
     , fetchRepoReleases
     , fetchTimeline
     , issueScore
@@ -134,6 +137,13 @@ type alias Error =
 
 type alias ID =
     String
+
+
+type alias Ref =
+    { name : String
+    , prefix : String
+    , target : GitObject
+    }
 
 
 type alias Repo =
@@ -452,6 +462,10 @@ type alias RefSelector =
     { repo : RepoSelector, qualifiedName : String }
 
 
+type alias RefsSelector =
+    { repo : RepoSelector, refPrefix : String }
+
+
 type alias PagedSelector a =
     { selector : a, after : Maybe ID }
 
@@ -537,6 +551,11 @@ fetchRepoMilestones token repo =
 fetchRepoReleases : Token -> RepoSelector -> Task Error (List Release)
 fetchRepoReleases token repo =
     fetchPaged releasesQuery token { selector = repo, after = Nothing }
+
+
+fetchRepoRefs : Token -> RefsSelector -> Task Error (List Ref)
+fetchRepoRefs token refs =
+    fetchPaged refsQuery token { selector = refs, after = Nothing }
 
 
 fetchRepoCommitsPage : Token -> PagedSelector RefSelector -> (Result Error ( List Commit, PageInfo ) -> msg) -> Cmd msg
@@ -1381,6 +1400,14 @@ releaseObject =
         |> GB.with (GB.field "tag" [] (GB.nullable tagObject))
 
 
+refObject : GB.ValueSpec GB.NonNull GB.ObjectType Ref vars
+refObject =
+    GB.object Ref
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "prefix" [] GB.string)
+        |> GB.with (GB.field "target" [] gitObjectObject)
+
+
 tagObject : GB.ValueSpec GB.NonNull GB.ObjectType Tag vars
 tagObject =
     GB.object Tag
@@ -1862,6 +1889,52 @@ releasesQuery =
                     ]
                 <|
                     GB.extract (GB.field "releases" pageArgs paged)
+    in
+    GB.queryDocument queryRoot
+
+
+refsQuery : GB.Document GB.Query (PagedResult Ref) (PagedSelector RefsSelector)
+refsQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.owner << .repo << .selector) GV.string
+
+        repoNameVar =
+            GV.required "repoName" (.name << .repo << .selector) GV.string
+
+        refPrefixVar =
+            GV.required "refPrefix" (.refPrefix << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "refPrefix", GA.variable refPrefixVar )
+            , ( "first", GA.int 100 )
+            , ( "orderBy"
+              , GA.object [ ( "field", GA.enum "ALPHABETICAL" ), ( "direction", GA.enum "DESC" ) ]
+              )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list refObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "repository"
+                    [ ( "owner", GA.variable orgNameVar )
+                    , ( "name", GA.variable repoNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "refs" pageArgs paged)
     in
     GB.queryDocument queryRoot
 

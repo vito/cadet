@@ -13,7 +13,7 @@ module Model exposing
     , Page(..)
     , Progress(..)
     , ProgressState
-    , ReleaseRepo
+    , ReleaseStatus
     , SharedLabel
     , StatefulGraph
     , empty
@@ -49,7 +49,7 @@ type alias Model =
     , dataIndex : Int
     , repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
-    , repoCommits : Dict GitHub.ID (List GitHub.Commit)
+    , repoCommits : Dict GitHub.ID (Dict String (List GitHub.Commit))
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -71,7 +71,7 @@ type alias Model =
     , labelToRepoToId : Dict String (Dict GitHub.ID GitHub.ID)
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
     , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
-    , releaseRepos : Dict GitHub.ID ReleaseRepo
+    , repoReleaseStatuses : Dict GitHub.ID (List ReleaseStatus)
 
     -- cache of computed lightness values for each color; used for determining
     -- whether label text should be white or dark
@@ -196,8 +196,8 @@ type Page
     | GlobalGraphPage
     | ProjectPage GitHub.ID
     | LabelsPage
-    | ReleasePage
-    | ReleaseRepoPage String (Maybe Int)
+    | ReleasesPage
+    | ReleasePage String (Maybe String) (Maybe String) (Maybe Int)
     | PullRequestsPage
     | PullRequestsRepoPage String (Maybe Int)
     | ArchivePage
@@ -231,9 +231,10 @@ type alias CardDestination =
     }
 
 
-type alias ReleaseRepo =
-    { repo : GitHub.Repo
-    , nextMilestone : Maybe GitHub.Milestone
+type alias ReleaseStatus =
+    { ref : String
+    , repo : GitHub.Repo
+    , milestone : Maybe GitHub.Milestone
     , totalCommits : Int
     , openPRs : List Card
     , mergedPRs : List Card
@@ -334,7 +335,7 @@ empty key =
     , labelToRepoToId = Dict.empty
     , openPRsByRepo = Dict.empty
     , cardsByMilestone = Dict.empty
-    , releaseRepos = Dict.empty
+    , repoReleaseStatuses = Dict.empty
     , issues = Dict.empty
     , prs = Dict.empty
     , cardEvents = Dict.empty
