@@ -1,8 +1,10 @@
 module ReleaseStatus exposing (init, view)
 
+import Backend
 import Card exposing (Card)
 import Colors
 import DateFormat
+import DateFormat.Relative
 import Dict
 import GitHub
 import Html exposing (Html)
@@ -14,6 +16,7 @@ import Model exposing (Model, Msg)
 import Octicons
 import ProgressBar
 import Time
+import Time.Extra as TE
 import Url.Builder as UB
 
 
@@ -68,8 +71,8 @@ findMatchingMilestone ref milestones =
     LE.find (String.startsWith titlePrefix << .title) milestones
 
 
-initFromCommits : Model -> GitHub.Repo -> String -> List GitHub.Commit -> Model.ReleaseStatus
-initFromCommits model repo ref commits =
+initFromCommits : Model -> GitHub.Repo -> String -> Backend.CommitsSinceLastRelease -> Model.ReleaseStatus
+initFromCommits model repo ref { lastRelease, commits } =
     let
         openMilestones =
             Dict.get repo.id model.repoMilestones
@@ -98,6 +101,7 @@ initFromCommits model repo ref commits =
     List.foldl (categorizeCard model)
         { repo = repo
         , ref = Just ref
+        , lastRelease = Just lastRelease
         , milestone = milestone
         , issue = LE.find (Label.cardHasLabel model "release") allCards
         , totalCommits = List.length commits
@@ -116,8 +120,9 @@ initFromCommits model repo ref commits =
 initFromMilestone : Model -> GitHub.Repo -> GitHub.Milestone -> Model.ReleaseStatus
 initFromMilestone model repo milestone =
     List.foldl (categorizeCard model)
-        { ref = Nothing
-        , repo = repo
+        { repo = repo
+        , ref = Nothing
+        , lastRelease = Nothing
         , milestone = Just milestone
         , issue = Nothing
         , totalCommits = 0
@@ -291,6 +296,29 @@ view model sir =
 
                             -- Value from GitHub is UTC; ignore current zone
                             , Html.text (DateFormat.format dueDate Time.utc dueOn)
+                            ]
+
+                    Nothing ->
+                        Html.text ""
+                , case sir.lastRelease of
+                    Just rel ->
+                        Html.div
+                            [ HA.class "metric"
+                            , HA.classList
+                                [ ( "overdue"
+                                  , TE.diff TE.Week Time.utc rel.createdAt model.currentTime >= 3
+                                  )
+                                ]
+                            ]
+                            [ Octicons.tag octiconOpts
+                            , Html.a
+                                [ HA.class "title-link"
+                                , HA.href rel.url
+                                , HA.target "_blank"
+                                ]
+                                [ Html.text (Maybe.withDefault "last release" rel.name) ]
+                            , Html.text " was "
+                            , Html.text (DateFormat.Relative.relativeTime model.currentTime rel.createdAt)
                             ]
 
                     Nothing ->

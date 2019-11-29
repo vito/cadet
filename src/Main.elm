@@ -2405,17 +2405,17 @@ handleEvent event data index model =
             withDecoded Backend.decodeRepoCommitsEvent <|
                 \val ->
                     let
+                        commits =
+                            { lastRelease = val.lastRelease
+                            , commits = val.commits
+                            }
+
                         setRefCommits =
                             Maybe.withDefault Dict.empty
-                                >> Dict.insert val.ref val.commits
+                                >> Dict.insert val.ref commits
                                 >> Just
                     in
-                    { model
-                        | repoCommits =
-                            Dict.update val.repoId
-                                setRefCommits
-                                model.repoCommits
-                    }
+                    { model | repoCommits = Dict.update val.repoId setRefCommits model.repoCommits }
 
         "repoLabels" ->
             withDecoded Backend.decodeRepoLabelsEvent <|

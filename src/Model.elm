@@ -49,7 +49,7 @@ type alias Model =
     , dataIndex : Int
     , repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
-    , repoCommits : Dict GitHub.ID (Dict String (List GitHub.Commit))
+    , repoCommits : Dict GitHub.ID (Dict String Backend.CommitsSinceLastRelease)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
@@ -234,6 +234,7 @@ type alias CardDestination =
 type alias ReleaseStatus =
     { repo : GitHub.Repo
     , ref : Maybe String
+    , lastRelease : Maybe GitHub.Release
     , milestone : Maybe GitHub.Milestone
     , issue : Maybe Card
     , totalCommits : Int

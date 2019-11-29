@@ -158,6 +158,7 @@ type alias Repo =
 type alias Release =
     { id : ID
     , url : String
+    , createdAt : Time.Posix
     , name : Maybe String
     , tag : Maybe Tag
     }
@@ -1398,6 +1399,7 @@ releaseObject =
     GB.object Release
         |> GB.with (GB.field "id" [] GB.string)
         |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
         |> GB.with (GB.field "name" [] (GB.nullable GB.string))
         |> GB.with (GB.field "tag" [] (GB.nullable tagObject))
 
@@ -2118,6 +2120,7 @@ decodeRelease =
     JD.succeed Release
         |> andMap (JD.field "id" JD.string)
         |> andMap (JD.field "url" JD.string)
+        |> andMap (JD.field "created_at" JDE.datetime)
         |> andMap (JD.field "name" (JD.maybe JD.string))
         |> andMap (JD.field "tag" (JD.maybe decodeTag))
 
@@ -2592,6 +2595,7 @@ encodeRelease record =
     JE.object
         [ ( "id", JE.string record.id )
         , ( "url", JE.string record.url )
+        , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
         , ( "name", JEE.maybe JE.string record.name )
         , ( "tag", JEE.maybe encodeTag record.tag )
         ]

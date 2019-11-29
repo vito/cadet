@@ -9,7 +9,9 @@ import IntDict
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
 import Json.Encode as JE
+import List.Extra as LE
 import Log
+import Maybe.Extra as ME
 import Platform
 import Set
 import Task
@@ -37,7 +39,7 @@ port setPullRequest : JD.Value -> Cmd msg
 port setRepoProjects : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
-port setRepoCommits : ( GitHub.ID, ( String, JD.Value ) ) -> Cmd msg
+port setRepoCommits : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
 port setRepoLabels : ( GitHub.ID, JD.Value ) -> Cmd msg
@@ -549,31 +551,36 @@ update msg model =
                             Just t ->
                                 t.target.oid == commit.sha
 
-                    ( newCommitsSoFar, reachedRelease ) =
+                    ( newCommitsSoFar, sinceRelease ) =
                         List.foldl
                             (\commit ( soFar, f ) ->
-                                if f || List.any (isForCommit commit) releases then
-                                    ( soFar, True )
+                                case ME.or f (LE.find (isForCommit commit) releases) of
+                                    Just release ->
+                                        ( soFar, Just release )
 
-                                else
-                                    ( commit :: soFar, False )
+                                    _ ->
+                                        ( commit :: soFar, Nothing )
                             )
-                            ( commitsSoFar, False )
+                            ( commitsSoFar, Nothing )
                             commits
                   in
-                  if reachedRelease then
-                    setRepoCommits
-                        ( repo.id
-                        , ( psel.selector.qualifiedName
-                          , JE.list GitHub.encodeCommit newCommitsSoFar
-                          )
-                        )
+                  case sinceRelease of
+                    Just release ->
+                        setRepoCommits
+                            ( repo.id
+                            , JE.object
+                                [ ( "ref", JE.string psel.selector.qualifiedName )
+                                , ( "commits", JE.list GitHub.encodeCommit newCommitsSoFar )
+                                , ( "lastRelease", GitHub.encodeRelease release )
+                                ]
+                            )
 
-                  else if pageInfo.hasNextPage then
-                    fetchRepoCommits model repo { psel | after = pageInfo.endCursor } releases newCommitsSoFar
+                    Nothing ->
+                        if pageInfo.hasNextPage then
+                            fetchRepoCommits model repo { psel | after = pageInfo.endCursor } releases newCommitsSoFar
 
-                  else
-                    Cmd.none
+                        else
+                            Cmd.none
                 )
 
         PullRequestFetched (Ok pr) ->

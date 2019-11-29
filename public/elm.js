@@ -5860,6 +5860,10 @@ var $author$project$Backend$decodeColumnCard = A2(
 				$elm$json$Json$Decode$succeed($author$project$Backend$ColumnCard)))));
 var $elm$json$Json$Decode$list = _Json_decodeList;
 var $author$project$Backend$decodeColumnCards = $elm$json$Json$Decode$list($author$project$Backend$decodeColumnCard);
+var $author$project$Backend$CommitsSinceLastRelease = F2(
+	function (lastRelease, commits) {
+		return {commits: commits, lastRelease: lastRelease};
+	});
 var $author$project$GitHub$Commit = F8(
 	function (url, sha, status, author, committer, authoredAt, committedAt, associatedPullRequests) {
 		return {associatedPullRequests: associatedPullRequests, author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status, url: url};
@@ -6813,6 +6817,64 @@ var $author$project$GitHub$decodeCommit = A2(
 								$elm_community$json_extra$Json$Decode$Extra$andMap,
 								A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
 								$elm$json$Json$Decode$succeed($author$project$GitHub$Commit)))))))));
+var $author$project$GitHub$Release = F5(
+	function (id, url, createdAt, name, tag) {
+		return {createdAt: createdAt, id: id, name: name, tag: tag, url: url};
+	});
+var $author$project$GitHub$Tag = F2(
+	function (name, target) {
+		return {name: name, target: target};
+	});
+var $author$project$GitHub$GitObject = F2(
+	function (url, oid) {
+		return {oid: oid, url: url};
+	});
+var $author$project$GitHub$decodeGitObject = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2($elm$json$Json$Decode$field, 'oid', $elm$json$Json$Decode$string),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
+		$elm$json$Json$Decode$succeed($author$project$GitHub$GitObject)));
+var $author$project$GitHub$decodeTag = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2($elm$json$Json$Decode$field, 'target', $author$project$GitHub$decodeGitObject),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
+		$elm$json$Json$Decode$succeed($author$project$GitHub$Tag)));
+var $author$project$GitHub$decodeRelease = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$field,
+		'tag',
+		$elm$json$Json$Decode$maybe($author$project$GitHub$decodeTag)),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$field,
+			'name',
+			$elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)),
+		A2(
+			$elm_community$json_extra$Json$Decode$Extra$andMap,
+			A2($elm$json$Json$Decode$field, 'created_at', $elm_community$json_extra$Json$Decode$Extra$datetime),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
+				A2(
+					$elm_community$json_extra$Json$Decode$Extra$andMap,
+					A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
+					$elm$json$Json$Decode$succeed($author$project$GitHub$Release))))));
+var $author$project$Backend$decodeCommitsSinceLastRelease = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$field,
+		'commits',
+		$elm$json$Json$Decode$list($author$project$GitHub$decodeCommit)),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'lastRelease', $author$project$GitHub$decodeRelease),
+		$elm$json$Json$Decode$succeed($author$project$Backend$CommitsSinceLastRelease)));
 var $author$project$GitHub$Label = F3(
 	function (id, name, color) {
 		return {color: color, id: id, name: name};
@@ -6976,51 +7038,6 @@ var $author$project$GitHub$decodeProject = A2(
 							$elm_community$json_extra$Json$Decode$Extra$andMap,
 							A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
 							$elm$json$Json$Decode$succeed($author$project$GitHub$Project))))))));
-var $author$project$GitHub$Release = F4(
-	function (id, url, name, tag) {
-		return {id: id, name: name, tag: tag, url: url};
-	});
-var $author$project$GitHub$Tag = F2(
-	function (name, target) {
-		return {name: name, target: target};
-	});
-var $author$project$GitHub$GitObject = F2(
-	function (url, oid) {
-		return {oid: oid, url: url};
-	});
-var $author$project$GitHub$decodeGitObject = A2(
-	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm$json$Json$Decode$field, 'oid', $elm$json$Json$Decode$string),
-	A2(
-		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
-		$elm$json$Json$Decode$succeed($author$project$GitHub$GitObject)));
-var $author$project$GitHub$decodeTag = A2(
-	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2($elm$json$Json$Decode$field, 'target', $author$project$GitHub$decodeGitObject),
-	A2(
-		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'name', $elm$json$Json$Decode$string),
-		$elm$json$Json$Decode$succeed($author$project$GitHub$Tag)));
-var $author$project$GitHub$decodeRelease = A2(
-	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		$elm$json$Json$Decode$field,
-		'tag',
-		$elm$json$Json$Decode$maybe($author$project$GitHub$decodeTag)),
-	A2(
-		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2(
-			$elm$json$Json$Decode$field,
-			'name',
-			$elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)),
-		A2(
-			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'url', $elm$json$Json$Decode$string),
-			A2(
-				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
-				$elm$json$Json$Decode$succeed($author$project$GitHub$Release)))));
 var $author$project$GitHub$Repo = F5(
 	function (id, url, owner, name, isArchived) {
 		return {id: id, isArchived: isArchived, name: name, owner: owner, url: url};
@@ -7081,8 +7098,7 @@ var $author$project$Backend$decodeData = A2(
 						$elm$json$Json$Decode$field,
 						'repoCommits',
 						$elm$json$Json$Decode$dict(
-							$elm$json$Json$Decode$dict(
-								$elm$json$Json$Decode$list($author$project$GitHub$decodeCommit)))),
+							$elm$json$Json$Decode$dict($author$project$Backend$decodeCommitsSinceLastRelease))),
 					A2(
 						$elm_community$json_extra$Json$Decode$Extra$andMap,
 						A2(
@@ -11508,7 +11524,9 @@ var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, $elm$core$Set$empty, list, _List_Nil);
 };
 var $author$project$ReleaseStatus$initFromCommits = F4(
-	function (model, repo, ref, commits) {
+	function (model, repo, ref, _v0) {
+		var lastRelease = _v0.lastRelease;
+		var commits = _v0.commits;
 		var openMilestones = A2(
 			$elm$core$List$filter,
 			A2(
@@ -11560,6 +11578,7 @@ var $author$project$ReleaseStatus$initFromCommits = F4(
 					$elm_community$list_extra$List$Extra$find,
 					A2($author$project$Label$cardHasLabel, model, 'release'),
 					allCards),
+				lastRelease: $elm$core$Maybe$Just(lastRelease),
 				mergedPRs: _List_Nil,
 				milestone: milestone,
 				noImpactCards: _List_Nil,
@@ -11582,6 +11601,7 @@ var $author$project$ReleaseStatus$initFromMilestone = F3(
 				documentedCards: _List_Nil,
 				doneCards: _List_Nil,
 				issue: $elm$core$Maybe$Nothing,
+				lastRelease: $elm$core$Maybe$Nothing,
 				mergedPRs: _List_Nil,
 				milestone: $elm$core$Maybe$Just(milestone),
 				noImpactCards: _List_Nil,
@@ -13284,23 +13304,26 @@ var $author$project$Backend$decodeColumnCardsEvent = A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2($elm$json$Json$Decode$field, 'columnId', $elm$json$Json$Decode$string),
 		$elm$json$Json$Decode$succeed($author$project$Backend$ColumnCardsEvent)));
-var $author$project$Backend$RepoCommitsEvent = F3(
-	function (repoId, ref, commits) {
-		return {commits: commits, ref: ref, repoId: repoId};
+var $author$project$Backend$RepoCommitsEvent = F4(
+	function (repoId, ref, commits, lastRelease) {
+		return {commits: commits, lastRelease: lastRelease, ref: ref, repoId: repoId};
 	});
 var $author$project$Backend$decodeRepoCommitsEvent = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
-	A2(
-		$elm$json$Json$Decode$field,
-		'commits',
-		$elm$json$Json$Decode$list($author$project$GitHub$decodeCommit)),
+	A2($elm$json$Json$Decode$field, 'lastRelease', $author$project$GitHub$decodeRelease),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'ref', $elm$json$Json$Decode$string),
+		A2(
+			$elm$json$Json$Decode$field,
+			'commits',
+			$elm$json$Json$Decode$list($author$project$GitHub$decodeCommit)),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'repoId', $elm$json$Json$Decode$string),
-			$elm$json$Json$Decode$succeed($author$project$Backend$RepoCommitsEvent))));
+			A2($elm$json$Json$Decode$field, 'ref', $elm$json$Json$Decode$string),
+			A2(
+				$elm_community$json_extra$Json$Decode$Extra$andMap,
+				A2($elm$json$Json$Decode$field, 'repoId', $elm$json$Json$Decode$string),
+				$elm$json$Json$Decode$succeed($author$project$Backend$RepoCommitsEvent)))));
 var $author$project$Backend$RepoLabelsEvent = F2(
 	function (repoId, labels) {
 		return {labels: labels, repoId: repoId};
@@ -13445,12 +13468,13 @@ var $author$project$Main$handleEvent = F4(
 					withDecoded,
 					$author$project$Backend$decodeRepoCommitsEvent,
 					function (val) {
+						var commits = {commits: val.commits, lastRelease: val.lastRelease};
 						var setRefCommits = A2(
 							$elm$core$Basics$composeR,
 							$elm$core$Maybe$withDefault($elm$core$Dict$empty),
 							A2(
 								$elm$core$Basics$composeR,
-								A2($elm$core$Dict$insert, val.ref, val.commits),
+								A2($elm$core$Dict$insert, val.ref, commits),
 								$elm$core$Maybe$Just));
 						return _Utils_update(
 							model,
@@ -24813,6 +24837,62 @@ var $author$project$ReleaseStatus$branchName = function (_v0) {
 		A2($elm$core$Maybe$withDefault, 'impossible', ref));
 };
 var $elm$html$Html$code = _VirtualDom_node('code');
+var $justinmimbs$time_extra$Time$Extra$Day = {$: 'Day'};
+var $justinmimbs$time_extra$Time$Extra$Millisecond = {$: 'Millisecond'};
+var $justinmimbs$time_extra$Time$Extra$Month = {$: 'Month'};
+var $justinmimbs$time_extra$Time$Extra$toFractionalDay = F2(
+	function (zone, posix) {
+		return A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix) / 86400000;
+	});
+var $justinmimbs$time_extra$Time$Extra$toMonths = F2(
+	function (zone, posix) {
+		var wholeMonths = (12 * (A2($elm$time$Time$toYear, zone, posix) - 1)) + ($justinmimbs$date$Date$monthToNumber(
+			A2($elm$time$Time$toMonth, zone, posix)) - 1);
+		var fractionalMonth = (A2($elm$time$Time$toDay, zone, posix) + A2($justinmimbs$time_extra$Time$Extra$toFractionalDay, zone, posix)) / 100;
+		return wholeMonths + fractionalMonth;
+	});
+var $justinmimbs$time_extra$Time$Extra$toRataDieMoment = F2(
+	function (zone, posix) {
+		return $justinmimbs$date$Date$toRataDie(
+			A2($justinmimbs$date$Date$fromPosix, zone, posix)) + A2($justinmimbs$time_extra$Time$Extra$toFractionalDay, zone, posix);
+	});
+var $justinmimbs$time_extra$Time$Extra$diff = F4(
+	function (interval, zone, posix1, posix2) {
+		diff:
+		while (true) {
+			switch (interval.$) {
+				case 'Millisecond':
+					return $elm$time$Time$posixToMillis(posix2) - $elm$time$Time$posixToMillis(posix1);
+				case 'Second':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 1000) | 0;
+				case 'Minute':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 60000) | 0;
+				case 'Hour':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 3600000) | 0;
+				case 'Day':
+					return (A2($justinmimbs$time_extra$Time$Extra$toRataDieMoment, zone, posix2) - A2($justinmimbs$time_extra$Time$Extra$toRataDieMoment, zone, posix1)) | 0;
+				case 'Month':
+					return (A2($justinmimbs$time_extra$Time$Extra$toMonths, zone, posix2) - A2($justinmimbs$time_extra$Time$Extra$toMonths, zone, posix1)) | 0;
+				case 'Year':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Month, zone, posix1, posix2) / 12) | 0;
+				case 'Quarter':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Month, zone, posix1, posix2) / 3) | 0;
+				case 'Week':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Day, zone, posix1, posix2) / 7) | 0;
+				default:
+					var weekday = interval;
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Week,
+						$temp$zone = zone,
+						$temp$posix1 = A3($justinmimbs$time_extra$Time$Extra$floor, weekday, zone, posix1),
+						$temp$posix2 = A3($justinmimbs$time_extra$Time$Extra$floor, weekday, zone, posix2);
+					interval = $temp$interval;
+					zone = $temp$zone;
+					posix1 = $temp$posix1;
+					posix2 = $temp$posix2;
+					continue diff;
+			}
+		}
+	});
 var $ryannhg$date_format$DateFormat$DayOfMonthSuffix = {$: 'DayOfMonthSuffix'};
 var $ryannhg$date_format$DateFormat$dayOfMonthSuffix = $ryannhg$date_format$DateFormat$DayOfMonthSuffix;
 var $ryannhg$date_format$DateFormat$MonthNameFull = {$: 'MonthNameFull'};
@@ -24832,6 +24912,71 @@ var $capitalist$elm_octicons$Octicons$gitBranch = A3($capitalist$elm_octicons$Oc
 var $author$project$ReleaseStatus$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
 var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
 var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeDays = function (days) {
+	return (days < 2) ? 'tomorrow' : ('in ' + ($elm$core$String$fromInt(days) + ' days'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeHours = function (hours) {
+	return (hours < 2) ? 'in an hour' : ('in ' + ($elm$core$String$fromInt(hours) + ' hours'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeMinutes = function (minutes) {
+	return (minutes < 2) ? 'in a minute' : ('in ' + ($elm$core$String$fromInt(minutes) + ' minutes'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeMonths = function (months) {
+	return (months < 2) ? 'in a month' : ('in ' + ($elm$core$String$fromInt(months) + ' months'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeSeconds = function (seconds) {
+	return (seconds < 30) ? 'in a few seconds' : ('in ' + ($elm$core$String$fromInt(seconds) + ' seconds'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultInSomeYears = function (years) {
+	return (years < 2) ? 'in a year' : ('in ' + ($elm$core$String$fromInt(years) + ' years'));
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultRightNow = 'right now';
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeDaysAgo = function (days) {
+	return (days < 2) ? 'yesterday' : ($elm$core$String$fromInt(days) + ' days ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeHoursAgo = function (hours) {
+	return (hours < 2) ? 'an hour ago' : ($elm$core$String$fromInt(hours) + ' hours ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeMinutesAgo = function (minutes) {
+	return (minutes < 2) ? 'a minute ago' : ($elm$core$String$fromInt(minutes) + ' minutes ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeMonthsAgo = function (months) {
+	return (months < 2) ? 'last month' : ($elm$core$String$fromInt(months) + ' months ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeSecondsAgo = function (seconds) {
+	return (seconds < 30) ? 'just now' : ($elm$core$String$fromInt(seconds) + ' seconds ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultSomeYearsAgo = function (years) {
+	return (years < 2) ? 'last year' : ($elm$core$String$fromInt(years) + ' years ago');
+};
+var $ryannhg$date_format$DateFormat$Relative$defaultRelativeOptions = {inSomeDays: $ryannhg$date_format$DateFormat$Relative$defaultInSomeDays, inSomeHours: $ryannhg$date_format$DateFormat$Relative$defaultInSomeHours, inSomeMinutes: $ryannhg$date_format$DateFormat$Relative$defaultInSomeMinutes, inSomeMonths: $ryannhg$date_format$DateFormat$Relative$defaultInSomeMonths, inSomeSeconds: $ryannhg$date_format$DateFormat$Relative$defaultInSomeSeconds, inSomeYears: $ryannhg$date_format$DateFormat$Relative$defaultInSomeYears, rightNow: $ryannhg$date_format$DateFormat$Relative$defaultRightNow, someDaysAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeDaysAgo, someHoursAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeHoursAgo, someMinutesAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeMinutesAgo, someMonthsAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeMonthsAgo, someSecondsAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeSecondsAgo, someYearsAgo: $ryannhg$date_format$DateFormat$Relative$defaultSomeYearsAgo};
+var $ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions = F6(
+	function (seconds, minutes, hours, days, months, years) {
+		return {days: days, hours: hours, minutes: minutes, months: months, seconds: seconds, years: years};
+	});
+var $ryannhg$date_format$DateFormat$Relative$relativeTimeWithFunctions = F3(
+	function (zone, millis, functions) {
+		var seconds = (millis / 1000) | 0;
+		var posix = $elm$time$Time$millisToPosix(millis);
+		var minutes = (seconds / 60) | 0;
+		var hours = (minutes / 60) | 0;
+		var days = (hours / 24) | 0;
+		return (minutes < 1) ? functions.seconds(
+			A2($elm$time$Time$toSecond, zone, posix)) : ((hours < 1) ? functions.minutes(
+			A2($elm$time$Time$toMinute, zone, posix)) : ((hours < 24) ? functions.hours(
+			A2($elm$time$Time$toHour, zone, posix)) : ((days < 30) ? functions.days(days) : ((days < 365) ? functions.months((days / 30) | 0) : functions.years((days / 365) | 0)))));
+	});
+var $ryannhg$date_format$DateFormat$Relative$toMilliseconds = $elm$time$Time$posixToMillis;
+var $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions = F3(
+	function (options, start, end) {
+		var differenceInMilliseconds = $ryannhg$date_format$DateFormat$Relative$toMilliseconds(end) - $ryannhg$date_format$DateFormat$Relative$toMilliseconds(start);
+		return (!differenceInMilliseconds) ? options.rightNow : A3(
+			$ryannhg$date_format$DateFormat$Relative$relativeTimeWithFunctions,
+			$elm$time$Time$utc,
+			$elm$core$Basics$abs(differenceInMilliseconds),
+			(differenceInMilliseconds < 0) ? A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.someSecondsAgo, options.someMinutesAgo, options.someHoursAgo, options.someDaysAgo, options.someMonthsAgo, options.someYearsAgo) : A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.inSomeSeconds, options.inSomeMinutes, options.inSomeHours, options.inSomeDays, options.inSomeMonths, options.inSomeYears));
+	});
+var $ryannhg$date_format$DateFormat$Relative$relativeTime = $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions($ryannhg$date_format$DateFormat$Relative$defaultRelativeOptions);
 var $author$project$ReleaseStatus$viewMetric = F5(
 	function (icon, count, plural, singular, description) {
 		return A2(
@@ -25096,6 +25241,47 @@ var $author$project$ReleaseStatus$view = F2(
 													$capitalist$elm_octicons$Octicons$calendar($author$project$ReleaseStatus$octiconOpts),
 													$elm$html$Html$text(
 													A3($ryannhg$date_format$DateFormat$format, $author$project$ReleaseStatus$dueDate, $elm$time$Time$utc, dueOn))
+												]));
+									} else {
+										return $elm$html$Html$text('');
+									}
+								}(),
+									function () {
+									var _v6 = sir.lastRelease;
+									if (_v6.$ === 'Just') {
+										var rel = _v6.a;
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('metric'),
+													$elm$html$Html$Attributes$classList(
+													_List_fromArray(
+														[
+															_Utils_Tuple2(
+															'overdue',
+															A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Week, $elm$time$Time$utc, rel.createdAt, model.currentTime) >= 3)
+														]))
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$tag($author$project$ReleaseStatus$octiconOpts),
+													A2(
+													$elm$html$Html$a,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('title-link'),
+															$elm$html$Html$Attributes$href(rel.url),
+															$elm$html$Html$Attributes$target('_blank')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(
+															A2($elm$core$Maybe$withDefault, 'last release', rel.name))
+														])),
+													$elm$html$Html$text(' was '),
+													$elm$html$Html$text(
+													A2($ryannhg$date_format$DateFormat$Relative$relativeTime, model.currentTime, rel.createdAt))
 												]));
 									} else {
 										return $elm$html$Html$text('');

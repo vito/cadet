@@ -3,6 +3,7 @@ module Backend exposing
     , CardEvent
     , ColumnCard
     , ColumnCardsEvent
+    , CommitsSinceLastRelease
     , Data
     , Indexed
     , Me
@@ -51,11 +52,17 @@ type alias Indexed a =
 type alias Data =
     { repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
-    , repoCommits : Dict GitHub.ID (Dict String (List GitHub.Commit))
+    , repoCommits : Dict GitHub.ID (Dict String CommitsSinceLastRelease)
     , repoLabels : Dict GitHub.ID (List GitHub.Label)
     , repoMilestones : Dict GitHub.ID (List GitHub.Milestone)
     , repoReleases : Dict GitHub.ID (List GitHub.Release)
     , columnCards : Dict GitHub.ID (List ColumnCard)
+    }
+
+
+type alias CommitsSinceLastRelease =
+    { lastRelease : GitHub.Release
+    , commits : List GitHub.Commit
     }
 
 
@@ -191,7 +198,7 @@ decodeData =
     JD.succeed Data
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
         |> andMap (JD.field "repoProjects" <| JD.dict (JD.list GitHub.decodeProject))
-        |> andMap (JD.field "repoCommits" <| JD.dict (JD.dict (JD.list GitHub.decodeCommit)))
+        |> andMap (JD.field "repoCommits" <| JD.dict (JD.dict decodeCommitsSinceLastRelease))
         |> andMap (JD.field "repoLabels" <| JD.dict (JD.list GitHub.decodeLabel))
         |> andMap (JD.field "repoMilestones" <| JD.dict (JD.list GitHub.decodeMilestone))
         |> andMap (JD.field "repoReleases" <| JD.dict (JD.list GitHub.decodeRelease))
@@ -205,6 +212,13 @@ decodeCardData =
         |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
         |> andMap (JD.field "cardEvents" <| JD.dict (JD.list decodeCardEvent))
         |> andMap (JD.field "prReviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
+
+
+decodeCommitsSinceLastRelease : JD.Decoder CommitsSinceLastRelease
+decodeCommitsSinceLastRelease =
+    JD.succeed CommitsSinceLastRelease
+        |> andMap (JD.field "lastRelease" GitHub.decodeRelease)
+        |> andMap (JD.field "commits" (JD.list GitHub.decodeCommit))
 
 
 decodeColumnCards : JD.Decoder (List ColumnCard)
@@ -319,6 +333,7 @@ type alias RepoCommitsEvent =
     { repoId : GitHub.ID
     , ref : String
     , commits : List GitHub.Commit
+    , lastRelease : GitHub.Release
     }
 
 
@@ -328,6 +343,7 @@ decodeRepoCommitsEvent =
         |> andMap (JD.field "repoId" JD.string)
         |> andMap (JD.field "ref" JD.string)
         |> andMap (JD.field "commits" (JD.list GitHub.decodeCommit))
+        |> andMap (JD.field "lastRelease" GitHub.decodeRelease)
 
 
 type alias RepoLabelsEvent =

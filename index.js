@@ -210,15 +210,19 @@ worker.ports.setRepoCommits.subscribe(function(args) {
   var id = args[0];
   var val = args[1];
 
-  var ref = val[0];
-  var commits = val[1];
-
   if (data.repoCommits[id] === undefined) {
     data.repoCommits[id] = {};
   }
-  data.repoCommits[id][ref] = commits;
 
-  bumpIndexAndEmitUpdate("repoCommits", { repoId: id, ref: ref, commits: commits });
+  data.repoCommits[id][val.ref] = val;
+
+  bumpIndexAndEmitUpdate("repoCommits", {
+    repoId: id,
+    ref: val.ref,
+    commits: val.commits,
+    lastRelease: val.lastRelease,
+  });
+
   popPoll();
 });
 

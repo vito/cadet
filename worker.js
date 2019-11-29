@@ -3214,27 +3214,6 @@ var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
 	});
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Worker$backOff = F2(
@@ -5222,6 +5201,27 @@ var $elm$core$Set$member = F2(
 var $elm_community$intdict$IntDict$singleton = F2(
 	function (key, value) {
 		return A2($elm_community$intdict$IntDict$leaf, key, value);
+	});
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
 	});
 var $elm$core$List$append = F2(
 	function (xs, ys) {
@@ -9581,6 +9581,10 @@ var $author$project$GitHub$encodeRelease = function (record) {
 				'url',
 				$elm$json$Json$Encode$string(record.url)),
 				_Utils_Tuple2(
+				'created_at',
+				$elm$json$Json$Encode$string(
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(record.createdAt))),
+				_Utils_Tuple2(
 				'name',
 				A2($elm_community$json_extra$Json$Encode$Extra$maybe, $elm$json$Json$Encode$string, record.name)),
 				_Utils_Tuple2(
@@ -11437,9 +11441,9 @@ var $author$project$Worker$RepoReleasesFetched = F2(
 	function (a, b) {
 		return {$: 'RepoReleasesFetched', a: a, b: b};
 	});
-var $author$project$GitHub$Release = F4(
-	function (id, url, name, tag) {
-		return {id: id, name: name, tag: tag, url: url};
+var $author$project$GitHub$Release = F5(
+	function (id, url, createdAt, name, tag) {
+		return {createdAt: createdAt, id: id, name: name, tag: tag, url: url};
 	});
 var $author$project$GitHub$Tag = F2(
 	function (name, target) {
@@ -11468,11 +11472,18 @@ var $author$project$GitHub$releaseObject = A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'createdAt',
+				_List_Nil,
+				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Release)))));
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Release))))));
 var $author$project$GitHub$releasesQuery = function () {
 	var repoNameVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -11668,6 +11679,27 @@ var $author$project$Worker$fetchRepos = function (model) {
 			model.githubToken,
 			{name: model.githubOrg}));
 };
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
+	});
 var $author$project$Worker$setCardEvents = _Platform_outgoingPort(
 	'setCardEvents',
 	function ($) {
@@ -11731,18 +11763,7 @@ var $author$project$Worker$setRepoCommits = _Platform_outgoingPort(
 			_List_fromArray(
 				[
 					$elm$json$Json$Encode$string(a),
-					function ($) {
-					var a = $.a;
-					var b = $.b;
-					return A2(
-						$elm$json$Json$Encode$list,
-						$elm$core$Basics$identity,
-						_List_fromArray(
-							[
-								$elm$json$Json$Encode$string(a),
-								$elm$core$Basics$identity(b)
-							]));
-				}(b)
+					$elm$core$Basics$identity(b)
 				]));
 	});
 var $author$project$Worker$setRepoLabels = _Platform_outgoingPort(
@@ -12745,11 +12766,11 @@ var $author$project$Worker$update = F2(
 							function () {
 								var isForCommit = F2(
 									function (commit, release) {
-										var _v14 = release.tag;
-										if (_v14.$ === 'Nothing') {
+										var _v16 = release.tag;
+										if (_v16.$ === 'Nothing') {
 											return false;
 										} else {
-											var t = _v14.a;
+											var t = _v16.a;
 											return _Utils_eq(t.target.oid, commit.sha);
 										}
 									});
@@ -12759,31 +12780,57 @@ var $author$project$Worker$update = F2(
 										function (commit, _v13) {
 											var soFar = _v13.a;
 											var f = _v13.b;
-											return (f || A2(
-												$elm$core$List$any,
-												isForCommit(commit),
-												releases)) ? _Utils_Tuple2(soFar, true) : _Utils_Tuple2(
-												A2($elm$core$List$cons, commit, soFar),
-												false);
+											var _v14 = A2(
+												$elm_community$maybe_extra$Maybe$Extra$or,
+												f,
+												A2(
+													$elm_community$list_extra$List$Extra$find,
+													isForCommit(commit),
+													releases));
+											if (_v14.$ === 'Just') {
+												var release = _v14.a;
+												return _Utils_Tuple2(
+													soFar,
+													$elm$core$Maybe$Just(release));
+											} else {
+												return _Utils_Tuple2(
+													A2($elm$core$List$cons, commit, soFar),
+													$elm$core$Maybe$Nothing);
+											}
 										}),
-									_Utils_Tuple2(commitsSoFar, false),
+									_Utils_Tuple2(commitsSoFar, $elm$core$Maybe$Nothing),
 									commits);
 								var newCommitsSoFar = _v12.a;
-								var reachedRelease = _v12.b;
-								return reachedRelease ? $author$project$Worker$setRepoCommits(
-									_Utils_Tuple2(
-										repo.id,
+								var sinceRelease = _v12.b;
+								if (sinceRelease.$ === 'Just') {
+									var release = sinceRelease.a;
+									return $author$project$Worker$setRepoCommits(
 										_Utils_Tuple2(
-											psel.selector.qualifiedName,
-											A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeCommit, newCommitsSoFar)))) : (pageInfo.hasNextPage ? A5(
-									$author$project$Worker$fetchRepoCommits,
-									model,
-									repo,
-									_Utils_update(
-										psel,
-										{after: pageInfo.endCursor}),
-									releases,
-									newCommitsSoFar) : $elm$core$Platform$Cmd$none);
+											repo.id,
+											$elm$json$Json$Encode$object(
+												_List_fromArray(
+													[
+														_Utils_Tuple2(
+														'ref',
+														$elm$json$Json$Encode$string(psel.selector.qualifiedName)),
+														_Utils_Tuple2(
+														'commits',
+														A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeCommit, newCommitsSoFar)),
+														_Utils_Tuple2(
+														'lastRelease',
+														$author$project$GitHub$encodeRelease(release))
+													]))));
+								} else {
+									return pageInfo.hasNextPage ? A5(
+										$author$project$Worker$fetchRepoCommits,
+										model,
+										repo,
+										_Utils_update(
+											psel,
+											{after: pageInfo.endCursor}),
+										releases,
+										newCommitsSoFar) : $elm$core$Platform$Cmd$none;
+								}
 							}()));
 				}
 			case 'PullRequestFetched':
@@ -12798,9 +12845,9 @@ var $author$project$Worker$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _v15 = pr.lastCommit;
-										if (_v15.$ === 'Just') {
-											var sha = _v15.a.sha;
+										var _v17 = pr.lastCommit;
+										if (_v17.$ === 'Just') {
+											var sha = _v17.a.sha;
 											return A3($elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12870,9 +12917,9 @@ var $author$project$Worker$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _v17 = msg.b.a;
-					var timeline = _v17.a;
-					var reviews = _v17.b;
+					var _v19 = msg.b.a;
+					var timeline = _v19.a;
+					var reviews = _v19.b;
 					var reviewers = A2(
 						$elm$core$List$map,
 						$author$project$GitHub$encodePullRequestReview,
@@ -12880,8 +12927,8 @@ var $author$project$Worker$update = F2(
 							A3(
 								$elm$core$List$foldl,
 								function (r) {
-									var _v20 = r.state;
-									switch (_v20.$) {
+									var _v22 = r.state;
+									switch (_v22.$) {
 										case 'PullRequestReviewStatePending':
 											return A2($elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -12901,8 +12948,8 @@ var $author$project$Worker$update = F2(
 							avatar: review.author.avatar,
 							createdAt: review.createdAt,
 							event: function () {
-								var _v19 = review.state;
-								switch (_v19.$) {
+								var _v21 = review.state;
+								switch (_v21.$) {
 									case 'PullRequestReviewStatePending':
 										return 'review-pending';
 									case 'PullRequestReviewStateCommented':
