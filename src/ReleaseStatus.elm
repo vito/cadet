@@ -2,6 +2,7 @@ module ReleaseStatus exposing (init, view)
 
 import Card exposing (Card)
 import Colors
+import DateFormat
 import Dict
 import GitHub
 import Html exposing (Html)
@@ -12,6 +13,7 @@ import Maybe.Extra as ME
 import Model exposing (Model, Msg)
 import Octicons
 import ProgressBar
+import Time
 import Url.Builder as UB
 
 
@@ -208,8 +210,8 @@ branchName { ref } =
         |> String.replace "refs/heads/" ""
 
 
-view : Model.ReleaseStatus -> Html Msg
-view sir =
+view : Model -> Model.ReleaseStatus -> Html Msg
+view model sir =
     Html.div [ HA.class "card release" ]
         [ Html.div [ HA.class "card-body" ]
             [ case ( sir.milestone, sir.ref ) of
@@ -275,6 +277,25 @@ view sir =
 
                     Nothing ->
                         Html.text ""
+                , case Maybe.andThen .dueOn sir.milestone of
+                    Just dueOn ->
+                        Html.div
+                            [ HA.class "metric"
+                            , HA.classList
+                                [ ( "overdue"
+                                  , Time.posixToMillis model.currentTime > Time.posixToMillis dueOn
+                                  )
+                                ]
+                            ]
+                            [ Octicons.clock octiconOpts
+                            , Html.text "due "
+
+                            -- Value from GitHub is UTC; ignore current zone
+                            , Html.text (DateFormat.format dueDate Time.utc dueOn)
+                            ]
+
+                    Nothing ->
+                        Html.text ""
                 , viewMetric
                     (Octicons.gitCommit { octiconOpts | color = Colors.gray })
                     sir.totalCommits
@@ -330,3 +351,13 @@ viewMetric icon count plural singular description =
         , Html.text " "
         , Html.text description
         ]
+
+
+dueDate : List DateFormat.Token
+dueDate =
+    [ DateFormat.monthNameFull
+    , DateFormat.text " "
+    , DateFormat.dayOfMonthSuffix
+    , DateFormat.text " "
+    , DateFormat.yearNumber
+    ]

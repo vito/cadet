@@ -8001,9 +8001,9 @@ var $author$project$GitHub$mergeableStates = _List_fromArray(
 		_Utils_Tuple2('CONFLICTING', $author$project$GitHub$MergeableStateConflicting),
 		_Utils_Tuple2('UNKNOWN', $author$project$GitHub$MergeableStateUnknown)
 	]);
-var $author$project$GitHub$Milestone = F5(
-	function (id, number, title, state, description) {
-		return {description: description, id: id, number: number, state: state, title: title};
+var $author$project$GitHub$Milestone = F6(
+	function (id, number, title, state, description, dueOn) {
+		return {description: description, dueOn: dueOn, id: id, number: number, state: state, title: title};
 	});
 var $author$project$GitHub$MilestoneStateClosed = {$: 'MilestoneStateClosed'};
 var $author$project$GitHub$MilestoneStateOpen = {$: 'MilestoneStateOpen'};
@@ -8016,26 +8016,34 @@ var $author$project$GitHub$milestoneObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'description',
+		'dueOn',
 		_List_Nil,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime))),
 	A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-			'state',
+			'description',
 			_List_Nil,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum($author$project$GitHub$milestoneStates)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'state',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum($author$project$GitHub$milestoneStates)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Milestone))))));
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Milestone)))))));
 var $author$project$GitHub$ReactionGroup = F2(
 	function (type_, count) {
 		return {count: count, type_: type_};
@@ -9184,7 +9192,13 @@ var $author$project$GitHub$encodeMilestone = function (record) {
 				$author$project$GitHub$encodeMilestoneState(record.state)),
 				_Utils_Tuple2(
 				'description',
-				A2($elm_community$json_extra$Json$Encode$Extra$maybe, $elm$json$Json$Encode$string, record.description))
+				A2($elm_community$json_extra$Json$Encode$Extra$maybe, $elm$json$Json$Encode$string, record.description)),
+				_Utils_Tuple2(
+				'due_on',
+				A2(
+					$elm_community$json_extra$Json$Encode$Extra$maybe,
+					$elm$json$Json$Encode$string,
+					A2($elm$core$Maybe$map, $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime, record.dueOn)))
 			]));
 };
 var $author$project$GitHub$encodeReactionType = function (item) {

@@ -6827,9 +6827,9 @@ var $author$project$GitHub$decodeLabel = A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
 			$elm$json$Json$Decode$succeed($author$project$GitHub$Label))));
-var $author$project$GitHub$Milestone = F5(
-	function (id, number, title, state, description) {
-		return {description: description, id: id, number: number, state: state, title: title};
+var $author$project$GitHub$Milestone = F6(
+	function (id, number, title, state, description, dueOn) {
+		return {description: description, dueOn: dueOn, id: id, number: number, state: state, title: title};
 	});
 var $author$project$GitHub$MilestoneStateClosed = {$: 'MilestoneStateClosed'};
 var $author$project$GitHub$MilestoneStateOpen = {$: 'MilestoneStateOpen'};
@@ -6857,21 +6857,27 @@ var $author$project$GitHub$decodeMilestone = A2(
 	$elm_community$json_extra$Json$Decode$Extra$andMap,
 	A2(
 		$elm$json$Json$Decode$field,
-		'description',
-		$elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)),
+		'due_on',
+		$elm$json$Json$Decode$maybe($elm_community$json_extra$Json$Decode$Extra$datetime)),
 	A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
-		A2($elm$json$Json$Decode$field, 'state', $author$project$GitHub$decodeMilestoneState),
+		A2(
+			$elm$json$Json$Decode$field,
+			'description',
+			$elm$json$Json$Decode$maybe($elm$json$Json$Decode$string)),
 		A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
-			A2($elm$json$Json$Decode$field, 'title', $elm$json$Json$Decode$string),
+			A2($elm$json$Json$Decode$field, 'state', $author$project$GitHub$decodeMilestoneState),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
-				A2($elm$json$Json$Decode$field, 'number', $elm$json$Json$Decode$int),
+				A2($elm$json$Json$Decode$field, 'title', $elm$json$Json$Decode$string),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
-					A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
-					$elm$json$Json$Decode$succeed($author$project$GitHub$Milestone))))));
+					A2($elm$json$Json$Decode$field, 'number', $elm$json$Json$Decode$int),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2($elm$json$Json$Decode$field, 'id', $elm$json$Json$Decode$string),
+						$elm$json$Json$Decode$succeed($author$project$GitHub$Milestone)))))));
 var $author$project$GitHub$Project = F7(
 	function (id, url, owner, name, number, body, columns) {
 		return {body: body, columns: columns, id: id, name: name, number: number, owner: owner, url: url};
@@ -8931,26 +8937,34 @@ var $author$project$GitHub$milestoneObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'description',
+		'dueOn',
 		_List_Nil,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable(
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime))),
 	A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A3(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-			'state',
+			'description',
 			_List_Nil,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum($author$project$GitHub$milestoneStates)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'state',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$enum($author$project$GitHub$milestoneStates)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'title', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Milestone))))));
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Milestone)))))));
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map = F2(
 	function (f, _v0) {
 		var sourceType = _v0.a;
@@ -24799,6 +24813,20 @@ var $author$project$ReleaseStatus$branchName = function (_v0) {
 		A2($elm$core$Maybe$withDefault, 'impossible', ref));
 };
 var $elm$html$Html$code = _VirtualDom_node('code');
+var $ryannhg$date_format$DateFormat$DayOfMonthSuffix = {$: 'DayOfMonthSuffix'};
+var $ryannhg$date_format$DateFormat$dayOfMonthSuffix = $ryannhg$date_format$DateFormat$DayOfMonthSuffix;
+var $ryannhg$date_format$DateFormat$MonthNameFull = {$: 'MonthNameFull'};
+var $ryannhg$date_format$DateFormat$monthNameFull = $ryannhg$date_format$DateFormat$MonthNameFull;
+var $ryannhg$date_format$DateFormat$YearNumber = {$: 'YearNumber'};
+var $ryannhg$date_format$DateFormat$yearNumber = $ryannhg$date_format$DateFormat$YearNumber;
+var $author$project$ReleaseStatus$dueDate = _List_fromArray(
+	[
+		$ryannhg$date_format$DateFormat$monthNameFull,
+		$ryannhg$date_format$DateFormat$text(' '),
+		$ryannhg$date_format$DateFormat$dayOfMonthSuffix,
+		$ryannhg$date_format$DateFormat$text(' '),
+		$ryannhg$date_format$DateFormat$yearNumber
+	]);
 var $capitalist$elm_octicons$Octicons$gitBranchPath = 'M10,5 C10,3.89 9.11,3 8,3 C6.89,3 6,3.89 6,5 C6,5.73 6.41,6.38 7,6.72 L7,7.02 C6.98,7.54 6.77,8 6.37,8.4 C5.97,8.8 5.51,9.01 4.99,9.03 C4.16,9.05 3.51,9.19 2.99,9.48 L2.99,4.72 C3.58,4.38 3.99,3.74 3.99,3 C3.99,1.89 3.1,1 1.99,1 C0.88,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.47 3.8,12 3.47,11.64 C3.56,11.58 3.95,11.23 4.06,11.17 C4.31,11.06 4.62,11 5,11 C6.05,10.95 6.95,10.55 7.75,9.75 C8.55,8.95 8.95,7.77 9,6.73 L8.98,6.73 C9.59,6.37 10,5.73 10,5 L10,5 Z M2,1.8 C2.66,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 C1.35,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 L2,1.8 Z M2,14.21 C1.34,14.21 0.8,13.66 0.8,13.01 C0.8,12.36 1.35,11.81 2,11.81 C2.65,11.81 3.2,12.36 3.2,13.01 C3.2,13.66 2.65,14.21 2,14.21 L2,14.21 Z M8,6.21 C7.34,6.21 6.8,5.66 6.8,5.01 C6.8,4.36 7.35,3.81 8,3.81 C8.65,3.81 9.2,4.36 9.2,5.01 C9.2,5.66 8.65,6.21 8,6.21 L8,6.21 Z';
 var $capitalist$elm_octicons$Octicons$gitBranch = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitBranchPath, '0 0 10 16', 'gitBranch');
 var $author$project$ReleaseStatus$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
@@ -24833,60 +24861,28 @@ var $author$project$ReleaseStatus$viewMetric = F5(
 					$elm$html$Html$text(description)
 				]));
 	});
-var $author$project$ReleaseStatus$view = function (sir) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('card release')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('card-body')
-					]),
-				_List_fromArray(
-					[
-						function () {
-						var _v0 = _Utils_Tuple2(sir.milestone, sir.ref);
-						if (_v0.a.$ === 'Just') {
-							var nm = _v0.a.a;
-							return A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('release-title')
-									]),
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$milestone($author$project$ReleaseStatus$octiconOpts),
-										A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('title-link'),
-												$elm$html$Html$Attributes$href(
-												A2(
-													$elm$url$Url$Builder$absolute,
-													_List_fromArray(
-														['releases', sir.repo.name]),
-													_List_fromArray(
-														[
-															A2($elm$url$Url$Builder$string, 'milestone', nm.title)
-														])))
-											]),
-										_List_fromArray(
-											[
-												$elm$html$Html$text(nm.title)
-											]))
-									]));
-						} else {
-							if (_v0.b.$ === 'Just') {
-								var _v1 = _v0.a;
-								var ref = _v0.b.a;
+var $author$project$ReleaseStatus$view = F2(
+	function (model, sir) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card release')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-body')
+						]),
+					_List_fromArray(
+						[
+							function () {
+							var _v0 = _Utils_Tuple2(sir.milestone, sir.ref);
+							if (_v0.a.$ === 'Just') {
+								var nm = _v0.a.a;
 								return A2(
 									$elm$html$Html$div,
 									_List_fromArray(
@@ -24895,6 +24891,7 @@ var $author$project$ReleaseStatus$view = function (sir) {
 										]),
 									_List_fromArray(
 										[
+											$capitalist$elm_octicons$Octicons$milestone($author$project$ReleaseStatus$octiconOpts),
 											A2(
 											$elm$html$Html$a,
 											_List_fromArray(
@@ -24907,123 +24904,44 @@ var $author$project$ReleaseStatus$view = function (sir) {
 															['releases', sir.repo.name]),
 														_List_fromArray(
 															[
-																A2($elm$url$Url$Builder$string, 'ref', ref)
+																A2($elm$url$Url$Builder$string, 'milestone', nm.title)
 															])))
 												]),
 											_List_fromArray(
 												[
-													$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
-													A2(
-													$elm$html$Html$code,
-													_List_Nil,
-													_List_fromArray(
-														[
-															$elm$html$Html$text(
-															$author$project$ReleaseStatus$branchName(sir))
-														]))
+													$elm$html$Html$text(nm.title)
 												]))
 										]));
 							} else {
-								return $elm$html$Html$text('impossible');
-							}
-						}
-					}(),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('release-ownership')
-							]),
-						_List_fromArray(
-							[
-								function () {
-								var _v2 = sir.issue;
-								if (_v2.$ === 'Nothing') {
+								if (_v0.b.$ === 'Just') {
+									var _v1 = _v0.a;
+									var ref = _v0.b.a;
 									return A2(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('issue-placeholder')
+												$elm$html$Html$Attributes$class('release-title')
 											]),
 										_List_fromArray(
 											[
-												$capitalist$elm_octicons$Octicons$person($author$project$ReleaseStatus$octiconOpts)
-											]));
-								} else {
-									var issue = _v2.a;
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('release-issue')
-											]),
-										_List_fromArray(
-											[
-												function () {
-												var _v3 = issue.author;
-												if (_v3.$ === 'Nothing') {
-													return $elm$html$Html$text('missing owner');
-												} else {
-													var user = _v3.a;
-													return A2(
-														$elm$html$Html$img,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('release-avatar'),
-																$elm$html$Html$Attributes$src(user.avatar)
-															]),
-														_List_Nil);
-												}
-											}(),
-												A2(
-												$elm$html$Html$a,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('issue-number'),
-														$elm$html$Html$Attributes$href(issue.url),
-														$elm$html$Html$Attributes$target('_blank')
-													]),
-												_List_fromArray(
-													[
-														$elm$html$Html$text('#'),
-														$elm$html$Html$text(
-														$elm$core$String$fromInt(issue.number))
-													]))
-											]));
-								}
-							}()
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('release-metrics')
-							]),
-						_List_fromArray(
-							[
-								function () {
-								var _v4 = sir.ref;
-								if (_v4.$ === 'Just') {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('metric')
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
 												A2(
 												$elm$html$Html$a,
 												_List_fromArray(
 													[
 														$elm$html$Html$Attributes$class('title-link'),
 														$elm$html$Html$Attributes$href(
-														sir.repo.url + ('/tree/' + $author$project$ReleaseStatus$branchName(sir))),
-														$elm$html$Html$Attributes$target('_blank')
+														A2(
+															$elm$url$Url$Builder$absolute,
+															_List_fromArray(
+																['releases', sir.repo.name]),
+															_List_fromArray(
+																[
+																	A2($elm$url$Url$Builder$string, 'ref', ref)
+																])))
 													]),
 												_List_fromArray(
 													[
+														$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
 														A2(
 														$elm$html$Html$code,
 														_List_Nil,
@@ -25035,65 +24953,211 @@ var $author$project$ReleaseStatus$view = function (sir) {
 													]))
 											]));
 								} else {
-									return $elm$html$Html$text('');
+									return $elm$html$Html$text('impossible');
 								}
-							}(),
-								A5(
-								$author$project$ReleaseStatus$viewMetric,
-								$capitalist$elm_octicons$Octicons$gitCommit(
-									_Utils_update(
-										$author$project$ReleaseStatus$octiconOpts,
-										{color: $author$project$Colors$gray})),
-								sir.totalCommits,
-								'commits',
-								'commit',
-								'since last release'),
-								A5(
-								$author$project$ReleaseStatus$viewMetric,
-								$capitalist$elm_octicons$Octicons$gitPullRequest(
-									_Utils_update(
-										$author$project$ReleaseStatus$octiconOpts,
-										{color: $author$project$Colors$purple})),
-								$elm$core$List$length(sir.doneCards),
-								'issues/PRs need',
-								'issue/PR needs',
-								'documentation'),
-								$elm$core$List$isEmpty(sir.openIssues) ? $elm$html$Html$text('') : A5(
-								$author$project$ReleaseStatus$viewMetric,
-								$capitalist$elm_octicons$Octicons$issueOpened(
-									_Utils_update(
-										$author$project$ReleaseStatus$octiconOpts,
-										{color: $author$project$Colors$gray})),
-								$elm$core$List$length(sir.openIssues),
-								'open issues/PRs',
-								'open issue/PR',
-								'in milestone')
-							])),
-						$author$project$ProgressBar$view(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								$author$project$Colors$green,
-								$elm$core$List$length(sir.documentedCards)),
-								_Utils_Tuple2(
-								$author$project$Colors$green,
-								$elm$core$List$length(sir.undocumentedCards)),
-								_Utils_Tuple2(
-								$author$project$Colors$green,
-								$elm$core$List$length(sir.noImpactCards)),
-								_Utils_Tuple2(
-								$author$project$Colors$purple,
-								$elm$core$List$length(sir.doneCards)),
-								_Utils_Tuple2(
-								$author$project$Colors$gray200,
-								$elm$core$List$length(sir.openPRs)),
-								_Utils_Tuple2(
-								$author$project$Colors$gray200,
-								$elm$core$List$length(sir.openIssues))
-							]))
-					]))
-			]));
-};
+							}
+						}(),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('release-ownership')
+								]),
+							_List_fromArray(
+								[
+									function () {
+									var _v2 = sir.issue;
+									if (_v2.$ === 'Nothing') {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('issue-placeholder')
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$person($author$project$ReleaseStatus$octiconOpts)
+												]));
+									} else {
+										var issue = _v2.a;
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('release-issue')
+												]),
+											_List_fromArray(
+												[
+													function () {
+													var _v3 = issue.author;
+													if (_v3.$ === 'Nothing') {
+														return $elm$html$Html$text('missing owner');
+													} else {
+														var user = _v3.a;
+														return A2(
+															$elm$html$Html$img,
+															_List_fromArray(
+																[
+																	$elm$html$Html$Attributes$class('release-avatar'),
+																	$elm$html$Html$Attributes$src(user.avatar)
+																]),
+															_List_Nil);
+													}
+												}(),
+													A2(
+													$elm$html$Html$a,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('issue-number'),
+															$elm$html$Html$Attributes$href(issue.url),
+															$elm$html$Html$Attributes$target('_blank')
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text('#'),
+															$elm$html$Html$text(
+															$elm$core$String$fromInt(issue.number))
+														]))
+												]));
+									}
+								}()
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('release-metrics')
+								]),
+							_List_fromArray(
+								[
+									function () {
+									var _v4 = sir.ref;
+									if (_v4.$ === 'Just') {
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('metric')
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
+													A2(
+													$elm$html$Html$a,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('title-link'),
+															$elm$html$Html$Attributes$href(
+															sir.repo.url + ('/tree/' + $author$project$ReleaseStatus$branchName(sir))),
+															$elm$html$Html$Attributes$target('_blank')
+														]),
+													_List_fromArray(
+														[
+															A2(
+															$elm$html$Html$code,
+															_List_Nil,
+															_List_fromArray(
+																[
+																	$elm$html$Html$text(
+																	$author$project$ReleaseStatus$branchName(sir))
+																]))
+														]))
+												]));
+									} else {
+										return $elm$html$Html$text('');
+									}
+								}(),
+									function () {
+									var _v5 = A2(
+										$elm$core$Maybe$andThen,
+										function ($) {
+											return $.dueOn;
+										},
+										sir.milestone);
+									if (_v5.$ === 'Just') {
+										var dueOn = _v5.a;
+										return A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('metric'),
+													$elm$html$Html$Attributes$classList(
+													_List_fromArray(
+														[
+															_Utils_Tuple2(
+															'overdue',
+															_Utils_cmp(
+																$elm$time$Time$posixToMillis(model.currentTime),
+																$elm$time$Time$posixToMillis(dueOn)) > 0)
+														]))
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$clock($author$project$ReleaseStatus$octiconOpts),
+													$elm$html$Html$text('due '),
+													$elm$html$Html$text(
+													A3($ryannhg$date_format$DateFormat$format, $author$project$ReleaseStatus$dueDate, $elm$time$Time$utc, dueOn))
+												]));
+									} else {
+										return $elm$html$Html$text('');
+									}
+								}(),
+									A5(
+									$author$project$ReleaseStatus$viewMetric,
+									$capitalist$elm_octicons$Octicons$gitCommit(
+										_Utils_update(
+											$author$project$ReleaseStatus$octiconOpts,
+											{color: $author$project$Colors$gray})),
+									sir.totalCommits,
+									'commits',
+									'commit',
+									'since last release'),
+									A5(
+									$author$project$ReleaseStatus$viewMetric,
+									$capitalist$elm_octicons$Octicons$gitPullRequest(
+										_Utils_update(
+											$author$project$ReleaseStatus$octiconOpts,
+											{color: $author$project$Colors$purple})),
+									$elm$core$List$length(sir.doneCards),
+									'issues/PRs need',
+									'issue/PR needs',
+									'documentation'),
+									$elm$core$List$isEmpty(sir.openIssues) ? $elm$html$Html$text('') : A5(
+									$author$project$ReleaseStatus$viewMetric,
+									$capitalist$elm_octicons$Octicons$issueOpened(
+										_Utils_update(
+											$author$project$ReleaseStatus$octiconOpts,
+											{color: $author$project$Colors$gray})),
+									$elm$core$List$length(sir.openIssues),
+									'open issues/PRs',
+									'open issue/PR',
+									'in milestone')
+								])),
+							$author$project$ProgressBar$view(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									$author$project$Colors$green,
+									$elm$core$List$length(sir.documentedCards)),
+									_Utils_Tuple2(
+									$author$project$Colors$green,
+									$elm$core$List$length(sir.undocumentedCards)),
+									_Utils_Tuple2(
+									$author$project$Colors$green,
+									$elm$core$List$length(sir.noImpactCards)),
+									_Utils_Tuple2(
+									$author$project$Colors$purple,
+									$elm$core$List$length(sir.doneCards)),
+									_Utils_Tuple2(
+									$author$project$Colors$gray200,
+									$elm$core$List$length(sir.openPRs)),
+									_Utils_Tuple2(
+									$author$project$Colors$gray200,
+									$elm$core$List$length(sir.openIssues))
+								]))
+						]))
+				]));
+	});
 var $author$project$Main$viewReleasesPage = function (model) {
 	var viewRepoReleases = F2(
 		function (repoName, releases) {
@@ -25124,7 +25188,7 @@ var $author$project$Main$viewReleasesPage = function (model) {
 							]),
 						A2(
 							$elm$core$List$map,
-							$author$project$ReleaseStatus$view,
+							$author$project$ReleaseStatus$view(model),
 							$elm$core$List$reverse(
 								A2($elm$core$List$sortWith, $author$project$Main$compareReleaseStatus, releases))))
 					]));

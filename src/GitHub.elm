@@ -319,6 +319,7 @@ type alias Milestone =
     , title : String
     , state : MilestoneState
     , description : Maybe String
+    , dueOn : Maybe Time.Posix
     }
 
 
@@ -1389,6 +1390,7 @@ milestoneObject =
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "state" [] (GB.enum milestoneStates))
         |> GB.with (GB.field "description" [] (GB.nullable GB.string))
+        |> GB.with (GB.field "dueOn" [] (GB.nullable <| GB.customScalar DateType JDE.datetime))
 
 
 releaseObject : GB.ValueSpec GB.NonNull GB.ObjectType Release vars
@@ -2236,6 +2238,7 @@ decodeMilestone =
         |> andMap (JD.field "title" JD.string)
         |> andMap (JD.field "state" decodeMilestoneState)
         |> andMap (JD.field "description" (JD.maybe JD.string))
+        |> andMap (JD.field "due_on" (JD.maybe JDE.datetime))
 
 
 decodeReactionGroup : JD.Decoder ReactionGroup
@@ -2618,6 +2621,7 @@ encodeMilestone record =
         , ( "title", JE.string record.title )
         , ( "state", encodeMilestoneState record.state )
         , ( "description", JEE.maybe JE.string record.description )
+        , ( "due_on", JEE.maybe JE.string (Maybe.map Iso8601.fromTime record.dueOn) )
         ]
 
 

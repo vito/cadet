@@ -1356,7 +1356,7 @@ viewReleasesPage model =
                 , releases
                     |> List.sortWith compareReleaseStatus
                     |> List.reverse
-                    |> List.map ReleaseStatus.view
+                    |> List.map (ReleaseStatus.view model)
                     |> Html.div [ HA.class "releases" ]
                 ]
     in
