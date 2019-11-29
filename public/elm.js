@@ -11542,6 +11542,10 @@ var $author$project$ReleaseStatus$initReleaseStatus = F4(
 				closedIssues: _List_Nil,
 				documentedCards: _List_Nil,
 				doneCards: _List_Nil,
+				issue: A2(
+					$elm_community$list_extra$List$Extra$find,
+					A2($author$project$Label$cardHasLabel, model, 'release'),
+					allCards),
 				mergedPRs: _List_Nil,
 				milestone: milestone,
 				noImpactCards: _List_Nil,
@@ -24711,6 +24715,8 @@ var $elm$html$Html$code = _VirtualDom_node('code');
 var $capitalist$elm_octicons$Octicons$gitBranchPath = 'M10,5 C10,3.89 9.11,3 8,3 C6.89,3 6,3.89 6,5 C6,5.73 6.41,6.38 7,6.72 L7,7.02 C6.98,7.54 6.77,8 6.37,8.4 C5.97,8.8 5.51,9.01 4.99,9.03 C4.16,9.05 3.51,9.19 2.99,9.48 L2.99,4.72 C3.58,4.38 3.99,3.74 3.99,3 C3.99,1.89 3.1,1 1.99,1 C0.88,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.47 3.8,12 3.47,11.64 C3.56,11.58 3.95,11.23 4.06,11.17 C4.31,11.06 4.62,11 5,11 C6.05,10.95 6.95,10.55 7.75,9.75 C8.55,8.95 8.95,7.77 9,6.73 L8.98,6.73 C9.59,6.37 10,5.73 10,5 L10,5 Z M2,1.8 C2.66,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 C1.35,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 L2,1.8 Z M2,14.21 C1.34,14.21 0.8,13.66 0.8,13.01 C0.8,12.36 1.35,11.81 2,11.81 C2.65,11.81 3.2,12.36 3.2,13.01 C3.2,13.66 2.65,14.21 2,14.21 L2,14.21 Z M8,6.21 C7.34,6.21 6.8,5.66 6.8,5.01 C6.8,4.36 7.35,3.81 8,3.81 C8.65,3.81 9.2,4.36 9.2,5.01 C9.2,5.66 8.65,6.21 8,6.21 L8,6.21 Z';
 var $capitalist$elm_octicons$Octicons$gitBranch = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitBranchPath, '0 0 10 16', 'gitBranch');
 var $author$project$ReleaseStatus$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
+var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
+var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
 var $author$project$ReleaseStatus$viewMetric = F5(
 	function (icon, count, plural, singular, description) {
 		return A2(
@@ -24759,7 +24765,7 @@ var $author$project$ReleaseStatus$view = function (sir) {
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$span,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
 								$elm$html$Html$Attributes$class('release-title')
@@ -24818,7 +24824,72 @@ var $author$project$ReleaseStatus$view = function (sir) {
 													]))
 											]));
 								}
-							}()
+							}(),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('release-ownership')
+									]),
+								_List_fromArray(
+									[
+										function () {
+										var _v1 = sir.issue;
+										if (_v1.$ === 'Nothing') {
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('issue-placeholder')
+													]),
+												_List_fromArray(
+													[
+														$capitalist$elm_octicons$Octicons$person($author$project$ReleaseStatus$octiconOpts)
+													]));
+										} else {
+											var issue = _v1.a;
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('release-issue')
+													]),
+												_List_fromArray(
+													[
+														function () {
+														var _v2 = issue.author;
+														if (_v2.$ === 'Nothing') {
+															return $elm$html$Html$text('missing owner');
+														} else {
+															var user = _v2.a;
+															return A2(
+																$elm$html$Html$img,
+																_List_fromArray(
+																	[
+																		$elm$html$Html$Attributes$class('release-avatar'),
+																		$elm$html$Html$Attributes$src(user.avatar)
+																	]),
+																_List_Nil);
+														}
+													}(),
+														A2(
+														$elm$html$Html$a,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('issue-number'),
+																$elm$html$Html$Attributes$href(issue.url),
+																$elm$html$Html$Attributes$target('_blank')
+															]),
+														_List_fromArray(
+															[
+																$elm$html$Html$text('#'),
+																$elm$html$Html$text(
+																$elm$core$String$fromInt(issue.number))
+															]))
+													]));
+										}
+									}()
+									]))
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -24829,8 +24900,8 @@ var $author$project$ReleaseStatus$view = function (sir) {
 						_List_fromArray(
 							[
 								function () {
-								var _v1 = sir.milestone;
-								if (_v1.$ === 'Just') {
+								var _v3 = sir.milestone;
+								if (_v3.$ === 'Just') {
 									return A2(
 										$elm$html$Html$div,
 										_List_fromArray(
@@ -24936,7 +25007,7 @@ var $author$project$ReleaseStatus$view = function (sir) {
 									_Utils_update(
 										$author$project$ReleaseStatus$octiconOpts,
 										{color: $author$project$Colors$gray})),
-								$elm$core$List$length(sir.openIssues) + $elm$core$List$length(sir.openIssues),
+								$elm$core$List$length(sir.openIssues),
 								'open issues/PRs',
 								'open issue/PR',
 								'in milestone')

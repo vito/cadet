@@ -235,6 +235,7 @@ type alias ReleaseStatus =
     { ref : String
     , repo : GitHub.Repo
     , milestone : Maybe GitHub.Milestone
+    , issue : Maybe Card
     , totalCommits : Int
     , openPRs : List Card
     , mergedPRs : List Card

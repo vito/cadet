@@ -1504,11 +1504,53 @@ a.column-title:hover, .page-header a:hover {
 
 .release-title {
   font-size: 24px;
+  position: relative;
 
   .octicon {
     width: 24px;
     height: 24px;
     margin-right: 7px;
+  }
+
+  .release-ownership {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 18px;
+  }
+
+  .issue-placeholder {
+    background: @gray-200;
+    border-radius: 5px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .octicon {
+      margin: 0;
+      vertical-align: middle;
+
+      * {
+        fill: @white;
+      }
+    }
+  }
+
+  .release-issue {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+
+    .issue-number {
+      font-size: 14px;
+      margin-top: 5px;
+
+      &:hover {
+        color: @blue;
+      }
+    }
   }
 }
 
@@ -1925,11 +1967,14 @@ a.column-title:hover, .page-header a:hover {
   display: inline-block;
 }
 
-.leaderboard-avatar {
+.leaderboard-avatar, .release-avatar {
   width: 48px;
   height: 48px;
   vertical-align: middle;
   border-radius: 5px;
+}
+
+.leaderboard-avatar {
   margin-right: 16px;
 }
 

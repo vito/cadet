@@ -122,6 +122,7 @@ initReleaseStatus model repo ref commits =
         { ref = ref
         , repo = repo
         , milestone = milestone
+        , issue = LE.find (Label.cardHasLabel model "release") allCards
         , totalCommits = List.length commits
         , openPRs = []
         , mergedPRs = []
@@ -165,7 +166,7 @@ view sir =
     in
     Html.div [ HA.class "card release" ]
         [ Html.div [ HA.class "card-body" ]
-            [ Html.span [ HA.class "release-title" ] <|
+            [ Html.div [ HA.class "release-title" ] <|
                 [ case sir.milestone of
                     Just nm ->
                         Html.a
@@ -186,6 +187,26 @@ view sir =
                             [ Octicons.gitBranch octiconOpts
                             , Html.code [] [ Html.text refName ]
                             ]
+                , Html.div [ HA.class "release-ownership" ]
+                    [ case sir.issue of
+                        Nothing ->
+                            Html.div [ HA.class "issue-placeholder" ]
+                                [ Octicons.person octiconOpts ]
+
+                        Just issue ->
+                            Html.div [ HA.class "release-issue" ]
+                                [ case issue.author of
+                                    Nothing ->
+                                        Html.text "missing owner"
+
+                                    Just user ->
+                                        Html.img [ HA.class "release-avatar", HA.src user.avatar ] []
+                                , Html.a [ HA.class "issue-number", HA.href issue.url, HA.target "_blank" ]
+                                    [ Html.text "#"
+                                    , Html.text (String.fromInt issue.number)
+                                    ]
+                                ]
+                    ]
                 ]
             , Html.div [ HA.class "release-metrics" ]
                 [ case sir.milestone of
@@ -235,7 +256,7 @@ view sir =
                   else
                     viewMetric
                         (Octicons.issueOpened { octiconOpts | color = Colors.gray })
-                        (List.length sir.openIssues + List.length sir.openIssues)
+                        (List.length sir.openIssues)
                         "open issues/PRs"
                         "open issue/PR"
                         "in milestone"
