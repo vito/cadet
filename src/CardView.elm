@@ -25,6 +25,7 @@ import Markdown
 import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
 import Octicons
+import ProgressBar
 import Project
 import Set
 import Task
@@ -376,29 +377,12 @@ viewProjectBar model project =
 
         dones =
             countPurpose GitHub.ProjectColumnPurposeDone
-
-        total =
-            toDos + inProgresses + dones
-
-        width base =
-            let
-                pct =
-                    (toFloat base / toFloat total) * 100
-            in
-            HA.style "width" (String.fromFloat pct ++ "%")
-
-        segment name val =
-            if val == 0 then
-                Html.text ""
-
-            else
-                Html.div [ HA.class ("segment " ++ name), width val ] []
     in
-    if total > 0 then
-        Html.div [ HA.class "project-bar" ]
-            [ segment "done" dones
-            , segment "in-progress" inProgresses
-            , segment "to-do" toDos
+    if toDos + inProgresses + dones > 0 then
+        ProgressBar.view
+            [ ( Colors.green, dones )
+            , ( Colors.purple, inProgresses )
+            , ( Colors.gray200, toDos )
             ]
 
     else

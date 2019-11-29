@@ -1322,17 +1322,36 @@ viewLabelsPage model =
         ]
 
 
+compareReleaseStatus : Model.ReleaseStatus -> Model.ReleaseStatus -> Order
+compareReleaseStatus a b =
+    case ( a.milestone, b.milestone ) of
+        ( Just am, Just bm ) ->
+            compare am.title bm.title
+
+        ( Just _, Nothing ) ->
+            GT
+
+        ( Nothing, Just _ ) ->
+            LT
+
+        ( Nothing, Nothing ) ->
+            compare a.ref b.ref
+
+
 viewReleasesPage : Model -> Html Msg
 viewReleasesPage model =
     let
         viewRepoReleases repoName releases =
-            Html.div [ HA.class "repo-cards" ]
+            Html.div [ HA.class "repo-releases" ]
                 [ Html.span [ HA.class "column-title" ]
                     [ Octicons.repo octiconOpts
                     , Html.text repoName
                     ]
-                , Html.div [ HA.class "cards" ] <|
-                    List.map ReleaseStatus.view releases
+                , releases
+                    |> List.sortWith compareReleaseStatus
+                    |> List.reverse
+                    |> List.map ReleaseStatus.view
+                    |> Html.div [ HA.class "releases" ]
                 ]
     in
     Html.div [ HA.class "page-content" ]
@@ -1340,7 +1359,7 @@ viewReleasesPage model =
             [ Octicons.milestone octiconOpts
             , Html.text "Releases"
             ]
-        , Html.div [ HA.class "card-columns" ] <|
+        , Html.div [ HA.class "all-releases" ] <|
             Dict.values (Dict.map viewRepoReleases model.repoReleaseStatuses)
         ]
 

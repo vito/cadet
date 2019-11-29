@@ -10,6 +10,7 @@ import Label
 import List.Extra as LE
 import Model exposing (Model, Msg)
 import Octicons
+import ProgressBar
 import Url.Builder as UB
 
 
@@ -33,16 +34,17 @@ isEmpty { milestone, totalCommits } =
     milestone == Nothing && totalCommits == 0
 
 
+refMajorMinor : String -> String
+refMajorMinor =
+    String.replace "refs/heads/release/" ""
+        >> String.replace ".x" ""
+
+
 findMatchingMilestone : String -> List GitHub.Milestone -> Maybe GitHub.Milestone
 findMatchingMilestone ref milestones =
     let
-        strippedRef =
-            ref
-                |> String.replace "refs/heads/release/" ""
-                |> String.replace ".x" ""
-
         titlePrefix =
-            "v" ++ strippedRef
+            "v" ++ refMajorMinor ref
     in
     LE.find (String.startsWith titlePrefix << .title) milestones
 
@@ -157,31 +159,65 @@ milestoneCards model milestone =
 
 view : Model.ReleaseStatus -> Html Msg
 view sir =
+    let
+        refName =
+            String.replace "refs/heads/" "" sir.ref
+    in
     Html.div [ HA.class "card release" ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.gitBranch Octicons.defaultOptions
-            ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "card-title", HA.draggable "false" ] <|
-                [ Html.a
-                    [ HA.class "title-link"
-                    , HA.href <|
-                        UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" sir.ref ]
-                    ]
-                    [ Html.text (String.replace "refs/heads/" "" sir.ref)
-                    ]
-                ]
-            , case sir.milestone of
-                Just nm ->
-                    Html.span []
-                        [ Octicons.milestone octiconOpts
-                        , Html.text nm.title
-                        ]
+        [ Html.div [ HA.class "card-body" ]
+            [ Html.span [ HA.class "release-title" ] <|
+                [ case sir.milestone of
+                    Just nm ->
+                        Html.a
+                            [ HA.class "title-link"
+                            , HA.href <|
+                                UB.absolute [ "releases", sir.repo.name ] [ UB.string "milestone" nm.title ]
+                            ]
+                            [ Octicons.milestone octiconOpts
+                            , Html.text nm.title
+                            ]
 
-                Nothing ->
-                    Html.text ""
-            , Html.div [ HA.class "metrics" ]
-                [ viewMetric
+                    Nothing ->
+                        Html.a
+                            [ HA.class "title-link"
+                            , HA.href <|
+                                UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" sir.ref ]
+                            ]
+                            [ Octicons.gitBranch octiconOpts
+                            , Html.code [] [ Html.text refName ]
+                            ]
+                ]
+            , Html.div [ HA.class "release-metrics" ]
+                [ case sir.milestone of
+                    Just _ ->
+                        Html.div [ HA.class "metric" ]
+                            [ Octicons.gitBranch octiconOpts
+                            , Html.a
+                                [ HA.class "title-link"
+                                , HA.href <|
+                                    UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" sir.ref ]
+                                ]
+                                [ Html.code [] [ Html.text refName ] ]
+                            ]
+
+                    Nothing ->
+                        Html.div [ HA.class "metric" ]
+                            [ Octicons.milestone octiconOpts
+                            , Html.form [ HA.class "create-milestone" ] <|
+                                if refName == "master" then
+                                    [ Html.text "v"
+                                    , Html.input [ HA.class "inline-major-minor" ] []
+                                    , Html.text ".0"
+                                    ]
+
+                                else
+                                    [ Html.text "v"
+                                    , Html.text (refMajorMinor sir.ref)
+                                    , Html.text "."
+                                    , Html.input [ HA.class "inline-patch" ] []
+                                    ]
+                            ]
+                , viewMetric
                     (Octicons.gitCommit { octiconOpts | color = Colors.gray })
                     sir.totalCommits
                     "commits"
@@ -189,30 +225,28 @@ view sir =
                     "since last release"
                 , viewMetric
                     (Octicons.gitPullRequest { octiconOpts | color = Colors.purple })
-                    (List.length sir.mergedPRs)
-                    "merged PRs"
-                    "merged PRs"
-                    "since last release"
-                , if List.isEmpty sir.closedIssues then
-                    Html.text ""
-
-                  else
-                    viewMetric
-                        (Octicons.check { octiconOpts | color = Colors.green })
-                        (List.length sir.closedIssues)
-                        "closed issues"
-                        "closed issue"
-                        "in milestone"
+                    (List.length sir.doneCards)
+                    "issues/PRs need"
+                    "issue/PR needs"
+                    "documentation"
                 , if List.isEmpty sir.openIssues then
                     Html.text ""
 
                   else
                     viewMetric
-                        (Octicons.issueOpened { octiconOpts | color = Colors.yellow })
-                        (List.length sir.openIssues)
-                        "open issues"
-                        "open issue"
+                        (Octicons.issueOpened { octiconOpts | color = Colors.gray })
+                        (List.length sir.openIssues + List.length sir.openIssues)
+                        "open issues/PRs"
+                        "open issue/PR"
                         "in milestone"
+                ]
+            , ProgressBar.view
+                [ ( Colors.green, List.length sir.documentedCards )
+                , ( Colors.green, List.length sir.undocumentedCards )
+                , ( Colors.green, List.length sir.noImpactCards )
+                , ( Colors.purple, List.length sir.doneCards )
+                , ( Colors.gray200, List.length sir.openPRs )
+                , ( Colors.gray200, List.length sir.openIssues )
                 ]
             ]
         ]

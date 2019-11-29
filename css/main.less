@@ -168,6 +168,31 @@ h4 {
   }
 }
 
+.card-body {
+  flex-grow: 1;
+  padding: 1em;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card-title {
+  font-size: 1.4em;
+  font-weight: 600;
+  color: @gray-900;
+  display: flex;
+  flex-direction: row;
+}
+
+.title-link {
+  flex-grow: 1;
+
+  &:hover {
+    color: @blue;
+  }
+}
+
 .card-info {
   flex-grow: 1;
   padding: 1em;
@@ -176,18 +201,6 @@ h4 {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-
-  .card-title {
-    font-size: 1.4em;
-    font-weight: 600;
-    color: @gray-900;
-    display: flex;
-    flex-direction: row;
-
-    .title-link {
-      flex-grow: 1;
-    }
-  }
 
   .card-meta {
     margin-top: 0.4em;
@@ -493,7 +506,7 @@ h4 {
   color: @gray;
 }
 
-.project-bar {
+.progress-bar {
   width: 100%;
   height: 10px;
   margin-top: 4px;
@@ -509,18 +522,6 @@ h4 {
     &:last-child {
       border-top-right-radius: 3px;
       border-bottom-right-radius: 3px;
-    }
-
-    &.done {
-      background: @green;
-    }
-
-    &.in-progress {
-      background: @purple;
-    }
-
-    &.to-do {
-      background: @gray-200;
     }
   }
 }
@@ -1484,30 +1485,68 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.metrics-items {
-  column-count: auto;
-  column-width: @card-width;
-  column-gap: 2 * @card-margin;
+.releases {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: start;
+  margin-bottom: 20px;
 }
 
-.metrics-item {
-  break-inside: avoid;
-  margin-bottom: 50px;
-  width: @card-width;
+.card.release {
+  padding: 5px;
+  width: 400px;
+  margin-top: 1.5 * @card-margin;
+  margin-right: 1.5 * @card-margin;
+  font-size: 15px;
+  user-select: initial;
 }
 
-.metric {
-  color: @gray-dark;
-  font-size: 16px;
+.release-title {
+  font-size: 24px;
+
+  .octicon {
+    width: 24px;
+    height: 24px;
+    margin-right: 7px;
+  }
+}
+
+.create-milestone {
+  display: inline;
+
+  color: @gray-400;
+
+  .octicon * {
+    fill: @gray-400;
+  }
+
+  input {
+    font-size: inherit;
+    color: inherit;
+    font-weight: inherit;
+    border: 1px solid @gray-200;
+
+    &.inline-patch {
+      width: 20px;
+    }
+  }
+}
+
+.release-metrics {
+  font-size: 14px;
+  margin: 8px 0;
+  padding: 0 4px; // center octicons
 
   .count {
     font-weight: 600;
   }
 
   .octicon {
-    margin: 10px;
-    width: 20px;
-    height: 20px;
+    margin: 5px;
+    margin-left: 0;
+    width: 16px;
+    height: 16px;
   }
 }
 
@@ -1901,9 +1940,7 @@ a.column-title:hover, .page-header a:hover {
 .dashboard-cards {
   .card {
     font-size: 15px;
-
-    margin-bottom: 10px;
-
+    margin-bottom: 1.5 * @card-margin;
     width: auto;
   }
 }
