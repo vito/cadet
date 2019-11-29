@@ -168,15 +168,6 @@ h4 {
   }
 }
 
-.card-body {
-  flex-grow: 1;
-  padding: 1em;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
 .card-title {
   font-size: 1.4em;
   font-weight: 600;
@@ -1493,7 +1484,17 @@ a.column-title:hover, .page-header a:hover {
   margin-bottom: 20px;
 }
 
+.card-body {
+  flex-grow: 1;
+  padding: 1em;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 .card.release {
+  position: relative;
   padding: 5px;
   width: 400px;
   margin-top: 1.5 * @card-margin;
@@ -1504,19 +1505,35 @@ a.column-title:hover, .page-header a:hover {
 
 .release-title {
   font-size: 24px;
-  position: relative;
+  margin-right: 48px;
+  display: flex;
 
   .octicon {
     width: 24px;
     height: 24px;
     margin-right: 7px;
   }
+}
 
-  .release-ownership {
-    position: absolute;
-    top: 0;
-    right: 0;
-    font-size: 18px;
+.release-ownership {
+  position: absolute;
+  top: 1em;
+  right: 1em;
+  font-size: 18px;
+
+  .release-issue {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+
+    .issue-number {
+      font-size: 14px;
+      margin-top: 5px;
+
+      &:hover {
+        color: @blue;
+      }
+    }
   }
 
   .issue-placeholder {
@@ -1535,42 +1552,6 @@ a.column-title:hover, .page-header a:hover {
       * {
         fill: @white;
       }
-    }
-  }
-
-  .release-issue {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-
-    .issue-number {
-      font-size: 14px;
-      margin-top: 5px;
-
-      &:hover {
-        color: @blue;
-      }
-    }
-  }
-}
-
-.create-milestone {
-  display: inline;
-
-  color: @gray-400;
-
-  .octicon * {
-    fill: @gray-400;
-  }
-
-  input {
-    font-size: inherit;
-    color: inherit;
-    font-weight: inherit;
-    border: 1px solid @gray-200;
-
-    &.inline-patch {
-      width: 20px;
     }
   }
 }

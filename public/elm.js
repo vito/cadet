@@ -11288,6 +11288,94 @@ var $author$project$Main$computeDataView = function (model) {
 var $author$project$Model$InProjectFilter = function (a) {
 	return {$: 'InProjectFilter', a: a};
 };
+var $author$project$ReleaseStatus$categorizeByCardState = F2(
+	function (card, sir) {
+		var _v0 = card.state;
+		if (_v0.$ === 'IssueState') {
+			if (_v0.a.$ === 'IssueStateOpen') {
+				var _v1 = _v0.a;
+				return _Utils_update(
+					sir,
+					{
+						openIssues: A2($elm$core$List$cons, card, sir.openIssues)
+					});
+			} else {
+				var _v2 = _v0.a;
+				return _Utils_update(
+					sir,
+					{
+						closedIssues: A2($elm$core$List$cons, card, sir.closedIssues)
+					});
+			}
+		} else {
+			switch (_v0.a.$) {
+				case 'PullRequestStateOpen':
+					var _v3 = _v0.a;
+					return _Utils_update(
+						sir,
+						{
+							openPRs: A2($elm$core$List$cons, card, sir.openPRs)
+						});
+				case 'PullRequestStateMerged':
+					var _v4 = _v0.a;
+					return _Utils_update(
+						sir,
+						{
+							mergedPRs: A2($elm$core$List$cons, card, sir.mergedPRs)
+						});
+				default:
+					var _v5 = _v0.a;
+					return sir;
+			}
+		}
+	});
+var $author$project$ReleaseStatus$categorizeByDocumentedState = F3(
+	function (model, card, sir) {
+		return A3($author$project$Label$cardHasLabel, model, 'release/documented', card) ? _Utils_update(
+			sir,
+			{
+				documentedCards: A2($elm$core$List$cons, card, sir.documentedCards)
+			}) : (A3($author$project$Label$cardHasLabel, model, 'release/undocumented', card) ? _Utils_update(
+			sir,
+			{
+				undocumentedCards: A2($elm$core$List$cons, card, sir.undocumentedCards)
+			}) : (A3($author$project$Label$cardHasLabel, model, 'release/no-impact', card) ? _Utils_update(
+			sir,
+			{
+				noImpactCards: A2($elm$core$List$cons, card, sir.noImpactCards)
+			}) : _Utils_update(
+			sir,
+			{
+				doneCards: A2($elm$core$List$cons, card, sir.doneCards)
+			})));
+	});
+var $author$project$Card$isOpen = function (card) {
+	var _v0 = card.state;
+	_v0$2:
+	while (true) {
+		if (_v0.$ === 'IssueState') {
+			if (_v0.a.$ === 'IssueStateOpen') {
+				var _v1 = _v0.a;
+				return true;
+			} else {
+				break _v0$2;
+			}
+		} else {
+			if (_v0.a.$ === 'PullRequestStateOpen') {
+				var _v2 = _v0.a;
+				return true;
+			} else {
+				break _v0$2;
+			}
+		}
+	}
+	return false;
+};
+var $author$project$ReleaseStatus$categorizeCard = F3(
+	function (model, card, sir) {
+		var byState = A2($author$project$ReleaseStatus$categorizeByCardState, card, sir);
+		return $author$project$Card$isOpen(card) ? byState : A3($author$project$ReleaseStatus$categorizeByDocumentedState, model, card, byState);
+	});
 var $elm_community$list_extra$List$Extra$find = F2(
 	function (predicate, list) {
 		find:
@@ -11333,28 +11421,6 @@ var $author$project$ReleaseStatus$findMatchingMilestone = F2(
 				}),
 			milestones);
 	});
-var $author$project$Card$isOpen = function (card) {
-	var _v0 = card.state;
-	_v0$2:
-	while (true) {
-		if (_v0.$ === 'IssueState') {
-			if (_v0.a.$ === 'IssueStateOpen') {
-				var _v1 = _v0.a;
-				return true;
-			} else {
-				break _v0$2;
-			}
-		} else {
-			if (_v0.a.$ === 'PullRequestStateOpen') {
-				var _v2 = _v0.a;
-				return true;
-			} else {
-				break _v0$2;
-			}
-		}
-	}
-	return false;
-};
 var $author$project$Card$isMerged = function (card) {
 	return _Utils_eq(
 		card.state,
@@ -11427,7 +11493,7 @@ var $elm_community$list_extra$List$Extra$uniqueHelp = F4(
 var $elm_community$list_extra$List$Extra$unique = function (list) {
 	return A4($elm_community$list_extra$List$Extra$uniqueHelp, $elm$core$Basics$identity, $elm$core$Set$empty, list, _List_Nil);
 };
-var $author$project$ReleaseStatus$initReleaseStatus = F4(
+var $author$project$ReleaseStatus$initFromCommits = F4(
 	function (model, repo, ref, commits) {
 		var openMilestones = A2(
 			$elm$core$List$filter,
@@ -11460,72 +11526,6 @@ var $author$project$ReleaseStatus$initReleaseStatus = F4(
 						return $.associatedPullRequests;
 					},
 					commits)));
-		var categorizeByDocumentedState = F2(
-			function (card, sir) {
-				return A3($author$project$Label$cardHasLabel, model, 'release/documented', card) ? _Utils_update(
-					sir,
-					{
-						documentedCards: A2($elm$core$List$cons, card, sir.documentedCards)
-					}) : (A3($author$project$Label$cardHasLabel, model, 'release/undocumented', card) ? _Utils_update(
-					sir,
-					{
-						undocumentedCards: A2($elm$core$List$cons, card, sir.undocumentedCards)
-					}) : (A3($author$project$Label$cardHasLabel, model, 'release/no-impact', card) ? _Utils_update(
-					sir,
-					{
-						noImpactCards: A2($elm$core$List$cons, card, sir.noImpactCards)
-					}) : _Utils_update(
-					sir,
-					{
-						doneCards: A2($elm$core$List$cons, card, sir.doneCards)
-					})));
-			});
-		var categorizeByCardState = F2(
-			function (card, sir) {
-				var _v0 = card.state;
-				if (_v0.$ === 'IssueState') {
-					if (_v0.a.$ === 'IssueStateOpen') {
-						var _v1 = _v0.a;
-						return _Utils_update(
-							sir,
-							{
-								openIssues: A2($elm$core$List$cons, card, sir.openIssues)
-							});
-					} else {
-						var _v2 = _v0.a;
-						return _Utils_update(
-							sir,
-							{
-								closedIssues: A2($elm$core$List$cons, card, sir.closedIssues)
-							});
-					}
-				} else {
-					switch (_v0.a.$) {
-						case 'PullRequestStateOpen':
-							var _v3 = _v0.a;
-							return _Utils_update(
-								sir,
-								{
-									openPRs: A2($elm$core$List$cons, card, sir.openPRs)
-								});
-						case 'PullRequestStateMerged':
-							var _v4 = _v0.a;
-							return _Utils_update(
-								sir,
-								{
-									mergedPRs: A2($elm$core$List$cons, card, sir.mergedPRs)
-								});
-						default:
-							var _v5 = _v0.a;
-							return sir;
-					}
-				}
-			});
-		var categorizeCard = F2(
-			function (card, sir) {
-				var byState = A2(categorizeByCardState, card, sir);
-				return $author$project$Card$isOpen(card) ? byState : A2(categorizeByDocumentedState, card, byState);
-			});
 		var allCards = _Utils_ap(
 			A2(
 				$elm$core$Maybe$withDefault,
@@ -11537,7 +11537,7 @@ var $author$project$ReleaseStatus$initReleaseStatus = F4(
 			mergedPRCards);
 		return A3(
 			$elm$core$List$foldl,
-			categorizeCard,
+			$author$project$ReleaseStatus$categorizeCard(model),
 			{
 				closedIssues: _List_Nil,
 				documentedCards: _List_Nil,
@@ -11551,31 +11551,99 @@ var $author$project$ReleaseStatus$initReleaseStatus = F4(
 				noImpactCards: _List_Nil,
 				openIssues: _List_Nil,
 				openPRs: _List_Nil,
-				ref: ref,
+				ref: $elm$core$Maybe$Just(ref),
 				repo: repo,
 				totalCommits: $elm$core$List$length(commits),
 				undocumentedCards: _List_Nil
 			},
 			allCards);
 	});
+var $author$project$ReleaseStatus$initFromMilestone = F3(
+	function (model, repo, milestone) {
+		return A3(
+			$elm$core$List$foldl,
+			$author$project$ReleaseStatus$categorizeCard(model),
+			{
+				closedIssues: _List_Nil,
+				documentedCards: _List_Nil,
+				doneCards: _List_Nil,
+				issue: $elm$core$Maybe$Nothing,
+				mergedPRs: _List_Nil,
+				milestone: $elm$core$Maybe$Just(milestone),
+				noImpactCards: _List_Nil,
+				openIssues: _List_Nil,
+				openPRs: _List_Nil,
+				ref: $elm$core$Maybe$Nothing,
+				repo: repo,
+				totalCommits: 0,
+				undocumentedCards: _List_Nil
+			},
+			A2($author$project$ReleaseStatus$milestoneCards, model, milestone));
+	});
 var $author$project$ReleaseStatus$isEmpty = function (_v0) {
 	var milestone = _v0.milestone;
 	var totalCommits = _v0.totalCommits;
 	return _Utils_eq(milestone, $elm$core$Maybe$Nothing) && (!totalCommits);
 };
+var $elm_community$maybe_extra$Maybe$Extra$foldrValues = F2(
+	function (item, list) {
+		if (item.$ === 'Nothing') {
+			return list;
+		} else {
+			var v = item.a;
+			return A2($elm$core$List$cons, v, list);
+		}
+	});
+var $elm_community$maybe_extra$Maybe$Extra$values = A2($elm$core$List$foldr, $elm_community$maybe_extra$Maybe$Extra$foldrValues, _List_Nil);
 var $author$project$ReleaseStatus$init = F2(
 	function (model, repo) {
-		return A2(
+		var refReleases = A2(
 			$elm$core$List$filter,
 			A2($elm$core$Basics$composeL, $elm$core$Basics$not, $author$project$ReleaseStatus$isEmpty),
 			$elm$core$Dict$values(
 				A2(
 					$elm$core$Dict$map,
-					A2($author$project$ReleaseStatus$initReleaseStatus, model, repo),
+					A2($author$project$ReleaseStatus$initFromCommits, model, repo),
 					A2(
 						$elm$core$Maybe$withDefault,
 						$elm$core$Dict$empty,
 						A2($elm$core$Dict$get, repo.id, model.repoCommits)))));
+		var alreadyRefMilestone = function (m) {
+			return A2(
+				$elm$core$List$any,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Basics$eq(m.id),
+					function ($) {
+						return $.id;
+					}),
+				$elm_community$maybe_extra$Maybe$Extra$values(
+					A2(
+						$elm$core$List$map,
+						function ($) {
+							return $.milestone;
+						},
+						refReleases)));
+		};
+		var nakedMilestones = A2(
+			$elm$core$List$map,
+			A2($author$project$ReleaseStatus$initFromMilestone, model, repo),
+			A2(
+				$elm$core$List$filter,
+				A2($elm$core$Basics$composeL, $elm$core$Basics$not, alreadyRefMilestone),
+				A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeL,
+						$elm$core$Basics$eq($author$project$GitHub$MilestoneStateOpen),
+						function ($) {
+							return $.state;
+						}),
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, repo.id, model.repoMilestones)))));
+		return _Utils_ap(refReleases, nakedMilestones);
 	});
 var $author$project$Main$computeRepoStatuses = function (model) {
 	var add = F3(
@@ -17448,11 +17516,15 @@ var $author$project$Main$matchesRelease = F3(
 			if (_v0.b.$ === 'Just') {
 				var ref = _v0.a.a;
 				var milestone = _v0.b.a;
-				return _Utils_eq(rel.ref, ref) && milestoneMatches(milestone);
+				return _Utils_eq(
+					rel.ref,
+					$elm$core$Maybe$Just(ref)) && milestoneMatches(milestone);
 			} else {
 				var ref = _v0.a.a;
 				var _v1 = _v0.b;
-				return _Utils_eq(rel.ref, ref);
+				return _Utils_eq(
+					rel.ref,
+					$elm$core$Maybe$Just(ref));
 			}
 		} else {
 			if (_v0.b.$ === 'Just') {
@@ -24707,10 +24779,25 @@ var $author$project$Main$compareReleaseStatus = F2(
 			} else {
 				var _v3 = _v0.a;
 				var _v4 = _v0.b;
-				return A2($elm$core$Basics$compare, a.ref, b.ref);
+				var _v5 = _Utils_Tuple2(a.ref, b.ref);
+				if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
+					var ar = _v5.a.a;
+					var br = _v5.b.a;
+					return A2($elm$core$Basics$compare, ar, br);
+				} else {
+					return $elm$core$Basics$EQ;
+				}
 			}
 		}
 	});
+var $author$project$ReleaseStatus$branchName = function (_v0) {
+	var ref = _v0.ref;
+	return A3(
+		$elm$core$String$replace,
+		'refs/heads/',
+		'',
+		A2($elm$core$Maybe$withDefault, 'impossible', ref));
+};
 var $elm$html$Html$code = _VirtualDom_node('code');
 var $capitalist$elm_octicons$Octicons$gitBranchPath = 'M10,5 C10,3.89 9.11,3 8,3 C6.89,3 6,3.89 6,5 C6,5.73 6.41,6.38 7,6.72 L7,7.02 C6.98,7.54 6.77,8 6.37,8.4 C5.97,8.8 5.51,9.01 4.99,9.03 C4.16,9.05 3.51,9.19 2.99,9.48 L2.99,4.72 C3.58,4.38 3.99,3.74 3.99,3 C3.99,1.89 3.1,1 1.99,1 C0.88,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.47 3.8,12 3.47,11.64 C3.56,11.58 3.95,11.23 4.06,11.17 C4.31,11.06 4.62,11 5,11 C6.05,10.95 6.95,10.55 7.75,9.75 C8.55,8.95 8.95,7.77 9,6.73 L8.98,6.73 C9.59,6.37 10,5.73 10,5 L10,5 Z M2,1.8 C2.66,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 C1.35,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 L2,1.8 Z M2,14.21 C1.34,14.21 0.8,13.66 0.8,13.01 C0.8,12.36 1.35,11.81 2,11.81 C2.65,11.81 3.2,12.36 3.2,13.01 C3.2,13.66 2.65,14.21 2,14.21 L2,14.21 Z M8,6.21 C7.34,6.21 6.8,5.66 6.8,5.01 C6.8,4.36 7.35,3.81 8,3.81 C8.65,3.81 9.2,4.36 9.2,5.01 C9.2,5.66 8.65,6.21 8,6.21 L8,6.21 Z';
 var $capitalist$elm_octicons$Octicons$gitBranch = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitBranchPath, '0 0 10 16', 'gitBranch');
@@ -24747,7 +24834,6 @@ var $author$project$ReleaseStatus$viewMetric = F5(
 				]));
 	});
 var $author$project$ReleaseStatus$view = function (sir) {
-	var refName = A3($elm$core$String$replace, 'refs/heads/', '', sir.ref);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -24764,19 +24850,20 @@ var $author$project$ReleaseStatus$view = function (sir) {
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('release-title')
-							]),
-						_List_fromArray(
-							[
-								function () {
-								var _v0 = sir.milestone;
-								if (_v0.$ === 'Just') {
-									var nm = _v0.a;
-									return A2(
+						function () {
+						var _v0 = _Utils_Tuple2(sir.milestone, sir.ref);
+						if (_v0.a.$ === 'Just') {
+							var nm = _v0.a.a;
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('release-title')
+									]),
+								_List_fromArray(
+									[
+										$capitalist$elm_octicons$Octicons$milestone($author$project$ReleaseStatus$octiconOpts),
+										A2(
 										$elm$html$Html$a,
 										_List_fromArray(
 											[
@@ -24793,103 +24880,118 @@ var $author$project$ReleaseStatus$view = function (sir) {
 											]),
 										_List_fromArray(
 											[
-												$capitalist$elm_octicons$Octicons$milestone($author$project$ReleaseStatus$octiconOpts),
 												$elm$html$Html$text(nm.title)
-											]));
-								} else {
-									return A2(
-										$elm$html$Html$a,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('title-link'),
-												$elm$html$Html$Attributes$href(
-												A2(
-													$elm$url$Url$Builder$absolute,
-													_List_fromArray(
-														['releases', sir.repo.name]),
+											]))
+									]));
+						} else {
+							if (_v0.b.$ === 'Just') {
+								var _v1 = _v0.a;
+								var ref = _v0.b.a;
+								return A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('release-title')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('title-link'),
+													$elm$html$Html$Attributes$href(
+													A2(
+														$elm$url$Url$Builder$absolute,
+														_List_fromArray(
+															['releases', sir.repo.name]),
+														_List_fromArray(
+															[
+																A2($elm$url$Url$Builder$string, 'ref', ref)
+															])))
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
+													A2(
+													$elm$html$Html$code,
+													_List_Nil,
 													_List_fromArray(
 														[
-															A2($elm$url$Url$Builder$string, 'ref', sir.ref)
-														])))
+															$elm$html$Html$text(
+															$author$project$ReleaseStatus$branchName(sir))
+														]))
+												]))
+										]));
+							} else {
+								return $elm$html$Html$text('impossible');
+							}
+						}
+					}(),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('release-ownership')
+							]),
+						_List_fromArray(
+							[
+								function () {
+								var _v2 = sir.issue;
+								if (_v2.$ === 'Nothing') {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('issue-placeholder')
 											]),
 										_List_fromArray(
 											[
-												$capitalist$elm_octicons$Octicons$gitBranch($author$project$ReleaseStatus$octiconOpts),
+												$capitalist$elm_octicons$Octicons$person($author$project$ReleaseStatus$octiconOpts)
+											]));
+								} else {
+									var issue = _v2.a;
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('release-issue')
+											]),
+										_List_fromArray(
+											[
+												function () {
+												var _v3 = issue.author;
+												if (_v3.$ === 'Nothing') {
+													return $elm$html$Html$text('missing owner');
+												} else {
+													var user = _v3.a;
+													return A2(
+														$elm$html$Html$img,
+														_List_fromArray(
+															[
+																$elm$html$Html$Attributes$class('release-avatar'),
+																$elm$html$Html$Attributes$src(user.avatar)
+															]),
+														_List_Nil);
+												}
+											}(),
 												A2(
-												$elm$html$Html$code,
-												_List_Nil,
+												$elm$html$Html$a,
 												_List_fromArray(
 													[
-														$elm$html$Html$text(refName)
+														$elm$html$Html$Attributes$class('issue-number'),
+														$elm$html$Html$Attributes$href(issue.url),
+														$elm$html$Html$Attributes$target('_blank')
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text('#'),
+														$elm$html$Html$text(
+														$elm$core$String$fromInt(issue.number))
 													]))
 											]));
 								}
-							}(),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('release-ownership')
-									]),
-								_List_fromArray(
-									[
-										function () {
-										var _v1 = sir.issue;
-										if (_v1.$ === 'Nothing') {
-											return A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('issue-placeholder')
-													]),
-												_List_fromArray(
-													[
-														$capitalist$elm_octicons$Octicons$person($author$project$ReleaseStatus$octiconOpts)
-													]));
-										} else {
-											var issue = _v1.a;
-											return A2(
-												$elm$html$Html$div,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('release-issue')
-													]),
-												_List_fromArray(
-													[
-														function () {
-														var _v2 = issue.author;
-														if (_v2.$ === 'Nothing') {
-															return $elm$html$Html$text('missing owner');
-														} else {
-															var user = _v2.a;
-															return A2(
-																$elm$html$Html$img,
-																_List_fromArray(
-																	[
-																		$elm$html$Html$Attributes$class('release-avatar'),
-																		$elm$html$Html$Attributes$src(user.avatar)
-																	]),
-																_List_Nil);
-														}
-													}(),
-														A2(
-														$elm$html$Html$a,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('issue-number'),
-																$elm$html$Html$Attributes$href(issue.url),
-																$elm$html$Html$Attributes$target('_blank')
-															]),
-														_List_fromArray(
-															[
-																$elm$html$Html$text('#'),
-																$elm$html$Html$text(
-																$elm$core$String$fromInt(issue.number))
-															]))
-													]));
-										}
-									}()
-									]))
+							}()
 							])),
 						A2(
 						$elm$html$Html$div,
@@ -24900,8 +25002,8 @@ var $author$project$ReleaseStatus$view = function (sir) {
 						_List_fromArray(
 							[
 								function () {
-								var _v3 = sir.milestone;
-								if (_v3.$ === 'Just') {
+								var _v4 = sir.ref;
+								if (_v4.$ === 'Just') {
 									return A2(
 										$elm$html$Html$div,
 										_List_fromArray(
@@ -24917,14 +25019,8 @@ var $author$project$ReleaseStatus$view = function (sir) {
 													[
 														$elm$html$Html$Attributes$class('title-link'),
 														$elm$html$Html$Attributes$href(
-														A2(
-															$elm$url$Url$Builder$absolute,
-															_List_fromArray(
-																['releases', sir.repo.name]),
-															_List_fromArray(
-																[
-																	A2($elm$url$Url$Builder$string, 'ref', sir.ref)
-																])))
+														sir.repo.url + ('/tree/' + $author$project$ReleaseStatus$branchName(sir))),
+														$elm$html$Html$Attributes$target('_blank')
 													]),
 												_List_fromArray(
 													[
@@ -24933,52 +25029,13 @@ var $author$project$ReleaseStatus$view = function (sir) {
 														_List_Nil,
 														_List_fromArray(
 															[
-																$elm$html$Html$text(refName)
+																$elm$html$Html$text(
+																$author$project$ReleaseStatus$branchName(sir))
 															]))
 													]))
 											]));
 								} else {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('metric')
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$milestone($author$project$ReleaseStatus$octiconOpts),
-												A2(
-												$elm$html$Html$form,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('create-milestone')
-													]),
-												(refName === 'master') ? _List_fromArray(
-													[
-														$elm$html$Html$text('v'),
-														A2(
-														$elm$html$Html$input,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('inline-major-minor')
-															]),
-														_List_Nil),
-														$elm$html$Html$text('.0')
-													]) : _List_fromArray(
-													[
-														$elm$html$Html$text('v'),
-														$elm$html$Html$text(
-														$author$project$ReleaseStatus$refMajorMinor(sir.ref)),
-														$elm$html$Html$text('.'),
-														A2(
-														$elm$html$Html$input,
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('inline-patch')
-															]),
-														_List_Nil)
-													]))
-											]));
+									return $elm$html$Html$text('');
 								}
 							}(),
 								A5(

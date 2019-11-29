@@ -1063,10 +1063,10 @@ matchesRelease mref mmilestone rel =
     in
     case ( mref, mmilestone ) of
         ( Just ref, Just milestone ) ->
-            rel.ref == ref && milestoneMatches milestone
+            rel.ref == Just ref && milestoneMatches milestone
 
         ( Just ref, Nothing ) ->
-            rel.ref == ref
+            rel.ref == Just ref
 
         ( Nothing, Just milestone ) ->
             milestoneMatches milestone
@@ -1335,7 +1335,13 @@ compareReleaseStatus a b =
             LT
 
         ( Nothing, Nothing ) ->
-            compare a.ref b.ref
+            case ( a.ref, b.ref ) of
+                ( Just ar, Just br ) ->
+                    compare ar br
+
+                _ ->
+                    -- impossible
+                    EQ
 
 
 viewReleasesPage : Model -> Html Msg

@@ -232,8 +232,8 @@ type alias CardDestination =
 
 
 type alias ReleaseStatus =
-    { ref : String
-    , repo : GitHub.Repo
+    { repo : GitHub.Repo
+    , ref : Maybe String
     , milestone : Maybe GitHub.Milestone
     , issue : Maybe Card
     , totalCommits : Int

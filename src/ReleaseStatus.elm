@@ -8,6 +8,7 @@ import Html exposing (Html)
 import Html.Attributes as HA
 import Label
 import List.Extra as LE
+import Maybe.Extra as ME
 import Model exposing (Model, Msg)
 import Octicons
 import ProgressBar
@@ -21,12 +22,28 @@ minorMilestone { title } =
 
 init : Model -> GitHub.Repo -> List Model.ReleaseStatus
 init model repo =
-    -- TODO: include milestones with no corresponding commits
-    Dict.get repo.id model.repoCommits
-        |> Maybe.withDefault Dict.empty
-        |> Dict.map (initReleaseStatus model repo)
-        |> Dict.values
-        |> List.filter (not << isEmpty)
+    let
+        refReleases =
+            Dict.get repo.id model.repoCommits
+                |> Maybe.withDefault Dict.empty
+                |> Dict.map (initFromCommits model repo)
+                |> Dict.values
+                |> List.filter (not << isEmpty)
+
+        alreadyRefMilestone m =
+            refReleases
+                |> List.map .milestone
+                |> ME.values
+                |> List.any ((==) m.id << .id)
+
+        nakedMilestones =
+            Dict.get repo.id model.repoMilestones
+                |> Maybe.withDefault []
+                |> List.filter ((==) GitHub.MilestoneStateOpen << .state)
+                |> List.filter (not << alreadyRefMilestone)
+                |> List.map (initFromMilestone model repo)
+    in
+    refReleases ++ nakedMilestones
 
 
 isEmpty : Model.ReleaseStatus -> Bool
@@ -49,8 +66,8 @@ findMatchingMilestone ref milestones =
     LE.find (String.startsWith titlePrefix << .title) milestones
 
 
-initReleaseStatus : Model -> GitHub.Repo -> String -> List GitHub.Commit -> Model.ReleaseStatus
-initReleaseStatus model repo ref commits =
+initFromCommits : Model -> GitHub.Repo -> String -> List GitHub.Commit -> Model.ReleaseStatus
+initFromCommits model repo ref commits =
     let
         openMilestones =
             Dict.get repo.id model.repoMilestones
@@ -75,52 +92,10 @@ initReleaseStatus model repo ref commits =
 
         allCards =
             (Maybe.map (milestoneCards model) milestone |> Maybe.withDefault []) ++ mergedPRCards
-
-        categorizeByDocumentedState card sir =
-            if Label.cardHasLabel model "release/documented" card then
-                { sir | documentedCards = card :: sir.documentedCards }
-
-            else if Label.cardHasLabel model "release/undocumented" card then
-                { sir | undocumentedCards = card :: sir.undocumentedCards }
-
-            else if Label.cardHasLabel model "release/no-impact" card then
-                { sir | noImpactCards = card :: sir.noImpactCards }
-
-            else
-                { sir | doneCards = card :: sir.doneCards }
-
-        categorizeByCardState card sir =
-            case card.state of
-                Card.IssueState GitHub.IssueStateOpen ->
-                    { sir | openIssues = card :: sir.openIssues }
-
-                Card.IssueState GitHub.IssueStateClosed ->
-                    { sir | closedIssues = card :: sir.closedIssues }
-
-                Card.PullRequestState GitHub.PullRequestStateOpen ->
-                    { sir | openPRs = card :: sir.openPRs }
-
-                Card.PullRequestState GitHub.PullRequestStateMerged ->
-                    { sir | mergedPRs = card :: sir.mergedPRs }
-
-                Card.PullRequestState GitHub.PullRequestStateClosed ->
-                    -- ignored
-                    sir
-
-        categorizeCard card sir =
-            let
-                byState =
-                    categorizeByCardState card sir
-            in
-            if Card.isOpen card then
-                byState
-
-            else
-                categorizeByDocumentedState card byState
     in
-    List.foldl categorizeCard
-        { ref = ref
-        , repo = repo
+    List.foldl (categorizeCard model)
+        { repo = repo
+        , ref = Just ref
         , milestone = milestone
         , issue = LE.find (Label.cardHasLabel model "release") allCards
         , totalCommits = List.length commits
@@ -134,6 +109,74 @@ initReleaseStatus model repo ref commits =
         , noImpactCards = []
         }
         allCards
+
+
+initFromMilestone : Model -> GitHub.Repo -> GitHub.Milestone -> Model.ReleaseStatus
+initFromMilestone model repo milestone =
+    List.foldl (categorizeCard model)
+        { ref = Nothing
+        , repo = repo
+        , milestone = Just milestone
+        , issue = Nothing
+        , totalCommits = 0
+        , openPRs = []
+        , mergedPRs = []
+        , openIssues = []
+        , closedIssues = []
+        , doneCards = []
+        , documentedCards = []
+        , undocumentedCards = []
+        , noImpactCards = []
+        }
+        (milestoneCards model milestone)
+
+
+categorizeByDocumentedState : Model -> Card -> Model.ReleaseStatus -> Model.ReleaseStatus
+categorizeByDocumentedState model card sir =
+    if Label.cardHasLabel model "release/documented" card then
+        { sir | documentedCards = card :: sir.documentedCards }
+
+    else if Label.cardHasLabel model "release/undocumented" card then
+        { sir | undocumentedCards = card :: sir.undocumentedCards }
+
+    else if Label.cardHasLabel model "release/no-impact" card then
+        { sir | noImpactCards = card :: sir.noImpactCards }
+
+    else
+        { sir | doneCards = card :: sir.doneCards }
+
+
+categorizeByCardState : Card -> Model.ReleaseStatus -> Model.ReleaseStatus
+categorizeByCardState card sir =
+    case card.state of
+        Card.IssueState GitHub.IssueStateOpen ->
+            { sir | openIssues = card :: sir.openIssues }
+
+        Card.IssueState GitHub.IssueStateClosed ->
+            { sir | closedIssues = card :: sir.closedIssues }
+
+        Card.PullRequestState GitHub.PullRequestStateOpen ->
+            { sir | openPRs = card :: sir.openPRs }
+
+        Card.PullRequestState GitHub.PullRequestStateMerged ->
+            { sir | mergedPRs = card :: sir.mergedPRs }
+
+        Card.PullRequestState GitHub.PullRequestStateClosed ->
+            -- ignored
+            sir
+
+
+categorizeCard : Model -> Card -> Model.ReleaseStatus -> Model.ReleaseStatus
+categorizeCard model card sir =
+    let
+        byState =
+            categorizeByCardState card sir
+    in
+    if Card.isOpen card then
+        byState
+
+    else
+        categorizeByDocumentedState model card byState
 
 
 issueOrOpenPR : Model -> GitHub.ID -> Maybe Card
@@ -158,86 +201,80 @@ milestoneCards model milestone =
         |> List.filterMap (issueOrOpenPR model)
 
 
+branchName : Model.ReleaseStatus -> String
+branchName { ref } =
+    ref
+        |> Maybe.withDefault "impossible"
+        |> String.replace "refs/heads/" ""
+
+
 view : Model.ReleaseStatus -> Html Msg
 view sir =
-    let
-        refName =
-            String.replace "refs/heads/" "" sir.ref
-    in
     Html.div [ HA.class "card release" ]
         [ Html.div [ HA.class "card-body" ]
-            [ Html.div [ HA.class "release-title" ] <|
-                [ case sir.milestone of
-                    Just nm ->
-                        Html.a
+            [ case ( sir.milestone, sir.ref ) of
+                ( Just nm, _ ) ->
+                    Html.div [ HA.class "release-title" ]
+                        [ Octicons.milestone octiconOpts
+                        , Html.a
                             [ HA.class "title-link"
                             , HA.href <|
-                                UB.absolute [ "releases", sir.repo.name ] [ UB.string "milestone" nm.title ]
+                                UB.absolute [ "releases", sir.repo.name ]
+                                    [ UB.string "milestone" nm.title ]
                             ]
-                            [ Octicons.milestone octiconOpts
-                            , Html.text nm.title
+                            [ Html.text nm.title
                             ]
+                        ]
 
-                    Nothing ->
-                        Html.a
+                ( Nothing, Just ref ) ->
+                    Html.div [ HA.class "release-title" ]
+                        [ Html.a
                             [ HA.class "title-link"
                             , HA.href <|
-                                UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" sir.ref ]
+                                UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" ref ]
                             ]
                             [ Octicons.gitBranch octiconOpts
-                            , Html.code [] [ Html.text refName ]
+                            , Html.code [] [ Html.text (branchName sir) ]
                             ]
-                , Html.div [ HA.class "release-ownership" ]
-                    [ case sir.issue of
-                        Nothing ->
-                            Html.div [ HA.class "issue-placeholder" ]
-                                [ Octicons.person octiconOpts ]
+                        ]
 
-                        Just issue ->
-                            Html.div [ HA.class "release-issue" ]
-                                [ case issue.author of
-                                    Nothing ->
-                                        Html.text "missing owner"
+                _ ->
+                    Html.text "impossible"
+            , Html.div [ HA.class "release-ownership" ]
+                [ case sir.issue of
+                    Nothing ->
+                        Html.div [ HA.class "issue-placeholder" ]
+                            [ Octicons.person octiconOpts ]
 
-                                    Just user ->
-                                        Html.img [ HA.class "release-avatar", HA.src user.avatar ] []
-                                , Html.a [ HA.class "issue-number", HA.href issue.url, HA.target "_blank" ]
-                                    [ Html.text "#"
-                                    , Html.text (String.fromInt issue.number)
-                                    ]
+                    Just issue ->
+                        Html.div [ HA.class "release-issue" ]
+                            [ case issue.author of
+                                Nothing ->
+                                    Html.text "missing owner"
+
+                                Just user ->
+                                    Html.img [ HA.class "release-avatar", HA.src user.avatar ] []
+                            , Html.a [ HA.class "issue-number", HA.href issue.url, HA.target "_blank" ]
+                                [ Html.text "#"
+                                , Html.text (String.fromInt issue.number)
                                 ]
-                    ]
+                            ]
                 ]
             , Html.div [ HA.class "release-metrics" ]
-                [ case sir.milestone of
+                [ case sir.ref of
                     Just _ ->
                         Html.div [ HA.class "metric" ]
                             [ Octicons.gitBranch octiconOpts
                             , Html.a
                                 [ HA.class "title-link"
-                                , HA.href <|
-                                    UB.absolute [ "releases", sir.repo.name ] [ UB.string "ref" sir.ref ]
+                                , HA.href (sir.repo.url ++ "/tree/" ++ branchName sir)
+                                , HA.target "_blank"
                                 ]
-                                [ Html.code [] [ Html.text refName ] ]
+                                [ Html.code [] [ Html.text (branchName sir) ] ]
                             ]
 
                     Nothing ->
-                        Html.div [ HA.class "metric" ]
-                            [ Octicons.milestone octiconOpts
-                            , Html.form [ HA.class "create-milestone" ] <|
-                                if refName == "master" then
-                                    [ Html.text "v"
-                                    , Html.input [ HA.class "inline-major-minor" ] []
-                                    , Html.text ".0"
-                                    ]
-
-                                else
-                                    [ Html.text "v"
-                                    , Html.text (refMajorMinor sir.ref)
-                                    , Html.text "."
-                                    , Html.input [ HA.class "inline-patch" ] []
-                                    ]
-                            ]
+                        Html.text ""
                 , viewMetric
                     (Octicons.gitCommit { octiconOpts | color = Colors.gray })
                     sir.totalCommits
