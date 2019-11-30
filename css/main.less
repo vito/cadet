@@ -1476,31 +1476,61 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.releases {
+.releases, .single-release {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
   align-items: start;
   margin-bottom: 20px;
+  padding: @card-margin 0;
+  margin: 0 -@card-margin;
 }
 
-.card-body {
-  flex-grow: 1;
-  padding: 1em;
+.single-release {
+  margin-bottom: 15px;
+}
 
+.release-repo-title {
+  color: @gray-dark;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  flex-direction: row;
+  align-items: center;
+  font-size: 24px;
+  user-select: none;
+  border-bottom: 1px solid @gray-light;
+
+  .octicon {
+    width: 20px;
+    height: 20px;
+    margin: 10px;
+
+    * {
+      fill: @gray-dark;
+    }
+  }
+}
+
+.card.release,
+.release-even-columns-hack {
+  flex-basis: 400px;
+  flex-grow: 1;
+  margin: @card-margin;
+  padding: 5px;
 }
 
 .card.release {
   position: relative;
-  padding: 5px;
-  width: 400px;
-  margin-top: 1.5 * @card-margin;
-  margin-right: 1.5 * @card-margin;
   font-size: 15px;
   user-select: initial;
+
+  .card-body {
+    flex-grow: 1;
+    padding: 1em;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 }
 
 .release-title {
@@ -1583,7 +1613,7 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.page-header {
+.page-header, .release-repo-header {
   padding-bottom: 25px;
   font-size: 18px;
   color: @gray-dark;
@@ -1611,6 +1641,10 @@ a.column-title:hover, .page-header a:hover {
       height: 24px;
     }
   }
+}
+
+.release-repo-header {
+  padding-bottom: 0;
 }
 
 .tab-row {
@@ -1757,21 +1791,6 @@ a.column-title:hover, .page-header a:hover {
 .tab-cards.first-tab .card:first-child,
 .no-tab-cards.first-tab {
   border-top-left-radius: 0;
-}
-
-.release-next-milestone {
-  color: @gray-light;
-  margin-left: 10px;
-  font-size: 16px;
-
-  .octicon {
-    width: 16px;
-    height: 16px;
-
-    * {
-      fill: @gray-light;
-    }
-  }
 }
 
 .archive-events {

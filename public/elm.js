@@ -17384,7 +17384,7 @@ var $author$project$Main$navButton = F4(
 				case 'LabelsPage':
 					return label === 'Labels';
 				case 'ReleasesPage':
-					return label === 'Releases';
+					return label === 'Release';
 				case 'ReleasePage':
 					return label === 'Release';
 				case 'PullRequestsPage':
@@ -24438,47 +24438,6 @@ var $author$project$Main$viewPullRequestsPage = function (model) {
 							$elm$core$Dict$toList(model.openPRsByRepo)))))
 			]));
 };
-var $author$project$Main$viewLabelByName = F2(
-	function (model, name) {
-		var mlabel = A2(
-			$elm$core$Maybe$andThen,
-			function (id) {
-				return A2($elm$core$Dict$get, id, model.allLabels);
-			},
-			A2(
-				$elm$core$Maybe$andThen,
-				A2($elm$core$Basics$composeL, $elm$core$List$head, $elm$core$Dict$values),
-				A2($elm$core$Dict$get, name, model.labelToRepoToId)));
-		if (mlabel.$ === 'Just') {
-			var label = mlabel.a;
-			return A2($author$project$Label$view, model, label);
-		} else {
-			return $elm$html$Html$text('missing label: ' + name);
-		}
-	});
-var $elm$url$Url$Builder$QueryParameter = F2(
-	function (a, b) {
-		return {$: 'QueryParameter', a: a, b: b};
-	});
-var $elm$url$Url$Builder$int = F2(
-	function (key, value) {
-		return A2(
-			$elm$url$Url$Builder$QueryParameter,
-			$elm$url$Url$percentEncode(key),
-			$elm$core$String$fromInt(value));
-	});
-var $author$project$Main$pageTab = function (page) {
-	switch (page.$) {
-		case 'ReleasePage':
-			var mi = page.d;
-			return A2($elm$core$Maybe$withDefault, 0, mi);
-		case 'PullRequestsRepoPage':
-			var mi = page.b;
-			return A2($elm$core$Maybe$withDefault, 0, mi);
-		default:
-			return 0;
-	}
-};
 var $elm$url$Url$Builder$toQueryPair = function (_v0) {
 	var key = _v0.a;
 	var value = _v0.b;
@@ -24497,336 +24456,6 @@ var $elm$url$Url$Builder$toQuery = function (parameters) {
 var $elm$url$Url$Builder$absolute = F2(
 	function (pathSegments, parameters) {
 		return '/' + (A2($elm$core$String$join, '/', pathSegments) + $elm$url$Url$Builder$toQuery(parameters));
-	});
-var $elm$url$Url$Builder$string = F2(
-	function (key, value) {
-		return A2(
-			$elm$url$Url$Builder$QueryParameter,
-			$elm$url$Url$percentEncode(key),
-			$elm$url$Url$percentEncode(value));
-	});
-var $author$project$Main$pageUrl = F2(
-	function (page, query) {
-		switch (page.$) {
-			case 'AllProjectsPage':
-				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
-			case 'ProjectPage':
-				var id = page.a;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['projects', id]),
-					query);
-			case 'GlobalGraphPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['graph']),
-					query);
-			case 'LabelsPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['labels']),
-					query);
-			case 'ReleasePage':
-				var repo = page.a;
-				var mref = page.b;
-				var mmilestone = page.c;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['releases', repo]),
-					function () {
-						var _v1 = _Utils_Tuple2(mref, mmilestone);
-						if (_v1.a.$ === 'Just') {
-							var ref = _v1.a.a;
-							return A2(
-								$elm$core$List$cons,
-								A2($elm$url$Url$Builder$string, 'ref', ref),
-								query);
-						} else {
-							if (_v1.b.$ === 'Just') {
-								var _v2 = _v1.a;
-								var milestone = _v1.b.a;
-								return A2(
-									$elm$core$List$cons,
-									A2($elm$url$Url$Builder$string, 'milestone', milestone),
-									query);
-							} else {
-								var _v3 = _v1.a;
-								var _v4 = _v1.b;
-								return query;
-							}
-						}
-					}());
-			case 'ReleasesPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['releases']),
-					query);
-			case 'PullRequestsPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['pull-requests']),
-					query);
-			case 'PullRequestsRepoPage':
-				var r = page.a;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['pull-requests', r]),
-					query);
-			case 'ArchivePage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['archive']),
-					query);
-			case 'DashboardPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['dashboard']),
-					query);
-			default:
-				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
-		}
-	});
-var $author$project$Main$viewTabbedCards = F2(
-	function (model, tabs) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('tabbed-cards')
-				]),
-			_List_fromArray(
-				[
-					function () {
-					var tabCount = function (count) {
-						return A2(
-							$elm$html$Html$span,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('counter')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$elm$core$String$fromInt(count))
-								]));
-					};
-					var tabAttrs = function (tab) {
-						return _List_fromArray(
-							[
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('tab', true),
-										_Utils_Tuple2(
-										'selected',
-										_Utils_eq(
-											$author$project$Main$pageTab(model.page),
-											tab))
-									])),
-								$elm$html$Html$Attributes$href(
-								A2(
-									$author$project$Main$pageUrl,
-									model.page,
-									_List_fromArray(
-										[
-											A2($elm$url$Url$Builder$int, 'tab', tab)
-										])))
-							]);
-					};
-					return A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tab-row')
-							]),
-						A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (idx, _v0) {
-									var icon = _v0.a;
-									var label = _v0.b;
-									var cards = _v0.c;
-									return A2(
-										$elm$html$Html$a,
-										tabAttrs(idx),
-										_List_fromArray(
-											[
-												icon,
-												$author$project$Main$hideLabel(label),
-												tabCount(
-												$elm$core$List$length(cards))
-											]));
-								}),
-							tabs));
-				}(),
-					function () {
-					var firstTabClass = $elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'first-tab',
-								!$author$project$Main$pageTab(model.page))
-							]));
-					var _v1 = A2(
-						$elm$core$List$drop,
-						$author$project$Main$pageTab(model.page),
-						tabs);
-					if (_v1.b) {
-						var _v2 = _v1.a;
-						var cards = _v2.c;
-						return $elm$core$List$isEmpty(cards) ? A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('no-tab-cards'),
-									firstTabClass
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('no cards')
-								])) : A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tab-cards'),
-									firstTabClass
-								]),
-							A2(
-								$elm$core$List$map,
-								A2($author$project$CardView$viewCard, model, _List_Nil),
-								$elm$core$List$reverse(
-									A2(
-										$elm$core$List$sortBy,
-										A2(
-											$elm$core$Basics$composeR,
-											function ($) {
-												return $.updatedAt;
-											},
-											$elm$time$Time$posixToMillis),
-										cards))));
-					} else {
-						return $elm$html$Html$text('');
-					}
-				}()
-				]));
-	});
-var $author$project$Main$viewReleasePage = F2(
-	function (model, sir) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('page-content')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('page-header')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href('/release')
-								]),
-							_List_fromArray(
-								[
-									$capitalist$elm_octicons$Octicons$milestone($author$project$Main$octiconOpts),
-									$elm$html$Html$text('Release')
-								])),
-							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-							$elm$html$Html$text(sir.repo.name),
-							function () {
-							var _v0 = sir.milestone;
-							if (_v0.$ === 'Just') {
-								var nm = _v0.a;
-								return A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('release-next-milestone')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$milestone($author$project$Main$octiconOpts),
-											$elm$html$Html$text(nm.title)
-										]));
-							} else {
-								return $elm$html$Html$text('');
-							}
-						}()
-						])),
-					A2(
-					$author$project$Main$viewTabbedCards,
-					model,
-					_List_fromArray(
-						[
-							_Utils_Tuple3(
-							$capitalist$elm_octicons$Octicons$inbox($author$project$Main$octiconOpts),
-							'To Do',
-							_Utils_ap(sir.openIssues, sir.openPRs)),
-							_Utils_Tuple3(
-							$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
-							'Done',
-							sir.doneCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/documented'),
-							'Documented',
-							sir.documentedCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/undocumented'),
-							'Undocumented',
-							sir.undocumentedCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/no-impact'),
-							'No Impact',
-							sir.noImpactCards)
-						]))
-				]));
-	});
-var $author$project$Main$compareReleaseStatus = F2(
-	function (a, b) {
-		var _v0 = _Utils_Tuple2(a.milestone, b.milestone);
-		if (_v0.a.$ === 'Just') {
-			if (_v0.b.$ === 'Just') {
-				var am = _v0.a.a;
-				var bm = _v0.b.a;
-				return A2($elm$core$Basics$compare, am.title, bm.title);
-			} else {
-				var _v1 = _v0.b;
-				return $elm$core$Basics$GT;
-			}
-		} else {
-			if (_v0.b.$ === 'Just') {
-				var _v2 = _v0.a;
-				return $elm$core$Basics$LT;
-			} else {
-				var _v3 = _v0.a;
-				var _v4 = _v0.b;
-				var _v5 = _Utils_Tuple2(a.ref, b.ref);
-				if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
-					var ar = _v5.a.a;
-					var br = _v5.b.a;
-					return A2($elm$core$Basics$compare, ar, br);
-				} else {
-					return $elm$core$Basics$EQ;
-				}
-			}
-		}
 	});
 var $author$project$ReleaseStatus$branchName = function (_v0) {
 	var ref = _v0.ref;
@@ -24977,6 +24606,17 @@ var $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions = F3(
 			(differenceInMilliseconds < 0) ? A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.someSecondsAgo, options.someMinutesAgo, options.someHoursAgo, options.someDaysAgo, options.someMonthsAgo, options.someYearsAgo) : A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.inSomeSeconds, options.inSomeMinutes, options.inSomeHours, options.inSomeDays, options.inSomeMonths, options.inSomeYears));
 	});
 var $ryannhg$date_format$DateFormat$Relative$relativeTime = $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions($ryannhg$date_format$DateFormat$Relative$defaultRelativeOptions);
+var $elm$url$Url$Builder$QueryParameter = F2(
+	function (a, b) {
+		return {$: 'QueryParameter', a: a, b: b};
+	});
+var $elm$url$Url$Builder$string = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$url$Url$percentEncode(value));
+	});
 var $author$project$ReleaseStatus$viewMetric = F5(
 	function (icon, count, plural, singular, description) {
 		return A2(
@@ -25343,6 +24983,346 @@ var $author$project$ReleaseStatus$view = F2(
 						]))
 				]));
 	});
+var $author$project$Main$viewLabelByName = F2(
+	function (model, name) {
+		var mlabel = A2(
+			$elm$core$Maybe$andThen,
+			function (id) {
+				return A2($elm$core$Dict$get, id, model.allLabels);
+			},
+			A2(
+				$elm$core$Maybe$andThen,
+				A2($elm$core$Basics$composeL, $elm$core$List$head, $elm$core$Dict$values),
+				A2($elm$core$Dict$get, name, model.labelToRepoToId)));
+		if (mlabel.$ === 'Just') {
+			var label = mlabel.a;
+			return A2($author$project$Label$view, model, label);
+		} else {
+			return $elm$html$Html$text('missing label: ' + name);
+		}
+	});
+var $elm$url$Url$Builder$int = F2(
+	function (key, value) {
+		return A2(
+			$elm$url$Url$Builder$QueryParameter,
+			$elm$url$Url$percentEncode(key),
+			$elm$core$String$fromInt(value));
+	});
+var $author$project$Main$pageTab = function (page) {
+	switch (page.$) {
+		case 'ReleasePage':
+			var mi = page.d;
+			return A2($elm$core$Maybe$withDefault, 0, mi);
+		case 'PullRequestsRepoPage':
+			var mi = page.b;
+			return A2($elm$core$Maybe$withDefault, 0, mi);
+		default:
+			return 0;
+	}
+};
+var $author$project$Main$pageUrl = F2(
+	function (page, query) {
+		switch (page.$) {
+			case 'AllProjectsPage':
+				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
+			case 'ProjectPage':
+				var id = page.a;
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['projects', id]),
+					query);
+			case 'GlobalGraphPage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['graph']),
+					query);
+			case 'LabelsPage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['labels']),
+					query);
+			case 'ReleasePage':
+				var repo = page.a;
+				var mref = page.b;
+				var mmilestone = page.c;
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['releases', repo]),
+					function () {
+						var _v1 = _Utils_Tuple2(mref, mmilestone);
+						if (_v1.a.$ === 'Just') {
+							var ref = _v1.a.a;
+							return A2(
+								$elm$core$List$cons,
+								A2($elm$url$Url$Builder$string, 'ref', ref),
+								query);
+						} else {
+							if (_v1.b.$ === 'Just') {
+								var _v2 = _v1.a;
+								var milestone = _v1.b.a;
+								return A2(
+									$elm$core$List$cons,
+									A2($elm$url$Url$Builder$string, 'milestone', milestone),
+									query);
+							} else {
+								var _v3 = _v1.a;
+								var _v4 = _v1.b;
+								return query;
+							}
+						}
+					}());
+			case 'ReleasesPage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['releases']),
+					query);
+			case 'PullRequestsPage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['pull-requests']),
+					query);
+			case 'PullRequestsRepoPage':
+				var r = page.a;
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['pull-requests', r]),
+					query);
+			case 'ArchivePage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['archive']),
+					query);
+			case 'DashboardPage':
+				return A2(
+					$elm$url$Url$Builder$absolute,
+					_List_fromArray(
+						['dashboard']),
+					query);
+			default:
+				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
+		}
+	});
+var $author$project$Main$viewTabbedCards = F2(
+	function (model, tabs) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('tabbed-cards')
+				]),
+			_List_fromArray(
+				[
+					function () {
+					var tabCount = function (count) {
+						return A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('counter')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									$elm$core$String$fromInt(count))
+								]));
+					};
+					var tabAttrs = function (tab) {
+						return _List_fromArray(
+							[
+								$elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('tab', true),
+										_Utils_Tuple2(
+										'selected',
+										_Utils_eq(
+											$author$project$Main$pageTab(model.page),
+											tab))
+									])),
+								$elm$html$Html$Attributes$href(
+								A2(
+									$author$project$Main$pageUrl,
+									model.page,
+									_List_fromArray(
+										[
+											A2($elm$url$Url$Builder$int, 'tab', tab)
+										])))
+							]);
+					};
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('tab-row')
+							]),
+						A2(
+							$elm$core$List$indexedMap,
+							F2(
+								function (idx, _v0) {
+									var icon = _v0.a;
+									var label = _v0.b;
+									var cards = _v0.c;
+									return A2(
+										$elm$html$Html$a,
+										tabAttrs(idx),
+										_List_fromArray(
+											[
+												icon,
+												$author$project$Main$hideLabel(label),
+												tabCount(
+												$elm$core$List$length(cards))
+											]));
+								}),
+							tabs));
+				}(),
+					function () {
+					var firstTabClass = $elm$html$Html$Attributes$classList(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'first-tab',
+								!$author$project$Main$pageTab(model.page))
+							]));
+					var _v1 = A2(
+						$elm$core$List$drop,
+						$author$project$Main$pageTab(model.page),
+						tabs);
+					if (_v1.b) {
+						var _v2 = _v1.a;
+						var cards = _v2.c;
+						return $elm$core$List$isEmpty(cards) ? A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('no-tab-cards'),
+									firstTabClass
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('no cards')
+								])) : A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('tab-cards'),
+									firstTabClass
+								]),
+							A2(
+								$elm$core$List$map,
+								A2($author$project$CardView$viewCard, model, _List_Nil),
+								$elm$core$List$reverse(
+									A2(
+										$elm$core$List$sortBy,
+										A2(
+											$elm$core$Basics$composeR,
+											function ($) {
+												return $.updatedAt;
+											},
+											$elm$time$Time$posixToMillis),
+										cards))));
+					} else {
+						return $elm$html$Html$text('');
+					}
+				}()
+				]));
+	});
+var $author$project$Main$viewReleasePage = F2(
+	function (model, sir) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('page-content')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('release-repo-header')
+						]),
+					_List_fromArray(
+						[
+							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
+							$elm$html$Html$text(sir.repo.name)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('single-release')
+						]),
+					_List_fromArray(
+						[
+							A2($author$project$ReleaseStatus$view, model, sir)
+						])),
+					A2(
+					$author$project$Main$viewTabbedCards,
+					model,
+					_List_fromArray(
+						[
+							_Utils_Tuple3(
+							$capitalist$elm_octicons$Octicons$inbox($author$project$Main$octiconOpts),
+							'To Do',
+							_Utils_ap(sir.openIssues, sir.openPRs)),
+							_Utils_Tuple3(
+							$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
+							'Done',
+							sir.doneCards),
+							_Utils_Tuple3(
+							A2($author$project$Main$viewLabelByName, model, 'release/documented'),
+							'Documented',
+							sir.documentedCards),
+							_Utils_Tuple3(
+							A2($author$project$Main$viewLabelByName, model, 'release/undocumented'),
+							'Undocumented',
+							sir.undocumentedCards),
+							_Utils_Tuple3(
+							A2($author$project$Main$viewLabelByName, model, 'release/no-impact'),
+							'No Impact',
+							sir.noImpactCards)
+						]))
+				]));
+	});
+var $author$project$Main$compareReleaseStatus = F2(
+	function (a, b) {
+		var _v0 = _Utils_Tuple2(a.milestone, b.milestone);
+		if (_v0.a.$ === 'Just') {
+			if (_v0.b.$ === 'Just') {
+				var am = _v0.a.a;
+				var bm = _v0.b.a;
+				return A2($elm$core$Basics$compare, am.title, bm.title);
+			} else {
+				var _v1 = _v0.b;
+				return $elm$core$Basics$GT;
+			}
+		} else {
+			if (_v0.b.$ === 'Just') {
+				var _v2 = _v0.a;
+				return $elm$core$Basics$LT;
+			} else {
+				var _v3 = _v0.a;
+				var _v4 = _v0.b;
+				var _v5 = _Utils_Tuple2(a.ref, b.ref);
+				if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
+					var ar = _v5.a.a;
+					var br = _v5.b.a;
+					return A2($elm$core$Basics$compare, ar, br);
+				} else {
+					return $elm$core$Basics$EQ;
+				}
+			}
+		}
+	});
 var $author$project$Main$viewReleasesPage = function (model) {
 	var viewRepoReleases = F2(
 		function (repoName, releases) {
@@ -25355,10 +25335,10 @@ var $author$project$Main$viewReleasesPage = function (model) {
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$span,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('column-title')
+								$elm$html$Html$Attributes$class('release-repo-header')
 							]),
 						_List_fromArray(
 							[
@@ -25371,11 +25351,25 @@ var $author$project$Main$viewReleasesPage = function (model) {
 							[
 								$elm$html$Html$Attributes$class('releases')
 							]),
-						A2(
-							$elm$core$List$map,
-							$author$project$ReleaseStatus$view(model),
-							$elm$core$List$reverse(
-								A2($elm$core$List$sortWith, $author$project$Main$compareReleaseStatus, releases))))
+						function (x) {
+							return _Utils_ap(
+								x,
+								A2(
+									$elm$core$List$repeat,
+									5,
+									A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('release-even-columns-hack')
+											]),
+										_List_Nil)));
+						}(
+							A2(
+								$elm$core$List$map,
+								$author$project$ReleaseStatus$view(model),
+								$elm$core$List$reverse(
+									A2($elm$core$List$sortWith, $author$project$Main$compareReleaseStatus, releases)))))
 					]));
 		});
 	return A2(
@@ -25384,28 +25378,8 @@ var $author$project$Main$viewReleasesPage = function (model) {
 			[
 				$elm$html$Html$Attributes$class('page-content')
 			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('page-header')
-					]),
-				_List_fromArray(
-					[
-						$capitalist$elm_octicons$Octicons$milestone($author$project$Main$octiconOpts),
-						$elm$html$Html$text('Releases')
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('all-releases')
-					]),
-				$elm$core$Dict$values(
-					A2($elm$core$Dict$map, viewRepoReleases, model.repoReleaseStatuses)))
-			]));
+		$elm$core$Dict$values(
+			A2($elm$core$Dict$map, viewRepoReleases, model.repoReleaseStatuses)));
 };
 var $author$project$Main$changesRequested = F2(
 	function (model, card) {

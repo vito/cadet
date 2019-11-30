@@ -1190,7 +1190,7 @@ navButton model icon label route =
                     label == "Labels"
 
                 ReleasesPage ->
-                    label == "Releases"
+                    label == "Release"
 
                 ReleasePage _ _ _ _ ->
                     label == "Release"
@@ -1349,7 +1349,7 @@ viewReleasesPage model =
     let
         viewRepoReleases repoName releases =
             Html.div [ HA.class "repo-releases" ]
-                [ Html.span [ HA.class "column-title" ]
+                [ Html.div [ HA.class "release-repo-header" ]
                     [ Octicons.repo octiconOpts
                     , Html.text repoName
                     ]
@@ -1357,38 +1357,23 @@ viewReleasesPage model =
                     |> List.sortWith compareReleaseStatus
                     |> List.reverse
                     |> List.map (ReleaseStatus.view model)
+                    |> (\x -> x ++ List.repeat 5 (Html.div [ HA.class "release-even-columns-hack" ] []))
                     |> Html.div [ HA.class "releases" ]
                 ]
     in
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Octicons.milestone octiconOpts
-            , Html.text "Releases"
-            ]
-        , Html.div [ HA.class "all-releases" ] <|
-            Dict.values (Dict.map viewRepoReleases model.repoReleaseStatuses)
-        ]
+    Html.div [ HA.class "page-content" ] <|
+        Dict.values (Dict.map viewRepoReleases model.repoReleaseStatuses)
 
 
 viewReleasePage : Model -> Model.ReleaseStatus -> Html Msg
 viewReleasePage model sir =
     Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Html.a [ HA.href "/release" ]
-                [ Octicons.milestone octiconOpts
-                , Html.text "Release"
-                ]
-            , Octicons.repo octiconOpts
+        [ Html.div [ HA.class "release-repo-header" ]
+            [ Octicons.repo octiconOpts
             , Html.text sir.repo.name
-            , case sir.milestone of
-                Just nm ->
-                    Html.span [ HA.class "release-next-milestone" ]
-                        [ Octicons.milestone octiconOpts
-                        , Html.text nm.title
-                        ]
-
-                Nothing ->
-                    Html.text ""
+            ]
+        , Html.div [ HA.class "single-release" ]
+            [ ReleaseStatus.view model sir
             ]
         , viewTabbedCards model
             [ ( Octicons.inbox octiconOpts, "To Do", sir.openIssues ++ sir.openPRs )
