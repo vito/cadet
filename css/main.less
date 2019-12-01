@@ -1908,45 +1908,23 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .dashboard {
-  display: grid;
-  grid-template-columns: 450px 3fr 3fr 3fr;
-  grid-template-rows: 90vh;
-  grid-template-areas:
-    "leaderboard review-inbox author-waiting approved";
-  grid-gap: 24px;
+  display: flex;
+  flex-direction: row;
+  padding: 50px - 15px;
+  position: relative;
 }
 
 .dashboard-pane {
-  overflow: hidden;
-  position: relative;
-
-  &:after {
-    content: "";
-    position: absolute;
-    z-index: 1;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    pointer-events: none;
-    background-image: linear-gradient(to bottom, fade(@gray-100, 0%), @gray-100 90%);
-    height: 4em;
-  }
+  flex-grow: 1;
+  margin: 15px;
 }
 
 .leaderboard-pane {
-  grid-area: leaderboard;
-}
-
-.review-inbox-pane {
-  grid-area: review-inbox;
-}
-
-.author-waiting-pane {
-  grid-area: author-waiting;
-}
-
-.approved-pane {
-  grid-area: approved;
+  flex-basis: 450px;
+  flex-grow: 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
 }
 
 .leaderboard-entry {
@@ -2007,20 +1985,24 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.release-columns {
+.fixed-columns {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
   margin: 0 -10px;
 
-  .project-column { // lol
+  .fixed-column {
     flex-grow: 1;
-    flex-basis: 300px;
-    margin: 0 10px;
+    flex-basis: 30em;
+    margin: 0 1em;
 
     .card {
       width: auto;
-      margin: 10px 0 10px;
+      margin: 1em 0;
     }
   }
+}
+
+.repo-prs {
+  margin-bottom: 40px;
 }

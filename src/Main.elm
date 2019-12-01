@@ -98,7 +98,6 @@ routeParser =
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
-        , UP.map DashboardPage (UP.s "dashboard")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -143,9 +142,6 @@ pageUrl page query =
 
         ArchivePage ->
             UB.absolute [ "archive" ] query
-
-        DashboardPage ->
-            UB.absolute [ "dashboard" ] query
 
         BouncePage ->
             UB.absolute [] query
@@ -1032,9 +1028,6 @@ pageTitle model =
             ArchivePage ->
                 "Archive"
 
-            DashboardPage ->
-                "Dashboard"
-
             BouncePage ->
                 "Bounce"
 
@@ -1114,9 +1107,6 @@ viewPage model =
             ArchivePage ->
                 viewArchivePage model
 
-            DashboardPage ->
-                viewDashboardPage model
-
             BouncePage ->
                 Html.text "you shouldn't see this"
         ]
@@ -1148,7 +1138,6 @@ viewNavBar model =
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
             , navButton model Octicons.tag "Labels" "/labels"
-            , navButton model Octicons.flame "Dashboard" "/dashboard"
             ]
         , case model.me of
             Nothing ->
@@ -1182,9 +1171,6 @@ navButton model icon label route =
 
                 ArchivePage ->
                     label == "Archive"
-
-                DashboardPage ->
-                    label == "Dashboard"
 
                 LabelsPage ->
                     label == "Labels"
@@ -1375,8 +1361,8 @@ viewReleasePage model sir =
         , Html.div [ HA.class "single-release" ]
             [ ReleaseStatus.view model sir
             ]
-        , Html.div [ HA.class "release-columns" ]
-            [ Html.div [ HA.class "project-column" ]
+        , Html.div [ HA.class "fixed-columns" ]
+            [ Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Octicons.issueOpened octiconOpts
                     , Html.span [ HA.class "column-name" ]
@@ -1385,7 +1371,7 @@ viewReleasePage model sir =
                 , Html.div [ HA.class "cards" ] <|
                     List.map (CardView.viewCard model []) (sir.openPRs ++ sir.openIssues)
                 ]
-            , Html.div [ HA.class "project-column" ]
+            , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Octicons.question octiconOpts
                     , Html.span [ HA.class "column-name" ]
@@ -1394,7 +1380,7 @@ viewReleasePage model sir =
                 , Html.div [ HA.class "cards" ] <|
                     List.map (CardView.viewCard model []) sir.doneCards
                 ]
-            , Html.div [ HA.class "project-column" ]
+            , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Html.span [ HA.class "column-name" ]
                         [ viewLabelByName model "release/documented" ]
@@ -1402,7 +1388,7 @@ viewReleasePage model sir =
                 , Html.div [ HA.class "cards" ] <|
                     List.map (CardView.viewCard model []) sir.documentedCards
                 ]
-            , Html.div [ HA.class "project-column" ]
+            , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Html.span [ HA.class "column-name" ]
                         [ viewLabelByName model "release/undocumented" ]
@@ -1410,7 +1396,7 @@ viewReleasePage model sir =
                 , Html.div [ HA.class "cards" ] <|
                     List.map (CardView.viewCard model []) sir.undocumentedCards
                 ]
-            , Html.div [ HA.class "project-column" ]
+            , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Html.span [ HA.class "column-name" ]
                         [ viewLabelByName model "release/no-impact" ]
@@ -1485,38 +1471,160 @@ viewTabbedCards model tabs =
 
 viewPullRequestsPage : Model -> Html Msg
 viewPullRequestsPage model =
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Octicons.gitPullRequest octiconOpts
-            , Html.text "Pull Requests"
-            ]
-        , Dict.toList model.openPRsByRepo
+    let
+        eventCounts event =
+            case event of
+                "review-comment" ->
+                    True
+
+                "review-approved" ->
+                    True
+
+                "review-changes-requested" ->
+                    True
+
+                _ ->
+                    False
+
+        events =
+            eventsThisWeek model
+                |> List.filter (.event >> .event >> eventCounts)
+
+        bumpLeaderboard user entry =
+            case entry of
+                Nothing ->
+                    Just ( user, 1 )
+
+                Just ( _, count ) ->
+                    Just ( user, count + 1 )
+
+        countUserEvent event byUser =
+            case event.user of
+                Nothing ->
+                    byUser
+
+                Just user ->
+                    Dict.update user.id (bumpLeaderboard user) byUser
+
+        leaderboard =
+            List.foldl
+                (\{ event } -> countUserEvent event)
+                Dict.empty
+                events
+                |> Dict.values
+                |> List.sortBy Tuple.second
+                |> List.reverse
+    in
+    Html.div [ HA.class "page-content dashboard" ]
+        [ model.openPRsByRepo
+            |> Dict.toList
             |> List.sortBy (Tuple.second >> List.length)
             |> List.reverse
-            |> List.map (\( a, b ) -> viewRepoPRs model a b)
-            |> Html.div [ HA.class "card-columns" ]
+            |> List.map
+                (\( repoId, prIds ) ->
+                    Dict.get repoId model.repos
+                        |> Maybe.map
+                            (\repo ->
+                                let
+                                    cards =
+                                        List.filterMap (\id -> Dict.get id model.cards) prIds
+                                in
+                                viewRepoOpenPRs model repo cards
+                            )
+                )
+            |> List.filterMap identity
+            |> Html.div [ HA.class "dashboard-pane" ]
+        , Html.div [ HA.class "dashboard-pane leaderboard-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.flame octiconOpts
+                , Html.text "Weekly Review Leaderboard"
+                ]
+            , Html.div [ HA.class "leaderboard" ]
+                (List.map viewLeaderboardEntry leaderboard)
+            ]
         ]
 
 
-viewRepoPRs : Model -> GitHub.ID -> List GitHub.ID -> Html Msg
-viewRepoPRs model repoId prIds =
-    case Dict.get repoId model.repos of
-        Just repo ->
-            Html.div [ HA.class "repo-cards" ]
-                [ Html.a [ HA.class "column-title", HA.href ("/pull-requests/" ++ repo.name) ]
-                    [ Octicons.repo octiconOpts
-                    , Html.text repo.name
-                    ]
-                , prIds
-                    |> List.filterMap (\id -> Dict.get id model.cards)
-                    |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                    |> List.reverse
-                    |> List.map (CardView.viewCard model [])
-                    |> Html.div [ HA.class "cards" ]
-                ]
+viewRepoOpenPRs : Model -> GitHub.Repo -> List Card -> Html Msg
+viewRepoOpenPRs model repo cards =
+    let
+        prHasReviewers { id } =
+            Dict.get id model.prReviewers
+                |> Maybe.withDefault []
+                |> List.isEmpty
+                |> not
 
-        Nothing ->
-            Html.text ""
+        prLastActivityIsAuthor { id, author } =
+            case lastActiveUser model id of
+                Just user ->
+                    user.id == Maybe.withDefault "" (Maybe.map .id author)
+
+                _ ->
+                    False
+
+        prIsReadyToMerge { id } =
+            Dict.get id model.prReviewers
+                |> Maybe.withDefault []
+                |> (\rs -> not (List.isEmpty rs) && List.all (.state >> (==) GitHub.PullRequestReviewStateApproved) rs)
+
+        prsNeedingAttention =
+            cards
+                |> List.filter (not << prHasReviewers)
+                |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                |> List.reverse
+
+        prsWaitingReply =
+            cards
+                |> List.filter prLastActivityIsAuthor
+                |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                |> List.reverse
+
+        prsWaitingMerge =
+            cards
+                |> List.filter prIsReadyToMerge
+                |> List.sortBy (.updatedAt >> Time.posixToMillis)
+                |> List.reverse
+    in
+    Html.div [ HA.class "repo-prs" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.repo octiconOpts
+            , Html.a [ HA.href ("/pull-requests/" ++ repo.name) ]
+                [ Html.text repo.name
+                ]
+            ]
+        , Html.div [ HA.class "fixed-columns" ]
+            [ Html.div [ HA.class "fixed-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.inbox octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text "Review Inbox"
+                        ]
+                    ]
+                , Html.div [ HA.class "dashboard-cards" ] <|
+                    List.map (CardView.viewCard model []) prsNeedingAttention
+                ]
+            , Html.div [ HA.class "fixed-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.clock octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text "Author Waiting"
+                        ]
+                    ]
+                , Html.div [ HA.class "dashboard-cards" ] <|
+                    List.map (CardView.viewCard model []) prsWaitingReply
+                ]
+            , Html.div [ HA.class "fixed-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.check octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text "Approved"
+                        ]
+                    ]
+                , Html.div [ HA.class "dashboard-cards" ] <|
+                    List.map (CardView.viewCard model []) prsWaitingMerge
+                ]
+            ]
+        ]
 
 
 failedChecks : Card -> Bool
@@ -1663,128 +1771,6 @@ viewArchivePage model =
             |> groupEvents model.currentZone
             |> List.map (\( a, b ) -> viewArchiveDay model a b)
             |> Html.div [ HA.class "archive-columns" ]
-        ]
-
-
-viewDashboardPage : Model -> Html Msg
-viewDashboardPage model =
-    let
-        eventCounts event =
-            case event of
-                "review-comment" ->
-                    True
-
-                "review-approved" ->
-                    True
-
-                "review-changes-requested" ->
-                    True
-
-                _ ->
-                    False
-
-        events =
-            eventsThisWeek model
-                |> List.filter (.event >> .event >> eventCounts)
-
-        bumpLeaderboard user entry =
-            case entry of
-                Nothing ->
-                    Just ( user, 1 )
-
-                Just ( _, count ) ->
-                    Just ( user, count + 1 )
-
-        countUserEvent event byUser =
-            case event.user of
-                Nothing ->
-                    byUser
-
-                Just user ->
-                    Dict.update user.id (bumpLeaderboard user) byUser
-
-        leaderboard =
-            List.foldl
-                (\{ event } -> countUserEvent event)
-                Dict.empty
-                events
-                |> Dict.values
-                |> List.sortBy Tuple.second
-                |> List.reverse
-
-        prHasReviewers prId =
-            Dict.get prId model.prReviewers
-                |> Maybe.withDefault []
-                |> List.isEmpty
-                |> not
-
-        prLastActivityIsAuthor prId =
-            case ( lastActiveUser model prId, Dict.get prId model.prs ) of
-                ( Just user, Just pr ) ->
-                    user.id == Maybe.withDefault "" (Maybe.map .id pr.author)
-
-                _ ->
-                    False
-
-        prIsReadyToMerge prId =
-            Dict.get prId model.prReviewers
-                |> Maybe.withDefault []
-                |> (\rs -> not (List.isEmpty rs) && List.all (.state >> (==) GitHub.PullRequestReviewStateApproved) rs)
-
-        prsNeedingAttention =
-            List.concat (Dict.values model.openPRsByRepo)
-                |> List.filter (not << prHasReviewers)
-                |> List.filterMap (\id -> Dict.get id model.cards)
-                |> List.sortBy .number
-                |> List.reverse
-
-        prsWaitingReply =
-            List.concat (Dict.values model.openPRsByRepo)
-                |> List.filter prLastActivityIsAuthor
-                |> List.filterMap (\id -> Dict.get id model.cards)
-                |> List.sortBy .number
-                |> List.reverse
-
-        prsWaitingMerge =
-            List.concat (Dict.values model.openPRsByRepo)
-                |> List.filter prIsReadyToMerge
-                |> List.filterMap (\id -> Dict.get id model.cards)
-                |> List.sortBy .number
-                |> List.reverse
-    in
-    Html.div [ HA.class "page-content dashboard" ]
-        [ Html.div [ HA.class "dashboard-pane leaderboard-pane" ]
-            [ Html.div [ HA.class "page-header" ]
-                [ Octicons.flame octiconOpts
-                , Html.text "Weekly Review Leaderboard"
-                ]
-            , Html.div [ HA.class "leaderboard" ]
-                (List.map viewLeaderboardEntry leaderboard)
-            ]
-        , Html.div [ HA.class "dashboard-pane review-inbox-pane" ]
-            [ Html.div [ HA.class "page-header" ]
-                [ Octicons.inbox octiconOpts
-                , Html.text "Review Inbox"
-                ]
-            , Html.div [ HA.class "dashboard-cards" ] <|
-                List.map (CardView.viewCard model []) prsNeedingAttention
-            ]
-        , Html.div [ HA.class "dashboard-pane author-waiting-pane" ]
-            [ Html.div [ HA.class "page-header" ]
-                [ Octicons.clock octiconOpts
-                , Html.text "Author Waiting"
-                ]
-            , Html.div [ HA.class "dashboard-cards" ] <|
-                List.map (CardView.viewCard model []) prsWaitingReply
-            ]
-        , Html.div [ HA.class "dashboard-pane approved-pane" ]
-            [ Html.div [ HA.class "page-header" ]
-                [ Octicons.check octiconOpts
-                , Html.text "Approved"
-                ]
-            , Html.div [ HA.class "dashboard-cards" ] <|
-                List.map (CardView.viewCard model []) prsWaitingMerge
-            ]
         ]
 
 

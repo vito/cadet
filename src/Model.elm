@@ -201,7 +201,6 @@ type Page
     | PullRequestsPage
     | PullRequestsRepoPage String (Maybe Int)
     | ArchivePage
-    | DashboardPage
     | BouncePage
 
 
