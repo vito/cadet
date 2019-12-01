@@ -197,7 +197,7 @@ h4 {
   margin: .4em;
 
   .card-meta {
-    margin-top: 0.4em;
+    margin: .4em;
     font-size: 1.2em;
     color: @gray-600;
     line-height: 1.4;
@@ -221,7 +221,7 @@ h4 {
 
   &.horizontal {
     flex-direction: row;
-    margin: 0 -.4em;
+    margin: -.4em;
   }
 
   &.vertical {
@@ -238,6 +238,7 @@ h4 {
 
   .label:hover {
     position: absolute;
+    z-index: 1000;
   }
 
   &.left {
@@ -588,7 +589,7 @@ h4 {
   &.suggested {
     opacity: 0.2;
 
-    &.has {
+    &:hover, &.has {
       opacity: 1;
     }
 
