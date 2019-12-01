@@ -1587,9 +1587,9 @@ viewRepoOpenPRs model repo cards =
     in
     Html.div [ HA.class "repo-prs" ]
         [ Html.div [ HA.class "page-header" ]
-            [ Octicons.repo octiconOpts
-            , Html.a [ HA.href ("/pull-requests/" ++ repo.name) ]
-                [ Html.text repo.name
+            [ Html.a [ HA.href ("/pull-requests/" ++ repo.name) ]
+                [ Octicons.repo octiconOpts
+                , Html.text repo.name
                 ]
             ]
         , Html.div [ HA.class "fixed-columns" ]
@@ -1737,14 +1737,12 @@ viewRepoPullRequestsPage model repoName =
     in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
-            [ Html.div []
-                [ Html.a [ HA.href "/pull-requests" ]
-                    [ Octicons.gitPullRequest octiconOpts
-                    , Html.text "Pull Requests"
-                    ]
-                , Octicons.repo octiconOpts
-                , Html.text repoName
+            [ Html.a [ HA.href "/pull-requests" ]
+                [ Octicons.gitPullRequest octiconOpts
+                , Html.text "Pull Requests"
                 ]
+            , Octicons.repo octiconOpts
+            , Html.text repoName
             ]
         , Html.div [ HA.class "repo-cards" ]
             [ viewTabbedCards model

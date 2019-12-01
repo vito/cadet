@@ -24180,7 +24180,6 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 						]),
 					_List_fromArray(
 						[
-							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
 							A2(
 							$elm$html$Html$a,
 							_List_fromArray(
@@ -24189,6 +24188,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 								]),
 							_List_fromArray(
 								[
+									$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
 									$elm$html$Html$text(repo.name)
 								]))
 						])),
@@ -25767,24 +25767,18 @@ var $author$project$Main$viewRepoPullRequestsPage = F2(
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$div,
-							_List_Nil,
+							$elm$html$Html$a,
 							_List_fromArray(
 								[
-									A2(
-									$elm$html$Html$a,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$href('/pull-requests')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$gitPullRequest($author$project$Main$octiconOpts),
-											$elm$html$Html$text('Pull Requests')
-										])),
-									$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-									$elm$html$Html$text(repoName)
-								]))
+									$elm$html$Html$Attributes$href('/pull-requests')
+								]),
+							_List_fromArray(
+								[
+									$capitalist$elm_octicons$Octicons$gitPullRequest($author$project$Main$octiconOpts),
+									$elm$html$Html$text('Pull Requests')
+								])),
+							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
+							$elm$html$Html$text(repoName)
 						])),
 					A2(
 					$elm$html$Html$div,
