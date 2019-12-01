@@ -16210,33 +16210,6 @@ var $author$project$Card$isInFlight = function (card) {
 var $author$project$Card$isPaused = function (card) {
 	return card.processState.hasPausedLabel;
 };
-var $author$project$CardView$lastActiveUser = F2(
-	function (model, card) {
-		return A2(
-			$elm$core$Maybe$andThen,
-			function ($) {
-				return $.user;
-			},
-			A2(
-				$elm$core$Maybe$andThen,
-				$elm$core$List$head,
-				A2($elm$core$Dict$get, card.id, model.cardEvents)));
-	});
-var $author$project$CardView$lastActivityIsByUser = F3(
-	function (model, login, card) {
-		return A2(
-			$elm$core$Maybe$withDefault,
-			false,
-			A2(
-				$elm$core$Maybe$map,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq(login),
-					function ($) {
-						return $.login;
-					}),
-				A2($author$project$CardView$lastActiveUser, model, card)));
-	});
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -16270,36 +16243,130 @@ var $author$project$CardView$pauseIcon = function (card) {
 		$author$project$Card$isInFlight(card),
 		$author$project$Card$isPaused(card));
 	if (_v0.b) {
-		return A2(
-			$elm$html$Html$span,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('pause-toggle'),
-					$elm$html$Html$Events$onClick(
-					A2($author$project$Model$UnlabelCard, card, 'paused'))
-				]),
-			_List_fromArray(
-				[
-					$capitalist$elm_octicons$Octicons$bookmark($capitalist$elm_octicons$Octicons$defaultOptions)
-				]));
-	} else {
-		if (_v0.a) {
-			return A2(
+		return _List_fromArray(
+			[
+				A2(
 				$elm$html$Html$span,
 				_List_fromArray(
 					[
 						$elm$html$Html$Attributes$class('pause-toggle paused'),
 						$elm$html$Html$Events$onClick(
-						A2($author$project$Model$LabelCard, card, 'paused'))
+						A2($author$project$Model$UnlabelCard, card, 'paused'))
 					]),
 				_List_fromArray(
 					[
 						$capitalist$elm_octicons$Octicons$bookmark($capitalist$elm_octicons$Octicons$defaultOptions)
+					]))
+			]);
+	} else {
+		if (_v0.a) {
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('pause-toggle'),
+							$elm$html$Html$Events$onClick(
+							A2($author$project$Model$LabelCard, card, 'paused'))
+						]),
+					_List_fromArray(
+						[
+							$capitalist$elm_octicons$Octicons$bookmark($capitalist$elm_octicons$Octicons$defaultOptions)
+						]))
+				]);
+		} else {
+			return _List_Nil;
+		}
+	}
+};
+var $author$project$Model$SearchCards = function (a) {
+	return {$: 'SearchCards', a: a};
+};
+var $author$project$Label$search = F2(
+	function (model, name) {
+		return $author$project$Model$SearchCards(
+			$elm$core$String$isEmpty(model.cardSearch) ? ('label:' + name) : (model.cardSearch + (' label:' + name)));
+	});
+var $author$project$Label$colorIsLight = F2(
+	function (model, hex) {
+		var _v0 = A2($elm$core$Dict$get, hex, model.colorLightnessCache);
+		if (_v0.$ === 'Just') {
+			var res = _v0.a;
+			return res;
+		} else {
+			return A3(
+				$author$project$Log$debug,
+				'color lightness cache miss',
+				hex,
+				$author$project$Label$computeColorIsLight(hex));
+		}
+	});
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$Label$colorStyles = F2(
+	function (model, color) {
+		return _List_fromArray(
+			[
+				A2($elm$html$Html$Attributes$style, 'background-color', '#' + color),
+				A2($author$project$Label$colorIsLight, model, color) ? $elm$html$Html$Attributes$class('light-label') : $elm$html$Html$Attributes$class('dark-label')
+			]);
+	});
+var $author$project$Label$view = F2(
+	function (model, label) {
+		return A2(
+			$elm$html$Html$span,
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$class('label'),
+				A2($author$project$Label$colorStyles, model, label.color)),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$span,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('label-text')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(label.name)
+						]))
+				]));
+	});
+var $author$project$CardView$searchableLabel = F2(
+	function (model, labelId) {
+		var _v0 = A2($elm$core$Dict$get, labelId, model.allLabels);
+		if (_v0.$ === 'Just') {
+			var label = _v0.a;
+			return A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Events$onClick(
+						A2($author$project$Label$search, model, label.name))
+					]),
+				_List_fromArray(
+					[
+						A2($author$project$Label$view, model, label)
 					]));
 		} else {
 			return $elm$html$Html$text('');
 		}
-	}
+	});
+var $elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		$elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var $capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
+var $capitalist$elm_octicons$Octicons$sync = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
+var $elm$html$Html$Attributes$tabindex = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'tabIndex',
+		$elm$core$String$fromInt(n));
 };
 var $capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
 var $capitalist$elm_octicons$Octicons$gitMerge = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
@@ -16308,12 +16375,6 @@ var $author$project$Colors$green = $author$project$Colors$green500;
 var $author$project$CardView$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
 var $author$project$Colors$red500 = '#d73a49';
 var $author$project$Colors$red = $author$project$Colors$red500;
-var $elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		$elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
 var $capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
 var $capitalist$elm_octicons$Octicons$alert = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$alertPath, '0 0 16 16', 'alert');
 var $capitalist$elm_octicons$Octicons$checkPolygon = '12 5 4 13 0 9 1.5 7.5 4 10 10.5 3.5';
@@ -16396,18 +16457,21 @@ var $author$project$CardView$prIcons = F2(
 					pr.lastCommit);
 				if ((_v3.$ === 'Just') && (_v3.a.$ === 'Just')) {
 					var contexts = _v3.a.a.contexts;
-					return A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('status-icon')
-							]),
-						_List_fromArray(
-							[
-								$author$project$CardView$summarizeContexts(contexts)
-							]));
+					return _List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('status-icon')
+								]),
+							_List_fromArray(
+								[
+									$author$project$CardView$summarizeContexts(contexts)
+								]))
+						]);
 				} else {
-					return $elm$html$Html$text('');
+					return _List_Nil;
 				}
 			}();
 			var reviews = A2(
@@ -16436,110 +16500,39 @@ var $author$project$CardView$prIcons = F2(
 						$elm$html$Html$img,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('status-actor ' + reviewClass),
+								$elm$html$Html$Attributes$class('card-actor ' + reviewClass),
 								$elm$html$Html$Attributes$src(r.author.avatar)
 							]),
 						_List_Nil);
 				},
 				reviews);
-			return _Utils_ap(
+			return $elm$core$List$concat(
 				_List_fromArray(
 					[
-						$capitalist$elm_octicons$Octicons$gitMerge(
-						_Utils_update(
-							$author$project$CardView$octiconOpts,
-							{
-								color: function () {
-									var _v1 = pr.mergeable;
-									switch (_v1.$) {
-										case 'MergeableStateMergeable':
-											return $author$project$Colors$green;
-										case 'MergeableStateConflicting':
-											return $author$project$Colors$red;
-										default:
-											return $author$project$Colors$yellow;
-									}
-								}()
-							})),
-						statusCheck
-					]),
-				reviewStates);
+						_List_fromArray(
+						[
+							$capitalist$elm_octicons$Octicons$gitMerge(
+							_Utils_update(
+								$author$project$CardView$octiconOpts,
+								{
+									color: function () {
+										var _v1 = pr.mergeable;
+										switch (_v1.$) {
+											case 'MergeableStateMergeable':
+												return $author$project$Colors$green;
+											case 'MergeableStateConflicting':
+												return $author$project$Colors$red;
+											default:
+												return $author$project$Colors$yellow;
+										}
+									}()
+								}))
+						]),
+						statusCheck,
+						reviewStates
+					]));
 		}
 	});
-var $capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
-var $capitalist$elm_octicons$Octicons$sync = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
-var $elm$html$Html$Attributes$tabindex = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'tabIndex',
-		$elm$core$String$fromInt(n));
-};
-var $capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
-var $capitalist$elm_octicons$Octicons$gitPullRequest = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
-var $capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
-var $capitalist$elm_octicons$Octicons$issueClosed = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
-var $capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
-var $capitalist$elm_octicons$Octicons$issueOpened = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
-var $author$project$CardView$viewCardIcon = function (card) {
-	return $author$project$Card$isPR(card) ? $capitalist$elm_octicons$Octicons$gitPullRequest(
-		_Utils_update(
-			$author$project$CardView$octiconOpts,
-			{
-				color: $author$project$Card$isMerged(card) ? $author$project$Colors$purple : ($author$project$Card$isOpen(card) ? $author$project$Colors$green : $author$project$Colors$red)
-			})) : ($author$project$Card$isOpen(card) ? $capitalist$elm_octicons$Octicons$issueOpened(
-		_Utils_update(
-			$author$project$CardView$octiconOpts,
-			{color: $author$project$Colors$green})) : $capitalist$elm_octicons$Octicons$issueClosed(
-		_Utils_update(
-			$author$project$CardView$octiconOpts,
-			{color: $author$project$Colors$red})));
-};
-var $author$project$CardView$viewCardMeta = function (card) {
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('card-meta')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$a,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$href(card.url),
-						$elm$html$Html$Attributes$target('_blank'),
-						$elm$html$Html$Attributes$draggable('false')
-					]),
-				_List_fromArray(
-					[
-						$elm$html$Html$text(
-						'#' + $elm$core$String$fromInt(card.number))
-					])),
-				$elm$html$Html$text(' '),
-				$elm$html$Html$text('opened by '),
-				function () {
-				var _v0 = card.author;
-				if (_v0.$ === 'Just') {
-					var user = _v0.a;
-					return A2(
-						$elm$html$Html$a,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$href(user.url),
-								$elm$html$Html$Attributes$target('_blank'),
-								$elm$html$Html$Attributes$draggable('false')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(user.login)
-							]));
-				} else {
-					return $elm$html$Html$text('(deleted user)');
-				}
-			}()
-			]));
-};
 var $elm$core$List$takeReverse = F3(
 	function (n, list, kept) {
 		takeReverse:
@@ -16677,80 +16670,6 @@ var $author$project$CardView$recentEvents = F2(
 					_List_Nil,
 					A2($elm$core$Dict$get, card.id, model.cardEvents))));
 	});
-var $author$project$Model$SearchCards = function (a) {
-	return {$: 'SearchCards', a: a};
-};
-var $author$project$Label$search = F2(
-	function (model, name) {
-		return $author$project$Model$SearchCards(
-			$elm$core$String$isEmpty(model.cardSearch) ? ('label:' + name) : (model.cardSearch + (' label:' + name)));
-	});
-var $author$project$Label$colorIsLight = F2(
-	function (model, hex) {
-		var _v0 = A2($elm$core$Dict$get, hex, model.colorLightnessCache);
-		if (_v0.$ === 'Just') {
-			var res = _v0.a;
-			return res;
-		} else {
-			return A3(
-				$author$project$Log$debug,
-				'color lightness cache miss',
-				hex,
-				$author$project$Label$computeColorIsLight(hex));
-		}
-	});
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $author$project$Label$colorStyles = F2(
-	function (model, color) {
-		return _List_fromArray(
-			[
-				A2($elm$html$Html$Attributes$style, 'background-color', '#' + color),
-				A2($author$project$Label$colorIsLight, model, color) ? $elm$html$Html$Attributes$class('light-label') : $elm$html$Html$Attributes$class('dark-label')
-			]);
-	});
-var $author$project$Label$view = F2(
-	function (model, label) {
-		return A2(
-			$elm$html$Html$span,
-			A2(
-				$elm$core$List$cons,
-				$elm$html$Html$Attributes$class('label'),
-				A2($author$project$Label$colorStyles, model, label.color)),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$span,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-text')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text(label.name)
-						]))
-				]));
-	});
-var $author$project$CardView$searchableLabel = F2(
-	function (model, labelId) {
-		var _v0 = A2($elm$core$Dict$get, labelId, model.allLabels);
-		if (_v0.$ === 'Just') {
-			var label = _v0.a;
-			return A2(
-				$elm$html$Html$span,
-				_List_fromArray(
-					[
-						$elm$html$Html$Events$onClick(
-						A2($author$project$Label$search, model, label.name))
-					]),
-				_List_fromArray(
-					[
-						A2($author$project$Label$view, model, label)
-					]));
-		} else {
-			return $elm$html$Html$text('');
-		}
-	});
 var $author$project$CardView$viewEventActor = F2(
 	function (model, _v0) {
 		var createdAt = _v0.createdAt;
@@ -16767,11 +16686,104 @@ var $author$project$CardView$viewEventActor = F2(
 				]),
 			_List_Nil);
 	});
-var $capitalist$elm_octicons$Octicons$dashPolygon = '0 7 0 9 8 9 8 7';
-var $capitalist$elm_octicons$Octicons$dash = A3($capitalist$elm_octicons$Octicons$polygonIconWithOptions, $capitalist$elm_octicons$Octicons$dashPolygon, '0 0 8 16', 'dash');
+var $author$project$CardView$viewCardActivity = F2(
+	function (model, card) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card-squares horizontal')
+				]),
+			A2(
+				$elm$core$List$map,
+				function (x) {
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('card-square')
+							]),
+						_List_fromArray(
+							[x]));
+				},
+				$elm$core$List$concat(
+					_List_fromArray(
+						[
+							A2($author$project$CardView$prIcons, model, card),
+							A2(
+							$elm$core$List$map,
+							$author$project$CardView$viewEventActor(model),
+							A2($author$project$CardView$recentEvents, model, card))
+						]))));
+	});
+var $capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
+var $capitalist$elm_octicons$Octicons$gitPullRequest = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var $capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
+var $capitalist$elm_octicons$Octicons$issueClosed = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
+var $capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
+var $capitalist$elm_octicons$Octicons$issueOpened = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$issueOpenedPath, '0 0 14 16', 'issueOpened');
+var $author$project$CardView$viewCardIcon = function (card) {
+	return $author$project$Card$isPR(card) ? $capitalist$elm_octicons$Octicons$gitPullRequest(
+		_Utils_update(
+			$author$project$CardView$octiconOpts,
+			{
+				color: $author$project$Card$isMerged(card) ? $author$project$Colors$purple : ($author$project$Card$isOpen(card) ? $author$project$Colors$green : $author$project$Colors$red)
+			})) : ($author$project$Card$isOpen(card) ? $capitalist$elm_octicons$Octicons$issueOpened(
+		_Utils_update(
+			$author$project$CardView$octiconOpts,
+			{color: $author$project$Colors$green})) : $capitalist$elm_octicons$Octicons$issueClosed(
+		_Utils_update(
+			$author$project$CardView$octiconOpts,
+			{color: $author$project$Colors$red})));
+};
+var $author$project$CardView$viewCardMeta = function (card) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('card-meta')
+			]),
+		_List_fromArray(
+			[
+				A2(
+				$elm$html$Html$a,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$href(card.url),
+						$elm$html$Html$Attributes$target('_blank'),
+						$elm$html$Html$Attributes$draggable('false')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text(
+						'#' + $elm$core$String$fromInt(card.number))
+					])),
+				$elm$html$Html$text(' '),
+				$elm$html$Html$text('opened by '),
+				function () {
+				var _v0 = card.author;
+				if (_v0.$ === 'Just') {
+					var user = _v0.a;
+					return A2(
+						$elm$html$Html$a,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$href(user.url),
+								$elm$html$Html$Attributes$target('_blank'),
+								$elm$html$Html$Attributes$draggable('false')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text(user.login)
+							]));
+				} else {
+					return $elm$html$Html$text('(deleted user)');
+				}
+			}()
+			]));
+};
 var $capitalist$elm_octicons$Octicons$plusPolygon = '12 9 7 9 7 14 5 14 5 9 0 9 0 7 5 7 5 2 7 2 7 7 12 7';
 var $capitalist$elm_octicons$Octicons$plus = A3($capitalist$elm_octicons$Octicons$polygonIconWithOptions, $capitalist$elm_octicons$Octicons$plusPolygon, '0 0 12 16', 'plus');
-var $author$project$Colors$white = '#fff';
 var $author$project$CardView$viewSuggestedLabel = F3(
 	function (model, card, name) {
 		var mlabelId = A2(
@@ -16802,19 +16814,17 @@ var $author$project$CardView$viewSuggestedLabel = F3(
 					_List_fromArray(
 						[
 							$elm$html$Html$Attributes$class('label suggested'),
+							$elm$html$Html$Attributes$classList(
+							_List_fromArray(
+								[
+									_Utils_Tuple2('has', has)
+								])),
 							$elm$html$Html$Events$onClick(
 							has ? A2($author$project$Model$UnlabelCard, card, name) : A2($author$project$Model$LabelCard, card, name))
 						]),
 					A2($author$project$Label$colorStyles, model, color)),
 				_List_fromArray(
 					[
-						has ? $capitalist$elm_octicons$Octicons$dash(
-						_Utils_update(
-							$author$project$CardView$octiconOpts,
-							{color: $author$project$Colors$white})) : $capitalist$elm_octicons$Octicons$plus(
-						_Utils_update(
-							$author$project$CardView$octiconOpts,
-							{color: $author$project$Colors$white})),
 						A2(
 						$elm$html$Html$span,
 						_List_fromArray(
@@ -16824,46 +16834,10 @@ var $author$project$CardView$viewSuggestedLabel = F3(
 						_List_fromArray(
 							[
 								$elm$html$Html$text(name)
-							]))
+							])),
+						has ? $capitalist$elm_octicons$Octicons$x($author$project$CardView$octiconOpts) : $capitalist$elm_octicons$Octicons$plus($author$project$CardView$octiconOpts)
 					]));
 		}
-	});
-var $author$project$CardView$viewCardSquares = F2(
-	function (model, card) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('card-squares')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-labels')
-						]),
-					_Utils_ap(
-						A2(
-							$elm$core$List$map,
-							$author$project$CardView$searchableLabel(model),
-							card.labels),
-						A2(
-							$elm$core$List$map,
-							A2($author$project$CardView$viewSuggestedLabel, model, card),
-							model.suggestedLabels))),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-actors')
-						]),
-					A2(
-						$elm$core$List$map,
-						$author$project$CardView$viewEventActor(model),
-						A2($author$project$CardView$recentEvents, model, card)))
-				]));
 	});
 var $author$project$CardView$viewCard = F3(
 	function (model, controls, card) {
@@ -16905,18 +16879,7 @@ var $author$project$CardView$viewCard = F3(
 								$elm$core$Maybe$Just(card.id))),
 							_Utils_Tuple2(
 							A2($author$project$Activity$class, model.currentTime, card.updatedAt),
-							$author$project$Card$isPR(card)),
-							_Utils_Tuple2(
-							'last-activity-is-me',
-							function () {
-								var _v0 = model.me;
-								if (_v0.$ === 'Just') {
-									var user = _v0.a.user;
-									return A3($author$project$CardView$lastActivityIsByUser, model, user.login, card);
-								} else {
-									return false;
-								}
-							}())
+							$author$project$Card$isPR(card))
 						])),
 					$elm$html$Html$Events$onClick(
 					$author$project$Model$SelectCard(card.id)),
@@ -16930,36 +16893,46 @@ var $author$project$CardView$viewCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-icons')
+							$elm$html$Html$Attributes$class('card-squares left vertical')
 						]),
-					$elm$core$List$concat(
-						_List_fromArray(
-							[
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
 								_List_fromArray(
-								[
-									$author$project$CardView$viewCardIcon(card)
-								]),
-								$author$project$CardView$cardExternalIcons(card),
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
 								_List_fromArray(
+									[x]));
+						},
+						$elm$core$List$concat(
+							_List_fromArray(
 								[
-									$author$project$CardView$pauseIcon(card)
-								]),
-								A2(
-								$elm$core$List$map,
-								function (_v1) {
-									var avatar = _v1.avatar;
-									return A2(
-										$elm$html$Html$img,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('status-actor'),
-												$elm$html$Html$Attributes$src(avatar)
-											]),
-										_List_Nil);
-								},
-								card.assignees),
-								A2($author$project$CardView$prIcons, model, card)
-							]))),
+									_List_fromArray(
+									[
+										$author$project$CardView$viewCardIcon(card)
+									]),
+									A2(
+									$elm$core$List$map,
+									function (_v0) {
+										var avatar = _v0.avatar;
+										return A2(
+											$elm$html$Html$img,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('card-actor'),
+													$elm$html$Html$Attributes$src(avatar)
+												]),
+											_List_Nil);
+									},
+									card.assignees),
+									A2(
+									$elm$core$List$map,
+									$author$project$CardView$searchableLabel(model),
+									card.labels)
+								])))),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -16991,28 +16964,51 @@ var $author$project$CardView$viewCard = F3(
 										]))
 								])),
 							$author$project$CardView$viewCardMeta(card),
-							A2($author$project$CardView$viewCardSquares, model, card)
+							A2($author$project$CardView$viewCardActivity, model, card)
 						])),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-controls')
+							$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
 						]),
 					A2(
-						$elm$core$List$cons,
-						A2(
-							$elm$html$Html$span,
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						$elm$core$List$concat(
 							_List_fromArray(
 								[
-									$elm$html$Html$Events$onClick(
-									$author$project$Card$isPR(card) ? $author$project$Model$RefreshPullRequest(card.id) : $author$project$Model$RefreshIssue(card.id))
-								]),
-							_List_fromArray(
-								[
-									$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
-								])),
-						controls))
+									_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick(
+												$author$project$Card$isPR(card) ? $author$project$Model$RefreshPullRequest(card.id) : $author$project$Model$RefreshIssue(card.id))
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
+											]))
+									]),
+									$author$project$CardView$cardExternalIcons(card),
+									$author$project$CardView$pauseIcon(card),
+									controls,
+									A2(
+									$elm$core$List$map,
+									A2($author$project$CardView$viewSuggestedLabel, model, card),
+									model.suggestedLabels)
+								]))))
 				]));
 	});
 var $author$project$CardOperations$viewCardEntry = F2(
@@ -17058,6 +17054,8 @@ var $author$project$Model$ToggleLabelOperations = {$: 'ToggleLabelOperations'};
 var $author$project$Model$UnsetLabelOperation = function (a) {
 	return {$: 'UnsetLabelOperation', a: a};
 };
+var $capitalist$elm_octicons$Octicons$dashPolygon = '0 7 0 9 8 9 8 7';
+var $capitalist$elm_octicons$Octicons$dash = A3($capitalist$elm_octicons$Octicons$polygonIconWithOptions, $capitalist$elm_octicons$Octicons$dashPolygon, '0 0 8 16', 'dash');
 var $elm$html$Html$input = _VirtualDom_node('input');
 var $elm$html$Html$Events$alwaysStop = function (x) {
 	return _Utils_Tuple2(x, true);
@@ -17692,13 +17690,24 @@ var $author$project$CardView$viewProjectCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-icons')
+							$elm$html$Html$Attributes$class('card-squares left vertical')
 						]),
-					_List_fromArray(
-						[
-							$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions),
-							$author$project$CardView$projectExternalIcon(project)
-						])),
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions)
+							]))),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -17740,9 +17749,26 @@ var $author$project$CardView$viewProjectCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-controls')
+							$elm$html$Html$Attributes$class('card-squares left vertical card-controls')
 						]),
-					controls)
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						_Utils_ap(
+							controls,
+							_List_fromArray(
+								[
+									$author$project$CardView$projectExternalIcon(project)
+								]))))
 				]));
 	});
 var $author$project$Main$viewRepoProjects = F3(
@@ -20625,13 +20651,22 @@ var $author$project$Main$viewArchiveDay = F3(
 					_List_fromArray(
 						[
 							$capitalist$elm_octicons$Octicons$calendar($author$project$Main$octiconOpts),
-							$author$project$Main$viewMonth(month),
-							$elm$html$Html$text(' '),
-							$elm$html$Html$text(
-							$elm$core$String$fromInt(day)),
-							$elm$html$Html$text(', '),
-							$elm$html$Html$text(
-							$elm$core$String$fromInt(year))
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('column-name')
+								]),
+							_List_fromArray(
+								[
+									$author$project$Main$viewMonth(month),
+									$elm$html$Html$text(' '),
+									$elm$html$Html$text(
+									$elm$core$String$fromInt(day)),
+									$elm$html$Html$text(', '),
+									$elm$html$Html$text(
+									$elm$core$String$fromInt(year))
+								]))
 						])),
 					A2(
 					$elm$html$Html$div,
@@ -24538,6 +24573,24 @@ var $author$project$ReleaseStatus$dueDate = _List_fromArray(
 	]);
 var $capitalist$elm_octicons$Octicons$gitBranchPath = 'M10,5 C10,3.89 9.11,3 8,3 C6.89,3 6,3.89 6,5 C6,5.73 6.41,6.38 7,6.72 L7,7.02 C6.98,7.54 6.77,8 6.37,8.4 C5.97,8.8 5.51,9.01 4.99,9.03 C4.16,9.05 3.51,9.19 2.99,9.48 L2.99,4.72 C3.58,4.38 3.99,3.74 3.99,3 C3.99,1.89 3.1,1 1.99,1 C0.88,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.47 3.8,12 3.47,11.64 C3.56,11.58 3.95,11.23 4.06,11.17 C4.31,11.06 4.62,11 5,11 C6.05,10.95 6.95,10.55 7.75,9.75 C8.55,8.95 8.95,7.77 9,6.73 L8.98,6.73 C9.59,6.37 10,5.73 10,5 L10,5 Z M2,1.8 C2.66,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 C1.35,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 L2,1.8 Z M2,14.21 C1.34,14.21 0.8,13.66 0.8,13.01 C0.8,12.36 1.35,11.81 2,11.81 C2.65,11.81 3.2,12.36 3.2,13.01 C3.2,13.66 2.65,14.21 2,14.21 L2,14.21 Z M8,6.21 C7.34,6.21 6.8,5.66 6.8,5.01 C6.8,4.36 7.35,3.81 8,3.81 C8.65,3.81 9.2,4.36 9.2,5.01 C9.2,5.66 8.65,6.21 8,6.21 L8,6.21 Z';
 var $capitalist$elm_octicons$Octicons$gitBranch = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitBranchPath, '0 0 10 16', 'gitBranch');
+var $author$project$ReleaseStatus$labelColorByName = F2(
+	function (model, name) {
+		var mlabel = A2(
+			$elm$core$Maybe$andThen,
+			function (id) {
+				return A2($elm$core$Dict$get, id, model.allLabels);
+			},
+			A2(
+				$elm$core$Maybe$andThen,
+				A2($elm$core$Basics$composeL, $elm$core$List$head, $elm$core$Dict$values),
+				A2($elm$core$Dict$get, name, model.labelToRepoToId)));
+		if (mlabel.$ === 'Just') {
+			var label = mlabel.a;
+			return '#' + label.color;
+		} else {
+			return '#ff00ff';
+		}
+	});
 var $author$project$ReleaseStatus$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
 var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
 var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
@@ -24606,6 +24659,23 @@ var $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions = F3(
 			(differenceInMilliseconds < 0) ? A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.someSecondsAgo, options.someMinutesAgo, options.someHoursAgo, options.someDaysAgo, options.someMonthsAgo, options.someYearsAgo) : A6($ryannhg$date_format$DateFormat$Relative$RelativeTimeFunctions, options.inSomeSeconds, options.inSomeMinutes, options.inSomeHours, options.inSomeDays, options.inSomeMonths, options.inSomeYears));
 	});
 var $ryannhg$date_format$DateFormat$Relative$relativeTime = $ryannhg$date_format$DateFormat$Relative$relativeTimeWithOptions($ryannhg$date_format$DateFormat$Relative$defaultRelativeOptions);
+var $author$project$ReleaseStatus$releaseName = function (rel) {
+	var _v0 = A2($elm$core$Maybe$withDefault, '', rel.name);
+	if (_v0 === '') {
+		return A2(
+			$elm$core$Maybe$withDefault,
+			'release',
+			A2(
+				$elm$core$Maybe$map,
+				function ($) {
+					return $.name;
+				},
+				rel.tag));
+	} else {
+		var name = _v0;
+		return name;
+	}
+};
 var $elm$url$Url$Builder$QueryParameter = F2(
 	function (a, b) {
 		return {$: 'QueryParameter', a: a, b: b};
@@ -24917,7 +24987,7 @@ var $author$project$ReleaseStatus$view = F2(
 													_List_fromArray(
 														[
 															$elm$html$Html$text(
-															A2($elm$core$Maybe$withDefault, 'last release', rel.name))
+															$author$project$ReleaseStatus$releaseName(rel))
 														])),
 													$elm$html$Html$text(' was '),
 													$elm$html$Html$text(
@@ -24962,14 +25032,14 @@ var $author$project$ReleaseStatus$view = F2(
 							_List_fromArray(
 								[
 									_Utils_Tuple2(
-									$author$project$Colors$green,
-									$elm$core$List$length(sir.documentedCards)),
+									A2($author$project$ReleaseStatus$labelColorByName, model, 'release/no-impact'),
+									$elm$core$List$length(sir.noImpactCards)),
 									_Utils_Tuple2(
-									$author$project$Colors$green,
+									A2($author$project$ReleaseStatus$labelColorByName, model, 'release/undocumented'),
 									$elm$core$List$length(sir.undocumentedCards)),
 									_Utils_Tuple2(
-									$author$project$Colors$green,
-									$elm$core$List$length(sir.noImpactCards)),
+									A2($author$project$ReleaseStatus$labelColorByName, model, 'release/documented'),
+									$elm$core$List$length(sir.documentedCards)),
 									_Utils_Tuple2(
 									$author$project$Colors$purple,
 									$elm$core$List$length(sir.doneCards)),
@@ -25001,6 +25071,392 @@ var $author$project$Main$viewLabelByName = F2(
 			return $elm$html$Html$text('missing label: ' + name);
 		}
 	});
+var $author$project$Main$viewReleasePage = F2(
+	function (model, sir) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('page-content')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('release-repo-header')
+						]),
+					_List_fromArray(
+						[
+							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
+							$elm$html$Html$text(sir.repo.name)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('single-release')
+						]),
+					_List_fromArray(
+						[
+							A2($author$project$ReleaseStatus$view, model, sir)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('release-columns')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-column')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											$capitalist$elm_octicons$Octicons$issueOpened($author$project$Main$octiconOpts),
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('column-name')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Open Issues')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('cards')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCard, model, _List_Nil),
+										_Utils_ap(sir.openPRs, sir.openIssues)))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-column')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											$capitalist$elm_octicons$Octicons$question($author$project$Main$octiconOpts),
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('column-name')
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text('Needs Documentation')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('cards')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCard, model, _List_Nil),
+										sir.doneCards))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-column')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('column-name')
+												]),
+											_List_fromArray(
+												[
+													A2($author$project$Main$viewLabelByName, model, 'release/documented')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('cards')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCard, model, _List_Nil),
+										sir.documentedCards))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-column')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('column-name')
+												]),
+											_List_fromArray(
+												[
+													A2($author$project$Main$viewLabelByName, model, 'release/undocumented')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('cards')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCard, model, _List_Nil),
+										sir.undocumentedCards))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-column')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('column-title')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('column-name')
+												]),
+											_List_fromArray(
+												[
+													A2($author$project$Main$viewLabelByName, model, 'release/no-impact')
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('cards')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCard, model, _List_Nil),
+										sir.noImpactCards))
+								]))
+						]))
+				]));
+	});
+var $author$project$Main$compareReleaseStatus = F2(
+	function (a, b) {
+		var _v0 = _Utils_Tuple2(a.milestone, b.milestone);
+		if (_v0.a.$ === 'Just') {
+			if (_v0.b.$ === 'Just') {
+				var am = _v0.a.a;
+				var bm = _v0.b.a;
+				return A2($elm$core$Basics$compare, am.title, bm.title);
+			} else {
+				var _v1 = _v0.b;
+				return $elm$core$Basics$GT;
+			}
+		} else {
+			if (_v0.b.$ === 'Just') {
+				var _v2 = _v0.a;
+				return $elm$core$Basics$LT;
+			} else {
+				var _v3 = _v0.a;
+				var _v4 = _v0.b;
+				var _v5 = _Utils_Tuple2(a.ref, b.ref);
+				if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
+					var ar = _v5.a.a;
+					var br = _v5.b.a;
+					return A2($elm$core$Basics$compare, ar, br);
+				} else {
+					return $elm$core$Basics$EQ;
+				}
+			}
+		}
+	});
+var $author$project$Main$viewReleasesPage = function (model) {
+	var viewRepoReleases = F2(
+		function (repoName, releases) {
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('repo-releases')
+					]),
+				_List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('release-repo-header')
+							]),
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
+								$elm$html$Html$text(repoName)
+							])),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('releases')
+							]),
+						function (x) {
+							return _Utils_ap(
+								x,
+								A2(
+									$elm$core$List$repeat,
+									5,
+									A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('release-even-columns-hack')
+											]),
+										_List_Nil)));
+						}(
+							A2(
+								$elm$core$List$map,
+								$author$project$ReleaseStatus$view(model),
+								$elm$core$List$reverse(
+									A2($elm$core$List$sortWith, $author$project$Main$compareReleaseStatus, releases)))))
+					]));
+		});
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('page-content')
+			]),
+		$elm$core$Dict$values(
+			A2($elm$core$Dict$map, viewRepoReleases, model.repoReleaseStatuses)));
+};
+var $author$project$Main$changesRequested = F2(
+	function (model, card) {
+		var _v0 = A2($elm$core$Dict$get, card.id, model.prReviewers);
+		if (_v0.$ === 'Just') {
+			var reviews = _v0.a;
+			return A2(
+				$elm$core$List$any,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Basics$eq($author$project$GitHub$PullRequestReviewStateChangesRequested),
+					function ($) {
+						return $.state;
+					}),
+				reviews);
+		} else {
+			return false;
+		}
+	});
+var $author$project$Main$failedChecks = function (card) {
+	var _v0 = card.content;
+	if (_v0.$ === 'PullRequestCardContent') {
+		var lastCommit = _v0.a.lastCommit;
+		var _v1 = A2(
+			$elm$core$Maybe$andThen,
+			function ($) {
+				return $.status;
+			},
+			lastCommit);
+		if (_v1.$ === 'Just') {
+			var contexts = _v1.a.contexts;
+			return A2(
+				$elm$core$List$any,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Basics$eq($author$project$GitHub$StatusStateFailure),
+					function ($) {
+						return $.state;
+					}),
+				contexts);
+		} else {
+			return false;
+		}
+	} else {
+		return false;
+	}
+};
+var $author$project$Main$hasMergeConflict = function (card) {
+	var _v0 = card.content;
+	if (_v0.$ === 'PullRequestCardContent') {
+		var mergeable = _v0.a.mergeable;
+		switch (mergeable.$) {
+			case 'MergeableStateMergeable':
+				return false;
+			case 'MergeableStateConflicting':
+				return true;
+			default:
+				return false;
+		}
+	} else {
+		return false;
+	}
+};
+var $capitalist$elm_octicons$Octicons$lawPath = 'M7,4 C6.17,4 5.5,3.33 5.5,2.5 C5.5,1.67 6.17,1 7,1 C7.83,1 8.5,1.67 8.5,2.5 C8.5,3.33 7.83,4 7,4 L7,4 Z M14,10 C14,11.11 13.11,12 12,12 L11,12 C9.89,12 9,11.11 9,10 L11,6 L10,6 C9.45,6 9,5.55 9,5 L8,5 L8,13 C8.42,13 9,13.45 9,14 L10,14 C10.42,14 11,14.45 11,15 L3,15 C3,14.45 3.58,14 4,14 L5,14 C5,13.45 5.58,13 6,13 L6.03,13 L6,5 L5,5 C5,5.55 4.55,6 4,6 L3,6 L5,10 C5,11.11 4.11,12 3,12 L2,12 C0.89,12 0,11.11 0,10 L2,6 L1,6 L1,5 L4,5 C4,4.45 4.45,4 5,4 L9,4 C9.55,4 10,4.45 10,5 L13,5 L13,6 L12,6 L14,10 L14,10 Z M2.5,7 L1,10 L4,10 L2.5,7 L2.5,7 Z M13,10 L11.5,7 L10,10 L13,10 L13,10 Z';
+var $capitalist$elm_octicons$Octicons$law = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$lawPath, '0 0 14 16', 'law');
 var $elm$url$Url$Builder$int = F2(
 	function (key, value) {
 		return A2(
@@ -25234,217 +25690,6 @@ var $author$project$Main$viewTabbedCards = F2(
 				}()
 				]));
 	});
-var $author$project$Main$viewReleasePage = F2(
-	function (model, sir) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('page-content')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('release-repo-header')
-						]),
-					_List_fromArray(
-						[
-							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-							$elm$html$Html$text(sir.repo.name)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('single-release')
-						]),
-					_List_fromArray(
-						[
-							A2($author$project$ReleaseStatus$view, model, sir)
-						])),
-					A2(
-					$author$project$Main$viewTabbedCards,
-					model,
-					_List_fromArray(
-						[
-							_Utils_Tuple3(
-							$capitalist$elm_octicons$Octicons$inbox($author$project$Main$octiconOpts),
-							'To Do',
-							_Utils_ap(sir.openIssues, sir.openPRs)),
-							_Utils_Tuple3(
-							$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
-							'Done',
-							sir.doneCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/documented'),
-							'Documented',
-							sir.documentedCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/undocumented'),
-							'Undocumented',
-							sir.undocumentedCards),
-							_Utils_Tuple3(
-							A2($author$project$Main$viewLabelByName, model, 'release/no-impact'),
-							'No Impact',
-							sir.noImpactCards)
-						]))
-				]));
-	});
-var $author$project$Main$compareReleaseStatus = F2(
-	function (a, b) {
-		var _v0 = _Utils_Tuple2(a.milestone, b.milestone);
-		if (_v0.a.$ === 'Just') {
-			if (_v0.b.$ === 'Just') {
-				var am = _v0.a.a;
-				var bm = _v0.b.a;
-				return A2($elm$core$Basics$compare, am.title, bm.title);
-			} else {
-				var _v1 = _v0.b;
-				return $elm$core$Basics$GT;
-			}
-		} else {
-			if (_v0.b.$ === 'Just') {
-				var _v2 = _v0.a;
-				return $elm$core$Basics$LT;
-			} else {
-				var _v3 = _v0.a;
-				var _v4 = _v0.b;
-				var _v5 = _Utils_Tuple2(a.ref, b.ref);
-				if ((_v5.a.$ === 'Just') && (_v5.b.$ === 'Just')) {
-					var ar = _v5.a.a;
-					var br = _v5.b.a;
-					return A2($elm$core$Basics$compare, ar, br);
-				} else {
-					return $elm$core$Basics$EQ;
-				}
-			}
-		}
-	});
-var $author$project$Main$viewReleasesPage = function (model) {
-	var viewRepoReleases = F2(
-		function (repoName, releases) {
-			return A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('repo-releases')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('release-repo-header')
-							]),
-						_List_fromArray(
-							[
-								$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-								$elm$html$Html$text(repoName)
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('releases')
-							]),
-						function (x) {
-							return _Utils_ap(
-								x,
-								A2(
-									$elm$core$List$repeat,
-									5,
-									A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('release-even-columns-hack')
-											]),
-										_List_Nil)));
-						}(
-							A2(
-								$elm$core$List$map,
-								$author$project$ReleaseStatus$view(model),
-								$elm$core$List$reverse(
-									A2($elm$core$List$sortWith, $author$project$Main$compareReleaseStatus, releases)))))
-					]));
-		});
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('page-content')
-			]),
-		$elm$core$Dict$values(
-			A2($elm$core$Dict$map, viewRepoReleases, model.repoReleaseStatuses)));
-};
-var $author$project$Main$changesRequested = F2(
-	function (model, card) {
-		var _v0 = A2($elm$core$Dict$get, card.id, model.prReviewers);
-		if (_v0.$ === 'Just') {
-			var reviews = _v0.a;
-			return A2(
-				$elm$core$List$any,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq($author$project$GitHub$PullRequestReviewStateChangesRequested),
-					function ($) {
-						return $.state;
-					}),
-				reviews);
-		} else {
-			return false;
-		}
-	});
-var $author$project$Main$failedChecks = function (card) {
-	var _v0 = card.content;
-	if (_v0.$ === 'PullRequestCardContent') {
-		var lastCommit = _v0.a.lastCommit;
-		var _v1 = A2(
-			$elm$core$Maybe$andThen,
-			function ($) {
-				return $.status;
-			},
-			lastCommit);
-		if (_v1.$ === 'Just') {
-			var contexts = _v1.a.contexts;
-			return A2(
-				$elm$core$List$any,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq($author$project$GitHub$StatusStateFailure),
-					function ($) {
-						return $.state;
-					}),
-				contexts);
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-};
-var $author$project$Main$hasMergeConflict = function (card) {
-	var _v0 = card.content;
-	if (_v0.$ === 'PullRequestCardContent') {
-		var mergeable = _v0.a.mergeable;
-		switch (mergeable.$) {
-			case 'MergeableStateMergeable':
-				return false;
-			case 'MergeableStateConflicting':
-				return true;
-			default:
-				return false;
-		}
-	} else {
-		return false;
-	}
-};
-var $capitalist$elm_octicons$Octicons$lawPath = 'M7,4 C6.17,4 5.5,3.33 5.5,2.5 C5.5,1.67 6.17,1 7,1 C7.83,1 8.5,1.67 8.5,2.5 C8.5,3.33 7.83,4 7,4 L7,4 Z M14,10 C14,11.11 13.11,12 12,12 L11,12 C9.89,12 9,11.11 9,10 L11,6 L10,6 C9.45,6 9,5.55 9,5 L8,5 L8,13 C8.42,13 9,13.45 9,14 L10,14 C10.42,14 11,14.45 11,15 L3,15 C3,14.45 3.58,14 4,14 L5,14 C5,13.45 5.58,13 6,13 L6.03,13 L6,5 L5,5 C5,5.55 4.55,6 4,6 L3,6 L5,10 C5,11.11 4.11,12 3,12 L2,12 C0.89,12 0,11.11 0,10 L2,6 L1,6 L1,5 L4,5 C4,4.45 4.45,4 5,4 L9,4 C9.55,4 10,4.45 10,5 L13,5 L13,6 L12,6 L14,10 L14,10 Z M2.5,7 L1,10 L4,10 L2.5,7 L2.5,7 Z M13,10 L11.5,7 L10,10 L13,10 L13,10 Z';
-var $capitalist$elm_octicons$Octicons$law = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$lawPath, '0 0 14 16', 'law');
 var $author$project$Main$viewRepoPullRequestsPage = F2(
 	function (model, repoName) {
 		var prCards = A2(

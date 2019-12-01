@@ -1375,12 +1375,49 @@ viewReleasePage model sir =
         , Html.div [ HA.class "single-release" ]
             [ ReleaseStatus.view model sir
             ]
-        , viewTabbedCards model
-            [ ( Octicons.inbox octiconOpts, "To Do", sir.openIssues ++ sir.openPRs )
-            , ( Octicons.check octiconOpts, "Done", sir.doneCards )
-            , ( viewLabelByName model "release/documented", "Documented", sir.documentedCards )
-            , ( viewLabelByName model "release/undocumented", "Undocumented", sir.undocumentedCards )
-            , ( viewLabelByName model "release/no-impact", "No Impact", sir.noImpactCards )
+        , Html.div [ HA.class "release-columns" ]
+            [ Html.div [ HA.class "project-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.issueOpened octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text "Open Issues" ]
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map (CardView.viewCard model []) (sir.openPRs ++ sir.openIssues)
+                ]
+            , Html.div [ HA.class "project-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.question octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text "Needs Documentation" ]
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map (CardView.viewCard model []) sir.doneCards
+                ]
+            , Html.div [ HA.class "project-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Html.span [ HA.class "column-name" ]
+                        [ viewLabelByName model "release/documented" ]
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map (CardView.viewCard model []) sir.documentedCards
+                ]
+            , Html.div [ HA.class "project-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Html.span [ HA.class "column-name" ]
+                        [ viewLabelByName model "release/undocumented" ]
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map (CardView.viewCard model []) sir.undocumentedCards
+                ]
+            , Html.div [ HA.class "project-column" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Html.span [ HA.class "column-name" ]
+                        [ viewLabelByName model "release/no-impact" ]
+                    ]
+                , Html.div [ HA.class "cards" ] <|
+                    List.map (CardView.viewCard model []) sir.noImpactCards
+                ]
             ]
         ]
 
@@ -1771,11 +1808,13 @@ viewArchiveDay model { year, month, day } events =
     Html.div [ HA.class "archive-day" ]
         [ Html.span [ HA.class "column-title" ]
             [ Octicons.calendar octiconOpts
-            , viewMonth month
+            , Html.span [HA.class "column-name"]
+              [ viewMonth month
             , Html.text " "
             , Html.text (String.fromInt day)
             , Html.text ", "
             , Html.text (String.fromInt year)
+            ]
             ]
         , events
             |> List.map (viewArchiveEvent model)

@@ -10,13 +10,11 @@ module Label exposing
 
 import Card exposing (Card)
 import Dict
-import Effects
 import GitHub
 import Html exposing (Html)
 import Html.Attributes as HA
 import Log
 import Model exposing (Model, Msg(..))
-import OrderedSet
 import ParseInt
 import Random
 import Regex exposing (Regex)

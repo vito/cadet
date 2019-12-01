@@ -45,31 +45,22 @@ viewCard model controls card =
             , ( "paused", Card.isPaused card )
             , ( "highlighted", model.highlightedCard == Just card.id )
             , ( Activity.class model.currentTime card.updatedAt, Card.isPR card )
-            , ( "last-activity-is-me"
-              , case model.me of
-                    Just { user } ->
-                        lastActivityIsByUser model user.login card
-
-                    Nothing ->
-                        False
-              )
             ]
         , HE.onClick (SelectCard card.id)
         , HE.onMouseOver (HighlightNode card.id)
         , HE.onMouseOut UnhighlightNode
         ]
-        [ Html.div [ HA.class "card-icons" ] <|
-            List.concat
-                [ [ viewCardIcon card ]
-                , cardExternalIcons card
-                , [ pauseIcon card ]
-                , List.map
-                    (\{ avatar } ->
-                        Html.img [ HA.class "status-actor", HA.src avatar ] []
-                    )
-                    card.assignees
-                , prIcons model card
-                ]
+        [ Html.div [ HA.class "card-squares left vertical" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                List.concat
+                    [ [ viewCardIcon card ]
+                    , List.map
+                        (\{ avatar } ->
+                            Html.img [ HA.class "card-actor", HA.src avatar ] []
+                        )
+                        card.assignees
+                    , List.map (searchableLabel model) card.labels
+                    ]
         , Html.div [ HA.class "card-info" ]
             [ Html.span [ HA.class "card-title", HA.draggable "false" ] <|
                 [ Html.a
@@ -81,20 +72,27 @@ viewCard model controls card =
                     ]
                 ]
             , viewCardMeta card
-            , viewCardSquares model card
+            , viewCardActivity model card
             ]
-        , Html.div [ HA.class "card-controls" ] <|
-            Html.span
-                [ HE.onClick
-                    (if Card.isPR card then
-                        RefreshPullRequest card.id
+        , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                List.concat
+                    [ [ Html.span
+                            [ HE.onClick
+                                (if Card.isPR card then
+                                    RefreshPullRequest card.id
 
-                     else
-                        RefreshIssue card.id
-                    )
-                ]
-                [ Octicons.sync Octicons.defaultOptions ]
-                :: controls
+                                 else
+                                    RefreshIssue card.id
+                                )
+                            ]
+                            [ Octicons.sync Octicons.defaultOptions ]
+                      ]
+                    , cardExternalIcons card
+                    , pauseIcon card
+                    , controls
+                    , List.map (viewSuggestedLabel model card) model.suggestedLabels
+                    ]
         ]
 
 
@@ -336,10 +334,10 @@ viewNoteCard model project col card controls text =
 viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
 viewProjectCard model controls project =
     Html.div [ HA.class "card project", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-icons" ]
-            [ Octicons.project Octicons.defaultOptions
-            , projectExternalIcon project
-            ]
+        [ Html.div [ HA.class "card-squares left vertical" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
+                [ Octicons.project Octicons.defaultOptions
+                ]
         , Html.div [ HA.class "card-info" ]
             [ Html.span [ HA.class "card-title", HA.draggable "false" ]
                 [ Html.a [ HA.href ("/projects/" ++ project.id) ]
@@ -352,7 +350,9 @@ viewProjectCard model controls project =
                 Markdown.toHtml [ HA.class "project-body" ] project.body
             , viewProjectBar model project
             ]
-        , Html.div [ HA.class "card-controls" ] controls
+        , Html.div [ HA.class "card-squares left vertical card-controls" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
+                (controls ++ [ projectExternalIcon project ])
         ]
 
 
@@ -414,38 +414,39 @@ viewCardMeta card =
         ]
 
 
-viewCardSquares : Model -> Card -> Html Msg
-viewCardSquares model card =
-    Html.div [ HA.class "card-squares" ]
-        [ Html.div [ HA.class "card-labels" ] <|
-            List.map (searchableLabel model) card.labels
-                ++ List.map (viewSuggestedLabel model card) model.suggestedLabels
-        , Html.div [ HA.class "card-actors" ] <|
-            List.map (viewEventActor model) (recentEvents model card)
-        ]
+viewCardActivity : Model -> Card -> Html Msg
+viewCardActivity model card =
+    Html.div [ HA.class "card-squares horizontal" ] <|
+        List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+            List.concat
+                [ prIcons model card
+                , List.map (viewEventActor model) (recentEvents model card)
+                ]
 
 
-pauseIcon : Card -> Html Msg
+pauseIcon : Card -> List (Html Msg)
 pauseIcon card =
     case ( Card.isInFlight card, Card.isPaused card ) of
         ( _, True ) ->
-            Html.span
-                [ HA.class "pause-toggle"
+            [ Html.span
+                [ HA.class "pause-toggle paused"
                 , HE.onClick (UnlabelCard card "paused")
                 ]
                 [ Octicons.bookmark Octicons.defaultOptions
                 ]
+            ]
 
         ( True, False ) ->
-            Html.span
-                [ HA.class "pause-toggle paused"
+            [ Html.span
+                [ HA.class "pause-toggle"
                 , HE.onClick (LabelCard card "paused")
                 ]
                 [ Octicons.bookmark Octicons.defaultOptions
                 ]
+            ]
 
         _ ->
-            Html.text ""
+            []
 
 
 viewCardIcon : Card -> Html Msg
@@ -528,12 +529,13 @@ prIcons model card =
                 statusCheck =
                     case Maybe.map .status pr.lastCommit of
                         Just (Just { contexts }) ->
-                            Html.span [ HA.class "status-icon" ]
+                            [ Html.span [ HA.class "status-icon" ]
                                 [ summarizeContexts contexts
                                 ]
+                            ]
 
                         _ ->
-                            Html.text ""
+                            []
 
                 reviews =
                     Maybe.withDefault [] <| Dict.get card.id model.prReviewers
@@ -559,26 +561,28 @@ prIcons model card =
                                         GitHub.PullRequestReviewStateDismissed ->
                                             "dismissed"
                             in
-                            Html.img [ HA.class ("status-actor " ++ reviewClass), HA.src r.author.avatar ] []
+                            Html.img [ HA.class ("card-actor " ++ reviewClass), HA.src r.author.avatar ] []
                         )
                         reviews
             in
-            [ Octicons.gitMerge
-                { octiconOpts
-                    | color =
-                        case pr.mergeable of
-                            GitHub.MergeableStateMergeable ->
-                                Colors.green
+            List.concat
+                [ [ Octicons.gitMerge
+                        { octiconOpts
+                            | color =
+                                case pr.mergeable of
+                                    GitHub.MergeableStateMergeable ->
+                                        Colors.green
 
-                            GitHub.MergeableStateConflicting ->
-                                Colors.red
+                                    GitHub.MergeableStateConflicting ->
+                                        Colors.red
 
-                            GitHub.MergeableStateUnknown ->
-                                Colors.yellow
-                }
-            , statusCheck
-            ]
-                ++ reviewStates
+                                    GitHub.MergeableStateUnknown ->
+                                        Colors.yellow
+                        }
+                  ]
+                , statusCheck
+                , reviewStates
+                ]
 
 
 recentEvents : Model -> Card -> List Backend.CardEvent
@@ -615,6 +619,7 @@ viewSuggestedLabel model card name =
         Just { color } ->
             Html.span
                 ([ HA.class "label suggested"
+                 , HA.classList [ ( "has", has ) ]
                  , HE.onClick <|
                     if has then
                         UnlabelCard card name
@@ -624,13 +629,13 @@ viewSuggestedLabel model card name =
                  ]
                     ++ Label.colorStyles model color
                 )
-                [ if has then
-                    Octicons.dash { octiconOpts | color = Colors.white }
+                [ Html.span [ HA.class "label-text" ]
+                    [ Html.text name ]
+                , if has then
+                    Octicons.x octiconOpts
 
                   else
-                    Octicons.plus { octiconOpts | color = Colors.white }
-                , Html.span [ HA.class "label-text" ]
-                    [ Html.text name ]
+                    Octicons.plus octiconOpts
                 ]
 
 

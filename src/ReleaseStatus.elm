@@ -316,7 +316,7 @@ view model sir =
                                 , HA.href rel.url
                                 , HA.target "_blank"
                                 ]
-                                [ Html.text (Maybe.withDefault "last release" rel.name) ]
+                                [ Html.text (releaseName rel) ]
                             , Html.text " was "
                             , Html.text (DateFormat.Relative.relativeTime model.currentTime rel.createdAt)
                             ]
@@ -347,15 +347,31 @@ view model sir =
                         "in milestone"
                 ]
             , ProgressBar.view
-                [ ( Colors.green, List.length sir.documentedCards )
-                , ( Colors.green, List.length sir.undocumentedCards )
-                , ( Colors.green, List.length sir.noImpactCards )
+                [ ( labelColorByName model "release/no-impact", List.length sir.noImpactCards )
+                , ( labelColorByName model "release/undocumented", List.length sir.undocumentedCards )
+                , ( labelColorByName model "release/documented", List.length sir.documentedCards )
                 , ( Colors.purple, List.length sir.doneCards )
                 , ( Colors.gray200, List.length sir.openPRs )
                 , ( Colors.gray200, List.length sir.openIssues )
                 ]
             ]
         ]
+
+
+labelColorByName : Model -> String -> String
+labelColorByName model name =
+    let
+        mlabel =
+            Dict.get name model.labelToRepoToId
+                |> Maybe.andThen (List.head << Dict.values)
+                |> Maybe.andThen (\id -> Dict.get id model.allLabels)
+    in
+    case mlabel of
+        Just label ->
+            "#" ++ label.color
+
+        Nothing ->
+            "#ff00ff"
 
 
 octiconOpts : Octicons.Options
@@ -388,3 +404,16 @@ dueDate =
     , DateFormat.text " "
     , DateFormat.yearNumber
     ]
+
+
+releaseName : GitHub.Release -> String
+releaseName rel =
+    case Maybe.withDefault "" rel.name of
+        -- some releases seem to have an empty (but non-Nothing) name
+        "" ->
+            rel.tag
+                |> Maybe.map .name
+                |> Maybe.withDefault "release"
+
+        name ->
+            name

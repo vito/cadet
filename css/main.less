@@ -111,6 +111,8 @@ h4 {
   flex-direction: row;
   position: relative;
 
+  padding: .5em;
+
   box-shadow: 0 0.1em 0.1em fade(@black, 10%);
 
   &:hover {
@@ -174,6 +176,7 @@ h4 {
   color: @gray-900;
   display: flex;
   flex-direction: row;
+  word-break: break-word;
 }
 
 .title-link {
@@ -186,12 +189,12 @@ h4 {
 
 .card-info {
   flex-grow: 1;
-  padding: 1em;
-  padding-left: 0.8em;
 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
+  margin: .4em;
 
   .card-meta {
     margin-top: 0.4em;
@@ -213,60 +216,55 @@ h4 {
   flex-grow: 1;
 }
 
-.card-icons, .card-controls {
+.card-squares {
   display: flex;
-  flex-direction: column;
-  padding: 1em;
 
-  > * {
-    margin-bottom: 0.8em;
+  &.horizontal {
+    flex-direction: row;
+    margin: 0 -.4em;
   }
 
-  > :last-child {
-    margin-bottom: 0;
+  &.vertical {
+    flex-direction: column;
+  }
+
+  .card-square {
+    width: 1.8em;
+    height: 1.8em;
+    margin: .4em;
+    align-self: center;
+    position: relative;
+  }
+
+  .label:hover {
+    position: absolute;
+  }
+
+  &.left {
+    .label:hover {
+      left: 0;
+    }
+  }
+
+  &.right {
+    .label:hover {
+      right: 0;
+    }
   }
 
   .octicon {
     width: 1.6em;
     height: 1.6em;
+    margin: 0.1em; // total to 18px
 
+    // why?
     &.project {
       width: 1.5em;
     }
   }
 }
 
-.card-icons {
-  padding-right: 0;
-
-  .status-actor {
-    width: 1.6em;
-    height: 1.6em;
-    border-radius: 0.3em;
-
-    &.pending { border: 0.1em solid @yellow; }
-    &.success { border: 0.1em solid @green; }
-    &.failure { border: 0.1em solid @red; }
-    &.expected { border: 0.1em solid @purple; }
-    &.error { border: 0.1em solid @orange; }
-  }
-
-  .pause-toggle {
-    cursor: pointer;
-
-    * {
-      fill: @gray-300;
-    }
-
-    &.paused *, &:hover * {
-      fill: @gray-600;
-    }
-  }
-}
-
 .card-controls {
-  padding-left: 0;
-
   .octicon {
     cursor: pointer;
   }
@@ -290,13 +288,14 @@ h4 {
       fill: @gray-900;
     }
   }
-}
 
-.card-actors {
-  height: 1.8em;
-  position: absolute;
-  bottom: 1em;
-  right: 1em;
+  .pause-toggle {
+    cursor: pointer;
+
+    &.paused *, &:hover * {
+      fill: @gray-900;
+    }
+  }
 }
 
 .card-actor {
@@ -304,8 +303,7 @@ h4 {
   display: inline-block;
   width: 1.8em;
   height: 1.8em;
-  box-sizing: content-box;
-  margin-left: 0.4em;
+  box-sizing: border-box;
   background-color: #fff;
   border-radius: 0.3em;
 
@@ -324,6 +322,12 @@ h4 {
   &.active-long-ago {
     opacity: 0.25;
   }
+
+  &.pending { border: 0.1em solid @yellow; }
+  &.success { border: 0.1em solid @green; }
+  &.failure { border: 0.1em solid @red; }
+  &.expected { border: 0.1em solid @purple; }
+  &.error { border: 0.1em solid @orange; }
 }
 
 .main-sidebar {
@@ -499,20 +503,20 @@ h4 {
 
 .progress-bar {
   width: 100%;
-  height: 10px;
-  margin-top: 4px;
+  height: 1em;
+  margin-top: .4em;
   display: flex;
   flex-direction: row;
 
   .segment {
     &:first-child {
-      border-top-left-radius: 3px;
-      border-bottom-left-radius: 3px;
+      border-top-left-radius: .3em;
+      border-bottom-left-radius: .3em;
     }
 
     &:last-child {
-      border-top-right-radius: 3px;
-      border-bottom-right-radius: 3px;
+      border-top-right-radius: .3em;
+      border-bottom-right-radius: .3em;
     }
   }
 }
@@ -521,27 +525,20 @@ h4 {
   vertical-align: middle;
 }
 
-.card-squares {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-top: 4px;
-  height: 18px;
-}
-
 .label {
   font-size: 12px;
   display: inline-block;
-  padding: 3px 4px;
   line-height: 1;
   border-radius: 2px;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
   vertical-align: text-top;
-  margin-right: 4px;
   white-space: nowrap;
   cursor: pointer;
 
   .label-text {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 3px 4px;
     font-weight: 600;
   }
 }
@@ -552,6 +549,10 @@ h4 {
   .octicon * {
     fill: @white;
   }
+
+  &:hover .octicon * {
+    fill: @white;
+  }
 }
 
 .light-label {
@@ -560,6 +561,10 @@ h4 {
   color: rgba(0, 0, 0, 0.8);
 
   .octicon * {
+    fill: rgba(0, 0, 0, 0.8);
+  }
+
+  &:hover .octicon * {
     fill: rgba(0, 0, 0, 0.8);
   }
 }
@@ -576,24 +581,25 @@ h4 {
     width: auto;
 
     .label-text {
-      display: initial;
-    }
-
-    &.suggested .octicon {
-      margin-right: 3px;
+      display: inline-block;
     }
   }
 
-  &.suggested .octicon {
-    width: 11px;
-    height: 11px;
+  &.suggested {
+    opacity: 0.2;
 
-    &.octicon-plus {
-      margin-left: 0.5px;
+    &.has {
+      opacity: 1;
     }
 
-    &.octicon-dash {
-      margin-left: 2px;
+    .octicon {
+      width: 1em;
+      height: 1em;
+      margin: .25em;
+    }
+
+    &:hover .octicon {
+      margin-left: -.1em;
     }
   }
 }
@@ -1387,16 +1393,6 @@ svg {
   margin-left: 0;
   margin-right: 0;
 
-  .card-actor:last-child {
-    animation: wiggle 0.5s infinite;
-  }
-
-  &.last-activity-is-me {
-    .card-actor:last-child {
-      animation: none;
-    }
-  }
-
   &.active-today { opacity: 1; }
   &.active-yesterday { opacity: 1; }
   &.active-this-week { opacity: 0.75; }
@@ -1423,11 +1419,13 @@ svg {
   font-size: 16px;
   user-select: none;
   border-bottom: 1px solid @gray-light;
+  height: 40px;
 
   .octicon {
     width: 20px;
     height: 20px;
-    margin: 10px;
+
+    margin-left: 10px;
 
     * {
       fill: @gray-dark;
@@ -1436,7 +1434,7 @@ svg {
 
   .column-name {
     flex-grow: 1;
-    margin: 10px 0;
+    margin: 0 10px;
   }
 
   .column-controls {
@@ -1998,5 +1996,23 @@ a.column-title:hover, .page-header a:hover {
     font-size: 15px;
     margin-bottom: 1.5 * @card-margin;
     width: auto;
+  }
+}
+
+.release-columns {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin: 0 -10px;
+
+  .project-column { // lol
+    flex-grow: 1;
+    flex-basis: 300px;
+    margin: 0 10px;
+
+    .card {
+      width: auto;
+      margin: 10px 0 10px;
+    }
   }
 }
