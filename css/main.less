@@ -197,7 +197,7 @@ h4 {
   margin: .4em;
 
   .card-meta {
-    margin: .4em;
+    margin: .4em 0;
     font-size: 1.2em;
     color: @gray-600;
     line-height: 1.4;
@@ -527,19 +527,21 @@ h4 {
 }
 
 .label {
-  font-size: 12px;
-  display: inline-block;
-  line-height: 1;
-  border-radius: 2px;
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+
+  border-radius: .2em;
   box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
-  vertical-align: text-top;
   white-space: nowrap;
   cursor: pointer;
 
+  height: 1.6em;
+
   .label-text {
+    font-size: 1.2em;
     display: inline-block;
-    vertical-align: middle;
-    padding: 3px 4px;
+    padding: 0 .4em;
     font-weight: 600;
   }
 }
@@ -571,8 +573,8 @@ h4 {
 }
 
 .card .label {
-  height: 18px;
-  width: 18px;
+  height: 1.8em;
+  width: 1.8em;
 
   .label-text {
     display: none;
@@ -594,9 +596,9 @@ h4 {
     }
 
     .octicon {
-      width: 1em;
-      height: 1em;
-      margin: .25em;
+      width: 1.2em;
+      height: 1.2em;
+      margin: 0 .3em;
     }
 
     &:hover .octicon {
@@ -1422,6 +1424,10 @@ svg {
   border-bottom: 1px solid @gray-light;
   height: 40px;
 
+  .label-text {
+    font-size: 16px;
+  }
+
   .octicon {
     width: 20px;
     height: 20px;
@@ -1680,6 +1686,7 @@ a.column-title:hover, .page-header a:hover {
 
     .label-text {
       display: none;
+      font-size: 12px;
     }
 
     @media(min-width: @wide-min-width) {
