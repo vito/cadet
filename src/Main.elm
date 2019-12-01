@@ -1794,13 +1794,13 @@ viewArchiveDay model { year, month, day } events =
     Html.div [ HA.class "archive-day" ]
         [ Html.span [ HA.class "column-title" ]
             [ Octicons.calendar octiconOpts
-            , Html.span [HA.class "column-name"]
-              [ viewMonth month
-            , Html.text " "
-            , Html.text (String.fromInt day)
-            , Html.text ", "
-            , Html.text (String.fromInt year)
-            ]
+            , Html.span [ HA.class "column-name" ]
+                [ viewMonth month
+                , Html.text " "
+                , Html.text (String.fromInt day)
+                , Html.text ", "
+                , Html.text (String.fromInt year)
+                ]
             ]
         , events
             |> List.map (viewArchiveEvent model)
