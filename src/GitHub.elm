@@ -36,44 +36,7 @@ module GitHub exposing
     , StatusState(..)
     , TimelineEvent(..)
     , User
-    , addContentCard
-    , addContentCardAfter
-    , addIssueLabels
-    , addNoteCard
-    , addNoteCardAfter
-    , addPullRequestLabels
-    , closeIssue
-    , closeRepoMilestone
-    , convertCardToIssue
-    , createRepoLabel
-    , createRepoMilestone
-    , decodeCommit
-    , decodeIssue
-    , decodeLabel
-    , decodeMilestone
-    , decodeProject
-    , decodeProjectColumnCard
-    , decodeProjectColumnPurpose
-    , decodePullRequest
-    , decodePullRequestReview
-    , decodeRelease
-    , decodeRepo
-    , decodeUser
-    , deleteProjectCard
-    , deleteRepoLabel
-    , deleteRepoMilestone
-    , encodeCommit
-    , encodeIssue
-    , encodeLabel
-    , encodeMilestone
-    , encodeProject
-    , encodeProjectColumnCard
-    , encodeProjectColumnPurpose
-    , encodePullRequest
-    , encodePullRequestReview
-    , encodeRelease
-    , encodeRepo
-    , encodeUser
+
     , fetchIssue
     , fetchOrgProject
     , fetchOrgProjects
@@ -94,11 +57,22 @@ module GitHub exposing
     , fetchRepoRefs
     , fetchRepoReleases
     , fetchTimeline
-    , issueScore
-    , labelEq
+
+    , addContentCard
+    , addContentCardAfter
+    , addIssueLabels
+    , addNoteCard
+    , addNoteCardAfter
+    , addPullRequestLabels
+    , closeIssue
+    , closeRepoMilestone
+    , convertCardToIssue
+    , createRepoLabel
+    , createRepoMilestone
+    , deleteProjectCard
+    , deleteRepoLabel
+    , deleteRepoMilestone
     , moveCardAfter
-    , pullRequestScore
-    , reactionScore
     , removeIssueLabel
     , removePullRequestLabel
     , reopenIssue
@@ -107,13 +81,42 @@ module GitHub exposing
     , setPullRequestMilestone
     , updateCardNote
     , updateRepoLabel
+
+    , encodeCommit
+    , encodeIssue
+    , encodeLabel
+    , encodeMilestone
+    , encodeProject
+    , encodeProjectColumnCard
+    , encodeProjectColumnPurpose
+    , encodePullRequest
+    , encodePullRequestReview
+    , encodeRelease
+    , encodeRepo
+    , encodeUser
+
+    , decodeCommit
+    , decodeIssue
+    , decodeLabel
+    , decodeMilestone
+    , decodeProject
+    , decodeProjectColumnCard
+    , decodeProjectColumnPurpose
+    , decodePullRequest
+    , decodePullRequestReview
+    , decodeRelease
+    , decodeRepo
+    , decodeUser
+
+    , issueScore
+    , pullRequestScore
+    , reactionScore
+
+    , labelEq
     )
 
 import Dict
-import GraphQL.Client.Http as GH
-import GraphQL.Request.Builder as GB
-import GraphQL.Request.Builder.Arg as GA
-import GraphQL.Request.Builder.Variable as GV
+import Graphql.Http as GH
 import Http
 import HttpBuilder
 import Iso8601
@@ -125,6 +128,7 @@ import Log
 import Maybe.Extra as ME
 import Task exposing (Task)
 import Time
+import GitHub.Query as Query
 
 
 type alias Token =
@@ -505,9 +509,11 @@ fetchProjectColumnCards : Token -> IDSelector -> Task Error (List ProjectColumnC
 fetchProjectColumnCards token col =
     fetchPaged cardsQuery token { selector = col, after = Nothing }
 
+repoSelection : SelectionSet Repo GitHub.Interface.RepositoryNode
 
 fetchRepo : Token -> RepoSelector -> Task Error Repo
 fetchRepo token repo =
+  Query.repository repo repoSelection
     repoQuery
         |> GB.request repo
         |> GH.customSendQuery (authedOptions token)
@@ -1151,26 +1157,6 @@ repoObject =
         |> GB.with (GB.field "owner" [] (GB.extract (GB.field "login" [] GB.string)))
         |> GB.with (GB.field "name" [] GB.string)
         |> GB.with (GB.field "isArchived" [] GB.bool)
-
-
-repoQuery : GB.Document GB.Query Repo RepoSelector
-repoQuery =
-    let
-        ownerVar =
-            GV.required "owner" .owner GV.string
-
-        nameVar =
-            GV.required "name" .name GV.string
-
-        queryRoot =
-            GB.extract <|
-                GB.field "repository"
-                    [ ( "owner", GA.variable ownerVar )
-                    , ( "name", GA.variable nameVar )
-                    ]
-                    repoObject
-    in
-    GB.queryDocument queryRoot
 
 
 reposQuery : GB.Document GB.Query (PagedResult Repo) (PagedSelector OrgSelector)
