@@ -3214,21 +3214,27 @@ var $elm$core$Basics$always = F2(
 	function (a, _v0) {
 		return a;
 	});
+var $elm$core$Basics$ge = _Utils_ge;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
-var $author$project$Worker$backOff = F2(
-	function (model, cmd) {
-		return _Utils_Tuple2(
-			_Utils_update(
-				model,
-				{
-					failedQueue: A2(
-						$elm$core$List$cons,
-						cmd,
-						_Utils_ap(model.loadQueue, model.failedQueue)),
-					loadQueue: _List_Nil
-				}),
-			$elm$core$Platform$Cmd$none);
+var $author$project$Worker$backOff = F3(
+	function (model, err, cmd) {
+		if ((err.$ === 'HttpError') && (err.a.$ === 'BadStatus')) {
+			var status = err.a.a.status;
+			return ((status.code === 403) || (status.code >= 500)) ? _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						failedQueue: A2(
+							$elm$core$List$cons,
+							cmd,
+							_Utils_ap(model.loadQueue, model.failedQueue)),
+						loadQueue: _List_Nil
+					}),
+				$elm$core$Platform$Cmd$none) : _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		} else {
+			return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+		}
 	});
 var $elm$core$Basics$composeL = F3(
 	function (g, f, x) {
@@ -4314,7 +4320,6 @@ var $ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema = function (extrema_) {
 			minY: A2($elm$core$Basics$min, extrema_.minY, extrema_.maxY)
 		});
 };
-var $elm$core$Basics$ge = _Utils_ge;
 var $ianmackenzie$elm_geometry$BoundingBox2d$hull = F2(
 	function (firstBox, secondBox) {
 		return $ianmackenzie$elm_geometry$BoundingBox2d$fromExtrema(
@@ -12218,9 +12223,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch repos',
 						err,
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							$author$project$Worker$fetchRepos(model)));
 				}
 			case 'RepositoryFetched':
@@ -12328,9 +12334,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch projects',
 						err,
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A3($author$project$Worker$fetchRepoProjects, model, repo, nextMsg)));
 				}
 			case 'FetchCards':
@@ -12379,9 +12386,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch cards',
 						_Utils_Tuple2(colId, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchCards, model, colId)));
 				}
 			case 'IssuesPageFetched':
@@ -12435,9 +12443,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch issues',
 						_Utils_Tuple2(psel, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchIssuesPage, model, psel)));
 				}
 			case 'IssueFetched':
@@ -12534,9 +12543,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch prs',
 						_Utils_Tuple2(psel, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchPullRequestsPage, model, psel)));
 				}
 			case 'FetchRepoLabels':
@@ -12559,9 +12569,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch labels',
 						_Utils_Tuple2(repo.url, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchRepoLabels, model, repo)));
 				} else {
 					var repo = msg.a;
@@ -12597,9 +12608,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch milestones',
 						_Utils_Tuple2(repo.url, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchRepoMilestones, model, repo)));
 				} else {
 					var repo = msg.a;
@@ -12635,9 +12647,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch releases',
 						_Utils_Tuple2(repo.url, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchRepoReleases, model, repo)));
 				} else {
 					var repo = msg.a;
@@ -12688,9 +12701,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch refs',
 						_Utils_Tuple2(repo.name, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A3($author$project$Worker$fetchRepoReleaseRefs, model, repo, releases)));
 				} else {
 					var repo = msg.a;
@@ -12745,9 +12759,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch commits',
 						_Utils_Tuple2(psel, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A5($author$project$Worker$fetchRepoCommits, model, repo, psel, releases, commitsSoFar)));
 				} else {
 					var repo = msg.a;
@@ -12909,9 +12924,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch timeline',
 						_Utils_Tuple2(id, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchIssueTimeline, model, id)));
 				}
 			default:
@@ -13013,9 +13029,10 @@ var $author$project$Worker$update = F2(
 						$author$project$Log$debug,
 						'failed to fetch timeline and reviews',
 						_Utils_Tuple2(id, err),
-						A2(
+						A3(
 							$author$project$Worker$backOff,
 							model,
+							err,
 							A2($author$project$Worker$fetchPRTimelineAndReviews, model, id)));
 				}
 		}

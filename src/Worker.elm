@@ -4,7 +4,9 @@ import Backend
 import Dict exposing (Dict)
 import ForceGraph exposing (ForceGraph)
 import GitHub
+import GraphQL.Client.Http as GH
 import Hash
+import Http
 import IntDict
 import Json.Decode as JD
 import Json.Decode.Extra exposing (andMap)
@@ -327,7 +329,7 @@ update msg model =
 
         RepositoriesFetched (Err err) ->
             Log.debug "failed to fetch repos" err <|
-                backOff model (fetchRepos model)
+                backOff model err (fetchRepos model)
 
         RepositoryFetched nextMsg (Ok repo) ->
             Log.debug "repository fetched" repo.name <|
@@ -363,7 +365,7 @@ update msg model =
 
         RepoProjectsFetched repo nextMsg (Err err) ->
             Log.debug "failed to fetch projects" err <|
-                backOff model (fetchRepoProjects model repo nextMsg)
+                backOff model err (fetchRepoProjects model repo nextMsg)
 
         FetchCards projects ->
             ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue }, Cmd.none )
@@ -376,7 +378,7 @@ update msg model =
 
         CardsFetched colId (Err err) ->
             Log.debug "failed to fetch cards" ( colId, err ) <|
-                backOff model (fetchCards model colId)
+                backOff model err (fetchCards model colId)
 
         IssuesPageFetched psel (Ok ( issues, pageInfo )) ->
             let
@@ -399,7 +401,7 @@ update msg model =
 
         IssuesPageFetched psel (Err err) ->
             Log.debug "failed to fetch issues" ( psel, err ) <|
-                backOff model (fetchIssuesPage model psel)
+                backOff model err (fetchIssuesPage model psel)
 
         IssueFetched (Ok issue) ->
             Log.debug "issue fetched" issue.url <|
@@ -446,14 +448,14 @@ update msg model =
 
         PullRequestsPageFetched psel (Err err) ->
             Log.debug "failed to fetch prs" ( psel, err ) <|
-                backOff model (fetchPullRequestsPage model psel)
+                backOff model err (fetchPullRequestsPage model psel)
 
         FetchRepoLabels repo ->
             ( { model | loadQueue = fetchRepoLabels model repo :: model.loadQueue }, Cmd.none )
 
         RepoLabelsFetched repo (Err err) ->
             Log.debug "failed to fetch labels" ( repo.url, err ) <|
-                backOff model (fetchRepoLabels model repo)
+                backOff model err (fetchRepoLabels model repo)
 
         RepoLabelsFetched repo (Ok labels) ->
             Log.debug "labels fetched for" repo.url <|
@@ -466,7 +468,7 @@ update msg model =
 
         RepoMilestonesFetched repo (Err err) ->
             Log.debug "failed to fetch milestones" ( repo.url, err ) <|
-                backOff model (fetchRepoMilestones model repo)
+                backOff model err (fetchRepoMilestones model repo)
 
         RepoMilestonesFetched repo (Ok milestones) ->
             Log.debug "milestones fetched for" repo.url <|
@@ -479,7 +481,7 @@ update msg model =
 
         RepoReleasesFetched repo (Err err) ->
             Log.debug "failed to fetch releases" ( repo.url, err ) <|
-                backOff model (fetchRepoReleases model repo)
+                backOff model err (fetchRepoReleases model repo)
 
         RepoReleasesFetched repo (Ok releases) ->
             Log.debug "releases fetched for" repo.url <|
@@ -509,9 +511,10 @@ update msg model =
 
         RepoRefsFetched repo releases (Err err) ->
             Log.debug "failed to fetch refs" ( repo.name, err ) <|
-                backOff model (fetchRepoReleaseRefs model repo releases)
+                backOff model err (fetchRepoReleaseRefs model repo releases)
 
         RepoRefsFetched repo releases (Ok refs) ->
+            -- TODO: sync refs so that deleted branches are removed
             Log.debug "refs fetched for" repo.url <|
                 ( model
                 , Cmd.batch <|
@@ -537,7 +540,7 @@ update msg model =
 
         RepoCommitsPageFetched repo psel releases commitsSoFar (Err err) ->
             Log.debug "failed to fetch commits" ( psel, err ) <|
-                backOff model (fetchRepoCommits model repo psel releases commitsSoFar)
+                backOff model err (fetchRepoCommits model repo psel releases commitsSoFar)
 
         RepoCommitsPageFetched repo psel releases commitsSoFar (Ok ( commits, pageInfo )) ->
             Log.debug "commits fetched for" psel <|
@@ -631,7 +634,7 @@ update msg model =
 
         IssueTimelineFetched id (Err err) ->
             Log.debug "failed to fetch timeline" ( id, err ) <|
-                backOff model (fetchIssueTimeline model id)
+                backOff model err (fetchIssueTimeline model id)
 
         PullRequestTimelineAndReviewsFetched id (Ok ( timeline, reviews )) ->
             let
@@ -712,17 +715,26 @@ update msg model =
 
         PullRequestTimelineAndReviewsFetched id (Err err) ->
             Log.debug "failed to fetch timeline and reviews" ( id, err ) <|
-                backOff model (fetchPRTimelineAndReviews model id)
+                backOff model err (fetchPRTimelineAndReviews model id)
 
 
-backOff : Model -> Cmd Msg -> ( Model, Cmd Msg )
-backOff model cmd =
-    ( { model
-        | failedQueue = cmd :: model.loadQueue ++ model.failedQueue
-        , loadQueue = []
-      }
-    , Cmd.none
-    )
+backOff : Model -> GH.Error -> Cmd Msg -> ( Model, Cmd Msg )
+backOff model err cmd =
+    case err of
+        GH.HttpError (Http.BadStatus { status }) ->
+            if status.code == 403 || status.code >= 500 then
+                ( { model
+                    | failedQueue = cmd :: model.loadQueue ++ model.failedQueue
+                    , loadQueue = []
+                  }
+                , Cmd.none
+                )
+
+            else
+                ( model, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 fetchRepos : Model -> Cmd Msg
