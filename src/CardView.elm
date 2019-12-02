@@ -188,20 +188,6 @@ unarchiveCardControl archiveId =
         ]
 
 
-lastActivityIsByUser : Model -> String -> Card -> Bool
-lastActivityIsByUser model login card =
-    lastActiveUser model card
-        |> Maybe.map ((==) login << .login)
-        |> Maybe.withDefault False
-
-
-lastActiveUser : Model -> Card -> Maybe GitHub.User
-lastActiveUser model card =
-    Dict.get card.id model.cardEvents
-        |> Maybe.andThen List.head
-        |> Maybe.andThen .user
-
-
 deleteCardControl : Model -> GitHub.ID -> GitHub.ID -> Html Msg
 deleteCardControl model selfId deleteId =
     if Set.member selfId model.deletingCards then
@@ -416,12 +402,14 @@ viewCardMeta card =
 
 viewCardActivity : Model -> Card -> Html Msg
 viewCardActivity model card =
-    Html.div [ HA.class "card-squares horizontal" ] <|
-        List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-            List.concat
-                [ prIcons model card
-                , List.map (viewEventActor model) (recentEvents model card)
-                ]
+    Html.div [ HA.class "card-activity" ]
+        [ Html.div [ HA.class "card-squares horizontal avatar-stack" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                List.map (viewEventActor model) (recentEvents model card)
+        , Html.div [ HA.class "card-squares horizontal" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                prIcons model card
+        ]
 
 
 pauseIcon : Card -> List (Html Msg)
@@ -561,12 +549,14 @@ prIcons model card =
                                         GitHub.PullRequestReviewStateDismissed ->
                                             "dismissed"
                             in
-                            Html.img [ HA.class ("card-actor " ++ reviewClass), HA.src r.author.avatar ] []
+                            Html.img [ HA.class ("card-actor " ++ Activity.class model.currentTime r.createdAt ++ " " ++ reviewClass), HA.src r.author.avatar ] []
                         )
                         reviews
             in
             List.concat
-                [ [ Octicons.gitMerge
+                [ reviewStates
+                , statusCheck
+                , [ Octicons.gitMerge
                         { octiconOpts
                             | color =
                                 case pr.mergeable of
@@ -580,16 +570,28 @@ prIcons model card =
                                         Colors.yellow
                         }
                   ]
-                , statusCheck
-                , reviewStates
                 ]
 
 
 recentEvents : Model -> Card -> List Backend.CardEvent
 recentEvents model card =
+    let
+        dropDupes e es =
+            case es of
+                [] ->
+                    [ e ]
+
+                { avatar } :: rest ->
+                    if avatar == e.avatar then
+                        e :: rest
+
+                    else
+                        e :: es
+    in
     Dict.get card.id model.cardEvents
         |> Maybe.withDefault []
-        |> List.take 3
+        |> List.foldr dropDupes []
+        |> List.take 5
         |> List.reverse
 
 
@@ -640,18 +642,20 @@ viewSuggestedLabel model card name =
 
 
 viewEventActor : Model -> Backend.CardEvent -> Html Msg
-viewEventActor model { createdAt, avatar } =
-    Html.img
-        [ HA.class ("card-actor " ++ Activity.class model.currentTime createdAt)
-        , HA.src <|
-            if String.contains "?" avatar then
-                avatar ++ "&s=88"
+viewEventActor model { createdAt, avatar, url } =
+    Html.a [ HA.href url, HA.target "_blank" ]
+        [ Html.img
+            [ HA.class ("card-actor " ++ Activity.class model.currentTime createdAt)
+            , HA.src <|
+                if String.contains "?" avatar then
+                    avatar ++ "&s=88"
 
-            else
-                avatar ++ "?s=88"
-        , HA.draggable "false"
+                else
+                    avatar ++ "?s=88"
+            , HA.draggable "false"
+            ]
+            []
         ]
-        []
 
 
 searchableLabel : Model -> GitHub.ID -> Html Msg

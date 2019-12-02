@@ -8,6 +8,12 @@
 
 @wide-min-width: 950px;
 
+@active-today: 1;
+@active-yesterday: 1;
+@active-this-week: 0.75;
+@active-this-month: 0.5;
+@active-long-ago: 0.25;
+
 * {
   box-sizing: border-box;
   padding: 0;
@@ -265,6 +271,12 @@ h4 {
   }
 }
 
+.card-activity {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
 .card-controls {
   .octicon {
     cursor: pointer;
@@ -308,20 +320,14 @@ h4 {
   background-color: #fff;
   border-radius: 0.3em;
 
-  &.active-today {
+  &.active-today { opacity: @active-today; }
+  &.active-yesterday { opacity: @active-yesterday; }
+  &.active-this-week { opacity: @active-this-week; }
+  &.active-this-month { opacity: @active-this-month; }
+  &.active-long-ago { opacity: @active-long-ago; }
+
+  &:hover {
     opacity: 1;
-  }
-
-  &.active-yesterday {
-    opacity: 0.75;
-  }
-
-  &.active-this-week {
-    opacity: 0.5;
-  }
-
-  &.active-long-ago {
-    opacity: 0.25;
   }
 
   &.pending { border: 0.1em solid @yellow; }
@@ -330,6 +336,28 @@ h4 {
   &.expected { border: 0.1em solid @purple; }
   &.error { border: 0.1em solid @orange; }
 }
+
+.avatar-stack {
+  flex-direction: row-reverse !important;
+
+  .card-square {
+    margin-right: -(.4em + (1.8em / 2));
+    transition: margin 0.1s ease-in-out;
+
+    box-sizing: content-box;
+    background: @white;
+    border-right: 1px solid @white;
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
+  }
+
+  &:hover {
+    .card-square {
+      margin-right: 0;
+    }
+  }
+}
+
 
 .main-sidebar {
   overflow-y: auto;
@@ -731,6 +759,11 @@ h4 {
       background: @white-fade-70;
     }
   }
+
+  .spatial-graph {
+    border-radius: 10px;
+    margin-bottom: 50px;
+  }
 }
 
 .name-column {
@@ -760,8 +793,6 @@ h4 {
 }
 
 .project.single {
-  // display: flex;
-  // flex-direction: column;
   flex-grow: 1;
   min-height: 100%;
 
@@ -784,11 +815,40 @@ h4 {
 }
 
 .spatial-graph {
-  text-align: center;
+  flex-grow: 1;
+
   position: relative;
   overflow-y: auto;
-  padding: 40px 20px;
+  background: @gray;
+
+  .graphs {
+    text-align: center;
+    padding: 20px;
+  }
 }
+
+.graph-controls {
+  position: sticky;
+  top: 10px;
+  right: 10px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+
+  margin-bottom: 20px;
+
+  .control-group {
+    display: inline-block;
+    margin-right: 10px;
+  }
+
+  .label-selection {
+    position: relative;
+    display: inline-block;
+  }
+}
+
 
 .dragging {
   display: none;
@@ -817,11 +877,11 @@ svg {
     }
 
     &.graph-edge {
-      stroke: @gray-200;
+      stroke: @gray-600;
     }
 
     circle {
-      fill: @gray-300;
+      fill: @gray-800;
     }
 
     .issue-number {
@@ -857,11 +917,11 @@ svg {
       fill: @white;
     }
 
-    &.active-today .flair-arc { opacity: 0.8; }
-    &.active-yesterday .flair-arc { opacity: 0.6; }
-    &.active-this-week .flair-arc { opacity: 0.4; }
-    &.active-this-month .flair-arc { opacity: 0.2; }
-    &.active-long-ago .flair-arc { opacity: 0.1; }
+    &.active-today .flair-arc { opacity: @active-today * .8; }
+    &.active-yesterday .flair-arc { opacity: @active-yesterday * .8; }
+    &.active-this-week .flair-arc { opacity: @active-this-week * .8; }
+    &.active-this-month .flair-arc { opacity: @active-this-month * .8; }
+    &.active-long-ago .flair-arc { opacity: @active-long-ago * .8; }
   }
 
   .reveal:hover .hidden {
@@ -1108,26 +1168,9 @@ svg {
   }
 }
 
-.graph-controls {
-  position: fixed;
-  bottom: 8px;
-  text-align: left;
-
-  .control-group {
-    display: inline-block;
-    margin-left: 8px;
-    margin-bottom: 8px;
-  }
-
-  .label-selection {
-    position: relative;
-    display: inline-block;
-  }
-}
-
 .label-filters {
   position: absolute;
-  top: -408px;
+  bottom: -408px;
   width: 200px;
   height: 400px;
   background: @white;
@@ -1136,7 +1179,7 @@ svg {
 
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-start;
   visibility: hidden;
 
   &.visible {
@@ -1153,6 +1196,7 @@ svg {
       margin-bottom: 5px;
       vertical-align: initial;
       cursor: pointer;
+      font-size: 12px;
     }
   }
 
@@ -1167,7 +1211,7 @@ svg {
   display: inline-block;
   line-height: 26px;
   padding: 0 8px;
-  background: @gray;
+  background: @gray-600;
   color: @white;
   border-top-left-radius: 3px;
   border-bottom-left-radius: 3px;
@@ -1396,11 +1440,11 @@ svg {
   margin-left: 0;
   margin-right: 0;
 
-  &.active-today { opacity: 1; }
-  &.active-yesterday { opacity: 1; }
-  &.active-this-week { opacity: 0.75; }
-  &.active-this-month { opacity: 0.5; }
-  &.active-long-ago { opacity: 0.25; }
+  &.active-today { opacity: @active-today; }
+  &.active-yesterday { opacity: @active-today; }
+  &.active-this-week { opacity: @active-this-week; }
+  &.active-this-month { opacity: @active-this-month; }
+  &.active-long-ago { opacity: @active-long-ago; }
 }
 
 @keyframes wiggle {
@@ -1619,7 +1663,6 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .page-header, .release-repo-header {
-  padding-bottom: 25px;
   font-size: 18px;
   color: @gray-dark;
 
@@ -1648,8 +1691,8 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
-.release-repo-header {
-  padding-bottom: 0;
+.page-header {
+  padding-bottom: 20px;
 }
 
 .tab-row {

@@ -385,8 +385,7 @@ viewGraphControls model =
                                      ]
                                         ++ Label.colorStyles model color
                                     )
-                                    [ Octicons.tag octiconOpts
-                                    , Html.text name
+                                    [ Html.span [ HA.class "label-text" ] [ Html.text name ]
                                     ]
                                 ]
 

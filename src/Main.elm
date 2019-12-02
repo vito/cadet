@@ -1114,13 +1114,7 @@ viewPage model =
 
 viewGlobalGraphPage : Model -> Html Msg
 viewGlobalGraphPage model =
-    Html.div [ HA.class "all-issues-graph" ]
-        [ Html.div [ HA.class "column-title" ]
-            [ Octicons.circuitBoard octiconOpts
-            , Html.text "Issue Graph"
-            ]
-        , StatefulGraph.view model
-        ]
+    StatefulGraph.view model
 
 
 hideLabel : String -> Html Msg
@@ -2341,7 +2335,7 @@ viewProjectPage model project =
             , Html.div [ HA.class "project-columns" ] <|
                 List.map (viewProjectColumn model project) project.columns
             , Html.div [ HA.class "icebox-graph" ]
-                [ Html.div [ HA.class "column-title" ]
+                [ Html.div [ HA.class "page-header" ]
                     [ Octicons.circuitBoard octiconOpts
                     , Html.text (project.name ++ " Graph")
                     ]
