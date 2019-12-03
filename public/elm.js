@@ -17787,7 +17787,7 @@ var $author$project$CardView$viewProjectCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-squares left vertical card-controls')
+							$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
 						]),
 					A2(
 						$elm$core$List$map,
@@ -18746,12 +18746,24 @@ var $author$project$CardView$viewNoteCard = F6(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-icons')
+									$elm$html$Html$Attributes$class('card-squares left vertical')
 								]),
-							_List_fromArray(
-								[
-									$capitalist$elm_octicons$Octicons$note($capitalist$elm_octicons$Octicons$defaultOptions)
-								])),
+							A2(
+								$elm$core$List$map,
+								function (x) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('card-square')
+											]),
+										_List_fromArray(
+											[x]));
+								},
+								_List_fromArray(
+									[
+										$capitalist$elm_octicons$Octicons$note($capitalist$elm_octicons$Octicons$defaultOptions)
+									]))),
 							A2(
 							$elm_explorations$markdown$Markdown$toHtml,
 							_List_fromArray(
@@ -18766,23 +18778,35 @@ var $author$project$CardView$viewNoteCard = F6(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-controls')
+									$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
 								]),
 							A2(
-								$elm$core$List$cons,
+								$elm$core$List$map,
+								function (x) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('card-square')
+											]),
+										_List_fromArray(
+											[x]));
+								},
 								A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('spin-on-column-refresh'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$RefreshColumn(col.id))
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
-										])),
-								controls))
+									$elm$core$List$cons,
+									A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('spin-on-column-refresh'),
+												$elm$html$Html$Events$onClick(
+												$author$project$Model$RefreshColumn(col.id))
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
+											])),
+									controls)))
 						])),
 					function () {
 					var _v0 = A2($elm$core$Dict$get, card.id, model.editingCardNotes);

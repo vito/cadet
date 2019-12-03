@@ -250,19 +250,21 @@ viewNoteCard model project col card controls text =
                 , ( "backlog", Project.detectColumn.backlog col )
                 ]
             ]
-            [ Html.div [ HA.class "card-icons" ]
-                [ Octicons.note Octicons.defaultOptions
-                ]
+            [ Html.div [ HA.class "card-squares left vertical" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                    [ Octicons.note Octicons.defaultOptions
+                    ]
             , Dict.get card.id model.editingCardNotes
                 |> Maybe.withDefault text
                 |> Markdown.toHtml [ HA.class "card-info card-note" ]
-            , Html.div [ HA.class "card-controls" ] <|
-                Html.span
-                    [ HA.class "spin-on-column-refresh"
-                    , HE.onClick (RefreshColumn col.id)
-                    ]
-                    [ Octicons.sync Octicons.defaultOptions ]
-                    :: controls
+            , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                    Html.span
+                        [ HA.class "spin-on-column-refresh"
+                        , HE.onClick (RefreshColumn col.id)
+                        ]
+                        [ Octicons.sync Octicons.defaultOptions ]
+                        :: controls
             ]
         , case Dict.get card.id model.editingCardNotes of
             Nothing ->
@@ -336,7 +338,7 @@ viewProjectCard model controls project =
                 Markdown.toHtml [ HA.class "project-body" ] project.body
             , viewProjectBar model project
             ]
-        , Html.div [ HA.class "card-squares left vertical card-controls" ] <|
+        , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
             List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
                 (controls ++ [ projectExternalIcon project ])
         ]
