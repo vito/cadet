@@ -2403,6 +2403,27 @@ handleEvent event data index model =
                 \val ->
                     { model | repoProjects = Dict.insert val.repoId val.projects model.repoProjects }
 
+        "repoRefs" ->
+            withDecoded Backend.decodeRepoRefsEvent <|
+                \val ->
+                    let
+                        existingRefs =
+                            Dict.get val.repoId model.repoCommits
+                                |> Maybe.withDefault Dict.empty
+
+                        syncRef ref =
+                            case Dict.get ref existingRefs of
+                                Just cs ->
+                                    Dict.insert ref cs
+
+                                Nothing ->
+                                    identity
+
+                        syncRefs =
+                            List.foldl syncRef Dict.empty
+                    in
+                    { model | repoCommits = Dict.insert val.repoId (syncRefs val.refs) model.repoCommits }
+
         "repoCommits" ->
             withDecoded Backend.decodeRepoCommitsEvent <|
                 \val ->

@@ -11813,6 +11813,20 @@ var $author$project$Worker$setRepoProjects = _Platform_outgoingPort(
 					$elm$core$Basics$identity(b)
 				]));
 	});
+var $author$project$Worker$setRepoRefs = _Platform_outgoingPort(
+	'setRepoRefs',
+	function ($) {
+		var a = $.a;
+		var b = $.b;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(a),
+					$elm$core$Basics$identity(b)
+				]));
+	});
 var $author$project$Worker$setRepoReleases = _Platform_outgoingPort(
 	'setRepoReleases',
 	function ($) {
@@ -12716,37 +12730,52 @@ var $author$project$Worker$update = F2(
 						repo.url,
 						_Utils_Tuple2(
 							model,
-							$elm$core$Platform$Cmd$batch(
-								function () {
-									var releaseRefs = A2(
-										$elm$core$List$filter,
-										A2(
-											$elm$core$Basics$composeL,
-											$elm$core$String$endsWith('.x'),
-											function ($) {
-												return $.name;
-											}),
-										refs);
-									return A2(
-										$elm$core$List$map,
-										function (_v10) {
-											var name = _v10.name;
-											return A5(
-												$author$project$Worker$fetchRepoCommits,
-												model,
-												repo,
-												{
-													after: $elm$core$Maybe$Nothing,
-													selector: {
-														qualifiedName: 'refs/heads/release/' + name,
-														repo: {name: repo.name, owner: repo.owner}
-													}
-												},
-												releases,
-												_List_Nil);
+							function () {
+								var releaseRefs = A2(
+									$elm$core$List$filter,
+									A2(
+										$elm$core$Basics$composeL,
+										$elm$core$String$endsWith('.x'),
+										function ($) {
+											return $.name;
+										}),
+									refs);
+								var fetchRefCommits = function (_v10) {
+									var name = _v10.name;
+									return A5(
+										$author$project$Worker$fetchRepoCommits,
+										model,
+										repo,
+										{
+											after: $elm$core$Maybe$Nothing,
+											selector: {
+												qualifiedName: 'refs/heads/release/' + name,
+												repo: {name: repo.name, owner: repo.owner}
+											}
 										},
-										releaseRefs);
-								}())));
+										releases,
+										_List_Nil);
+								};
+								return $elm$core$Platform$Cmd$batch(
+									A2(
+										$elm$core$List$cons,
+										$author$project$Worker$setRepoRefs(
+											_Utils_Tuple2(
+												repo.id,
+												A2(
+													$elm$json$Json$Encode$list,
+													$elm$json$Json$Encode$string,
+													A2(
+														$elm$core$List$cons,
+														'refs/heads/master',
+														A2(
+															$elm$core$List$map,
+															function (r) {
+																return _Utils_ap(r.prefix, r.name);
+															},
+															refs))))),
+										A2($elm$core$List$map, fetchRefCommits, releaseRefs)));
+							}()));
 				}
 			case 'RepoCommitsPageFetched':
 				if (msg.e.$ === 'Err') {

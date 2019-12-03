@@ -15,6 +15,7 @@ module Backend exposing
     , decodeRepoLabelsEvent
     , decodeRepoMilestonesEvent
     , decodeRepoProjectsEvent
+    , decodeRepoRefsEvent
     , decodeRepoReleasesEvent
     , decodeReviewersEvent
     , encodeCardEvent
@@ -327,6 +328,19 @@ decodeRepoProjectsEvent =
     JD.succeed RepoProjectsEvent
         |> andMap (JD.field "repoId" JD.string)
         |> andMap (JD.field "projects" (JD.list GitHub.decodeProject))
+
+
+type alias RepoRefsEvent =
+    { repoId : GitHub.ID
+    , refs : List String
+    }
+
+
+decodeRepoRefsEvent : JD.Decoder RepoRefsEvent
+decodeRepoRefsEvent =
+    JD.succeed RepoRefsEvent
+        |> andMap (JD.field "repoId" JD.string)
+        |> andMap (JD.field "refs" (JD.list JD.string))
 
 
 type alias RepoCommitsEvent =

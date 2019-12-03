@@ -41,6 +41,9 @@ port setPullRequest : JD.Value -> Cmd msg
 port setRepoProjects : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
+port setRepoRefs : ( GitHub.ID, JD.Value ) -> Cmd msg
+
+
 port setRepoCommits : ( GitHub.ID, JD.Value ) -> Cmd msg
 
 
@@ -514,28 +517,36 @@ update msg model =
                 backOff model err (fetchRepoReleaseRefs model repo releases)
 
         RepoRefsFetched repo releases (Ok refs) ->
-            -- TODO: sync refs so that deleted branches are removed
             Log.debug "refs fetched for" repo.url <|
                 ( model
-                , Cmd.batch <|
-                    let
-                        releaseRefs =
-                            List.filter (String.endsWith ".x" << .name) refs
-                    in
-                    List.map
-                        (\{ name } ->
-                            fetchRepoCommits model
-                                repo
-                                { selector =
-                                    { repo = { owner = repo.owner, name = repo.name }
-                                    , qualifiedName = "refs/heads/release/" ++ name
-                                    }
-                                , after = Nothing
+                , let
+                    releaseRefs =
+                        List.filter (String.endsWith ".x" << .name) refs
+
+                    fetchRefCommits { name } =
+                        fetchRepoCommits model
+                            repo
+                            { selector =
+                                { repo = { owner = repo.owner, name = repo.name }
+                                , qualifiedName = "refs/heads/release/" ++ name
                                 }
-                                releases
-                                []
+                            , after = Nothing
+                            }
+                            releases
+                            []
+                  in
+                  Cmd.batch <|
+                    setRepoRefs
+                        ( repo.id
+                        , JE.list JE.string <|
+                            -- kinda hacky; have to do this because refs are
+                            -- 'synced' to the full set to detect deleted
+                            -- branches, but we fetch master separately from
+                            -- these
+                            "refs/heads/master"
+                                :: List.map (\r -> r.prefix ++ r.name) refs
                         )
-                        releaseRefs
+                        :: List.map fetchRefCommits releaseRefs
                 )
 
         RepoCommitsPageFetched repo psel releases commitsSoFar (Err err) ->

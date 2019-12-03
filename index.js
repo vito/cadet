@@ -206,6 +206,27 @@ worker.ports.setRepoProjects.subscribe(function(args) {
   popPoll();
 });
 
+worker.ports.setRepoRefs.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+
+  if (data.repoCommits[id] === undefined) {
+    data.repoCommits[id] = {};
+  }
+
+  var newRefs = {};
+  for (var ref in val) {
+    var oldCommits = data.repoCommits[id][ref];
+    if (oldCommits !== undefined) {
+      newRefs[ref] = oldCommits;
+    }
+  }
+
+  data.repoCommits[id] = newRefs;
+  bumpIndexAndEmitUpdate("repoRefs", { repoId: id, refs: val });
+  popPoll();
+});
+
 worker.ports.setRepoCommits.subscribe(function(args) {
   var id = args[0];
   var val = args[1];

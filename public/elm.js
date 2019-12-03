@@ -13366,6 +13366,20 @@ var $author$project$Backend$decodeRepoProjectsEvent = A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2($elm$json$Json$Decode$field, 'repoId', $elm$json$Json$Decode$string),
 		$elm$json$Json$Decode$succeed($author$project$Backend$RepoProjectsEvent)));
+var $author$project$Backend$RepoRefsEvent = F2(
+	function (repoId, refs) {
+		return {refs: refs, repoId: repoId};
+	});
+var $author$project$Backend$decodeRepoRefsEvent = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$field,
+		'refs',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'repoId', $elm$json$Json$Decode$string),
+		$elm$json$Json$Decode$succeed($author$project$Backend$RepoRefsEvent)));
 var $author$project$Backend$RepoReleasesEvent = F2(
 	function (repoId, releases) {
 		return {releases: releases, repoId: repoId};
@@ -13410,16 +13424,16 @@ var $author$project$Main$handleEvent = F4(
 	function (event, data, index, model) {
 		var withDecoded = F2(
 			function (decoder, fn) {
-				var _v1 = A2($elm$json$Json$Decode$decodeString, decoder, data);
-				if (_v1.$ === 'Ok') {
-					var val = _v1.a;
+				var _v2 = A2($elm$json$Json$Decode$decodeString, decoder, data);
+				if (_v2.$ === 'Ok') {
+					var val = _v2.a;
 					return A3(
 						$author$project$Log$debug,
 						'updating ' + event,
 						_Utils_Tuple0,
 						fn(val));
 				} else {
-					var err = _v1.a;
+					var err = _v2.a;
 					return A3($author$project$Log$debug, 'error decoding event', err, model);
 				}
 			});
@@ -13461,6 +13475,35 @@ var $author$project$Main$handleEvent = F4(
 							model,
 							{
 								repoProjects: A3($elm$core$Dict$insert, val.repoId, val.projects, model.repoProjects)
+							});
+					});
+			case 'repoRefs':
+				return A2(
+					withDecoded,
+					$author$project$Backend$decodeRepoRefsEvent,
+					function (val) {
+						var existingRefs = A2(
+							$elm$core$Maybe$withDefault,
+							$elm$core$Dict$empty,
+							A2($elm$core$Dict$get, val.repoId, model.repoCommits));
+						var syncRef = function (ref) {
+							var _v1 = A2($elm$core$Dict$get, ref, existingRefs);
+							if (_v1.$ === 'Just') {
+								var cs = _v1.a;
+								return A2($elm$core$Dict$insert, ref, cs);
+							} else {
+								return $elm$core$Basics$identity;
+							}
+						};
+						var syncRefs = A2($elm$core$List$foldl, syncRef, $elm$core$Dict$empty);
+						return _Utils_update(
+							model,
+							{
+								repoCommits: A3(
+									$elm$core$Dict$insert,
+									val.repoId,
+									syncRefs(val.refs),
+									model.repoCommits)
 							});
 					});
 			case 'repoCommits':
