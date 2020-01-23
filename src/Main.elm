@@ -1212,16 +1212,23 @@ viewAllProjectsPage model =
 
         ( roadmaps, projects ) =
             Dict.foldl extractRoadmaps ( [], [] ) model.repoProjects
+
+        allProjects =
+            if List.isEmpty projects then
+                []
+
+            else
+                [ Html.div [ HA.class "page-header" ]
+                    [ Octicons.project octiconOpts
+                    , Html.text "All Projects"
+                    ]
+                , Html.div [ HA.class "fixed-columns card-columns" ] <|
+                    List.map (\( a, b ) -> viewRepoProjects model a b) projects
+                ]
     in
     Html.div [ HA.class "page-content" ] <|
         List.map (\( a, b ) -> viewRepoRoadmap model a b) roadmaps
-            ++ [ Html.div [ HA.class "page-header" ]
-                    [ Octicons.project octiconOpts
-                    , Html.text "Projects"
-                    ]
-               , Html.div [ HA.class "card-columns" ] <|
-                    List.map (\( a, b ) -> viewRepoProjects model a b) projects
-               ]
+            ++ allProjects
 
 
 viewRepoRoadmap : Model -> GitHub.Repo -> GitHub.Project -> Html Msg
@@ -1233,14 +1240,14 @@ viewRepoRoadmap model repo project =
             , Octicons.repo octiconOpts
             , Html.text repo.name
             ]
-        , Html.div [ HA.class "project-columns" ] <|
+        , Html.div [ HA.class "fixed-columns" ] <|
             List.map (viewProjectColumn model project) project.columns
         ]
 
 
 viewRepoProjects : Model -> GitHub.Repo -> List GitHub.Project -> Html Msg
 viewRepoProjects model repo projects =
-    Html.div [ HA.class "repo-cards" ]
+    Html.div [ HA.class "fixed-column" ]
         [ Html.span [ HA.class "column-title" ]
             [ Octicons.repo octiconOpts
             , Html.span [ HA.class "column-name" ]
@@ -2217,7 +2224,7 @@ viewProjectColumn model project col =
             ]
     in
     Html.div
-        [ HA.class "project-column"
+        [ HA.class "fixed-column"
         , HA.classList [ ( "loading", Dict.member col.id model.progress ) ]
         ]
         [ Html.div [ HA.class "column-title" ]
@@ -2334,7 +2341,7 @@ viewProjectPage model project =
                 [ Octicons.project octiconOpts
                 , Html.text project.name
                 ]
-            , Html.div [ HA.class "project-columns" ] <|
+            , Html.div [ HA.class "fixed-columns card-columns" ] <|
                 List.map (viewProjectColumn model project) project.columns
             , Html.div [ HA.class "icebox-graph" ]
                 [ Html.div [ HA.class "page-header" ]

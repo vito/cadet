@@ -21,6 +21,7 @@ import Html.Events as HE
 import Json.Decode as JD
 import Label
 import List.Extra as LE
+import Log
 import Markdown
 import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
@@ -319,13 +320,43 @@ viewNoteCard model project col card controls text =
         ]
 
 
+isOpenEpic : Card -> Bool
+isOpenEpic card =
+    Card.isOpen card && card.processState.hasEpicLabel
+
+
 viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
 viewProjectCard model controls project =
+    let
+        metaIssue =
+            findProjectCard model project.columns isOpenEpic
+
+        metaIssueIcons =
+            case metaIssue of
+                Nothing ->
+                    []
+
+                Just card ->
+                    List.concat
+                        [ [ Html.a
+                                [ HA.href card.url
+                                , HA.target "_blank"
+                                ]
+                                [ viewCardIcon card ]
+                          ]
+                        , List.map
+                            (\{ avatar } ->
+                                Html.img [ HA.class "card-actor", HA.src avatar ] []
+                            )
+                            card.assignees
+                        , List.map (searchableLabel model) card.labels
+                        ]
+    in
     Html.div [ HA.class "card project", HA.tabindex 0 ]
         [ Html.div [ HA.class "card-squares left vertical" ] <|
-            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
-                [ Octicons.project Octicons.defaultOptions
-                ]
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                Octicons.project Octicons.defaultOptions
+                    :: metaIssueIcons
         , Html.div [ HA.class "card-info" ]
             [ Html.span [ HA.class "card-title", HA.draggable "false" ]
                 [ Html.a [ HA.href ("/projects/" ++ project.id) ]
@@ -342,6 +373,35 @@ viewProjectCard model controls project =
             List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
                 (controls ++ [ projectExternalIcon project ])
         ]
+
+
+findProjectCard : Model -> List GitHub.ProjectColumn -> (Card -> Bool) -> Maybe Card
+findProjectCard model columns pred =
+    case columns of
+        [] ->
+            Nothing
+
+        column :: rest ->
+            let
+                findCard { contentId } =
+                    case contentId of
+                        Nothing ->
+                            Nothing
+
+                        Just id ->
+                            Dict.get id model.cards
+
+                columnCards =
+                    Dict.get column.id model.columnCards
+                        |> Maybe.withDefault []
+                        |> List.filterMap findCard
+            in
+            case LE.find pred columnCards of
+                Just card ->
+                    Just card
+
+                Nothing ->
+                    findProjectCard model rest pred
 
 
 viewProjectBar : Model -> GitHub.Project -> Html Msg

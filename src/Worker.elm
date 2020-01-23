@@ -117,21 +117,21 @@ type Msg
     | RefreshRequested String GitHub.ID
     | GraphRefreshRequested (List GitHub.ID) (List ( GitHub.ID, List GitHub.ID ))
     | HookReceived String JD.Value
+    | FetchCards (List GitHub.Project)
+    | FetchRepoProjects GitHub.Repo
+    | FetchRepoLabels GitHub.Repo
+    | FetchRepoMilestones GitHub.Repo
+    | FetchRepoReleases GitHub.Repo
     | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
     | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
-    | FetchCards (List GitHub.Project)
     | CardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
     | IssuesPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.Issue, GitHub.PageInfo ))
     | IssueFetched (Result GitHub.Error GitHub.Issue)
     | PullRequestsPageFetched (GitHub.PagedSelector GitHub.RepoSelector) (Result GitHub.Error ( List GitHub.PullRequest, GitHub.PageInfo ))
     | RepoCommitsPageFetched GitHub.Repo (GitHub.PagedSelector GitHub.RefSelector) (List GitHub.Release) (List GitHub.Commit) (Result GitHub.Error ( List GitHub.Commit, GitHub.PageInfo ))
-    | FetchRepoProjects GitHub.Repo
     | RepoProjectsFetched GitHub.Repo (List GitHub.Project -> Msg) (Result GitHub.Error (List GitHub.Project))
-    | FetchRepoLabels GitHub.Repo
     | RepoLabelsFetched GitHub.Repo (Result GitHub.Error (List GitHub.Label))
-    | FetchRepoMilestones GitHub.Repo
     | RepoMilestonesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Milestone))
-    | FetchRepoReleases GitHub.Repo
     | RepoReleasesFetched GitHub.Repo (Result GitHub.Error (List GitHub.Release))
     | PullRequestFetched (Result GitHub.Error GitHub.PullRequest)
     | IssueTimelineFetched GitHub.ID (Result GitHub.Error (List GitHub.TimelineEvent))
@@ -216,6 +216,38 @@ update msg model =
             case String.split "/" ownerAndName of
                 owner :: name :: _ ->
                     ( model, fetchRepo model (always Noop) { owner = owner, name = name } )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        RefreshRequested "repoProjects" ownerAndName ->
+            case String.split "/" ownerAndName of
+                owner :: name :: _ ->
+                    ( model, fetchRepo model FetchRepoProjects { owner = owner, name = name } )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        RefreshRequested "repoMilestones" ownerAndName ->
+            case String.split "/" ownerAndName of
+                owner :: name :: _ ->
+                    ( model, fetchRepo model FetchRepoMilestones { owner = owner, name = name } )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        RefreshRequested "repoReleases" ownerAndName ->
+            case String.split "/" ownerAndName of
+                owner :: name :: _ ->
+                    ( model, fetchRepo model FetchRepoReleases { owner = owner, name = name } )
+
+                _ ->
+                    ( model, Cmd.none )
+
+        RefreshRequested "repoLabels" ownerAndName ->
+            case String.split "/" ownerAndName of
+                owner :: name :: _ ->
+                    ( model, fetchRepo model FetchRepoLabels { owner = owner, name = name } )
 
                 _ ->
                     ( model, Cmd.none )

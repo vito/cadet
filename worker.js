@@ -11997,6 +11997,74 @@ var $author$project$Worker$update = F2(
 						} else {
 							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 						}
+					case 'repoProjects':
+						var ownerAndName = msg.b;
+						var _v4 = A2($elm$core$String$split, '/', ownerAndName);
+						if (_v4.b && _v4.b.b) {
+							var owner = _v4.a;
+							var _v5 = _v4.b;
+							var name = _v5.a;
+							return _Utils_Tuple2(
+								model,
+								A3(
+									$author$project$Worker$fetchRepo,
+									model,
+									$author$project$Worker$FetchRepoProjects,
+									{name: name, owner: owner}));
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'repoMilestones':
+						var ownerAndName = msg.b;
+						var _v6 = A2($elm$core$String$split, '/', ownerAndName);
+						if (_v6.b && _v6.b.b) {
+							var owner = _v6.a;
+							var _v7 = _v6.b;
+							var name = _v7.a;
+							return _Utils_Tuple2(
+								model,
+								A3(
+									$author$project$Worker$fetchRepo,
+									model,
+									$author$project$Worker$FetchRepoMilestones,
+									{name: name, owner: owner}));
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'repoReleases':
+						var ownerAndName = msg.b;
+						var _v8 = A2($elm$core$String$split, '/', ownerAndName);
+						if (_v8.b && _v8.b.b) {
+							var owner = _v8.a;
+							var _v9 = _v8.b;
+							var name = _v9.a;
+							return _Utils_Tuple2(
+								model,
+								A3(
+									$author$project$Worker$fetchRepo,
+									model,
+									$author$project$Worker$FetchRepoReleases,
+									{name: name, owner: owner}));
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
+					case 'repoLabels':
+						var ownerAndName = msg.b;
+						var _v10 = A2($elm$core$String$split, '/', ownerAndName);
+						if (_v10.b && _v10.b.b) {
+							var owner = _v10.a;
+							var _v11 = _v10.b;
+							var name = _v11.a;
+							return _Utils_Tuple2(
+								model,
+								A3(
+									$author$project$Worker$fetchRepo,
+									model,
+									$author$project$Worker$FetchRepoLabels,
+									{name: name, owner: owner}));
+						} else {
+							return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+						}
 					case 'issue':
 						var id = msg.b;
 						return _Utils_Tuple2(
@@ -12106,16 +12174,16 @@ var $author$project$Worker$update = F2(
 							'project_card hook received; refreshing projects and cards',
 							_Utils_Tuple0,
 							function () {
-								var _v4 = A2($elm$json$Json$Decode$decodeValue, $author$project$Worker$decodeAffectedColumnIds, payload);
-								if (_v4.$ === 'Err') {
-									var err = _v4.a;
+								var _v12 = A2($elm$json$Json$Decode$decodeValue, $author$project$Worker$decodeAffectedColumnIds, payload);
+								if (_v12.$ === 'Err') {
+									var err = _v12.a;
 									return A3(
 										$author$project$Log$debug,
 										'failed to decode column ids',
 										err,
 										_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 								} else {
-									var databaseIDs = _v4.a;
+									var databaseIDs = _v12.a;
 									var affectedColumnIDs = A2(
 										$elm$core$List$filterMap,
 										function (did) {
@@ -12252,12 +12320,12 @@ var $author$project$Worker$update = F2(
 						'repository fetched',
 						repo.name,
 						function () {
-							var _v5 = A2(
+							var _v13 = A2(
 								$author$project$Worker$update,
 								nextMsg(repo),
 								model);
-							var next = _v5.a;
-							var cmd = _v5.b;
+							var next = _v13.a;
+							var cmd = _v13.b;
 							return _Utils_Tuple2(
 								next,
 								$elm$core$Platform$Cmd$batch(
@@ -12318,7 +12386,7 @@ var $author$project$Worker$update = F2(
 										ids,
 										project.columns);
 								});
-							var _v6 = A2(
+							var _v14 = A2(
 								$author$project$Worker$update,
 								nextMsg(projects),
 								_Utils_update(
@@ -12326,8 +12394,8 @@ var $author$project$Worker$update = F2(
 									{
 										columnIDs: A3($elm$core$List$foldl, addColumnIDs, model.columnIDs, projects)
 									}));
-							var next = _v6.a;
-							var cmd = _v6.b;
+							var next = _v14.a;
+							var cmd = _v14.b;
 							return _Utils_Tuple2(
 								next,
 								$elm$core$Platform$Cmd$batch(
@@ -12409,9 +12477,9 @@ var $author$project$Worker$update = F2(
 			case 'IssuesPageFetched':
 				if (msg.b.$ === 'Ok') {
 					var psel = msg.a;
-					var _v7 = msg.b.a;
-					var issues = _v7.a;
-					var pageInfo = _v7.b;
+					var _v15 = msg.b.a;
+					var issues = _v15.a;
+					var pageInfo = _v15.b;
 					var fetchTimelines = A2(
 						$elm$core$List$map,
 						A2(
@@ -12494,9 +12562,9 @@ var $author$project$Worker$update = F2(
 			case 'PullRequestsPageFetched':
 				if (msg.b.$ === 'Ok') {
 					var psel = msg.a;
-					var _v8 = msg.b.a;
-					var prs = _v8.a;
-					var pageInfo = _v8.b;
+					var _v16 = msg.b.a;
+					var prs = _v16.a;
+					var pageInfo = _v16.b;
 					var openPRs = A2(
 						$elm$core$List$filter,
 						A2(
@@ -12524,9 +12592,9 @@ var $author$project$Worker$update = F2(
 					var commitPRs = A3(
 						$elm$core$List$foldl,
 						function (pr) {
-							var _v9 = pr.lastCommit;
-							if (_v9.$ === 'Just') {
-								var sha = _v9.a.sha;
+							var _v17 = pr.lastCommit;
+							if (_v17.$ === 'Just') {
+								var sha = _v17.a.sha;
 								return A2($elm$core$Dict$insert, sha, pr.id);
 							} else {
 								return $elm$core$Basics$identity;
@@ -12740,8 +12808,8 @@ var $author$project$Worker$update = F2(
 											return $.name;
 										}),
 									refs);
-								var fetchRefCommits = function (_v10) {
-									var name = _v10.name;
+								var fetchRefCommits = function (_v18) {
+									var name = _v18.name;
 									return A5(
 										$author$project$Worker$fetchRepoCommits,
 										model,
@@ -12798,9 +12866,9 @@ var $author$project$Worker$update = F2(
 					var psel = msg.b;
 					var releases = msg.c;
 					var commitsSoFar = msg.d;
-					var _v11 = msg.e.a;
-					var commits = _v11.a;
-					var pageInfo = _v11.b;
+					var _v19 = msg.e.a;
+					var commits = _v19.a;
+					var pageInfo = _v19.b;
 					return A3(
 						$author$project$Log$debug,
 						'commits fetched for',
@@ -12810,29 +12878,29 @@ var $author$project$Worker$update = F2(
 							function () {
 								var isForCommit = F2(
 									function (commit, release) {
-										var _v16 = release.tag;
-										if (_v16.$ === 'Nothing') {
+										var _v24 = release.tag;
+										if (_v24.$ === 'Nothing') {
 											return false;
 										} else {
-											var t = _v16.a;
+											var t = _v24.a;
 											return _Utils_eq(t.target.oid, commit.sha);
 										}
 									});
-								var _v12 = A3(
+								var _v20 = A3(
 									$elm$core$List$foldl,
 									F2(
-										function (commit, _v13) {
-											var soFar = _v13.a;
-											var f = _v13.b;
-											var _v14 = A2(
+										function (commit, _v21) {
+											var soFar = _v21.a;
+											var f = _v21.b;
+											var _v22 = A2(
 												$elm_community$maybe_extra$Maybe$Extra$or,
 												f,
 												A2(
 													$elm_community$list_extra$List$Extra$find,
 													isForCommit(commit),
 													releases));
-											if (_v14.$ === 'Just') {
-												var release = _v14.a;
+											if (_v22.$ === 'Just') {
+												var release = _v22.a;
 												return _Utils_Tuple2(
 													soFar,
 													$elm$core$Maybe$Just(release));
@@ -12844,8 +12912,8 @@ var $author$project$Worker$update = F2(
 										}),
 									_Utils_Tuple2(commitsSoFar, $elm$core$Maybe$Nothing),
 									commits);
-								var newCommitsSoFar = _v12.a;
-								var sinceRelease = _v12.b;
+								var newCommitsSoFar = _v20.a;
+								var sinceRelease = _v20.b;
 								if (sinceRelease.$ === 'Just') {
 									var release = sinceRelease.a;
 									return $author$project$Worker$setRepoCommits(
@@ -12889,9 +12957,9 @@ var $author$project$Worker$update = F2(
 								model,
 								{
 									commitPRs: function () {
-										var _v17 = pr.lastCommit;
-										if (_v17.$ === 'Just') {
-											var sha = _v17.a.sha;
+										var _v25 = pr.lastCommit;
+										if (_v25.$ === 'Just') {
+											var sha = _v25.a.sha;
 											return A3($elm$core$Dict$insert, sha, pr.id, model.commitPRs);
 										} else {
 											return model.commitPRs;
@@ -12962,9 +13030,9 @@ var $author$project$Worker$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _v19 = msg.b.a;
-					var timeline = _v19.a;
-					var reviews = _v19.b;
+					var _v27 = msg.b.a;
+					var timeline = _v27.a;
+					var reviews = _v27.b;
 					var reviewers = A2(
 						$elm$core$List$map,
 						$author$project$GitHub$encodePullRequestReview,
@@ -12972,8 +13040,8 @@ var $author$project$Worker$update = F2(
 							A3(
 								$elm$core$List$foldl,
 								function (r) {
-									var _v22 = r.state;
-									switch (_v22.$) {
+									var _v30 = r.state;
+									switch (_v30.$) {
 										case 'PullRequestReviewStatePending':
 											return A2($elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -12993,8 +13061,8 @@ var $author$project$Worker$update = F2(
 							avatar: review.author.avatar,
 							createdAt: review.createdAt,
 							event: function () {
-								var _v21 = review.state;
-								switch (_v21.$) {
+								var _v29 = review.state;
+								switch (_v29.$) {
 									case 'PullRequestReviewStatePending':
 										return 'review-pending';
 									case 'PullRequestReviewStateCommented':

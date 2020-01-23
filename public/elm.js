@@ -10776,6 +10776,15 @@ var $author$project$Card$cardProcessState = function (_v0) {
 	var cards = _v0.cards;
 	var labels = _v0.labels;
 	return {
+		hasEpicLabel: A2(
+			$elm$core$List$any,
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$core$Basics$eq('epic'),
+				function ($) {
+					return $.name;
+				}),
+			labels),
 		hasPausedLabel: A2(
 			$elm$core$List$any,
 			A2(
@@ -17655,6 +17664,50 @@ var $author$project$Main$matchesRelease = F3(
 	});
 var $capitalist$elm_octicons$Octicons$repoPath = 'M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z M4,6 L3,6 L3,7 L4,7 L4,6 L4,6 Z M4,4 L3,4 L3,5 L4,5 L4,4 L4,4 Z M4,2 L3,2 L3,3 L4,3 L4,2 L4,2 Z M12,1 L12,13 C12,13.55 11.55,14 11,14 L6,14 L6,16 L4.5,14.5 L3,16 L3,14 L1,14 C0.45,14 0,13.55 0,13 L0,1 C0,0.45 0.45,0 1,0 L11,0 C11.55,0 12,0.45 12,1 L12,1 Z M11,11 L1,11 L1,13 L3,13 L3,12 L6,12 L6,13 L11,13 L11,11 L11,11 Z M11,1 L2,1 L2,10 L11,10 L11,1 L11,1 Z';
 var $capitalist$elm_octicons$Octicons$repo = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$repoPath, '0 0 12 16', 'repo');
+var $author$project$CardView$findProjectCard = F3(
+	function (model, columns, pred) {
+		findProjectCard:
+		while (true) {
+			if (!columns.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var column = columns.a;
+				var rest = columns.b;
+				var findCard = function (_v3) {
+					var contentId = _v3.contentId;
+					if (contentId.$ === 'Nothing') {
+						return $elm$core$Maybe$Nothing;
+					} else {
+						var id = contentId.a;
+						return A2($elm$core$Dict$get, id, model.cards);
+					}
+				};
+				var columnCards = A2(
+					$elm$core$List$filterMap,
+					findCard,
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, column.id, model.columnCards)));
+				var _v1 = A2($elm_community$list_extra$List$Extra$find, pred, columnCards);
+				if (_v1.$ === 'Just') {
+					var card = _v1.a;
+					return $elm$core$Maybe$Just(card);
+				} else {
+					var $temp$model = model,
+						$temp$columns = rest,
+						$temp$pred = pred;
+					model = $temp$model;
+					columns = $temp$columns;
+					pred = $temp$pred;
+					continue findProjectCard;
+				}
+			}
+		}
+	});
+var $author$project$CardView$isOpenEpic = function (card) {
+	return $author$project$Card$isOpen(card) && card.processState.hasEpicLabel;
+};
 var $author$project$CardView$projectExternalIcon = function (project) {
 	return A2(
 		$elm$html$Html$a,
@@ -17758,6 +17811,50 @@ var $author$project$CardView$viewProjectBar = F2(
 	});
 var $author$project$CardView$viewProjectCard = F3(
 	function (model, controls, project) {
+		var metaIssue = A3($author$project$CardView$findProjectCard, model, project.columns, $author$project$CardView$isOpenEpic);
+		var metaIssueIcons = function () {
+			if (metaIssue.$ === 'Nothing') {
+				return _List_Nil;
+			} else {
+				var card = metaIssue.a;
+				return $elm$core$List$concat(
+					_List_fromArray(
+						[
+							_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$a,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$href(card.url),
+										$elm$html$Html$Attributes$target('_blank')
+									]),
+								_List_fromArray(
+									[
+										$author$project$CardView$viewCardIcon(card)
+									]))
+							]),
+							A2(
+							$elm$core$List$map,
+							function (_v1) {
+								var avatar = _v1.avatar;
+								return A2(
+									$elm$html$Html$img,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-actor'),
+											$elm$html$Html$Attributes$src(avatar)
+										]),
+									_List_Nil);
+							},
+							card.assignees),
+							A2(
+							$elm$core$List$map,
+							$author$project$CardView$searchableLabel(model),
+							card.labels)
+						]));
+			}
+		}();
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -17785,10 +17882,10 @@ var $author$project$CardView$viewProjectCard = F3(
 								_List_fromArray(
 									[x]));
 						},
-						_List_fromArray(
-							[
-								$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions)
-							]))),
+						A2(
+							$elm$core$List$cons,
+							$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions),
+							metaIssueIcons))),
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
@@ -17858,7 +17955,7 @@ var $author$project$Main$viewRepoProjects = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('repo-cards')
+					$elm$html$Html$Attributes$class('fixed-column')
 				]),
 			_List_fromArray(
 				[
@@ -19100,7 +19197,7 @@ var $author$project$Main$viewProjectColumn = F3(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('project-column'),
+					$elm$html$Html$Attributes$class('fixed-column'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
@@ -19279,7 +19376,7 @@ var $author$project$Main$viewRepoRoadmap = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('project-columns')
+							$elm$html$Html$Attributes$class('fixed-columns')
 						]),
 					A2(
 						$elm$core$List$map,
@@ -19335,6 +19432,34 @@ var $author$project$Main$viewAllProjectsPage = function (model) {
 		model.repoProjects);
 	var roadmaps = _v0.a;
 	var projects = _v0.b;
+	var allProjects = $elm$core$List$isEmpty(projects) ? _List_Nil : _List_fromArray(
+		[
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('page-header')
+				]),
+			_List_fromArray(
+				[
+					$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
+					$elm$html$Html$text('All Projects')
+				])),
+			A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('fixed-columns card-columns')
+				]),
+			A2(
+				$elm$core$List$map,
+				function (_v2) {
+					var a = _v2.a;
+					var b = _v2.b;
+					return A3($author$project$Main$viewRepoProjects, model, a, b);
+				},
+				projects))
+		]);
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -19350,34 +19475,7 @@ var $author$project$Main$viewAllProjectsPage = function (model) {
 					return A3($author$project$Main$viewRepoRoadmap, model, a, b);
 				},
 				roadmaps),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('page-header')
-						]),
-					_List_fromArray(
-						[
-							$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
-							$elm$html$Html$text('Projects')
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-columns')
-						]),
-					A2(
-						$elm$core$List$map,
-						function (_v2) {
-							var a = _v2.a;
-							var b = _v2.b;
-							return A3($author$project$Main$viewRepoProjects, model, a, b);
-						},
-						projects))
-				])));
+			allProjects));
 };
 var $justinmimbs$time_extra$Time$Extra$Week = {$: 'Week'};
 var $justinmimbs$date$Date$Day = {$: 'Day'};
@@ -24102,7 +24200,7 @@ var $author$project$Main$viewProjectPage = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('project-columns')
+									$elm$html$Html$Attributes$class('fixed-columns card-columns')
 								]),
 							A2(
 								$elm$core$List$map,

@@ -50,6 +50,7 @@ type alias ProcessState =
     , inDoneColumn : Bool
     , hasPausedLabel : Bool
     , hasTriageLabel : Bool
+    , hasEpicLabel : Bool
     }
 
 
@@ -175,6 +176,7 @@ cardProcessState { cards, labels } =
     , inDoneColumn = inColumn Project.detectColumn.done cards
     , hasPausedLabel = List.any ((==) "paused" << .name) labels
     , hasTriageLabel = List.any ((==) "triage" << .name) labels
+    , hasEpicLabel = List.any ((==) "epic" << .name) labels
     }
 
 
