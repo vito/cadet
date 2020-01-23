@@ -23704,61 +23704,46 @@ var $author$project$Main$viewLabelRow = F3(
 									if (_v3.$ === 'Nothing') {
 										return A2(
 											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('label-background')
-												]),
+											A2(
+												$elm$core$List$cons,
+												$elm$html$Html$Attributes$class('label big'),
+												A2($author$project$Label$colorStyles, model, label.color)),
 											_List_fromArray(
 												[
 													($elm$core$String$isEmpty(model.newLabel.name) && $elm$core$Dict$isEmpty(model.editingLabels)) ? A2(
 													$elm$html$Html$span,
-													_Utils_ap(
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('label-icon'),
-																$elm$html$Html$Events$onClick(
-																A2($author$project$Label$search, model, label.name))
-															]),
-														A2($author$project$Label$colorStyles, model, label.color)),
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('label-icon'),
+															$elm$html$Html$Events$onClick(
+															A2($author$project$Label$search, model, label.name))
+														]),
 													_List_fromArray(
 														[
 															$capitalist$elm_octicons$Octicons$tag($author$project$Main$octiconOpts)
 														])) : A2(
 													$elm$html$Html$span,
-													_Utils_ap(
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('label-icon'),
-																$elm$html$Html$Events$onClick(
-																$author$project$Model$SetLabelColor(label.color))
-															]),
-														A2($author$project$Label$colorStyles, model, label.color)),
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('label-icon'),
+															$elm$html$Html$Events$onClick(
+															$author$project$Model$SetLabelColor(label.color))
+														]),
 													_List_fromArray(
 														[
 															$capitalist$elm_octicons$Octicons$paintcan($author$project$Main$octiconOpts)
 														])),
 													A2(
 													$elm$html$Html$span,
-													_Utils_ap(
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('label big'),
-																$elm$html$Html$Events$onClick(
-																A2($author$project$Label$search, model, label.name))
-															]),
-														A2($author$project$Label$colorStyles, model, label.color)),
 													_List_fromArray(
 														[
-															A2(
-															$elm$html$Html$span,
-															_List_fromArray(
-																[
-																	$elm$html$Html$Attributes$class('label-text')
-																]),
-															_List_fromArray(
-																[
-																	$elm$html$Html$text(label.name)
-																]))
+															$elm$html$Html$Attributes$class('label-text'),
+															$elm$html$Html$Events$onClick(
+															A2($author$project$Label$search, model, label.name))
+														]),
+													_List_fromArray(
+														[
+															$elm$html$Html$text(label.name)
 														]))
 												]));
 									} else {
@@ -24069,35 +24054,34 @@ var $author$project$Main$viewLabelsPage = function (model) {
 							[
 								A2(
 								$elm$html$Html$form,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('label-edit'),
-										$elm$html$Html$Events$onSubmit($author$project$Model$CreateLabel)
-									]),
+								_Utils_ap(
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('label edit'),
+											$elm$html$Html$Events$onSubmit($author$project$Model$CreateLabel)
+										]),
+									A2($author$project$Label$colorStyles, model, model.newLabel.color)),
 								_List_fromArray(
 									[
 										A2(
 										$elm$html$Html$span,
-										_Utils_ap(
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('label-icon'),
-													$elm$html$Html$Events$onClick($author$project$Model$RandomizeNewLabelColor)
-												]),
-											A2($author$project$Label$colorStyles, model, model.newLabel.color)),
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('label-icon'),
+												$elm$html$Html$Events$onClick($author$project$Model$RandomizeNewLabelColor)
+											]),
 										_List_fromArray(
 											[
 												$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
 											])),
 										A2(
 										$elm$html$Html$input,
-										_Utils_ap(
-											_List_fromArray(
-												[
-													$elm$html$Html$Events$onInput($author$project$Model$SetNewLabelName),
-													$elm$html$Html$Attributes$value(model.newLabel.name)
-												]),
-											A2($author$project$Label$colorStyles, model, model.newLabel.color)),
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('label-text'),
+												$elm$html$Html$Events$onInput($author$project$Model$SetNewLabelName),
+												$elm$html$Html$Attributes$value(model.newLabel.name)
+											]),
 										_List_Nil)
 									]))
 							]))

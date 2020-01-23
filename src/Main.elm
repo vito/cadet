@@ -1266,20 +1266,17 @@ viewLabelsPage model =
             Html.div [ HA.class "new-label" ]
                 [ Html.div [ HA.class "label-cell" ]
                     [ Html.div [ HA.class "label-name" ]
-                        [ Html.form [ HA.class "label-edit", HE.onSubmit CreateLabel ]
+                        [ Html.form ([ HA.class "label edit", HE.onSubmit CreateLabel ] ++ Label.colorStyles model model.newLabel.color)
                             [ Html.span
-                                ([ HA.class "label-icon"
-                                 , HE.onClick RandomizeNewLabelColor
-                                 ]
-                                    ++ Label.colorStyles model model.newLabel.color
-                                )
+                                [ HA.class "label-icon"
+                                , HE.onClick RandomizeNewLabelColor
+                                ]
                                 [ Octicons.sync octiconOpts ]
                             , Html.input
-                                ([ HE.onInput SetNewLabelName
-                                 , HA.value model.newLabel.name
-                                 ]
-                                    ++ Label.colorStyles model model.newLabel.color
-                                )
+                                [ HA.class "label-text"
+                                , HE.onInput SetNewLabelName
+                                , HA.value model.newLabel.name
+                                ]
                                 []
                             ]
                         ]
@@ -2018,32 +2015,25 @@ viewLabelRow model label repoIds =
             [ Html.div [ HA.class "label-name" ]
                 [ case Dict.get stateKey model.editingLabels of
                     Nothing ->
-                        Html.div [ HA.class "label-background" ]
+                        Html.div (HA.class "label big" :: Label.colorStyles model label.color)
                             [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
                                 Html.span
-                                    ([ HA.class "label-icon"
-                                     , HE.onClick (Label.search model label.name)
-                                     ]
-                                        ++ Label.colorStyles model label.color
-                                    )
+                                    [ HA.class "label-icon"
+                                    , HE.onClick (Label.search model label.name)
+                                    ]
                                     [ Octicons.tag octiconOpts ]
 
                               else
                                 Html.span
-                                    ([ HA.class "label-icon"
-                                     , HE.onClick (SetLabelColor label.color)
-                                     ]
-                                        ++ Label.colorStyles model label.color
-                                    )
+                                    [ HA.class "label-icon"
+                                    , HE.onClick (SetLabelColor label.color)
+                                    ]
                                     [ Octicons.paintcan octiconOpts ]
                             , Html.span
-                                ([ HA.class "label big"
-                                 , HE.onClick (Label.search model label.name)
-                                 ]
-                                    ++ Label.colorStyles model label.color
-                                )
-                                [ Html.span [ HA.class "label-text" ]
-                                    [ Html.text label.name ]
+                                [ HA.class "label-text"
+                                , HE.onClick (Label.search model label.name)
+                                ]
+                                [ Html.text label.name
                                 ]
                             ]
 

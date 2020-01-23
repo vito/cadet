@@ -571,7 +571,15 @@ h4 {
   white-space: nowrap;
   cursor: pointer;
 
-  height: 1.6em;
+  height: 1.8em;
+
+  .octicon {
+    margin: 0 .4em;
+  }
+
+  .label-icon ~ .label-text {
+    padding-left: 0;
+  }
 
   .label-text {
     font-size: 1.2em;
@@ -956,7 +964,6 @@ svg {
 
 .labels-table {
   display: table;
-  width: 100%;
 }
 
 .label-row {
@@ -989,31 +996,15 @@ svg {
   text-align: left;
   background: @white;
 
-  .label-background {
-    display: inline-flex;
-    padding: 9px;
-  }
-
   .label {
-    margin: 0;
-    padding: 0;
-    padding-right: 10px;
     font-size: 16px;
-    font-weight: 600;
-    line-height: 2;
-    border-radius: 3px;
-    text-align: center;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    border: 0;
-    vertical-align: middle;
-    cursor: pointer;
+    margin: 10px;
+    height: 30px;
   }
 }
 
-.label-edit {
+.label.edit {
   display: inline-flex;
-  padding: 9px;
 
   .button {
     color: @gray;
@@ -1029,17 +1020,11 @@ svg {
   }
 
   input {
-    padding-right: 5px;
-    color: #fff;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
+    background: transparent;
     vertical-align: middle;
-    font-size: 16px;
-    line-height: 2;
-    font-weight: 600;
-    border-radius: 3px;
     border: 0;
-    border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
+    color: inherit;
+    height: 30px;
   }
 }
 
@@ -1061,15 +1046,6 @@ svg {
   .label-controls {
     border-bottom-right-radius: 10px;
   }
-}
-
-.label-icon {
-  border-radius: 3px;
-  box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
-  padding: 8px 5px 8px 9px;
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  cursor: pointer;
 }
 
 .label-counts {
@@ -1105,8 +1081,6 @@ svg {
 }
 
 .new-label {
-  margin-bottom: 10px;
-
   .label-name, .label-controls {
     background: transparent;
   }
