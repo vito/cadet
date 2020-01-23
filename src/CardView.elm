@@ -21,7 +21,6 @@ import Html.Events as HE
 import Json.Decode as JD
 import Label
 import List.Extra as LE
-import Log
 import Markdown
 import Maybe.Extra as ME
 import Model exposing (Model, Msg(..), Page(..))
@@ -78,7 +77,8 @@ viewCard model controls card =
         , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
             List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
                 List.concat
-                    [ [ Html.span
+                    [ controls
+                    , [ Html.span
                             [ HE.onClick
                                 (if Card.isPR card then
                                     RefreshPullRequest card.id
@@ -91,7 +91,6 @@ viewCard model controls card =
                       ]
                     , cardExternalIcons card
                     , pauseIcon card
-                    , controls
                     , List.map (viewSuggestedLabel model card) model.suggestedLabels
                     ]
         ]
@@ -260,12 +259,13 @@ viewNoteCard model project col card controls text =
                 |> Markdown.toHtml [ HA.class "card-info card-note" ]
             , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
                 List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    Html.span
-                        [ HA.class "spin-on-column-refresh"
-                        , HE.onClick (RefreshColumn col.id)
-                        ]
-                        [ Octicons.sync Octicons.defaultOptions ]
-                        :: controls
+                    controls ++
+                      [ Html.span
+                          [ HA.class "spin-on-column-refresh"
+                          , HE.onClick (RefreshColumn col.id)
+                          ]
+                          [ Octicons.sync Octicons.defaultOptions ]
+                      ]
             ]
         , case Dict.get card.id model.editingCardNotes of
             Nothing ->

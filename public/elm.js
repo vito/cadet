@@ -17082,6 +17082,7 @@ var $author$project$CardView$viewCard = F3(
 						$elm$core$List$concat(
 							_List_fromArray(
 								[
+									controls,
 									_List_fromArray(
 									[
 										A2(
@@ -17098,7 +17099,6 @@ var $author$project$CardView$viewCard = F3(
 									]),
 									$author$project$CardView$cardExternalIcons(card),
 									$author$project$CardView$pauseIcon(card),
-									controls,
 									A2(
 									$elm$core$List$map,
 									A2($author$project$CardView$viewSuggestedLabel, model, card),
@@ -18950,21 +18950,23 @@ var $author$project$CardView$viewNoteCard = F6(
 										_List_fromArray(
 											[x]));
 								},
-								A2(
-									$elm$core$List$cons,
-									A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('spin-on-column-refresh'),
-												$elm$html$Html$Events$onClick(
-												$author$project$Model$RefreshColumn(col.id))
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
-											])),
-									controls)))
+								_Utils_ap(
+									controls,
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('spin-on-column-refresh'),
+													$elm$html$Html$Events$onClick(
+													$author$project$Model$RefreshColumn(col.id))
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
+												]))
+										]))))
 						])),
 					function () {
 					var _v0 = A2($elm$core$Dict$get, card.id, model.editingCardNotes);
