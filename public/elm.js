@@ -18433,11 +18433,20 @@ var $author$project$Main$viewAddingNote = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-icons')
+									$elm$html$Html$Attributes$class('card-squares left vertical')
 								]),
 							_List_fromArray(
 								[
-									$capitalist$elm_octicons$Octicons$note($author$project$Main$octiconOpts)
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-square')
+										]),
+									_List_fromArray(
+										[
+											$capitalist$elm_octicons$Octicons$note($author$project$Main$octiconOpts)
+										]))
 								])),
 							A2(
 							$elm_explorations$markdown$Markdown$toHtml,
@@ -18450,7 +18459,7 @@ var $author$project$Main$viewAddingNote = F2(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-controls')
+									$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
 								]),
 							_List_Nil)
 						])),
