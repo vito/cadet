@@ -1243,7 +1243,9 @@ viewRepoProjects model repo projects =
     Html.div [ HA.class "repo-cards" ]
         [ Html.span [ HA.class "column-title" ]
             [ Octicons.repo octiconOpts
-            , Html.text repo.name
+            , Html.span [ HA.class "column-name" ]
+                [ Html.text repo.name
+                ]
             ]
         , Html.div [ HA.class "cards" ]
             (List.map (CardView.viewProjectCard model []) projects)

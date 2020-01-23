@@ -17871,7 +17871,16 @@ var $author$project$Main$viewRepoProjects = F3(
 					_List_fromArray(
 						[
 							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-							$elm$html$Html$text(repo.name)
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('column-name')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(repo.name)
+								]))
 						])),
 					A2(
 					$elm$html$Html$div,
