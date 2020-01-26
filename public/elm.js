@@ -18636,10 +18636,10 @@ var $author$project$Drag$viewDropArea = F4(
 			_Utils_ap(
 				_List_fromArray(
 					[
+						$elm$html$Html$Attributes$class('drop-area'),
 						$elm$html$Html$Attributes$classList(
 						_List_fromArray(
 							[
-								_Utils_Tuple2('drop-area', true),
 								_Utils_Tuple2('active', isActive),
 								_Utils_Tuple2(
 								'never-left',

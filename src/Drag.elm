@@ -172,9 +172,9 @@ viewDropArea model wrap candidate ownSource =
                     Html.text ""
     in
     Html.div
-        ([ HA.classList
-            [ ( "drop-area", True )
-            , ( "active", isActive )
+        ([ HA.class "drop-area"
+         , HA.classList
+            [ ( "active", isActive )
             , ( "never-left", hasNeverLeft model )
             , ( "over", isOver )
             ]

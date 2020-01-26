@@ -654,14 +654,7 @@ h4 {
   display: flex;
   flex-direction: column;
   padding-bottom: @card-margin;
-
-  > .drop-area {
-    margin-top: 0;
-    margin-left: 0;
-    margin-right: 0;
-  }
 }
-
 
 .fixed-column .no-cards {
   display: flex;
@@ -679,11 +672,6 @@ h4 {
     min-height: 60px;
     padding: 0;
 
-    .card {
-      margin: @card-margin;
-      margin-bottom: 0;
-    }
-
     &::before {
       display: block;
       text-align: center;
@@ -696,12 +684,6 @@ h4 {
     }
 
     &.over {
-      padding-top: 8px;
-
-      .card {
-        margin-top: 0;
-      }
-
       &::before {
         display: none;
       }
@@ -729,15 +711,10 @@ h4 {
   }
 
   &.over {
-    padding-top: 30px + @card-margin;
     z-index: 3;
     transition: all 0.2s ease-in-out;
     // background: green;
     // opacity: 0.5;
-  }
-
-  .card {
-    margin: 0 @card-margin;
   }
 
   &:last-child {
