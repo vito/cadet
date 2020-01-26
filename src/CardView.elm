@@ -1,6 +1,7 @@
 module CardView exposing
     ( focusEditNote
     , viewCard
+    , viewCardActor
     , viewCardIcon
     , viewNote
     , viewProjectCard
@@ -120,16 +121,6 @@ viewNote model project col card text =
 
 viewProjectColumnCard : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> Html Msg
 viewProjectColumnCard model project col ghCard =
-    let
-        dropCandidate =
-            { msgFunc = MoveCardAfter
-            , target =
-                { projectId = project.id
-                , columnId = col.id
-                , afterId = Just ghCard.id
-                }
-            }
-    in
     case ( ghCard.note, ghCard.contentId ) of
         ( Just n, Nothing ) ->
             viewNote model project col ghCard n
@@ -344,11 +335,7 @@ viewProjectCard model controls project =
                                 ]
                                 [ viewCardIcon card ]
                           ]
-                        , List.map
-                            (\{ avatar } ->
-                                Html.img [ HA.class "card-actor", HA.src avatar ] []
-                            )
-                            card.assignees
+                        , List.map viewCardActor card.assignees
                         , List.map (searchableLabel model) card.labels
                         ]
     in
@@ -373,6 +360,11 @@ viewProjectCard model controls project =
             List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
                 (controls ++ [ projectExternalIcon project ])
         ]
+
+
+viewCardActor : GitHub.User -> Html msg
+viewCardActor { avatar } =
+    Html.img [ HA.class "card-actor", HA.src avatar ] []
 
 
 findProjectCard : Model -> List GitHub.ProjectColumn -> (Card -> Bool) -> Maybe Card

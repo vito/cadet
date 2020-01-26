@@ -250,7 +250,7 @@ view model sir =
             , Html.div [ HA.class "release-ownership" ]
                 [ case sir.issue of
                     Nothing ->
-                        Html.div [ HA.class "issue-placeholder" ]
+                        Html.div [ HA.class "actor-placeholder" ]
                             [ Octicons.person octiconOpts ]
 
                     Just issue ->

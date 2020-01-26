@@ -367,7 +367,6 @@ h4 {
   flex-shrink: 0;
   width: @card-width + (2 * @card-margin);
   border-bottom-left-radius: 6px;
-  padding-bottom: 10px;
 
   background: @gray-400;
 
@@ -1544,25 +1543,6 @@ a.column-title:hover, .page-header a:hover {
       }
     }
   }
-
-  .issue-placeholder {
-    background: @gray-200;
-    border-radius: 5px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    .octicon {
-      margin: 0;
-      vertical-align: middle;
-
-      * {
-        fill: @white;
-      }
-    }
-  }
 }
 
 .release-metrics {
@@ -1979,4 +1959,59 @@ a.column-title:hover, .page-header a:hover {
 
 .repo-prs {
   margin-bottom: 40px;
+}
+
+.card-lanes {
+  display: flex;
+  flex-direction: column;
+
+  .card-lane {
+    display: flex;
+    flex-direction: row;
+  }
+
+  .cards {
+    display: flex;
+    flex-direction: row;
+    padding-top: @card-margin;
+
+    .card {
+      // margin-top: @card-margin;
+      margin-right: @card-margin;
+    }
+  }
+
+  .lane-actors {
+    display: flex;
+    flex-direction: column;
+    width: 48px + (2 * @card-margin);
+
+    padding: @card-margin;
+
+    .card-actor {
+      width: 48px;
+      height: 48px;
+      border-radius: 5px;
+      margin-bottom: @card-margin;
+    }
+  }
+}
+
+.actor-placeholder {
+  background: @gray-200;
+  border-radius: 5px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .octicon {
+    margin: 0;
+    vertical-align: middle;
+
+    * {
+      fill: @white;
+    }
+  }
 }

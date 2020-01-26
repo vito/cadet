@@ -98,6 +98,7 @@ routeParser =
         , UP.map PullRequestsPage (UP.s "pull-requests")
         , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
+        , UP.map PairsPage (UP.s "pairs")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
         , UP.map BouncePage (UP.s "auth")
         , UP.map BouncePage (UP.s "logout")
@@ -142,6 +143,9 @@ pageUrl page query =
 
         ArchivePage ->
             UB.absolute [ "archive" ] query
+
+        PairsPage ->
+            UB.absolute [ "pairs" ] query
 
         BouncePage ->
             UB.absolute [] query
@@ -1028,6 +1032,9 @@ pageTitle model =
             ArchivePage ->
                 "Archive"
 
+            PairsPage ->
+                "Pairs"
+
             BouncePage ->
                 "Bounce"
 
@@ -1107,6 +1114,9 @@ viewPage model =
             ArchivePage ->
                 viewArchivePage model
 
+            PairsPage ->
+                viewPairsPage model
+
             BouncePage ->
                 Html.text "you shouldn't see this"
         ]
@@ -1132,6 +1142,7 @@ viewNavBar model =
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
             , navButton model Octicons.tag "Labels" "/labels"
+            , navButton model Octicons.organization "Pairs" "/pairs"
             ]
         , case model.me of
             Nothing ->
@@ -1180,6 +1191,9 @@ navButton model icon label route =
 
                 PullRequestsRepoPage _ _ ->
                     label == "PRs"
+
+                PairsPage ->
+                    label == "Pairs"
 
                 BouncePage ->
                     False
@@ -1770,6 +1784,75 @@ viewArchivePage model =
             |> List.map (\( a, b ) -> viewArchiveDay model a b)
             |> Html.div [ HA.class "archive-columns" ]
         ]
+
+
+viewPairsPage : Model -> Html Msg
+viewPairsPage model =
+    let
+        isInProgress { purpose } =
+            purpose == Just GitHub.ProjectColumnPurposeInProgress
+
+        columnCards col =
+            Dict.get col.id model.columnCards
+                |> Maybe.withDefault []
+                |> List.filterMap .contentId
+                |> List.filterMap (\id -> Dict.get id model.cards)
+
+        inFlightCards =
+            model.repoProjects
+                |> Dict.values
+                |> List.concat
+                |> List.concatMap (\p -> List.filter isInProgress p.columns |> List.concatMap columnCards)
+
+        addCard card val =
+            case val of
+                Nothing ->
+                    Just [ card ]
+
+                Just vals ->
+                    Just (card :: vals)
+
+        groupByAssignee card groups =
+            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
+
+        byAssignees =
+            List.foldl groupByAssignee Dict.empty inFlightCards
+                |> Dict.values
+    in
+    Html.div [ HA.class "page-content" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.organization octiconOpts
+            , Html.text "Lanes"
+            ]
+        , Html.div [ HA.class "card-lanes" ] <|
+            List.map
+                (\cards ->
+                    Html.div [ HA.class "card-lane" ]
+                        [ viewLaneActors cards
+                        , Html.div [ HA.class "cards" ] <|
+                            List.map (CardView.viewCard model []) cards
+                        ]
+                )
+                byAssignees
+        ]
+
+
+viewLaneActors : List Card -> Html Msg
+viewLaneActors cards =
+    Html.div [ HA.class "lane-actors" ] <|
+        case List.head cards of
+            Just card ->
+                if List.isEmpty card.assignees then
+                    [ Html.div [ HA.class "actor-placeholder" ]
+                        [ Octicons.person octiconOpts ]
+                    ]
+
+                else
+                    List.map CardView.viewCardActor card.assignees
+
+            Nothing ->
+                -- impossible
+                []
 
 
 viewLeaderboardEntry : ( GitHub.User, Int ) -> Html Msg
