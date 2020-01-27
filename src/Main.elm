@@ -254,6 +254,82 @@ update msg model =
             Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
 
+        AssignUserDrag subMsg ->
+            let
+                dragModel =
+                    Drag.update subMsg model.assignUserDrag
+
+                newModel =
+                    { model | assignUserDrag = dragModel }
+            in
+            case dragModel of
+                Drag.Dropping state ->
+                    update state.msg { newModel | assignUserDrag = Drag.drop newModel.assignUserDrag }
+
+                _ ->
+                    ( newModel, Cmd.none )
+
+        AssignUser user card ->
+            Log.debug "assigning" ( user.login, card.id ) <|
+                ( model, Effects.assignUsers model [ user ] card.id )
+
+        AssignOnlyUserDrag subMsg ->
+            let
+                dragModel =
+                    Drag.update subMsg model.assignOnlyUserDrag
+
+                newModel =
+                    { model | assignOnlyUserDrag = dragModel }
+            in
+            case dragModel of
+                Drag.Dropping state ->
+                    update state.msg { newModel | assignOnlyUserDrag = Drag.drop newModel.assignOnlyUserDrag }
+
+                _ ->
+                    ( newModel, Cmd.none )
+
+        AssignOnlyUser card user ->
+            Log.debug "assigning" ( user.login, card.id ) <|
+                ( model
+                , Cmd.batch
+                    [ Effects.assignUsers model [ user ] card.id
+                    , let
+                        otherAssignees =
+                            List.filter ((/=) user.id << .id) card.assignees
+                      in
+                      Effects.unassignUsers model otherAssignees card.id
+                    ]
+                )
+
+        AssigneesUpdated (Ok (Just assignable)) ->
+            let
+                card =
+                    case assignable of
+                        GitHub.AssignableIssue issue ->
+                            Card.fromIssue issue
+
+                        GitHub.AssignablePullRequest pr ->
+                            Card.fromPR pr
+            in
+            Log.debug "assignees updated"
+                ()
+                ( { model
+                    | cards = Dict.insert card.id card model.cards
+                    , assignUserDrag = Drag.complete model.assignUserDrag
+                    , assignOnlyUserDrag = Drag.complete model.assignOnlyUserDrag
+                    , progress = finishProgress card.id model.progress
+                  }
+                , Cmd.none
+                )
+
+        AssigneesUpdated (Ok Nothing) ->
+            Log.debug "assign returned nothing" () <|
+                ( model, Cmd.none )
+
+        AssigneesUpdated (Err err) ->
+            Log.debug "assign failed" err <|
+                ( model, Cmd.none )
+
         RefreshQueued (Ok ()) ->
             Log.debug "refresh queued" () ( model, Cmd.none )
 
@@ -1818,6 +1894,17 @@ viewPairsPage model =
         byAssignees =
             List.foldl groupByAssignee Dict.empty inFlightCards
                 |> Dict.values
+
+        viewDroppableCard card =
+            let
+                assignDropCandidate =
+                    { msgFunc = AssignUser
+                    , target = card
+                    }
+            in
+            Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
+                Drag.draggable model.assignOnlyUserDrag AssignOnlyUserDrag card <|
+                    CardView.viewCard model [] card
     in
     Html.div [ HA.class "page-content" ]
         [ Html.div [ HA.class "page-header" ]
@@ -1828,27 +1915,38 @@ viewPairsPage model =
             List.map
                 (\cards ->
                     Html.div [ HA.class "card-lane" ]
-                        [ viewLaneActors cards
+                        [ viewLaneActors model cards
                         , Html.div [ HA.class "cards" ] <|
-                            List.map (CardView.viewCard model []) cards
+                            List.map viewDroppableCard cards
                         ]
                 )
                 byAssignees
         ]
 
 
-viewLaneActors : List Card -> Html Msg
-viewLaneActors cards =
+viewLaneActors : Model -> List Card -> Html Msg
+viewLaneActors model cards =
+    let
+        assignDropCandidate user =
+            { msgFunc = AssignOnlyUser
+            , target = user
+            }
+
+        viewDraggableActor user =
+            Drag.droppable model.assignOnlyUserDrag AssignOnlyUserDrag (assignDropCandidate user) <|
+                Drag.draggable model.assignUserDrag AssignUserDrag user <|
+                    CardView.viewCardActor user
+    in
     Html.div [ HA.class "lane-actors" ] <|
         case List.head cards of
             Just card ->
                 if List.isEmpty card.assignees then
-                    [ Html.div [ HA.class "actor-placeholder" ]
+                    [ Html.div [ HA.class "card-actor actor-placeholder" ]
                         [ Octicons.person octiconOpts ]
                     ]
 
                 else
-                    List.map CardView.viewCardActor card.assignees
+                    List.map viewDraggableActor card.assignees
 
             Nothing ->
                 -- impossible

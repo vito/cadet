@@ -1,5 +1,6 @@
 module GitHub exposing
-    ( CardContent(..)
+    ( Assignable(..)
+    , CardContent(..)
     , CardLocation
     , Commit
     , Error
@@ -36,6 +37,10 @@ module GitHub exposing
     , StatusState(..)
     , TimelineEvent(..)
     , User
+
+    , assign
+    , unassign
+
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
@@ -608,6 +613,20 @@ moveCardAfter token columnID cardID mafterID =
         |> GH.customSendMutation (authedOptions token)
 
 
+assign : Token -> List ID -> ID -> Task Error (Maybe Assignable)
+assign token assigneeIds assignableId =
+    assignUsersMutation
+        |> GB.request { assigneeIds = assigneeIds, assignableId = assignableId }
+        |> GH.customSendMutation (authedOptions token)
+
+
+unassign : Token -> List ID -> ID -> Task Error (Maybe Assignable)
+unassign token assigneeIds assignableId =
+    unassignUsersMutation
+        |> GB.request { assigneeIds = assigneeIds, assignableId = assignableId }
+        |> GH.customSendMutation (authedOptions token)
+
+
 addContentCard : Token -> ID -> ID -> Task Error ProjectColumnCard
 addContentCard token columnID contentID =
     addContentCardMutation
@@ -790,6 +809,73 @@ encodeLabelPatch name color =
         [ ( "name", JE.string name )
         , ( "color", JE.string color )
         ]
+
+
+type Assignable
+    = AssignableIssue Issue
+    | AssignablePullRequest PullRequest
+
+
+assignUsersMutation : GB.Document GB.Mutation (Maybe Assignable) { assignableId : ID, assigneeIds : List ID }
+assignUsersMutation =
+    let
+        assignableIdVar =
+            GV.required "assignableId" .assignableId GV.id
+
+        assigneeIdsVar =
+            GV.required "assigneeIds" .assigneeIds (GV.list GV.id)
+
+        assignable =
+            GB.object ME.or
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map AssignableIssue issueObject))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map AssignablePullRequest prObject))
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "addAssigneesToAssignable"
+                [ ( "input"
+                  , GA.object
+                        [ ( "assignableId", GA.variable assignableIdVar )
+                        , ( "assigneeIds", GA.variable assigneeIdsVar )
+                        ]
+                  )
+                ]
+                (GB.extract <|
+                    GB.field "assignable"
+                        []
+                        assignable
+                )
+
+
+unassignUsersMutation : GB.Document GB.Mutation (Maybe Assignable) { assignableId : ID, assigneeIds : List ID }
+unassignUsersMutation =
+    let
+        assignableIdVar =
+            GV.required "assignableId" .assignableId GV.id
+
+        assigneeIdsVar =
+            GV.required "assigneeIds" .assigneeIds (GV.list GV.id)
+
+        assignable =
+            GB.object ME.or
+                |> GB.with (GB.inlineFragment (Just (GB.onType "Issue")) (GB.map AssignableIssue issueObject))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.map AssignablePullRequest prObject))
+    in
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "removeAssigneesFromAssignable"
+                [ ( "input"
+                  , GA.object
+                        [ ( "assignableId", GA.variable assignableIdVar )
+                        , ( "assigneeIds", GA.variable assigneeIdsVar )
+                        ]
+                  )
+                ]
+                (GB.extract <|
+                    GB.field "assignable"
+                        []
+                        assignable
+                )
 
 
 moveCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, cardId : ID, afterId : Maybe ID }

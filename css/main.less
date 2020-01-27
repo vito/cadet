@@ -831,12 +831,11 @@ h4 {
 
 
 .dragging {
-  display: none;
+  opacity: 0.5;
 }
 
-.page-sidebar .dragging {
-  display: initial;
-  opacity: 0.5;
+.fixed-column .cards .dragging {
+  display: none;
 }
 
 svg {
@@ -1984,16 +1983,34 @@ a.column-title:hover, .page-header a:hover {
   .lane-actors {
     display: flex;
     flex-direction: column;
-    width: 48px + (2 * @card-margin);
-
-    padding: @card-margin;
 
     .card-actor {
       width: 48px;
       height: 48px;
       border-radius: 5px;
-      margin-bottom: @card-margin;
+      margin-top: @card-margin;
+      margin-right: @card-margin;
+      border: 1px solid @gray-200;
     }
+
+    .droppable.active .card-actor {
+      border-color: @gray-200 !important;
+      box-shadow: 0 0.1em 0.3em fade(@gray, 30%);
+    }
+
+    .droppable.over .card-actor {
+      border-color: @blue !important;
+      box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
+    }
+  }
+
+  .droppable.active .card {
+    box-shadow: 0 0.1em 0.3em fade(@gray, 30%);
+  }
+
+  .droppable.over .card {
+    border-color: @blue !important;
+    box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
   }
 }
 

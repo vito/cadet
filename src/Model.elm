@@ -79,6 +79,8 @@ type alias Model =
 
     -- card dragging in projects
     , projectDrag : Drag.Model CardSource CardDestination Msg
+    , assignUserDrag : Drag.Model GitHub.User Card Msg
+    , assignOnlyUserDrag : Drag.Model Card GitHub.User Msg
 
     -- sidebar card search/selecting state
     , cardSearch : String
@@ -132,6 +134,11 @@ type Msg
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
+    | AssignUserDrag (Drag.Msg GitHub.User Card Msg)
+    | AssignUser GitHub.User Card
+    | AssignOnlyUserDrag (Drag.Msg Card GitHub.User Msg)
+    | AssignOnlyUser Card GitHub.User
+    | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Backend.Me))
     | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
@@ -359,6 +366,8 @@ empty key =
     , graphFilters = []
     , graphSort = ImpactSort
     , projectDrag = Drag.init
+    , assignUserDrag = Drag.init
+    , assignOnlyUserDrag = Drag.init
     , deletingLabels = Set.empty
     , editingLabels = Dict.empty
     , newLabel = { name = "", color = "ffffff" }

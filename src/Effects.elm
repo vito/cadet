@@ -3,6 +3,7 @@ module Effects exposing
     , addIssueLabels
     , addNoteCard
     , addPullRequestLabels
+    , assignUsers
     , contentCardId
     , convertNoteToIssue
     , createLabel
@@ -15,6 +16,7 @@ module Effects exposing
     , removeIssueLabel
     , removePullRequestLabel
     , setProjectCardArchived
+    , unassignUsers
     , updateCardNote
     , updateLabel
     )
@@ -83,6 +85,24 @@ addCard model { projectId, columnId, afterId } contentId =
                     GitHub.addContentCardAfter token columnId contentId afterId
                         |> Task.attempt (CardMoved columnId)
                         |> withSetLoading [ columnId ]
+
+
+unassignUsers : Model -> List GitHub.User -> GitHub.ID -> Cmd Msg
+unassignUsers model users id =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.unassign token (List.map .id users) id
+                |> Task.attempt AssigneesUpdated
+                |> withSetLoading [ id ]
+
+
+assignUsers : Model -> List GitHub.User -> GitHub.ID -> Cmd Msg
+assignUsers model users id =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.assign token (List.map .id users) id
+                |> Task.attempt AssigneesUpdated
+                |> withSetLoading [ id ]
 
 
 createLabel : Model -> GitHub.Repo -> Model.SharedLabel -> Cmd Msg

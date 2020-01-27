@@ -6,6 +6,7 @@ module Drag exposing
     , complete
     , draggable
     , drop
+    , droppable
     , init
     , land
     , update
@@ -35,7 +36,9 @@ type alias DragState source target msg =
 
 
 type alias DropCandidate source target msg =
-    { target : target, msgFunc : source -> target -> msg }
+    { target : target
+    , msgFunc : source -> target -> msg
+    }
 
 
 type alias DropState source target msg =
@@ -225,6 +228,56 @@ draggable model wrap source view =
         , HE.on "dragend" (JD.succeed (wrap End))
         , HA.attribute "ondragstart" "event.dataTransfer.setData('text/plain', '');"
         ]
+        [ view ]
+
+
+droppable : Model source target msg -> (Msg source target msg -> msg) -> DropCandidate source target msg -> Html msg -> Html msg
+droppable model wrap candidate view =
+    let
+        isActive =
+            case model of
+                Dragging _ ->
+                    True
+
+                _ ->
+                    False
+
+        dragEvents =
+            if isActive then
+                onDrop candidate wrap
+
+            else
+                []
+
+        isOver =
+            case model of
+                NotDragging ->
+                    False
+
+                Dragging state ->
+                    case state.dropCandidate of
+                        Just { target } ->
+                            target == candidate.target
+
+                        _ ->
+                            False
+
+                Dropping { target, landed } ->
+                    target == candidate.target && not landed
+
+                Dropped { target, landed } ->
+                    target == candidate.target && not landed
+    in
+    Html.div
+        ([ HA.class "droppable"
+         , HA.classList
+            [ ( "active", isActive )
+            , ( "never-left", hasNeverLeft model )
+            , ( "over", isOver )
+            ]
+         ]
+            ++ dragEvents
+        )
         [ view ]
 
 
