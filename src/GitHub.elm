@@ -35,18 +35,17 @@ module GitHub exposing
     , RepoSelector
     , StatusContext
     , StatusState(..)
+    , Team
+    , TeamSelector
     , TimelineEvent(..)
     , User
-
-    , assign
-    , unassign
-
     , addContentCard
     , addContentCardAfter
     , addIssueLabels
     , addNoteCard
     , addNoteCardAfter
     , addPullRequestLabels
+    , assign
     , closeIssue
     , closeRepoMilestone
     , convertCardToIssue
@@ -98,6 +97,7 @@ module GitHub exposing
     , fetchRepoPullRequestsPage
     , fetchRepoRefs
     , fetchRepoReleases
+    , fetchTeam
     , fetchTimeline
     , issueScore
     , labelEq
@@ -110,6 +110,7 @@ module GitHub exposing
     , setCardArchived
     , setIssueMilestone
     , setPullRequestMilestone
+    , unassign
     , updateCardNote
     , updateRepoLabel
     )
@@ -415,6 +416,14 @@ type alias ProjectLocation =
     }
 
 
+type alias Team =
+    { id : ID
+    , url : String
+    , name : String
+    , members : List User
+    }
+
+
 type alias CardLocation =
     { id : ID
     , url : String
@@ -450,11 +459,21 @@ type alias OrgSelector =
 
 
 type alias RepoSelector =
-    { owner : String, name : String }
+    { owner : String
+    , name : String
+    }
+
+
+type alias TeamSelector =
+    { org : String
+    , slug : String
+    }
 
 
 type alias ProjectSelector =
-    { owner : String, number : Int }
+    { owner : String
+    , number : Int
+    }
 
 
 type alias IDSelector =
@@ -462,19 +481,28 @@ type alias IDSelector =
 
 
 type alias IssueOrPRSelector =
-    { owner : String, repo : String, number : Int }
+    { owner : String
+    , repo : String
+    , number : Int
+    }
 
 
 type alias RefSelector =
-    { repo : RepoSelector, qualifiedName : String }
+    { repo : RepoSelector
+    , qualifiedName : String
+    }
 
 
 type alias RefsSelector =
-    { repo : RepoSelector, refPrefix : String }
+    { repo : RepoSelector
+    , refPrefix : String
+    }
 
 
 type alias PagedSelector a =
-    { selector : a, after : Maybe ID }
+    { selector : a
+    , after : Maybe ID
+    }
 
 
 type alias PagedResult a =
@@ -487,6 +515,13 @@ type alias PageInfo =
     { endCursor : Maybe ID
     , hasNextPage : Bool
     }
+
+
+fetchTeam : Token -> TeamSelector -> Task Error Team
+fetchTeam token team =
+    teamQuery
+        |> GB.request team
+        |> GH.customSendQuery (authedOptions token)
 
 
 fetchOrgRepos : Token -> OrgSelector -> Task Error (List Repo)
@@ -521,11 +556,6 @@ fetchRepo token repo =
 fetchRepoProjects : Token -> RepoSelector -> Task Error (List Project)
 fetchRepoProjects token repo =
     fetchPaged repoProjectsQuery token { selector = repo, after = Nothing }
-
-
-fetchRepoIssues : Token -> RepoSelector -> Task Error (List Issue)
-fetchRepoIssues token repo =
-    fetchPaged issuesQuery token { selector = repo, after = Nothing }
 
 
 fetchRepoIssuesPage : Token -> PagedSelector RepoSelector -> (Result Error ( List Issue, PageInfo ) -> msg) -> Cmd msg
@@ -1294,6 +1324,15 @@ reposQuery =
     GB.queryDocument queryRoot
 
 
+teamObject : GB.ValueSpec GB.NonNull GB.ObjectType Team vars
+teamObject =
+    GB.object Team
+        |> GB.with (GB.field "id" [] GB.string)
+        |> GB.with (GB.field "url" [] GB.string)
+        |> GB.with (GB.field "name" [] GB.string)
+        |> GB.with (GB.field "members" [] (GB.extract (GB.field "nodes" [] (GB.list userObject))))
+
+
 projectObject : GB.ValueSpec GB.NonNull GB.ObjectType Project vars
 projectObject =
     GB.object Project
@@ -1316,6 +1355,26 @@ projectOwnerObject =
 
 idObject =
     GB.extract (GB.field "id" [] GB.string)
+
+
+teamQuery : GB.Document GB.Query Team TeamSelector
+teamQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" .org GV.string
+
+        slugVar =
+            GV.required "slugVar" .slug GV.string
+
+        queryRoot =
+            GB.extract <|
+                GB.field "organization"
+                    [ ( "login", GA.variable orgNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "team" [ ( "slug", GA.variable slugVar ) ] teamObject)
+    in
+    GB.queryDocument queryRoot
 
 
 projectQuery : GB.Document GB.Query Project ProjectSelector

@@ -71,6 +71,9 @@ port setCards : ( GitHub.ID, List JD.Value ) -> Cmd msg
 port setGraphs : JD.Value -> Cmd msg
 
 
+port setPairingUsers : List JD.Value -> Cmd msg
+
+
 port refresh : (( String, GitHub.ID ) -> msg) -> Sub msg
 
 
@@ -122,6 +125,7 @@ type Msg
     | FetchRepoLabels GitHub.Repo
     | FetchRepoMilestones GitHub.Repo
     | FetchRepoReleases GitHub.Repo
+    | PairingTeamFetched (Result GitHub.Error GitHub.Team)
     | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
     | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
     | CardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
@@ -176,7 +180,7 @@ update msg model =
             ( model, Cmd.none )
 
         Refresh ->
-            ( { model | loadQueue = fetchRepos model :: model.loadQueue }, Cmd.none )
+            ( { model | loadQueue = fetchPairingTeam model :: fetchRepos model :: model.loadQueue }, Cmd.none )
 
         PopQueue ->
             case model.loadQueue of
@@ -208,6 +212,9 @@ update msg model =
                 ( model
                 , setGraphs (JE.list (ForceGraph.encode JE.string) graphs)
                 )
+
+        RefreshRequested "pairingUsers" _ ->
+            ( model, fetchPairingTeam model )
 
         RefreshRequested "columnCards" colId ->
             ( model, fetchCards model colId )
@@ -261,6 +268,10 @@ update msg model =
         RefreshRequested field id ->
             Log.debug "cannot refresh" ( field, id ) <|
                 ( model, Cmd.none )
+
+        HookReceived "membership" payload ->
+            Log.debug "membership hook received; refreshing Pairing team" () <|
+                ( decodeAndFetchPairingTeam payload model, Cmd.none )
 
         HookReceived "label" payload ->
             Log.debug "label hook received; refreshing repo" () <|
@@ -333,6 +344,13 @@ update msg model =
         HookReceived event payload ->
             Log.debug "hook received" ( event, payload ) <|
                 ( model, Cmd.none )
+
+        PairingTeamFetched (Ok team) ->
+            ( model, setPairingUsers (List.map GitHub.encodeUser team.members) )
+
+        PairingTeamFetched (Err err) ->
+            Log.debug "failed to fetch pairing members" err <|
+                backOff model err (fetchRepos model)
 
         RepositoriesFetched (Ok repos) ->
             Log.debug "repositories fetched" (List.map .name repos) <|
@@ -886,6 +904,27 @@ decodeAndFetchRepo nextMsg payload model =
                 model
 
 
+fetchPairingTeam : Model -> Cmd Msg
+fetchPairingTeam model =
+    GitHub.fetchTeam model.githubToken { org = model.githubOrg, slug = "pairing" }
+        |> Task.attempt PairingTeamFetched
+
+
+decodeAndFetchPairingTeam : JD.Value -> Model -> Model
+decodeAndFetchPairingTeam payload model =
+    case JD.decodeValue decodeTeamSelector payload of
+        Ok sel ->
+            if sel.slug == "pairing" then
+                { model | loadQueue = fetchPairingTeam model :: model.loadQueue }
+
+            else
+                model
+
+        Err err ->
+            Log.debug "failed to decode team" ( err, payload ) <|
+                model
+
+
 decodeAndFetchPRForCommit : JD.Value -> Model -> Model
 decodeAndFetchPRForCommit payload model =
     case JD.decodeValue (JD.field "sha" JD.string) payload of
@@ -949,6 +988,13 @@ decodeRepoSelector =
     JD.succeed GitHub.RepoSelector
         |> andMap (JD.at [ "repository", "owner", "login" ] JD.string)
         |> andMap (JD.at [ "repository", "name" ] JD.string)
+
+
+decodeTeamSelector : JD.Decoder GitHub.TeamSelector
+decodeTeamSelector =
+    JD.succeed GitHub.TeamSelector
+        |> andMap (JD.at [ "organization", "login" ] JD.string)
+        |> andMap (JD.at [ "team", "slug" ] JD.string)
 
 
 decodeIssueOrPRSelector : String -> JD.Decoder GitHub.IssueOrPRSelector

@@ -30,6 +30,9 @@ var events = new SSE();
 var dataIndex = 1;
 
 const data = {
+  // users in 'pairing' team
+  pairingUsers: [],
+
   // repos by id
   repos: {},
 
@@ -96,6 +99,12 @@ setInterval(popPoll, 30 * 1000);
 worker.ports.setGraphs.subscribe(function(gs) {
   graphs = gs;
   bumpIndexAndEmitUpdate("graphs", gs);
+});
+
+worker.ports.setPairingUsers.subscribe(function(users) {
+  data.pairingUsers = users;
+  bumpIndexAndEmitUpdate("pairingUsers", users);
+  popPoll();
 });
 
 worker.ports.setRepos.subscribe(function(repos) {

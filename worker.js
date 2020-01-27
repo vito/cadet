@@ -8477,6 +8477,132 @@ var $author$project$Worker$decodeAndFetchPRForCommit = F2(
 				model);
 		}
 	});
+var $author$project$GitHub$TeamSelector = F2(
+	function (org, slug) {
+		return {org: org, slug: slug};
+	});
+var $author$project$Worker$decodeTeamSelector = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$at,
+		_List_fromArray(
+			['team', 'slug']),
+		$elm$json$Json$Decode$string),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2(
+			$elm$json$Json$Decode$at,
+			_List_fromArray(
+				['organization', 'login']),
+			$elm$json$Json$Decode$string),
+		$elm$json$Json$Decode$succeed($author$project$GitHub$TeamSelector)));
+var $author$project$Worker$PairingTeamFetched = function (a) {
+	return {$: 'PairingTeamFetched', a: a};
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
+var $author$project$GitHub$Team = F4(
+	function (id, url, name, members) {
+		return {id: id, members: members, name: name, url: url};
+	});
+var $author$project$GitHub$teamObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'members',
+		_List_Nil,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$userObject)))),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Team)))));
+var $author$project$GitHub$teamQuery = function () {
+	var slugVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'slugVar',
+		function ($) {
+			return $.slug;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var orgNameVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'orgName',
+		function ($) {
+			return $.org;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var queryRoot = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+		A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'organization',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'login',
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(orgNameVar))
+				]),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+				A3(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+					'team',
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'slug',
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(slugVar))
+						]),
+					$author$project$GitHub$teamObject))));
+	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
+}();
+var $author$project$GitHub$fetchTeam = F2(
+	function (token, team) {
+		return A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery,
+			$author$project$GitHub$authedOptions(token),
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, team, $author$project$GitHub$teamQuery));
+	});
+var $author$project$Worker$fetchPairingTeam = function (model) {
+	return A2(
+		$elm$core$Task$attempt,
+		$author$project$Worker$PairingTeamFetched,
+		A2(
+			$author$project$GitHub$fetchTeam,
+			model.githubToken,
+			{org: model.githubOrg, slug: 'pairing'}));
+};
+var $author$project$Worker$decodeAndFetchPairingTeam = F2(
+	function (payload, model) {
+		var _v0 = A2($elm$json$Json$Decode$decodeValue, $author$project$Worker$decodeTeamSelector, payload);
+		if (_v0.$ === 'Ok') {
+			var sel = _v0.a;
+			return (sel.slug === 'pairing') ? _Utils_update(
+				model,
+				{
+					loadQueue: A2(
+						$elm$core$List$cons,
+						$author$project$Worker$fetchPairingTeam(model),
+						model.loadQueue)
+				}) : model;
+		} else {
+			var err = _v0.a;
+			return A3(
+				$author$project$Log$debug,
+				'failed to decode team',
+				_Utils_Tuple2(err, payload),
+				model);
+		}
+	});
 var $author$project$GitHub$RepoSelector = F2(
 	function (owner, name) {
 		return {name: name, owner: owner};
@@ -8527,8 +8653,6 @@ var $author$project$GitHub$repoObject = A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Repo))))));
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
 var $author$project$GitHub$repoQuery = function () {
 	var ownerVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -11738,6 +11862,9 @@ var $author$project$Worker$setIssue = _Platform_outgoingPort('setIssue', $elm$co
 var $author$project$Worker$setIssues = _Platform_outgoingPort(
 	'setIssues',
 	$elm$json$Json$Encode$list($elm$core$Basics$identity));
+var $author$project$Worker$setPairingUsers = _Platform_outgoingPort(
+	'setPairingUsers',
+	$elm$json$Json$Encode$list($elm$core$Basics$identity));
 var $author$project$Worker$setPullRequest = _Platform_outgoingPort('setPullRequest', $elm$core$Basics$identity);
 var $author$project$Worker$setPullRequests = _Platform_outgoingPort(
 	'setPullRequests',
@@ -11928,8 +12055,11 @@ var $author$project$Worker$update = F2(
 						{
 							loadQueue: A2(
 								$elm$core$List$cons,
-								$author$project$Worker$fetchRepos(model),
-								model.loadQueue)
+								$author$project$Worker$fetchPairingTeam(model),
+								A2(
+									$elm$core$List$cons,
+									$author$project$Worker$fetchRepos(model),
+									model.loadQueue))
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'PopQueue':
@@ -11975,6 +12105,10 @@ var $author$project$Worker$update = F2(
 								graphs))));
 			case 'RefreshRequested':
 				switch (msg.a) {
+					case 'pairingUsers':
+						return _Utils_Tuple2(
+							model,
+							$author$project$Worker$fetchPairingTeam(model));
 					case 'columnCards':
 						var colId = msg.b;
 						return _Utils_Tuple2(
@@ -12086,6 +12220,15 @@ var $author$project$Worker$update = F2(
 				}
 			case 'HookReceived':
 				switch (msg.a) {
+					case 'membership':
+						var payload = msg.b;
+						return A3(
+							$author$project$Log$debug,
+							'membership hook received; refreshing Pairing team',
+							_Utils_Tuple0,
+							_Utils_Tuple2(
+								A2($author$project$Worker$decodeAndFetchPairingTeam, payload, model),
+								$elm$core$Platform$Cmd$none));
 					case 'label':
 						var payload = msg.b;
 						return A3(
@@ -12252,6 +12395,25 @@ var $author$project$Worker$update = F2(
 							'hook received',
 							_Utils_Tuple2(event, payload),
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
+				}
+			case 'PairingTeamFetched':
+				if (msg.a.$ === 'Ok') {
+					var team = msg.a.a;
+					return _Utils_Tuple2(
+						model,
+						$author$project$Worker$setPairingUsers(
+							A2($elm$core$List$map, $author$project$GitHub$encodeUser, team.members)));
+				} else {
+					var err = msg.a.a;
+					return A3(
+						$author$project$Log$debug,
+						'failed to fetch pairing members',
+						err,
+						A3(
+							$author$project$Worker$backOff,
+							model,
+							err,
+							$author$project$Worker$fetchRepos(model)));
 				}
 			case 'RepositoriesFetched':
 				if (msg.a.$ === 'Ok') {

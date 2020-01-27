@@ -311,8 +311,7 @@ update msg model =
                         GitHub.AssignablePullRequest pr ->
                             Card.fromPR pr
             in
-            Log.debug "assignees updated"
-                ()
+            Log.debug "assignees updated" ( card.id, card.title ) <|
                 ( { model
                     | cards = Dict.insert card.id card model.cards
                     , assignUserDrag = Drag.complete model.assignUserDrag
@@ -323,7 +322,7 @@ update msg model =
                 )
 
         AssigneesUpdated (Ok Nothing) ->
-            Log.debug "assign returned nothing" () <|
+            Log.debug "assignment returned nothing" () <|
                 ( model, Cmd.none )
 
         AssigneesUpdated (Err err) ->
@@ -430,6 +429,7 @@ update msg model =
             if index > model.dataIndex then
                 ( { model
                     | dataIndex = index
+                    , assignableUsers = value.pairingUsers
                     , repos = value.repos
                     , repoProjects = value.repoProjects
                     , repoCommits = value.repoCommits
@@ -1624,7 +1624,7 @@ viewPullRequestsPage model =
                 )
             |> List.filterMap identity
             |> Html.div [ HA.class "dashboard-pane" ]
-        , Html.div [ HA.class "dashboard-pane leaderboard-pane" ]
+        , Html.div [ HA.class "dashboard-pane side-pane" ]
             [ Html.div [ HA.class "page-header" ]
                 [ Octicons.flame octiconOpts
                 , Html.text "Weekly Review Leaderboard"
@@ -1906,22 +1906,51 @@ viewPairsPage model =
                 Drag.draggable model.assignOnlyUserDrag AssignOnlyUserDrag card <|
                     CardView.viewCard model [] card
     in
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Octicons.organization octiconOpts
-            , Html.text "Lanes"
+    Html.div [ HA.class "page-content dashboard" ]
+        [ Html.div [ HA.class "dashboard-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.listUnordered octiconOpts
+                , Html.text "Lanes"
+                ]
+            , Html.div [ HA.class "card-lanes" ] <|
+                List.map
+                    (\cards ->
+                        Html.div [ HA.class "card-lane" ]
+                            [ viewLaneActors model cards
+                            , Html.div [ HA.class "cards" ] <|
+                                List.map viewDroppableCard cards
+                            ]
+                    )
+                    byAssignees
             ]
-        , Html.div [ HA.class "card-lanes" ] <|
-            List.map
-                (\cards ->
-                    Html.div [ HA.class "card-lane" ]
-                        [ viewLaneActors model cards
-                        , Html.div [ HA.class "cards" ] <|
-                            List.map viewDroppableCard cards
-                        ]
-                )
-                byAssignees
+        , Html.div [ HA.class "dashboard-pane side-pane" ]
+            [ Html.div [ HA.class "page-header" ]
+                [ Octicons.organization octiconOpts
+                , Html.text "Assignable Users"
+                ]
+            , viewAssignableUsers model
+            ]
         ]
+
+
+viewAssignableUsers : Model -> Html Msg
+viewAssignableUsers model =
+    let
+        assignDropCandidate user =
+            { msgFunc = AssignOnlyUser
+            , target = user
+            }
+
+        viewDraggableActor user =
+            Drag.droppable model.assignOnlyUserDrag AssignOnlyUserDrag (assignDropCandidate user) <|
+                Drag.draggable model.assignUserDrag AssignUserDrag user <|
+                    Html.div [ HA.class "assignable-user" ]
+                        [ CardView.viewCardActor user
+                        , Html.text (Maybe.withDefault user.login user.name)
+                        ]
+    in
+    Html.div [ HA.class "assignable-users" ] <|
+        List.map viewDraggableActor model.assignableUsers
 
 
 viewLaneActors : Model -> List Card -> Html Msg
@@ -2563,6 +2592,10 @@ handleEvent event data index model =
                         model
     in
     case event of
+        "pairingUsers" ->
+            withDecoded (JD.list GitHub.decodeUser) <|
+                \val -> { model | assignableUsers = val }
+
         "columnCards" ->
             withDecoded Backend.decodeColumnCardsEvent <|
                 \val ->
