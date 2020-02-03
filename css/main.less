@@ -1902,26 +1902,26 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .assignable-user {
-  font-size: 32px;
+  font-size: 24px;
   background: white;
 
   border: 1px solid @gray-200;
   margin-bottom: 10px;
 
   color: @gray-900;
-  padding: 10px;
+  padding: 5px;
 
   display: flex;
   flex-direction: row;
   border-radius: 10px;
 
-  line-height: 60px;
+  line-height: 48px;
 
   .card-actor {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     vertical-align: middle;
-    margin-right: 15px;
+    margin-right: 10px;
   }
 }
 
@@ -1993,33 +1993,40 @@ a.column-title:hover, .page-header a:hover {
   margin-bottom: 40px;
 }
 
+.project-lanes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
 .card-lanes {
   display: flex;
   flex-direction: column;
+  padding: 10px;
 
   .card-lane {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
   }
 
   .cards {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
 
     .card {
-      font-size: 15px;
+      font-size: 10px;
       margin-top: @card-margin;
-      margin-right: @card-margin;
     }
   }
 
   .lane-actors {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
 
     .card-actor {
-      font-size: 15px;
+      font-size: 10px;
 
       width: 4.8em;
       height: 4.8em;

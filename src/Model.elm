@@ -11,6 +11,7 @@ module Model exposing
     , Model
     , Msg(..)
     , Page(..)
+    , PendingAssignments
     , Progress(..)
     , ProgressState
     , ReleaseStatus
@@ -122,6 +123,15 @@ type alias Model =
     -- card note editing state
     , editingCardNotes : Dict GitHub.ID String
     , showArchivedCards : Set GitHub.ID
+
+    -- assigning state
+    , pendingAssignments : Dict GitHub.ID PendingAssignments
+    }
+
+
+type alias PendingAssignments =
+    { assign : List GitHub.User
+    , unassign : List GitHub.User
     }
 
 
@@ -140,6 +150,7 @@ type Msg
     | AssignOnlyUserDrag (Drag.Msg Card GitHub.User Msg)
     | AssignOnlyUser Card GitHub.User
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
+    | CommitAssignments
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Backend.Me))
     | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
@@ -383,4 +394,5 @@ empty key =
     , deletingCards = Set.empty
     , editingCardNotes = Dict.empty
     , showArchivedCards = Set.empty
+    , pendingAssignments = Dict.empty
     }

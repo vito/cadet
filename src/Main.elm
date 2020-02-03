@@ -264,14 +264,28 @@ update msg model =
             in
             case dragModel of
                 Drag.Dropping state ->
-                    update state.msg { newModel | assignUserDrag = Drag.drop newModel.assignUserDrag }
+                    update state.msg { newModel | assignUserDrag = Drag.complete newModel.assignUserDrag }
 
                 _ ->
                     ( newModel, Cmd.none )
 
         AssignUser user card ->
             Log.debug "assigning" ( user.login, card.id ) <|
-                ( model, Effects.assignUsers model [ user ] card.id )
+                let
+                    addAssignment mp =
+                        case mp of
+                            Nothing ->
+                                Just { assign = [ user ], unassign = [] }
+
+                            Just p ->
+                                Just { p | assign = user :: List.filter ((/=) user.id << .id) p.assign }
+                in
+                ( { model
+                    | pendingAssignments =
+                        Dict.update card.id addAssignment model.pendingAssignments
+                  }
+                , Cmd.none
+                )
 
         AssignOnlyUserDrag subMsg ->
             let
@@ -283,23 +297,54 @@ update msg model =
             in
             case dragModel of
                 Drag.Dropping state ->
-                    update state.msg { newModel | assignOnlyUserDrag = Drag.drop newModel.assignOnlyUserDrag }
+                    update state.msg { newModel | assignOnlyUserDrag = Drag.complete newModel.assignOnlyUserDrag }
 
                 _ ->
                     ( newModel, Cmd.none )
 
         AssignOnlyUser card user ->
             Log.debug "assigning" ( user.login, card.id ) <|
-                ( model
-                , Cmd.batch
-                    [ Effects.assignUsers model [ user ] card.id
-                    , let
-                        otherAssignees =
-                            List.filter ((/=) user.id << .id) card.assignees
-                      in
-                      Effects.unassignUsers model otherAssignees card.id
-                    ]
+                let
+                    otherAssignees =
+                        List.filter ((/=) user.id << .id) card.assignees
+
+                    pending =
+                        { assign = [ user ], unassign = otherAssignees }
+                in
+                ( { model
+                    | pendingAssignments =
+                        Dict.insert card.id pending model.pendingAssignments
+                  }
+                , Cmd.none
                 )
+
+        CommitAssignments ->
+            let
+                cardAssignments cardId { assign, unassign } =
+                    case ( assign, unassign ) of
+                        ( [], [] ) ->
+                            []
+
+                        ( [], _ ) ->
+                            [ Effects.unassignUsers model unassign cardId ]
+
+                        ( _, [] ) ->
+                            [ Effects.assignUsers model assign cardId ]
+
+                        _ ->
+                            [ Effects.assignUsers model assign cardId
+                            , Effects.unassignUsers model unassign cardId
+                            ]
+            in
+            ( { model | pendingAssignments = Dict.empty }
+            , Cmd.batch <|
+                Dict.foldl
+                    (\cardId assignments effects ->
+                        cardAssignments cardId assignments ++ effects
+                    )
+                    []
+                    model.pendingAssignments
+            )
 
         AssigneesUpdated (Ok (Just assignable)) ->
             let
@@ -314,8 +359,6 @@ update msg model =
             Log.debug "assignees updated" ( card.id, card.title ) <|
                 ( { model
                     | cards = Dict.insert card.id card model.cards
-                    , assignUserDrag = Drag.complete model.assignUserDrag
-                    , assignOnlyUserDrag = Drag.complete model.assignOnlyUserDrag
                     , progress = finishProgress card.id model.progress
                   }
                 , Cmd.none
@@ -1874,11 +1917,41 @@ viewPairsPage model =
                 |> List.filterMap .contentId
                 |> List.filterMap (\id -> Dict.get id model.cards)
 
+        reflectPendingAssignments card =
+            let
+                newAssignees =
+                    case Dict.get card.id model.pendingAssignments of
+                        Nothing ->
+                            card.assignees
+
+                        Just { assign, unassign } ->
+                            let
+                                unaffected { id } =
+                                    not (List.any ((==) id << .id) (assign ++ unassign))
+                            in
+                            assign ++ List.filter unaffected card.assignees
+            in
+            { card | assignees = newAssignees }
+
+        projectInFlightCards project =
+            let
+                projectCards =
+                    List.filter isInProgress project.columns
+                        |> List.concatMap columnCards
+                        |> List.map reflectPendingAssignments
+            in
+            if List.isEmpty projectCards then
+                Nothing
+
+            else
+                Just ( project, projectCards )
+
         inFlightCards =
             model.repoProjects
                 |> Dict.values
                 |> List.concat
-                |> List.concatMap (\p -> List.filter isInProgress p.columns |> List.concatMap columnCards)
+                |> List.filterMap projectInFlightCards
+                |> List.sortBy (Tuple.first >> .name)
 
         addCard card val =
             case val of
@@ -1891,9 +1964,12 @@ viewPairsPage model =
         groupByAssignee card groups =
             Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
 
-        byAssignees =
-            List.foldl groupByAssignee Dict.empty inFlightCards
-                |> Dict.values
+        byAssignees cards =
+            List.foldl groupByAssignee Dict.empty cards
+                |> Dict.toList
+                |> List.sortBy (\( a, b ) -> ( List.length a, List.length b ))
+                |> List.reverse
+                |> List.map Tuple.second
 
         viewDroppableCard card =
             let
@@ -1905,6 +1981,27 @@ viewPairsPage model =
             Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
                 Drag.draggable model.assignOnlyUserDrag AssignOnlyUserDrag card <|
                     CardView.viewCard model [] card
+
+        viewProjectLanes ( project, projectCards ) =
+            Html.div [ HA.class "project-cards" ]
+                [ Html.div [ HA.class "column-title" ]
+                    [ Octicons.project octiconOpts
+                    , Html.span [ HA.class "column-name" ]
+                        [ Html.text project.name
+                        ]
+                    ]
+                , CardView.viewProjectBar model project
+                , Html.div [ HA.class "card-lanes" ] <|
+                    List.map
+                        (\cards ->
+                            Html.div [ HA.class "card-lane" ]
+                                [ viewLaneActors model cards
+                                , Html.div [ HA.class "cards" ] <|
+                                    List.map viewDroppableCard cards
+                                ]
+                        )
+                        (byAssignees projectCards)
+                ]
     in
     Html.div [ HA.class "page-content dashboard" ]
         [ Html.div [ HA.class "dashboard-pane" ]
@@ -1912,16 +2009,8 @@ viewPairsPage model =
                 [ Octicons.listUnordered octiconOpts
                 , Html.text "Lanes"
                 ]
-            , Html.div [ HA.class "card-lanes" ] <|
-                List.map
-                    (\cards ->
-                        Html.div [ HA.class "card-lane" ]
-                            [ viewLaneActors model cards
-                            , Html.div [ HA.class "cards" ] <|
-                                List.map viewDroppableCard cards
-                            ]
-                    )
-                    byAssignees
+            , Html.div [ HA.class "project-lanes" ] <|
+                List.map viewProjectLanes inFlightCards
             ]
         , Html.div [ HA.class "dashboard-pane side-pane" ]
             [ Html.div [ HA.class "page-header" ]

@@ -4,6 +4,7 @@ module CardView exposing
     , viewCardActor
     , viewCardIcon
     , viewNote
+    , viewProjectBar
     , viewProjectCard
     , viewProjectColumnCard
     )
@@ -250,13 +251,13 @@ viewNoteCard model project col card controls text =
                 |> Markdown.toHtml [ HA.class "card-info card-note" ]
             , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
                 List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    controls ++
-                      [ Html.span
-                          [ HA.class "spin-on-column-refresh"
-                          , HE.onClick (RefreshColumn col.id)
-                          ]
-                          [ Octicons.sync Octicons.defaultOptions ]
-                      ]
+                    controls
+                        ++ [ Html.span
+                                [ HA.class "spin-on-column-refresh"
+                                , HE.onClick (RefreshColumn col.id)
+                                ]
+                                [ Octicons.sync Octicons.defaultOptions ]
+                           ]
             ]
         , case Dict.get card.id model.editingCardNotes of
             Nothing ->
