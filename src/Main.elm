@@ -2365,16 +2365,16 @@ columnIcon : GitHub.ProjectColumn -> Html Msg
 columnIcon col =
     case col.purpose of
         Nothing ->
-            Octicons.kebabHorizontal { octiconOpts | color = Colors.gray }
+            Octicons.kebabHorizontal octiconOpts
 
         Just GitHub.ProjectColumnPurposeToDo ->
-            Octicons.book { octiconOpts | color = Colors.gray }
+            Octicons.book octiconOpts
 
         Just GitHub.ProjectColumnPurposeInProgress ->
-            Octicons.pulse { octiconOpts | color = Colors.purple }
+            Octicons.pulse octiconOpts
 
         Just GitHub.ProjectColumnPurposeDone ->
-            Octicons.check { octiconOpts | color = Colors.green }
+            Octicons.check octiconOpts
 
 
 focusId : GitHub.ID -> String
