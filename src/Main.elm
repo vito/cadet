@@ -1991,12 +1991,20 @@ viewPairsPage model =
             else
                 Just ( project, projectCards )
 
+        progress ( p, _ ) =
+            let
+                ( toDos, inProgresses, dones ) =
+                    CardView.projectProgress model p
+            in
+            toFloat dones / toFloat (toDos + inProgresses + dones)
+
         inFlightCards =
             model.repoProjects
                 |> Dict.values
                 |> List.concat
                 |> List.filterMap projectInFlightCards
-                |> List.sortBy (Tuple.first >> .name)
+                |> List.sortBy progress
+                |> List.reverse
 
         addCard card val =
             case val of

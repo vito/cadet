@@ -18305,6 +18305,40 @@ var $author$project$CardView$viewCardActor = function (_v0) {
 		_List_Nil);
 };
 var $author$project$Colors$gray200 = '#e1e4e8';
+var $author$project$CardView$projectProgress = F2(
+	function (model, project) {
+		var cardCount = function (col) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2(
+					$elm$core$Maybe$map,
+					$elm$core$List$length,
+					A2($elm$core$Dict$get, col.id, model.columnCards)));
+		};
+		var countPurpose = function (purpose) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2(
+					$elm$core$Maybe$map,
+					cardCount,
+					A2(
+						$elm_community$list_extra$List$Extra$find,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Basics$eq(
+								$elm$core$Maybe$Just(purpose)),
+							function ($) {
+								return $.purpose;
+							}),
+						project.columns)));
+		};
+		var dones = countPurpose($author$project$GitHub$ProjectColumnPurposeDone);
+		var inProgresses = countPurpose($author$project$GitHub$ProjectColumnPurposeInProgress);
+		var toDos = countPurpose($author$project$GitHub$ProjectColumnPurposeToDo);
+		return _Utils_Tuple3(toDos, inProgresses, dones);
+	});
 var $author$project$ProgressBar$view = function (segments) {
 	var total = $elm$core$List$sum(
 		A2($elm$core$List$map, $elm$core$Tuple$second, segments));
@@ -18344,36 +18378,10 @@ var $author$project$ProgressBar$view = function (segments) {
 };
 var $author$project$CardView$viewProjectBar = F2(
 	function (model, project) {
-		var cardCount = function (col) {
-			return A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2(
-					$elm$core$Maybe$map,
-					$elm$core$List$length,
-					A2($elm$core$Dict$get, col.id, model.columnCards)));
-		};
-		var countPurpose = function (purpose) {
-			return A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2(
-					$elm$core$Maybe$map,
-					cardCount,
-					A2(
-						$elm_community$list_extra$List$Extra$find,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(
-								$elm$core$Maybe$Just(purpose)),
-							function ($) {
-								return $.purpose;
-							}),
-						project.columns)));
-		};
-		var dones = countPurpose($author$project$GitHub$ProjectColumnPurposeDone);
-		var inProgresses = countPurpose($author$project$GitHub$ProjectColumnPurposeInProgress);
-		var toDos = countPurpose($author$project$GitHub$ProjectColumnPurposeToDo);
+		var _v0 = A2($author$project$CardView$projectProgress, model, project);
+		var toDos = _v0.a;
+		var inProgresses = _v0.b;
+		var dones = _v0.c;
 		return (((toDos + inProgresses) + dones) > 0) ? $author$project$ProgressBar$view(
 			_List_fromArray(
 				[
@@ -24890,14 +24898,14 @@ var $author$project$Main$viewPairsPage = function (model) {
 	};
 	var reflectPendingAssignments = function (card) {
 		var newAssignees = function () {
-			var _v4 = A2($elm$core$Dict$get, card.id, model.pendingAssignments);
-			if (_v4.$ === 'Nothing') {
+			var _v6 = A2($elm$core$Dict$get, card.id, model.pendingAssignments);
+			if (_v6.$ === 'Nothing') {
 				return card.assignees;
 			} else {
-				var assign = _v4.a.assign;
-				var unassign = _v4.a.unassign;
-				var unaffected = function (_v5) {
-					var id = _v5.id;
+				var assign = _v6.a.assign;
+				var unassign = _v6.a.unassign;
+				var unaffected = function (_v7) {
+					var id = _v7.id;
 					return !A2(
 						$elm$core$List$any,
 						A2(
@@ -24916,6 +24924,14 @@ var $author$project$Main$viewPairsPage = function (model) {
 		return _Utils_update(
 			card,
 			{assignees: newAssignees});
+	};
+	var progress = function (_v5) {
+		var p = _v5.a;
+		var _v4 = A2($author$project$CardView$projectProgress, model, p);
+		var toDos = _v4.a;
+		var inProgresses = _v4.b;
+		var dones = _v4.c;
+		return dones / ((toDos + inProgresses) + dones);
 	};
 	var isInProgress = function (_v3) {
 		var purpose = _v3.purpose;
@@ -24950,19 +24966,15 @@ var $author$project$Main$viewPairsPage = function (model) {
 		return $elm$core$List$isEmpty(projectCards) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
 			_Utils_Tuple2(project, projectCards));
 	};
-	var inFlightCards = A2(
-		$elm$core$List$sortBy,
+	var inFlightCards = $elm$core$List$reverse(
 		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Tuple$first,
-			function ($) {
-				return $.name;
-			}),
-		A2(
-			$elm$core$List$filterMap,
-			projectInFlightCards,
-			$elm$core$List$concat(
-				$elm$core$Dict$values(model.repoProjects))));
+			$elm$core$List$sortBy,
+			progress,
+			A2(
+				$elm$core$List$filterMap,
+				projectInFlightCards,
+				$elm$core$List$concat(
+					$elm$core$Dict$values(model.repoProjects)))));
 	var addCard = F2(
 		function (card, val) {
 			if (val.$ === 'Nothing') {

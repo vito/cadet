@@ -1,5 +1,6 @@
 module CardView exposing
     ( focusEditNote
+    , projectProgress
     , viewCard
     , viewCardActor
     , viewCardIcon
@@ -397,8 +398,8 @@ findProjectCard model columns pred =
                     findProjectCard model rest pred
 
 
-viewProjectBar : Model -> GitHub.Project -> Html Msg
-viewProjectBar model project =
+projectProgress : Model -> GitHub.Project -> ( Int, Int, Int )
+projectProgress model project =
     let
         cardCount col =
             Dict.get col.id model.columnCards
@@ -418,6 +419,15 @@ viewProjectBar model project =
 
         dones =
             countPurpose GitHub.ProjectColumnPurposeDone
+    in
+    ( toDos, inProgresses, dones )
+
+
+viewProjectBar : Model -> GitHub.Project -> Html Msg
+viewProjectBar model project =
+    let
+        ( toDos, inProgresses, dones ) =
+            projectProgress model project
     in
     if toDos + inProgresses + dones > 0 then
         ProgressBar.view
