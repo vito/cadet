@@ -11,6 +11,7 @@ module Model exposing
     , Model
     , Msg(..)
     , Page(..)
+    , PendingAssignments
     , Progress(..)
     , ProgressState
     , ReleaseStatus
@@ -81,6 +82,7 @@ type alias Model =
     -- card dragging in projects
     , projectDrag : Drag.Model CardSource CardDestination Msg
     , assignUserDrag : Drag.Model GitHub.User Card Msg
+    , reassignUserDrag : Drag.Model ( GitHub.User, List Card ) Card Msg
     , assignOnlyUserDrag : Drag.Model Card GitHub.User Msg
 
     -- sidebar card search/selecting state
@@ -122,6 +124,15 @@ type alias Model =
     -- card note editing state
     , editingCardNotes : Dict GitHub.ID String
     , showArchivedCards : Set GitHub.ID
+
+    -- assigning state
+    , pendingAssignments : Dict GitHub.ID PendingAssignments
+    }
+
+
+type alias PendingAssignments =
+    { assign : List GitHub.User
+    , unassign : List GitHub.User
     }
 
 
@@ -139,7 +150,11 @@ type Msg
     | AssignUser GitHub.User Card
     | AssignOnlyUserDrag (Drag.Msg Card GitHub.User Msg)
     | AssignOnlyUser Card GitHub.User
+    | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) Card Msg)
+    | ReassignUser ( GitHub.User, List Card ) Card
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
+    | CommitAssignments
+    | ResetAssignments
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Backend.Me))
     | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
@@ -369,6 +384,7 @@ empty key =
     , graphSort = ImpactSort
     , projectDrag = Drag.init
     , assignUserDrag = Drag.init
+    , reassignUserDrag = Drag.init
     , assignOnlyUserDrag = Drag.init
     , deletingLabels = Set.empty
     , editingLabels = Dict.empty
@@ -383,4 +399,5 @@ empty key =
     , deletingCards = Set.empty
     , editingCardNotes = Dict.empty
     , showArchivedCards = Set.empty
+    , pendingAssignments = Dict.empty
     }

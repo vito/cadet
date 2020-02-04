@@ -3,8 +3,8 @@
 @project-bg: @gray-900;
 @column-bg: transparent;
 
-@card-width: 30em;
-@card-margin: 1em;
+@card-width: 300px;
+@card-margin: 10px;
 
 @wide-min-width: 950px;
 
@@ -496,18 +496,6 @@ h4 {
       background: @white;
       color: @black;
     }
-  }
-}
-
-.button {
-  display: inline-block;
-  flex-shrink: 0;
-  padding: 12px;
-  text-align: center;
-  color: @white;
-
-  .octicon * {
-    fill: @white;
   }
 }
 
@@ -1313,53 +1301,6 @@ svg {
 
 }
 
-.buttons {
-  text-align: right;
-  width: 100%;
-  padding: @card-margin;
-
-  .button {
-    border: 0;
-
-    display: inline-block;
-    color: @white;
-    padding: 0 9px;
-    line-height: 28px;
-    border-radius: 3px;
-    margin-left: 8px;
-    cursor: pointer;
-
-    .octicon {
-      margin-right: 6px;
-      margin-left: -2px;
-      margin-top: -1px;
-    }
-
-    &.apply {
-      background: @green;
-
-      &:hover {
-        background: @green-600;
-      }
-    }
-
-    &.cancel {
-      background: @white;
-      color: @gray;
-
-      .octicon {
-        * {
-          fill: @gray;
-        }
-      }
-
-      &:hover {
-        background: @gray-200;
-      }
-    }
-  }
-}
-
 .repo-roadmap {
   column-span: all;
   margin-bottom: 4 * @card-margin;
@@ -1880,7 +1821,7 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .side-pane {
-  flex-basis: 450px;
+  flex-basis: 350px;
   flex-grow: 0;
   flex-shrink: 0;
   position: sticky;
@@ -1901,27 +1842,27 @@ a.column-title:hover, .page-header a:hover {
   font-size: 32px;
 }
 
-.assignable-user {
-  font-size: 32px;
+.side-user {
+  font-size: 24px;
   background: white;
 
   border: 1px solid @gray-200;
   margin-bottom: 10px;
 
   color: @gray-900;
-  padding: 10px;
+  padding: 5px;
 
   display: flex;
   flex-direction: row;
   border-radius: 10px;
 
-  line-height: 60px;
+  line-height: 48px;
 
   .card-actor {
-    width: 60px;
-    height: 60px;
+    width: 48px;
+    height: 48px;
     vertical-align: middle;
-    margin-right: 15px;
+    margin-right: 10px;
   }
 }
 
@@ -1934,40 +1875,23 @@ a.column-title:hover, .page-header a:hover {
   box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
 }
 
-.leaderboard-person {
-  color: @gray;
-  font-weight: bold;
-}
-
-.leaderboard-person, .leaderboard-count {
-  padding: 16px;
-  flex-grow: 1;
-}
-
 .leaderboard-count-number {
-  background: @gray-800;
+  background: @gray;
   color: @white;
   line-height: 48px;
   border-radius: 5px;
   width: 48px;
   text-align: center;
   display: inline-block;
+  position: absolute;
+  right: 6px;
 }
 
-.leaderboard-avatar, .release-avatar {
+.release-avatar {
   width: 48px;
   height: 48px;
   vertical-align: middle;
   border-radius: 5px;
-}
-
-.leaderboard-avatar {
-  margin-right: 16px;
-}
-
-.leaderboard-count {
-  font-weight: bold;
-  text-align: right;
 }
 
 .fixed-columns {
@@ -1993,6 +1917,41 @@ a.column-title:hover, .page-header a:hover {
   margin-bottom: 40px;
 }
 
+.project-lanes {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  .project-lane {
+    margin-bottom: 50px;
+  }
+
+  .project-lane,
+  .project-lanes-hack {
+    flex-basis: 32%;
+  }
+
+  .project-title {
+    .octicon {
+      margin-right: 8px;
+      width: 17px;
+      margin-top: -3px;
+    }
+
+    .project-name {
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 24px;
+    }
+  }
+
+  .progress-bar {
+    width: auto;
+    margin: 10px 0;
+  }
+}
+
 .card-lanes {
   display: flex;
   flex-direction: column;
@@ -2004,13 +1963,14 @@ a.column-title:hover, .page-header a:hover {
 
   .cards {
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
+    flex-grow: 1;
 
     .card {
-      font-size: 15px;
+      font-size: 12px;
       margin-top: @card-margin;
-      margin-right: @card-margin;
+      width: auto;
     }
   }
 
@@ -2019,7 +1979,7 @@ a.column-title:hover, .page-header a:hover {
     flex-direction: column;
 
     .card-actor {
-      font-size: 15px;
+      font-size: 10px;
 
       width: 4.8em;
       height: 4.8em;
@@ -2067,4 +2027,80 @@ a.column-title:hover, .page-header a:hover {
       fill: @white;
     }
   }
+}
+
+.buttons {
+  text-align: right;
+  width: 100%;
+  padding: @card-margin;
+
+  .button {
+    border: 0;
+
+    display: inline-block;
+    color: @white;
+    padding: 0 9px;
+    line-height: 28px;
+    border-radius: 3px;
+    margin-left: 8px;
+    cursor: pointer;
+
+    .octicon {
+      margin-right: 6px;
+      margin-left: -2px;
+      margin-top: -1px;
+    }
+
+    &.apply {
+      background: @green;
+
+      &:hover {
+        background: @green-600;
+      }
+    }
+
+    &.cancel {
+      background: @white;
+      color: @gray;
+
+      .octicon {
+        * {
+          fill: @gray;
+        }
+      }
+
+      &:hover {
+        background: @gray-200;
+      }
+    }
+  }
+}
+
+.button {
+  display: inline-block;
+  flex-shrink: 0;
+  padding: 12px;
+  text-align: center;
+  color: @white;
+  font-size: 12px;
+
+  .octicon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .octicon * {
+    fill: @white;
+  }
+}
+
+.lane-controls {
+  width: auto;
+  line-height: 28px;
+  display: inline-block;
+  padding: 0;
+  margin-left: 10px;
+  margin-bottom: -4px;
+  position: relative;
+  top: -4px;
 }

@@ -5780,11 +5780,13 @@ var $author$project$Model$empty = function (key) {
 		newLabelColored: false,
 		openPRsByRepo: $elm$core$Dict$empty,
 		page: $author$project$Model$GlobalGraphPage,
+		pendingAssignments: $elm$core$Dict$empty,
 		prReviewers: $elm$core$Dict$empty,
 		progress: $elm$core$Dict$empty,
 		projectDrag: $author$project$Drag$init,
 		projects: $elm$core$Dict$empty,
 		prs: $elm$core$Dict$empty,
+		reassignUserDrag: $author$project$Drag$init,
 		repoCommits: $elm$core$Dict$empty,
 		repoLabels: $elm$core$Dict$empty,
 		repoMilestones: $elm$core$Dict$empty,
@@ -14982,7 +14984,7 @@ var $author$project$Main$update = F2(
 							$temp$model = _Utils_update(
 							newModel,
 							{
-								assignUserDrag: $author$project$Drag$drop(newModel.assignUserDrag)
+								assignUserDrag: $author$project$Drag$complete(newModel.assignUserDrag)
 							});
 						msg = $temp$msg;
 						model = $temp$model;
@@ -14997,14 +14999,159 @@ var $author$project$Main$update = F2(
 						$author$project$Log$debug,
 						'assigning',
 						_Utils_Tuple2(user.login, card.id),
-						_Utils_Tuple2(
-							model,
-							A3(
-								$author$project$Effects$assignUsers,
-								model,
-								_List_fromArray(
-									[user]),
-								card.id)));
+						function () {
+							var addAssignment = function (mp) {
+								if (mp.$ === 'Nothing') {
+									return $elm$core$Maybe$Just(
+										{
+											assign: _List_fromArray(
+												[user]),
+											unassign: _List_Nil
+										});
+								} else {
+									var p = mp.a;
+									return $elm$core$Maybe$Just(
+										_Utils_update(
+											p,
+											{
+												assign: A2(
+													$elm$core$List$cons,
+													user,
+													A2(
+														$elm$core$List$filter,
+														A2(
+															$elm$core$Basics$composeL,
+															$elm$core$Basics$neq(user.id),
+															function ($) {
+																return $.id;
+															}),
+														p.assign))
+											}));
+								}
+							};
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3($elm$core$Dict$update, card.id, addAssignment, model.pendingAssignments)
+									}),
+								$elm$core$Platform$Cmd$none);
+						}());
+				case 'ReassignUserDrag':
+					var subMsg = msg.a;
+					var dragModel = A2($author$project$Drag$update, subMsg, model.reassignUserDrag);
+					var newModel = _Utils_update(
+						model,
+						{reassignUserDrag: dragModel});
+					if (dragModel.$ === 'Dropping') {
+						var state = dragModel.a;
+						var $temp$msg = state.msg,
+							$temp$model = _Utils_update(
+							newModel,
+							{
+								reassignUserDrag: $author$project$Drag$complete(newModel.reassignUserDrag)
+							});
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					} else {
+						return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
+					}
+				case 'ReassignUser':
+					var _v10 = msg.a;
+					var user = _v10.a;
+					var unassignCards = _v10.b;
+					var assignCard = msg.b;
+					return A3(
+						$author$project$Log$debug,
+						'reassigning',
+						_Utils_Tuple3(
+							user.login,
+							A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.id;
+								},
+								unassignCards),
+							assignCard.id),
+						function () {
+							var addUnassignment = function (mp) {
+								if (mp.$ === 'Nothing') {
+									return $elm$core$Maybe$Just(
+										{
+											assign: _List_Nil,
+											unassign: _List_fromArray(
+												[user])
+										});
+								} else {
+									var p = mp.a;
+									return $elm$core$Maybe$Just(
+										_Utils_update(
+											p,
+											{
+												unassign: A2(
+													$elm$core$List$cons,
+													user,
+													A2(
+														$elm$core$List$filter,
+														A2(
+															$elm$core$Basics$composeL,
+															$elm$core$Basics$neq(user.id),
+															function ($) {
+																return $.id;
+															}),
+														p.unassign))
+											}));
+								}
+							};
+							var addAssignment = function (mp) {
+								if (mp.$ === 'Nothing') {
+									return $elm$core$Maybe$Just(
+										{
+											assign: _List_fromArray(
+												[user]),
+											unassign: _List_Nil
+										});
+								} else {
+									var p = mp.a;
+									return $elm$core$Maybe$Just(
+										_Utils_update(
+											p,
+											{
+												assign: A2(
+													$elm$core$List$cons,
+													user,
+													A2(
+														$elm$core$List$filter,
+														A2(
+															$elm$core$Basics$composeL,
+															$elm$core$Basics$neq(user.id),
+															function ($) {
+																return $.id;
+															}),
+														p.assign))
+											}));
+								}
+							};
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3(
+											$elm$core$Dict$update,
+											assignCard.id,
+											addAssignment,
+											A3(
+												$elm$core$List$foldl,
+												function (_v11) {
+													var id = _v11.id;
+													return A2($elm$core$Dict$update, id, addUnassignment);
+												},
+												model.pendingAssignments,
+												unassignCards))
+									}),
+								$elm$core$Platform$Cmd$none);
+						}());
 				case 'AssignOnlyUserDrag':
 					var subMsg = msg.a;
 					var dragModel = A2($author$project$Drag$update, subMsg, model.assignOnlyUserDrag);
@@ -15017,7 +15164,7 @@ var $author$project$Main$update = F2(
 							$temp$model = _Utils_update(
 							newModel,
 							{
-								assignOnlyUserDrag: $author$project$Drag$drop(newModel.assignOnlyUserDrag)
+								assignOnlyUserDrag: $author$project$Drag$complete(newModel.assignOnlyUserDrag)
 							});
 						msg = $temp$msg;
 						model = $temp$model;
@@ -15032,30 +15179,80 @@ var $author$project$Main$update = F2(
 						$author$project$Log$debug,
 						'assigning',
 						_Utils_Tuple2(user.login, card.id),
-						_Utils_Tuple2(
+						function () {
+							var otherAssignees = A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$core$Basics$neq(user.id),
+									function ($) {
+										return $.id;
+									}),
+								card.assignees);
+							var pending = {
+								assign: _List_fromArray(
+									[user]),
+								unassign: otherAssignees
+							};
+							return _Utils_Tuple2(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3($elm$core$Dict$insert, card.id, pending, model.pendingAssignments)
+									}),
+								$elm$core$Platform$Cmd$none);
+						}());
+				case 'CommitAssignments':
+					var cardAssignments = F2(
+						function (cardId, _v16) {
+							var assign = _v16.assign;
+							var unassign = _v16.unassign;
+							var _v15 = _Utils_Tuple2(assign, unassign);
+							if (!_v15.a.b) {
+								if (!_v15.b.b) {
+									return _List_Nil;
+								} else {
+									return _List_fromArray(
+										[
+											A3($author$project$Effects$unassignUsers, model, unassign, cardId)
+										]);
+								}
+							} else {
+								if (!_v15.b.b) {
+									return _List_fromArray(
+										[
+											A3($author$project$Effects$assignUsers, model, assign, cardId)
+										]);
+								} else {
+									return _List_fromArray(
+										[
+											A3($author$project$Effects$assignUsers, model, assign, cardId),
+											A3($author$project$Effects$unassignUsers, model, unassign, cardId)
+										]);
+								}
+							}
+						});
+					return _Utils_Tuple2(
+						_Utils_update(
 							model,
-							$elm$core$Platform$Cmd$batch(
-								_List_fromArray(
-									[
-										A3(
-										$author$project$Effects$assignUsers,
-										model,
-										_List_fromArray(
-											[user]),
-										card.id),
-										function () {
-										var otherAssignees = A2(
-											$elm$core$List$filter,
-											A2(
-												$elm$core$Basics$composeL,
-												$elm$core$Basics$neq(user.id),
-												function ($) {
-													return $.id;
-												}),
-											card.assignees);
-										return A3($author$project$Effects$unassignUsers, model, otherAssignees, card.id);
-									}()
-									]))));
+							{pendingAssignments: $elm$core$Dict$empty}),
+						$elm$core$Platform$Cmd$batch(
+							A3(
+								$elm$core$Dict$foldl,
+								F3(
+									function (cardId, assignments, effects) {
+										return _Utils_ap(
+											A2(cardAssignments, cardId, assignments),
+											effects);
+									}),
+								_List_Nil,
+								model.pendingAssignments)));
+				case 'ResetAssignments':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{pendingAssignments: $elm$core$Dict$empty}),
+						$elm$core$Platform$Cmd$none);
 				case 'AssigneesUpdated':
 					if (msg.a.$ === 'Ok') {
 						if (msg.a.a.$ === 'Just') {
@@ -15077,14 +15274,12 @@ var $author$project$Main$update = F2(
 									_Utils_update(
 										model,
 										{
-											assignOnlyUserDrag: $author$project$Drag$complete(model.assignOnlyUserDrag),
-											assignUserDrag: $author$project$Drag$complete(model.assignUserDrag),
 											cards: A3($elm$core$Dict$insert, card.id, card, model.cards),
 											progress: A2($author$project$Main$finishProgress, card.id, model.progress)
 										}),
 									$elm$core$Platform$Cmd$none));
 						} else {
-							var _v10 = msg.a.a;
+							var _v18 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15204,13 +15399,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v11 = msg.a;
-					var event = _v11.a;
-					var data = _v11.b;
-					var indexStr = _v11.c;
-					var _v12 = $elm$core$String$toInt(indexStr);
-					if (_v12.$ === 'Just') {
-						var index = _v12.a;
+					var _v19 = msg.a;
+					var event = _v19.a;
+					var data = _v19.b;
+					var indexStr = _v19.c;
+					var _v20 = $elm$core$String$toInt(indexStr);
+					if (_v20.$ === 'Just') {
+						var index = _v20.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -15334,12 +15529,12 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v13, r, acc) {
+							function (_v21, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v14 = A2(
+								var _v22 = A2(
 									$elm$core$List$filter,
 									A2(
 										$elm$core$Basics$composeL,
@@ -15348,13 +15543,13 @@ var $author$project$Main$update = F2(
 											return $.name;
 										}),
 									labels);
-								if (!_v14.b) {
+								if (!_v22.b) {
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _v14.a;
+									var label = _v22.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										$elm$core$List$cons,
 										A4($author$project$Effects$updateLabel, model, r, label, newLabel),
@@ -15395,19 +15590,19 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v15, r, acc) {
+							function (_v23, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v16 = A2(
+								var _v24 = A2(
 									$elm$core$List$filter,
 									$author$project$Main$matchesLabel(label),
 									labels);
-								if (!_v16.b) {
+								if (!_v24.b) {
 									return acc;
 								} else {
-									var repoLabel = _v16.a;
+									var repoLabel = _v24.a;
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$deleteLabel, model, r, repoLabel),
@@ -15480,7 +15675,7 @@ var $author$project$Main$update = F2(
 								editingLabels: A2(
 									$elm$core$Dict$map,
 									F2(
-										function (_v17, label) {
+										function (_v25, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -15494,14 +15689,14 @@ var $author$project$Main$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _v18 = A2(
+					var _v26 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_v18.$ === 'Nothing') {
+					if (_v26.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v18.a;
+						var newLabel = _v26.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -15516,28 +15711,28 @@ var $author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _v19 = A2(
+					var _v27 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_v19.$ === 'Nothing') {
+					if (_v27.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v19.a;
+						var newLabel = _v27.a;
 						var cmds = A3(
 							$elm$core$Dict$foldl,
 							F3(
-								function (_v20, r, acc) {
+								function (_v28, r, acc) {
 									var labels = A2(
 										$elm$core$Maybe$withDefault,
 										_List_Nil,
 										A2($elm$core$Dict$get, r.id, model.repoLabels));
-									var _v21 = A2(
+									var _v29 = A2(
 										$elm$core$List$filter,
 										$author$project$Main$matchesLabel(oldLabel),
 										labels);
-									if (_v21.b) {
-										var repoLabel = _v21.a;
+									if (_v29.b) {
+										var repoLabel = _v29.a;
 										return A2(
 											$elm$core$List$cons,
 											A4($author$project$Effects$updateLabel, model, r, repoLabel, newLabel),
@@ -15615,9 +15810,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v22 = card.content;
-					if (_v22.$ === 'IssueCardContent') {
-						var issue = _v22.a;
+					var _v30 = card.content;
+					if (_v30.$ === 'IssueCardContent') {
+						var issue = _v30.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15627,7 +15822,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v22.a;
+						var pr = _v30.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15640,14 +15835,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v23 = card.content;
-					if (_v23.$ === 'IssueCardContent') {
-						var issue = _v23.a;
+					var _v31 = card.content;
+					if (_v31.$ === 'IssueCardContent') {
+						var issue = _v31.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v23.a;
+						var pr = _v31.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -15787,14 +15982,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v24 = A2(
+							var _v32 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v24 === '') {
+							if (_v32 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v24;
+								var note = _v32;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -15860,14 +16055,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v25 = A2(
+							var _v33 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v25 === '') {
+							if (_v33 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v25;
+								var note = _v33;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -18375,8 +18570,6 @@ var $author$project$Model$ToggleShowArchivedCards = function (a) {
 };
 var $capitalist$elm_octicons$Octicons$bookPath = 'M3,5 L7,5 L7,6 L3,6 L3,5 L3,5 Z M3,8 L7,8 L7,7 L3,7 L3,8 L3,8 Z M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M14,5 L10,5 L10,6 L14,6 L14,5 L14,5 Z M14,7 L10,7 L10,8 L14,8 L14,7 L14,7 Z M14,9 L10,9 L10,10 L14,10 L14,9 L14,9 Z M16,3 L16,12 C16,12.55 15.55,13 15,13 L9.5,13 L8.5,14 L7.5,13 L2,13 C1.45,13 1,12.55 1,12 L1,3 C1,2.45 1.45,2 2,2 L7.5,2 L8.5,3 L9.5,2 L15,2 C15.55,2 16,2.45 16,3 L16,3 Z M8,3.5 L7.5,3 L2,3 L2,12 L8,12 L8,3.5 L8,3.5 Z M15,3 L9.5,3 L9,3.5 L9,12 L15,12 L15,3 L15,3 Z';
 var $capitalist$elm_octicons$Octicons$book = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$bookPath, '0 0 16 16', 'book');
-var $author$project$Colors$gray500 = '#6a737d';
-var $author$project$Colors$gray = $author$project$Colors$gray500;
 var $capitalist$elm_octicons$Octicons$kebabHorizontalPath = 'M1.5 9C2.32843 9 3 8.32843 3 7.5C3 6.67157 2.32843 6 1.5 6C0.67157 6 0 6.67157 0 7.5C0 8.32843 0.67157 9 1.5 9ZM6.5 9C7.32843 9 8 8.32843 8 7.5C8 6.67157 7.32843 6 6.5 6C5.67157 6 5 6.67157 5 7.5C5 8.32843 5.67157 9 6.5 9ZM13 7.5C13 8.32843 12.3284 9 11.5 9C10.6716 9 10 8.32843 10 7.5C10 6.67157 10.6716 6 11.5 6C12.3284 6 13 6.67157 13 7.5Z';
 var $capitalist$elm_octicons$Octicons$kebabHorizontal = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$kebabHorizontalPath, '0 0 13 16', 'kebabHorizontal');
 var $capitalist$elm_octicons$Octicons$pulsePolygon = '11.5 8 8.8 5.4 6.6 8.5 5.5 1.6 2.38 8 0 8 0 10 3.6 10 4.5 8.2 5.4 13.6 9 8.5 10.6 10 14 10 14 8';
@@ -18384,30 +18577,18 @@ var $capitalist$elm_octicons$Octicons$pulse = A3($capitalist$elm_octicons$Octico
 var $author$project$Main$columnIcon = function (col) {
 	var _v0 = col.purpose;
 	if (_v0.$ === 'Nothing') {
-		return $capitalist$elm_octicons$Octicons$kebabHorizontal(
-			_Utils_update(
-				$author$project$Main$octiconOpts,
-				{color: $author$project$Colors$gray}));
+		return $capitalist$elm_octicons$Octicons$kebabHorizontal($author$project$Main$octiconOpts);
 	} else {
 		switch (_v0.a.$) {
 			case 'ProjectColumnPurposeToDo':
 				var _v1 = _v0.a;
-				return $capitalist$elm_octicons$Octicons$book(
-					_Utils_update(
-						$author$project$Main$octiconOpts,
-						{color: $author$project$Colors$gray}));
+				return $capitalist$elm_octicons$Octicons$book($author$project$Main$octiconOpts);
 			case 'ProjectColumnPurposeInProgress':
 				var _v2 = _v0.a;
-				return $capitalist$elm_octicons$Octicons$pulse(
-					_Utils_update(
-						$author$project$Main$octiconOpts,
-						{color: $author$project$Colors$purple}));
+				return $capitalist$elm_octicons$Octicons$pulse($author$project$Main$octiconOpts);
 			default:
 				var _v3 = _v0.a;
-				return $capitalist$elm_octicons$Octicons$check(
-					_Utils_update(
-						$author$project$Main$octiconOpts,
-						{color: $author$project$Colors$green}));
+				return $capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts);
 		}
 	}
 };
@@ -20989,6 +21170,8 @@ var $ryannhg$date_format$DateFormat$formatWithLanguage = F4(
 var $ryannhg$date_format$DateFormat$format = $ryannhg$date_format$DateFormat$formatWithLanguage($ryannhg$date_format$DateFormat$Language$english);
 var $capitalist$elm_octicons$Octicons$gitCommitPath = 'M10.86,7 C10.41,5.28 8.86,4 7,4 C5.14,4 3.59,5.28 3.14,7 L0,7 L0,9 L3.14,9 C3.59,10.72 5.14,12 7,12 C8.86,12 10.41,10.72 10.86,9 L14,9 L14,7 L10.86,7 L10.86,7 Z M7,10.2 C5.78,10.2 4.8,9.22 4.8,8 C4.8,6.78 5.78,5.8 7,5.8 C8.22,5.8 9.2,6.78 9.2,8 C9.2,9.22 8.22,10.2 7,10.2 L7,10.2 Z';
 var $capitalist$elm_octicons$Octicons$gitCommit = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitCommitPath, '0 0 14 16', 'gitCommit');
+var $author$project$Colors$gray500 = '#6a737d';
+var $author$project$Colors$gray = $author$project$Colors$gray500;
 var $author$project$Main$grayOpts = _Utils_update(
 	$author$project$Main$octiconOpts,
 	{color: $author$project$Colors$gray});
@@ -24529,6 +24712,15 @@ var $author$project$Model$AssignUser = F2(
 var $author$project$Model$AssignUserDrag = function (a) {
 	return {$: 'AssignUserDrag', a: a};
 };
+var $author$project$Model$CommitAssignments = {$: 'CommitAssignments'};
+var $author$project$Model$ReassignUser = F2(
+	function (a, b) {
+		return {$: 'ReassignUser', a: a, b: b};
+	});
+var $author$project$Model$ReassignUserDrag = function (a) {
+	return {$: 'ReassignUserDrag', a: a};
+};
+var $author$project$Model$ResetAssignments = {$: 'ResetAssignments'};
 var $author$project$Drag$droppable = F4(
 	function (model, wrap, candidate, view) {
 		var isOver = function () {
@@ -24610,7 +24802,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('assignable-user')
+							$elm$html$Html$Attributes$class('side-user')
 						]),
 					_List_fromArray(
 						[
@@ -24623,7 +24815,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('assignable-users')
+				$elm$html$Html$Attributes$class('side-users')
 			]),
 		A2($elm$core$List$map, viewDraggableActor, model.assignableUsers));
 };
@@ -24642,9 +24834,9 @@ var $author$project$Main$viewLaneActors = F2(
 				assignDropCandidate(user),
 				A4(
 					$author$project$Drag$draggable,
-					model.assignUserDrag,
-					$author$project$Model$AssignUserDrag,
-					user,
+					model.reassignUserDrag,
+					$author$project$Model$ReassignUserDrag,
+					_Utils_Tuple2(user, cards),
 					$author$project$CardView$viewCardActor(user)));
 		};
 		return A2(
@@ -24677,21 +24869,56 @@ var $author$project$Main$viewLaneActors = F2(
 	});
 var $author$project$Main$viewPairsPage = function (model) {
 	var viewDroppableCard = function (card) {
+		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: card};
 		var assignDropCandidate = {msgFunc: $author$project$Model$AssignUser, target: card};
 		return A4(
 			$author$project$Drag$droppable,
-			model.assignUserDrag,
-			$author$project$Model$AssignUserDrag,
-			assignDropCandidate,
+			model.reassignUserDrag,
+			$author$project$Model$ReassignUserDrag,
+			reassignDropCandidate,
 			A4(
-				$author$project$Drag$draggable,
-				model.assignOnlyUserDrag,
-				$author$project$Model$AssignOnlyUserDrag,
-				card,
-				A3($author$project$CardView$viewCard, model, _List_Nil, card)));
+				$author$project$Drag$droppable,
+				model.assignUserDrag,
+				$author$project$Model$AssignUserDrag,
+				assignDropCandidate,
+				A4(
+					$author$project$Drag$draggable,
+					model.assignOnlyUserDrag,
+					$author$project$Model$AssignOnlyUserDrag,
+					card,
+					A3($author$project$CardView$viewCard, model, _List_Nil, card))));
 	};
-	var isInProgress = function (_v1) {
-		var purpose = _v1.purpose;
+	var reflectPendingAssignments = function (card) {
+		var newAssignees = function () {
+			var _v4 = A2($elm$core$Dict$get, card.id, model.pendingAssignments);
+			if (_v4.$ === 'Nothing') {
+				return card.assignees;
+			} else {
+				var assign = _v4.a.assign;
+				var unassign = _v4.a.unassign;
+				var unaffected = function (_v5) {
+					var id = _v5.id;
+					return !A2(
+						$elm$core$List$any,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Basics$eq(id),
+							function ($) {
+								return $.id;
+							}),
+						_Utils_ap(assign, unassign));
+				};
+				return _Utils_ap(
+					assign,
+					A2($elm$core$List$filter, unaffected, card.assignees));
+			}
+		}();
+		return _Utils_update(
+			card,
+			{assignees: newAssignees});
+	};
+	var isInProgress = function (_v3) {
+		var purpose = _v3.purpose;
 		return _Utils_eq(
 			purpose,
 			$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress));
@@ -24712,16 +24939,30 @@ var $author$project$Main$viewPairsPage = function (model) {
 					_List_Nil,
 					A2($elm$core$Dict$get, col.id, model.columnCards))));
 	};
-	var inFlightCards = A2(
-		$elm$core$List$concatMap,
-		function (p) {
-			return A2(
+	var projectInFlightCards = function (project) {
+		var projectCards = A2(
+			$elm$core$List$map,
+			reflectPendingAssignments,
+			A2(
 				$elm$core$List$concatMap,
 				columnCards,
-				A2($elm$core$List$filter, isInProgress, p.columns));
-		},
-		$elm$core$List$concat(
-			$elm$core$Dict$values(model.repoProjects)));
+				A2($elm$core$List$filter, isInProgress, project.columns)));
+		return $elm$core$List$isEmpty(projectCards) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
+			_Utils_Tuple2(project, projectCards));
+	};
+	var inFlightCards = A2(
+		$elm$core$List$sortBy,
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Tuple$first,
+			function ($) {
+				return $.name;
+			}),
+		A2(
+			$elm$core$List$filterMap,
+			projectInFlightCards,
+			$elm$core$List$concat(
+				$elm$core$Dict$values(model.repoProjects))));
 	var addCard = F2(
 		function (card, val) {
 			if (val.$ === 'Nothing') {
@@ -24748,8 +24989,86 @@ var $author$project$Main$viewPairsPage = function (model) {
 				addCard(card),
 				groups);
 		});
-	var byAssignees = $elm$core$Dict$values(
-		A3($elm$core$List$foldl, groupByAssignee, $elm$core$Dict$empty, inFlightCards));
+	var byAssignees = function (cards) {
+		return A2(
+			$elm$core$List$map,
+			$elm$core$Tuple$second,
+			$elm$core$List$reverse(
+				A2(
+					$elm$core$List$sortBy,
+					function (_v1) {
+						var a = _v1.a;
+						var b = _v1.b;
+						return _Utils_Tuple2(
+							$elm$core$List$length(a),
+							$elm$core$List$length(b));
+					},
+					$elm$core$Dict$toList(
+						A3($elm$core$List$foldl, groupByAssignee, $elm$core$Dict$empty, cards)))));
+	};
+	var viewProjectLanes = function (_v0) {
+		var project = _v0.a;
+		var projectCards = _v0.b;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('project-lane')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('project-title')
+						]),
+					_List_fromArray(
+						[
+							$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
+							A2(
+							$elm$html$Html$a,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('project-name'),
+									$elm$html$Html$Attributes$href('/projects/' + project.id)
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(project.name)
+								]))
+						])),
+					A2($author$project$CardView$viewProjectBar, model, project),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-lanes')
+						]),
+					A2(
+						$elm$core$List$map,
+						function (cards) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-lane')
+									]),
+								_List_fromArray(
+									[
+										A2($author$project$Main$viewLaneActors, model, cards),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('cards')
+											]),
+										A2($elm$core$List$map, viewDroppableCard, cards))
+									]));
+						},
+						byAssignees(projectCards)))
+				]));
+	};
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -24775,36 +25094,62 @@ var $author$project$Main$viewPairsPage = function (model) {
 						_List_fromArray(
 							[
 								$capitalist$elm_octicons$Octicons$listUnordered($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Lanes')
+								$elm$html$Html$text('Lanes'),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('lane-controls buttons')
+									]),
+								$elm$core$Dict$isEmpty(model.pendingAssignments) ? _List_Nil : _List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('button apply'),
+												$elm$html$Html$Events$onClick($author$project$Model$CommitAssignments)
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
+												$elm$html$Html$text('apply')
+											])),
+										A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('button cancel'),
+												$elm$html$Html$Events$onClick($author$project$Model$ResetAssignments)
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts),
+												$elm$html$Html$text('cancel')
+											]))
+									]))
 							])),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('card-lanes')
+								$elm$html$Html$Attributes$class('project-lanes')
 							]),
-						A2(
-							$elm$core$List$map,
-							function (cards) {
-								return A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('card-lane')
-										]),
-									_List_fromArray(
-										[
-											A2($author$project$Main$viewLaneActors, model, cards),
-											A2(
-											$elm$html$Html$div,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('cards')
-												]),
-											A2($elm$core$List$map, viewDroppableCard, cards))
-										]));
-							},
-							byAssignees))
+						function (x) {
+							return _Utils_ap(
+								x,
+								A2(
+									$elm$core$List$repeat,
+									2,
+									A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('project-lanes-hack')
+											]),
+										_List_Nil)));
+						}(
+							A2($elm$core$List$map, viewProjectLanes, inFlightCards)))
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -24899,48 +25244,30 @@ var $author$project$Main$viewLeaderboardEntry = function (_v0) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('leaderboard-entry')
+				$elm$html$Html$Attributes$class('side-user')
 			]),
 		_List_fromArray(
 			[
 				A2(
-				$elm$html$Html$div,
+				$elm$html$Html$img,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('leaderboard-person')
+						$elm$html$Html$Attributes$class('card-actor'),
+						$elm$html$Html$Attributes$src(user.avatar)
 					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$img,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('leaderboard-avatar'),
-								$elm$html$Html$Attributes$src(user.avatar)
-							]),
-						_List_Nil),
-						$elm$html$Html$text(
-						A2($elm$core$Maybe$withDefault, user.login, user.name))
-					])),
+				_List_Nil),
+				$elm$html$Html$text(
+				A2($elm$core$Maybe$withDefault, user.login, user.name)),
 				A2(
-				$elm$html$Html$div,
+				$elm$html$Html$span,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('leaderboard-count')
+						$elm$html$Html$Attributes$class('leaderboard-count-number')
 					]),
 				_List_fromArray(
 					[
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('leaderboard-count-number')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(
-								$elm$core$String$fromInt(count))
-							]))
+						$elm$html$Html$text(
+						$elm$core$String$fromInt(count))
 					]))
 			]));
 };
