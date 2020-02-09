@@ -10252,7 +10252,7 @@ var $author$project$GitHub$timelineQuery = function () {
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar))
 		]);
 	var timeline = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'timeline', pageArgs, paged));
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'timelineItems', pageArgs, paged));
 	var issueOrPRTimeline = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(

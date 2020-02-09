@@ -2177,7 +2177,7 @@ timelineQuery =
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
         timeline =
-            GB.extract (GB.field "timeline" pageArgs paged)
+            GB.extract (GB.field "timelineItems" pageArgs paged)
 
         issueOrPRTimeline =
             GB.object ME.or
