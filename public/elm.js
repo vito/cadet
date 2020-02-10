@@ -14060,6 +14060,9 @@ var $author$project$Hash$updateHash = F2(
 var $author$project$Hash$hash = function (str) {
 	return A3($elm$core$String$foldl, $author$project$Hash$updateHash, 5381, str);
 };
+var $author$project$Card$isPaused = function (card) {
+	return card.processState.hasPausedLabel;
+};
 var $author$project$Main$labelKey = function (label) {
 	return _Utils_Tuple2(
 		label.name,
@@ -15142,6 +15145,33 @@ var $author$project$Main$pairUpUser = F2(
 							[userA.id, userB.id])),
 					model.lastPaired);
 			});
+		var pickBestUser = F2(
+			function (user, cur) {
+				var _v43 = _Utils_Tuple2(
+					A2(lastPaired, target, user),
+					A2(lastPaired, target, cur));
+				if (_v43.a.$ === 'Just') {
+					if (_v43.b.$ === 'Just') {
+						var tsUser = _v43.a.a;
+						var tsCur = _v43.b.a;
+						return (_Utils_cmp(
+							$elm$time$Time$posixToMillis(tsCur),
+							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
+					} else {
+						var _v44 = _v43.b;
+						return cur;
+					}
+				} else {
+					if (_v43.b.$ === 'Just') {
+						var _v45 = _v43.a;
+						return user;
+					} else {
+						var _v46 = _v43.a;
+						var _v47 = _v43.b;
+						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
+					}
+				}
+			});
 		var _v41 = A2(
 			$elm$core$List$partition,
 			A2(
@@ -15169,67 +15199,33 @@ var $author$project$Main$pairUpUser = F2(
 					$elm$core$List$any(
 						A2(
 							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(user.id),
+							$elm$core$Basics$eq(user.login),
 							function ($) {
-								return $.id;
+								return $.login;
 							})),
 					function ($) {
 						return $.assignees;
 					}),
 				pairingLanes);
 		};
-		var pickBestUser = F2(
-			function (user, cur) {
-				var _v43 = _Utils_Tuple2(
-					isPairing(user),
-					isPairing(cur));
-				_v43$2:
-				while (true) {
-					if (_v43.a) {
-						if (!_v43.b) {
-							return cur;
-						} else {
-							break _v43$2;
-						}
-					} else {
-						if (_v43.b) {
-							return user;
-						} else {
-							break _v43$2;
-						}
-					}
-				}
-				var _v44 = _Utils_Tuple2(
-					A2(lastPaired, target, user),
-					A2(lastPaired, target, cur));
-				if (_v44.a.$ === 'Just') {
-					if (_v44.b.$ === 'Just') {
-						var tsUser = _v44.a.a;
-						var tsCur = _v44.b.a;
-						return (_Utils_cmp(
-							$elm$time$Time$posixToMillis(tsCur),
-							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
-					} else {
-						var _v45 = _v44.b;
-						return cur;
-					}
-				} else {
-					if (_v44.b.$ === 'Just') {
-						var _v46 = _v44.a;
-						return user;
-					} else {
-						var _v47 = _v44.a;
-						var _v48 = _v44.b;
-						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
-					}
-				}
-			});
 		var pairingPool = A2(
-			$elm$core$List$concatMap,
-			function ($) {
-				return $.assignees;
-			},
-			soloLanes);
+			$elm$core$List$filter,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isPairing),
+			A2(
+				$elm$core$List$concatMap,
+				function ($) {
+					return $.assignees;
+				},
+				A2(
+					$elm$core$List$filter,
+					A2(
+						$elm$core$Basics$composeL,
+						$elm$core$List$any(
+							A2($elm$core$Basics$composeL, $elm$core$Basics$not, $author$project$Card$isPaused)),
+						function ($) {
+							return $.cards;
+						}),
+					soloLanes)));
 		var _v42 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
 		if (_v42.$ === 'Just') {
 			var pair = _v42.a;
@@ -17388,9 +17384,6 @@ var $author$project$Card$isIcebox = function (card) {
 };
 var $author$project$Card$isInFlight = function (card) {
 	return card.processState.inInFlightColumn;
-};
-var $author$project$Card$isPaused = function (card) {
-	return card.processState.hasPausedLabel;
 };
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(

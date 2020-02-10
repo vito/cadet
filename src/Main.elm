@@ -957,45 +957,40 @@ pairUpUser target ( model, msg ) =
                 |> List.concatMap .lanes
                 |> List.partition ((==) 1 << List.length << .assignees)
 
+        isPairing user =
+            List.any (List.any ((==) user.login << .login) << .assignees) pairingLanes
+
         pairingPool =
-            List.concatMap .assignees soloLanes
+            soloLanes
+                |> List.filter (List.any (not << Card.isPaused) << .cards)
+                |> List.concatMap .assignees
+                |> List.filter (not << isPairing)
 
         lastPaired userA userB =
             Dict.get (List.sort [ userA.id, userB.id ]) model.lastPaired
 
-        isPairing user =
-            List.any (List.any ((==) user.id << .id) << .assignees) pairingLanes
-
         pickBestUser user cur =
-            case ( isPairing user, isPairing cur ) of
-                ( True, False ) ->
+            case ( lastPaired target user, lastPaired target cur ) of
+                ( Just tsUser, Just tsCur ) ->
+                    if Time.posixToMillis tsCur < Time.posixToMillis tsUser then
+                        cur
+
+                    else
+                        user
+
+                ( Just _, Nothing ) ->
                     cur
 
-                ( False, True ) ->
+                ( Nothing, Just _ ) ->
                     user
 
-                _ ->
-                    case ( lastPaired target user, lastPaired target cur ) of
-                        ( Just tsUser, Just tsCur ) ->
-                            if Time.posixToMillis tsCur < Time.posixToMillis tsUser then
-                                cur
+                ( Nothing, Nothing ) ->
+                    -- arbitrary
+                    if user.id < cur.id then
+                        user
 
-                            else
-                                user
-
-                        ( Just _, Nothing ) ->
-                            cur
-
-                        ( Nothing, Just _ ) ->
-                            user
-
-                        ( Nothing, Nothing ) ->
-                            -- arbitrary
-                            if user.id < cur.id then
-                                user
-
-                            else
-                                cur
+                    else
+                        cur
     in
     case LE.foldl1 pickBestUser pairingPool of
         Just pair ->
