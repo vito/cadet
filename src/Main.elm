@@ -2238,19 +2238,7 @@ viewPairsPage model =
                 |> (\x -> x ++ List.repeat 2 (Html.div [ HA.class "project-lanes-hack" ] []))
                 |> Html.div [ HA.class "project-lanes" ]
             ]
-        , Html.div [ HA.class "dashboard-pane side-pane" ]
-            [ Html.div [ HA.class "page-header" ]
-                [ Octicons.person octiconOpts
-                , Html.text "Assignable Users"
-                , Html.div [ HA.class "lane-controls buttons" ]
-                    [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
-                        [ Octicons.organization octiconOpts
-                        , Html.text "pair up"
-                        ]
-                    ]
-                ]
-            , viewAssignableUsers model
-            ]
+        , viewAssignableUsers model
         ]
 
 
@@ -2309,14 +2297,32 @@ viewAssignableUsers model =
                             ]
                         ]
     in
-    Html.div [ HA.class "side-users" ] <|
-        if List.isEmpty assignableUsers then
-            [ Html.div [ HA.class "no-users" ]
-                [ Html.text "everyone is assigned!" ]
-            ]
+    Html.div [ HA.class "dashboard-pane side-pane" ]
+        [ Html.div [ HA.class "page-header" ]
+            [ Octicons.person octiconOpts
+            , Html.text "Assignable Users"
+            , if List.isEmpty assignableUsers then
+                Html.text ""
 
-        else
-            List.map viewDraggableActor assignableUsers
+              else
+                Html.div [ HA.class "lane-controls buttons" ]
+                    [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
+                        [ Octicons.organization octiconOpts
+                        , Html.text "pair up"
+                        ]
+                    ]
+            ]
+        , Html.div
+            [ HA.class "side-users" ]
+          <|
+            if List.isEmpty assignableUsers then
+                [ Html.div [ HA.class "no-users" ]
+                    [ Html.text "everyone is assigned!" ]
+                ]
+
+            else
+                List.map viewDraggableActor assignableUsers
+        ]
 
 
 viewLaneAssignees : Model -> List GitHub.User -> List Card -> Html Msg

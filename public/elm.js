@@ -25226,7 +25226,6 @@ var $author$project$Main$viewLabelsPage = function (model) {
 var $author$project$Model$AssignOnlyUserDrag = function (a) {
 	return {$: 'AssignOnlyUserDrag', a: a};
 };
-var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
 var $author$project$Model$AssignUserDrag = function (a) {
 	return {$: 'AssignUserDrag', a: a};
 };
@@ -25294,12 +25293,11 @@ var $author$project$Drag$droppable = F4(
 	});
 var $capitalist$elm_octicons$Octicons$listUnorderedPath = 'M2,13 C2,13.59 2,14 1.41,14 L0.59,14 C0,14 0,13.59 0,13 C0,12.41 0,12 0.59,12 L1.4,12 C1.99,12 1.99,12.41 1.99,13 L2,13 Z M4.59,4 L11.4,4 C11.99,4 11.99,3.59 11.99,3 C11.99,2.41 11.99,2 11.4,2 L4.59,2 C4,2 4,2.41 4,3 C4,3.59 4,4 4.59,4 L4.59,4 Z M1.41,7 L0.59,7 C0,7 0,7.41 0,8 C0,8.59 0,9 0.59,9 L1.4,9 C1.99,9 1.99,8.59 1.99,8 C1.99,7.41 1.99,7 1.4,7 L1.41,7 Z M1.41,2 L0.59,2 C0,2 0,2.41 0,3 C0,3.59 0,4 0.59,4 L1.4,4 C1.99,4 1.99,3.59 1.99,3 C1.99,2.41 1.99,2 1.4,2 L1.41,2 Z M11.41,7 L4.59,7 C4,7 4,7.41 4,8 C4,8.59 4,9 4.59,9 L11.4,9 C11.99,9 11.99,8.59 11.99,8 C11.99,7.41 11.99,7 11.4,7 L11.41,7 Z M11.41,12 L4.59,12 C4,12 4,12.41 4,13 C4,13.59 4,14 4.59,14 L11.4,14 C11.99,14 11.99,13.59 11.99,13 C11.99,12.41 11.99,12 11.4,12 L11.41,12 Z';
 var $capitalist$elm_octicons$Octicons$listUnordered = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$listUnorderedPath, '0 0 12 16', 'listUnordered');
-var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
-var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
 var $author$project$Model$AssignOnlyUser = F2(
 	function (a, b) {
 		return {$: 'AssignOnlyUser', a: a, b: b};
 	});
+var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
 var $author$project$Model$SetUserIn = function (a) {
 	return {$: 'SetUserIn', a: a};
 };
@@ -25308,6 +25306,8 @@ var $author$project$Model$SetUserOut = function (a) {
 };
 var $capitalist$elm_octicons$Octicons$circleSlashPath = 'M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M7,2.3 C8.3,2.3 9.5,2.74 10.47,3.47 L2.47,11.47 C1.74,10.5 1.3,9.3 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,13.71 C5.7,13.71 4.5,13.27 3.53,12.54 L11.53,4.54 C12.26,5.51 12.7,6.71 12.7,8.01 C12.7,11.15 10.14,13.71 7,13.71 L7,13.71 Z';
 var $capitalist$elm_octicons$Octicons$circleSlash = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$circleSlashPath, '0 0 14 16', 'circleSlash');
+var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
+var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
 var $author$project$Main$viewAssignableUsers = function (model) {
 	var currentAssignments = function (user) {
 		return A3(
@@ -25395,21 +25395,62 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('side-users')
+				$elm$html$Html$Attributes$class('dashboard-pane side-pane')
 			]),
-		$elm$core$List$isEmpty(assignableUsers) ? _List_fromArray(
+		_List_fromArray(
 			[
 				A2(
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('no-users')
+						$elm$html$Html$Attributes$class('page-header')
 					]),
 				_List_fromArray(
 					[
-						$elm$html$Html$text('everyone is assigned!')
-					]))
-			]) : A2($elm$core$List$map, viewDraggableActor, assignableUsers));
+						$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts),
+						$elm$html$Html$text('Assignable Users'),
+						$elm$core$List$isEmpty(assignableUsers) ? $elm$html$Html$text('') : A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('lane-controls buttons')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('button shuffle'),
+										$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
+									]),
+								_List_fromArray(
+									[
+										$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
+										$elm$html$Html$text('pair up')
+									]))
+							]))
+					])),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('side-users')
+					]),
+				$elm$core$List$isEmpty(assignableUsers) ? _List_fromArray(
+					[
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('no-users')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('everyone is assigned!')
+							]))
+					]) : A2($elm$core$List$map, viewDraggableActor, assignableUsers))
+			]));
 };
 var $author$project$Model$UnassignUser = F2(
 	function (a, b) {
@@ -25632,48 +25673,7 @@ var $author$project$Main$viewPairsPage = function (model) {
 						}(
 							A2($elm$core$List$map, viewProjectLanes, model.inFlight)))
 					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('dashboard-pane side-pane')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('page-header')
-							]),
-						_List_fromArray(
-							[
-								$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Assignable Users'),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('lane-controls buttons')
-									]),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('button shuffle'),
-												$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
-												$elm$html$Html$text('pair up')
-											]))
-									]))
-							])),
-						$author$project$Main$viewAssignableUsers(model)
-					]))
+				$author$project$Main$viewAssignableUsers(model)
 			]));
 };
 var $author$project$Main$viewProjectPage = F2(
