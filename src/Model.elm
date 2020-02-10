@@ -14,6 +14,8 @@ module Model exposing
     , PendingAssignments
     , Progress(..)
     , ProgressState
+    , ProjectLane
+    , ProjectLanes
     , ReleaseStatus
     , SharedLabel
     , StatefulGraph
@@ -75,6 +77,7 @@ type alias Model =
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
     , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
     , repoReleaseStatuses : Dict GitHub.ID (List ReleaseStatus)
+    , inFlight : List ProjectLanes
 
     -- cache of computed lightness values for each color; used for determining
     -- whether label text should be white or dark
@@ -131,6 +134,18 @@ type alias Model =
     }
 
 
+type alias ProjectLanes =
+    { project : GitHub.Project
+    , lanes : List ProjectLane
+    }
+
+
+type alias ProjectLane =
+    { assignees : List GitHub.User
+    , cards : List Card
+    }
+
+
 type alias PendingAssignments =
     { assign : List GitHub.User
     , unassign : List GitHub.User
@@ -154,6 +169,7 @@ type Msg
     | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) Card Msg)
     | ReassignUser ( GitHub.User, List Card ) Card
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
+    | ShuffleAssignments
     | CommitAssignments
     | ResetAssignments
     | RefreshQueued (Result Http.Error ())
@@ -402,4 +418,5 @@ empty key =
     , editingCardNotes = Dict.empty
     , showArchivedCards = Set.empty
     , pendingAssignments = Dict.empty
+    , inFlight = []
     }

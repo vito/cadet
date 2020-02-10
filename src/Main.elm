@@ -360,6 +360,9 @@ update msg model =
                 , Cmd.none
                 )
 
+        ShuffleAssignments ->
+            ( model, Cmd.none )
+
         CommitAssignments ->
             let
                 cardAssignments cardId { assign, unassign } =
@@ -980,6 +983,7 @@ computeViewForPage model =
             { model
                 | baseGraphFilter = Nothing
                 , suggestedLabels = []
+                , inFlight = []
             }
     in
     case model.page of
@@ -1019,6 +1023,9 @@ computeViewForPage model =
                     , "blocked"
                     ]
             }
+
+        PairsPage ->
+            { reset | inFlight = computeProjectLanes reset }
 
         _ ->
             reset
@@ -1153,6 +1160,82 @@ computeCardsView model =
         , cardsByMilestone = cardsByMilestone
         , archive = computeArchive model cards
     }
+
+
+computeProjectLanes : Model -> List Model.ProjectLanes
+computeProjectLanes model =
+    let
+        isInProgress { purpose } =
+            purpose == Just GitHub.ProjectColumnPurposeInProgress
+
+        columnCards col =
+            Dict.get col.id model.columnCards
+                |> Maybe.withDefault []
+                |> List.filterMap .contentId
+                |> List.filterMap (\id -> Dict.get id model.cards)
+
+        reflectPendingAssignments card =
+            let
+                newAssignees =
+                    case Dict.get card.id model.pendingAssignments of
+                        Nothing ->
+                            card.assignees
+
+                        Just { assign, unassign } ->
+                            let
+                                unaffected { id } =
+                                    not (List.any ((==) id << .id) (assign ++ unassign))
+                            in
+                            assign ++ List.filter unaffected card.assignees
+            in
+            { card | assignees = newAssignees }
+
+        inFlightCards project =
+            let
+                projectCards =
+                    List.filter isInProgress project.columns
+                        |> List.concatMap columnCards
+                        |> List.map reflectPendingAssignments
+            in
+            if List.isEmpty projectCards then
+                Nothing
+
+            else
+                Just { project = project, lanes = byAssignees projectCards }
+
+        progress { project } =
+            let
+                ( toDos, inProgresses, dones ) =
+                    CardView.projectProgress model project
+            in
+            toFloat dones / toFloat (toDos + inProgresses + dones)
+
+        addCard card val =
+            case val of
+                Nothing ->
+                    Just { assignees = card.assignees, cards = [ card ] }
+
+                Just lane ->
+                    Just { lane | cards = card :: lane.cards }
+
+        groupByAssignees card groups =
+            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
+
+        byAssignees =
+            List.foldl groupByAssignees Dict.empty
+                >> Dict.values
+                >> List.sortBy
+                    (\{ assignees, cards } ->
+                        ( List.length assignees, List.length cards )
+                    )
+                >> List.reverse
+    in
+    model.repoProjects
+        |> Dict.values
+        |> List.concat
+        |> List.filterMap inFlightCards
+        |> List.sortBy progress
+        |> List.reverse
 
 
 titleSuffix : String -> String
@@ -1954,77 +2037,6 @@ viewArchivePage model =
 viewPairsPage : Model -> Html Msg
 viewPairsPage model =
     let
-        isInProgress { purpose } =
-            purpose == Just GitHub.ProjectColumnPurposeInProgress
-
-        columnCards col =
-            Dict.get col.id model.columnCards
-                |> Maybe.withDefault []
-                |> List.filterMap .contentId
-                |> List.filterMap (\id -> Dict.get id model.cards)
-
-        reflectPendingAssignments card =
-            let
-                newAssignees =
-                    case Dict.get card.id model.pendingAssignments of
-                        Nothing ->
-                            card.assignees
-
-                        Just { assign, unassign } ->
-                            let
-                                unaffected { id } =
-                                    not (List.any ((==) id << .id) (assign ++ unassign))
-                            in
-                            assign ++ List.filter unaffected card.assignees
-            in
-            { card | assignees = newAssignees }
-
-        projectInFlightCards project =
-            let
-                projectCards =
-                    List.filter isInProgress project.columns
-                        |> List.concatMap columnCards
-                        |> List.map reflectPendingAssignments
-            in
-            if List.isEmpty projectCards then
-                Nothing
-
-            else
-                Just ( project, projectCards )
-
-        progress ( p, _ ) =
-            let
-                ( toDos, inProgresses, dones ) =
-                    CardView.projectProgress model p
-            in
-            toFloat dones / toFloat (toDos + inProgresses + dones)
-
-        inFlightCards =
-            model.repoProjects
-                |> Dict.values
-                |> List.concat
-                |> List.filterMap projectInFlightCards
-                |> List.sortBy progress
-                |> List.reverse
-
-        addCard card val =
-            case val of
-                Nothing ->
-                    Just [ card ]
-
-                Just vals ->
-                    Just (card :: vals)
-
-        groupByAssignee card groups =
-            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
-
-        byAssignees cards =
-            List.foldl groupByAssignee Dict.empty cards
-                |> Dict.toList
-                |> List.sortBy (\( a, b ) -> ( List.length a, List.length b ))
-                |> List.reverse
-                |> List.map Tuple.second
-
         viewDroppableCard card =
             let
                 assignDropCandidate =
@@ -2042,7 +2054,7 @@ viewPairsPage model =
                     Drag.draggable model.assignOnlyUserDrag AssignOnlyUserDrag card <|
                         CardView.viewCard model [] card
 
-        viewProjectLanes ( project, projectCards ) =
+        viewProjectLanes { project, lanes } =
             Html.div [ HA.class "project-lane" ]
                 [ Html.div [ HA.class "project-title" ]
                     [ Octicons.project octiconOpts
@@ -2056,14 +2068,14 @@ viewPairsPage model =
                 , CardView.viewProjectBar model project
                 , Html.div [ HA.class "card-lanes" ] <|
                     List.map
-                        (\cards ->
+                        (\{ assignees, cards } ->
                             Html.div [ HA.class "card-lane" ]
-                                [ viewLaneActors model cards
+                                [ viewLaneAssignees model assignees cards
                                 , Html.div [ HA.class "cards" ] <|
                                     List.map viewDroppableCard cards
                                 ]
                         )
-                        (byAssignees projectCards)
+                        lanes
                 ]
     in
     Html.div [ HA.class "page-content dashboard" ]
@@ -2072,21 +2084,26 @@ viewPairsPage model =
                 [ Octicons.listUnordered octiconOpts
                 , Html.text "Lanes"
                 , Html.div [ HA.class "lane-controls buttons" ] <|
-                    if Dict.isEmpty model.pendingAssignments then
-                        []
-
-                    else
-                        [ Html.span [ HA.class "button apply", HE.onClick CommitAssignments ]
-                            [ Octicons.check octiconOpts
-                            , Html.text "apply"
-                            ]
-                        , Html.span [ HA.class "button cancel", HE.onClick ResetAssignments ]
-                            [ Octicons.x octiconOpts
-                            , Html.text "cancel"
-                            ]
+                    Html.span [ HA.class "button shuffle", HE.onClick ShuffleAssignments ]
+                        [ Octicons.sync octiconOpts
+                        , Html.text "rotate"
                         ]
+                        :: (if Dict.isEmpty model.pendingAssignments then
+                                []
+
+                            else
+                                [ Html.span [ HA.class "button apply", HE.onClick CommitAssignments ]
+                                    [ Octicons.check octiconOpts
+                                    , Html.text "apply"
+                                    ]
+                                , Html.span [ HA.class "button cancel", HE.onClick ResetAssignments ]
+                                    [ Octicons.x octiconOpts
+                                    , Html.text "cancel"
+                                    ]
+                                ]
+                           )
                 ]
-            , List.map viewProjectLanes inFlightCards
+            , List.map viewProjectLanes model.inFlight
                 |> (\x -> x ++ List.repeat 2 (Html.div [ HA.class "project-lanes-hack" ] []))
                 |> Html.div [ HA.class "project-lanes" ]
             ]
@@ -2120,8 +2137,8 @@ viewAssignableUsers model =
         List.map viewDraggableActor model.assignableUsers
 
 
-viewLaneActors : Model -> List Card -> Html Msg
-viewLaneActors model cards =
+viewLaneAssignees : Model -> List GitHub.User -> List Card -> Html Msg
+viewLaneAssignees model assignees cards =
     let
         assignDropCandidate user =
             { msgFunc = AssignOnlyUser
@@ -2134,19 +2151,13 @@ viewLaneActors model cards =
                     CardView.viewCardActor user
     in
     Html.div [ HA.class "lane-actors" ] <|
-        case List.head cards of
-            Just card ->
-                if List.isEmpty card.assignees then
-                    [ Html.div [ HA.class "card-actor actor-placeholder" ]
-                        [ Octicons.person octiconOpts ]
-                    ]
+        if List.isEmpty assignees then
+            [ Html.div [ HA.class "card-actor actor-placeholder" ]
+                [ Octicons.person octiconOpts ]
+            ]
 
-                else
-                    List.map viewDraggableActor card.assignees
-
-            Nothing ->
-                -- impossible
-                []
+        else
+            List.map viewDraggableActor assignees
 
 
 viewLeaderboardEntry : ( GitHub.User, Int ) -> Html Msg
