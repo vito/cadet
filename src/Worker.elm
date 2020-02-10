@@ -477,7 +477,7 @@ update msg model =
 
         IssueFetched (Ok issue) ->
             Log.debug "issue fetched" issue.url <|
-                ( { model | loadQueue = model.loadQueue ++ [ fetchIssueTimeline model issue.id ] }
+                ( { model | loadQueue = fetchIssueTimeline model issue.id :: model.loadQueue }
                 , setIssue (GitHub.encodeIssue issue)
                 )
 
