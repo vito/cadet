@@ -1860,11 +1860,47 @@ a.column-title:hover, .page-header a:hover {
 
   line-height: 48px;
 
+  position: relative;
+
   .card-actor {
     width: 48px;
     height: 48px;
     vertical-align: middle;
     margin-right: 10px;
+  }
+
+  .out-button {
+    font-size: 10px;
+    width: 4.8em;
+    height: 4.8em;
+    display: inline-block;
+    position: absolute;
+    right: 6px;
+    text-align: center;
+
+    .octicon {
+      width: 24px;
+      height: 24px;
+      vertical-align: middle;
+
+      * {
+        fill: @gray-200;
+      }
+    }
+
+    &:hover {
+      .octicon * {
+        fill: @gray;
+      }
+    }
+  }
+
+  &.out {
+    opacity: 0.5;
+
+    .out-button .octicon * {
+      fill: @gray;
+    }
   }
 }
 
@@ -2011,6 +2047,10 @@ a.column-title:hover, .page-header a:hover {
       border-color: @blue !important;
       box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
     }
+  }
+
+  &.side-lanes .lane-actors {
+    flex-direction: row;
   }
 
   .droppable.active .card {

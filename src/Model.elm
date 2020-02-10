@@ -131,6 +131,7 @@ type alias Model =
     , showArchivedCards : Set GitHub.ID
 
     -- assigning state
+    , outUsers : Set GitHub.ID
     , pendingAssignments : Dict GitHub.ID PendingAssignments
     }
 
@@ -231,6 +232,8 @@ type Msg
     | SetCardArchived GitHub.ID Bool
     | ToggleShowArchivedCards GitHub.ID
     | SetLoading (List GitHub.ID) (Cmd Msg)
+    | SetUserOut GitHub.User
+    | SetUserIn GitHub.User
 
 
 type Page
@@ -419,6 +422,7 @@ empty key =
     , deletingCards = Set.empty
     , editingCardNotes = Dict.empty
     , showArchivedCards = Set.empty
+    , outUsers = Set.empty
     , pendingAssignments = Dict.empty
     , inFlight = []
     , lastPaired = Dict.empty

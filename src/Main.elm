@@ -364,8 +364,12 @@ update msg model =
                             else
                                 assigned rest user
 
+                assignable user =
+                    not (Set.member user.id model.outUsers)
+                        && not (assigned model.inFlight user)
+
                 toAssign =
-                    List.filter (not << assigned model.inFlight) model.assignableUsers
+                    List.filter assignable model.assignableUsers
             in
             List.foldl pairUpUser ( model, Cmd.none ) toAssign
 
@@ -402,9 +406,8 @@ update msg model =
 
         AssigneesUpdated (Ok (Just assignable)) ->
             ( model
-
-            -- force the backend to refresh, don't eagerly update client-side;
-            -- that is the path to jankiness
+              -- force the backend to refresh, don't eagerly update client-side;
+              -- that is the path to jankiness
             , case assignable of
                 GitHub.AssignableIssue issue ->
                     Effects.refreshIssue issue.id
@@ -902,6 +905,12 @@ update msg model =
             , Cmd.none
             )
 
+        SetUserOut user ->
+            ( { model | outUsers = Set.insert user.id model.outUsers }, Cmd.none )
+
+        SetUserIn user ->
+            ( { model | outUsers = Set.remove user.id model.outUsers }, Cmd.none )
+
 
 addAssignment : GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
 addAssignment user mp =
@@ -1293,28 +1302,12 @@ computeProjectLanes model =
                 |> List.filterMap .contentId
                 |> List.filterMap (\id -> Dict.get id model.cards)
 
-        reflectPendingAssignments card =
-            let
-                newAssignees =
-                    case Dict.get card.id model.pendingAssignments of
-                        Nothing ->
-                            card.assignees
-
-                        Just { assign, unassign } ->
-                            let
-                                unaffected { id } =
-                                    not (List.any ((==) id << .id) (assign ++ unassign))
-                            in
-                            assign ++ List.filter unaffected card.assignees
-            in
-            { card | assignees = newAssignees }
-
         inFlightCards project =
             let
                 projectCards =
                     List.filter isInProgress project.columns
                         |> List.concatMap columnCards
-                        |> List.map reflectPendingAssignments
+                        |> List.map (reflectPendingAssignments model)
             in
             if List.isEmpty projectCards then
                 Nothing
@@ -1328,26 +1321,6 @@ computeProjectLanes model =
                     CardView.projectProgress model project
             in
             toFloat dones / toFloat (toDos + inProgresses + dones)
-
-        addCard card val =
-            case val of
-                Nothing ->
-                    Just { assignees = card.assignees, cards = [ card ] }
-
-                Just lane ->
-                    Just { lane | cards = card :: lane.cards }
-
-        groupByAssignees card groups =
-            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
-
-        byAssignees =
-            List.foldl groupByAssignees Dict.empty
-                >> Dict.values
-                >> List.sortBy
-                    (\{ assignees, cards } ->
-                        ( List.length assignees, List.length cards )
-                    )
-                >> List.reverse
     in
     { model
         | inFlight =
@@ -1358,6 +1331,47 @@ computeProjectLanes model =
                 |> List.sortBy progress
                 |> List.reverse
     }
+
+
+reflectPendingAssignments : Model -> Card -> Card
+reflectPendingAssignments model card =
+    let
+        newAssignees =
+            case Dict.get card.id model.pendingAssignments of
+                Nothing ->
+                    card.assignees
+
+                Just { assign, unassign } ->
+                    let
+                        unaffected { id } =
+                            not (List.any ((==) id << .id) (assign ++ unassign))
+                    in
+                    assign ++ List.filter unaffected card.assignees
+    in
+    { card | assignees = newAssignees }
+
+
+byAssignees : List Card -> List Model.ProjectLane
+byAssignees =
+    let
+        addCard card val =
+            case val of
+                Nothing ->
+                    Just { assignees = card.assignees, cards = [ card ] }
+
+                Just lane ->
+                    Just { lane | cards = card :: lane.cards }
+
+        groupByAssignees card groups =
+            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
+    in
+    List.foldl groupByAssignees Dict.empty
+        >> Dict.values
+        >> List.sortBy
+            (\{ assignees, cards } ->
+                ( List.length assignees, List.length cards )
+            )
+        >> List.reverse
 
 
 titleSuffix : String -> String
@@ -2206,24 +2220,19 @@ viewPairsPage model =
                 [ Octicons.listUnordered octiconOpts
                 , Html.text "Lanes"
                 , Html.div [ HA.class "lane-controls buttons" ] <|
-                    Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
-                        [ Octicons.organization octiconOpts
-                        , Html.text "pair up"
-                        ]
-                        :: (if Dict.isEmpty model.pendingAssignments then
-                                []
+                    if Dict.isEmpty model.pendingAssignments then
+                        []
 
-                            else
-                                [ Html.span [ HA.class "button apply", HE.onClick CommitAssignments ]
-                                    [ Octicons.check octiconOpts
-                                    , Html.text "apply"
-                                    ]
-                                , Html.span [ HA.class "button cancel", HE.onClick ResetAssignments ]
-                                    [ Octicons.x octiconOpts
-                                    , Html.text "cancel"
-                                    ]
-                                ]
-                           )
+                    else
+                        [ Html.span [ HA.class "button apply", HE.onClick CommitAssignments ]
+                            [ Octicons.check octiconOpts
+                            , Html.text "apply"
+                            ]
+                        , Html.span [ HA.class "button cancel", HE.onClick ResetAssignments ]
+                            [ Octicons.x octiconOpts
+                            , Html.text "cancel"
+                            ]
+                        ]
                 ]
             , List.map viewProjectLanes model.inFlight
                 |> (\x -> x ++ List.repeat 2 (Html.div [ HA.class "project-lanes-hack" ] []))
@@ -2231,10 +2240,21 @@ viewPairsPage model =
             ]
         , Html.div [ HA.class "dashboard-pane side-pane" ]
             [ Html.div [ HA.class "page-header" ]
-                [ Octicons.organization octiconOpts
+                [ Octicons.person octiconOpts
                 , Html.text "Assignable Users"
+                , Html.div [ HA.class "lane-controls buttons" ]
+                    [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
+                        [ Octicons.organization octiconOpts
+                        , Html.text "pair up"
+                        ]
+                    ]
                 ]
             , viewAssignableUsers model
+            , Html.div [ HA.class "page-header" ]
+                [ Octicons.organization octiconOpts
+                , Html.text "Current Rotations"
+                ]
+            , viewCurrentRotations model
             ]
         ]
 
@@ -2247,37 +2267,70 @@ viewAssignableUsers model =
             , target = user
             }
 
-        viewDraggableActor user =
-            let
-                count =
+        currentAssignments user =
+            List.foldl
+                (\{ lanes } acc ->
                     List.foldl
-                        (\{ lanes } acc ->
-                            List.foldl
-                                (\{ assignees, cards } acc2 ->
-                                    if List.any ((==) user.id << .id) assignees then
-                                        List.length cards + acc2
+                        (\{ assignees, cards } acc2 ->
+                            if List.any ((==) user.id << .id) assignees then
+                                List.length cards + acc2
 
-                                    else
-                                        acc2
-                                )
-                                acc
-                                lanes
+                            else
+                                acc2
                         )
-                        0
-                        model.inFlight
-            in
+                        acc
+                        lanes
+                )
+                0
+                model.inFlight
+
+        assignableUsers =
+            model.assignableUsers
+                |> List.filter ((==) 0 << currentAssignments)
+
+        viewDraggableActor user =
             Drag.droppable model.assignOnlyUserDrag AssignOnlyUserDrag (assignDropCandidate user) <|
                 Drag.draggable model.assignUserDrag AssignUserDrag user <|
-                    Html.div [ HA.class "side-user" ]
+                    let
+                        isOut =
+                            Set.member user.id model.outUsers
+                    in
+                    Html.div
+                        [ HA.class "side-user"
+                        , HA.classList [ ( "out", isOut ) ]
+                        ]
                         [ CardView.viewCardActor user
                         , Html.text (Maybe.withDefault user.login user.name)
-                        , Html.span [ HA.class "leaderboard-count-number" ]
-                            [ Html.text (String.fromInt count)
+                        , Html.span
+                            [ HA.class "out-button"
+                            , HE.onClick <|
+                                if isOut then
+                                    SetUserIn user
+
+                                else
+                                    SetUserOut user
+                            ]
+                            [ Octicons.circleSlash octiconOpts
                             ]
                         ]
     in
     Html.div [ HA.class "side-users" ] <|
-        List.map viewDraggableActor model.assignableUsers
+        List.map viewDraggableActor assignableUsers
+
+
+viewCurrentRotations : Model -> Html Msg
+viewCurrentRotations model =
+    let
+        allInFlight =
+            List.concatMap (List.concatMap .cards << .lanes) model.inFlight
+                |> List.filter (not << Card.isPaused)
+
+        lanes =
+            byAssignees allInFlight
+                |> List.filter (not << List.isEmpty << .assignees)
+    in
+    Html.div [ HA.class "side-lanes card-lanes" ] <|
+        List.map (\lane -> viewLaneAssignees model lane.assignees lane.cards) lanes
 
 
 viewLaneAssignees : Model -> List GitHub.User -> List Card -> Html Msg
