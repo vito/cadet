@@ -337,14 +337,12 @@ update msg model =
                 let
                     otherAssignees =
                         List.filter ((/=) user.id << .id) card.assignees
-
-                    pending =
-                        { assign = [ user ], unassign = otherAssignees }
                 in
                 ( computeProjectLanes
                     { model
                         | pendingAssignments =
-                            Dict.insert card.id pending model.pendingAssignments
+                            Dict.update card.id (addAssignment user) <|
+                                List.foldl (\other -> Dict.update card.id (addUnassignment other)) model.pendingAssignments otherAssignees
                     }
                 , Cmd.none
                 )
