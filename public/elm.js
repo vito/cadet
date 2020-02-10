@@ -15133,28 +15133,6 @@ var $author$project$Main$pairUpUser = F2(
 	function (target, _v40) {
 		var model = _v40.a;
 		var msg = _v40.b;
-		var pairingPool = A2(
-			$elm$core$List$concatMap,
-			function ($) {
-				return $.assignees;
-			},
-			A2(
-				$elm$core$List$filter,
-				A2(
-					$elm$core$Basics$composeL,
-					A2(
-						$elm$core$Basics$composeL,
-						$elm$core$Basics$eq(1),
-						$elm$core$List$length),
-					function ($) {
-						return $.assignees;
-					}),
-				A2(
-					$elm$core$List$concatMap,
-					function ($) {
-						return $.lanes;
-					},
-					model.inFlight)));
 		var lastPaired = F2(
 			function (userA, userB) {
 				return A2(
@@ -15164,36 +15142,97 @@ var $author$project$Main$pairUpUser = F2(
 							[userA.id, userB.id])),
 					model.lastPaired);
 			});
+		var _v41 = A2(
+			$elm$core$List$partition,
+			A2(
+				$elm$core$Basics$composeL,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$Basics$eq(1),
+					$elm$core$List$length),
+				function ($) {
+					return $.assignees;
+				}),
+			A2(
+				$elm$core$List$concatMap,
+				function ($) {
+					return $.lanes;
+				},
+				model.inFlight));
+		var soloLanes = _v41.a;
+		var pairingLanes = _v41.b;
+		var isPairing = function (user) {
+			return A2(
+				$elm$core$List$any,
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$List$any(
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Basics$eq(user.id),
+							function ($) {
+								return $.id;
+							})),
+					function ($) {
+						return $.assignees;
+					}),
+				pairingLanes);
+		};
 		var pickBestUser = F2(
 			function (user, cur) {
-				var _v42 = _Utils_Tuple2(
+				var _v43 = _Utils_Tuple2(
+					isPairing(user),
+					isPairing(cur));
+				_v43$2:
+				while (true) {
+					if (_v43.a) {
+						if (!_v43.b) {
+							return cur;
+						} else {
+							break _v43$2;
+						}
+					} else {
+						if (_v43.b) {
+							return user;
+						} else {
+							break _v43$2;
+						}
+					}
+				}
+				var _v44 = _Utils_Tuple2(
 					A2(lastPaired, target, user),
 					A2(lastPaired, target, cur));
-				if (_v42.a.$ === 'Just') {
-					if (_v42.b.$ === 'Just') {
-						var tsUser = _v42.a.a;
-						var tsCur = _v42.b.a;
+				if (_v44.a.$ === 'Just') {
+					if (_v44.b.$ === 'Just') {
+						var tsUser = _v44.a.a;
+						var tsCur = _v44.b.a;
 						return (_Utils_cmp(
 							$elm$time$Time$posixToMillis(tsCur),
 							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
 					} else {
-						var _v43 = _v42.b;
+						var _v45 = _v44.b;
 						return cur;
 					}
 				} else {
-					if (_v42.b.$ === 'Just') {
-						var _v44 = _v42.a;
+					if (_v44.b.$ === 'Just') {
+						var _v46 = _v44.a;
 						return user;
 					} else {
-						var _v45 = _v42.a;
-						var _v46 = _v42.b;
+						var _v47 = _v44.a;
+						var _v48 = _v44.b;
 						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
 					}
 				}
 			});
-		var _v41 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
-		if (_v41.$ === 'Just') {
-			var pair = _v41.a;
+		var pairingPool = A2(
+			$elm$core$List$concatMap,
+			function ($) {
+				return $.assignees;
+			},
+			soloLanes);
+		var _v42 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
+		if (_v42.$ === 'Just') {
+			var pair = _v42.a;
 			return A3(
 				$author$project$Log$debug,
 				'chose',
