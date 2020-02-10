@@ -2310,8 +2310,13 @@ viewAssignableUsers model =
                         ]
     in
     Html.div [ HA.class "side-users" ] <|
-        List.map viewDraggableActor assignableUsers
+        if List.isEmpty assignableUsers then
+            [ Html.div [ HA.class "no-users" ]
+                [ Html.text "everyone is assigned!" ]
+            ]
 
+        else
+            List.map viewDraggableActor assignableUsers
 
 
 viewLaneAssignees : Model -> List GitHub.User -> List Card -> Html Msg

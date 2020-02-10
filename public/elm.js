@@ -25397,7 +25397,19 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 			[
 				$elm$html$Html$Attributes$class('side-users')
 			]),
-		A2($elm$core$List$map, viewDraggableActor, assignableUsers));
+		$elm$core$List$isEmpty(assignableUsers) ? _List_fromArray(
+			[
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('no-users')
+					]),
+				_List_fromArray(
+					[
+						$elm$html$Html$text('everyone is assigned!')
+					]))
+			]) : A2($elm$core$List$map, viewDraggableActor, assignableUsers));
 };
 var $author$project$Model$UnassignUser = F2(
 	function (a, b) {
