@@ -271,19 +271,10 @@ update msg model =
 
         AssignUser user card ->
             Log.debug "assigning" ( user.login, card.id ) <|
-                let
-                    addAssignment mp =
-                        case mp of
-                            Nothing ->
-                                Just { assign = [ user ], unassign = [] }
-
-                            Just p ->
-                                Just { p | assign = user :: List.filter ((/=) user.id << .id) p.assign }
-                in
                 ( computeProjectLanes
                     { model
                         | pendingAssignments =
-                            Dict.update card.id addAssignment model.pendingAssignments
+                            Dict.update card.id (addAssignment user) model.pendingAssignments
                     }
                 , Cmd.none
                 )
@@ -305,51 +296,21 @@ update msg model =
 
         ReassignUser ( user, unassignCards ) assignCard ->
             Log.debug "reassigning" ( user.login, List.map .id unassignCards, assignCard.id ) <|
-                let
-                    addAssignment mp =
-                        case mp of
-                            Nothing ->
-                                Just { assign = [ user ], unassign = [] }
-
-                            Just p ->
-                                Just { p | assign = user :: List.filter ((/=) user.id << .id) p.assign }
-
-                    addUnassignment mp =
-                        case mp of
-                            Nothing ->
-                                Just { assign = [], unassign = [ user ] }
-
-                            Just p ->
-                                Just { p | unassign = user :: List.filter ((/=) user.id << .id) p.unassign }
-                in
                 ( computeProjectLanes
                     { model
                         | pendingAssignments =
-                            Dict.update assignCard.id addAssignment <|
-                                List.foldl (\{ id } -> Dict.update id addUnassignment) model.pendingAssignments unassignCards
+                            Dict.update assignCard.id (addAssignment user) <|
+                                List.foldl (\{ id } -> Dict.update id (addUnassignment user)) model.pendingAssignments unassignCards
                     }
                 , Cmd.none
                 )
 
         UnassignUser user cards ->
             Log.debug "unassigning" ( user.login, List.map .id cards ) <|
-                let
-                    addUnassignment mp =
-                        case mp of
-                            Nothing ->
-                                Just { assign = [], unassign = [ user ] }
-
-                            Just p ->
-                                Just
-                                    { p
-                                        | unassign = user :: List.filter ((/=) user.id << .id) p.unassign
-                                        , assign = List.filter ((/=) user.id << .id) p.assign
-                                    }
-                in
                 ( computeProjectLanes
                     { model
                         | pendingAssignments =
-                            List.foldl (\{ id } -> Dict.update id addUnassignment)
+                            List.foldl (\{ id } -> Dict.update id (addUnassignment user))
                                 model.pendingAssignments
                                 cards
                     }
@@ -442,22 +403,17 @@ update msg model =
             ( computeProjectLanes { model | pendingAssignments = Dict.empty }, Cmd.none )
 
         AssigneesUpdated (Ok (Just assignable)) ->
-            let
-                card =
-                    case assignable of
-                        GitHub.AssignableIssue issue ->
-                            Card.fromIssue issue
+            ( model
 
-                        GitHub.AssignablePullRequest pr ->
-                            Card.fromPR pr
-            in
-            Log.debug "assignees updated" ( card.id, card.title ) <|
-                ( { model
-                    | cards = Dict.insert card.id card model.cards
-                    , progress = finishProgress card.id model.progress
-                  }
-                , Cmd.none
-                )
+            -- force the backend to refresh, don't eagerly update client-side;
+            -- that is the path to jankiness
+            , case assignable of
+                GitHub.AssignableIssue issue ->
+                    Effects.refreshIssue issue.id
+
+                GitHub.AssignablePullRequest pr ->
+                    Effects.refreshPR pr.id
+            )
 
         AssigneesUpdated (Ok Nothing) ->
             Log.debug "assignment returned nothing" () <|
@@ -947,6 +903,34 @@ update msg model =
               }
             , Cmd.none
             )
+
+
+addAssignment : GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
+addAssignment user mp =
+    case mp of
+        Nothing ->
+            Just { assign = [ user ], unassign = [] }
+
+        Just p ->
+            Just
+                { p
+                    | unassign = List.filter ((/=) user.id << .id) p.unassign
+                    , assign = user :: List.filter ((/=) user.id << .id) p.assign
+                }
+
+
+addUnassignment : GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
+addUnassignment user mp =
+    case mp of
+        Nothing ->
+            Just { assign = [], unassign = [ user ] }
+
+        Just p ->
+            Just
+                { p
+                    | unassign = user :: List.filter ((/=) user.id << .id) p.unassign
+                    , assign = List.filter ((/=) user.id << .id) p.assign
+                }
 
 
 pairUpUser : GitHub.User -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )

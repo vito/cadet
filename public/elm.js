@@ -7788,6 +7788,56 @@ var $author$project$Model$Noop = {$: 'Noop'};
 var $author$project$Model$RefreshQueued = function (a) {
 	return {$: 'RefreshQueued', a: a};
 };
+var $elm$core$List$filter = F2(
+	function (isGood, list) {
+		return A3(
+			$elm$core$List$foldr,
+			F2(
+				function (x, xs) {
+					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
+				}),
+			_List_Nil,
+			list);
+	});
+var $author$project$Main$addAssignment = F2(
+	function (user, mp) {
+		if (mp.$ === 'Nothing') {
+			return $elm$core$Maybe$Just(
+				{
+					assign: _List_fromArray(
+						[user]),
+					unassign: _List_Nil
+				});
+		} else {
+			var p = mp.a;
+			return $elm$core$Maybe$Just(
+				_Utils_update(
+					p,
+					{
+						assign: A2(
+							$elm$core$List$cons,
+							user,
+							A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$core$Basics$neq(user.id),
+									function ($) {
+										return $.id;
+									}),
+								p.assign)),
+						unassign: A2(
+							$elm$core$List$filter,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Basics$neq(user.id),
+								function ($) {
+									return $.id;
+								}),
+							p.unassign)
+					}));
+		}
+	});
 var $author$project$Model$CardMoved = F2(
 	function (a, b) {
 		return {$: 'CardMoved', a: a, b: b};
@@ -7868,17 +7918,6 @@ var $elm$core$Tuple$mapSecond = F2(
 	});
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST = $elm$core$List$map(
 	$elm$core$Tuple$mapSecond($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getAST));
-var $elm$core$List$filter = F2(
-	function (isGood, list) {
-		return A3(
-			$elm$core$List$foldr,
-			F2(
-				function (x, xs) {
-					return isGood(x) ? A2($elm$core$List$cons, x, xs) : xs;
-				}),
-			_List_Nil,
-			list);
-	});
 var $elm$core$List$any = F2(
 	function (isOkay, list) {
 		any:
@@ -10478,6 +10517,45 @@ var $author$project$Effects$addPullRequestLabels = F3(
 							A2($author$project$Backend$refreshPR, pr.id, $author$project$Model$RefreshQueued)),
 						A3($author$project$GitHub$addPullRequestLabels, token, pr, labels)));
 			});
+	});
+var $author$project$Main$addUnassignment = F2(
+	function (user, mp) {
+		if (mp.$ === 'Nothing') {
+			return $elm$core$Maybe$Just(
+				{
+					assign: _List_Nil,
+					unassign: _List_fromArray(
+						[user])
+				});
+		} else {
+			var p = mp.a;
+			return $elm$core$Maybe$Just(
+				_Utils_update(
+					p,
+					{
+						assign: A2(
+							$elm$core$List$filter,
+							A2(
+								$elm$core$Basics$composeL,
+								$elm$core$Basics$neq(user.id),
+								function ($) {
+									return $.id;
+								}),
+							p.assign),
+						unassign: A2(
+							$elm$core$List$cons,
+							user,
+							A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$core$Basics$neq(user.id),
+									function ($) {
+										return $.id;
+									}),
+								p.unassign))
+					}));
+		}
 	});
 var $author$project$Model$AddLabelOperation = {$: 'AddLabelOperation'};
 var $elm$core$List$member = F2(
@@ -13528,7 +13606,6 @@ var $author$project$Main$finishLoadingData = function (data) {
 				return !A2(hasLoaded, id, p);
 			}));
 };
-var $author$project$Main$finishProgress = $elm$core$Dict$remove;
 var $elm$browser$Browser$Dom$focus = _Browser_call('focus');
 var $author$project$CardView$focusId = function (id) {
 	return 'focus-' + id;
@@ -13817,6 +13894,7 @@ var $author$project$Backend$decodeReviewersEvent = A2(
 		$elm_community$json_extra$Json$Decode$Extra$andMap,
 		A2($elm$json$Json$Decode$field, 'prId', $elm$json$Json$Decode$string),
 		$elm$json$Json$Decode$succeed($author$project$Backend$ReviewersEvent)));
+var $author$project$Main$finishProgress = $elm$core$Dict$remove;
 var $author$project$Main$finishLoadingColumnCards = F2(
 	function (cards, state) {
 		return A3(
@@ -15133,9 +15211,9 @@ var $author$project$Effects$updateLabel = F4(
 			});
 	});
 var $author$project$Main$pairUpUser = F2(
-	function (target, _v40) {
-		var model = _v40.a;
-		var msg = _v40.b;
+	function (target, _v36) {
+		var model = _v36.a;
+		var msg = _v36.b;
 		var lastPaired = F2(
 			function (userA, userB) {
 				return A2(
@@ -15147,32 +15225,32 @@ var $author$project$Main$pairUpUser = F2(
 			});
 		var pickBestUser = F2(
 			function (user, cur) {
-				var _v43 = _Utils_Tuple2(
+				var _v39 = _Utils_Tuple2(
 					A2(lastPaired, target, user),
 					A2(lastPaired, target, cur));
-				if (_v43.a.$ === 'Just') {
-					if (_v43.b.$ === 'Just') {
-						var tsUser = _v43.a.a;
-						var tsCur = _v43.b.a;
+				if (_v39.a.$ === 'Just') {
+					if (_v39.b.$ === 'Just') {
+						var tsUser = _v39.a.a;
+						var tsCur = _v39.b.a;
 						return (_Utils_cmp(
 							$elm$time$Time$posixToMillis(tsCur),
 							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
 					} else {
-						var _v44 = _v43.b;
+						var _v40 = _v39.b;
 						return cur;
 					}
 				} else {
-					if (_v43.b.$ === 'Just') {
-						var _v45 = _v43.a;
+					if (_v39.b.$ === 'Just') {
+						var _v41 = _v39.a;
 						return user;
 					} else {
-						var _v46 = _v43.a;
-						var _v47 = _v43.b;
+						var _v42 = _v39.a;
+						var _v43 = _v39.b;
 						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
 					}
 				}
 			});
-		var _v41 = A2(
+		var _v37 = A2(
 			$elm$core$List$partition,
 			A2(
 				$elm$core$Basics$composeL,
@@ -15189,8 +15267,8 @@ var $author$project$Main$pairUpUser = F2(
 					return $.lanes;
 				},
 				model.inFlight));
-		var soloLanes = _v41.a;
-		var pairingLanes = _v41.b;
+		var soloLanes = _v37.a;
+		var pairingLanes = _v37.b;
 		var isPairing = function (user) {
 			return A2(
 				$elm$core$List$any,
@@ -15226,9 +15304,9 @@ var $author$project$Main$pairUpUser = F2(
 							return $.cards;
 						}),
 					soloLanes)));
-		var _v42 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
-		if (_v42.$ === 'Just') {
-			var pair = _v42.a;
+		var _v38 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
+		if (_v38.$ === 'Just') {
+			var pair = _v38.a;
 			return A3(
 				$author$project$Log$debug,
 				'chose',
@@ -15287,12 +15365,12 @@ var $author$project$Main$replay = F2(
 		return A3(
 			$elm$core$List$foldl,
 			F2(
-				function (msg, _v38) {
-					var m = _v38.a;
-					var cmd = _v38.b;
-					var _v39 = A2($author$project$Main$update, msg, m);
-					var nm = _v39.a;
-					var ncmd = _v39.b;
+				function (msg, _v34) {
+					var m = _v34.a;
+					var cmd = _v34.b;
+					var _v35 = A2($author$project$Main$update, msg, m);
+					var nm = _v35.a;
+					var ncmd = _v35.b;
 					return _Utils_Tuple2(
 						nm,
 						$elm$core$Platform$Cmd$batch(
@@ -15452,45 +15530,18 @@ var $author$project$Main$update = F2(
 						$author$project$Log$debug,
 						'assigning',
 						_Utils_Tuple2(user.login, card.id),
-						function () {
-							var addAssignment = function (mp) {
-								if (mp.$ === 'Nothing') {
-									return $elm$core$Maybe$Just(
-										{
-											assign: _List_fromArray(
-												[user]),
-											unassign: _List_Nil
-										});
-								} else {
-									var p = mp.a;
-									return $elm$core$Maybe$Just(
-										_Utils_update(
-											p,
-											{
-												assign: A2(
-													$elm$core$List$cons,
-													user,
-													A2(
-														$elm$core$List$filter,
-														A2(
-															$elm$core$Basics$composeL,
-															$elm$core$Basics$neq(user.id),
-															function ($) {
-																return $.id;
-															}),
-														p.assign))
-											}));
-								}
-							};
-							return _Utils_Tuple2(
-								$author$project$Main$computeProjectLanes(
-									_Utils_update(
-										model,
-										{
-											pendingAssignments: A3($elm$core$Dict$update, card.id, addAssignment, model.pendingAssignments)
-										})),
-								$elm$core$Platform$Cmd$none);
-						}());
+						_Utils_Tuple2(
+							$author$project$Main$computeProjectLanes(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3(
+											$elm$core$Dict$update,
+											card.id,
+											$author$project$Main$addAssignment(user),
+											model.pendingAssignments)
+									})),
+							$elm$core$Platform$Cmd$none));
 				case 'ReassignUserDrag':
 					var subMsg = msg.a;
 					var dragModel = A2($author$project$Drag$update, subMsg, model.reassignUserDrag);
@@ -15512,9 +15563,9 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
 					}
 				case 'ReassignUser':
-					var _v10 = msg.a;
-					var user = _v10.a;
-					var unassignCards = _v10.b;
+					var _v9 = msg.a;
+					var user = _v9.a;
+					var unassignCards = _v9.b;
 					var assignCard = msg.b;
 					return A3(
 						$author$project$Log$debug,
@@ -15528,85 +15579,28 @@ var $author$project$Main$update = F2(
 								},
 								unassignCards),
 							assignCard.id),
-						function () {
-							var addUnassignment = function (mp) {
-								if (mp.$ === 'Nothing') {
-									return $elm$core$Maybe$Just(
-										{
-											assign: _List_Nil,
-											unassign: _List_fromArray(
-												[user])
-										});
-								} else {
-									var p = mp.a;
-									return $elm$core$Maybe$Just(
-										_Utils_update(
-											p,
-											{
-												unassign: A2(
-													$elm$core$List$cons,
-													user,
-													A2(
-														$elm$core$List$filter,
-														A2(
-															$elm$core$Basics$composeL,
-															$elm$core$Basics$neq(user.id),
-															function ($) {
-																return $.id;
-															}),
-														p.unassign))
-											}));
-								}
-							};
-							var addAssignment = function (mp) {
-								if (mp.$ === 'Nothing') {
-									return $elm$core$Maybe$Just(
-										{
-											assign: _List_fromArray(
-												[user]),
-											unassign: _List_Nil
-										});
-								} else {
-									var p = mp.a;
-									return $elm$core$Maybe$Just(
-										_Utils_update(
-											p,
-											{
-												assign: A2(
-													$elm$core$List$cons,
-													user,
-													A2(
-														$elm$core$List$filter,
-														A2(
-															$elm$core$Basics$composeL,
-															$elm$core$Basics$neq(user.id),
-															function ($) {
-																return $.id;
-															}),
-														p.assign))
-											}));
-								}
-							};
-							return _Utils_Tuple2(
-								$author$project$Main$computeProjectLanes(
-									_Utils_update(
-										model,
-										{
-											pendingAssignments: A3(
-												$elm$core$Dict$update,
-												assignCard.id,
-												addAssignment,
-												A3(
-													$elm$core$List$foldl,
-													function (_v11) {
-														var id = _v11.id;
-														return A2($elm$core$Dict$update, id, addUnassignment);
-													},
-													model.pendingAssignments,
-													unassignCards))
-										})),
-								$elm$core$Platform$Cmd$none);
-						}());
+						_Utils_Tuple2(
+							$author$project$Main$computeProjectLanes(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3(
+											$elm$core$Dict$update,
+											assignCard.id,
+											$author$project$Main$addAssignment(user),
+											A3(
+												$elm$core$List$foldl,
+												function (_v10) {
+													var id = _v10.id;
+													return A2(
+														$elm$core$Dict$update,
+														id,
+														$author$project$Main$addUnassignment(user));
+												},
+												model.pendingAssignments,
+												unassignCards))
+									})),
+							$elm$core$Platform$Cmd$none));
 				case 'UnassignUser':
 					var user = msg.a;
 					var cards = msg.b;
@@ -15621,61 +15615,24 @@ var $author$project$Main$update = F2(
 									return $.id;
 								},
 								cards)),
-						function () {
-							var addUnassignment = function (mp) {
-								if (mp.$ === 'Nothing') {
-									return $elm$core$Maybe$Just(
-										{
-											assign: _List_Nil,
-											unassign: _List_fromArray(
-												[user])
-										});
-								} else {
-									var p = mp.a;
-									return $elm$core$Maybe$Just(
-										_Utils_update(
-											p,
-											{
-												assign: A2(
-													$elm$core$List$filter,
-													A2(
-														$elm$core$Basics$composeL,
-														$elm$core$Basics$neq(user.id),
-														function ($) {
-															return $.id;
-														}),
-													p.assign),
-												unassign: A2(
-													$elm$core$List$cons,
-													user,
-													A2(
-														$elm$core$List$filter,
-														A2(
-															$elm$core$Basics$composeL,
-															$elm$core$Basics$neq(user.id),
-															function ($) {
-																return $.id;
-															}),
-														p.unassign))
-											}));
-								}
-							};
-							return _Utils_Tuple2(
-								$author$project$Main$computeProjectLanes(
-									_Utils_update(
-										model,
-										{
-											pendingAssignments: A3(
-												$elm$core$List$foldl,
-												function (_v14) {
-													var id = _v14.id;
-													return A2($elm$core$Dict$update, id, addUnassignment);
-												},
-												model.pendingAssignments,
-												cards)
-										})),
-								$elm$core$Platform$Cmd$none);
-						}());
+						_Utils_Tuple2(
+							$author$project$Main$computeProjectLanes(
+								_Utils_update(
+									model,
+									{
+										pendingAssignments: A3(
+											$elm$core$List$foldl,
+											function (_v11) {
+												var id = _v11.id;
+												return A2(
+													$elm$core$Dict$update,
+													id,
+													$author$project$Main$addUnassignment(user));
+											},
+											model.pendingAssignments,
+											cards)
+									})),
+							$elm$core$Platform$Cmd$none));
 				case 'AssignOnlyUserDrag':
 					var subMsg = msg.a;
 					var dragModel = A2($author$project$Drag$update, subMsg, model.assignOnlyUserDrag);
@@ -15777,12 +15734,12 @@ var $author$project$Main$update = F2(
 						toAssign);
 				case 'CommitAssignments':
 					var cardAssignments = F2(
-						function (cardId, _v19) {
-							var assign = _v19.assign;
-							var unassign = _v19.unassign;
-							var _v18 = _Utils_Tuple2(assign, unassign);
-							if (!_v18.a.b) {
-								if (!_v18.b.b) {
+						function (cardId, _v15) {
+							var assign = _v15.assign;
+							var unassign = _v15.unassign;
+							var _v14 = _Utils_Tuple2(assign, unassign);
+							if (!_v14.a.b) {
+								if (!_v14.b.b) {
 									return _List_Nil;
 								} else {
 									return _List_fromArray(
@@ -15791,7 +15748,7 @@ var $author$project$Main$update = F2(
 										]);
 								}
 							} else {
-								if (!_v18.b.b) {
+								if (!_v14.b.b) {
 									return _List_fromArray(
 										[
 											A3($author$project$Effects$assignUsers, model, assign, cardId)
@@ -15832,29 +15789,19 @@ var $author$project$Main$update = F2(
 					if (msg.a.$ === 'Ok') {
 						if (msg.a.a.$ === 'Just') {
 							var assignable = msg.a.a.a;
-							var card = function () {
-								if (assignable.$ === 'AssignableIssue') {
-									var issue = assignable.a;
-									return $author$project$Card$fromIssue(issue);
-								} else {
-									var pr = assignable.a;
-									return $author$project$Card$fromPR(pr);
-								}
-							}();
-							return A3(
-								$author$project$Log$debug,
-								'assignees updated',
-								_Utils_Tuple2(card.id, card.title),
-								_Utils_Tuple2(
-									_Utils_update(
-										model,
-										{
-											cards: A3($elm$core$Dict$insert, card.id, card, model.cards),
-											progress: A2($author$project$Main$finishProgress, card.id, model.progress)
-										}),
-									$elm$core$Platform$Cmd$none));
+							return _Utils_Tuple2(
+								model,
+								function () {
+									if (assignable.$ === 'AssignableIssue') {
+										var issue = assignable.a;
+										return $author$project$Effects$refreshIssue(issue.id);
+									} else {
+										var pr = assignable.a;
+										return $author$project$Effects$refreshPR(pr.id);
+									}
+								}());
 						} else {
-							var _v21 = msg.a.a;
+							var _v17 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15974,13 +15921,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v22 = msg.a;
-					var event = _v22.a;
-					var data = _v22.b;
-					var indexStr = _v22.c;
-					var _v23 = $elm$core$String$toInt(indexStr);
-					if (_v23.$ === 'Just') {
-						var index = _v23.a;
+					var _v18 = msg.a;
+					var event = _v18.a;
+					var data = _v18.b;
+					var indexStr = _v18.c;
+					var _v19 = $elm$core$String$toInt(indexStr);
+					if (_v19.$ === 'Just') {
+						var index = _v19.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -16105,12 +16052,12 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v24, r, acc) {
+							function (_v20, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v25 = A2(
+								var _v21 = A2(
 									$elm$core$List$filter,
 									A2(
 										$elm$core$Basics$composeL,
@@ -16119,13 +16066,13 @@ var $author$project$Main$update = F2(
 											return $.name;
 										}),
 									labels);
-								if (!_v25.b) {
+								if (!_v21.b) {
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _v25.a;
+									var label = _v21.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										$elm$core$List$cons,
 										A4($author$project$Effects$updateLabel, model, r, label, newLabel),
@@ -16166,19 +16113,19 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v26, r, acc) {
+							function (_v22, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v27 = A2(
+								var _v23 = A2(
 									$elm$core$List$filter,
 									$author$project$Main$matchesLabel(label),
 									labels);
-								if (!_v27.b) {
+								if (!_v23.b) {
 									return acc;
 								} else {
-									var repoLabel = _v27.a;
+									var repoLabel = _v23.a;
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$deleteLabel, model, r, repoLabel),
@@ -16251,7 +16198,7 @@ var $author$project$Main$update = F2(
 								editingLabels: A2(
 									$elm$core$Dict$map,
 									F2(
-										function (_v28, label) {
+										function (_v24, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -16265,14 +16212,14 @@ var $author$project$Main$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _v29 = A2(
+					var _v25 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_v29.$ === 'Nothing') {
+					if (_v25.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v29.a;
+						var newLabel = _v25.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -16287,28 +16234,28 @@ var $author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _v30 = A2(
+					var _v26 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_v30.$ === 'Nothing') {
+					if (_v26.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v30.a;
+						var newLabel = _v26.a;
 						var cmds = A3(
 							$elm$core$Dict$foldl,
 							F3(
-								function (_v31, r, acc) {
+								function (_v27, r, acc) {
 									var labels = A2(
 										$elm$core$Maybe$withDefault,
 										_List_Nil,
 										A2($elm$core$Dict$get, r.id, model.repoLabels));
-									var _v32 = A2(
+									var _v28 = A2(
 										$elm$core$List$filter,
 										$author$project$Main$matchesLabel(oldLabel),
 										labels);
-									if (_v32.b) {
-										var repoLabel = _v32.a;
+									if (_v28.b) {
+										var repoLabel = _v28.a;
 										return A2(
 											$elm$core$List$cons,
 											A4($author$project$Effects$updateLabel, model, r, repoLabel, newLabel),
@@ -16386,9 +16333,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v33 = card.content;
-					if (_v33.$ === 'IssueCardContent') {
-						var issue = _v33.a;
+					var _v29 = card.content;
+					if (_v29.$ === 'IssueCardContent') {
+						var issue = _v29.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16398,7 +16345,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v33.a;
+						var pr = _v29.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16411,14 +16358,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v34 = card.content;
-					if (_v34.$ === 'IssueCardContent') {
-						var issue = _v34.a;
+					var _v30 = card.content;
+					if (_v30.$ === 'IssueCardContent') {
+						var issue = _v30.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v34.a;
+						var pr = _v30.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16558,14 +16505,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v35 = A2(
+							var _v31 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v35 === '') {
+							if (_v31 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v35;
+								var note = _v31;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -16631,14 +16578,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v36 = A2(
+							var _v32 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v36 === '') {
+							if (_v32 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v36;
+								var note = _v32;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
