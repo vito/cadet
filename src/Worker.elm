@@ -369,7 +369,7 @@ update msg model =
 
         PairingTeamFetched (Err err) ->
             Log.debug "failed to fetch pairing members" err <|
-                backOff model err (fetchRepos model)
+                backOff model err (fetchPairingTeam model)
 
         RepositoriesFetched (Ok repos) ->
             Log.debug "repositories fetched" (List.map .name repos) <|
