@@ -3192,6 +3192,8 @@ var $elm$json$Json$Decode$field = _Json_decodeField;
 var $author$project$Worker$Refresh = {$: 'Refresh'};
 var $elm$core$Dict$RBEmpty_elm_builtin = {$: 'RBEmpty_elm_builtin'};
 var $elm$core$Dict$empty = $elm$core$Dict$RBEmpty_elm_builtin;
+var $elm$core$Platform$Cmd$batch = _Platform_batch;
+var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Worker$FetchCards = function (a) {
 	return {$: 'FetchCards', a: a};
 };
@@ -3215,8 +3217,6 @@ var $elm$core$Basics$always = F2(
 		return a;
 	});
 var $elm$core$Basics$ge = _Utils_ge;
-var $elm$core$Platform$Cmd$batch = _Platform_batch;
-var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$Worker$backOff = F3(
 	function (model, err, cmd) {
 		if ((err.$ === 'HttpError') && (err.a.$ === 'BadStatus')) {
@@ -6798,11 +6798,10 @@ var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$aliasAs = F2(
 			return selection;
 		}
 	});
-var $author$project$GitHub$User = F6(
-	function (id, databaseId, url, login, avatar, name) {
-		return {avatar: avatar, databaseId: databaseId, id: id, login: login, name: name, url: url};
+var $author$project$GitHub$Commit = F8(
+	function (url, sha, status, author, committer, authoredAt, committedAt, associatedPullRequests) {
+		return {associatedPullRequests: associatedPullRequests, author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status, url: url};
 	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType = {$: 'IntType'};
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec = F2(
 	function (coreType, decoder) {
 		return A4(
@@ -6812,219 +6811,6 @@ var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec = F2(
 			$elm$core$Basics$always(decoder),
 			_List_Nil,
 			_List_Nil);
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType, $elm$json$Json$Decode$int);
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-	{coreType: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType, join: $elm$core$Basics$always, nullability: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, selectionSet: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
-	return A4(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType,
-		$elm$core$Basics$always(
-			$elm$json$Json$Decode$succeed(ctr)),
-		_List_Nil,
-		_List_Nil);
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType = {$: 'StringType'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType, $elm$json$Json$Decode$string);
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets = F2(
-	function (_v0, _v1) {
-		var selectionsA = _v0.a;
-		var selectionsB = _v1.a;
-		return $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet(
-			_Utils_ap(selectionsA, selectionsB));
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join = F2(
-	function (a, b) {
-		var _v0 = _Utils_Tuple2(a, b);
-		if (_v0.a.$ === 'SpecifiedType') {
-			if (_v0.b.$ === 'SpecifiedType') {
-				var typeInfoA = _v0.a.a;
-				var typeInfoB = _v0.b.a;
-				return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-					_Utils_update(
-						typeInfoA,
-						{
-							coreType: A2(typeInfoA.join, typeInfoA.coreType, typeInfoB.coreType),
-							selectionSet: A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.selectionSet, typeInfoB.selectionSet)
-						}));
-			} else {
-				var _v2 = _v0.b;
-				return a;
-			}
-		} else {
-			var _v1 = _v0.a;
-			return b;
-		}
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeFragments = F2(
-	function (fragmentsA, fragmentsB) {
-		return _Utils_ap(
-			fragmentsA,
-			A2(
-				$elm$core$List$filter,
-				function (fragmentItem) {
-					return !A2(
-						$elm$core$List$any,
-						$elm$core$Basics$eq(fragmentItem),
-						fragmentsA);
-				},
-				fragmentsB));
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2 = F3(
-	function (f, _v0, _v1) {
-		var sourceTypeA = _v0.a;
-		var decoderA = _v0.b;
-		var varsA = _v0.c;
-		var fragmentsA = _v0.d;
-		var sourceTypeB = _v1.a;
-		var decoderB = _v1.b;
-		var varsB = _v1.c;
-		var fragmentsB = _v1.d;
-		var mergedVariables = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables, varsA, varsB);
-		var mergedFragments = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeFragments, fragmentsA, fragmentsB);
-		var joinedSourceType = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join, sourceTypeA, sourceTypeB);
-		var joinedDecoder = function (selectionSet) {
-			return A3(
-				$elm$json$Json$Decode$map2,
-				f,
-				decoderA(selectionSet),
-				decoderB(selectionSet));
-		};
-		return A4($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec, joinedSourceType, joinedDecoder, mergedVariables, mergedFragments);
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with = F2(
-	function (selection, objectSpec) {
-		return A3(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2,
-			$elm$core$Basics$apL,
-			objectSpec,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(selection));
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 'AnyType'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce = function (x) {
-	return A4(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
-		$elm$core$Basics$always(
-			$elm$json$Json$Decode$succeed(x)),
-		_List_Nil,
-		_List_Nil);
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant = F2(
-	function (x, objectSpec) {
-		return A3(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2,
-			$elm$core$Basics$apL,
-			objectSpec,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce(x));
-	});
-var $author$project$GitHub$botObject = A2(
-	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant,
-	$elm$core$Maybe$Nothing,
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				A2(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
-					A2(
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$User)))))));
-var $elm_community$maybe_extra$Maybe$Extra$or = F2(
-	function (ma, mb) {
-		if (ma.$ === 'Nothing') {
-			return mb;
-		} else {
-			return ma;
-		}
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
-	function (nullability, coreType, join, selectionSet) {
-		return {coreType: coreType, join: join, nullability: nullability, selectionSet: selectionSet};
-	});
-var $elm$json$Json$Decode$null = _Json_decodeNull;
-var $elm$json$Json$Decode$nullable = function (decoder) {
-	return $elm$json$Json$Decode$oneOf(
-		_List_fromArray(
-			[
-				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
-				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
-			]));
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = {$: 'NullableFlag'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag;
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_v0) {
-	var sourceType = _v0.a;
-	var decoder = _v0.b;
-	var vars = _v0.c;
-	var fragments = _v0.d;
-	if (sourceType.$ === 'SpecifiedType') {
-		var typeInfo = sourceType.a;
-		return A4(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
-				A4($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.coreType, typeInfo.join, typeInfo.selectionSet)),
-			A2($elm$core$Basics$composeL, $elm$json$Json$Decode$nullable, decoder),
-			vars,
-			fragments);
-	} else {
-		return A4(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
-			A2($elm$core$Basics$composeL, $elm$json$Json$Decode$nullable, decoder),
-			vars,
-			fragments);
-	}
-};
-var $author$project$GitHub$userObject = A2(
-	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'name',
-		_List_Nil,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				A2(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
-					A2(
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$User)))))));
-var $author$project$GitHub$authorObject = A2(
-	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-		$elm$core$Maybe$Just(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Bot')),
-		$author$project$GitHub$botObject),
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-			$elm$core$Maybe$Just(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
-			$author$project$GitHub$userObject),
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($elm_community$maybe_extra$Maybe$Extra$or)));
-var $author$project$GitHub$Commit = F8(
-	function (url, sha, status, author, committer, authoredAt, committedAt, associatedPullRequests) {
-		return {associatedPullRequests: associatedPullRequests, author: author, authoredAt: authoredAt, committedAt: committedAt, committer: committer, sha: sha, status: status, url: url};
 	});
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar = F2(
 	function (customTypeMarker, decoder) {
@@ -7657,6 +7443,161 @@ var $author$project$GitHub$GitActor = F4(
 	function (email, name, avatar, user) {
 		return {avatar: avatar, email: email, name: name, user: user};
 	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType = {$: 'AnyType'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo = F4(
+	function (nullability, coreType, join, selectionSet) {
+		return {coreType: coreType, join: join, nullability: nullability, selectionSet: selectionSet};
+	});
+var $elm$json$Json$Decode$null = _Json_decodeNull;
+var $elm$json$Json$Decode$nullable = function (decoder) {
+	return $elm$json$Json$Decode$oneOf(
+		_List_fromArray(
+			[
+				$elm$json$Json$Decode$null($elm$core$Maybe$Nothing),
+				A2($elm$json$Json$Decode$map, $elm$core$Maybe$Just, decoder)
+			]));
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag = {$: 'NullableFlag'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$NullableFlag;
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable = function (_v0) {
+	var sourceType = _v0.a;
+	var decoder = _v0.b;
+	var vars = _v0.c;
+	var fragments = _v0.d;
+	if (sourceType.$ === 'SpecifiedType') {
+		var typeInfo = sourceType.a;
+		return A4(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
+				A4($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedTypeInfo, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullableFlag, typeInfo.coreType, typeInfo.join, typeInfo.selectionSet)),
+			A2($elm$core$Basics$composeL, $elm$json$Json$Decode$nullable, decoder),
+			vars,
+			fragments);
+	} else {
+		return A4(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
+			A2($elm$core$Basics$composeL, $elm$json$Json$Decode$nullable, decoder),
+			vars,
+			fragments);
+	}
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
+	{coreType: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType, join: $elm$core$Basics$always, nullability: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nonNullFlag, selectionSet: $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptySelectionSet});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object = function (ctr) {
+	return A4(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$emptyObjectSpecifiedType,
+		$elm$core$Basics$always(
+			$elm$json$Json$Decode$succeed(ctr)),
+		_List_Nil,
+		_List_Nil);
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType = {$: 'StringType'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$StringType, $elm$json$Json$Decode$string);
+var $author$project$GitHub$User = F6(
+	function (id, databaseId, url, login, avatar, name) {
+		return {avatar: avatar, databaseId: databaseId, id: id, login: login, name: name, url: url};
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType = {$: 'IntType'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$primitiveSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$IntType, $elm$json$Json$Decode$int);
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets = F2(
+	function (_v0, _v1) {
+		var selectionsA = _v0.a;
+		var selectionsB = _v1.a;
+		return $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet(
+			_Utils_ap(selectionsA, selectionsB));
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join = F2(
+	function (a, b) {
+		var _v0 = _Utils_Tuple2(a, b);
+		if (_v0.a.$ === 'SpecifiedType') {
+			if (_v0.b.$ === 'SpecifiedType') {
+				var typeInfoA = _v0.a.a;
+				var typeInfoB = _v0.b.a;
+				return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SpecifiedType(
+					_Utils_update(
+						typeInfoA,
+						{
+							coreType: A2(typeInfoA.join, typeInfoA.coreType, typeInfoB.coreType),
+							selectionSet: A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeSelectionSets, typeInfoA.selectionSet, typeInfoB.selectionSet)
+						}));
+			} else {
+				var _v2 = _v0.b;
+				return a;
+			}
+		} else {
+			var _v1 = _v0.a;
+			return b;
+		}
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeFragments = F2(
+	function (fragmentsA, fragmentsB) {
+		return _Utils_ap(
+			fragmentsA,
+			A2(
+				$elm$core$List$filter,
+				function (fragmentItem) {
+					return !A2(
+						$elm$core$List$any,
+						$elm$core$Basics$eq(fragmentItem),
+						fragmentsA);
+				},
+				fragmentsB));
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2 = F3(
+	function (f, _v0, _v1) {
+		var sourceTypeA = _v0.a;
+		var decoderA = _v0.b;
+		var varsA = _v0.c;
+		var fragmentsA = _v0.d;
+		var sourceTypeB = _v1.a;
+		var decoderB = _v1.b;
+		var varsB = _v1.c;
+		var fragmentsB = _v1.d;
+		var mergedVariables = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables, varsA, varsB);
+		var mergedFragments = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mergeFragments, fragmentsA, fragmentsB);
+		var joinedSourceType = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$join, sourceTypeA, sourceTypeB);
+		var joinedDecoder = function (selectionSet) {
+			return A3(
+				$elm$json$Json$Decode$map2,
+				f,
+				decoderA(selectionSet),
+				decoderB(selectionSet));
+		};
+		return A4($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec, joinedSourceType, joinedDecoder, mergedVariables, mergedFragments);
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with = F2(
+	function (selection, objectSpec) {
+		return A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2,
+			$elm$core$Basics$apL,
+			objectSpec,
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(selection));
+	});
+var $author$project$GitHub$userObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'name',
+		_List_Nil,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$User)))))));
 var $author$project$GitHub$gitActorObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3(
@@ -8204,6 +8145,65 @@ var $author$project$GitHub$repoLocationObject = A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$RepoLocation)))));
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce = function (x) {
+	return A4(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ValueSpec,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$AnyType,
+		$elm$core$Basics$always(
+			$elm$json$Json$Decode$succeed(x)),
+		_List_Nil,
+		_List_Nil);
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant = F2(
+	function (x, objectSpec) {
+		return A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map2,
+			$elm$core$Basics$apL,
+			objectSpec,
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$produce(x));
+	});
+var $author$project$GitHub$botObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$withLocalConstant,
+	$elm$core$Maybe$Nothing,
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'avatarUrl', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'login', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'databaseId', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$User)))))));
+var $elm_community$maybe_extra$Maybe$Extra$or = F2(
+	function (ma, mb) {
+		if (ma.$ === 'Nothing') {
+			return mb;
+		} else {
+			return ma;
+		}
+	});
+var $author$project$GitHub$userOrBotObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+		$elm$core$Maybe$Just(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Bot')),
+		$author$project$GitHub$botObject),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			$elm$core$Maybe$Just(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
+			$author$project$GitHub$userObject),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($elm_community$maybe_extra$Maybe$Extra$or)));
 var $author$project$GitHub$prObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'headRefName', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -8305,7 +8305,7 @@ var $author$project$GitHub$prObject = A2(
 													$author$project$GitHub$nullableList($author$project$GitHub$userObject)))),
 										A2(
 											$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-											A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$authorObject),
+											A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$userOrBotObject),
 											A2(
 												$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 												A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, $author$project$GitHub$nonZeroReactionGroups),
@@ -9742,6 +9742,28 @@ var $author$project$GitHub$encodeRepo = function (record) {
 				$elm$json$Json$Encode$bool(record.isArchived))
 			]));
 };
+var $author$project$Backend$encodeRotation = function (_v0) {
+	var users = _v0.users;
+	var start = _v0.start;
+	var end = _v0.end;
+	return $elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'users',
+				A2($elm$json$Json$Encode$list, $author$project$GitHub$encodeUser, users)),
+				_Utils_Tuple2(
+				'start',
+				$elm$json$Json$Encode$string(
+					$rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime(start))),
+				_Utils_Tuple2(
+				'end',
+				A2(
+					$elm_community$json_extra$Json$Encode$Extra$maybe,
+					A2($elm$core$Basics$composeL, $elm$json$Json$Encode$string, $rtfeldman$elm_iso8601_date_strings$Iso8601$fromTime),
+					end))
+			]));
+};
 var $elm$core$String$endsWith = _String_endsWith;
 var $author$project$Worker$CardsFetched = F2(
 	function (a, b) {
@@ -9876,7 +9898,7 @@ var $author$project$GitHub$issueObject = A2(
 							$author$project$GitHub$nullableList($author$project$GitHub$userObject)))),
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$authorObject),
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$userOrBotObject),
 					A2(
 						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'reactionGroups', _List_Nil, $author$project$GitHub$nonZeroReactionGroups),
@@ -10115,6 +10137,9 @@ var $author$project$Worker$IssueTimelineFetched = F2(
 	function (a, b) {
 		return {$: 'IssueTimelineFetched', a: a, b: b};
 	});
+var $author$project$GitHub$AssignedEvent = function (a) {
+	return {$: 'AssignedEvent', a: a};
+};
 var $author$project$GitHub$CommitEvent = function (a) {
 	return {$: 'CommitEvent', a: a};
 };
@@ -10128,12 +10153,32 @@ var $author$project$GitHub$IssueComment = F3(
 var $author$project$GitHub$IssueCommentEvent = function (a) {
 	return {$: 'IssueCommentEvent', a: a};
 };
-var $author$project$GitHub$maybeOr3 = F3(
-	function (ma, mb, mc) {
+var $author$project$GitHub$UnassignedEvent = function (a) {
+	return {$: 'UnassignedEvent', a: a};
+};
+var $author$project$GitHub$dateObject = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime);
+var $author$project$GitHub$maybeOr4 = F4(
+	function (ma, mb, mc, md) {
 		return A2(
 			$elm_community$maybe_extra$Maybe$Extra$or,
 			ma,
-			A2($elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
+			A2(
+				$elm_community$maybe_extra$Maybe$Extra$or,
+				mb,
+				A2($elm_community$maybe_extra$Maybe$Extra$or, mc, md)));
+	});
+var $author$project$GitHub$maybeOr5 = F5(
+	function (ma, mb, mc, md, me) {
+		return A2(
+			$elm_community$maybe_extra$Maybe$Extra$or,
+			ma,
+			A2(
+				$elm_community$maybe_extra$Maybe$Extra$or,
+				mb,
+				A2(
+					$elm_community$maybe_extra$Maybe$Extra$or,
+					mc,
+					A2($elm_community$maybe_extra$Maybe$Extra$or, md, me))));
 	});
 var $author$project$GitHub$timelineQuery = function () {
 	var sourceID = A2(
@@ -10164,6 +10209,22 @@ var $author$project$GitHub$timelineQuery = function () {
 				_List_Nil,
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PageInfo)));
+	var paged = function (e) {
+		return A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+					'nodes',
+					_List_Nil,
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
+						$elm$core$List$filterMap($elm$core$Basics$identity),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(e))),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PagedResult)));
+	};
 	var issueIdVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'issueId',
@@ -10188,7 +10249,7 @@ var $author$project$GitHub$timelineQuery = function () {
 				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$authorObject),
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$userOrBotObject),
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -10198,43 +10259,104 @@ var $author$project$GitHub$timelineQuery = function () {
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
 			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'source', _List_Nil, sourceID)),
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$CrossReferencedEvent));
-	var commitEvent = A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$CommitEvent, $author$project$GitHub$commitObject);
-	var event = A2(
+	var assignOrUnassign = F3(
+		function (typename, assignee, createdAt) {
+			switch (typename) {
+				case 'AssignedEvent':
+					return $author$project$GitHub$AssignedEvent(
+						{assignee: assignee, createdAt: createdAt});
+				case 'UnassignedEvent':
+					return $author$project$GitHub$UnassignedEvent(
+						{assignee: assignee, createdAt: createdAt});
+				default:
+					return A3(
+						$author$project$Log$debug,
+						'impossible: type is neither AssignedEvent nor UnassignedEvent',
+						typename,
+						$author$project$GitHub$AssignedEvent(
+							{assignee: assignee, createdAt: createdAt}));
+			}
+		});
+	var assignmentObject = A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'createdAt', _List_Nil, $author$project$GitHub$dateObject),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'assignee', _List_Nil, $author$project$GitHub$userOrBotObject)),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, '__typename', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object(assignOrUnassign))));
+	var issueEvent = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 			$elm$core$Maybe$Just(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Commit')),
-			commitEvent),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('UnassignedEvent')),
+			assignmentObject),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 				$elm$core$Maybe$Just(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('CrossReferencedEvent')),
-				crossReferencedEvent),
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('AssignedEvent')),
+				assignmentObject),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 					$elm$core$Maybe$Just(
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('IssueComment')),
-					issueCommentEvent),
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr3))));
-	var paged = A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('CrossReferencedEvent')),
+					crossReferencedEvent),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+						$elm$core$Maybe$Just(
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('IssueComment')),
+						issueCommentEvent),
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr4)))));
+	var prEvent = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			$elm$core$Maybe$Just(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('UnassignedEvent')),
+			assignmentObject),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-				'nodes',
-				_List_Nil,
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+				$elm$core$Maybe$Just(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('AssignedEvent')),
+				assignmentObject),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A2(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
-					$elm$core$List$filterMap($elm$core$Basics$identity),
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list(event))),
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PagedResult)));
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+					$elm$core$Maybe$Just(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('PullRequestCommit')),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
+						$author$project$GitHub$CommitEvent,
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'commit', _List_Nil, $author$project$GitHub$commitObject)))),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+						$elm$core$Maybe$Just(
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('CrossReferencedEvent')),
+						crossReferencedEvent),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A2(
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+							$elm$core$Maybe$Just(
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('IssueComment')),
+							issueCommentEvent),
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr5))))));
 	var afterVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
 		'after',
@@ -10251,22 +10373,28 @@ var $author$project$GitHub$timelineQuery = function () {
 			'after',
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar))
 		]);
-	var timeline = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'timelineItems', pageArgs, paged));
+	var timelineItems = function (e) {
+		return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'timelineItems',
+				pageArgs,
+				paged(e)));
+	};
 	var issueOrPRTimeline = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 			$elm$core$Maybe$Just(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('PullRequest')),
-			timeline),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Issue')),
+			timelineItems(issueEvent)),
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
 				$elm$core$Maybe$Just(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Issue')),
-				timeline),
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('PullRequest')),
+				timelineItems(prEvent)),
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($elm_community$maybe_extra$Maybe$Extra$or)));
 	var queryRoot = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
@@ -10488,7 +10616,7 @@ var $author$project$GitHub$prReviewObject = A2(
 		A2(
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$authorObject)),
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$userOrBotObject)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -10528,7 +10656,7 @@ var $author$project$GitHub$prReviewQuery = function () {
 				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$customScalar, $author$project$GitHub$DateType, $elm_community$json_extra$Json$Decode$Extra$datetime)),
 			A2(
 				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$authorObject),
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'author', _List_Nil, $author$project$GitHub$userOrBotObject),
 				A2(
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
@@ -11235,6 +11363,13 @@ var $author$project$GitHub$ProjectOwnerUser = function (a) {
 };
 var $author$project$GitHub$idObject = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
 	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
+var $author$project$GitHub$maybeOr3 = F3(
+	function (ma, mb, mc) {
+		return A2(
+			$elm_community$maybe_extra$Maybe$Extra$or,
+			ma,
+			A2($elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
+	});
 var $author$project$GitHub$projectOwnerObject = A2(
 	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
 	A2(
@@ -11843,6 +11978,20 @@ var $author$project$Worker$setCardEvents = _Platform_outgoingPort(
 					$elm$json$Json$Encode$list($elm$core$Basics$identity)(b)
 				]));
 	});
+var $author$project$Worker$setCardRotations = _Platform_outgoingPort(
+	'setCardRotations',
+	function ($) {
+		var a = $.a;
+		var b = $.b;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(a),
+					$elm$json$Json$Encode$list($elm$core$Basics$identity)(b)
+				]));
+	});
 var $author$project$Worker$setCards = _Platform_outgoingPort(
 	'setCards',
 	function ($) {
@@ -12039,9 +12188,618 @@ var $author$project$Worker$timelineEvent = function (event) {
 					return $elm$core$Maybe$Nothing;
 				}
 			}
+		case 'CrossReferencedEvent':
+			return $elm$core$Maybe$Nothing;
+		case 'AssignedEvent':
+			return $elm$core$Maybe$Nothing;
 		default:
 			return $elm$core$Maybe$Nothing;
 	}
+};
+var $author$project$Backend$Rotation = F3(
+	function (users, start, end) {
+		return {end: end, start: start, users: users};
+	});
+var $justinmimbs$time_extra$Time$Extra$Hour = {$: 'Hour'};
+var $justinmimbs$time_extra$Time$Extra$Day = {$: 'Day'};
+var $justinmimbs$time_extra$Time$Extra$Millisecond = {$: 'Millisecond'};
+var $justinmimbs$time_extra$Time$Extra$Month = {$: 'Month'};
+var $justinmimbs$time_extra$Time$Extra$Week = {$: 'Week'};
+var $justinmimbs$date$Date$Day = {$: 'Day'};
+var $justinmimbs$date$Date$Friday = {$: 'Friday'};
+var $justinmimbs$date$Date$Monday = {$: 'Monday'};
+var $justinmimbs$date$Date$Month = {$: 'Month'};
+var $justinmimbs$date$Date$Quarter = {$: 'Quarter'};
+var $justinmimbs$date$Date$Saturday = {$: 'Saturday'};
+var $justinmimbs$date$Date$Sunday = {$: 'Sunday'};
+var $justinmimbs$date$Date$Thursday = {$: 'Thursday'};
+var $justinmimbs$date$Date$Tuesday = {$: 'Tuesday'};
+var $justinmimbs$date$Date$Wednesday = {$: 'Wednesday'};
+var $justinmimbs$date$Date$Week = {$: 'Week'};
+var $justinmimbs$date$Date$Year = {$: 'Year'};
+var $elm$time$Time$Fri = {$: 'Fri'};
+var $elm$time$Time$Mon = {$: 'Mon'};
+var $justinmimbs$date$Date$RD = function (a) {
+	return {$: 'RD', a: a};
+};
+var $elm$time$Time$Sat = {$: 'Sat'};
+var $elm$time$Time$Sun = {$: 'Sun'};
+var $elm$time$Time$Thu = {$: 'Thu'};
+var $elm$time$Time$Tue = {$: 'Tue'};
+var $elm$time$Time$Wed = {$: 'Wed'};
+var $justinmimbs$date$Date$weekdayNumber = function (_v0) {
+	var rd = _v0.a;
+	var _v1 = A2($elm$core$Basics$modBy, 7, rd);
+	if (!_v1) {
+		return 7;
+	} else {
+		var n = _v1;
+		return n;
+	}
+};
+var $justinmimbs$date$Date$weekdayToNumber = function (wd) {
+	switch (wd.$) {
+		case 'Mon':
+			return 1;
+		case 'Tue':
+			return 2;
+		case 'Wed':
+			return 3;
+		case 'Thu':
+			return 4;
+		case 'Fri':
+			return 5;
+		case 'Sat':
+			return 6;
+		default:
+			return 7;
+	}
+};
+var $justinmimbs$date$Date$daysSincePreviousWeekday = F2(
+	function (wd, date) {
+		return A2(
+			$elm$core$Basics$modBy,
+			7,
+			($justinmimbs$date$Date$weekdayNumber(date) + 7) - $justinmimbs$date$Date$weekdayToNumber(wd));
+	});
+var $justinmimbs$date$Date$isLeapYear = function (y) {
+	return ((!A2($elm$core$Basics$modBy, 4, y)) && (!(!A2($elm$core$Basics$modBy, 100, y)))) || (!A2($elm$core$Basics$modBy, 400, y));
+};
+var $justinmimbs$date$Date$daysBeforeMonth = F2(
+	function (y, m) {
+		var leapDays = $justinmimbs$date$Date$isLeapYear(y) ? 1 : 0;
+		switch (m.$) {
+			case 'Jan':
+				return 0;
+			case 'Feb':
+				return 31;
+			case 'Mar':
+				return 59 + leapDays;
+			case 'Apr':
+				return 90 + leapDays;
+			case 'May':
+				return 120 + leapDays;
+			case 'Jun':
+				return 151 + leapDays;
+			case 'Jul':
+				return 181 + leapDays;
+			case 'Aug':
+				return 212 + leapDays;
+			case 'Sep':
+				return 243 + leapDays;
+			case 'Oct':
+				return 273 + leapDays;
+			case 'Nov':
+				return 304 + leapDays;
+			default:
+				return 334 + leapDays;
+		}
+	});
+var $justinmimbs$date$Date$floorDiv = F2(
+	function (a, b) {
+		return $elm$core$Basics$floor(a / b);
+	});
+var $justinmimbs$date$Date$daysBeforeYear = function (y1) {
+	var y = y1 - 1;
+	var leapYears = (A2($justinmimbs$date$Date$floorDiv, y, 4) - A2($justinmimbs$date$Date$floorDiv, y, 100)) + A2($justinmimbs$date$Date$floorDiv, y, 400);
+	return (365 * y) + leapYears;
+};
+var $justinmimbs$date$Date$firstOfMonth = F2(
+	function (y, m) {
+		return $justinmimbs$date$Date$RD(
+			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + 1);
+	});
+var $justinmimbs$date$Date$firstOfYear = function (y) {
+	return $justinmimbs$date$Date$RD(
+		$justinmimbs$date$Date$daysBeforeYear(y) + 1);
+};
+var $justinmimbs$date$Date$daysInMonth = F2(
+	function (y, m) {
+		switch (m.$) {
+			case 'Jan':
+				return 31;
+			case 'Feb':
+				return $justinmimbs$date$Date$isLeapYear(y) ? 29 : 28;
+			case 'Mar':
+				return 31;
+			case 'Apr':
+				return 30;
+			case 'May':
+				return 31;
+			case 'Jun':
+				return 30;
+			case 'Jul':
+				return 31;
+			case 'Aug':
+				return 31;
+			case 'Sep':
+				return 30;
+			case 'Oct':
+				return 31;
+			case 'Nov':
+				return 30;
+			default:
+				return 31;
+		}
+	});
+var $justinmimbs$date$Date$monthToNumber = function (m) {
+	switch (m.$) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
+var $justinmimbs$date$Date$numberToMonth = function (mn) {
+	var _v0 = A2($elm$core$Basics$max, 1, mn);
+	switch (_v0) {
+		case 1:
+			return $elm$time$Time$Jan;
+		case 2:
+			return $elm$time$Time$Feb;
+		case 3:
+			return $elm$time$Time$Mar;
+		case 4:
+			return $elm$time$Time$Apr;
+		case 5:
+			return $elm$time$Time$May;
+		case 6:
+			return $elm$time$Time$Jun;
+		case 7:
+			return $elm$time$Time$Jul;
+		case 8:
+			return $elm$time$Time$Aug;
+		case 9:
+			return $elm$time$Time$Sep;
+		case 10:
+			return $elm$time$Time$Oct;
+		case 11:
+			return $elm$time$Time$Nov;
+		default:
+			return $elm$time$Time$Dec;
+	}
+};
+var $justinmimbs$date$Date$toCalendarDateHelp = F3(
+	function (y, m, d) {
+		toCalendarDateHelp:
+		while (true) {
+			var monthDays = A2($justinmimbs$date$Date$daysInMonth, y, m);
+			var mn = $justinmimbs$date$Date$monthToNumber(m);
+			if ((mn < 12) && (_Utils_cmp(d, monthDays) > 0)) {
+				var $temp$y = y,
+					$temp$m = $justinmimbs$date$Date$numberToMonth(mn + 1),
+					$temp$d = d - monthDays;
+				y = $temp$y;
+				m = $temp$m;
+				d = $temp$d;
+				continue toCalendarDateHelp;
+			} else {
+				return {day: d, month: m, year: y};
+			}
+		}
+	});
+var $justinmimbs$date$Date$divWithRemainder = F2(
+	function (a, b) {
+		return _Utils_Tuple2(
+			A2($justinmimbs$date$Date$floorDiv, a, b),
+			A2($elm$core$Basics$modBy, b, a));
+	});
+var $justinmimbs$date$Date$year = function (_v0) {
+	var rd = _v0.a;
+	var _v1 = A2($justinmimbs$date$Date$divWithRemainder, rd, 146097);
+	var n400 = _v1.a;
+	var r400 = _v1.b;
+	var _v2 = A2($justinmimbs$date$Date$divWithRemainder, r400, 36524);
+	var n100 = _v2.a;
+	var r100 = _v2.b;
+	var _v3 = A2($justinmimbs$date$Date$divWithRemainder, r100, 1461);
+	var n4 = _v3.a;
+	var r4 = _v3.b;
+	var _v4 = A2($justinmimbs$date$Date$divWithRemainder, r4, 365);
+	var n1 = _v4.a;
+	var r1 = _v4.b;
+	var n = (!r1) ? 0 : 1;
+	return ((((n400 * 400) + (n100 * 100)) + (n4 * 4)) + n1) + n;
+};
+var $justinmimbs$date$Date$toOrdinalDate = function (_v0) {
+	var rd = _v0.a;
+	var y = $justinmimbs$date$Date$year(
+		$justinmimbs$date$Date$RD(rd));
+	return {
+		ordinalDay: rd - $justinmimbs$date$Date$daysBeforeYear(y),
+		year: y
+	};
+};
+var $justinmimbs$date$Date$toCalendarDate = function (_v0) {
+	var rd = _v0.a;
+	var date = $justinmimbs$date$Date$toOrdinalDate(
+		$justinmimbs$date$Date$RD(rd));
+	return A3($justinmimbs$date$Date$toCalendarDateHelp, date.year, $elm$time$Time$Jan, date.ordinalDay);
+};
+var $justinmimbs$date$Date$month = A2(
+	$elm$core$Basics$composeR,
+	$justinmimbs$date$Date$toCalendarDate,
+	function ($) {
+		return $.month;
+	});
+var $justinmimbs$date$Date$monthToQuarter = function (m) {
+	return (($justinmimbs$date$Date$monthToNumber(m) + 2) / 3) | 0;
+};
+var $justinmimbs$date$Date$quarter = A2($elm$core$Basics$composeR, $justinmimbs$date$Date$month, $justinmimbs$date$Date$monthToQuarter);
+var $justinmimbs$date$Date$quarterToMonth = function (q) {
+	return $justinmimbs$date$Date$numberToMonth((q * 3) - 2);
+};
+var $justinmimbs$date$Date$floor = F2(
+	function (interval, date) {
+		var rd = date.a;
+		switch (interval.$) {
+			case 'Year':
+				return $justinmimbs$date$Date$firstOfYear(
+					$justinmimbs$date$Date$year(date));
+			case 'Quarter':
+				return A2(
+					$justinmimbs$date$Date$firstOfMonth,
+					$justinmimbs$date$Date$year(date),
+					$justinmimbs$date$Date$quarterToMonth(
+						$justinmimbs$date$Date$quarter(date)));
+			case 'Month':
+				return A2(
+					$justinmimbs$date$Date$firstOfMonth,
+					$justinmimbs$date$Date$year(date),
+					$justinmimbs$date$Date$month(date));
+			case 'Week':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
+			case 'Monday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Mon, date));
+			case 'Tuesday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Tue, date));
+			case 'Wednesday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Wed, date));
+			case 'Thursday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Thu, date));
+			case 'Friday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Fri, date));
+			case 'Saturday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sat, date));
+			case 'Sunday':
+				return $justinmimbs$date$Date$RD(
+					rd - A2($justinmimbs$date$Date$daysSincePreviousWeekday, $elm$time$Time$Sun, date));
+			default:
+				return date;
+		}
+	});
+var $elm$core$Basics$clamp = F3(
+	function (low, high, number) {
+		return (_Utils_cmp(number, low) < 0) ? low : ((_Utils_cmp(number, high) > 0) ? high : number);
+	});
+var $justinmimbs$date$Date$fromCalendarDate = F3(
+	function (y, m, d) {
+		return $justinmimbs$date$Date$RD(
+			($justinmimbs$date$Date$daysBeforeYear(y) + A2($justinmimbs$date$Date$daysBeforeMonth, y, m)) + A3(
+				$elm$core$Basics$clamp,
+				1,
+				A2($justinmimbs$date$Date$daysInMonth, y, m),
+				d));
+	});
+var $justinmimbs$date$Date$fromPosix = F2(
+	function (zone, posix) {
+		return A3(
+			$justinmimbs$date$Date$fromCalendarDate,
+			A2($elm$time$Time$toYear, zone, posix),
+			A2($elm$time$Time$toMonth, zone, posix),
+			A2($elm$time$Time$toDay, zone, posix));
+	});
+var $justinmimbs$date$Date$toRataDie = function (_v0) {
+	var rd = _v0.a;
+	return rd;
+};
+var $justinmimbs$time_extra$Time$Extra$dateToMillis = function (date) {
+	var daysSinceEpoch = $justinmimbs$date$Date$toRataDie(date) - 719163;
+	return daysSinceEpoch * 86400000;
+};
+var $justinmimbs$time_extra$Time$Extra$timeFromClock = F4(
+	function (hour, minute, second, millisecond) {
+		return (((hour * 3600000) + (minute * 60000)) + (second * 1000)) + millisecond;
+	});
+var $justinmimbs$time_extra$Time$Extra$timeFromPosix = F2(
+	function (zone, posix) {
+		return A4(
+			$justinmimbs$time_extra$Time$Extra$timeFromClock,
+			A2($elm$time$Time$toHour, zone, posix),
+			A2($elm$time$Time$toMinute, zone, posix),
+			A2($elm$time$Time$toSecond, zone, posix),
+			A2($elm$time$Time$toMillis, zone, posix));
+	});
+var $justinmimbs$time_extra$Time$Extra$toOffset = F2(
+	function (zone, posix) {
+		var millis = $elm$time$Time$posixToMillis(posix);
+		var localMillis = $justinmimbs$time_extra$Time$Extra$dateToMillis(
+			A2($justinmimbs$date$Date$fromPosix, zone, posix)) + A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix);
+		return ((localMillis - millis) / 60000) | 0;
+	});
+var $justinmimbs$time_extra$Time$Extra$posixFromDateTime = F3(
+	function (zone, date, time) {
+		var millis = $justinmimbs$time_extra$Time$Extra$dateToMillis(date) + time;
+		var offset0 = A2(
+			$justinmimbs$time_extra$Time$Extra$toOffset,
+			zone,
+			$elm$time$Time$millisToPosix(millis));
+		var posix1 = $elm$time$Time$millisToPosix(millis - (offset0 * 60000));
+		var offset1 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix1);
+		if (_Utils_eq(offset0, offset1)) {
+			return posix1;
+		} else {
+			var posix2 = $elm$time$Time$millisToPosix(millis - (offset1 * 60000));
+			var offset2 = A2($justinmimbs$time_extra$Time$Extra$toOffset, zone, posix2);
+			return _Utils_eq(offset1, offset2) ? posix2 : posix1;
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$floorDate = F3(
+	function (dateInterval, zone, posix) {
+		return A3(
+			$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+			zone,
+			A2(
+				$justinmimbs$date$Date$floor,
+				dateInterval,
+				A2($justinmimbs$date$Date$fromPosix, zone, posix)),
+			0);
+	});
+var $justinmimbs$time_extra$Time$Extra$floor = F3(
+	function (interval, zone, posix) {
+		switch (interval.$) {
+			case 'Millisecond':
+				return posix;
+			case 'Second':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						A2($elm$time$Time$toMinute, zone, posix),
+						A2($elm$time$Time$toSecond, zone, posix),
+						0));
+			case 'Minute':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						A2($elm$time$Time$toMinute, zone, posix),
+						0,
+						0));
+			case 'Hour':
+				return A3(
+					$justinmimbs$time_extra$Time$Extra$posixFromDateTime,
+					zone,
+					A2($justinmimbs$date$Date$fromPosix, zone, posix),
+					A4(
+						$justinmimbs$time_extra$Time$Extra$timeFromClock,
+						A2($elm$time$Time$toHour, zone, posix),
+						0,
+						0,
+						0));
+			case 'Day':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Day, zone, posix);
+			case 'Month':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Month, zone, posix);
+			case 'Year':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Year, zone, posix);
+			case 'Quarter':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Quarter, zone, posix);
+			case 'Week':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Week, zone, posix);
+			case 'Monday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Monday, zone, posix);
+			case 'Tuesday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Tuesday, zone, posix);
+			case 'Wednesday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Wednesday, zone, posix);
+			case 'Thursday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Thursday, zone, posix);
+			case 'Friday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Friday, zone, posix);
+			case 'Saturday':
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Saturday, zone, posix);
+			default:
+				return A3($justinmimbs$time_extra$Time$Extra$floorDate, $justinmimbs$date$Date$Sunday, zone, posix);
+		}
+	});
+var $justinmimbs$time_extra$Time$Extra$toFractionalDay = F2(
+	function (zone, posix) {
+		return A2($justinmimbs$time_extra$Time$Extra$timeFromPosix, zone, posix) / 86400000;
+	});
+var $justinmimbs$time_extra$Time$Extra$toMonths = F2(
+	function (zone, posix) {
+		var wholeMonths = (12 * (A2($elm$time$Time$toYear, zone, posix) - 1)) + ($justinmimbs$date$Date$monthToNumber(
+			A2($elm$time$Time$toMonth, zone, posix)) - 1);
+		var fractionalMonth = (A2($elm$time$Time$toDay, zone, posix) + A2($justinmimbs$time_extra$Time$Extra$toFractionalDay, zone, posix)) / 100;
+		return wholeMonths + fractionalMonth;
+	});
+var $justinmimbs$time_extra$Time$Extra$toRataDieMoment = F2(
+	function (zone, posix) {
+		return $justinmimbs$date$Date$toRataDie(
+			A2($justinmimbs$date$Date$fromPosix, zone, posix)) + A2($justinmimbs$time_extra$Time$Extra$toFractionalDay, zone, posix);
+	});
+var $elm$core$Basics$truncate = _Basics_truncate;
+var $justinmimbs$time_extra$Time$Extra$diff = F4(
+	function (interval, zone, posix1, posix2) {
+		diff:
+		while (true) {
+			switch (interval.$) {
+				case 'Millisecond':
+					return $elm$time$Time$posixToMillis(posix2) - $elm$time$Time$posixToMillis(posix1);
+				case 'Second':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 1000) | 0;
+				case 'Minute':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 60000) | 0;
+				case 'Hour':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Millisecond, zone, posix1, posix2) / 3600000) | 0;
+				case 'Day':
+					return (A2($justinmimbs$time_extra$Time$Extra$toRataDieMoment, zone, posix2) - A2($justinmimbs$time_extra$Time$Extra$toRataDieMoment, zone, posix1)) | 0;
+				case 'Month':
+					return (A2($justinmimbs$time_extra$Time$Extra$toMonths, zone, posix2) - A2($justinmimbs$time_extra$Time$Extra$toMonths, zone, posix1)) | 0;
+				case 'Year':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Month, zone, posix1, posix2) / 12) | 0;
+				case 'Quarter':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Month, zone, posix1, posix2) / 3) | 0;
+				case 'Week':
+					return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Day, zone, posix1, posix2) / 7) | 0;
+				default:
+					var weekday = interval;
+					var $temp$interval = $justinmimbs$time_extra$Time$Extra$Week,
+						$temp$zone = zone,
+						$temp$posix1 = A3($justinmimbs$time_extra$Time$Extra$floor, weekday, zone, posix1),
+						$temp$posix2 = A3($justinmimbs$time_extra$Time$Extra$floor, weekday, zone, posix2);
+					interval = $temp$interval;
+					zone = $temp$zone;
+					posix1 = $temp$posix1;
+					posix2 = $temp$posix2;
+					continue diff;
+			}
+		}
+	});
+var $author$project$Backend$updateRotation = F4(
+	function (users, createdAt, currentRotation, rest) {
+		return (A4($justinmimbs$time_extra$Time$Extra$diff, $justinmimbs$time_extra$Time$Extra$Hour, $elm$time$Time$utc, currentRotation.start, createdAt) > 1) ? A2(
+			$elm$core$List$cons,
+			A3($author$project$Backend$Rotation, users, createdAt, $elm$core$Maybe$Nothing),
+			A2(
+				$elm$core$List$cons,
+				_Utils_update(
+					currentRotation,
+					{
+						end: $elm$core$Maybe$Just(createdAt)
+					}),
+				rest)) : A2(
+			$elm$core$List$cons,
+			_Utils_update(
+				currentRotation,
+				{users: users}),
+			rest);
+	});
+var $author$project$Backend$recordRotation = F2(
+	function (event, rotations) {
+		var _v0 = _Utils_Tuple2(event, rotations);
+		_v0$4:
+		while (true) {
+			if (!_v0.b.b) {
+				switch (_v0.a.$) {
+					case 'AssignedEvent':
+						var assignee = _v0.a.a.assignee;
+						var createdAt = _v0.a.a.createdAt;
+						return _List_fromArray(
+							[
+								A3(
+								$author$project$Backend$Rotation,
+								_List_fromArray(
+									[assignee]),
+								createdAt,
+								$elm$core$Maybe$Nothing)
+							]);
+					case 'UnassignedEvent':
+						var assignment = _v0.a.a;
+						return A3($author$project$Log$debug, 'impossible: unassign before assign', assignment, _List_Nil);
+					default:
+						break _v0$4;
+				}
+			} else {
+				switch (_v0.a.$) {
+					case 'AssignedEvent':
+						var assignee = _v0.a.a.assignee;
+						var createdAt = _v0.a.a.createdAt;
+						var _v1 = _v0.b;
+						var currentRotation = _v1.a;
+						var rest = _v1.b;
+						return A4(
+							$author$project$Backend$updateRotation,
+							_Utils_ap(
+								currentRotation.users,
+								_List_fromArray(
+									[assignee])),
+							createdAt,
+							currentRotation,
+							rest);
+					case 'UnassignedEvent':
+						var assignee = _v0.a.a.assignee;
+						var createdAt = _v0.a.a.createdAt;
+						var _v2 = _v0.b;
+						var currentRotation = _v2.a;
+						var rest = _v2.b;
+						return A4(
+							$author$project$Backend$updateRotation,
+							A2(
+								$elm$core$List$filter,
+								A2(
+									$elm$core$Basics$composeL,
+									$elm$core$Basics$neq(assignee.login),
+									function ($) {
+										return $.login;
+									}),
+								currentRotation.users),
+							createdAt,
+							currentRotation,
+							rest);
+					default:
+						break _v0$4;
+				}
+			}
+		}
+		return rotations;
+	});
+var $author$project$Backend$timelineRotations = function (events) {
+	return A3($elm$core$List$foldl, $author$project$Backend$recordRotation, _List_Nil, events);
 };
 var $author$project$Worker$update = F2(
 	function (msg, model) {
@@ -12413,7 +13171,7 @@ var $author$project$Worker$update = F2(
 							$author$project$Worker$backOff,
 							model,
 							err,
-							$author$project$Worker$fetchRepos(model)));
+							$author$project$Worker$fetchPairingTeam(model)));
 				}
 			case 'RepositoriesFetched':
 				if (msg.a.$ === 'Ok') {
@@ -12704,12 +13462,10 @@ var $author$project$Worker$update = F2(
 							_Utils_update(
 								model,
 								{
-									loadQueue: _Utils_ap(
-										model.loadQueue,
-										_List_fromArray(
-											[
-												A2($author$project$Worker$fetchIssueTimeline, model, issue.id)
-											]))
+									loadQueue: A2(
+										$elm$core$List$cons,
+										A2($author$project$Worker$fetchIssueTimeline, model, issue.id),
+										model.loadQueue)
 								}),
 							$author$project$Worker$setIssue(
 								$author$project$GitHub$encodeIssue(issue))));
@@ -13148,6 +13904,7 @@ var $author$project$Worker$update = F2(
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
 					var timeline = msg.b.a;
+					var rotations = $author$project$Backend$timelineRotations(timeline);
 					var findSource = function (event) {
 						if (event.$ === 'CrossReferencedEvent') {
 							var eid = event.a;
@@ -13174,7 +13931,11 @@ var $author$project$Worker$update = F2(
 										$author$project$Worker$setReferences(
 										_Utils_Tuple2(id, edges)),
 										$author$project$Worker$setCardEvents(
-										_Utils_Tuple2(id, events))
+										_Utils_Tuple2(id, events)),
+										$author$project$Worker$setCardRotations(
+										_Utils_Tuple2(
+											id,
+											A2($elm$core$List$map, $author$project$Backend$encodeRotation, rotations)))
 									]))));
 				} else {
 					var id = msg.a;
@@ -13195,6 +13956,7 @@ var $author$project$Worker$update = F2(
 					var _v27 = msg.b.a;
 					var timeline = _v27.a;
 					var reviews = _v27.b;
+					var rotations = $author$project$Backend$timelineRotations(timeline);
 					var reviewers = A2(
 						$elm$core$List$map,
 						$author$project$GitHub$encodePullRequestReview,
@@ -13278,6 +14040,10 @@ var $author$project$Worker$update = F2(
 										_Utils_Tuple2(id, edges)),
 										$author$project$Worker$setCardEvents(
 										_Utils_Tuple2(id, events)),
+										$author$project$Worker$setCardRotations(
+										_Utils_Tuple2(
+											id,
+											A2($elm$core$List$map, $author$project$Backend$encodeRotation, rotations))),
 										$author$project$Worker$setReviewers(
 										_Utils_Tuple2(id, reviewers))
 									]))));
@@ -13296,14 +14062,35 @@ var $author$project$Worker$update = F2(
 				}
 		}
 	});
+var $author$project$Worker$replay = F2(
+	function (msgs, model) {
+		return A3(
+			$elm$core$List$foldl,
+			F2(
+				function (msg, _v0) {
+					var m = _v0.a;
+					var cmd = _v0.b;
+					var _v1 = A2($author$project$Worker$update, msg, m);
+					var nm = _v1.a;
+					var ncmd = _v1.b;
+					return _Utils_Tuple2(
+						nm,
+						$elm$core$Platform$Cmd$batch(
+							_List_fromArray(
+								[cmd, ncmd])));
+				}),
+			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
+			msgs);
+	});
 var $author$project$Worker$init = function (_v0) {
 	var githubToken = _v0.githubToken;
 	var githubOrg = _v0.githubOrg;
 	var skipTimeline = _v0.skipTimeline;
 	var noRefresh = _v0.noRefresh;
 	return A2(
-		$author$project$Worker$update,
-		$author$project$Worker$Refresh,
+		$author$project$Worker$replay,
+		_List_fromArray(
+			[$author$project$Worker$Refresh]),
 		{columnIDs: $elm$core$Dict$empty, commitPRs: $elm$core$Dict$empty, failedQueue: _List_Nil, githubOrg: githubOrg, githubToken: githubToken, loadQueue: _List_Nil, noRefresh: noRefresh, skipTimeline: skipTimeline});
 };
 var $author$project$Worker$GraphRefreshRequested = F2(

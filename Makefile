@@ -6,7 +6,7 @@ all: worker.js public/elm.js public/main.css elm-stuff
 .PHONY: clean
 
 clean:
-	rm -f public/elm.js public/elm.min.js public/main.css bindata.go
+	rm -f worker.js public/elm.js public/elm.min.js public/main.css bindata.go
 
 worker.js: $(ELM_FILES)
 	yarn run elm make --output $@ src/Worker.elm
