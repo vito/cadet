@@ -77,6 +77,7 @@ type alias Model =
     , openPRsByRepo : Dict GitHub.ID (List GitHub.ID)
     , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
     , repoReleaseStatuses : Dict GitHub.ID (List ReleaseStatus)
+    , lastPaired : Dict (List GitHub.ID) Time.Posix
     , inFlight : List ProjectLanes
 
     -- cache of computed lightness values for each color; used for determining
@@ -168,8 +169,9 @@ type Msg
     | AssignOnlyUser Card GitHub.User
     | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) Card Msg)
     | ReassignUser ( GitHub.User, List Card ) Card
+    | UnassignUser GitHub.User (List Card)
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
-    | ShuffleAssignments
+    | AssignPairs
     | CommitAssignments
     | ResetAssignments
     | RefreshQueued (Result Http.Error ())
@@ -419,4 +421,5 @@ empty key =
     , showArchivedCards = Set.empty
     , pendingAssignments = Dict.empty
     , inFlight = []
+    , lastPaired = Dict.empty
     }

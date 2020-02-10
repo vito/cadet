@@ -1984,6 +1984,14 @@ a.column-title:hover, .page-header a:hover {
     display: flex;
     flex-direction: column;
 
+    .remove-assignee {
+      cursor: pointer;
+
+      &:hover .card-actor {
+        box-shadow: 0 0 0 2px @red;
+      }
+    }
+
     .card-actor {
       font-size: 10px;
 
@@ -1992,7 +2000,6 @@ a.column-title:hover, .page-header a:hover {
       border-radius: .5em;
       margin-top: @card-margin;
       margin-right: @card-margin;
-      border: 0.1em solid @gray-200;
     }
 
     .droppable.active .card-actor {

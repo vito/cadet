@@ -280,10 +280,11 @@ update msg model =
                             Just p ->
                                 Just { p | assign = user :: List.filter ((/=) user.id << .id) p.assign }
                 in
-                ( { model
-                    | pendingAssignments =
-                        Dict.update card.id addAssignment model.pendingAssignments
-                  }
+                ( computeProjectLanes
+                    { model
+                        | pendingAssignments =
+                            Dict.update card.id addAssignment model.pendingAssignments
+                    }
                 , Cmd.none
                 )
 
@@ -321,11 +322,37 @@ update msg model =
                             Just p ->
                                 Just { p | unassign = user :: List.filter ((/=) user.id << .id) p.unassign }
                 in
-                ( { model
-                    | pendingAssignments =
-                        Dict.update assignCard.id addAssignment <|
-                            List.foldl (\{ id } -> Dict.update id addUnassignment) model.pendingAssignments unassignCards
-                  }
+                ( computeProjectLanes
+                    { model
+                        | pendingAssignments =
+                            Dict.update assignCard.id addAssignment <|
+                                List.foldl (\{ id } -> Dict.update id addUnassignment) model.pendingAssignments unassignCards
+                    }
+                , Cmd.none
+                )
+
+        UnassignUser user cards ->
+            Log.debug "unassigning" ( user.login, List.map .id cards ) <|
+                let
+                    addUnassignment mp =
+                        case mp of
+                            Nothing ->
+                                Just { assign = [], unassign = [ user ] }
+
+                            Just p ->
+                                Just
+                                    { p
+                                        | unassign = user :: List.filter ((/=) user.id << .id) p.unassign
+                                        , assign = List.filter ((/=) user.id << .id) p.assign
+                                    }
+                in
+                ( computeProjectLanes
+                    { model
+                        | pendingAssignments =
+                            List.foldl (\{ id } -> Dict.update id addUnassignment)
+                                model.pendingAssignments
+                                cards
+                    }
                 , Cmd.none
                 )
 
@@ -353,15 +380,35 @@ update msg model =
                     pending =
                         { assign = [ user ], unassign = otherAssignees }
                 in
-                ( { model
-                    | pendingAssignments =
-                        Dict.insert card.id pending model.pendingAssignments
-                  }
+                ( computeProjectLanes
+                    { model
+                        | pendingAssignments =
+                            Dict.insert card.id pending model.pendingAssignments
+                    }
                 , Cmd.none
                 )
 
-        ShuffleAssignments ->
-            ( model, Cmd.none )
+        AssignPairs ->
+            -- loop over each available user,
+            -- for each lane that has only one user,
+            -- select the lane whose assignee has been paired with least recently
+            let
+                assigned projectLanes user =
+                    case projectLanes of
+                        [] ->
+                            False
+
+                        { lanes } :: rest ->
+                            if List.any (List.any ((==) user.id << .id) << .assignees) lanes then
+                                True
+
+                            else
+                                assigned rest user
+
+                toAssign =
+                    List.filter (not << assigned model.inFlight) model.assignableUsers
+            in
+            List.foldl pairUpUser ( model, Cmd.none ) toAssign
 
         CommitAssignments ->
             let
@@ -381,7 +428,7 @@ update msg model =
                             , Effects.unassignUsers model unassign cardId
                             ]
             in
-            ( { model | pendingAssignments = Dict.empty }
+            ( computeProjectLanes { model | pendingAssignments = Dict.empty }
             , Cmd.batch <|
                 Dict.foldl
                     (\cardId assignments effects ->
@@ -392,7 +439,7 @@ update msg model =
             )
 
         ResetAssignments ->
-            ( { model | pendingAssignments = Dict.empty }, Cmd.none )
+            ( computeProjectLanes { model | pendingAssignments = Dict.empty }, Cmd.none )
 
         AssigneesUpdated (Ok (Just assignable)) ->
             let
@@ -902,6 +949,72 @@ update msg model =
             )
 
 
+pairUpUser : GitHub.User -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
+pairUpUser target ( model, msg ) =
+    let
+        pairingPool =
+            model.inFlight
+                |> List.concatMap .lanes
+                |> List.filter ((==) 1 << List.length << .assignees)
+                |> List.concatMap .assignees
+
+        lastPaired userA userB =
+            Dict.get (List.sort [ userA.id, userB.id ]) model.lastPaired
+
+        pickBestUser user cur =
+            case ( lastPaired target user, lastPaired target cur ) of
+                ( Just tsUser, Just tsCur ) ->
+                    if Time.posixToMillis tsCur < Time.posixToMillis tsUser then
+                        cur
+
+                    else
+                        user
+
+                ( Just _, Nothing ) ->
+                    cur
+
+                ( Nothing, Just _ ) ->
+                    user
+
+                ( Nothing, Nothing ) ->
+                    -- arbitrary
+                    if user.id < cur.id then
+                        user
+
+                    else
+                        cur
+    in
+    case LE.foldl1 pickBestUser pairingPool of
+        Just pair ->
+            Log.debug "chose" ( target.login, pair.login ) <|
+                let
+                    activeCards =
+                        model.inFlight
+                            |> List.concatMap .lanes
+                            |> List.filter (List.any ((==) pair.id << .id) << .assignees)
+                            |> List.concatMap .cards
+                in
+                replay (List.map (AssignUser target) activeCards) model
+
+        Nothing ->
+            Log.debug "no pair available" ( target.login, List.map .login pairingPool ) <|
+                ( model, msg )
+
+
+replay : List Msg -> Model -> ( Model, Cmd Msg )
+replay msgs model =
+    List.foldl
+        (\msg ( m, cmd ) ->
+            let
+                ( nm, ncmd ) =
+                    update msg m
+            in
+            ( nm, Cmd.batch [ cmd, ncmd ] )
+        )
+        ( model, Cmd.none )
+        msgs
+
+
 searchCards : Model -> String -> Set GitHub.ID
 searchCards model str =
     let
@@ -1025,7 +1138,7 @@ computeViewForPage model =
             }
 
         PairsPage ->
-            { reset | inFlight = computeProjectLanes reset }
+            computeProjectLanes reset
 
         _ ->
             reset
@@ -1152,6 +1265,21 @@ computeCardsView model =
                 )
                 Dict.empty
                 cards
+
+        recordRotation start cur =
+            case cur of
+                Nothing ->
+                    Just start
+
+                Just ts ->
+                    if Time.posixToMillis start > Time.posixToMillis ts then
+                        Just start
+
+                    else
+                        Just ts
+
+        recordPairRotations _ rotations acc =
+            List.foldl (\{ users, start } -> Dict.update (List.sort (List.map .id users)) (recordRotation start)) acc rotations
     in
     { model
         | cards = cards
@@ -1159,10 +1287,11 @@ computeCardsView model =
         , openPRsByRepo = openPRsByRepo
         , cardsByMilestone = cardsByMilestone
         , archive = computeArchive model cards
+        , lastPaired = Dict.foldl recordPairRotations Dict.empty model.cardRotations
     }
 
 
-computeProjectLanes : Model -> List Model.ProjectLanes
+computeProjectLanes : Model -> Model
 computeProjectLanes model =
     let
         isInProgress { purpose } =
@@ -1230,12 +1359,15 @@ computeProjectLanes model =
                     )
                 >> List.reverse
     in
-    model.repoProjects
-        |> Dict.values
-        |> List.concat
-        |> List.filterMap inFlightCards
-        |> List.sortBy progress
-        |> List.reverse
+    { model
+        | inFlight =
+            model.repoProjects
+                |> Dict.values
+                |> List.concat
+                |> List.filterMap inFlightCards
+                |> List.sortBy progress
+                |> List.reverse
+    }
 
 
 titleSuffix : String -> String
@@ -2084,9 +2216,9 @@ viewPairsPage model =
                 [ Octicons.listUnordered octiconOpts
                 , Html.text "Lanes"
                 , Html.div [ HA.class "lane-controls buttons" ] <|
-                    Html.span [ HA.class "button shuffle", HE.onClick ShuffleAssignments ]
-                        [ Octicons.sync octiconOpts
-                        , Html.text "rotate"
+                    Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
+                        [ Octicons.organization octiconOpts
+                        , Html.text "pair up"
                         ]
                         :: (if Dict.isEmpty model.pendingAssignments then
                                 []
@@ -2126,11 +2258,32 @@ viewAssignableUsers model =
             }
 
         viewDraggableActor user =
+            let
+                count =
+                    List.foldl
+                        (\{ lanes } acc ->
+                            List.foldl
+                                (\{ assignees, cards } acc2 ->
+                                    if List.any ((==) user.id << .id) assignees then
+                                        List.length cards + acc2
+
+                                    else
+                                        acc2
+                                )
+                                acc
+                                lanes
+                        )
+                        0
+                        model.inFlight
+            in
             Drag.droppable model.assignOnlyUserDrag AssignOnlyUserDrag (assignDropCandidate user) <|
                 Drag.draggable model.assignUserDrag AssignUserDrag user <|
                     Html.div [ HA.class "side-user" ]
                         [ CardView.viewCardActor user
                         , Html.text (Maybe.withDefault user.login user.name)
+                        , Html.span [ HA.class "leaderboard-count-number" ]
+                            [ Html.text (String.fromInt count)
+                            ]
                         ]
     in
     Html.div [ HA.class "side-users" ] <|
@@ -2148,7 +2301,8 @@ viewLaneAssignees model assignees cards =
         viewDraggableActor user =
             Drag.droppable model.assignOnlyUserDrag AssignOnlyUserDrag (assignDropCandidate user) <|
                 Drag.draggable model.reassignUserDrag ReassignUserDrag ( user, cards ) <|
-                    CardView.viewCardActor user
+                    Html.span [ HA.class "remove-assignee", HE.onClick (UnassignUser user cards) ]
+                        [ CardView.viewCardActor user ]
     in
     Html.div [ HA.class "lane-actors" ] <|
         if List.isEmpty assignees then
