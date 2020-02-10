@@ -25452,44 +25452,6 @@ var $author$project$Main$viewLaneAssignees = F3(
 						]))
 				]) : A2($elm$core$List$map, viewDraggableActor, assignees));
 	});
-var $author$project$Main$viewCurrentRotations = function (model) {
-	var allInFlight = A2(
-		$elm$core$List$filter,
-		A2($elm$core$Basics$composeL, $elm$core$Basics$not, $author$project$Card$isPaused),
-		A2(
-			$elm$core$List$concatMap,
-			A2(
-				$elm$core$Basics$composeL,
-				$elm$core$List$concatMap(
-					function ($) {
-						return $.cards;
-					}),
-				function ($) {
-					return $.lanes;
-				}),
-			model.inFlight));
-	var lanes = A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeL,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$List$isEmpty),
-			function ($) {
-				return $.assignees;
-			}),
-		$author$project$Main$byAssignees(allInFlight));
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('side-lanes card-lanes')
-			]),
-		A2(
-			$elm$core$List$map,
-			function (lane) {
-				return A3($author$project$Main$viewLaneAssignees, model, lane.assignees, lane.cards);
-			},
-			lanes));
-};
 var $author$project$Main$viewPairsPage = function (model) {
 	var viewDroppableCard = function (card) {
 		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: card};
@@ -25698,19 +25660,7 @@ var $author$project$Main$viewPairsPage = function (model) {
 											]))
 									]))
 							])),
-						$author$project$Main$viewAssignableUsers(model),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('page-header')
-							]),
-						_List_fromArray(
-							[
-								$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Current Rotations')
-							])),
-						$author$project$Main$viewCurrentRotations(model)
+						$author$project$Main$viewAssignableUsers(model)
 					]))
 			]));
 };

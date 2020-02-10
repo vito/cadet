@@ -2250,11 +2250,6 @@ viewPairsPage model =
                     ]
                 ]
             , viewAssignableUsers model
-            , Html.div [ HA.class "page-header" ]
-                [ Octicons.organization octiconOpts
-                , Html.text "Current Rotations"
-                ]
-            , viewCurrentRotations model
             ]
         ]
 
@@ -2317,20 +2312,6 @@ viewAssignableUsers model =
     Html.div [ HA.class "side-users" ] <|
         List.map viewDraggableActor assignableUsers
 
-
-viewCurrentRotations : Model -> Html Msg
-viewCurrentRotations model =
-    let
-        allInFlight =
-            List.concatMap (List.concatMap .cards << .lanes) model.inFlight
-                |> List.filter (not << Card.isPaused)
-
-        lanes =
-            byAssignees allInFlight
-                |> List.filter (not << List.isEmpty << .assignees)
-    in
-    Html.div [ HA.class "side-lanes card-lanes" ] <|
-        List.map (\lane -> viewLaneAssignees model lane.assignees lane.cards) lanes
 
 
 viewLaneAssignees : Model -> List GitHub.User -> List Card -> Html Msg
