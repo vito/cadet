@@ -7,8 +7,10 @@ module Backend exposing
     , Data
     , Indexed
     , Me
+    , Rotation
     , User
     , decodeCardEventsEvent
+    , decodeCardRotationsEvent
     , decodeColumnCardsEvent
     , decodeGraphs
     , decodeRepoCommitsEvent
@@ -19,6 +21,7 @@ module Backend exposing
     , decodeRepoReleasesEvent
     , decodeReviewersEvent
     , encodeCardEvent
+    , encodeRotation
     , fetchCardData
     , fetchData
     , fetchGraphs
@@ -28,6 +31,7 @@ module Backend exposing
     , refreshIssue
     , refreshPR
     , refreshRepo
+    , timelineRotations
     )
 
 import Dict exposing (Dict)
@@ -40,8 +44,10 @@ import Json.Decode as JD
 import Json.Decode.Extra as JDE exposing (andMap)
 import Json.Encode as JE
 import Json.Encode.Extra as JEE
+import Log
 import Task
 import Time
+import Time.Extra as TE
 
 
 type alias Indexed a =
@@ -72,6 +78,7 @@ type alias CardData =
     { issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
     , cardEvents : Dict GitHub.ID (List CardEvent)
+    , cardRotations : Dict GitHub.ID (List Rotation)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     }
 
@@ -109,6 +116,52 @@ type alias ColumnCard =
     , contentId : Maybe GitHub.ID
     , note : Maybe String
     }
+
+
+type alias Rotation =
+    { users : List GitHub.User
+    , start : Time.Posix
+    , end : Maybe Time.Posix
+    }
+
+
+updateRotation : List GitHub.User -> Time.Posix -> Rotation -> List Rotation -> List Rotation
+updateRotation users createdAt currentRotation rest =
+    if TE.diff TE.Hour Time.utc currentRotation.start createdAt > 1 then
+        Rotation users createdAt Nothing
+            :: { currentRotation | end = Just createdAt }
+            :: rest
+
+    else
+        { currentRotation | users = users }
+            :: rest
+
+
+recordRotation : GitHub.TimelineEvent -> List Rotation -> List Rotation
+recordRotation event rotations =
+    case ( event, rotations ) of
+        ( GitHub.AssignedEvent { assignee, createdAt }, [] ) ->
+            [ Rotation [ assignee ] createdAt Nothing ]
+
+        ( GitHub.AssignedEvent { assignee, createdAt }, currentRotation :: rest ) ->
+            updateRotation (currentRotation.users ++ [ assignee ]) createdAt currentRotation rest
+
+        ( GitHub.UnassignedEvent assignment, [] ) ->
+            -- it'd be strange to see an unassigned event before an assigned
+            -- event; I guess just ignore it?
+            Log.debug "impossible: unassign before assign" assignment <|
+                []
+
+        ( GitHub.UnassignedEvent { assignee, createdAt }, currentRotation :: rest ) ->
+            updateRotation (List.filter ((/=) assignee.login << .login) currentRotation.users) createdAt currentRotation rest
+
+        _ ->
+            rotations
+
+
+timelineRotations : List GitHub.TimelineEvent -> List Rotation
+timelineRotations events =
+    List.foldl recordRotation [] events
 
 
 expectJsonWithIndex : JD.Decoder a -> Http.Expect (Indexed a)
@@ -214,6 +267,7 @@ decodeCardData =
         |> andMap (JD.field "issues" <| JD.dict GitHub.decodeIssue)
         |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
         |> andMap (JD.field "cardEvents" <| JD.dict (JD.list decodeCardEvent))
+        |> andMap (JD.field "cardRotations" <| JD.dict (JD.list decodeRotation))
         |> andMap (JD.field "prReviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
 
 
@@ -275,6 +329,23 @@ encodeCardEvent { event, url, user, avatar, createdAt } =
         ]
 
 
+decodeRotation : JD.Decoder Rotation
+decodeRotation =
+    JD.succeed Rotation
+        |> andMap (JD.field "users" (JD.list GitHub.decodeUser))
+        |> andMap (JD.field "start" JDE.datetime)
+        |> andMap (JD.field "end" (JD.maybe JDE.datetime))
+
+
+encodeRotation : Rotation -> JE.Value
+encodeRotation { users, start, end } =
+    JE.object
+        [ ( "users", JE.list GitHub.encodeUser users )
+        , ( "start", JE.string (Iso8601.fromTime start) )
+        , ( "end", JEE.maybe (JE.string << Iso8601.fromTime) end )
+        ]
+
+
 decodeGraphs : JD.Decoder (List (ForceGraph GitHub.ID))
 decodeGraphs =
     JD.list (ForceGraph.decode JD.string)
@@ -304,6 +375,19 @@ decodeCardEventsEvent =
     JD.succeed CardEventsEvent
         |> andMap (JD.field "cardId" JD.string)
         |> andMap (JD.field "events" (JD.list decodeCardEvent))
+
+
+type alias CardRotationsEvent =
+    { cardId : GitHub.ID
+    , rotations : List Rotation
+    }
+
+
+decodeCardRotationsEvent : JD.Decoder CardRotationsEvent
+decodeCardRotationsEvent =
+    JD.succeed CardRotationsEvent
+        |> andMap (JD.field "cardId" JD.string)
+        |> andMap (JD.field "rotations" (JD.list decodeRotation))
 
 
 type alias ReviewersEvent =

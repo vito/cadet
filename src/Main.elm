@@ -546,6 +546,7 @@ update msg model =
                     | issues = value.issues
                     , prs = value.prs
                     , cardEvents = value.cardEvents
+                    , cardRotations = value.cardRotations
                     , prReviewers = value.prReviewers
                     , progress = finishLoadingCardData value model.progress
                   }
@@ -2854,6 +2855,11 @@ handleEvent event data index model =
             withDecoded Backend.decodeCardEventsEvent <|
                 \val ->
                     { model | cardEvents = Dict.insert val.cardId val.events model.cardEvents }
+
+        "cardRotations" ->
+            withDecoded Backend.decodeCardRotationsEvent <|
+                \val ->
+                    { model | cardRotations = Dict.insert val.cardId val.rotations model.cardRotations }
 
         "prReviewers" ->
             withDecoded Backend.decodeReviewersEvent <|

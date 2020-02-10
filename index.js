@@ -65,6 +65,9 @@ const cards = {
   // map from issue/pr id to actors in timeline
   cardEvents: {},
 
+  // map from issue/pr id to rotations
+  cardRotations: {},
+
   // map from pr to review states per user
   prReviewers: {}
 }
@@ -294,6 +297,14 @@ worker.ports.setCardEvents.subscribe(function(args) {
   var val = args[1];
   cards.cardEvents[id] = val;
   bumpIndexAndEmitUpdate("cardEvents", { cardId: id, events: val });
+  popPoll();
+});
+
+worker.ports.setCardRotations.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  cards.cardRotations[id] = val;
+  bumpIndexAndEmitUpdate("cardRotations", { cardId: id, rotations: val });
   popPoll();
 });
 

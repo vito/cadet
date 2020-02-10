@@ -62,6 +62,9 @@ port setReferences : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
 port setCardEvents : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
+port setCardRotations : ( GitHub.ID, List JD.Value ) -> Cmd msg
+
+
 port setReviewers : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
@@ -143,9 +146,25 @@ type Msg
     | RepoRefsFetched GitHub.Repo (List GitHub.Release) (Result GitHub.Error (List GitHub.Ref))
 
 
+replay : List Msg -> Model -> ( Model, Cmd Msg )
+replay msgs model =
+    List.foldl
+        (\msg ( m, cmd ) ->
+            let
+                ( nm, ncmd ) =
+                    update msg m
+            in
+            ( nm, Cmd.batch [ cmd, ncmd ] )
+        )
+        ( model, Cmd.none )
+        msgs
+
+
 init : Flags -> ( Model, Cmd Msg )
 init { githubToken, githubOrg, skipTimeline, noRefresh } =
-    update Refresh
+    replay
+        [ Refresh
+        ]
         { githubToken = githubToken
         , githubOrg = githubOrg
         , skipTimeline = skipTimeline
@@ -679,6 +698,9 @@ update msg model =
                 edges =
                     List.filterMap findSource timeline
 
+                rotations =
+                    Backend.timelineRotations timeline
+
                 events =
                     timeline
                         |> List.filterMap timelineEvent
@@ -690,6 +712,7 @@ update msg model =
                 , Cmd.batch
                     [ setReferences ( id, edges )
                     , setCardEvents ( id, events )
+                    , setCardRotations ( id, List.map Backend.encodeRotation rotations )
                     ]
                 )
 
@@ -741,6 +764,9 @@ update msg model =
                         |> List.map Backend.encodeCardEvent
                         |> List.reverse
 
+                rotations =
+                    Backend.timelineRotations timeline
+
                 reviewers =
                     List.foldl
                         (\r ->
@@ -770,6 +796,7 @@ update msg model =
                 , Cmd.batch
                     [ setReferences ( id, edges )
                     , setCardEvents ( id, events )
+                    , setCardRotations ( id, List.map Backend.encodeRotation rotations )
                     , setReviewers ( id, reviewers )
                     ]
                 )
@@ -1076,6 +1103,12 @@ timelineEvent event =
                     Nothing
 
         GitHub.CrossReferencedEvent _ ->
+            Nothing
+
+        GitHub.AssignedEvent _ ->
+            Nothing
+
+        GitHub.UnassignedEvent _ ->
             Nothing
 
 

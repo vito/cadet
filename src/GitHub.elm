@@ -436,6 +436,14 @@ type TimelineEvent
     = IssueCommentEvent IssueComment
     | CrossReferencedEvent ID
     | CommitEvent Commit
+    | AssignedEvent Assignment
+    | UnassignedEvent Assignment
+
+
+type alias Assignment =
+    { assignee : User
+    , createdAt : Time.Posix
+    }
 
 
 type alias PullRequestReview =
@@ -1188,6 +1196,11 @@ type DateType
     = DateType
 
 
+dateObject : GB.ValueSpec GB.NonNull DateType Time.Posix vars
+dateObject =
+    GB.customScalar DateType JDE.datetime
+
+
 issueStates : List ( String, IssueState )
 issueStates =
     [ ( "OPEN", IssueStateOpen )
@@ -1602,8 +1615,8 @@ botObject =
         |> GB.withLocalConstant Nothing
 
 
-authorObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe User) vars
-authorObject =
+userOrBotObject : GB.ValueSpec GB.NonNull GB.ObjectType (Maybe User) vars
+userOrBotObject =
     GB.object ME.or
         |> GB.with (GB.inlineFragment (Just <| GB.onType "User") userObject)
         |> GB.with (GB.inlineFragment (Just <| GB.onType "Bot") botObject)
@@ -1655,7 +1668,7 @@ issueObject =
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
-        |> GB.with (GB.field "author" [] authorObject)
+        |> GB.with (GB.field "author" [] userOrBotObject)
         |> GB.with (GB.field "assignees" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList userObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
@@ -1709,7 +1722,7 @@ prObject =
         |> GB.with (GB.field "title" [] GB.string)
         |> GB.with (GB.field "comments" [] (GB.extract (GB.field "totalCount" [] GB.int)))
         |> GB.with (GB.field "reactionGroups" [] nonZeroReactionGroups)
-        |> GB.with (GB.field "author" [] authorObject)
+        |> GB.with (GB.field "author" [] userOrBotObject)
         |> GB.with (GB.field "assignees" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList userObject)))
         |> GB.with (GB.field "labels" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (GB.list labelObject)))
         |> GB.with (GB.field "projectCards" [ ( "first", GA.int 10 ) ] (GB.extract <| GB.field "nodes" [] (nullableList projectCardObject)))
@@ -1754,7 +1767,7 @@ prReviewObject : GB.ValueSpec GB.NonNull GB.ObjectType PullRequestReview vars
 prReviewObject =
     GB.object PullRequestReview
         |> GB.with (GB.field "url" [] GB.string)
-        |> GB.with (GB.assume <| GB.field "author" [] authorObject)
+        |> GB.with (GB.assume <| GB.field "author" [] userOrBotObject)
         |> GB.with (GB.field "state" [] (GB.enum pullRequestReviewStates))
         |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
 
@@ -2139,7 +2152,7 @@ timelineQuery =
         issueCommentEvent =
             GB.object IssueComment
                 |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "author" [] authorObject)
+                |> GB.with (GB.field "author" [] userOrBotObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
                 |> GB.map IssueCommentEvent
 
@@ -2152,14 +2165,40 @@ timelineQuery =
             GB.object CrossReferencedEvent
                 |> GB.with (GB.assume <| GB.field "source" [] sourceID)
 
-        commitEvent =
-            GB.map CommitEvent commitObject
+        -- both of these event interfaces are the same, so we have to switch on
+        -- the actual typename. gross!
+        assignOrUnassign typename assignee createdAt =
+            case typename of
+                "AssignedEvent" ->
+                    AssignedEvent { assignee = assignee, createdAt = createdAt }
 
-        event =
-            GB.object maybeOr3
+                "UnassignedEvent" ->
+                    UnassignedEvent { assignee = assignee, createdAt = createdAt }
+
+                _ ->
+                    Log.debug "impossible: type is neither AssignedEvent nor UnassignedEvent" typename <|
+                        AssignedEvent { assignee = assignee, createdAt = createdAt }
+
+        assignmentObject =
+            GB.object assignOrUnassign
+                |> GB.with (GB.field "__typename" [] GB.string)
+                |> GB.with (GB.assume <| GB.field "assignee" [] userOrBotObject)
+                |> GB.with (GB.field "createdAt" [] dateObject)
+
+        issueEvent =
+            GB.object maybeOr4
                 |> GB.with (GB.inlineFragment (Just (GB.onType "IssueComment")) issueCommentEvent)
                 |> GB.with (GB.inlineFragment (Just (GB.onType "CrossReferencedEvent")) crossReferencedEvent)
-                |> GB.with (GB.inlineFragment (Just (GB.onType "Commit")) commitEvent)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "AssignedEvent")) assignmentObject)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "UnassignedEvent")) assignmentObject)
+
+        prEvent =
+            GB.object maybeOr5
+                |> GB.with (GB.inlineFragment (Just (GB.onType "IssueComment")) issueCommentEvent)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "CrossReferencedEvent")) crossReferencedEvent)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequestCommit")) (GB.map CommitEvent (GB.extract <| GB.field "commit" [] commitObject)))
+                |> GB.with (GB.inlineFragment (Just (GB.onType "AssignedEvent")) assignmentObject)
+                |> GB.with (GB.inlineFragment (Just (GB.onType "UnassignedEvent")) assignmentObject)
 
         pageArgs =
             [ ( "first", GA.int 100 )
@@ -2171,18 +2210,18 @@ timelineQuery =
                 |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
                 |> GB.with (GB.field "hasNextPage" [] GB.bool)
 
-        paged =
+        paged e =
             GB.object PagedResult
-                |> GB.with (GB.field "nodes" [] (GB.map (List.filterMap identity) (GB.list event)))
+                |> GB.with (GB.field "nodes" [] (GB.map (List.filterMap identity) (GB.list e)))
                 |> GB.with (GB.field "pageInfo" [] pageInfo)
 
-        timeline =
-            GB.extract (GB.field "timelineItems" pageArgs paged)
+        timelineItems e =
+            GB.extract (GB.field "timelineItems" pageArgs (paged e))
 
         issueOrPRTimeline =
             GB.object ME.or
-                |> GB.with (GB.inlineFragment (Just <| GB.onType "Issue") timeline)
-                |> GB.with (GB.inlineFragment (Just <| GB.onType "PullRequest") timeline)
+                |> GB.with (GB.inlineFragment (Just <| GB.onType "PullRequest") (timelineItems prEvent))
+                |> GB.with (GB.inlineFragment (Just <| GB.onType "Issue") (timelineItems issueEvent))
 
         queryRoot =
             GB.extract <|
@@ -2207,7 +2246,7 @@ prReviewQuery =
         issueCommentEvent =
             GB.object IssueComment
                 |> GB.with (GB.field "url" [] GB.string)
-                |> GB.with (GB.field "author" [] authorObject)
+                |> GB.with (GB.field "author" [] userOrBotObject)
                 |> GB.with (GB.field "createdAt" [] (GB.customScalar DateType JDE.datetime))
                 |> GB.map IssueCommentEvent
 
@@ -2248,6 +2287,17 @@ maybeOr3 ma mb mc =
 maybeOr4 : Maybe a -> Maybe a -> Maybe a -> Maybe a -> Maybe a
 maybeOr4 ma mb mc md =
     ME.or ma (ME.or mb (ME.or mc md))
+
+
+maybeOr5 :
+    Maybe a
+    -> Maybe a
+    -> Maybe a
+    -> Maybe a
+    -> Maybe a
+    -> Maybe a -- a weapon to surpass metal gear
+maybeOr5 ma mb mc md me =
+    ME.or ma (ME.or mb (ME.or mc (ME.or md me)))
 
 
 decodeRepo : JD.Decoder Repo

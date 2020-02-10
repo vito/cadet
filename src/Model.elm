@@ -60,6 +60,7 @@ type alias Model =
     , issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
     , cardEvents : Dict GitHub.ID (List Backend.CardEvent)
+    , cardRotations : Dict GitHub.ID (List Backend.Rotation)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     , archive : List ArchiveEvent
 
@@ -365,6 +366,7 @@ empty key =
     , issues = Dict.empty
     , prs = Dict.empty
     , cardEvents = Dict.empty
+    , cardRotations = Dict.empty
     , prReviewers = Dict.empty
     , idsByUrl = Dict.empty
     , archive = []
