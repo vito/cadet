@@ -105,20 +105,17 @@ h4 {
   font-size: 10px;
 
   width: @card-width;
-  background: @white;
-  border: 0.1em solid @gray-200;
-  border-radius: @card-border-radius;
   box-sizing: border-box;
-  background: #fff;
-  white-space: normal;
-  vertical-align: top;
-  user-select: none;
-  display: flex;
-  flex-direction: row;
   position: relative;
 
-  padding: .5em;
+  white-space: normal;
+  user-select: none;
 
+  vertical-align: top;
+
+  border: 0.1em solid @gray-200;
+  border-radius: @card-border-radius;
+  background: @white;
   box-shadow: 0 0.1em 0.1em fade(@black, 10%);
 
   &:hover {
@@ -131,58 +128,41 @@ h4 {
     box-shadow: 0 0 0 .2em fade(@blue, 30%);
   }
 
-  &.highlighted {
-    box-shadow: 0 0 0 0.5em @yellow;
-  }
+  .card-content {
+    display: flex;
+    flex-direction: row;
+    padding: .5em;
 
-  &.in-flight, &.done, &.backlog, &.icebox {
-    &::before {
-      content: " ";
-      position: absolute;
-      top: 0;
-      left: 0.05em;
-      right: 0.05em;
-      height: 0;
-      border-top-left-radius: 0.5em;
-      border-top-right-radius: 0.5em;
+    &.highlighted {
+      box-shadow: 0 0 0 0.5em @yellow;
+    }
+
+    &.paused {
+      opacity: 0.5;
+    }
+
+    &.loading {
+      .loading-text {
+        font-size: 1.6em;
+        color: @gray;
+      }
     }
   }
 
-  &.paused {
-    opacity: 0.5;
+  .card-title {
+    font-size: 1.4em;
+    font-weight: 600;
+    color: @gray-900;
+    display: flex;
+    flex-direction: row;
+    word-break: break-word;
   }
 
-  &.icebox::before {
-    background: @gray;
-  }
-
-  &.in-flight::before {
-    background: @purple;
-  }
-
-  &.done::before {
-    background: @green;
-  }
-
-  &.backlog::before {
-    background: @blue;
-  }
-
-  &.loading {
-    .loading-text {
-      font-size: 1.6em;
-      color: @gray;
+  .card-closers {
+    .card-content {
+      border-top: .1em solid @gray-200;
     }
   }
-}
-
-.card-title {
-  font-size: 1.4em;
-  font-weight: 600;
-  color: @gray-900;
-  display: flex;
-  flex-direction: row;
-  word-break: break-word;
 }
 
 .title-link {

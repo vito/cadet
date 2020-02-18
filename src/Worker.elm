@@ -62,6 +62,9 @@ port setReferences : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
 port setCardEvents : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
+port setCardClosers : ( GitHub.ID, List GitHub.ID ) -> Cmd msg
+
+
 port setCardRotations : ( GitHub.ID, List JD.Value ) -> Cmd msg
 
 
@@ -689,14 +692,29 @@ update msg model =
             let
                 findSource event =
                     case event of
-                        GitHub.CrossReferencedEvent eid ->
-                            Just eid
+                        GitHub.CrossReferencedEvent ref ->
+                            Just ref.source
 
                         _ ->
                             Nothing
 
                 edges =
                     List.filterMap findSource timeline
+
+                findCloser event =
+                    case event of
+                        GitHub.CrossReferencedEvent ref ->
+                            if ref.willCloseTarget then
+                                Just ref.source
+
+                            else
+                                Nothing
+
+                        _ ->
+                            Nothing
+
+                closers =
+                    List.filterMap findCloser timeline
 
                 rotations =
                     Backend.timelineRotations timeline
@@ -712,6 +730,7 @@ update msg model =
                 , Cmd.batch
                     [ setReferences ( id, edges )
                     , setCardEvents ( id, events )
+                    , setCardClosers ( id, closers )
                     , setCardRotations ( id, List.map Backend.encodeRotation rotations )
                     ]
                 )
@@ -724,14 +743,29 @@ update msg model =
             let
                 findSource event =
                     case event of
-                        GitHub.CrossReferencedEvent eid ->
-                            Just eid
+                        GitHub.CrossReferencedEvent ref ->
+                            Just ref.source
 
                         _ ->
                             Nothing
 
                 edges =
                     List.filterMap findSource timeline
+
+                findCloser event =
+                    case event of
+                        GitHub.CrossReferencedEvent ref ->
+                            if ref.willCloseTarget then
+                                Just ref.source
+
+                            else
+                                Nothing
+
+                        _ ->
+                            Nothing
+
+                closers =
+                    List.filterMap findCloser timeline
 
                 reviewEvent review =
                     { event =
@@ -796,6 +830,7 @@ update msg model =
                 , Cmd.batch
                     [ setReferences ( id, edges )
                     , setCardEvents ( id, events )
+                    , setCardClosers ( id, closers )
                     , setCardRotations ( id, List.map Backend.encodeRotation rotations )
                     , setReviewers ( id, reviewers )
                     ]

@@ -9,6 +9,7 @@ module Backend exposing
     , Me
     , Rotation
     , User
+    , decodeCardClosersEvent
     , decodeCardEventsEvent
     , decodeCardRotationsEvent
     , decodeColumnCardsEvent
@@ -78,6 +79,7 @@ type alias CardData =
     { issues : Dict GitHub.ID GitHub.Issue
     , prs : Dict GitHub.ID GitHub.PullRequest
     , cardEvents : Dict GitHub.ID (List CardEvent)
+    , cardClosers : Dict GitHub.ID (List GitHub.ID)
     , cardRotations : Dict GitHub.ID (List Rotation)
     , prReviewers : Dict GitHub.ID (List GitHub.PullRequestReview)
     }
@@ -267,6 +269,7 @@ decodeCardData =
         |> andMap (JD.field "issues" <| JD.dict GitHub.decodeIssue)
         |> andMap (JD.field "prs" <| JD.dict GitHub.decodePullRequest)
         |> andMap (JD.field "cardEvents" <| JD.dict (JD.list decodeCardEvent))
+        |> andMap (JD.field "cardClosers" <| JD.dict (JD.list JD.string))
         |> andMap (JD.field "cardRotations" <| JD.dict (JD.list decodeRotation))
         |> andMap (JD.field "prReviewers" <| JD.dict (JD.list GitHub.decodePullRequestReview))
 
@@ -375,6 +378,19 @@ decodeCardEventsEvent =
     JD.succeed CardEventsEvent
         |> andMap (JD.field "cardId" JD.string)
         |> andMap (JD.field "events" (JD.list decodeCardEvent))
+
+
+type alias CardClosersEvent =
+    { cardId : GitHub.ID
+    , closers : List GitHub.ID
+    }
+
+
+decodeCardClosersEvent : JD.Decoder CardClosersEvent
+decodeCardClosersEvent =
+    JD.succeed CardClosersEvent
+        |> andMap (JD.field "cardId" JD.string)
+        |> andMap (JD.field "closers" (JD.list JD.string))
 
 
 type alias CardRotationsEvent =

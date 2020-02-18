@@ -10143,6 +10143,10 @@ var $author$project$GitHub$AssignedEvent = function (a) {
 var $author$project$GitHub$CommitEvent = function (a) {
 	return {$: 'CommitEvent', a: a};
 };
+var $author$project$GitHub$CrossReference = F2(
+	function (source, willCloseTarget) {
+		return {source: source, willCloseTarget: willCloseTarget};
+	});
 var $author$project$GitHub$CrossReferencedEvent = function (a) {
 	return {$: 'CrossReferencedEvent', a: a};
 };
@@ -10255,10 +10259,16 @@ var $author$project$GitHub$timelineQuery = function () {
 					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
 					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$IssueComment)))));
 	var crossReferencedEvent = A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'source', _List_Nil, sourceID)),
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$CrossReferencedEvent));
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map,
+		$author$project$GitHub$CrossReferencedEvent,
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'willCloseTarget', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+					A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'source', _List_Nil, sourceID)),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$CrossReference))));
 	var assignOrUnassign = F3(
 		function (typename, assignee, createdAt) {
 			switch (typename) {
@@ -11963,6 +11973,20 @@ var $elm_community$list_extra$List$Extra$find = F2(
 				}
 			}
 		}
+	});
+var $author$project$Worker$setCardClosers = _Platform_outgoingPort(
+	'setCardClosers',
+	function ($) {
+		var a = $.a;
+		var b = $.b;
+		return A2(
+			$elm$json$Json$Encode$list,
+			$elm$core$Basics$identity,
+			_List_fromArray(
+				[
+					$elm$json$Json$Encode$string(a),
+					$elm$json$Json$Encode$list($elm$json$Json$Encode$string)(b)
+				]));
 	});
 var $author$project$Worker$setCardEvents = _Platform_outgoingPort(
 	'setCardEvents',
@@ -13907,8 +13931,16 @@ var $author$project$Worker$update = F2(
 					var rotations = $author$project$Backend$timelineRotations(timeline);
 					var findSource = function (event) {
 						if (event.$ === 'CrossReferencedEvent') {
-							var eid = event.a;
-							return $elm$core$Maybe$Just(eid);
+							var ref = event.a;
+							return $elm$core$Maybe$Just(ref.source);
+						} else {
+							return $elm$core$Maybe$Nothing;
+						}
+					};
+					var findCloser = function (event) {
+						if (event.$ === 'CrossReferencedEvent') {
+							var ref = event.a;
+							return ref.willCloseTarget ? $elm$core$Maybe$Just(ref.source) : $elm$core$Maybe$Nothing;
 						} else {
 							return $elm$core$Maybe$Nothing;
 						}
@@ -13919,6 +13951,7 @@ var $author$project$Worker$update = F2(
 							$author$project$Backend$encodeCardEvent,
 							A2($elm$core$List$filterMap, $author$project$Worker$timelineEvent, timeline)));
 					var edges = A2($elm$core$List$filterMap, findSource, timeline);
+					var closers = A2($elm$core$List$filterMap, findCloser, timeline);
 					return A3(
 						$author$project$Log$debug,
 						'timeline fetched for',
@@ -13932,6 +13965,8 @@ var $author$project$Worker$update = F2(
 										_Utils_Tuple2(id, edges)),
 										$author$project$Worker$setCardEvents(
 										_Utils_Tuple2(id, events)),
+										$author$project$Worker$setCardClosers(
+										_Utils_Tuple2(id, closers)),
 										$author$project$Worker$setCardRotations(
 										_Utils_Tuple2(
 											id,
@@ -13953,9 +13988,9 @@ var $author$project$Worker$update = F2(
 			default:
 				if (msg.b.$ === 'Ok') {
 					var id = msg.a;
-					var _v27 = msg.b.a;
-					var timeline = _v27.a;
-					var reviews = _v27.b;
+					var _v28 = msg.b.a;
+					var timeline = _v28.a;
+					var reviews = _v28.b;
 					var rotations = $author$project$Backend$timelineRotations(timeline);
 					var reviewers = A2(
 						$elm$core$List$map,
@@ -13964,8 +13999,8 @@ var $author$project$Worker$update = F2(
 							A3(
 								$elm$core$List$foldl,
 								function (r) {
-									var _v30 = r.state;
-									switch (_v30.$) {
+									var _v32 = r.state;
+									switch (_v32.$) {
 										case 'PullRequestReviewStatePending':
 											return A2($elm$core$Dict$insert, r.author.id, r);
 										case 'PullRequestReviewStateCommented':
@@ -13985,8 +14020,8 @@ var $author$project$Worker$update = F2(
 							avatar: review.author.avatar,
 							createdAt: review.createdAt,
 							event: function () {
-								var _v29 = review.state;
-								switch (_v29.$) {
+								var _v31 = review.state;
+								switch (_v31.$) {
 									case 'PullRequestReviewStatePending':
 										return 'review-pending';
 									case 'PullRequestReviewStateCommented':
@@ -14005,8 +14040,16 @@ var $author$project$Worker$update = F2(
 					};
 					var findSource = function (event) {
 						if (event.$ === 'CrossReferencedEvent') {
-							var eid = event.a;
-							return $elm$core$Maybe$Just(eid);
+							var ref = event.a;
+							return $elm$core$Maybe$Just(ref.source);
+						} else {
+							return $elm$core$Maybe$Nothing;
+						}
+					};
+					var findCloser = function (event) {
+						if (event.$ === 'CrossReferencedEvent') {
+							var ref = event.a;
+							return ref.willCloseTarget ? $elm$core$Maybe$Just(ref.source) : $elm$core$Maybe$Nothing;
 						} else {
 							return $elm$core$Maybe$Nothing;
 						}
@@ -14027,6 +14070,7 @@ var $author$project$Worker$update = F2(
 									A2($elm$core$List$filterMap, $author$project$Worker$timelineEvent, timeline),
 									A2($elm$core$List$map, reviewEvent, reviews)))));
 					var edges = A2($elm$core$List$filterMap, findSource, timeline);
+					var closers = A2($elm$core$List$filterMap, findCloser, timeline);
 					return A3(
 						$author$project$Log$debug,
 						'timeline and reviews fetched for',
@@ -14040,6 +14084,8 @@ var $author$project$Worker$update = F2(
 										_Utils_Tuple2(id, edges)),
 										$author$project$Worker$setCardEvents(
 										_Utils_Tuple2(id, events)),
+										$author$project$Worker$setCardClosers(
+										_Utils_Tuple2(id, closers)),
 										$author$project$Worker$setCardRotations(
 										_Utils_Tuple2(
 											id,

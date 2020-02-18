@@ -52,6 +52,7 @@ module GitHub exposing
     , createRepoLabel
     , createRepoMilestone
     , decodeCommit
+    , decodeCrossReference
     , decodeIssue
     , decodeLabel
     , decodeMilestone
@@ -67,6 +68,7 @@ module GitHub exposing
     , deleteRepoLabel
     , deleteRepoMilestone
     , encodeCommit
+    , encodeCrossReference
     , encodeIssue
     , encodeLabel
     , encodeMilestone
@@ -434,10 +436,16 @@ type alias CardLocation =
 
 type TimelineEvent
     = IssueCommentEvent IssueComment
-    | CrossReferencedEvent ID
+    | CrossReferencedEvent CrossReference
     | CommitEvent Commit
     | AssignedEvent Assignment
     | UnassignedEvent Assignment
+
+
+type alias CrossReference =
+    { source : ID
+    , willCloseTarget : Bool
+    }
 
 
 type alias Assignment =
@@ -2162,8 +2170,10 @@ timelineQuery =
                 |> GB.with (GB.inlineFragment (Just (GB.onType "PullRequest")) (GB.extract <| GB.field "id" [] GB.string))
 
         crossReferencedEvent =
-            GB.object CrossReferencedEvent
+            GB.object CrossReference
                 |> GB.with (GB.assume <| GB.field "source" [] sourceID)
+                |> GB.with (GB.field "willCloseTarget" [] GB.bool)
+                |> GB.map CrossReferencedEvent
 
         -- both of these event interfaces are the same, so we have to switch on
         -- the actual typename. gross!
@@ -2409,6 +2419,13 @@ decodePullRequestReview =
         |> andMap (JD.field "author" decodeUser)
         |> andMap (JD.field "state" decodePullRequestReviewState)
         |> andMap (JD.field "created_at" JDE.datetime)
+
+
+decodeCrossReference : JD.Decoder CrossReference
+decodeCrossReference =
+    JD.succeed CrossReference
+        |> andMap (JD.field "source" JD.string)
+        |> andMap (JD.field "will_close_target" JD.bool)
 
 
 decodeRepoLocation : JD.Decoder RepoLocation
@@ -2763,6 +2780,14 @@ encodePullRequestReview record =
         , ( "author", encodeUser record.author )
         , ( "state", encodePullRequestReviewState record.state )
         , ( "created_at", JE.string (Iso8601.fromTime record.createdAt) )
+        ]
+
+
+encodeCrossReference : CrossReference -> JE.Value
+encodeCrossReference record =
+    JE.object
+        [ ( "source", JE.string record.source )
+        , ( "will_close_target", JE.bool record.willCloseTarget )
         ]
 
 

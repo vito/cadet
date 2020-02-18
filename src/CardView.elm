@@ -36,16 +36,31 @@ import Task
 
 viewCard : Model -> List (Html Msg) -> Card -> Html Msg
 viewCard model controls card =
+    Html.div [ HA.class "card", HA.tabindex 0 ] <|
+        viewCardContent model controls card
+            :: (case Dict.get card.id model.cardClosers of
+                    Nothing ->
+                        []
+
+                    Just [] ->
+                        []
+
+                    Just closers ->
+                        [ closers
+                            |> List.filterMap (\id -> Dict.get id model.cards)
+                            |> List.map (viewCardContent model [])
+                            |> Html.div [ HA.class "card-closers" ]
+                        ]
+               )
+
+
+viewCardContent : Model -> List (Html Msg) -> Card -> Html Msg
+viewCardContent model controls card =
     Html.div
-        [ HA.class "card"
+        [ HA.class "card-content"
         , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
-        , HA.tabindex 0
         , HA.classList
-            [ ( "in-flight", Card.isInFlight card )
-            , ( "done", Card.isDone card )
-            , ( "icebox", Card.isIcebox card )
-            , ( "backlog", Card.isBacklog card )
-            , ( "paused", Card.isPaused card )
+            [ ( "paused", Card.isPaused card )
             , ( "highlighted", model.highlightedCard == Just card.id )
             , ( Activity.class model.currentTime card.updatedAt, Card.isPR card )
             ]
@@ -156,9 +171,12 @@ viewProjectColumnCard model project col ghCard =
 viewLoadingCard : Html Msg
 viewLoadingCard =
     Html.div [ HA.class "card loading" ]
-        [ Html.div [ HA.class "card-icons" ] [ Octicons.sync octiconOpts ]
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "loading-text" ] [ Html.text "loading..." ] ]
+        [ Html.div [ HA.class "card-content" ]
+            [ Html.div [ HA.class "card-squares left vertical" ]
+                [ Html.span [ HA.class "card-square" ] [ Octicons.sync octiconOpts ] ]
+            , Html.div [ HA.class "card-info" ]
+                [ Html.span [ HA.class "loading-text" ] [ Html.text "loading..." ] ]
+            ]
         ]
 
 
@@ -243,22 +261,24 @@ viewNoteCard model project col card controls text =
                 , ( "backlog", Project.detectColumn.backlog col )
                 ]
             ]
-            [ Html.div [ HA.class "card-squares left vertical" ] <|
-                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    [ Octicons.note Octicons.defaultOptions
-                    ]
-            , Dict.get card.id model.editingCardNotes
-                |> Maybe.withDefault text
-                |> Markdown.toHtml [ HA.class "card-info card-note" ]
-            , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
-                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    controls
-                        ++ [ Html.span
-                                [ HA.class "spin-on-column-refresh"
-                                , HE.onClick (RefreshColumn col.id)
-                                ]
-                                [ Octicons.sync Octicons.defaultOptions ]
-                           ]
+            [ Html.div [ HA.class "card-content" ]
+                [ Html.div [ HA.class "card-squares left vertical" ] <|
+                    List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                        [ Octicons.note Octicons.defaultOptions
+                        ]
+                , Dict.get card.id model.editingCardNotes
+                    |> Maybe.withDefault text
+                    |> Markdown.toHtml [ HA.class "card-info card-note" ]
+                , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+                    List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                        controls
+                            ++ [ Html.span
+                                    [ HA.class "spin-on-column-refresh"
+                                    , HE.onClick (RefreshColumn col.id)
+                                    ]
+                                    [ Octicons.sync Octicons.defaultOptions ]
+                               ]
+                ]
             ]
         , case Dict.get card.id model.editingCardNotes of
             Nothing ->
@@ -342,25 +362,27 @@ viewProjectCard model controls project =
                         ]
     in
     Html.div [ HA.class "card project", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-squares left vertical" ] <|
-            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                Octicons.project Octicons.defaultOptions
-                    :: metaIssueIcons
-        , Html.div [ HA.class "card-info" ]
-            [ Html.span [ HA.class "card-title", HA.draggable "false" ]
-                [ Html.a [ HA.href ("/projects/" ++ project.id) ]
-                    [ Html.text project.name ]
-                ]
-            , if String.isEmpty project.body then
-                Html.text ""
+        [ Html.div [ HA.class "card-content" ]
+            [ Html.div [ HA.class "card-squares left vertical" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                    Octicons.project Octicons.defaultOptions
+                        :: metaIssueIcons
+            , Html.div [ HA.class "card-info" ]
+                [ Html.span [ HA.class "card-title", HA.draggable "false" ]
+                    [ Html.a [ HA.href ("/projects/" ++ project.id) ]
+                        [ Html.text project.name ]
+                    ]
+                , if String.isEmpty project.body then
+                    Html.text ""
 
-              else
-                Markdown.toHtml [ HA.class "project-body" ] project.body
-            , viewProjectBar model project
+                  else
+                    Markdown.toHtml [ HA.class "project-body" ] project.body
+                , viewProjectBar model project
+                ]
+            , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
+                    (controls ++ [ projectExternalIcon project ])
             ]
-        , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
-            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
-                (controls ++ [ projectExternalIcon project ])
         ]
 
 

@@ -65,6 +65,9 @@ const cards = {
   // map from issue/pr id to actors in timeline
   cardEvents: {},
 
+  // map from issue/pr to an issue/pr that closes it
+  cardClosers: {},
+
   // map from issue/pr id to rotations
   cardRotations: {},
 
@@ -297,6 +300,14 @@ worker.ports.setCardEvents.subscribe(function(args) {
   var val = args[1];
   cards.cardEvents[id] = val;
   bumpIndexAndEmitUpdate("cardEvents", { cardId: id, events: val });
+  popPoll();
+});
+
+worker.ports.setCardClosers.subscribe(function(args) {
+  var id = args[0];
+  var val = args[1];
+  cards.cardClosers[id] = val;
+  bumpIndexAndEmitUpdate("cardClosers", { cardId: id, closers: val });
   popPoll();
 });
 

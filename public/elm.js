@@ -5751,6 +5751,7 @@ var $author$project$Model$empty = function (key) {
 		assignUserDrag: $author$project$Drag$init,
 		assignableUsers: _List_Nil,
 		baseGraphFilter: $elm$core$Maybe$Nothing,
+		cardClosers: $elm$core$Dict$empty,
 		cardEvents: $elm$core$Dict$empty,
 		cardLabelOperations: $elm$core$Dict$empty,
 		cardRotations: $elm$core$Dict$empty,
@@ -13004,9 +13005,9 @@ var $author$project$CardOperations$dropCard = F4(
 					}()
 					])));
 	});
-var $author$project$Backend$CardData = F5(
-	function (issues, prs, cardEvents, cardRotations, prReviewers) {
-		return {cardEvents: cardEvents, cardRotations: cardRotations, issues: issues, prReviewers: prReviewers, prs: prs};
+var $author$project$Backend$CardData = F6(
+	function (issues, prs, cardEvents, cardClosers, cardRotations, prReviewers) {
+		return {cardClosers: cardClosers, cardEvents: cardEvents, cardRotations: cardRotations, issues: issues, prReviewers: prReviewers, prs: prs};
 	});
 var $author$project$Backend$CardEvent = F5(
 	function (event, url, user, avatar, createdAt) {
@@ -13372,22 +13373,29 @@ var $author$project$Backend$decodeCardData = A2(
 			$elm_community$json_extra$Json$Decode$Extra$andMap,
 			A2(
 				$elm$json$Json$Decode$field,
-				'cardEvents',
+				'cardClosers',
 				$elm$json$Json$Decode$dict(
-					$elm$json$Json$Decode$list($author$project$Backend$decodeCardEvent))),
+					$elm$json$Json$Decode$list($elm$json$Json$Decode$string))),
 			A2(
 				$elm_community$json_extra$Json$Decode$Extra$andMap,
 				A2(
 					$elm$json$Json$Decode$field,
-					'prs',
-					$elm$json$Json$Decode$dict($author$project$GitHub$decodePullRequest)),
+					'cardEvents',
+					$elm$json$Json$Decode$dict(
+						$elm$json$Json$Decode$list($author$project$Backend$decodeCardEvent))),
 				A2(
 					$elm_community$json_extra$Json$Decode$Extra$andMap,
 					A2(
 						$elm$json$Json$Decode$field,
-						'issues',
-						$elm$json$Json$Decode$dict($author$project$GitHub$decodeIssue)),
-					$elm$json$Json$Decode$succeed($author$project$Backend$CardData))))));
+						'prs',
+						$elm$json$Json$Decode$dict($author$project$GitHub$decodePullRequest)),
+					A2(
+						$elm_community$json_extra$Json$Decode$Extra$andMap,
+						A2(
+							$elm$json$Json$Decode$field,
+							'issues',
+							$elm$json$Json$Decode$dict($author$project$GitHub$decodeIssue)),
+						$elm$json$Json$Decode$succeed($author$project$Backend$CardData)))))));
 var $author$project$Backend$fetchCardData = function (f) {
 	return A2(
 		$elm$core$Task$attempt,
@@ -13755,6 +13763,20 @@ var $author$project$Label$generateColor = function (seed) {
 		_Utils_chr('0'),
 		$fredcy$elm_parseint$ParseInt$toHex(randomColor));
 };
+var $author$project$Backend$CardClosersEvent = F2(
+	function (cardId, closers) {
+		return {cardId: cardId, closers: closers};
+	});
+var $author$project$Backend$decodeCardClosersEvent = A2(
+	$elm_community$json_extra$Json$Decode$Extra$andMap,
+	A2(
+		$elm$json$Json$Decode$field,
+		'closers',
+		$elm$json$Json$Decode$list($elm$json$Json$Decode$string)),
+	A2(
+		$elm_community$json_extra$Json$Decode$Extra$andMap,
+		A2($elm$json$Json$Decode$field, 'cardId', $elm$json$Json$Decode$string),
+		$elm$json$Json$Decode$succeed($author$project$Backend$CardClosersEvent)));
 var $author$project$Backend$CardEventsEvent = F2(
 	function (cardId, events) {
 		return {cardId: cardId, events: events};
@@ -14092,6 +14114,17 @@ var $author$project$Main$handleEvent = F4(
 							model,
 							{
 								cardEvents: A3($elm$core$Dict$insert, val.cardId, val.events, model.cardEvents)
+							});
+					});
+			case 'cardClosers':
+				return A2(
+					withDecoded,
+					$author$project$Backend$decodeCardClosersEvent,
+					function (val) {
+						return _Utils_update(
+							model,
+							{
+								cardClosers: A3($elm$core$Dict$insert, val.cardId, val.closers, model.cardClosers)
 							});
 					});
 			case 'cardRotations':
@@ -16041,6 +16074,7 @@ var $author$project$Main$update = F2(
 										_Utils_update(
 											model,
 											{
+												cardClosers: value.cardClosers,
 												cardEvents: value.cardEvents,
 												cardRotations: value.cardRotations,
 												issues: value.issues,
@@ -17232,6 +17266,12 @@ var $author$project$Events$onClickNoBubble = function (msg) {
 			{message: msg, preventDefault: true, stopPropagation: true}));
 };
 var $elm$html$Html$span = _VirtualDom_node('span');
+var $elm$html$Html$Attributes$tabindex = function (n) {
+	return A2(
+		_VirtualDom_attribute,
+		'tabIndex',
+		$elm$core$String$fromInt(n));
+};
 var $author$project$Model$HighlightNode = function (a) {
 	return {$: 'HighlightNode', a: a};
 };
@@ -17373,18 +17413,6 @@ var $author$project$Activity$class = F2(
 		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
 	});
 var $elm$html$Html$img = _VirtualDom_node('img');
-var $author$project$Card$isBacklog = function (card) {
-	return card.processState.inBacklogColumn;
-};
-var $author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
-};
-var $author$project$Card$isIcebox = function (card) {
-	return card.processState.inIceboxColumn;
-};
-var $author$project$Card$isInFlight = function (card) {
-	return card.processState.inInFlightColumn;
-};
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -17413,6 +17441,9 @@ var $author$project$Model$UnlabelCard = F2(
 	});
 var $capitalist$elm_octicons$Octicons$bookmarkPath = 'M9,0 L1,0 C0.27,0 0,0.27 0,1 L0,16 L5,12.91 L10,16 L10,1 C10,0.27 9.73,0 9,0 L9,0 Z M8.22,4.25 L6.36,5.61 L7.08,7.77 C7.14,7.99 7.06,8.05 6.88,7.94 L5,6.6 L3.12,7.94 C2.93,8.05 2.87,7.99 2.92,7.77 L3.64,5.61 L1.78,4.25 C1.61,4.09 1.64,4.02 1.87,4.02 L4.17,3.99 L4.87,1.83 L5.12,1.83 L5.82,3.99 L8.12,4.02 C8.35,4.02 8.39,4.1 8.21,4.25 L8.22,4.25 Z';
 var $capitalist$elm_octicons$Octicons$bookmark = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$bookmarkPath, '0 0 10 16', 'bookmark');
+var $author$project$Card$isInFlight = function (card) {
+	return card.processState.inInFlightColumn;
+};
 var $author$project$CardView$pauseIcon = function (card) {
 	var _v0 = _Utils_Tuple2(
 		$author$project$Card$isInFlight(card),
@@ -17537,12 +17568,6 @@ var $elm$html$Html$Attributes$src = function (url) {
 };
 var $capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,10.02 9.04,11 C7.57,12.45 5.3,12.63 3.63,11.54 L4.8,10.4 L0.5,9.8 L1.1,14 L2.41,12.74 C4.77,14.48 8.11,14.31 10.25,12.2 C11.49,10.97 12.06,9.35 11.99,7.74 L10.24,7.4 L10.24,7.4 Z M2.96,5 C4.43,3.55 6.7,3.37 8.37,4.46 L7.2,5.6 L11.5,6.2 L10.9,2 L9.59,3.26 C7.23,1.52 3.89,1.69 1.74,3.8 C0.5,5.03 -0.06,6.65 0.01,8.26 L1.76,8.61 C1.57,7.33 1.96,5.98 2.96,5 L2.96,5 Z';
 var $capitalist$elm_octicons$Octicons$sync = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
-var $elm$html$Html$Attributes$tabindex = function (n) {
-	return A2(
-		_VirtualDom_attribute,
-		'tabIndex',
-		$elm$core$String$fromInt(n));
-};
 var $capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
 var $capitalist$elm_octicons$Octicons$gitMerge = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
 var $author$project$Colors$green500 = '#28a745';
@@ -18064,13 +18089,13 @@ var $author$project$CardView$viewSuggestedLabel = F3(
 					]));
 		}
 	});
-var $author$project$CardView$viewCard = F3(
+var $author$project$CardView$viewCardContent = F3(
 	function (model, controls, card) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('card'),
+					$elm$html$Html$Attributes$class('card-content'),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
@@ -18078,22 +18103,9 @@ var $author$project$CardView$viewCard = F3(
 							'loading',
 							A2($elm$core$Dict$member, card.id, model.progress))
 						])),
-					$elm$html$Html$Attributes$tabindex(0),
 					$elm$html$Html$Attributes$classList(
 					_List_fromArray(
 						[
-							_Utils_Tuple2(
-							'in-flight',
-							$author$project$Card$isInFlight(card)),
-							_Utils_Tuple2(
-							'done',
-							$author$project$Card$isDone(card)),
-							_Utils_Tuple2(
-							'icebox',
-							$author$project$Card$isIcebox(card)),
-							_Utils_Tuple2(
-							'backlog',
-							$author$project$Card$isBacklog(card)),
 							_Utils_Tuple2(
 							'paused',
 							$author$project$Card$isPaused(card)),
@@ -18235,6 +18247,49 @@ var $author$project$CardView$viewCard = F3(
 									model.suggestedLabels)
 								]))))
 				]));
+	});
+var $author$project$CardView$viewCard = F3(
+	function (model, controls, card) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card'),
+					$elm$html$Html$Attributes$tabindex(0)
+				]),
+			A2(
+				$elm$core$List$cons,
+				A3($author$project$CardView$viewCardContent, model, controls, card),
+				function () {
+					var _v0 = A2($elm$core$Dict$get, card.id, model.cardClosers);
+					if (_v0.$ === 'Nothing') {
+						return _List_Nil;
+					} else {
+						if (!_v0.a.b) {
+							return _List_Nil;
+						} else {
+							var closers = _v0.a;
+							return _List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-closers')
+										]),
+									A2(
+										$elm$core$List$map,
+										A2($author$project$CardView$viewCardContent, model, _List_Nil),
+										A2(
+											$elm$core$List$filterMap,
+											function (id) {
+												return A2($elm$core$Dict$get, id, model.cards);
+											},
+											closers)))
+								]);
+						}
+					}
+				}()));
 	});
 var $author$project$CardOperations$viewCardEntry = F2(
 	function (model, card) {
@@ -18975,85 +19030,94 @@ var $author$project$CardView$viewProjectCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-squares left vertical')
-						]),
-					A2(
-						$elm$core$List$map,
-						function (x) {
-							return A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('card-square')
-									]),
-								_List_fromArray(
-									[x]));
-						},
-						A2(
-							$elm$core$List$cons,
-							$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions),
-							metaIssueIcons))),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-info')
+							$elm$html$Html$Attributes$class('card-content')
 						]),
 					_List_fromArray(
 						[
 							A2(
-							$elm$html$Html$span,
+							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-title'),
-									$elm$html$Html$Attributes$draggable('false')
+									$elm$html$Html$Attributes$class('card-squares left vertical')
+								]),
+							A2(
+								$elm$core$List$map,
+								function (x) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('card-square')
+											]),
+										_List_fromArray(
+											[x]));
+								},
+								A2(
+									$elm$core$List$cons,
+									$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions),
+									metaIssueIcons))),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-info')
 								]),
 							_List_fromArray(
 								[
 									A2(
-									$elm$html$Html$a,
+									$elm$html$Html$span,
 									_List_fromArray(
 										[
-											$elm$html$Html$Attributes$href('/projects/' + project.id)
+											$elm$html$Html$Attributes$class('card-title'),
+											$elm$html$Html$Attributes$draggable('false')
 										]),
 									_List_fromArray(
 										[
-											$elm$html$Html$text(project.name)
-										]))
+											A2(
+											$elm$html$Html$a,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$href('/projects/' + project.id)
+												]),
+											_List_fromArray(
+												[
+													$elm$html$Html$text(project.name)
+												]))
+										])),
+									$elm$core$String$isEmpty(project.body) ? $elm$html$Html$text('') : A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('project-body')
+										]),
+									project.body),
+									A2($author$project$CardView$viewProjectBar, model, project)
 								])),
-							$elm$core$String$isEmpty(project.body) ? $elm$html$Html$text('') : A2(
-							$elm_explorations$markdown$Markdown$toHtml,
+							A2(
+							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('project-body')
+									$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
 								]),
-							project.body),
-							A2($author$project$CardView$viewProjectBar, model, project)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
-						]),
-					A2(
-						$elm$core$List$map,
-						function (x) {
-							return A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('card-square')
-									]),
-								_List_fromArray(
-									[x]));
-						},
-						_Utils_ap(
-							controls,
-							_List_fromArray(
-								[
-									$author$project$CardView$projectExternalIcon(project)
-								]))))
+							A2(
+								$elm$core$List$map,
+								function (x) {
+									return A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('card-square')
+											]),
+										_List_fromArray(
+											[x]));
+								},
+								_Utils_ap(
+									controls,
+									_List_fromArray(
+										[
+											$author$project$CardView$projectExternalIcon(project)
+										]))))
+						]))
 				]));
 	});
 var $author$project$Main$viewRepoProjects = F3(
@@ -19886,29 +19950,47 @@ var $author$project$CardView$viewLoadingCard = A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('card-icons')
-				]),
-			_List_fromArray(
-				[
-					$capitalist$elm_octicons$Octicons$sync($author$project$CardView$octiconOpts)
-				])),
-			A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('card-info')
+					$elm$html$Html$Attributes$class('card-content')
 				]),
 			_List_fromArray(
 				[
 					A2(
-					$elm$html$Html$span,
+					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('loading-text')
+							$elm$html$Html$Attributes$class('card-squares left vertical')
 						]),
 					_List_fromArray(
 						[
-							$elm$html$Html$text('loading...')
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-square')
+								]),
+							_List_fromArray(
+								[
+									$capitalist$elm_octicons$Octicons$sync($author$project$CardView$octiconOpts)
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-info')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('loading-text')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('loading...')
+								]))
 						]))
 				]))
 		]));
@@ -19997,69 +20079,78 @@ var $author$project$CardView$viewNoteCard = F6(
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-squares left vertical')
+									$elm$html$Html$Attributes$class('card-content')
 								]),
-							A2(
-								$elm$core$List$map,
-								function (x) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('card-square')
-											]),
-										_List_fromArray(
-											[x]));
-								},
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$note($capitalist$elm_octicons$Octicons$defaultOptions)
-									]))),
-							A2(
-							$elm_explorations$markdown$Markdown$toHtml,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('card-info card-note')
-								]),
-							A2(
-								$elm$core$Maybe$withDefault,
-								text,
-								A2($elm$core$Dict$get, card.id, model.editingCardNotes))),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
-								]),
-							A2(
-								$elm$core$List$map,
-								function (x) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('card-square')
-											]),
-										_List_fromArray(
-											[x]));
-								},
-								_Utils_ap(
-									controls,
+									A2(
+									$elm$html$Html$div,
 									_List_fromArray(
 										[
-											A2(
-											$elm$html$Html$span,
+											$elm$html$Html$Attributes$class('card-squares left vertical')
+										]),
+									A2(
+										$elm$core$List$map,
+										function (x) {
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('card-square')
+													]),
+												_List_fromArray(
+													[x]));
+										},
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$note($capitalist$elm_octicons$Octicons$defaultOptions)
+											]))),
+									A2(
+									$elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-info card-note')
+										]),
+									A2(
+										$elm$core$Maybe$withDefault,
+										text,
+										A2($elm$core$Dict$get, card.id, model.editingCardNotes))),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
+										]),
+									A2(
+										$elm$core$List$map,
+										function (x) {
+											return A2(
+												$elm$html$Html$div,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('card-square')
+													]),
+												_List_fromArray(
+													[x]));
+										},
+										_Utils_ap(
+											controls,
 											_List_fromArray(
 												[
-													$elm$html$Html$Attributes$class('spin-on-column-refresh'),
-													$elm$html$Html$Events$onClick(
-													$author$project$Model$RefreshColumn(col.id))
-												]),
-											_List_fromArray(
-												[
-													$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
-												]))
-										]))))
+													A2(
+													$elm$html$Html$span,
+													_List_fromArray(
+														[
+															$elm$html$Html$Attributes$class('spin-on-column-refresh'),
+															$elm$html$Html$Events$onClick(
+															$author$project$Model$RefreshColumn(col.id))
+														]),
+													_List_fromArray(
+														[
+															$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
+														]))
+												]))))
+								]))
 						])),
 					function () {
 					var _v0 = A2($elm$core$Dict$get, card.id, model.editingCardNotes);
@@ -23820,6 +23911,15 @@ var $author$project$StatefulGraph$cardLabelArcs = F3(
 				card.labels));
 	});
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
+var $author$project$Card$isBacklog = function (card) {
+	return card.processState.inBacklogColumn;
+};
+var $author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
+var $author$project$Card$isIcebox = function (card) {
+	return card.processState.inIceboxColumn;
+};
 var $elm$svg$Svg$Events$onClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
