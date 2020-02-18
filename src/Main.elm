@@ -1316,13 +1316,22 @@ computeProjectLanes : Model -> Model
 computeProjectLanes model =
     let
         isInProgress { purpose } =
-            purpose == Just GitHub.ProjectColumnPurposeInProgress
+            case purpose of
+                Just GitHub.ProjectColumnPurposeInProgress ->
+                    True
+
+                Just GitHub.ProjectColumnPurposeDone ->
+                    True
+
+                _ ->
+                    False
 
         columnCards col =
             Dict.get col.id model.columnCards
                 |> Maybe.withDefault []
                 |> List.filterMap .contentId
                 |> List.filterMap (\id -> Dict.get id model.cards)
+                |> List.filter Card.isOpen
 
         inFlightCards project =
             let

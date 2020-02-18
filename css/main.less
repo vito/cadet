@@ -2046,12 +2046,11 @@ a.column-title:hover, .page-header a:hover {
 
         border: 1px solid @gray-200;
         border-radius: 10px;
+        padding: 5px;
         background: white;
         color: @gray-900;
 
         margin-right: 10px;
-        margin-bottom: 10px;
-        padding: 5px;
 
         .card-actor {
           clear: both;
@@ -2067,6 +2066,11 @@ a.column-title:hover, .page-header a:hover {
           font-size: 16px;
           text-align: center;
         }
+      }
+
+      > .lane-user:last-child,
+      > :last-child .lane-user {
+        margin-right: 0;
       }
 
       .remove-assignee {
@@ -2089,12 +2093,19 @@ a.column-title:hover, .page-header a:hover {
     .project-lane-cards {
       display: flex;
       flex-direction: column;
+      margin-left: 20px;
 
       .card {
         font-size: 12px;
         width: 450px;
         margin-bottom: 12px;
         margin-right: 12px;
+      }
+
+      > .card:last-child,
+      > :last-child .card {
+        margin-bottom: 0;
+        margin-right: 0;
       }
     }
   }

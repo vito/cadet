@@ -11628,6 +11628,28 @@ var $author$project$Main$byAssignees = function () {
 					}),
 				$elm$core$List$reverse)));
 }();
+var $author$project$Card$isOpen = function (card) {
+	var _v0 = card.state;
+	_v0$2:
+	while (true) {
+		if (_v0.$ === 'IssueState') {
+			if (_v0.a.$ === 'IssueStateOpen') {
+				var _v1 = _v0.a;
+				return true;
+			} else {
+				break _v0$2;
+			}
+		} else {
+			if (_v0.a.$ === 'PullRequestStateOpen') {
+				var _v2 = _v0.a;
+				return true;
+			} else {
+				break _v0$2;
+			}
+		}
+	}
+	return false;
+};
 var $elm_community$list_extra$List$Extra$find = F2(
 	function (predicate, list) {
 		find:
@@ -11722,27 +11744,45 @@ var $author$project$Main$reflectPendingAssignments = F2(
 			{assignees: newAssignees});
 	});
 var $author$project$Main$computeProjectLanes = function (model) {
-	var isInProgress = function (_v0) {
-		var purpose = _v0.purpose;
-		return _Utils_eq(
-			purpose,
-			$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress));
+	var isInProgress = function (_v3) {
+		var purpose = _v3.purpose;
+		_v0$2:
+		while (true) {
+			if (purpose.$ === 'Just') {
+				switch (purpose.a.$) {
+					case 'ProjectColumnPurposeInProgress':
+						var _v1 = purpose.a;
+						return true;
+					case 'ProjectColumnPurposeDone':
+						var _v2 = purpose.a;
+						return true;
+					default:
+						break _v0$2;
+				}
+			} else {
+				break _v0$2;
+			}
+		}
+		return false;
 	};
 	var columnCards = function (col) {
 		return A2(
-			$elm$core$List$filterMap,
-			function (id) {
-				return A2($elm$core$Dict$get, id, model.cards);
-			},
+			$elm$core$List$filter,
+			$author$project$Card$isOpen,
 			A2(
 				$elm$core$List$filterMap,
-				function ($) {
-					return $.contentId;
+				function (id) {
+					return A2($elm$core$Dict$get, id, model.cards);
 				},
 				A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
-					A2($elm$core$Dict$get, col.id, model.columnCards))));
+					$elm$core$List$filterMap,
+					function ($) {
+						return $.contentId;
+					},
+					A2(
+						$elm$core$Maybe$withDefault,
+						_List_Nil,
+						A2($elm$core$Dict$get, col.id, model.columnCards)))));
 	};
 	var inFlightCards = function (project) {
 		var projectCards = A2(
@@ -11841,28 +11881,6 @@ var $author$project$ReleaseStatus$categorizeByDocumentedState = F3(
 				doneCards: A2($elm$core$List$cons, card, sir.doneCards)
 			})));
 	});
-var $author$project$Card$isOpen = function (card) {
-	var _v0 = card.state;
-	_v0$2:
-	while (true) {
-		if (_v0.$ === 'IssueState') {
-			if (_v0.a.$ === 'IssueStateOpen') {
-				var _v1 = _v0.a;
-				return true;
-			} else {
-				break _v0$2;
-			}
-		} else {
-			if (_v0.a.$ === 'PullRequestStateOpen') {
-				var _v2 = _v0.a;
-				return true;
-			} else {
-				break _v0$2;
-			}
-		}
-	}
-	return false;
-};
 var $author$project$ReleaseStatus$categorizeCard = F3(
 	function (model, card, sir) {
 		var byState = A2($author$project$ReleaseStatus$categorizeByCardState, card, sir);
@@ -17968,6 +17986,9 @@ var $author$project$CardView$viewCardActivity = F2(
 	});
 var $capitalist$elm_octicons$Octicons$gitPullRequestPath = 'M11,11.28 L11,5 C10.97,4.22 10.66,3.53 10.06,2.94 C9.46,2.35 8.78,2.03 8,2 L7,2 L7,0 L4,3 L7,6 L7,4 L8,4 C8.27,4.02 8.48,4.11 8.69,4.31 C8.9,4.51 8.99,4.73 9,5 L9,11.28 C8.41,11.62 8,12.26 8,13 C8,14.11 8.89,15 10,15 C11.11,15 12,14.11 12,13 C12,12.27 11.59,11.62 11,11.28 L11,11.28 Z M10,14.2 C9.34,14.2 8.8,13.65 8.8,13 C8.8,12.35 9.35,11.8 10,11.8 C10.65,11.8 11.2,12.35 11.2,13 C11.2,13.65 10.65,14.2 10,14.2 L10,14.2 Z M4,3 C4,1.89 3.11,1 2,1 C0.89,1 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.62 0,12.26 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,4.72 C3.59,4.38 4,3.74 4,3 L4,3 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z';
 var $capitalist$elm_octicons$Octicons$gitPullRequest = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitPullRequestPath, '0 0 12 16', 'gitPullRequest');
+var $author$project$Card$isDone = function (card) {
+	return card.processState.inDoneColumn;
+};
 var $capitalist$elm_octicons$Octicons$issueClosedPath = 'M7,10 L9,10 L9,12 L7,12 L7,10 L7,10 Z M9,4 L7,4 L7,9 L9,9 L9,4 L9,4 Z M10.5,5.5 L9.5,6.5 L12,9 L16,4.5 L15,3.5 L12,7 L10.5,5.5 L10.5,5.5 Z M8,13.7 C4.86,13.7 2.3,11.14 2.3,8 C2.3,4.86 4.86,2.3 8,2.3 C9.83,2.3 11.45,3.18 12.5,4.5 L13.42,3.58 C12.14,2 10.19,1 8,1 C4.14,1 1,4.14 1,8 C1,11.86 4.14,15 8,15 C11.86,15 15,11.86 15,8 L13.48,9.52 C12.82,11.93 10.62,13.71 8,13.71 L8,13.7 Z';
 var $capitalist$elm_octicons$Octicons$issueClosed = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$issueClosedPath, '0 0 16 16', 'issueClosed');
 var $capitalist$elm_octicons$Octicons$issueOpenedPath = 'M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M8,4 L6,4 L6,9 L8,9 L8,4 L8,4 Z M8,10 L6,10 L6,12 L8,12 L8,10 L8,10 Z';
@@ -17978,10 +17999,13 @@ var $author$project$CardView$viewCardIcon = function (card) {
 			$author$project$CardView$octiconOpts,
 			{
 				color: $author$project$Card$isMerged(card) ? $author$project$Colors$purple : ($author$project$Card$isOpen(card) ? $author$project$Colors$green : $author$project$Colors$red)
-			})) : ($author$project$Card$isOpen(card) ? $capitalist$elm_octicons$Octicons$issueOpened(
+			})) : ($author$project$Card$isOpen(card) ? ($author$project$Card$isDone(card) ? $capitalist$elm_octicons$Octicons$issueClosed(
 		_Utils_update(
 			$author$project$CardView$octiconOpts,
-			{color: $author$project$Colors$green})) : $capitalist$elm_octicons$Octicons$issueClosed(
+			{color: $author$project$Colors$green})) : $capitalist$elm_octicons$Octicons$issueOpened(
+		_Utils_update(
+			$author$project$CardView$octiconOpts,
+			{color: $author$project$Colors$green}))) : $capitalist$elm_octicons$Octicons$issueClosed(
 		_Utils_update(
 			$author$project$CardView$octiconOpts,
 			{color: $author$project$Colors$red})));
@@ -23913,9 +23937,6 @@ var $author$project$StatefulGraph$cardLabelArcs = F3(
 var $elm$svg$Svg$circle = $elm$svg$Svg$trustedNode('circle');
 var $author$project$Card$isBacklog = function (card) {
 	return card.processState.inBacklogColumn;
-};
-var $author$project$Card$isDone = function (card) {
-	return card.processState.inDoneColumn;
 };
 var $author$project$Card$isIcebox = function (card) {
 	return card.processState.inIceboxColumn;

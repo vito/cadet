@@ -541,7 +541,11 @@ viewCardIcon card =
             }
 
     else if Card.isOpen card then
-        Octicons.issueOpened { octiconOpts | color = Colors.green }
+        if Card.isDone card then
+            Octicons.issueClosed { octiconOpts | color = Colors.green }
+
+        else
+            Octicons.issueOpened { octiconOpts | color = Colors.green }
 
     else
         Octicons.issueClosed { octiconOpts | color = Colors.red }
