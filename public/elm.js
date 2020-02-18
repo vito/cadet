@@ -5747,7 +5747,7 @@ var $author$project$Model$empty = function (key) {
 		allLabels: $elm$core$Dict$empty,
 		anticipatedCards: $elm$core$Set$empty,
 		archive: _List_Nil,
-		assignOnlyUserDrag: $author$project$Drag$init,
+		assignOnlyUsersDrag: $author$project$Drag$init,
 		assignUserDrag: $author$project$Drag$init,
 		assignableUsers: _List_Nil,
 		baseGraphFilter: $elm$core$Maybe$Nothing,
@@ -7800,41 +7800,66 @@ var $elm$core$List$filter = F2(
 			_List_Nil,
 			list);
 	});
-var $author$project$Main$addAssignment = F2(
-	function (user, mp) {
+var $elm$core$List$any = F2(
+	function (isOkay, list) {
+		any:
+		while (true) {
+			if (!list.b) {
+				return false;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				if (isOkay(x)) {
+					return true;
+				} else {
+					var $temp$isOkay = isOkay,
+						$temp$list = xs;
+					isOkay = $temp$isOkay;
+					list = $temp$list;
+					continue any;
+				}
+			}
+		}
+	});
+var $elm$core$List$member = F2(
+	function (x, xs) {
+		return A2(
+			$elm$core$List$any,
+			function (a) {
+				return _Utils_eq(a, x);
+			},
+			xs);
+	});
+var $author$project$Main$addAssignments = F2(
+	function (users, mp) {
+		var userIds = A2(
+			$elm$core$List$map,
+			function ($) {
+				return $.id;
+			},
+			users);
+		var beingAssigned = function (_v1) {
+			var id = _v1.id;
+			return A2($elm$core$List$member, id, userIds);
+		};
 		if (mp.$ === 'Nothing') {
 			return $elm$core$Maybe$Just(
-				{
-					assign: _List_fromArray(
-						[user]),
-					unassign: _List_Nil
-				});
+				{assign: users, unassign: _List_Nil});
 		} else {
 			var p = mp.a;
 			return $elm$core$Maybe$Just(
 				_Utils_update(
 					p,
 					{
-						assign: A2(
-							$elm$core$List$cons,
-							user,
+						assign: _Utils_ap(
+							users,
 							A2(
 								$elm$core$List$filter,
-								A2(
-									$elm$core$Basics$composeL,
-									$elm$core$Basics$neq(user.id),
-									function ($) {
-										return $.id;
-									}),
+								A2($elm$core$Basics$composeL, $elm$core$Basics$not, beingAssigned),
 								p.assign)),
 						unassign: A2(
 							$elm$core$List$filter,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Basics$neq(user.id),
-								function ($) {
-									return $.id;
-								}),
+							A2($elm$core$Basics$composeL, $elm$core$Basics$not, beingAssigned),
 							p.unassign)
 					}));
 		}
@@ -7919,27 +7944,6 @@ var $elm$core$Tuple$mapSecond = F2(
 	});
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$argumentsAST = $elm$core$List$map(
 	$elm$core$Tuple$mapSecond($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getAST));
-var $elm$core$List$any = F2(
-	function (isOkay, list) {
-		any:
-		while (true) {
-			if (!list.b) {
-				return false;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				if (isOkay(x)) {
-					return true;
-				} else {
-					var $temp$isOkay = isOkay,
-						$temp$list = xs;
-					isOkay = $temp$isOkay;
-					list = $temp$list;
-					continue any;
-				}
-			}
-		}
-	});
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$VariableDefinition = function (a) {
 	return {$: 'VariableDefinition', a: a};
 };
@@ -10559,15 +10563,6 @@ var $author$project$Main$addUnassignment = F2(
 		}
 	});
 var $author$project$Model$AddLabelOperation = {$: 'AddLabelOperation'};
-var $elm$core$List$member = F2(
-	function (x, xs) {
-		return A2(
-			$elm$core$List$any,
-			function (a) {
-				return _Utils_eq(a, x);
-			},
-			xs);
-	});
 var $author$project$Label$cardHasLabel = F3(
 	function (model, name, card) {
 		var mlabelId = A2(
@@ -11687,6 +11682,14 @@ var $author$project$CardView$projectProgress = F2(
 		var toDos = countPurpose($author$project$GitHub$ProjectColumnPurposeToDo);
 		return _Utils_Tuple3(toDos, inProgresses, dones);
 	});
+var $author$project$Main$projectProgress = F2(
+	function (model, project) {
+		var _v0 = A2($author$project$CardView$projectProgress, model, project);
+		var toDos = _v0.a;
+		var inProgresses = _v0.b;
+		var dones = _v0.c;
+		return dones / ((toDos + inProgresses) + dones);
+	});
 var $author$project$Main$reflectPendingAssignments = F2(
 	function (model, card) {
 		var newAssignees = function () {
@@ -11718,14 +11721,6 @@ var $author$project$Main$reflectPendingAssignments = F2(
 			{assignees: newAssignees});
 	});
 var $author$project$Main$computeProjectLanes = function (model) {
-	var progress = function (_v2) {
-		var project = _v2.project;
-		var _v1 = A2($author$project$CardView$projectProgress, model, project);
-		var toDos = _v1.a;
-		var inProgresses = _v1.b;
-		var dones = _v1.c;
-		return dones / ((toDos + inProgresses) + dones);
-	};
 	var isInProgress = function (_v0) {
 		var purpose = _v0.purpose;
 		return _Utils_eq(
@@ -11768,7 +11763,12 @@ var $author$project$Main$computeProjectLanes = function (model) {
 			inFlight: $elm$core$List$reverse(
 				A2(
 					$elm$core$List$sortBy,
-					progress,
+					A2(
+						$elm$core$Basics$composeL,
+						$author$project$Main$projectProgress(model),
+						function ($) {
+							return $.project;
+						}),
 					A2(
 						$elm$core$List$filterMap,
 						inFlightCards,
@@ -15215,9 +15215,9 @@ var $author$project$Effects$updateLabel = F4(
 			});
 	});
 var $author$project$Main$pairUpUser = F2(
-	function (target, _v36) {
-		var model = _v36.a;
-		var msg = _v36.b;
+	function (target, _v37) {
+		var model = _v37.a;
+		var msg = _v37.b;
 		var lastPaired = F2(
 			function (userA, userB) {
 				return A2(
@@ -15229,32 +15229,32 @@ var $author$project$Main$pairUpUser = F2(
 			});
 		var pickBestUser = F2(
 			function (user, cur) {
-				var _v39 = _Utils_Tuple2(
+				var _v40 = _Utils_Tuple2(
 					A2(lastPaired, target, user),
 					A2(lastPaired, target, cur));
-				if (_v39.a.$ === 'Just') {
-					if (_v39.b.$ === 'Just') {
-						var tsUser = _v39.a.a;
-						var tsCur = _v39.b.a;
+				if (_v40.a.$ === 'Just') {
+					if (_v40.b.$ === 'Just') {
+						var tsUser = _v40.a.a;
+						var tsCur = _v40.b.a;
 						return (_Utils_cmp(
 							$elm$time$Time$posixToMillis(tsCur),
 							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
 					} else {
-						var _v40 = _v39.b;
+						var _v41 = _v40.b;
 						return cur;
 					}
 				} else {
-					if (_v39.b.$ === 'Just') {
-						var _v41 = _v39.a;
+					if (_v40.b.$ === 'Just') {
+						var _v42 = _v40.a;
 						return user;
 					} else {
-						var _v42 = _v39.a;
-						var _v43 = _v39.b;
+						var _v43 = _v40.a;
+						var _v44 = _v40.b;
 						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
 					}
 				}
 			});
-		var _v37 = A2(
+		var _v38 = A2(
 			$elm$core$List$partition,
 			A2(
 				$elm$core$Basics$composeL,
@@ -15271,8 +15271,8 @@ var $author$project$Main$pairUpUser = F2(
 					return $.lanes;
 				},
 				model.inFlight));
-		var soloLanes = _v37.a;
-		var pairingLanes = _v37.b;
+		var soloLanes = _v38.a;
+		var pairingLanes = _v38.b;
 		var isPairing = function (user) {
 			return A2(
 				$elm$core$List$any,
@@ -15308,9 +15308,9 @@ var $author$project$Main$pairUpUser = F2(
 							return $.cards;
 						}),
 					soloLanes)));
-		var _v38 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
-		if (_v38.$ === 'Just') {
-			var pair = _v38.a;
+		var _v39 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
+		if (_v39.$ === 'Just') {
+			var pair = _v39.a;
 			return A3(
 				$author$project$Log$debug,
 				'chose',
@@ -15342,11 +15342,8 @@ var $author$project$Main$pairUpUser = F2(
 								},
 								model.inFlight)));
 					return A2(
-						$author$project$Main$replay,
-						A2(
-							$elm$core$List$map,
-							$author$project$Model$AssignUser(target),
-							activeCards),
+						$author$project$Main$update,
+						A2($author$project$Model$AssignUser, target, activeCards),
 						model);
 				}());
 		} else {
@@ -15363,26 +15360,6 @@ var $author$project$Main$pairUpUser = F2(
 						pairingPool)),
 				_Utils_Tuple2(model, msg));
 		}
-	});
-var $author$project$Main$replay = F2(
-	function (msgs, model) {
-		return A3(
-			$elm$core$List$foldl,
-			F2(
-				function (msg, _v34) {
-					var m = _v34.a;
-					var cmd = _v34.b;
-					var _v35 = A2($author$project$Main$update, msg, m);
-					var nm = _v35.a;
-					var ncmd = _v35.b;
-					return _Utils_Tuple2(
-						nm,
-						$elm$core$Platform$Cmd$batch(
-							_List_fromArray(
-								[cmd, ncmd])));
-				}),
-			_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
-			msgs);
 	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
@@ -15529,21 +15506,36 @@ var $author$project$Main$update = F2(
 					}
 				case 'AssignUser':
 					var user = msg.a;
-					var card = msg.b;
+					var cards = msg.b;
 					return A3(
 						$author$project$Log$debug,
 						'assigning',
-						_Utils_Tuple2(user.login, card.id),
+						_Utils_Tuple2(
+							user.login,
+							A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.id;
+								},
+								cards)),
 						_Utils_Tuple2(
 							$author$project$Main$computeProjectLanes(
 								_Utils_update(
 									model,
 									{
 										pendingAssignments: A3(
-											$elm$core$Dict$update,
-											card.id,
-											$author$project$Main$addAssignment(user),
-											model.pendingAssignments)
+											$elm$core$List$foldl,
+											function (_v8) {
+												var id = _v8.id;
+												return A2(
+													$elm$core$Dict$update,
+													id,
+													$author$project$Main$addAssignments(
+														_List_fromArray(
+															[user])));
+											},
+											model.pendingAssignments,
+											cards)
 									})),
 							$elm$core$Platform$Cmd$none));
 				case 'ReassignUserDrag':
@@ -15567,10 +15559,10 @@ var $author$project$Main$update = F2(
 						return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
 					}
 				case 'ReassignUser':
-					var _v9 = msg.a;
-					var user = _v9.a;
-					var unassignCards = _v9.b;
-					var assignCard = msg.b;
+					var _v10 = msg.a;
+					var user = _v10.a;
+					var unassignCards = _v10.b;
+					var assignCards = msg.b;
 					return A3(
 						$author$project$Log$debug,
 						'reassigning',
@@ -15582,29 +15574,51 @@ var $author$project$Main$update = F2(
 									return $.id;
 								},
 								unassignCards),
-							assignCard.id),
-						_Utils_Tuple2(
-							$author$project$Main$computeProjectLanes(
-								_Utils_update(
-									model,
-									{
-										pendingAssignments: A3(
+							A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.id;
+								},
+								assignCards)),
+						function () {
+							var withUnassignments = function (pas) {
+								return A3(
+									$elm$core$List$foldl,
+									function (_v12) {
+										var id = _v12.id;
+										return A2(
 											$elm$core$Dict$update,
-											assignCard.id,
-											$author$project$Main$addAssignment(user),
-											A3(
-												$elm$core$List$foldl,
-												function (_v10) {
-													var id = _v10.id;
-													return A2(
-														$elm$core$Dict$update,
-														id,
-														$author$project$Main$addUnassignment(user));
-												},
-												model.pendingAssignments,
-												unassignCards))
-									})),
-							$elm$core$Platform$Cmd$none));
+											id,
+											$author$project$Main$addUnassignment(user));
+									},
+									pas,
+									unassignCards);
+							};
+							var withAssignments = function (pas) {
+								return A3(
+									$elm$core$List$foldl,
+									function (_v11) {
+										var id = _v11.id;
+										return A2(
+											$elm$core$Dict$update,
+											id,
+											$author$project$Main$addAssignments(
+												_List_fromArray(
+													[user])));
+									},
+									pas,
+									assignCards);
+							};
+							return _Utils_Tuple2(
+								$author$project$Main$computeProjectLanes(
+									_Utils_update(
+										model,
+										{
+											pendingAssignments: withUnassignments(
+												withAssignments(model.pendingAssignments))
+										})),
+								$elm$core$Platform$Cmd$none);
+						}());
 				case 'UnassignUser':
 					var user = msg.a;
 					var cards = msg.b;
@@ -15626,8 +15640,8 @@ var $author$project$Main$update = F2(
 									{
 										pendingAssignments: A3(
 											$elm$core$List$foldl,
-											function (_v11) {
-												var id = _v11.id;
+											function (_v13) {
+												var id = _v13.id;
 												return A2(
 													$elm$core$Dict$update,
 													id,
@@ -15637,19 +15651,19 @@ var $author$project$Main$update = F2(
 											cards)
 									})),
 							$elm$core$Platform$Cmd$none));
-				case 'AssignOnlyUserDrag':
+				case 'AssignOnlyUsersDrag':
 					var subMsg = msg.a;
-					var dragModel = A2($author$project$Drag$update, subMsg, model.assignOnlyUserDrag);
+					var dragModel = A2($author$project$Drag$update, subMsg, model.assignOnlyUsersDrag);
 					var newModel = _Utils_update(
 						model,
-						{assignOnlyUserDrag: dragModel});
+						{assignOnlyUsersDrag: dragModel});
 					if (dragModel.$ === 'Dropping') {
 						var state = dragModel.a;
 						var $temp$msg = state.msg,
 							$temp$model = _Utils_update(
 							newModel,
 							{
-								assignOnlyUserDrag: $author$project$Drag$complete(newModel.assignOnlyUserDrag)
+								assignOnlyUsersDrag: $author$project$Drag$complete(newModel.assignOnlyUsersDrag)
 							});
 						msg = $temp$msg;
 						model = $temp$model;
@@ -15657,22 +15671,34 @@ var $author$project$Main$update = F2(
 					} else {
 						return _Utils_Tuple2(newModel, $elm$core$Platform$Cmd$none);
 					}
-				case 'AssignOnlyUser':
+				case 'AssignOnlyUsers':
 					var card = msg.a;
-					var user = msg.b;
+					var users = msg.b;
 					return A3(
 						$author$project$Log$debug,
 						'assigning',
-						_Utils_Tuple2(user.login, card.id),
+						_Utils_Tuple2(
+							A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.login;
+								},
+								users),
+							card.id),
 						function () {
+							var userIds = A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.id;
+								},
+								users);
+							var beingAssigned = function (_v15) {
+								var id = _v15.id;
+								return A2($elm$core$List$member, id, userIds);
+							};
 							var otherAssignees = A2(
 								$elm$core$List$filter,
-								A2(
-									$elm$core$Basics$composeL,
-									$elm$core$Basics$neq(user.id),
-									function ($) {
-										return $.id;
-									}),
+								A2($elm$core$Basics$composeL, $elm$core$Basics$not, beingAssigned),
 								card.assignees);
 							return _Utils_Tuple2(
 								$author$project$Main$computeProjectLanes(
@@ -15682,7 +15708,7 @@ var $author$project$Main$update = F2(
 											pendingAssignments: A3(
 												$elm$core$Dict$update,
 												card.id,
-												$author$project$Main$addAssignment(user),
+												$author$project$Main$addAssignments(users),
 												A3(
 													$elm$core$List$foldl,
 													function (other) {
@@ -15743,12 +15769,12 @@ var $author$project$Main$update = F2(
 						toAssign);
 				case 'CommitAssignments':
 					var cardAssignments = F2(
-						function (cardId, _v15) {
-							var assign = _v15.assign;
-							var unassign = _v15.unassign;
-							var _v14 = _Utils_Tuple2(assign, unassign);
-							if (!_v14.a.b) {
-								if (!_v14.b.b) {
+						function (cardId, _v18) {
+							var assign = _v18.assign;
+							var unassign = _v18.unassign;
+							var _v17 = _Utils_Tuple2(assign, unassign);
+							if (!_v17.a.b) {
+								if (!_v17.b.b) {
 									return _List_Nil;
 								} else {
 									return _List_fromArray(
@@ -15757,7 +15783,7 @@ var $author$project$Main$update = F2(
 										]);
 								}
 							} else {
-								if (!_v14.b.b) {
+								if (!_v17.b.b) {
 									return _List_fromArray(
 										[
 											A3($author$project$Effects$assignUsers, model, assign, cardId)
@@ -15810,7 +15836,7 @@ var $author$project$Main$update = F2(
 									}
 								}());
 						} else {
-							var _v17 = msg.a.a;
+							var _v20 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15930,13 +15956,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v18 = msg.a;
-					var event = _v18.a;
-					var data = _v18.b;
-					var indexStr = _v18.c;
-					var _v19 = $elm$core$String$toInt(indexStr);
-					if (_v19.$ === 'Just') {
-						var index = _v19.a;
+					var _v21 = msg.a;
+					var event = _v21.a;
+					var data = _v21.b;
+					var indexStr = _v21.c;
+					var _v22 = $elm$core$String$toInt(indexStr);
+					if (_v22.$ === 'Just') {
+						var index = _v22.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -16061,12 +16087,12 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v20, r, acc) {
+							function (_v23, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v21 = A2(
+								var _v24 = A2(
 									$elm$core$List$filter,
 									A2(
 										$elm$core$Basics$composeL,
@@ -16075,13 +16101,13 @@ var $author$project$Main$update = F2(
 											return $.name;
 										}),
 									labels);
-								if (!_v21.b) {
+								if (!_v24.b) {
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$createLabel, model, r, newLabel),
 										acc);
 								} else {
-									var label = _v21.a;
+									var label = _v24.a;
 									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
 										$elm$core$List$cons,
 										A4($author$project$Effects$updateLabel, model, r, label, newLabel),
@@ -16122,19 +16148,19 @@ var $author$project$Main$update = F2(
 					var cmds = A3(
 						$elm$core$Dict$foldl,
 						F3(
-							function (_v22, r, acc) {
+							function (_v25, r, acc) {
 								var labels = A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
 									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v23 = A2(
+								var _v26 = A2(
 									$elm$core$List$filter,
 									$author$project$Main$matchesLabel(label),
 									labels);
-								if (!_v23.b) {
+								if (!_v26.b) {
 									return acc;
 								} else {
-									var repoLabel = _v23.a;
+									var repoLabel = _v26.a;
 									return A2(
 										$elm$core$List$cons,
 										A3($author$project$Effects$deleteLabel, model, r, repoLabel),
@@ -16207,7 +16233,7 @@ var $author$project$Main$update = F2(
 								editingLabels: A2(
 									$elm$core$Dict$map,
 									F2(
-										function (_v24, label) {
+										function (_v27, label) {
 											return _Utils_update(
 												label,
 												{color: newColor});
@@ -16221,14 +16247,14 @@ var $author$project$Main$update = F2(
 						$elm$core$Platform$Cmd$none);
 				case 'RandomizeLabelColor':
 					var label = msg.a;
-					var _v25 = A2(
+					var _v28 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(label),
 						model.editingLabels);
-					if (_v25.$ === 'Nothing') {
+					if (_v28.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v25.a;
+						var newLabel = _v28.a;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
@@ -16243,28 +16269,28 @@ var $author$project$Main$update = F2(
 					}
 				case 'EditLabel':
 					var oldLabel = msg.a;
-					var _v26 = A2(
+					var _v29 = A2(
 						$elm$core$Dict$get,
 						$author$project$Main$labelKey(oldLabel),
 						model.editingLabels);
-					if (_v26.$ === 'Nothing') {
+					if (_v29.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var newLabel = _v26.a;
+						var newLabel = _v29.a;
 						var cmds = A3(
 							$elm$core$Dict$foldl,
 							F3(
-								function (_v27, r, acc) {
+								function (_v30, r, acc) {
 									var labels = A2(
 										$elm$core$Maybe$withDefault,
 										_List_Nil,
 										A2($elm$core$Dict$get, r.id, model.repoLabels));
-									var _v28 = A2(
+									var _v31 = A2(
 										$elm$core$List$filter,
 										$author$project$Main$matchesLabel(oldLabel),
 										labels);
-									if (_v28.b) {
-										var repoLabel = _v28.a;
+									if (_v31.b) {
+										var repoLabel = _v31.a;
 										return A2(
 											$elm$core$List$cons,
 											A4($author$project$Effects$updateLabel, model, r, repoLabel, newLabel),
@@ -16342,9 +16368,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v29 = card.content;
-					if (_v29.$ === 'IssueCardContent') {
-						var issue = _v29.a;
+					var _v32 = card.content;
+					if (_v32.$ === 'IssueCardContent') {
+						var issue = _v32.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16354,7 +16380,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v29.a;
+						var pr = _v32.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16367,14 +16393,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v30 = card.content;
-					if (_v30.$ === 'IssueCardContent') {
-						var issue = _v30.a;
+					var _v33 = card.content;
+					if (_v33.$ === 'IssueCardContent') {
+						var issue = _v33.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v30.a;
+						var pr = _v33.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16514,14 +16540,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v31 = A2(
+							var _v34 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v31 === '') {
+							if (_v34 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v31;
+								var note = _v34;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -16587,14 +16613,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v32 = A2(
+							var _v35 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v32 === '') {
+							if (_v35 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v32;
+								var note = _v35;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -25223,21 +25249,25 @@ var $author$project$Main$viewLabelsPage = function (model) {
 				labelRows)
 			]));
 };
-var $author$project$Model$AssignOnlyUserDrag = function (a) {
-	return {$: 'AssignOnlyUserDrag', a: a};
+var $author$project$Model$AssignOnlyUsers = F2(
+	function (a, b) {
+		return {$: 'AssignOnlyUsers', a: a, b: b};
+	});
+var $author$project$Model$AssignOnlyUsersDrag = function (a) {
+	return {$: 'AssignOnlyUsersDrag', a: a};
 };
+var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
 var $author$project$Model$AssignUserDrag = function (a) {
 	return {$: 'AssignUserDrag', a: a};
 };
-var $author$project$Model$CommitAssignments = {$: 'CommitAssignments'};
-var $author$project$Model$ReassignUser = F2(
-	function (a, b) {
-		return {$: 'ReassignUser', a: a, b: b};
-	});
-var $author$project$Model$ReassignUserDrag = function (a) {
-	return {$: 'ReassignUserDrag', a: a};
+var $author$project$Model$SetUserIn = function (a) {
+	return {$: 'SetUserIn', a: a};
 };
-var $author$project$Model$ResetAssignments = {$: 'ResetAssignments'};
+var $author$project$Model$SetUserOut = function (a) {
+	return {$: 'SetUserOut', a: a};
+};
+var $capitalist$elm_octicons$Octicons$circleSlashPath = 'M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M7,2.3 C8.3,2.3 9.5,2.74 10.47,3.47 L2.47,11.47 C1.74,10.5 1.3,9.3 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,13.71 C5.7,13.71 4.5,13.27 3.53,12.54 L11.53,4.54 C12.26,5.51 12.7,6.71 12.7,8.01 C12.7,11.15 10.14,13.71 7,13.71 L7,13.71 Z';
+var $capitalist$elm_octicons$Octicons$circleSlash = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$circleSlashPath, '0 0 14 16', 'circleSlash');
 var $author$project$Drag$droppable = F4(
 	function (model, wrap, candidate, view) {
 		var isOver = function () {
@@ -25291,21 +25321,6 @@ var $author$project$Drag$droppable = F4(
 			_List_fromArray(
 				[view]));
 	});
-var $capitalist$elm_octicons$Octicons$listUnorderedPath = 'M2,13 C2,13.59 2,14 1.41,14 L0.59,14 C0,14 0,13.59 0,13 C0,12.41 0,12 0.59,12 L1.4,12 C1.99,12 1.99,12.41 1.99,13 L2,13 Z M4.59,4 L11.4,4 C11.99,4 11.99,3.59 11.99,3 C11.99,2.41 11.99,2 11.4,2 L4.59,2 C4,2 4,2.41 4,3 C4,3.59 4,4 4.59,4 L4.59,4 Z M1.41,7 L0.59,7 C0,7 0,7.41 0,8 C0,8.59 0,9 0.59,9 L1.4,9 C1.99,9 1.99,8.59 1.99,8 C1.99,7.41 1.99,7 1.4,7 L1.41,7 Z M1.41,2 L0.59,2 C0,2 0,2.41 0,3 C0,3.59 0,4 0.59,4 L1.4,4 C1.99,4 1.99,3.59 1.99,3 C1.99,2.41 1.99,2 1.4,2 L1.41,2 Z M11.41,7 L4.59,7 C4,7 4,7.41 4,8 C4,8.59 4,9 4.59,9 L11.4,9 C11.99,9 11.99,8.59 11.99,8 C11.99,7.41 11.99,7 11.4,7 L11.41,7 Z M11.41,12 L4.59,12 C4,12 4,12.41 4,13 C4,13.59 4,14 4.59,14 L11.4,14 C11.99,14 11.99,13.59 11.99,13 C11.99,12.41 11.99,12 11.4,12 L11.41,12 Z';
-var $capitalist$elm_octicons$Octicons$listUnordered = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$listUnorderedPath, '0 0 12 16', 'listUnordered');
-var $author$project$Model$AssignOnlyUser = F2(
-	function (a, b) {
-		return {$: 'AssignOnlyUser', a: a, b: b};
-	});
-var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
-var $author$project$Model$SetUserIn = function (a) {
-	return {$: 'SetUserIn', a: a};
-};
-var $author$project$Model$SetUserOut = function (a) {
-	return {$: 'SetUserOut', a: a};
-};
-var $capitalist$elm_octicons$Octicons$circleSlashPath = 'M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z M7,2.3 C8.3,2.3 9.5,2.74 10.47,3.47 L2.47,11.47 C1.74,10.5 1.3,9.3 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,13.71 C5.7,13.71 4.5,13.27 3.53,12.54 L11.53,4.54 C12.26,5.51 12.7,6.71 12.7,8.01 C12.7,11.15 10.14,13.71 7,13.71 L7,13.71 Z';
-var $capitalist$elm_octicons$Octicons$circleSlash = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$circleSlashPath, '0 0 14 16', 'circleSlash');
 var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
 var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
 var $author$project$Main$viewAssignableUsers = function (model) {
@@ -25337,21 +25352,19 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 			0,
 			model.inFlight);
 	};
-	var assignableUsers = A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeL,
-			$elm$core$Basics$eq(0),
-			currentAssignments),
-		model.assignableUsers);
+	var assignableUsers = A2($elm$core$List$sortBy, currentAssignments, model.assignableUsers);
 	var assignDropCandidate = function (user) {
-		return {msgFunc: $author$project$Model$AssignOnlyUser, target: user};
+		return {
+			msgFunc: $author$project$Model$AssignOnlyUsers,
+			target: _List_fromArray(
+				[user])
+		};
 	};
 	var viewDraggableActor = function (user) {
 		return A4(
 			$author$project$Drag$droppable,
-			model.assignOnlyUserDrag,
-			$author$project$Model$AssignOnlyUserDrag,
+			model.assignOnlyUsersDrag,
+			$author$project$Model$AssignOnlyUsersDrag,
 			assignDropCandidate(user),
 			A4(
 				$author$project$Drag$draggable,
@@ -25395,7 +25408,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('dashboard-pane side-pane')
+				$elm$html$Html$Attributes$class('assignable-users')
 			]),
 		_List_fromArray(
 			[
@@ -25452,63 +25465,29 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 					]) : A2($elm$core$List$map, viewDraggableActor, assignableUsers))
 			]));
 };
-var $author$project$Model$UnassignUser = F2(
+var $author$project$Model$CommitAssignments = {$: 'CommitAssignments'};
+var $author$project$Model$ResetAssignments = {$: 'ResetAssignments'};
+var $capitalist$elm_octicons$Octicons$listUnorderedPath = 'M2,13 C2,13.59 2,14 1.41,14 L0.59,14 C0,14 0,13.59 0,13 C0,12.41 0,12 0.59,12 L1.4,12 C1.99,12 1.99,12.41 1.99,13 L2,13 Z M4.59,4 L11.4,4 C11.99,4 11.99,3.59 11.99,3 C11.99,2.41 11.99,2 11.4,2 L4.59,2 C4,2 4,2.41 4,3 C4,3.59 4,4 4.59,4 L4.59,4 Z M1.41,7 L0.59,7 C0,7 0,7.41 0,8 C0,8.59 0,9 0.59,9 L1.4,9 C1.99,9 1.99,8.59 1.99,8 C1.99,7.41 1.99,7 1.4,7 L1.41,7 Z M1.41,2 L0.59,2 C0,2 0,2.41 0,3 C0,3.59 0,4 0.59,4 L1.4,4 C1.99,4 1.99,3.59 1.99,3 C1.99,2.41 1.99,2 1.4,2 L1.41,2 Z M11.41,7 L4.59,7 C4,7 4,7.41 4,8 C4,8.59 4,9 4.59,9 L11.4,9 C11.99,9 11.99,8.59 11.99,8 C11.99,7.41 11.99,7 11.4,7 L11.41,7 Z M11.41,12 L4.59,12 C4,12 4,12.41 4,13 C4,13.59 4,14 4.59,14 L11.4,14 C11.99,14 11.99,13.59 11.99,13 C11.99,12.41 11.99,12 11.4,12 L11.41,12 Z';
+var $capitalist$elm_octicons$Octicons$listUnordered = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$listUnorderedPath, '0 0 12 16', 'listUnordered');
+var $author$project$Model$ReassignUser = F2(
 	function (a, b) {
-		return {$: 'UnassignUser', a: a, b: b};
+		return {$: 'ReassignUser', a: a, b: b};
 	});
-var $author$project$Main$viewLaneAssignees = F3(
-	function (model, assignees, cards) {
-		var assignDropCandidate = function (user) {
-			return {msgFunc: $author$project$Model$AssignOnlyUser, target: user};
+var $author$project$Model$ReassignUserDrag = function (a) {
+	return {$: 'ReassignUserDrag', a: a};
+};
+var $author$project$Main$viewAssignableCard = F2(
+	function (model, card) {
+		var reassignDropCandidate = {
+			msgFunc: $author$project$Model$ReassignUser,
+			target: _List_fromArray(
+				[card])
 		};
-		var viewDraggableActor = function (user) {
-			return A4(
-				$author$project$Drag$droppable,
-				model.assignOnlyUserDrag,
-				$author$project$Model$AssignOnlyUserDrag,
-				assignDropCandidate(user),
-				A4(
-					$author$project$Drag$draggable,
-					model.reassignUserDrag,
-					$author$project$Model$ReassignUserDrag,
-					_Utils_Tuple2(user, cards),
-					A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('remove-assignee'),
-								$elm$html$Html$Events$onClick(
-								A2($author$project$Model$UnassignUser, user, cards))
-							]),
-						_List_fromArray(
-							[
-								$author$project$CardView$viewCardActor(user)
-							]))));
+		var assignDropCandidate = {
+			msgFunc: $author$project$Model$AssignUser,
+			target: _List_fromArray(
+				[card])
 		};
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('lane-actors')
-				]),
-			$elm$core$List$isEmpty(assignees) ? _List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-actor actor-placeholder')
-						]),
-					_List_fromArray(
-						[
-							$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts)
-						]))
-				]) : A2($elm$core$List$map, viewDraggableActor, assignees));
-	});
-var $author$project$Main$viewPairsPage = function (model) {
-	var viewDroppableCard = function (card) {
-		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: card};
-		var assignDropCandidate = {msgFunc: $author$project$Model$AssignUser, target: card};
 		return A4(
 			$author$project$Drag$droppable,
 			model.reassignUserDrag,
@@ -25521,81 +25500,163 @@ var $author$project$Main$viewPairsPage = function (model) {
 				assignDropCandidate,
 				A4(
 					$author$project$Drag$draggable,
-					model.assignOnlyUserDrag,
-					$author$project$Model$AssignOnlyUserDrag,
+					model.assignOnlyUsersDrag,
+					$author$project$Model$AssignOnlyUsersDrag,
 					card,
 					A3($author$project$CardView$viewCard, model, _List_Nil, card))));
-	};
-	var viewProjectLanes = function (_v1) {
-		var project = _v1.project;
-		var lanes = _v1.lanes;
+	});
+var $author$project$Model$UnassignUser = F2(
+	function (a, b) {
+		return {$: 'UnassignUser', a: a, b: b};
+	});
+var $author$project$Main$viewAssignedUser = F4(
+	function (model, cards, user, html) {
+		return A4(
+			$author$project$Drag$draggable,
+			model.reassignUserDrag,
+			$author$project$Model$ReassignUserDrag,
+			_Utils_Tuple2(user, cards),
+			A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('remove-assignee'),
+						$elm$html$Html$Events$onClick(
+						A2($author$project$Model$UnassignUser, user, cards))
+					]),
+				_List_fromArray(
+					[html])));
+	});
+var $author$project$Main$viewLaneUsers = F3(
+	function (model, users, cards) {
+		var viewLaneActor = function (user) {
+			return A4(
+				$author$project$Main$viewAssignedUser,
+				model,
+				cards,
+				user,
+				A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('lane-user')
+						]),
+					_List_fromArray(
+						[
+							$author$project$CardView$viewCardActor(user),
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('user-name')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2($elm$core$Maybe$withDefault, user.login, user.name))
+								]))
+						])));
+		};
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
-					$elm$html$Html$Attributes$class('project-lane')
+					$elm$html$Html$Attributes$class('project-lane-users')
 				]),
-			_List_fromArray(
-				[
+			_Utils_ap(
+				A2($elm$core$List$map, viewLaneActor, users),
+				($elm$core$List$length(users) < 2) ? A2(
+					$elm$core$List$repeat,
+					2 - $elm$core$List$length(users),
 					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('project-title')
-						]),
-					_List_fromArray(
-						[
-							$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
-							A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('project-name'),
-									$elm$html$Html$Attributes$href('/projects/' + project.id)
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(project.name)
-								]))
-						])),
-					A2($author$project$CardView$viewProjectBar, model, project),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('card-lanes')
-						]),
-					A2(
-						$elm$core$List$map,
-						function (_v0) {
-							var assignees = _v0.assignees;
-							var cards = _v0.cards;
-							return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('lane-user placeholder')
+							]),
+						_List_fromArray(
+							[
+								A2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('card-lane')
+										$elm$html$Html$Attributes$class('card-actor actor-placeholder')
 									]),
 								_List_fromArray(
 									[
-										A3($author$project$Main$viewLaneAssignees, model, assignees, cards),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('cards')
-											]),
-										A2($elm$core$List$map, viewDroppableCard, cards))
-									]));
-						},
-						lanes))
-				]));
-	};
+										$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts)
+									]))
+							]))) : _List_Nil));
+	});
+var $author$project$Main$viewProjectLane = F4(
+	function (model, project, i, _v0) {
+		var assignees = _v0.assignees;
+		var cards = _v0.cards;
+		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: cards};
+		var assignOnlyUsersDropCandidate = {msgFunc: $author$project$Model$AssignOnlyUsers, target: assignees};
+		var assignDropCandidate = {msgFunc: $author$project$Model$AssignUser, target: cards};
+		return A4(
+			$author$project$Drag$droppable,
+			model.assignUserDrag,
+			$author$project$Model$AssignUserDrag,
+			assignDropCandidate,
+			A4(
+				$author$project$Drag$droppable,
+				model.reassignUserDrag,
+				$author$project$Model$ReassignUserDrag,
+				reassignDropCandidate,
+				A4(
+					$author$project$Drag$droppable,
+					model.assignOnlyUsersDrag,
+					$author$project$Model$AssignOnlyUsersDrag,
+					assignOnlyUsersDropCandidate,
+					A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('project-lane'),
+								$elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2(
+										'even',
+										!A2($elm$core$Basics$modBy, 2, i)),
+										_Utils_Tuple2(
+										'odd',
+										A2($elm$core$Basics$modBy, 2, i) === 1)
+									]))
+							]),
+						_List_fromArray(
+							[
+								A3($author$project$Main$viewLaneUsers, model, assignees, cards),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('project-lane-cards')
+									]),
+								_List_fromArray(
+									[
+										A3($author$project$CardView$viewProjectCard, model, _List_Nil, project)
+									])),
+								A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('project-lane-cards')
+									]),
+								A2(
+									$elm$core$List$map,
+									$author$project$Main$viewAssignableCard(model),
+									cards))
+							])))));
+	});
+var $author$project$Main$viewInFlightLanes = function (model) {
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
 			[
-				$elm$html$Html$Attributes$class('page-content dashboard')
+				$elm$html$Html$Attributes$class('in-flight-lanes')
 			]),
 		_List_fromArray(
 			[
@@ -25603,76 +25664,75 @@ var $author$project$Main$viewPairsPage = function (model) {
 				$elm$html$Html$div,
 				_List_fromArray(
 					[
-						$elm$html$Html$Attributes$class('dashboard-pane')
+						$elm$html$Html$Attributes$class('page-header')
 					]),
 				_List_fromArray(
 					[
+						$capitalist$elm_octicons$Octicons$listUnordered($author$project$Main$octiconOpts),
+						$elm$html$Html$text('Lanes'),
 						A2(
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('page-header')
+								$elm$html$Html$Attributes$class('lane-controls buttons')
 							]),
-						_List_fromArray(
+						$elm$core$Dict$isEmpty(model.pendingAssignments) ? _List_Nil : _List_fromArray(
 							[
-								$capitalist$elm_octicons$Octicons$listUnordered($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Lanes'),
 								A2(
-								$elm$html$Html$div,
+								$elm$html$Html$span,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('lane-controls buttons')
+										$elm$html$Html$Attributes$class('button apply'),
+										$elm$html$Html$Events$onClick($author$project$Model$CommitAssignments)
 									]),
-								$elm$core$Dict$isEmpty(model.pendingAssignments) ? _List_Nil : _List_fromArray(
+								_List_fromArray(
 									[
-										A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('button apply'),
-												$elm$html$Html$Events$onClick($author$project$Model$CommitAssignments)
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
-												$elm$html$Html$text('apply')
-											])),
-										A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('button cancel'),
-												$elm$html$Html$Events$onClick($author$project$Model$ResetAssignments)
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts),
-												$elm$html$Html$text('cancel')
-											]))
-									]))
-							])),
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('project-lanes')
-							]),
-						function (x) {
-							return _Utils_ap(
-								x,
+										$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
+										$elm$html$Html$text('apply')
+									])),
 								A2(
-									$elm$core$List$repeat,
-									2,
-									A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('project-lanes-hack')
-											]),
-										_List_Nil)));
-						}(
-							A2($elm$core$List$map, viewProjectLanes, model.inFlight)))
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('button cancel'),
+										$elm$html$Html$Events$onClick($author$project$Model$ResetAssignments)
+									]),
+								_List_fromArray(
+									[
+										$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts),
+										$elm$html$Html$text('cancel')
+									]))
+							]))
 					])),
+				function () {
+				var viewProjectLanes = function (_v0) {
+					var project = _v0.project;
+					var lanes = _v0.lanes;
+					return A2(
+						$elm$core$List$indexedMap,
+						A2($author$project$Main$viewProjectLane, model, project),
+						lanes);
+				};
+				return A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('project-lanes')
+						]),
+					A2($elm$core$List$concatMap, viewProjectLanes, model.inFlight));
+			}()
+			]));
+};
+var $author$project$Main$viewPairsPage = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('page-content pair-assignments')
+			]),
+		_List_fromArray(
+			[
+				$author$project$Main$viewInFlightLanes(model),
 				$author$project$Main$viewAssignableUsers(model)
 			]));
 };

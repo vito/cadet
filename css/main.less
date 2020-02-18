@@ -1398,6 +1398,29 @@ a.column-title:hover, .page-header a:hover {
   }
 }
 
+.pair-assignments {
+  padding: 0;
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: 80fr 20fr;
+
+  .in-flight-lanes, .assignable-users {
+    overflow-y: auto;
+  }
+
+  .in-flight-lanes {
+    padding: 20px;
+
+    @media(min-width: @wide-min-width) {
+      padding: 50px;
+    }
+  }
+
+  .assignable-users {
+    padding: 20px;
+  }
+}
+
 .releases, .single-release {
   display: flex;
   flex-direction: row;
@@ -1853,21 +1876,19 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .side-user {
-  font-size: 24px;
-  background: white;
-
   border: 1px solid @gray-200;
-  margin-bottom: 10px;
-
+  border-radius: 10px;
+  background: white;
   color: @gray-900;
+
+  font-size: 24px;
+  line-height: 48px;
+
+  margin-bottom: 10px;
   padding: 5px;
 
   display: flex;
   flex-direction: row;
-  border-radius: 10px;
-
-  line-height: 48px;
-
   position: relative;
 
   .card-actor {
@@ -1964,45 +1985,6 @@ a.column-title:hover, .page-header a:hover {
   margin-bottom: 40px;
 }
 
-.project-lanes {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-between;
-
-  .project-lane {
-    margin-bottom: 50px;
-  }
-
-  .project-lane,
-  .project-lanes-hack {
-    flex-basis: 32%;
-  }
-
-  .project-title {
-    .octicon {
-      margin-right: 8px;
-      width: 17px;
-      margin-top: -3px;
-    }
-
-    .project-name {
-      font-size: 16px;
-      font-weight: 600;
-      line-height: 24px;
-
-      &:hover {
-        color: @blue;
-      }
-    }
-  }
-
-  .progress-bar {
-    width: auto;
-    margin: 10px 0;
-  }
-}
-
 .card-lanes {
   display: flex;
   flex-direction: column;
@@ -2031,6 +2013,7 @@ a.column-title:hover, .page-header a:hover {
 
     .remove-assignee {
       cursor: pointer;
+      display: inline-block;
 
       &:hover .card-actor {
         box-shadow: 0 0 0 2px @red;
@@ -2058,10 +2041,6 @@ a.column-title:hover, .page-header a:hover {
     }
   }
 
-  &.side-lanes .lane-actors {
-    flex-direction: row;
-  }
-
   .droppable.active .card {
     box-shadow: 0 0.1em 0.3em fade(@gray, 30%);
   }
@@ -2069,6 +2048,85 @@ a.column-title:hover, .page-header a:hover {
   .droppable.over .card {
     border-color: @blue !important;
     box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
+  }
+}
+
+.project-lanes {
+  display: flex;
+  flex-direction: column;
+
+  .project-lane {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+
+    padding: 15px;
+    margin: 0 -15px;
+    border-radius: 10px;
+
+    .project-lane-users {
+      display: flex;
+      flex-direction: row;
+
+      .lane-user {
+        display: flex;
+        flex-direction: column;
+
+        border: 1px solid @gray-200;
+        border-radius: 10px;
+        background: white;
+        color: @gray-900;
+
+        margin-right: 10px;
+        margin-bottom: 10px;
+        padding: 5px;
+
+        .card-actor {
+          clear: both;
+          width: 96px;
+          height: 96px;
+          border-radius: 5px;
+        }
+
+        .user-name {
+          display: block;
+          width: 96px;
+          margin-top: 5px;
+          font-size: 16px;
+          text-align: center;
+        }
+      }
+
+      .placeholder {
+        background: transparent;
+        border-color: transparent;
+
+        .actor-placeholder .octicon {
+          width: 32px;
+          height: 32px;
+        }
+      }
+    }
+
+    .project-lane-cards {
+      display: flex;
+      flex-direction: column;
+
+      .card {
+        font-size: 12px;
+        width: 450px;
+        margin-bottom: 12px;
+        margin-right: 12px;
+      }
+    }
+
+    &.odd {
+      background-color: @gray-200;
+
+      .lane-user, .card {
+        border-color: @gray-300;
+      }
+    }
   }
 }
 

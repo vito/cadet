@@ -86,9 +86,9 @@ type alias Model =
 
     -- card dragging in projects
     , projectDrag : Drag.Model CardSource CardDestination Msg
-    , assignUserDrag : Drag.Model GitHub.User Card Msg
-    , reassignUserDrag : Drag.Model ( GitHub.User, List Card ) Card Msg
-    , assignOnlyUserDrag : Drag.Model Card GitHub.User Msg
+    , assignUserDrag : Drag.Model GitHub.User (List Card) Msg
+    , reassignUserDrag : Drag.Model ( GitHub.User, List Card ) (List Card) Msg
+    , assignOnlyUsersDrag : Drag.Model Card (List GitHub.User) Msg
 
     -- sidebar card search/selecting state
     , cardSearch : String
@@ -164,12 +164,12 @@ type Msg
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MoveCardAfter CardSource CardDestination
     | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
-    | AssignUserDrag (Drag.Msg GitHub.User Card Msg)
-    | AssignUser GitHub.User Card
-    | AssignOnlyUserDrag (Drag.Msg Card GitHub.User Msg)
-    | AssignOnlyUser Card GitHub.User
-    | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) Card Msg)
-    | ReassignUser ( GitHub.User, List Card ) Card
+    | AssignUserDrag (Drag.Msg GitHub.User (List Card) Msg)
+    | AssignUser GitHub.User (List Card)
+    | AssignOnlyUsersDrag (Drag.Msg Card (List GitHub.User) Msg)
+    | AssignOnlyUsers Card (List GitHub.User)
+    | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) (List Card) Msg)
+    | ReassignUser ( GitHub.User, List Card ) (List Card)
     | UnassignUser GitHub.User (List Card)
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
     | AssignPairs
@@ -408,7 +408,7 @@ empty key =
     , projectDrag = Drag.init
     , assignUserDrag = Drag.init
     , reassignUserDrag = Drag.init
-    , assignOnlyUserDrag = Drag.init
+    , assignOnlyUsersDrag = Drag.init
     , deletingLabels = Set.empty
     , editingLabels = Dict.empty
     , newLabel = { name = "", color = "ffffff" }
