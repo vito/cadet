@@ -2250,23 +2250,19 @@ viewProjectLane model project i { assignees, cards } =
             , target = assignees
             }
     in
-    Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
-        Drag.droppable model.reassignUserDrag ReassignUserDrag reassignDropCandidate <|
-            Drag.droppable model.assignOnlyUsersDrag AssignOnlyUsersDrag assignOnlyUsersDropCandidate <|
-                Html.div
-                    [ HA.class "project-lane"
-                    , HA.classList
-                        [ ( "even", modBy 2 i == 0 )
-                        , ( "odd", modBy 2 i == 1 )
+    Html.div [ HA.class "project-lane-wrap" ]
+        [ Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
+            Drag.droppable model.reassignUserDrag ReassignUserDrag reassignDropCandidate <|
+                Drag.droppable model.assignOnlyUsersDrag AssignOnlyUsersDrag assignOnlyUsersDropCandidate <|
+                    Html.div [ HA.class "project-lane" ]
+                        [ viewLaneUsers model assignees cards
+                        , Html.div [ HA.class "project-lane-cards" ]
+                            [ CardView.viewProjectCard model [] project
+                            ]
+                        , Html.div [ HA.class "project-lane-cards" ] <|
+                            List.map (viewAssignableCard model) cards
                         ]
-                    ]
-                    [ viewLaneUsers model assignees cards
-                    , Html.div [ HA.class "project-lane-cards" ]
-                        [ CardView.viewProjectCard model [] project
-                        ]
-                    , Html.div [ HA.class "project-lane-cards" ] <|
-                        List.map (viewAssignableCard model) cards
-                    ]
+        ]
 
 
 viewAssignableCard : Model -> Card -> Html Msg
@@ -2324,7 +2320,7 @@ viewAssignableUsers model =
                             Set.member user.id model.outUsers
                     in
                     Html.div
-                        [ HA.class "side-user"
+                        [ HA.class "side-user assignable-user"
                         , HA.classList [ ( "out", isOut ) ]
                         ]
                         [ CardView.viewCardActor user

@@ -2011,14 +2011,6 @@ a.column-title:hover, .page-header a:hover {
     display: flex;
     flex-direction: column;
 
-    .remove-assignee {
-      cursor: pointer;
-      display: inline-block;
-
-      &:hover .card-actor {
-        box-shadow: 0 0 0 2px @red;
-      }
-    }
 
     .card-actor {
       font-size: 10px;
@@ -2097,6 +2089,12 @@ a.column-title:hover, .page-header a:hover {
         }
       }
 
+      .remove-assignee {
+        &:hover .lane-user {
+          border-color: @red;
+        }
+      }
+
       .placeholder {
         background: transparent;
         border-color: transparent;
@@ -2119,14 +2117,36 @@ a.column-title:hover, .page-header a:hover {
         margin-right: 12px;
       }
     }
+  }
+}
 
-    &.odd {
+.project-lane-wrap {
+  .project-lane {
+    border: 1px solid transparent;
+  }
+
+  &:nth-child(odd) {
+    .project-lane {
       background-color: @gray-200;
 
       .lane-user, .card {
         border-color: @gray-300;
       }
+
+      .placeholder {
+        border-color: transparent;
+
+        .actor-placeholder {
+          background-color: @gray-300;
+        }
+      }
     }
+  }
+
+  .droppable.over .project-lane {
+    border: 1px solid @blue !important;
+    box-shadow: 0 0.1em 0.3em fade(@blue, 30%);
+    box-shadow: 0 0 0 0.2em fade(@blue, 30%);
   }
 }
 

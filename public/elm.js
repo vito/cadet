@@ -25377,7 +25377,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('side-user'),
+								$elm$html$Html$Attributes$class('side-user assignable-user'),
 								$elm$html$Html$Attributes$classList(
 								_List_fromArray(
 									[
@@ -25595,61 +25595,60 @@ var $author$project$Main$viewProjectLane = F4(
 		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: cards};
 		var assignOnlyUsersDropCandidate = {msgFunc: $author$project$Model$AssignOnlyUsers, target: assignees};
 		var assignDropCandidate = {msgFunc: $author$project$Model$AssignUser, target: cards};
-		return A4(
-			$author$project$Drag$droppable,
-			model.assignUserDrag,
-			$author$project$Model$AssignUserDrag,
-			assignDropCandidate,
-			A4(
-				$author$project$Drag$droppable,
-				model.reassignUserDrag,
-				$author$project$Model$ReassignUserDrag,
-				reassignDropCandidate,
-				A4(
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('project-lane-wrap')
+				]),
+			_List_fromArray(
+				[
+					A4(
 					$author$project$Drag$droppable,
-					model.assignOnlyUsersDrag,
-					$author$project$Model$AssignOnlyUsersDrag,
-					assignOnlyUsersDropCandidate,
-					A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('project-lane'),
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2(
-										'even',
-										!A2($elm$core$Basics$modBy, 2, i)),
-										_Utils_Tuple2(
-										'odd',
-										A2($elm$core$Basics$modBy, 2, i) === 1)
-									]))
-							]),
-						_List_fromArray(
-							[
-								A3($author$project$Main$viewLaneUsers, model, assignees, cards),
-								A2(
+					model.assignUserDrag,
+					$author$project$Model$AssignUserDrag,
+					assignDropCandidate,
+					A4(
+						$author$project$Drag$droppable,
+						model.reassignUserDrag,
+						$author$project$Model$ReassignUserDrag,
+						reassignDropCandidate,
+						A4(
+							$author$project$Drag$droppable,
+							model.assignOnlyUsersDrag,
+							$author$project$Model$AssignOnlyUsersDrag,
+							assignOnlyUsersDropCandidate,
+							A2(
 								$elm$html$Html$div,
 								_List_fromArray(
 									[
-										$elm$html$Html$Attributes$class('project-lane-cards')
+										$elm$html$Html$Attributes$class('project-lane')
 									]),
 								_List_fromArray(
 									[
-										A3($author$project$CardView$viewProjectCard, model, _List_Nil, project)
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('project-lane-cards')
-									]),
-								A2(
-									$elm$core$List$map,
-									$author$project$Main$viewAssignableCard(model),
-									cards))
-							])))));
+										A3($author$project$Main$viewLaneUsers, model, assignees, cards),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('project-lane-cards')
+											]),
+										_List_fromArray(
+											[
+												A3($author$project$CardView$viewProjectCard, model, _List_Nil, project)
+											])),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('project-lane-cards')
+											]),
+										A2(
+											$elm$core$List$map,
+											$author$project$Main$viewAssignableCard(model),
+											cards))
+									])))))
+				]));
 	});
 var $author$project$Main$viewInFlightLanes = function (model) {
 	return A2(
