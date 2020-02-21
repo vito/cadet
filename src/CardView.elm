@@ -333,16 +333,16 @@ viewNoteCard model project col card controls text =
         ]
 
 
-isOpenEpic : Card -> Bool
-isOpenEpic card =
-    Card.isOpen card && card.processState.hasEpicLabel
+isInFlightEpic : Card -> Bool
+isInFlightEpic card =
+    card.processState.hasEpicLabel && Card.isInFlight card
 
 
 viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
 viewProjectCard model controls project =
     let
         metaIssue =
-            findProjectCard model project.columns isOpenEpic
+            findProjectCard model project.columns isInFlightEpic
 
         metaIssueIcons =
             case metaIssue of

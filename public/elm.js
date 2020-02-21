@@ -18919,8 +18919,8 @@ var $author$project$CardView$findProjectCard = F3(
 			}
 		}
 	});
-var $author$project$CardView$isOpenEpic = function (card) {
-	return $author$project$Card$isOpen(card) && card.processState.hasEpicLabel;
+var $author$project$CardView$isInFlightEpic = function (card) {
+	return card.processState.hasEpicLabel && $author$project$Card$isInFlight(card);
 };
 var $author$project$CardView$projectExternalIcon = function (project) {
 	return A2(
@@ -19010,7 +19010,7 @@ var $author$project$CardView$viewProjectBar = F2(
 	});
 var $author$project$CardView$viewProjectCard = F3(
 	function (model, controls, project) {
-		var metaIssue = A3($author$project$CardView$findProjectCard, model, project.columns, $author$project$CardView$isOpenEpic);
+		var metaIssue = A3($author$project$CardView$findProjectCard, model, project.columns, $author$project$CardView$isInFlightEpic);
 		var metaIssueIcons = function () {
 			if (metaIssue.$ === 'Nothing') {
 				return _List_Nil;
