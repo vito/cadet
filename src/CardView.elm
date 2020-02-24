@@ -333,19 +333,20 @@ viewNoteCard model project col card controls text =
         ]
 
 
-isInFlightEpic : Card -> Bool
-isInFlightEpic card =
-    card.processState.hasEpicLabel && Card.isInFlight card
-
-
 viewProjectCard : Model -> List (Html Msg) -> GitHub.Project -> Html Msg
 viewProjectCard model controls project =
     let
-        metaIssue =
-            findProjectCard model project.columns isInFlightEpic
+        isOpenEpic card =
+            Card.isOpen card && Card.isEpic card
 
-        metaIssueIcons =
-            case metaIssue of
+        projectEpics =
+            findProjectCards model project.columns isOpenEpic
+
+        activeEpic =
+            LE.find Card.isInFlight projectEpics
+
+        activeEpicSquares =
+            case activeEpic of
                 Nothing ->
                     []
 
@@ -366,7 +367,7 @@ viewProjectCard model controls project =
             [ Html.div [ HA.class "card-squares left vertical" ] <|
                 List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
                     Octicons.project Octicons.defaultOptions
-                        :: metaIssueIcons
+                        :: activeEpicSquares
             , Html.div [ HA.class "card-info" ]
                 [ Html.span [ HA.class "card-title", HA.draggable "false" ]
                     [ Html.a [ HA.href ("/projects/" ++ project.id) ]
@@ -383,6 +384,21 @@ viewProjectCard model controls project =
                 List.map (\x -> Html.div [ HA.class "card-square" ] [ x ])
                     (controls ++ [ projectExternalIcon project ])
             ]
+        , if not (List.isEmpty projectEpics) then
+            Html.div [ HA.class "card-epics" ]
+                [ Html.text (String.fromInt (List.length projectEpics))
+                , Html.text " "
+                , Html.text <|
+                    case List.length projectEpics of
+                        1 ->
+                            "epic"
+
+                        _ ->
+                            "epics"
+                ]
+
+          else
+            Html.text ""
         ]
 
 
@@ -391,11 +407,11 @@ viewCardActor { avatar } =
     Html.img [ HA.class "card-actor", HA.src avatar ] []
 
 
-findProjectCard : Model -> List GitHub.ProjectColumn -> (Card -> Bool) -> Maybe Card
-findProjectCard model columns pred =
+findProjectCards : Model -> List GitHub.ProjectColumn -> (Card -> Bool) -> List Card
+findProjectCards model columns pred =
     case columns of
         [] ->
-            Nothing
+            []
 
         column :: rest ->
             let
@@ -414,10 +430,10 @@ findProjectCard model columns pred =
             in
             case LE.find pred columnCards of
                 Just card ->
-                    Just card
+                    card :: findProjectCards model rest pred
 
                 Nothing ->
-                    findProjectCard model rest pred
+                    findProjectCards model rest pred
 
 
 projectProgress : Model -> GitHub.Project -> ( Int, Int, Int )

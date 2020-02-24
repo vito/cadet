@@ -6,6 +6,7 @@ module Card exposing
     , fromPR
     , isBacklog
     , isDone
+    , isEpic
     , isIcebox
     , isInFlight
     , isMerged
@@ -126,6 +127,11 @@ isOpenPR card =
 isInFlight : Card -> Bool
 isInFlight card =
     card.processState.inInFlightColumn
+
+
+isEpic : Card -> Bool
+isEpic card =
+    card.processState.hasEpicLabel
 
 
 isDone : Card -> Bool

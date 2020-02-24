@@ -18878,12 +18878,12 @@ var $author$project$Main$matchesRelease = F3(
 	});
 var $capitalist$elm_octicons$Octicons$repoPath = 'M4,9 L3,9 L3,8 L4,8 L4,9 L4,9 Z M4,6 L3,6 L3,7 L4,7 L4,6 L4,6 Z M4,4 L3,4 L3,5 L4,5 L4,4 L4,4 Z M4,2 L3,2 L3,3 L4,3 L4,2 L4,2 Z M12,1 L12,13 C12,13.55 11.55,14 11,14 L6,14 L6,16 L4.5,14.5 L3,16 L3,14 L1,14 C0.45,14 0,13.55 0,13 L0,1 C0,0.45 0.45,0 1,0 L11,0 C11.55,0 12,0.45 12,1 L12,1 Z M11,11 L1,11 L1,13 L3,13 L3,12 L6,12 L6,13 L11,13 L11,11 L11,11 Z M11,1 L2,1 L2,10 L11,10 L11,1 L11,1 Z';
 var $capitalist$elm_octicons$Octicons$repo = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$repoPath, '0 0 12 16', 'repo');
-var $author$project$CardView$findProjectCard = F3(
+var $author$project$CardView$findProjectCards = F3(
 	function (model, columns, pred) {
-		findProjectCard:
+		findProjectCards:
 		while (true) {
 			if (!columns.b) {
-				return $elm$core$Maybe$Nothing;
+				return _List_Nil;
 			} else {
 				var column = columns.a;
 				var rest = columns.b;
@@ -18906,7 +18906,10 @@ var $author$project$CardView$findProjectCard = F3(
 				var _v1 = A2($elm_community$list_extra$List$Extra$find, pred, columnCards);
 				if (_v1.$ === 'Just') {
 					var card = _v1.a;
-					return $elm$core$Maybe$Just(card);
+					return A2(
+						$elm$core$List$cons,
+						card,
+						A3($author$project$CardView$findProjectCards, model, rest, pred));
 				} else {
 					var $temp$model = model,
 						$temp$columns = rest,
@@ -18914,13 +18917,13 @@ var $author$project$CardView$findProjectCard = F3(
 					model = $temp$model;
 					columns = $temp$columns;
 					pred = $temp$pred;
-					continue findProjectCard;
+					continue findProjectCards;
 				}
 			}
 		}
 	});
-var $author$project$CardView$isInFlightEpic = function (card) {
-	return card.processState.hasEpicLabel && $author$project$Card$isInFlight(card);
+var $author$project$Card$isEpic = function (card) {
+	return card.processState.hasEpicLabel;
 };
 var $author$project$CardView$projectExternalIcon = function (project) {
 	return A2(
@@ -19010,12 +19013,16 @@ var $author$project$CardView$viewProjectBar = F2(
 	});
 var $author$project$CardView$viewProjectCard = F3(
 	function (model, controls, project) {
-		var metaIssue = A3($author$project$CardView$findProjectCard, model, project.columns, $author$project$CardView$isInFlightEpic);
-		var metaIssueIcons = function () {
-			if (metaIssue.$ === 'Nothing') {
+		var isOpenEpic = function (card) {
+			return $author$project$Card$isOpen(card) && $author$project$Card$isEpic(card);
+		};
+		var projectEpics = A3($author$project$CardView$findProjectCards, model, project.columns, isOpenEpic);
+		var activeEpic = A2($elm_community$list_extra$List$Extra$find, $author$project$Card$isInFlight, projectEpics);
+		var activeEpicSquares = function () {
+			if (activeEpic.$ === 'Nothing') {
 				return _List_Nil;
 			} else {
-				var card = metaIssue.a;
+				var card = activeEpic.a;
 				return $elm$core$List$concat(
 					_List_fromArray(
 						[
@@ -19079,7 +19086,7 @@ var $author$project$CardView$viewProjectCard = F3(
 								A2(
 									$elm$core$List$cons,
 									$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions),
-									metaIssueIcons))),
+									activeEpicSquares))),
 							A2(
 							$elm$html$Html$div,
 							_List_fromArray(
@@ -19141,7 +19148,29 @@ var $author$project$CardView$viewProjectCard = F3(
 										[
 											$author$project$CardView$projectExternalIcon(project)
 										]))))
-						]))
+						])),
+					(!$elm$core$List$isEmpty(projectEpics)) ? A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-epics')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(
+							$elm$core$String$fromInt(
+								$elm$core$List$length(projectEpics))),
+							$elm$html$Html$text(' '),
+							$elm$html$Html$text(
+							function () {
+								var _v0 = $elm$core$List$length(projectEpics);
+								if (_v0 === 1) {
+									return 'epic';
+								} else {
+									return 'epics';
+								}
+							}())
+						])) : $elm$html$Html$text('')
 				]));
 	});
 var $author$project$Main$viewRepoProjects = F3(
