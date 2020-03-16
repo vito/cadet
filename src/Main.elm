@@ -2917,13 +2917,15 @@ viewAddingNote col val =
                 , ( "backlog", Project.detectColumn.backlog col )
                 ]
             ]
-            [ Html.div [ HA.class "card-squares left vertical" ]
-                [ Html.div [ HA.class "card-square" ]
-                    [ Octicons.note octiconOpts
+            [ Html.div [ HA.class "card-content" ]
+                [ Html.div [ HA.class "card-squares left vertical" ]
+                    [ Html.div [ HA.class "card-square" ]
+                        [ Octicons.note octiconOpts
+                        ]
                     ]
+                , Markdown.toHtml [ HA.class "card-info card-note" ] val
+                , Html.div [ HA.class "card-squares right vertical card-controls" ] []
                 ]
-            , Markdown.toHtml [ HA.class "card-info card-note" ] val
-            , Html.div [ HA.class "card-squares right vertical card-controls" ] []
             ]
         , Html.div
             [ HA.class "edit-bubble add-note"
