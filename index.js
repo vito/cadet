@@ -29,6 +29,10 @@ var events = new SSE();
 // mononically increasing numbers for every update made to the data
 var dataIndex = 1;
 
+setInterval(function() {
+  events.send({}, "sync", dataIndex);
+}, 10000);
+
 const data = {
   // users in 'pairing' team
   pairingUsers: [],

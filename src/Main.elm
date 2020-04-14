@@ -3019,6 +3019,11 @@ handleEvent event data index model =
                         model
     in
     case event of
+        "sync" ->
+            -- this event is just to keep the event stream alive in the face of
+            -- aggressive load balancers
+            model
+
         "pairingUsers" ->
             withDecoded (JD.list GitHub.decodeUser) <|
                 \val -> { model | assignableUsers = val }
