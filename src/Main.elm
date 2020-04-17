@@ -1979,42 +1979,24 @@ viewPullRequestsPage model =
 viewRepoOpenPRs : Model -> GitHub.Repo -> List Card -> Html Msg
 viewRepoOpenPRs model repo cards =
     let
-        prHasReviewers { id } =
-            Dict.get id model.prReviewers
-                |> Maybe.withDefault []
-                |> List.isEmpty
-                |> not
+        categorizePR pr (ua, tw, uw) =
+            if List.isEmpty pr.assignees then
+                (pr :: ua, tw, uw)
+            else
+                case lastActiveUser model pr.id of
+                    Just user ->
+                        if List.any ((==) user.id) (List.map .id pr.assignees) then
+                            (ua, tw, pr :: uw)
+                        else
+                            (ua, pr :: tw, uw)
+                    Nothing ->
+                        (ua, pr :: tw, uw)
 
-        prLastActivityIsAuthor { id, author } =
-            case lastActiveUser model id of
-                Just user ->
-                    user.id == Maybe.withDefault "" (Maybe.map .id author)
+        (unassigned, themWaiting, usWaiting) =
+            List.foldl categorizePR ([], [], []) cards
 
-                _ ->
-                    False
-
-        prIsReadyToMerge { id } =
-            Dict.get id model.prReviewers
-                |> Maybe.withDefault []
-                |> (\rs -> not (List.isEmpty rs) && List.all (.state >> (==) GitHub.PullRequestReviewStateApproved) rs)
-
-        prsNeedingAttention =
-            cards
-                |> List.filter (not << prHasReviewers)
-                |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                |> List.reverse
-
-        prsWaitingReply =
-            cards
-                |> List.filter prLastActivityIsAuthor
-                |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                |> List.reverse
-
-        prsWaitingMerge =
-            cards
-                |> List.filter prIsReadyToMerge
-                |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                |> List.reverse
+        lastUpdatedFirst =
+            List.sortBy (.updatedAt >> Time.posixToMillis) >> List.reverse
     in
     Html.div [ HA.class "repo-prs" ]
         [ Html.div [ HA.class "page-header" ]
@@ -2028,31 +2010,31 @@ viewRepoOpenPRs model repo cards =
                 [ Html.div [ HA.class "column-title" ]
                     [ Octicons.inbox octiconOpts
                     , Html.span [ HA.class "column-name" ]
-                        [ Html.text "Review Inbox"
+                        [ Html.text "Unassigned"
                         ]
                     ]
                 , Html.div [ HA.class "dashboard-cards" ] <|
-                    List.map (CardView.viewCard model []) prsNeedingAttention
+                    List.map (CardView.viewCard model []) (lastUpdatedFirst unassigned)
                 ]
             , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Octicons.clock octiconOpts
                     , Html.span [ HA.class "column-name" ]
-                        [ Html.text "Author Waiting"
+                        [ Html.text "Others Active"
                         ]
                     ]
                 , Html.div [ HA.class "dashboard-cards" ] <|
-                    List.map (CardView.viewCard model []) prsWaitingReply
+                    List.map (CardView.viewCard model []) (lastUpdatedFirst themWaiting)
                 ]
             , Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
                     [ Octicons.check octiconOpts
                     , Html.span [ HA.class "column-name" ]
-                        [ Html.text "Approved"
+                        [ Html.text "Assignee Active"
                         ]
                     ]
                 , Html.div [ HA.class "dashboard-cards" ] <|
-                    List.map (CardView.viewCard model []) prsWaitingMerge
+                    List.map (CardView.viewCard model []) (lastUpdatedFirst usWaiting)
                 ]
             ]
         ]

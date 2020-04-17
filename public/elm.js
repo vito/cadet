@@ -13968,6 +13968,8 @@ var $author$project$Main$handleEvent = F4(
 				}
 			});
 		switch (event) {
+			case 'sync':
+				return model;
 			case 'pairingUsers':
 				return A2(
 					withDecoded,
@@ -26005,86 +26007,61 @@ var $author$project$Main$lastActiveUser = F2(
 	});
 var $author$project$Main$viewRepoOpenPRs = F3(
 	function (model, repo, cards) {
-		var prLastActivityIsAuthor = function (_v3) {
-			var id = _v3.id;
-			var author = _v3.author;
-			var _v2 = A2($author$project$Main$lastActiveUser, model, id);
-			if (_v2.$ === 'Just') {
-				var user = _v2.a;
-				return _Utils_eq(
-					user.id,
-					A2(
-						$elm$core$Maybe$withDefault,
-						'',
-						A2(
-							$elm$core$Maybe$map,
-							function ($) {
-								return $.id;
-							},
-							author)));
-			} else {
-				return false;
-			}
-		};
-		var prsWaitingReply = $elm$core$List$reverse(
-			A2(
-				$elm$core$List$sortBy,
+		var lastUpdatedFirst = A2(
+			$elm$core$Basics$composeR,
+			$elm$core$List$sortBy(
 				A2(
 					$elm$core$Basics$composeR,
 					function ($) {
 						return $.updatedAt;
 					},
-					$elm$time$Time$posixToMillis),
-				A2($elm$core$List$filter, prLastActivityIsAuthor, cards)));
-		var prIsReadyToMerge = function (_v1) {
-			var id = _v1.id;
-			return function (rs) {
-				return (!$elm$core$List$isEmpty(rs)) && A2(
-					$elm$core$List$all,
-					A2(
-						$elm$core$Basics$composeR,
-						function ($) {
-							return $.state;
-						},
-						$elm$core$Basics$eq($author$project$GitHub$PullRequestReviewStateApproved)),
-					rs);
-			}(
-				A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
-					A2($elm$core$Dict$get, id, model.prReviewers)));
-		};
-		var prsWaitingMerge = $elm$core$List$reverse(
-			A2(
-				$elm$core$List$sortBy,
-				A2(
-					$elm$core$Basics$composeR,
-					function ($) {
-						return $.updatedAt;
-					},
-					$elm$time$Time$posixToMillis),
-				A2($elm$core$List$filter, prIsReadyToMerge, cards)));
-		var prHasReviewers = function (_v0) {
-			var id = _v0.id;
-			return !$elm$core$List$isEmpty(
-				A2(
-					$elm$core$Maybe$withDefault,
-					_List_Nil,
-					A2($elm$core$Dict$get, id, model.prReviewers)));
-		};
-		var prsNeedingAttention = $elm$core$List$reverse(
-			A2(
-				$elm$core$List$sortBy,
-				A2(
-					$elm$core$Basics$composeR,
-					function ($) {
-						return $.updatedAt;
-					},
-					$elm$time$Time$posixToMillis),
-				A2(
-					$elm$core$List$filter,
-					A2($elm$core$Basics$composeL, $elm$core$Basics$not, prHasReviewers),
-					cards)));
+					$elm$time$Time$posixToMillis)),
+			$elm$core$List$reverse);
+		var categorizePR = F2(
+			function (pr, _v2) {
+				var ua = _v2.a;
+				var tw = _v2.b;
+				var uw = _v2.c;
+				if ($elm$core$List$isEmpty(pr.assignees)) {
+					return _Utils_Tuple3(
+						A2($elm$core$List$cons, pr, ua),
+						tw,
+						uw);
+				} else {
+					var _v1 = A2($author$project$Main$lastActiveUser, model, pr.id);
+					if (_v1.$ === 'Just') {
+						var user = _v1.a;
+						return A2(
+							$elm$core$List$any,
+							$elm$core$Basics$eq(user.id),
+							A2(
+								$elm$core$List$map,
+								function ($) {
+									return $.id;
+								},
+								pr.assignees)) ? _Utils_Tuple3(
+							ua,
+							tw,
+							A2($elm$core$List$cons, pr, uw)) : _Utils_Tuple3(
+							ua,
+							A2($elm$core$List$cons, pr, tw),
+							uw);
+					} else {
+						return _Utils_Tuple3(
+							ua,
+							A2($elm$core$List$cons, pr, tw),
+							uw);
+					}
+				}
+			});
+		var _v0 = A3(
+			$elm$core$List$foldl,
+			categorizePR,
+			_Utils_Tuple3(_List_Nil, _List_Nil, _List_Nil),
+			cards);
+		var unassigned = _v0.a;
+		var themWaiting = _v0.b;
+		var usWaiting = _v0.c;
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -26146,7 +26123,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Review Inbox')
+													$elm$html$Html$text('Unassigned')
 												]))
 										])),
 									A2(
@@ -26158,7 +26135,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 									A2(
 										$elm$core$List$map,
 										A2($author$project$CardView$viewCard, model, _List_Nil),
-										prsNeedingAttention))
+										lastUpdatedFirst(unassigned)))
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -26185,7 +26162,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Author Waiting')
+													$elm$html$Html$text('Others Active')
 												]))
 										])),
 									A2(
@@ -26197,7 +26174,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 									A2(
 										$elm$core$List$map,
 										A2($author$project$CardView$viewCard, model, _List_Nil),
-										prsWaitingReply))
+										lastUpdatedFirst(themWaiting)))
 								])),
 							A2(
 							$elm$html$Html$div,
@@ -26224,7 +26201,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 												]),
 											_List_fromArray(
 												[
-													$elm$html$Html$text('Approved')
+													$elm$html$Html$text('Assignee Active')
 												]))
 										])),
 									A2(
@@ -26236,7 +26213,7 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 									A2(
 										$elm$core$List$map,
 										A2($author$project$CardView$viewCard, model, _List_Nil),
-										prsWaitingMerge))
+										lastUpdatedFirst(usWaiting)))
 								]))
 						]))
 				]));
