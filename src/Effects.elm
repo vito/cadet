@@ -6,8 +6,6 @@ module Effects exposing
     , assignUsers
     , contentCardId
     , convertNoteToIssue
-    , createLabel
-    , deleteLabel
     , deleteProjectCard
     , moveCard
     , refreshColumnCards
@@ -18,7 +16,6 @@ module Effects exposing
     , setProjectCardArchived
     , unassignUsers
     , updateCardNote
-    , updateLabel
     )
 
 import Backend
@@ -104,29 +101,6 @@ assignUsers model users id =
                 |> Task.attempt AssigneesUpdated
                 |> withSetLoading [ id ]
 
-
-createLabel : Model -> GitHub.Repo -> Model.SharedLabel -> Cmd Msg
-createLabel model repo label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.createRepoLabel token repo label.name label.color
-                |> Task.attempt (LabelChanged repo)
-
-
-updateLabel : Model -> GitHub.Repo -> GitHub.Label -> Model.SharedLabel -> Cmd Msg
-updateLabel model repo label1 label2 =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.updateRepoLabel token repo label1 label2.name label2.color
-                |> Task.attempt (LabelChanged repo)
-
-
-deleteLabel : Model -> GitHub.Repo -> GitHub.Label -> Cmd Msg
-deleteLabel model repo label =
-    withTokenOrLogIn model <|
-        \token ->
-            GitHub.deleteRepoLabel token repo label.name
-                |> Task.attempt (LabelChanged repo)
 
 
 addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg

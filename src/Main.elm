@@ -14,7 +14,6 @@ import Drag
 import Effects
 import Events
 import GitHub
-import Hash
 import Html exposing (Html)
 import Html.Attributes as HA
 import Html.Events as HE
@@ -92,7 +91,6 @@ routeParser =
         , UP.map AllProjectsPage (UP.s "projects")
         , UP.map ProjectPage (UP.s "projects" </> UP.string)
         , UP.map GlobalGraphPage (UP.s "graph")
-        , UP.map LabelsPage (UP.s "labels")
         , UP.map ReleasesPage (UP.s "releases")
         , UP.map ReleasePage (UP.s "releases" </> UP.string <?> UQ.string "ref" <?> UQ.string "milestone" <?> UQ.int "tab")
         , UP.map PullRequestsPage (UP.s "pull-requests")
@@ -116,9 +114,6 @@ pageUrl page query =
 
         GlobalGraphPage ->
             UB.absolute [ "graph" ] query
-
-        LabelsPage ->
-            UB.absolute [ "labels" ] query
 
         ReleasePage repo mref mmilestone _ ->
             UB.absolute [ "releases", repo ] <|
@@ -591,175 +586,6 @@ update msg model =
 
         GraphsFetched (Err err) ->
             Log.debug "error fetching graphs" err <|
-                ( model, Cmd.none )
-
-        MirrorLabel newLabel ->
-            let
-                cmds =
-                    Dict.foldl
-                        (\_ r acc ->
-                            let
-                                labels =
-                                    Maybe.withDefault [] (Dict.get r.id model.repoLabels)
-                            in
-                            case List.filter ((==) newLabel.name << .name) labels of
-                                [] ->
-                                    Effects.createLabel model r newLabel :: acc
-
-                                label :: _ ->
-                                    if label.color == newLabel.color then
-                                        acc
-
-                                    else
-                                        Effects.updateLabel model r label newLabel :: acc
-                        )
-                        []
-                        model.repos
-            in
-            ( model, Cmd.batch cmds )
-
-        StartDeletingLabel label ->
-            ( { model | deletingLabels = Set.insert (labelKey label) model.deletingLabels }, Cmd.none )
-
-        StopDeletingLabel label ->
-            ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.none )
-
-        DeleteLabel label ->
-            let
-                cmds =
-                    Dict.foldl
-                        (\_ r acc ->
-                            let
-                                labels =
-                                    Maybe.withDefault [] (Dict.get r.id model.repoLabels)
-                            in
-                            case List.filter (matchesLabel label) labels of
-                                [] ->
-                                    acc
-
-                                repoLabel :: _ ->
-                                    Effects.deleteLabel model r repoLabel :: acc
-                        )
-                        []
-                        model.repos
-            in
-            ( { model | deletingLabels = Set.remove (labelKey label) model.deletingLabels }, Cmd.batch cmds )
-
-        StartEditingLabel label ->
-            ( { model | editingLabels = Dict.insert (labelKey label) label model.editingLabels }, Cmd.none )
-
-        StopEditingLabel label ->
-            ( { model | editingLabels = Dict.remove (labelKey label) model.editingLabels }, Cmd.none )
-
-        SetLabelName label newName ->
-            ( { model
-                | editingLabels =
-                    Dict.update (labelKey label) (Maybe.map (\newLabel -> { newLabel | name = newName })) model.editingLabels
-              }
-            , Cmd.none
-            )
-
-        SetLabelColor newColor ->
-            let
-                newLabel =
-                    model.newLabel
-            in
-            ( { model
-                | newLabel =
-                    if String.isEmpty newLabel.name then
-                        newLabel
-
-                    else
-                        { newLabel | color = newColor }
-                , newLabelColored = not (String.isEmpty newLabel.name)
-                , editingLabels =
-                    Dict.map (\_ label -> { label | color = newColor }) model.editingLabels
-              }
-            , Cmd.none
-            )
-
-        RandomizeLabelColor label ->
-            case Dict.get (labelKey label) model.editingLabels of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just newLabel ->
-                    ( { model
-                        | editingLabels =
-                            Dict.insert (labelKey label) (Label.randomizeColor newLabel) model.editingLabels
-                      }
-                    , Cmd.none
-                    )
-
-        EditLabel oldLabel ->
-            case Dict.get (labelKey oldLabel) model.editingLabels of
-                Nothing ->
-                    ( model, Cmd.none )
-
-                Just newLabel ->
-                    let
-                        cmds =
-                            Dict.foldl
-                                (\_ r acc ->
-                                    let
-                                        labels =
-                                            Maybe.withDefault [] (Dict.get r.id model.repoLabels)
-                                    in
-                                    case List.filter (matchesLabel oldLabel) labels of
-                                        repoLabel :: _ ->
-                                            Effects.updateLabel model r repoLabel newLabel :: acc
-
-                                        _ ->
-                                            acc
-                                )
-                                []
-                                model.repos
-                    in
-                    ( { model | editingLabels = Dict.remove (labelKey oldLabel) model.editingLabels }, Cmd.batch cmds )
-
-        CreateLabel ->
-            if model.newLabel.name == "" then
-                ( model, Cmd.none )
-
-            else
-                update (MirrorLabel model.newLabel)
-                    { model
-                        | newLabel = { name = "", color = "ffffff" }
-                        , newLabelColored = False
-                    }
-
-        RandomizeNewLabelColor ->
-            ( { model
-                | newLabel = Label.randomizeColor model.newLabel
-                , newLabelColored = True
-              }
-            , Cmd.none
-            )
-
-        SetNewLabelName name ->
-            let
-                newLabel =
-                    model.newLabel
-
-                newColor =
-                    if model.newLabelColored then
-                        model.newLabel.color
-
-                    else
-                        Label.generateColor (Hash.hash name)
-            in
-            ( { model | newLabel = { newLabel | name = name, color = newColor } }, Cmd.none )
-
-        LabelChanged repo (Ok ()) ->
-            -- TODO: progress
-            let
-                repoSel =
-                    { owner = repo.owner, name = repo.name }
-            in
-            ( model, Backend.refreshRepo repoSel RefreshQueued )
-
-        LabelChanged _ (Err err) ->
-            Log.debug "failed to modify labels" err <|
                 ( model, Cmd.none )
 
         LabelCard card label ->
@@ -1431,9 +1257,6 @@ pageTitle model =
                     |> Maybe.map .name
                     |> Maybe.withDefault ""
 
-            LabelsPage ->
-                "Labels"
-
             ReleasesPage ->
                 "Releases"
 
@@ -1510,9 +1333,6 @@ viewPage model =
                     Nothing ->
                         Html.text "project not found"
 
-            LabelsPage ->
-                viewLabelsPage model
-
             ReleasesPage ->
                 viewReleasesPage model
 
@@ -1558,7 +1378,6 @@ viewNavBar model =
             , navButton model Octicons.milestone "Release" "/releases"
             , navButton model Octicons.gitPullRequest "PRs" "/pull-requests"
             , navButton model Octicons.circuitBoard "Graph" "/graph"
-            , navButton model Octicons.tag "Labels" "/labels"
             , navButton model Octicons.organization "Pairs" "/pairs"
             ]
         , case model.me of
@@ -1593,9 +1412,6 @@ navButton model icon label route =
 
                 ArchivePage ->
                     label == "Archive"
-
-                LabelsPage ->
-                    label == "Labels"
 
                 ReleasesPage ->
                     label == "Release"
@@ -1687,55 +1503,6 @@ viewRepoProjects model repo projects =
             ]
         , Html.div [ HA.class "cards" ]
             (List.map (CardView.viewProjectCard model []) projects)
-        ]
-
-
-viewLabelsPage : Model -> Html Msg
-viewLabelsPage model =
-    let
-        newLabel =
-            Html.div [ HA.class "new-label" ]
-                [ Html.div [ HA.class "label-cell" ]
-                    [ Html.div [ HA.class "label-name" ]
-                        [ Html.form ([ HA.class "label edit", HE.onSubmit CreateLabel ] ++ Label.colorStyles model model.newLabel.color)
-                            [ Html.span
-                                [ HA.class "label-icon"
-                                , HE.onClick RandomizeNewLabelColor
-                                ]
-                                [ Octicons.sync octiconOpts ]
-                            , Html.input
-                                [ HA.class "label-text"
-                                , HE.onInput SetNewLabelName
-                                , HA.value model.newLabel.name
-                                ]
-                                []
-                            ]
-                        ]
-                    ]
-                , Html.div [ HA.class "label-cell" ]
-                    [ Html.div [ HA.class "label-controls" ]
-                        [ Html.span
-                            [ HE.onClick CreateLabel
-                            , HA.class "button"
-                            ]
-                            [ Octicons.plus octiconOpts ]
-                        ]
-                    ]
-                ]
-
-        labelRows =
-            (\a -> List.map a (Dict.toList model.reposByLabel)) <|
-                \( ( name, color ), repoIds ) ->
-                    viewLabelRow model { name = name, color = color } repoIds
-    in
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Octicons.tag octiconOpts
-            , Html.text "Labels"
-            ]
-        , newLabel
-        , Html.div [ HA.class "labels-table" ]
-            labelRows
         ]
 
 
@@ -1979,21 +1746,24 @@ viewPullRequestsPage model =
 viewRepoOpenPRs : Model -> GitHub.Repo -> List Card -> Html Msg
 viewRepoOpenPRs model repo cards =
     let
-        categorizePR pr (ua, tw, uw) =
+        categorizePR pr ( ua, tw, uw ) =
             if List.isEmpty pr.assignees then
-                (pr :: ua, tw, uw)
+                ( pr :: ua, tw, uw )
+
             else
                 case lastActiveUser model pr.id of
                     Just user ->
                         if List.any ((==) user.id) (List.map .id pr.assignees) then
-                            (ua, tw, pr :: uw)
-                        else
-                            (ua, pr :: tw, uw)
-                    Nothing ->
-                        (ua, pr :: tw, uw)
+                            ( ua, tw, pr :: uw )
 
-        (unassigned, themWaiting, usWaiting) =
-            List.foldl categorizePR ([], [], []) cards
+                        else
+                            ( ua, pr :: tw, uw )
+
+                    Nothing ->
+                        ( ua, pr :: tw, uw )
+
+        ( unassigned, themWaiting, usWaiting ) =
+            List.foldl categorizePR ( [], [], [] ) cards
 
         lastUpdatedFirst =
             List.sortBy (.updatedAt >> Time.posixToMillis) >> List.reverse
@@ -2586,188 +2356,6 @@ eventsThisWeek model =
     LE.takeWhile (eventMillis >> (<) startOfWeek) model.archive
 
 
-matchesLabel : Model.SharedLabel -> GitHub.Label -> Bool
-matchesLabel sl l =
-    l.name == sl.name && String.toLower l.color == String.toLower sl.color
-
-
-includesLabel : Model -> Model.SharedLabel -> List GitHub.ID -> Bool
-includesLabel model label labelIds =
-    List.any
-        (\id ->
-            case Dict.get id model.allLabels of
-                Just l ->
-                    matchesLabel label l
-
-                Nothing ->
-                    False
-        )
-        labelIds
-
-
-viewLabelRow : Model -> Model.SharedLabel -> List GitHub.ID -> Html Msg
-viewLabelRow model label repoIds =
-    let
-        stateKey =
-            labelKey label
-
-        ( prs, issues ) =
-            Dict.foldl
-                (\_ c ( ps, is ) ->
-                    if Card.isOpen c && includesLabel model label c.labels then
-                        if Card.isPR c then
-                            ( c :: ps, is )
-
-                        else
-                            ( ps, c :: is )
-
-                    else
-                        ( ps, is )
-                )
-                ( [], [] )
-                model.cards
-    in
-    Html.div [ HA.class "label-row" ]
-        [ Html.div [ HA.class "label-cell" ]
-            [ Html.div [ HA.class "label-name" ]
-                [ case Dict.get stateKey model.editingLabels of
-                    Nothing ->
-                        Html.div (HA.class "label big" :: Label.colorStyles model label.color)
-                            [ if String.isEmpty model.newLabel.name && Dict.isEmpty model.editingLabels then
-                                Html.span
-                                    [ HA.class "label-icon"
-                                    , HE.onClick (Label.search model label.name)
-                                    ]
-                                    [ Octicons.tag octiconOpts ]
-
-                              else
-                                Html.span
-                                    [ HA.class "label-icon"
-                                    , HE.onClick (SetLabelColor label.color)
-                                    ]
-                                    [ Octicons.paintcan octiconOpts ]
-                            , Html.span
-                                [ HA.class "label-text"
-                                , HE.onClick (Label.search model label.name)
-                                ]
-                                [ Html.text label.name
-                                ]
-                            ]
-
-                    Just newLabel ->
-                        Html.form [ HA.class "label-edit", HE.onSubmit (EditLabel label) ]
-                            [ Html.span
-                                ([ HA.class "label-icon"
-                                 , HE.onClick (RandomizeLabelColor label)
-                                 ]
-                                    ++ Label.colorStyles model newLabel.color
-                                )
-                                [ Octicons.sync octiconOpts ]
-                            , Html.input
-                                ([ HE.onInput (SetLabelName label)
-                                 , HA.value newLabel.name
-                                 ]
-                                    ++ Label.colorStyles model newLabel.color
-                                )
-                                []
-                            ]
-                ]
-            ]
-        , Html.div [ HA.class "label-cell" ]
-            [ Html.div [ HA.class "label-counts first" ]
-                [ Html.span [ HA.class "count" ]
-                    [ Octicons.issueOpened octiconOpts
-                    , Html.span [ HA.class "count-number" ]
-                        [ Html.text (String.fromInt (List.length issues))
-                        ]
-                    ]
-                ]
-            ]
-        , Html.div [ HA.class "label-cell" ]
-            [ Html.div [ HA.class "label-counts" ]
-                [ Html.span [ HA.class "count" ]
-                    [ Octicons.gitPullRequest octiconOpts
-                    , Html.span [ HA.class "count-number" ]
-                        [ Html.text (String.fromInt (List.length prs))
-                        ]
-                    ]
-                ]
-            ]
-        , Html.div [ HA.class "label-cell" ]
-            [ Html.div [ HA.class "label-counts last" ]
-                [ Html.span [ HA.class "count" ]
-                    [ Octicons.repo octiconOpts
-                    , Html.span [ HA.class "count-number" ]
-                        [ Html.text (String.fromInt (List.length repoIds))
-                        ]
-                    ]
-                ]
-            ]
-        , Html.div [ HA.class "label-cell drawer-cell" ]
-            [ Html.div [ HA.class "label-controls" ]
-                [ Html.span
-                    [ HE.onClick (MirrorLabel label)
-                    , HA.class "button"
-                    ]
-                    [ Octicons.mirror octiconOpts ]
-                , if Dict.member stateKey model.editingLabels then
-                    Html.span
-                        [ HE.onClick (StopEditingLabel label)
-                        , HA.class "button"
-                        ]
-                        [ Octicons.x octiconOpts ]
-
-                  else
-                    Html.span
-                        [ HE.onClick (StartEditingLabel label)
-                        , HA.class "button"
-                        ]
-                        [ Octicons.pencil octiconOpts ]
-                , if Set.member stateKey model.deletingLabels then
-                    Html.span
-                        [ HE.onClick (StopDeletingLabel label)
-                        , HA.class "button close"
-                        ]
-                        [ Octicons.x octiconOpts ]
-
-                  else
-                    Html.span
-                        [ HE.onClick (StartDeletingLabel label)
-                        , HA.class "button"
-                        ]
-                        [ Octicons.trashcan octiconOpts ]
-                ]
-            , let
-                isDeleting =
-                    Set.member stateKey model.deletingLabels
-
-                isEditing =
-                    Dict.member stateKey model.editingLabels
-              in
-              Html.div
-                [ HA.classList
-                    [ ( "label-confirm", True )
-                    , ( "active", isDeleting || isEditing )
-                    ]
-                ]
-                [ if isDeleting then
-                    Html.span
-                        [ HE.onClick (DeleteLabel label)
-                        , HA.class "button delete"
-                        ]
-                        [ Octicons.check octiconOpts ]
-
-                  else
-                    Html.span
-                        [ HE.onClick (EditLabel label)
-                        , HA.class "button edit"
-                        ]
-                        [ Octicons.check octiconOpts ]
-                ]
-            ]
-        ]
-
-
 columnIcon : GitHub.ProjectColumn -> Html Msg
 columnIcon col =
     case col.purpose of
@@ -3219,8 +2807,3 @@ finishLoadingCardData data =
 finishLoadingColumnCards : List Backend.ColumnCard -> Model.ProgressState -> Model.ProgressState
 finishLoadingColumnCards cards state =
     List.foldl (\{ id } -> finishProgress id) state cards
-
-
-labelKey : Model.SharedLabel -> ( String, String )
-labelKey label =
-    ( label.name, String.toLower label.color )

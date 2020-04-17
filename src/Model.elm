@@ -17,7 +17,6 @@ module Model exposing
     , ProjectLane
     , ProjectLanes
     , ReleaseStatus
-    , SharedLabel
     , StatefulGraph
     , empty
     )
@@ -112,12 +111,6 @@ type alias Model =
     , graphSort : GraphSort
     , showLabelFilters : Bool
 
-    -- label crud state
-    , deletingLabels : Set ( String, String )
-    , editingLabels : Dict ( String, String ) SharedLabel
-    , newLabel : SharedLabel
-    , newLabelColored : Bool
-
     -- card tabbed view state
     , suggestedLabels : List String
 
@@ -191,20 +184,6 @@ type Msg
     | SearchCards String
     | SelectAnticipatedCards
     | ClearSelectedCards
-    | MirrorLabel SharedLabel
-    | StartDeletingLabel SharedLabel
-    | StopDeletingLabel SharedLabel
-    | DeleteLabel SharedLabel
-    | StartEditingLabel SharedLabel
-    | StopEditingLabel SharedLabel
-    | SetLabelName SharedLabel String
-    | SetLabelColor String
-    | RandomizeLabelColor SharedLabel
-    | EditLabel SharedLabel
-    | CreateLabel
-    | RandomizeNewLabelColor
-    | SetNewLabelName String
-    | LabelChanged GitHub.Repo (Result GitHub.Error ())
     | LabelCard Card String
     | UnlabelCard Card String
     | RefreshIssue GitHub.ID
@@ -241,7 +220,6 @@ type Page
     = AllProjectsPage
     | GlobalGraphPage
     | ProjectPage GitHub.ID
-    | LabelsPage
     | ReleasesPage
     | ReleasePage String (Maybe String) (Maybe String) (Maybe Int)
     | PullRequestsPage
@@ -298,12 +276,6 @@ type alias ReleaseStatus =
 type alias ArchiveEvent =
     { cardId : GitHub.ID
     , event : Backend.CardEvent
-    }
-
-
-type alias SharedLabel =
-    { name : String
-    , color : String
     }
 
 
@@ -411,10 +383,6 @@ empty key =
     , assignUserDrag = Drag.init
     , reassignUserDrag = Drag.init
     , assignOnlyUsersDrag = Drag.init
-    , deletingLabels = Set.empty
-    , editingLabels = Dict.empty
-    , newLabel = { name = "", color = "ffffff" }
-    , newLabelColored = False
     , showLabelFilters = False
     , labelSearch = ""
     , suggestedLabels = []

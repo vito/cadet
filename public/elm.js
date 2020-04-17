@@ -5764,9 +5764,7 @@ var $author$project$Model$empty = function (key) {
 		currentZone: $elm$time$Time$utc,
 		dataIndex: 0,
 		deletingCards: $elm$core$Set$empty,
-		deletingLabels: $elm$core$Set$empty,
 		editingCardNotes: $elm$core$Dict$empty,
-		editingLabels: $elm$core$Dict$empty,
 		graphFilters: _List_Nil,
 		graphSort: $author$project$Model$ImpactSort,
 		graphs: _List_Nil,
@@ -5780,8 +5778,6 @@ var $author$project$Model$empty = function (key) {
 		labelToRepoToId: $elm$core$Dict$empty,
 		lastPaired: $elm$core$Dict$empty,
 		me: $elm$core$Maybe$Nothing,
-		newLabel: {color: 'ffffff', name: ''},
-		newLabelColored: false,
 		openPRsByRepo: $elm$core$Dict$empty,
 		outUsers: $elm$core$Set$empty,
 		page: $author$project$Model$GlobalGraphPage,
@@ -7783,13 +7779,7 @@ var $author$project$Model$CardDataFetched = function (a) {
 var $author$project$Model$GraphsFetched = function (a) {
 	return {$: 'GraphsFetched', a: a};
 };
-var $author$project$Model$MirrorLabel = function (a) {
-	return {$: 'MirrorLabel', a: a};
-};
 var $author$project$Model$Noop = {$: 'Noop'};
-var $author$project$Model$RefreshQueued = function (a) {
-	return {$: 'RefreshQueued', a: a};
-};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -10333,6 +10323,9 @@ var $author$project$Model$DataChanged = F2(
 	function (a, b) {
 		return {$: 'DataChanged', a: a, b: b};
 	});
+var $author$project$Model$RefreshQueued = function (a) {
+	return {$: 'RefreshQueued', a: a};
+};
 var $lukewestby$elm_http_builder$HttpBuilder$post = $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
 var $lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 	function (headerPairs, builder) {
@@ -12709,72 +12702,6 @@ var $author$project$Effects$convertNoteToIssue = F5(
 						A5($author$project$GitHub$convertCardToIssue, token, cardId, repoId, title, body)));
 			});
 	});
-var $author$project$Model$LabelChanged = F2(
-	function (a, b) {
-		return {$: 'LabelChanged', a: a, b: b};
-	});
-var $author$project$GitHub$encodeLabelPatch = F2(
-	function (name, color) {
-		return $elm$json$Json$Encode$object(
-			_List_fromArray(
-				[
-					_Utils_Tuple2(
-					'name',
-					$elm$json$Json$Encode$string(name)),
-					_Utils_Tuple2(
-					'color',
-					$elm$json$Json$Encode$string(color))
-				]));
-	});
-var $author$project$GitHub$createRepoLabel = F4(
-	function (token, repo, name, color) {
-		return A2(
-			$elm$core$Task$mapError,
-			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			$lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					$lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2($author$project$GitHub$encodeLabelPatch, name, color),
-					A2(
-						$lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						$author$project$GitHub$auth(token),
-						$lukewestby$elm_http_builder$HttpBuilder$post('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + '/labels'))))))));
-	});
-var $author$project$Effects$createLabel = F3(
-	function (model, repo, label) {
-		return A2(
-			$author$project$Effects$withTokenOrLogIn,
-			model,
-			function (token) {
-				return A2(
-					$elm$core$Task$attempt,
-					$author$project$Model$LabelChanged(repo),
-					A4($author$project$GitHub$createRepoLabel, token, repo, label.name, label.color));
-			});
-	});
-var $author$project$GitHub$deleteRepoLabel = F3(
-	function (token, repo, name) {
-		return A2(
-			$elm$core$Task$mapError,
-			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			$lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					$lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-					$author$project$GitHub$auth(token),
-					$lukewestby$elm_http_builder$HttpBuilder$delete('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + name))))))));
-	});
-var $author$project$Effects$deleteLabel = F3(
-	function (model, repo, label) {
-		return A2(
-			$author$project$Effects$withTokenOrLogIn,
-			model,
-			function (token) {
-				return A2(
-					$elm$core$Task$attempt,
-					$author$project$Model$LabelChanged(repo),
-					A3($author$project$GitHub$deleteRepoLabel, token, repo, label.name));
-			});
-	});
 var $author$project$GitHub$deleteProjectCardMutation = function () {
 	var cardIDVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -13662,125 +13589,6 @@ var $elm_community$list_extra$List$Extra$foldl1 = F2(
 		}
 	});
 var $elm$core$Basics$ge = _Utils_ge;
-var $elm$random$Random$Seed = F2(
-	function (a, b) {
-		return {$: 'Seed', a: a, b: b};
-	});
-var $elm$random$Random$next = function (_v0) {
-	var state0 = _v0.a;
-	var incr = _v0.b;
-	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
-};
-var $elm$random$Random$initialSeed = function (x) {
-	var _v0 = $elm$random$Random$next(
-		A2($elm$random$Random$Seed, 0, 1013904223));
-	var state1 = _v0.a;
-	var incr = _v0.b;
-	var state2 = (state1 + x) >>> 0;
-	return $elm$random$Random$next(
-		A2($elm$random$Random$Seed, state2, incr));
-};
-var $elm$random$Random$Generator = function (a) {
-	return {$: 'Generator', a: a};
-};
-var $elm$random$Random$peel = function (_v0) {
-	var state = _v0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var $elm$random$Random$int = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var $elm$core$String$cons = _String_cons;
-var $elm$core$String$fromChar = function (_char) {
-	return A2($elm$core$String$cons, _char, '');
-};
-var $elm$core$Bitwise$shiftRightBy = _Bitwise_shiftRightBy;
-var $elm$core$String$repeatHelp = F3(
-	function (n, chunk, result) {
-		return (n <= 0) ? result : A3(
-			$elm$core$String$repeatHelp,
-			n >> 1,
-			_Utils_ap(chunk, chunk),
-			(!(n & 1)) ? result : _Utils_ap(result, chunk));
-	});
-var $elm$core$String$repeat = F2(
-	function (n, chunk) {
-		return A3($elm$core$String$repeatHelp, n, chunk, '');
-	});
-var $elm$core$String$padLeft = F3(
-	function (n, _char, string) {
-		return _Utils_ap(
-			A2(
-				$elm$core$String$repeat,
-				n - $elm$core$String$length(string),
-				$elm$core$String$fromChar(_char)),
-			string);
-	});
-var $elm$random$Random$step = F2(
-	function (_v0, seed) {
-		var generator = _v0.a;
-		return generator(seed);
-	});
-var $elm$core$Char$fromCode = _Char_fromCode;
-var $fredcy$elm_parseint$ParseInt$charFromInt = function (i) {
-	return (i < 10) ? $elm$core$Char$fromCode(
-		i + $elm$core$Char$toCode(
-			_Utils_chr('0'))) : ((i < 36) ? $elm$core$Char$fromCode(
-		(i - 10) + $elm$core$Char$toCode(
-			_Utils_chr('A'))) : _Utils_chr('?'));
-};
-var $fredcy$elm_parseint$ParseInt$toRadixUnsafe = F2(
-	function (radix, i) {
-		return (_Utils_cmp(i, radix) < 0) ? $elm$core$String$fromChar(
-			$fredcy$elm_parseint$ParseInt$charFromInt(i)) : _Utils_ap(
-			A2($fredcy$elm_parseint$ParseInt$toRadixUnsafe, radix, (i / radix) | 0),
-			$elm$core$String$fromChar(
-				$fredcy$elm_parseint$ParseInt$charFromInt(
-					A2($elm$core$Basics$modBy, radix, i))));
-	});
-var $fredcy$elm_parseint$ParseInt$toHex = $fredcy$elm_parseint$ParseInt$toRadixUnsafe(16);
-var $author$project$Label$generateColor = function (seed) {
-	var _v0 = A2(
-		$elm$random$Random$step,
-		A2($elm$random$Random$int, 0, 16777215),
-		$elm$random$Random$initialSeed(seed));
-	var randomColor = _v0.a;
-	return A3(
-		$elm$core$String$padLeft,
-		6,
-		_Utils_chr('0'),
-		$fredcy$elm_parseint$ParseInt$toHex(randomColor));
-};
 var $author$project$Backend$CardClosersEvent = F2(
 	function (cardId, closers) {
 		return {cardId: cardId, closers: closers};
@@ -14186,30 +13994,10 @@ var $author$project$Main$handleEvent = F4(
 					model);
 		}
 	});
-var $elm$core$String$foldl = _String_foldl;
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $author$project$Hash$updateHash = F2(
-	function (c, h) {
-		return ((5 << h) + h) + $elm$core$Char$toCode(c);
-	});
-var $author$project$Hash$hash = function (str) {
-	return A3($elm$core$String$foldl, $author$project$Hash$updateHash, 5381, str);
-};
 var $author$project$Card$isPaused = function (card) {
 	return card.processState.hasPausedLabel;
 };
-var $author$project$Main$labelKey = function (label) {
-	return _Utils_Tuple2(
-		label.name,
-		$elm$core$String$toLower(label.color));
-};
 var $elm$core$String$lines = _String_lines;
-var $author$project$Main$matchesLabel = F2(
-	function (sl, l) {
-		return _Utils_eq(l.name, sl.name) && _Utils_eq(
-			$elm$core$String$toLower(l.color),
-			$elm$core$String$toLower(sl.color));
-	});
 var $author$project$Effects$moveCard = F3(
 	function (model, _v0, cardId) {
 		var columnId = _v0.columnId;
@@ -14348,33 +14136,6 @@ var $elm$url$Url$Parser$parse = F2(
 					$elm$core$Basics$identity)));
 	});
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
-var $elm$core$Result$toMaybe = function (result) {
-	if (result.$ === 'Ok') {
-		var v = result.a;
-		return $elm$core$Maybe$Just(v);
-	} else {
-		return $elm$core$Maybe$Nothing;
-	}
-};
-var $author$project$Label$randomizeColor = function (label) {
-	var currentColor = A2(
-		$elm$core$Maybe$withDefault,
-		0,
-		$elm$core$Result$toMaybe(
-			$fredcy$elm_parseint$ParseInt$parseIntHex(label.color)));
-	var randomHex = $author$project$Label$generateColor(currentColor);
-	return _Utils_update(
-		label,
-		{color: randomHex});
-};
-var $author$project$Backend$refreshRepo = F2(
-	function (repo, f) {
-		return A2(
-			$elm$core$Task$attempt,
-			f,
-			$lukewestby$elm_http_builder$HttpBuilder$toTask(
-				$lukewestby$elm_http_builder$HttpBuilder$get('/refresh?repo=' + (repo.owner + ('/' + repo.name)))));
-	});
 var $elm$core$Set$remove = F2(
 	function (key, _v0) {
 		var dict = _v0.a;
@@ -14384,7 +14145,6 @@ var $elm$core$Set$remove = F2(
 var $author$project$Model$AllProjectsPage = {$: 'AllProjectsPage'};
 var $author$project$Model$ArchivePage = {$: 'ArchivePage'};
 var $author$project$Model$BouncePage = {$: 'BouncePage'};
-var $author$project$Model$LabelsPage = {$: 'LabelsPage'};
 var $author$project$Model$PairsPage = {$: 'PairsPage'};
 var $author$project$Model$ProjectPage = function (a) {
 	return {$: 'ProjectPage', a: a};
@@ -14611,10 +14371,6 @@ var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
 			$elm$url$Url$Parser$map,
 			$author$project$Model$GlobalGraphPage,
 			$elm$url$Url$Parser$s('graph')),
-			A2(
-			$elm$url$Url$Parser$map,
-			$author$project$Model$LabelsPage,
-			$elm$url$Url$Parser$s('labels')),
 			A2(
 			$elm$url$Url$Parser$map,
 			$author$project$Model$ReleasesPage,
@@ -15240,37 +14996,10 @@ var $author$project$Effects$updateCardNote = F3(
 						A3($author$project$GitHub$updateCardNote, token, cardId, note)));
 			});
 	});
-var $lukewestby$elm_http_builder$HttpBuilder$patch = $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('PATCH');
-var $author$project$GitHub$updateRepoLabel = F5(
-	function (token, repo, label, name, color) {
-		return A2(
-			$elm$core$Task$mapError,
-			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$HttpError,
-			$lukewestby$elm_http_builder$HttpBuilder$toTask(
-				A2(
-					$lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-					A2($author$project$GitHub$encodeLabelPatch, name, color),
-					A2(
-						$lukewestby$elm_http_builder$HttpBuilder$withHeaders,
-						$author$project$GitHub$auth(token),
-						$lukewestby$elm_http_builder$HttpBuilder$patch('https://api.github.com/repos/' + (repo.owner + ('/' + (repo.name + ('/labels/' + label.name)))))))));
-	});
-var $author$project$Effects$updateLabel = F4(
-	function (model, repo, label1, label2) {
-		return A2(
-			$author$project$Effects$withTokenOrLogIn,
-			model,
-			function (token) {
-				return A2(
-					$elm$core$Task$attempt,
-					$author$project$Model$LabelChanged(repo),
-					A5($author$project$GitHub$updateRepoLabel, token, repo, label1, label2.name, label2.color));
-			});
-	});
 var $author$project$Main$pairUpUser = F2(
-	function (target, _v37) {
-		var model = _v37.a;
-		var msg = _v37.b;
+	function (target, _v28) {
+		var model = _v28.a;
+		var msg = _v28.b;
 		var lastPaired = F2(
 			function (userA, userB) {
 				return A2(
@@ -15282,32 +15011,32 @@ var $author$project$Main$pairUpUser = F2(
 			});
 		var pickBestUser = F2(
 			function (user, cur) {
-				var _v40 = _Utils_Tuple2(
+				var _v31 = _Utils_Tuple2(
 					A2(lastPaired, target, user),
 					A2(lastPaired, target, cur));
-				if (_v40.a.$ === 'Just') {
-					if (_v40.b.$ === 'Just') {
-						var tsUser = _v40.a.a;
-						var tsCur = _v40.b.a;
+				if (_v31.a.$ === 'Just') {
+					if (_v31.b.$ === 'Just') {
+						var tsUser = _v31.a.a;
+						var tsCur = _v31.b.a;
 						return (_Utils_cmp(
 							$elm$time$Time$posixToMillis(tsCur),
 							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
 					} else {
-						var _v41 = _v40.b;
+						var _v32 = _v31.b;
 						return cur;
 					}
 				} else {
-					if (_v40.b.$ === 'Just') {
-						var _v42 = _v40.a;
+					if (_v31.b.$ === 'Just') {
+						var _v33 = _v31.a;
 						return user;
 					} else {
-						var _v43 = _v40.a;
-						var _v44 = _v40.b;
+						var _v34 = _v31.a;
+						var _v35 = _v31.b;
 						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
 					}
 				}
 			});
-		var _v38 = A2(
+		var _v29 = A2(
 			$elm$core$List$partition,
 			A2(
 				$elm$core$Basics$composeL,
@@ -15324,8 +15053,8 @@ var $author$project$Main$pairUpUser = F2(
 					return $.lanes;
 				},
 				model.inFlight));
-		var soloLanes = _v38.a;
-		var pairingLanes = _v38.b;
+		var soloLanes = _v29.a;
+		var pairingLanes = _v29.b;
 		var isPairing = function (user) {
 			return A2(
 				$elm$core$List$any,
@@ -15361,9 +15090,9 @@ var $author$project$Main$pairUpUser = F2(
 							return $.cards;
 						}),
 					soloLanes)));
-		var _v39 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
-		if (_v39.$ === 'Just') {
-			var pair = _v39.a;
+		var _v30 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
+		if (_v30.$ === 'Just') {
+			var pair = _v30.a;
 			return A3(
 				$author$project$Log$debug,
 				'chose',
@@ -16136,295 +15865,12 @@ var $author$project$Main$update = F2(
 							err,
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
-				case 'MirrorLabel':
-					var newLabel = msg.a;
-					var cmds = A3(
-						$elm$core$Dict$foldl,
-						F3(
-							function (_v23, r, acc) {
-								var labels = A2(
-									$elm$core$Maybe$withDefault,
-									_List_Nil,
-									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v24 = A2(
-									$elm$core$List$filter,
-									A2(
-										$elm$core$Basics$composeL,
-										$elm$core$Basics$eq(newLabel.name),
-										function ($) {
-											return $.name;
-										}),
-									labels);
-								if (!_v24.b) {
-									return A2(
-										$elm$core$List$cons,
-										A3($author$project$Effects$createLabel, model, r, newLabel),
-										acc);
-								} else {
-									var label = _v24.a;
-									return _Utils_eq(label.color, newLabel.color) ? acc : A2(
-										$elm$core$List$cons,
-										A4($author$project$Effects$updateLabel, model, r, label, newLabel),
-										acc);
-								}
-							}),
-						_List_Nil,
-						model.repos);
-					return _Utils_Tuple2(
-						model,
-						$elm$core$Platform$Cmd$batch(cmds));
-				case 'StartDeletingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									$elm$core$Set$insert,
-									$author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'StopDeletingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									$elm$core$Set$remove,
-									$author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'DeleteLabel':
-					var label = msg.a;
-					var cmds = A3(
-						$elm$core$Dict$foldl,
-						F3(
-							function (_v25, r, acc) {
-								var labels = A2(
-									$elm$core$Maybe$withDefault,
-									_List_Nil,
-									A2($elm$core$Dict$get, r.id, model.repoLabels));
-								var _v26 = A2(
-									$elm$core$List$filter,
-									$author$project$Main$matchesLabel(label),
-									labels);
-								if (!_v26.b) {
-									return acc;
-								} else {
-									var repoLabel = _v26.a;
-									return A2(
-										$elm$core$List$cons,
-										A3($author$project$Effects$deleteLabel, model, r, repoLabel),
-										acc);
-								}
-							}),
-						_List_Nil,
-						model.repos);
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								deletingLabels: A2(
-									$elm$core$Set$remove,
-									$author$project$Main$labelKey(label),
-									model.deletingLabels)
-							}),
-						$elm$core$Platform$Cmd$batch(cmds));
-				case 'StartEditingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A3(
-									$elm$core$Dict$insert,
-									$author$project$Main$labelKey(label),
-									label,
-									model.editingLabels)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'StopEditingLabel':
-					var label = msg.a;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A2(
-									$elm$core$Dict$remove,
-									$author$project$Main$labelKey(label),
-									model.editingLabels)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'SetLabelName':
-					var label = msg.a;
-					var newName = msg.b;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A3(
-									$elm$core$Dict$update,
-									$author$project$Main$labelKey(label),
-									$elm$core$Maybe$map(
-										function (newLabel) {
-											return _Utils_update(
-												newLabel,
-												{name: newName});
-										}),
-									model.editingLabels)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'SetLabelColor':
-					var newColor = msg.a;
-					var newLabel = model.newLabel;
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								editingLabels: A2(
-									$elm$core$Dict$map,
-									F2(
-										function (_v27, label) {
-											return _Utils_update(
-												label,
-												{color: newColor});
-										}),
-									model.editingLabels),
-								newLabel: $elm$core$String$isEmpty(newLabel.name) ? newLabel : _Utils_update(
-									newLabel,
-									{color: newColor}),
-								newLabelColored: !$elm$core$String$isEmpty(newLabel.name)
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'RandomizeLabelColor':
-					var label = msg.a;
-					var _v28 = A2(
-						$elm$core$Dict$get,
-						$author$project$Main$labelKey(label),
-						model.editingLabels);
-					if (_v28.$ === 'Nothing') {
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					} else {
-						var newLabel = _v28.a;
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									editingLabels: A3(
-										$elm$core$Dict$insert,
-										$author$project$Main$labelKey(label),
-										$author$project$Label$randomizeColor(newLabel),
-										model.editingLabels)
-								}),
-							$elm$core$Platform$Cmd$none);
-					}
-				case 'EditLabel':
-					var oldLabel = msg.a;
-					var _v29 = A2(
-						$elm$core$Dict$get,
-						$author$project$Main$labelKey(oldLabel),
-						model.editingLabels);
-					if (_v29.$ === 'Nothing') {
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					} else {
-						var newLabel = _v29.a;
-						var cmds = A3(
-							$elm$core$Dict$foldl,
-							F3(
-								function (_v30, r, acc) {
-									var labels = A2(
-										$elm$core$Maybe$withDefault,
-										_List_Nil,
-										A2($elm$core$Dict$get, r.id, model.repoLabels));
-									var _v31 = A2(
-										$elm$core$List$filter,
-										$author$project$Main$matchesLabel(oldLabel),
-										labels);
-									if (_v31.b) {
-										var repoLabel = _v31.a;
-										return A2(
-											$elm$core$List$cons,
-											A4($author$project$Effects$updateLabel, model, r, repoLabel, newLabel),
-											acc);
-									} else {
-										return acc;
-									}
-								}),
-							_List_Nil,
-							model.repos);
-						return _Utils_Tuple2(
-							_Utils_update(
-								model,
-								{
-									editingLabels: A2(
-										$elm$core$Dict$remove,
-										$author$project$Main$labelKey(oldLabel),
-										model.editingLabels)
-								}),
-							$elm$core$Platform$Cmd$batch(cmds));
-					}
-				case 'CreateLabel':
-					if (model.newLabel.name === '') {
-						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
-					} else {
-						var $temp$msg = $author$project$Model$MirrorLabel(model.newLabel),
-							$temp$model = _Utils_update(
-							model,
-							{
-								newLabel: {color: 'ffffff', name: ''},
-								newLabelColored: false
-							});
-						msg = $temp$msg;
-						model = $temp$model;
-						continue update;
-					}
-				case 'RandomizeNewLabelColor':
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								newLabel: $author$project$Label$randomizeColor(model.newLabel),
-								newLabelColored: true
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'SetNewLabelName':
-					var name = msg.a;
-					var newLabel = model.newLabel;
-					var newColor = model.newLabelColored ? model.newLabel.color : $author$project$Label$generateColor(
-						$author$project$Hash$hash(name));
-					return _Utils_Tuple2(
-						_Utils_update(
-							model,
-							{
-								newLabel: _Utils_update(
-									newLabel,
-									{color: newColor, name: name})
-							}),
-						$elm$core$Platform$Cmd$none);
-				case 'LabelChanged':
-					if (msg.b.$ === 'Ok') {
-						var repo = msg.a;
-						var repoSel = {name: repo.name, owner: repo.owner};
-						return _Utils_Tuple2(
-							model,
-							A2($author$project$Backend$refreshRepo, repoSel, $author$project$Model$RefreshQueued));
-					} else {
-						var err = msg.b.a;
-						return A3(
-							$author$project$Log$debug,
-							'failed to modify labels',
-							err,
-							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
-					}
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v32 = card.content;
-					if (_v32.$ === 'IssueCardContent') {
-						var issue = _v32.a;
+					var _v23 = card.content;
+					if (_v23.$ === 'IssueCardContent') {
+						var issue = _v23.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16434,7 +15880,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v32.a;
+						var pr = _v23.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16447,14 +15893,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v33 = card.content;
-					if (_v33.$ === 'IssueCardContent') {
-						var issue = _v33.a;
+					var _v24 = card.content;
+					if (_v24.$ === 'IssueCardContent') {
+						var issue = _v24.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v33.a;
+						var pr = _v24.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16594,14 +16040,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v34 = A2(
+							var _v25 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v34 === '') {
+							if (_v25 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v34;
+								var note = _v25;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -16667,14 +16113,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v35 = A2(
+							var _v26 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v35 === '') {
+							if (_v26 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v35;
+								var note = _v26;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -17048,8 +16494,6 @@ var $author$project$Main$pageTitle = function (model) {
 								return $.name;
 							},
 							A2($elm$core$Dict$get, id, model.projects)));
-				case 'LabelsPage':
-					return 'Labels';
 				case 'ReleasesPage':
 					return 'Releases';
 				case 'ReleasePage':
@@ -18681,8 +18125,6 @@ var $author$project$Main$navButton = F4(
 					return label === 'Graph';
 				case 'ArchivePage':
 					return label === 'Archive';
-				case 'LabelsPage':
-					return label === 'Labels';
 				case 'ReleasesPage':
 					return label === 'Release';
 				case 'ReleasePage':
@@ -18798,7 +18240,6 @@ var $author$project$Main$viewNavBar = function (model) {
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$milestone, 'Release', '/releases'),
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$gitPullRequest, 'PRs', '/pull-requests'),
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$circuitBoard, 'Graph', '/graph'),
-						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$tag, 'Labels', '/labels'),
 						A4($author$project$Main$navButton, model, $capitalist$elm_octicons$Octicons$organization, 'Pairs', '/pairs')
 					])),
 				function () {
@@ -23472,6 +22913,10 @@ var $folkertdev$svg_path_lowlevel$Path$LowLevel$isEmpty = function (command) {
 			return false;
 	}
 };
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
 var $elm$core$Char$toLower = _Char_toLower;
 var $elm$core$Char$toUpper = _Char_toUpper;
 var $folkertdev$svg_path_lowlevel$Path$LowLevel$stringifyCharacter = F2(
@@ -23813,6 +23258,7 @@ var $elm$core$Array$getHelp = F3(
 			}
 		}
 	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
 var $elm$core$Array$tailIndex = function (len) {
 	return (len >>> 5) << 5;
 };
@@ -24851,564 +24297,6 @@ var $author$project$StatefulGraph$view = function (model) {
 };
 var $author$project$Main$viewGlobalGraphPage = function (model) {
 	return $author$project$StatefulGraph$view(model);
-};
-var $author$project$Model$CreateLabel = {$: 'CreateLabel'};
-var $author$project$Model$RandomizeNewLabelColor = {$: 'RandomizeNewLabelColor'};
-var $author$project$Model$SetNewLabelName = function (a) {
-	return {$: 'SetNewLabelName', a: a};
-};
-var $author$project$Model$DeleteLabel = function (a) {
-	return {$: 'DeleteLabel', a: a};
-};
-var $author$project$Model$EditLabel = function (a) {
-	return {$: 'EditLabel', a: a};
-};
-var $author$project$Model$RandomizeLabelColor = function (a) {
-	return {$: 'RandomizeLabelColor', a: a};
-};
-var $author$project$Model$SetLabelColor = function (a) {
-	return {$: 'SetLabelColor', a: a};
-};
-var $author$project$Model$SetLabelName = F2(
-	function (a, b) {
-		return {$: 'SetLabelName', a: a, b: b};
-	});
-var $author$project$Model$StartDeletingLabel = function (a) {
-	return {$: 'StartDeletingLabel', a: a};
-};
-var $author$project$Model$StartEditingLabel = function (a) {
-	return {$: 'StartEditingLabel', a: a};
-};
-var $author$project$Model$StopDeletingLabel = function (a) {
-	return {$: 'StopDeletingLabel', a: a};
-};
-var $author$project$Model$StopEditingLabel = function (a) {
-	return {$: 'StopEditingLabel', a: a};
-};
-var $author$project$Main$includesLabel = F3(
-	function (model, label, labelIds) {
-		return A2(
-			$elm$core$List$any,
-			function (id) {
-				var _v0 = A2($elm$core$Dict$get, id, model.allLabels);
-				if (_v0.$ === 'Just') {
-					var l = _v0.a;
-					return A2($author$project$Main$matchesLabel, label, l);
-				} else {
-					return false;
-				}
-			},
-			labelIds);
-	});
-var $capitalist$elm_octicons$Octicons$mirrorPath = 'M15.5,4.7 L8.5,0 L1.5,4.7 C1.2,4.89 1,5.15 1,5.5 L1,16 L8.5,12 L16,16 L16,5.5 C16,5.16 15.8,4.89 15.5,4.7 L15.5,4.7 Z M15,14.5 L9,11.25 L9,10 L8,10 L8,11.25 L2,14.5 L2,5.5 L8,1.5 L8,6 L9,6 L9,1.5 L15,5.5 L15,14.5 L15,14.5 Z M6,7 L11,7 L11,5 L14,8 L11,11 L11,9 L6,9 L6,11 L3,8 L6,5 L6,7 L6,7 Z';
-var $capitalist$elm_octicons$Octicons$mirror = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$mirrorPath, '0 0 16 16', 'mirror');
-var $capitalist$elm_octicons$Octicons$paintcanPath = 'M6,0 C2.69,0 0,2.69 0,6 L0,7 C0,7.55 0.45,8 1,8 L1,13 C1,14.1 3.24,15 6,15 C8.76,15 11,14.1 11,13 L11,8 C11.55,8 12,7.55 12,7 L12,6 C12,2.69 9.31,0 6,0 L6,0 Z M9,10 L9,10.5 C9,10.78 8.78,11 8.5,11 C8.22,11 8,10.78 8,10.5 L8,10 C8,9.72 7.78,9.5 7.5,9.5 C7.22,9.5 7,9.72 7,10 L7,12.5 C7,12.78 6.78,13 6.5,13 C6.22,13 6,12.78 6,12.5 L6,10.5 C6,10.22 5.78,10 5.5,10 C5.22,10 5,10.22 5,10.5 L5,11 C5,11.55 4.55,12 4,12 C3.45,12 3,11.55 3,11 L3,10 C2.45,10 2,9.55 2,9 L2,7.2 C2.91,7.69 4.36,8 6,8 C7.64,8 9.09,7.69 10,7.2 L10,9 C10,9.55 9.55,10 9,10 L9,10 Z M6,7 C4.32,7 2.88,6.59 2.29,6 C2.88,5.41 4.32,5 6,5 C7.68,5 9.12,5.41 9.71,6 C9.12,6.59 7.68,7 6,7 L6,7 Z M6,4 C3.24,4 1,4.89 1,6 L1,6 C1,3.24 3.24,1 6,1 C8.76,1 11,3.24 11,6 C11,4.9 8.76,4 6,4 L6,4 Z';
-var $capitalist$elm_octicons$Octicons$paintcan = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$paintcanPath, '0 0 12 16', 'paintcan');
-var $author$project$Main$viewLabelRow = F3(
-	function (model, label, repoIds) {
-		var stateKey = $author$project$Main$labelKey(label);
-		var _v0 = A3(
-			$elm$core$Dict$foldl,
-			F3(
-				function (_v1, c, _v2) {
-					var ps = _v2.a;
-					var is = _v2.b;
-					return ($author$project$Card$isOpen(c) && A3($author$project$Main$includesLabel, model, label, c.labels)) ? ($author$project$Card$isPR(c) ? _Utils_Tuple2(
-						A2($elm$core$List$cons, c, ps),
-						is) : _Utils_Tuple2(
-						ps,
-						A2($elm$core$List$cons, c, is))) : _Utils_Tuple2(ps, is);
-				}),
-			_Utils_Tuple2(_List_Nil, _List_Nil),
-			model.cards);
-		var prs = _v0.a;
-		var issues = _v0.b;
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('label-row')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-cell')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label-name')
-								]),
-							_List_fromArray(
-								[
-									function () {
-									var _v3 = A2($elm$core$Dict$get, stateKey, model.editingLabels);
-									if (_v3.$ === 'Nothing') {
-										return A2(
-											$elm$html$Html$div,
-											A2(
-												$elm$core$List$cons,
-												$elm$html$Html$Attributes$class('label big'),
-												A2($author$project$Label$colorStyles, model, label.color)),
-											_List_fromArray(
-												[
-													($elm$core$String$isEmpty(model.newLabel.name) && $elm$core$Dict$isEmpty(model.editingLabels)) ? A2(
-													$elm$html$Html$span,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('label-icon'),
-															$elm$html$Html$Events$onClick(
-															A2($author$project$Label$search, model, label.name))
-														]),
-													_List_fromArray(
-														[
-															$capitalist$elm_octicons$Octicons$tag($author$project$Main$octiconOpts)
-														])) : A2(
-													$elm$html$Html$span,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('label-icon'),
-															$elm$html$Html$Events$onClick(
-															$author$project$Model$SetLabelColor(label.color))
-														]),
-													_List_fromArray(
-														[
-															$capitalist$elm_octicons$Octicons$paintcan($author$project$Main$octiconOpts)
-														])),
-													A2(
-													$elm$html$Html$span,
-													_List_fromArray(
-														[
-															$elm$html$Html$Attributes$class('label-text'),
-															$elm$html$Html$Events$onClick(
-															A2($author$project$Label$search, model, label.name))
-														]),
-													_List_fromArray(
-														[
-															$elm$html$Html$text(label.name)
-														]))
-												]));
-									} else {
-										var newLabel = _v3.a;
-										return A2(
-											$elm$html$Html$form,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('label-edit'),
-													$elm$html$Html$Events$onSubmit(
-													$author$project$Model$EditLabel(label))
-												]),
-											_List_fromArray(
-												[
-													A2(
-													$elm$html$Html$span,
-													_Utils_ap(
-														_List_fromArray(
-															[
-																$elm$html$Html$Attributes$class('label-icon'),
-																$elm$html$Html$Events$onClick(
-																$author$project$Model$RandomizeLabelColor(label))
-															]),
-														A2($author$project$Label$colorStyles, model, newLabel.color)),
-													_List_fromArray(
-														[
-															$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
-														])),
-													A2(
-													$elm$html$Html$input,
-													_Utils_ap(
-														_List_fromArray(
-															[
-																$elm$html$Html$Events$onInput(
-																$author$project$Model$SetLabelName(label)),
-																$elm$html$Html$Attributes$value(newLabel.name)
-															]),
-														A2($author$project$Label$colorStyles, model, newLabel.color)),
-													_List_Nil)
-												]));
-									}
-								}()
-								]))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-cell')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label-counts first')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('count')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$issueOpened($author$project$Main$octiconOpts),
-											A2(
-											$elm$html$Html$span,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('count-number')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(
-													$elm$core$String$fromInt(
-														$elm$core$List$length(issues)))
-												]))
-										]))
-								]))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-cell')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label-counts')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('count')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$gitPullRequest($author$project$Main$octiconOpts),
-											A2(
-											$elm$html$Html$span,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('count-number')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(
-													$elm$core$String$fromInt(
-														$elm$core$List$length(prs)))
-												]))
-										]))
-								]))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-cell')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label-counts last')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('count')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-											A2(
-											$elm$html$Html$span,
-											_List_fromArray(
-												[
-													$elm$html$Html$Attributes$class('count-number')
-												]),
-											_List_fromArray(
-												[
-													$elm$html$Html$text(
-													$elm$core$String$fromInt(
-														$elm$core$List$length(repoIds)))
-												]))
-										]))
-								]))
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('label-cell drawer-cell')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('label-controls')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$MirrorLabel(label)),
-											$elm$html$Html$Attributes$class('button')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$mirror($author$project$Main$octiconOpts)
-										])),
-									A2($elm$core$Dict$member, stateKey, model.editingLabels) ? A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$StopEditingLabel(label)),
-											$elm$html$Html$Attributes$class('button')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts)
-										])) : A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$StartEditingLabel(label)),
-											$elm$html$Html$Attributes$class('button')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$pencil($author$project$Main$octiconOpts)
-										])),
-									A2($elm$core$Set$member, stateKey, model.deletingLabels) ? A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$StopDeletingLabel(label)),
-											$elm$html$Html$Attributes$class('button close')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts)
-										])) : A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$StartDeletingLabel(label)),
-											$elm$html$Html$Attributes$class('button')
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$trashcan($author$project$Main$octiconOpts)
-										]))
-								])),
-							function () {
-							var isEditing = A2($elm$core$Dict$member, stateKey, model.editingLabels);
-							var isDeleting = A2($elm$core$Set$member, stateKey, model.deletingLabels);
-							return A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$classList(
-										_List_fromArray(
-											[
-												_Utils_Tuple2('label-confirm', true),
-												_Utils_Tuple2('active', isDeleting || isEditing)
-											]))
-									]),
-								_List_fromArray(
-									[
-										isDeleting ? A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Events$onClick(
-												$author$project$Model$DeleteLabel(label)),
-												$elm$html$Html$Attributes$class('button delete')
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts)
-											])) : A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Events$onClick(
-												$author$project$Model$EditLabel(label)),
-												$elm$html$Html$Attributes$class('button edit')
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts)
-											]))
-									]));
-						}()
-						]))
-				]));
-	});
-var $author$project$Main$viewLabelsPage = function (model) {
-	var newLabel = A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('new-label')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('label-cell')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('label-name')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$form,
-								_Utils_ap(
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('label edit'),
-											$elm$html$Html$Events$onSubmit($author$project$Model$CreateLabel)
-										]),
-									A2($author$project$Label$colorStyles, model, model.newLabel.color)),
-								_List_fromArray(
-									[
-										A2(
-										$elm$html$Html$span,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('label-icon'),
-												$elm$html$Html$Events$onClick($author$project$Model$RandomizeNewLabelColor)
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
-											])),
-										A2(
-										$elm$html$Html$input,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('label-text'),
-												$elm$html$Html$Events$onInput($author$project$Model$SetNewLabelName),
-												$elm$html$Html$Attributes$value(model.newLabel.name)
-											]),
-										_List_Nil)
-									]))
-							]))
-					])),
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('label-cell')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('label-controls')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$span,
-								_List_fromArray(
-									[
-										$elm$html$Html$Events$onClick($author$project$Model$CreateLabel),
-										$elm$html$Html$Attributes$class('button')
-									]),
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$plus($author$project$Main$octiconOpts)
-									]))
-							]))
-					]))
-			]));
-	var labelRows = function (a) {
-		return A2(
-			$elm$core$List$map,
-			a,
-			$elm$core$Dict$toList(model.reposByLabel));
-	}(
-		function (_v0) {
-			var _v1 = _v0.a;
-			var name = _v1.a;
-			var color = _v1.b;
-			var repoIds = _v0.b;
-			return A3(
-				$author$project$Main$viewLabelRow,
-				model,
-				{color: color, name: name},
-				repoIds);
-		});
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('page-content')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('page-header')
-					]),
-				_List_fromArray(
-					[
-						$capitalist$elm_octicons$Octicons$tag($author$project$Main$octiconOpts),
-						$elm$html$Html$text('Labels')
-					])),
-				newLabel,
-				A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('labels-table')
-					]),
-				labelRows)
-			]));
 };
 var $author$project$Model$AssignOnlyUsers = F2(
 	function (a, b) {
@@ -27372,12 +26260,6 @@ var $author$project$Main$pageUrl = F2(
 					_List_fromArray(
 						['graph']),
 					query);
-			case 'LabelsPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['labels']),
-					query);
 			case 'ReleasePage':
 				var repo = page.a;
 				var mref = page.b;
@@ -27752,8 +26634,6 @@ var $author$project$Main$viewPage = function (model) {
 						} else {
 							return $elm$html$Html$text('project not found');
 						}
-					case 'LabelsPage':
-						return $author$project$Main$viewLabelsPage(model);
 					case 'ReleasesPage':
 						return $author$project$Main$viewReleasesPage(model);
 					case 'ReleasePage':

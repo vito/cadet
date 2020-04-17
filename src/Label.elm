@@ -2,8 +2,6 @@ module Label exposing
     ( cacheColorLightness
     , cardHasLabel
     , colorStyles
-    , generateColor
-    , randomizeColor
     , search
     , view
     )
@@ -16,7 +14,6 @@ import Html.Attributes as HA
 import Log
 import Model exposing (Model, Msg(..))
 import ParseInt
-import Random
 import Regex exposing (Regex)
 
 
@@ -54,25 +51,6 @@ cardHasLabel model name card =
             False
 
 
-randomizeColor : Model.SharedLabel -> Model.SharedLabel
-randomizeColor label =
-    let
-        currentColor =
-            Maybe.withDefault 0 <| Result.toMaybe <| ParseInt.parseIntHex label.color
-
-        randomHex =
-            generateColor currentColor
-    in
-    { label | color = randomHex }
-
-
-generateColor : Int -> String
-generateColor seed =
-    let
-        ( randomColor, _ ) =
-            Random.step (Random.int 0x00 0x00FFFFFF) (Random.initialSeed seed)
-    in
-    String.padLeft 6 '0' (ParseInt.toHex randomColor)
 
 
 colorStyles : Model -> String -> List (Html.Attribute Msg)
