@@ -17504,6 +17504,15 @@ var $author$project$CardView$viewCardMeta = function (card) {
 };
 var $capitalist$elm_octicons$Octicons$plusPolygon = '12 9 7 9 7 14 5 14 5 9 0 9 0 7 5 7 5 2 7 2 7 7 12 7';
 var $capitalist$elm_octicons$Octicons$plus = A3($capitalist$elm_octicons$Octicons$polygonIconWithOptions, $capitalist$elm_octicons$Octicons$plusPolygon, '0 0 12 16', 'plus');
+var $author$project$Model$whenLoggedIn = F2(
+	function (model, html) {
+		var _v0 = model.me;
+		if (_v0.$ === 'Nothing') {
+			return $elm$html$Html$text('');
+		} else {
+			return html;
+		}
+	});
 var $author$project$CardView$viewSuggestedLabel = F3(
 	function (model, card, name) {
 		var mlabelId = A2(
@@ -17529,34 +17538,37 @@ var $author$project$CardView$viewSuggestedLabel = F3(
 		} else {
 			var color = mlabel.a.color;
 			return A2(
-				$elm$html$Html$span,
-				_Utils_ap(
+				$author$project$Model$whenLoggedIn,
+				model,
+				A2(
+					$elm$html$Html$span,
+					_Utils_ap(
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('label suggested'),
+								$elm$html$Html$Attributes$classList(
+								_List_fromArray(
+									[
+										_Utils_Tuple2('has', has)
+									])),
+								$elm$html$Html$Events$onClick(
+								has ? A2($author$project$Model$UnlabelCard, card, name) : A2($author$project$Model$LabelCard, card, name))
+							]),
+						A2($author$project$Label$colorStyles, model, color)),
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('label suggested'),
-							$elm$html$Html$Attributes$classList(
+							A2(
+							$elm$html$Html$span,
 							_List_fromArray(
 								[
-									_Utils_Tuple2('has', has)
+									$elm$html$Html$Attributes$class('label-text')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(name)
 								])),
-							$elm$html$Html$Events$onClick(
-							has ? A2($author$project$Model$UnlabelCard, card, name) : A2($author$project$Model$LabelCard, card, name))
-						]),
-					A2($author$project$Label$colorStyles, model, color)),
-				_List_fromArray(
-					[
-						A2(
-						$elm$html$Html$span,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('label-text')
-							]),
-						_List_fromArray(
-							[
-								$elm$html$Html$text(name)
-							])),
-						has ? $capitalist$elm_octicons$Octicons$x($author$project$CardView$octiconOpts) : $capitalist$elm_octicons$Octicons$plus($author$project$CardView$octiconOpts)
-					]));
+							has ? $capitalist$elm_octicons$Octicons$x($author$project$CardView$octiconOpts) : $capitalist$elm_octicons$Octicons$plus($author$project$CardView$octiconOpts)
+						])));
 		}
 	});
 var $author$project$CardView$viewCardContent = F3(
@@ -17710,7 +17722,7 @@ var $author$project$CardView$viewCardContent = F3(
 											]))
 									]),
 									$author$project$CardView$cardExternalIcons(card),
-									$author$project$CardView$pauseIcon(card),
+									_Utils_eq(model.me, $elm$core$Maybe$Nothing) ? _List_Nil : $author$project$CardView$pauseIcon(card),
 									A2(
 									$elm$core$List$map,
 									A2($author$project$CardView$viewSuggestedLabel, model, card),
@@ -19768,7 +19780,7 @@ var $author$project$CardView$viewNoteCard = F6(
 	});
 var $author$project$CardView$viewNote = F5(
 	function (model, project, col, card, text) {
-		var controls = _List_fromArray(
+		var controls = _Utils_eq(model.me, $elm$core$Maybe$Nothing) ? _List_Nil : _List_fromArray(
 			[
 				A3($author$project$CardView$deleteCardControl, model, card.id, card.id),
 				A2(
@@ -19820,14 +19832,14 @@ var $author$project$CardView$viewProjectColumnCard = F4(
 					var _v3 = A2($elm$core$Dict$get, contentId, model.cards);
 					if (_v3.$ === 'Just') {
 						var c = _v3.a;
-						var controls = (!$author$project$Card$isOpen(c)) ? _List_fromArray(
+						var controls = _Utils_eq(model.me, $elm$core$Maybe$Nothing) ? _List_Nil : ((!$author$project$Card$isOpen(c)) ? _List_fromArray(
 							[
 								A3($author$project$CardView$deleteCardControl, model, c.id, ghCard.id),
 								ghCard.isArchived ? $author$project$CardView$unarchiveCardControl(ghCard.id) : $author$project$CardView$archiveCardControl(ghCard.id)
 							]) : _List_fromArray(
 							[
 								A3($author$project$CardView$deleteCardControl, model, c.id, ghCard.id)
-							]);
+							]));
 						return A3($author$project$CardView$viewCard, model, controls, c);
 					} else {
 						return $author$project$CardView$viewLoadingCard;
@@ -19940,17 +19952,20 @@ var $author$project$Main$viewProjectColumn = F3(
 											$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
 										])),
 									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('add-card'),
-											$elm$html$Html$Events$onClick(
-											A2($author$project$Model$SetCreatingColumnNote, col.id, ''))
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$plus($author$project$Main$octiconOpts)
-										]))
+									$author$project$Model$whenLoggedIn,
+									model,
+									A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('add-card'),
+												$elm$html$Html$Events$onClick(
+												A2($author$project$Model$SetCreatingColumnNote, col.id, ''))
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$plus($author$project$Main$octiconOpts)
+											])))
 								]))
 						])),
 					(_Utils_eq(addingNote, $elm$core$Maybe$Nothing) && $elm$core$List$isEmpty(cards)) ? A2(
@@ -24373,6 +24388,41 @@ var $author$project$Drag$droppable = F4(
 var $capitalist$elm_octicons$Octicons$personPath = 'M12,14.002 C12,14.553 11.553,15 11.002,15 L1.001,15 C0.448,15 0,14.552 0,13.999 L0,13 C0,10.367 4,9 4,9 C4,9 4.229,8.591 4,8 C3.159,7.38 3.056,6.41 3,4 C3.173,1.587 4.867,1 6,1 C7.133,1 8.827,1.586 9,4 C8.944,6.41 8.841,7.38 8,8 C7.771,8.59 8,9 8,9 C8,9 12,10.367 12,13 L12,14.002 Z';
 var $capitalist$elm_octicons$Octicons$person = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$personPath, '0 0 12 16', 'person');
 var $author$project$Main$viewAssignableUsers = function (model) {
+	var viewUser = function (user) {
+		var isOut = A2($elm$core$Set$member, user.id, model.outUsers);
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('side-user assignable-user'),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2('out', isOut)
+						]))
+				]),
+			_List_fromArray(
+				[
+					$author$project$CardView$viewCardActor(user),
+					$elm$html$Html$text(
+					A2($elm$core$Maybe$withDefault, user.login, user.name)),
+					A2(
+					$author$project$Model$whenLoggedIn,
+					model,
+					A2(
+						$elm$html$Html$span,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$class('out-button'),
+								$elm$html$Html$Events$onClick(
+								isOut ? $author$project$Model$SetUserIn(user) : $author$project$Model$SetUserOut(user))
+							]),
+						_List_fromArray(
+							[
+								$capitalist$elm_octicons$Octicons$circleSlash($author$project$Main$octiconOpts)
+							])))
+				]));
+	};
 	var currentAssignments = function (user) {
 		return A3(
 			$elm$core$List$foldl,
@@ -24410,7 +24460,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 		};
 	};
 	var viewDraggableActor = function (user) {
-		return A4(
+		return _Utils_eq(model.me, $elm$core$Maybe$Nothing) ? viewUser(user) : A4(
 			$author$project$Drag$droppable,
 			model.assignOnlyUsersDrag,
 			$author$project$Model$AssignOnlyUsersDrag,
@@ -24420,38 +24470,7 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 				model.assignUserDrag,
 				$author$project$Model$AssignUserDrag,
 				user,
-				function () {
-					var isOut = A2($elm$core$Set$member, user.id, model.outUsers);
-					return A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('side-user assignable-user'),
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('out', isOut)
-									]))
-							]),
-						_List_fromArray(
-							[
-								$author$project$CardView$viewCardActor(user),
-								$elm$html$Html$text(
-								A2($elm$core$Maybe$withDefault, user.login, user.name)),
-								A2(
-								$elm$html$Html$span,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('out-button'),
-										$elm$html$Html$Events$onClick(
-										isOut ? $author$project$Model$SetUserIn(user) : $author$project$Model$SetUserOut(user))
-									]),
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$circleSlash($author$project$Main$octiconOpts)
-									]))
-							]));
-				}()));
+				viewUser(user)));
 	};
 	return A2(
 		$elm$html$Html$div,
@@ -24471,27 +24490,30 @@ var $author$project$Main$viewAssignableUsers = function (model) {
 					[
 						$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts),
 						$elm$html$Html$text('Assignable Users'),
+						A2(
+						$author$project$Model$whenLoggedIn,
+						model,
 						$elm$core$List$isEmpty(assignableUsers) ? $elm$html$Html$text('') : A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('lane-controls buttons')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$span,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('button shuffle'),
-										$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
-									]),
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
-										$elm$html$Html$text('pair up')
-									]))
-							]))
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('lane-controls buttons')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$span,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('button shuffle'),
+											$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
+										]),
+									_List_fromArray(
+										[
+											$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
+											$elm$html$Html$text('pair up')
+										]))
+								])))
 					])),
 				A2(
 				$elm$html$Html$div,
@@ -24532,12 +24554,13 @@ var $author$project$Main$viewAssignableCard = F2(
 			target: _List_fromArray(
 				[card])
 		};
+		var cardView = A3($author$project$CardView$viewCard, model, _List_Nil, card);
 		var assignDropCandidate = {
 			msgFunc: $author$project$Model$AssignUser,
 			target: _List_fromArray(
 				[card])
 		};
-		return A4(
+		return _Utils_eq(model.me, $elm$core$Maybe$Nothing) ? cardView : A4(
 			$author$project$Drag$droppable,
 			model.reassignUserDrag,
 			$author$project$Model$ReassignUserDrag,
@@ -24547,12 +24570,7 @@ var $author$project$Main$viewAssignableCard = F2(
 				model.assignUserDrag,
 				$author$project$Model$AssignUserDrag,
 				assignDropCandidate,
-				A4(
-					$author$project$Drag$draggable,
-					model.assignOnlyUsersDrag,
-					$author$project$Model$AssignOnlyUsersDrag,
-					card,
-					A3($author$project$CardView$viewCard, model, _List_Nil, card))));
+				A4($author$project$Drag$draggable, model.assignOnlyUsersDrag, $author$project$Model$AssignOnlyUsersDrag, card, cardView)));
 	});
 var $author$project$Model$UnassignUser = F2(
 	function (a, b) {
@@ -24560,7 +24578,7 @@ var $author$project$Model$UnassignUser = F2(
 	});
 var $author$project$Main$viewAssignedUser = F4(
 	function (model, cards, user, html) {
-		return A4(
+		return _Utils_eq(model.me, $elm$core$Maybe$Nothing) ? html : A4(
 			$author$project$Drag$draggable,
 			model.reassignUserDrag,
 			$author$project$Model$ReassignUserDrag,
@@ -24637,8 +24655,8 @@ var $author$project$Main$viewLaneUsers = F3(
 									]))
 							]))) : _List_Nil));
 	});
-var $author$project$Main$viewProjectLane = F4(
-	function (model, project, i, _v0) {
+var $author$project$Main$viewProjectLane = F3(
+	function (model, project, _v0) {
 		var assignees = _v0.assignees;
 		var cards = _v0.cards;
 		var reassignDropCandidate = {msgFunc: $author$project$Model$ReassignUser, target: cards};
@@ -24757,7 +24775,7 @@ var $author$project$Main$viewInFlightLanes = function (model) {
 					var project = _v0.project;
 					var lanes = _v0.lanes;
 					return A2(
-						$elm$core$List$indexedMap,
+						$elm$core$List$map,
 						A2($author$project$Main$viewProjectLane, model, project),
 						lanes);
 				};

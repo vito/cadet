@@ -22,7 +22,7 @@ import Label
 import List.Extra as LE
 import Log
 import Markdown
-import Model exposing (Model, Msg(..), Page(..))
+import Model exposing (Model, Msg(..), Page(..), whenLoggedIn)
 import Octicons
 import Project
 import Query
@@ -1987,15 +1987,15 @@ viewInFlightLanes model =
             ]
         , let
             viewProjectLanes { project, lanes } =
-                List.indexedMap (viewProjectLane model project) lanes
+                List.map (viewProjectLane model project) lanes
           in
           Html.div [ HA.class "project-lanes" ] <|
             List.concatMap viewProjectLanes model.inFlight
         ]
 
 
-viewProjectLane : Model -> GitHub.Project -> Int -> Model.ProjectLane -> Html Msg
-viewProjectLane model project i { assignees, cards } =
+viewProjectLane : Model -> GitHub.Project -> Model.ProjectLane -> Html Msg
+viewProjectLane model project { assignees, cards } =
     let
         assignDropCandidate =
             { msgFunc = AssignUser
@@ -2039,11 +2039,18 @@ viewAssignableCard model card =
             { msgFunc = ReassignUser
             , target = [ card ]
             }
+
+        cardView =
+            CardView.viewCard model [] card
     in
-    Drag.droppable model.reassignUserDrag ReassignUserDrag reassignDropCandidate <|
-        Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
-            Drag.draggable model.assignOnlyUsersDrag AssignOnlyUsersDrag card <|
-                CardView.viewCard model [] card
+    if model.me == Nothing then
+        cardView
+
+    else
+        Drag.droppable model.reassignUserDrag ReassignUserDrag reassignDropCandidate <|
+            Drag.droppable model.assignUserDrag AssignUserDrag assignDropCandidate <|
+                Drag.draggable model.assignOnlyUsersDrag AssignOnlyUsersDrag card <|
+                    cardView
 
 
 viewAssignableUsers : Model -> Html Msg
@@ -2074,46 +2081,55 @@ viewAssignableUsers model =
         assignableUsers =
             List.sortBy currentAssignments model.assignableUsers
 
-        viewDraggableActor user =
-            Drag.droppable model.assignOnlyUsersDrag AssignOnlyUsersDrag (assignDropCandidate user) <|
-                Drag.draggable model.assignUserDrag AssignUserDrag user <|
-                    let
-                        isOut =
-                            Set.member user.id model.outUsers
-                    in
-                    Html.div
-                        [ HA.class "side-user assignable-user"
-                        , HA.classList [ ( "out", isOut ) ]
-                        ]
-                        [ CardView.viewCardActor user
-                        , Html.text (Maybe.withDefault user.login user.name)
-                        , Html.span
-                            [ HA.class "out-button"
-                            , HE.onClick <|
-                                if isOut then
-                                    SetUserIn user
+        viewUser user =
+            let
+                isOut =
+                    Set.member user.id model.outUsers
+            in
+            Html.div
+                [ HA.class "side-user assignable-user"
+                , HA.classList [ ( "out", isOut ) ]
+                ]
+                [ CardView.viewCardActor user
+                , Html.text (Maybe.withDefault user.login user.name)
+                , whenLoggedIn model <|
+                    Html.span
+                        [ HA.class "out-button"
+                        , HE.onClick <|
+                            if isOut then
+                                SetUserIn user
 
-                                else
-                                    SetUserOut user
-                            ]
-                            [ Octicons.circleSlash octiconOpts
-                            ]
+                            else
+                                SetUserOut user
                         ]
+                        [ Octicons.circleSlash octiconOpts
+                        ]
+                ]
+
+        viewDraggableActor user =
+            if model.me == Nothing then
+                viewUser user
+
+            else
+                Drag.droppable model.assignOnlyUsersDrag AssignOnlyUsersDrag (assignDropCandidate user) <|
+                    Drag.draggable model.assignUserDrag AssignUserDrag user <|
+                        viewUser user
     in
     Html.div [ HA.class "assignable-users" ]
         [ Html.div [ HA.class "page-header" ]
             [ Octicons.person octiconOpts
             , Html.text "Assignable Users"
-            , if List.isEmpty assignableUsers then
-                Html.text ""
+            , whenLoggedIn model <|
+                if List.isEmpty assignableUsers then
+                    Html.text ""
 
-              else
-                Html.div [ HA.class "lane-controls buttons" ]
-                    [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
-                        [ Octicons.organization octiconOpts
-                        , Html.text "pair up"
+                else
+                    Html.div [ HA.class "lane-controls buttons" ]
+                        [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
+                            [ Octicons.organization octiconOpts
+                            , Html.text "pair up"
+                            ]
                         ]
-                    ]
             ]
         , Html.div [ HA.class "side-users" ] <|
             if List.isEmpty assignableUsers then
@@ -2158,9 +2174,13 @@ viewLaneUsers model users cards =
 
 viewAssignedUser : Model -> List Card -> GitHub.User -> Html Msg -> Html Msg
 viewAssignedUser model cards user html =
-    Drag.draggable model.reassignUserDrag ReassignUserDrag ( user, cards ) <|
-        Html.div [ HA.class "remove-assignee", HE.onClick (UnassignUser user cards) ]
-            [ html ]
+    if model.me == Nothing then
+        html
+
+    else
+        Drag.draggable model.reassignUserDrag ReassignUserDrag ( user, cards ) <|
+            Html.div [ HA.class "remove-assignee", HE.onClick (UnassignUser user cards) ]
+                [ html ]
 
 
 viewLeaderboardEntry : ( GitHub.User, Int ) -> Html Msg
@@ -2429,8 +2449,9 @@ viewProjectColumn model project col =
             , Html.div [ HA.class "column-controls" ]
                 [ Html.span [ HA.class "refresh-column spin-on-column-refresh", HE.onClick (RefreshColumn col.id) ]
                     [ Octicons.sync octiconOpts ]
-                , Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
-                    [ Octicons.plus octiconOpts ]
+                , whenLoggedIn model <|
+                    Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
+                        [ Octicons.plus octiconOpts ]
                 ]
             ]
         , if addingNote == Nothing && List.isEmpty cards then

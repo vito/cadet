@@ -26,7 +26,7 @@ import Label
 import List.Extra as LE
 import Markdown
 import Maybe.Extra as ME
-import Model exposing (Model, Msg(..), Page(..))
+import Model exposing (Model, Msg(..), Page(..), whenLoggedIn)
 import Octicons
 import ProgressBar
 import Project
@@ -108,7 +108,10 @@ viewCardContent model controls card =
                             [ Octicons.sync Octicons.defaultOptions ]
                       ]
                     , cardExternalIcons card
-                    , pauseIcon card
+                    , if model.me == Nothing then
+                        []
+                      else
+                        pauseIcon card
                     , List.map (viewSuggestedLabel model card) model.suggestedLabels
                     ]
         ]
@@ -118,11 +121,15 @@ viewNote : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard
 viewNote model project col card text =
     let
         controls =
-            [ deleteCardControl model card.id card.id
-            , Html.span [ HA.class "edit-note", Events.onClickNoBubble (SetEditingCardNote card.id text) ]
-                [ Octicons.pencil Octicons.defaultOptions
+            if model.me == Nothing then
+                []
+
+            else
+                [ deleteCardControl model card.id card.id
+                , Html.span [ HA.class "edit-note", Events.onClickNoBubble (SetEditingCardNote card.id text) ]
+                    [ Octicons.pencil Octicons.defaultOptions
+                    ]
                 ]
-            ]
     in
     if Dict.member card.id model.editingCardNotes then
         viewNoteCard model project col card controls text
@@ -147,7 +154,10 @@ viewProjectColumnCard model project col ghCard =
                 Just c ->
                     let
                         controls =
-                            if not (Card.isOpen c) then
+                            if model.me == Nothing then
+                                []
+
+                            else if not (Card.isOpen c) then
                                 [ deleteCardControl model c.id ghCard.id
                                 , if ghCard.isArchived then
                                     unarchiveCardControl ghCard.id
@@ -726,26 +736,27 @@ viewSuggestedLabel model card name =
             Html.text ""
 
         Just { color } ->
-            Html.span
-                ([ HA.class "label suggested"
-                 , HA.classList [ ( "has", has ) ]
-                 , HE.onClick <|
-                    if has then
-                        UnlabelCard card name
+            whenLoggedIn model <|
+                Html.span
+                    ([ HA.class "label suggested"
+                     , HA.classList [ ( "has", has ) ]
+                     , HE.onClick <|
+                        if has then
+                            UnlabelCard card name
 
-                    else
-                        LabelCard card name
-                 ]
-                    ++ Label.colorStyles model color
-                )
-                [ Html.span [ HA.class "label-text" ]
-                    [ Html.text name ]
-                , if has then
-                    Octicons.x octiconOpts
+                        else
+                            LabelCard card name
+                     ]
+                        ++ Label.colorStyles model color
+                    )
+                    [ Html.span [ HA.class "label-text" ]
+                        [ Html.text name ]
+                    , if has then
+                        Octicons.x octiconOpts
 
-                  else
-                    Octicons.plus octiconOpts
-                ]
+                      else
+                        Octicons.plus octiconOpts
+                    ]
 
 
 viewEventActor : Model -> Backend.CardEvent -> Html Msg

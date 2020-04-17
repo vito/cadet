@@ -19,6 +19,7 @@ module Model exposing
     , ReleaseStatus
     , StatefulGraph
     , empty
+    , whenLoggedIn
     )
 
 import Backend
@@ -30,6 +31,7 @@ import Drag
 import ForceGraph exposing (ForceGraph)
 import GitHub
 import Http
+import Html exposing (Html)
 import OrderedSet exposing (OrderedSet)
 import Set exposing (Set)
 import Time
@@ -397,3 +399,13 @@ empty key =
     , inFlight = []
     , lastPaired = Dict.empty
     }
+
+
+whenLoggedIn : Model -> Html Msg -> Html Msg
+whenLoggedIn model html =
+    case model.me of
+        Nothing ->
+            Html.text ""
+
+        Just _ ->
+            html
