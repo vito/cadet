@@ -1815,13 +1815,18 @@ a.column-title:hover, .page-header a:hover {
 .dashboard {
   display: flex;
   flex-direction: row;
-  padding: 50px - 15px;
+  padding: 50px - 35px;
   position: relative;
 }
 
 .dashboard-pane {
   flex-grow: 1;
-  margin: 15px;
+  margin: 35px;
+  margin-right: 0;
+
+  &:last-child {
+    margin-right: 35px;
+  }
 }
 
 .dashboard-cards {
