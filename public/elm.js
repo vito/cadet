@@ -25137,59 +25137,52 @@ var $author$project$Main$viewPullRequestsPage = function (model) {
 				return false;
 		}
 	};
-	var events = A2(
-		$elm$core$List$filter,
-		A2(
-			$elm$core$Basics$composeR,
-			function ($) {
-				return $.event;
-			},
-			A2(
-				$elm$core$Basics$composeR,
-				function ($) {
-					return $.event;
-				},
-				eventCounts)),
-		$author$project$Main$eventsThisWeek(model));
-	var bumpLeaderboard = F2(
+	var bumpCount = F2(
 		function (user, entry) {
 			if (entry.$ === 'Nothing') {
 				return $elm$core$Maybe$Just(
 					_Utils_Tuple2(user, 1));
 			} else {
-				var _v4 = entry.a;
-				var count = _v4.b;
+				var _v2 = entry.a;
+				var count = _v2.b;
 				return $elm$core$Maybe$Just(
 					_Utils_Tuple2(user, count + 1));
 			}
 		});
-	var countUserEvent = F2(
-		function (event, byUser) {
-			var _v2 = event.user;
-			if (_v2.$ === 'Nothing') {
-				return byUser;
-			} else {
-				var user = _v2.a;
-				return A3(
-					$elm$core$Dict$update,
-					user.id,
-					bumpLeaderboard(user),
-					byUser);
-			}
+	var countAssignees = F2(
+		function (pr, counts) {
+			return A3(
+				$elm$core$List$foldl,
+				function (user) {
+					return A2(
+						$elm$core$Dict$update,
+						user.id,
+						bumpCount(user));
+				},
+				counts,
+				pr.assignees);
 		});
+	var assignedPRs = A2(
+		$elm$core$List$filter,
+		A2(
+			$elm$core$Basics$composeL,
+			A2($elm$core$Basics$composeL, $elm$core$Basics$not, $elm$core$List$isEmpty),
+			function ($) {
+				return $.assignees;
+			}),
+		A2(
+			$elm$core$List$filterMap,
+			function (prId) {
+				return A2($elm$core$Dict$get, prId, model.cards);
+			},
+			$elm$core$List$concat(
+				$elm$core$Dict$values(model.openPRsByRepo))));
 	var leaderboard = $elm$core$List$reverse(
 		A2(
 			$elm$core$List$sortBy,
 			$elm$core$Tuple$second,
 			$elm$core$Dict$values(
-				A3(
-					$elm$core$List$foldl,
-					function (_v1) {
-						var event = _v1.event;
-						return countUserEvent(event);
-					},
-					$elm$core$Dict$empty,
-					events))));
+				A3($elm$core$List$foldl, countAssignees, $elm$core$Dict$empty, assignedPRs))));
 	return A2(
 		$elm$html$Html$div,
 		_List_fromArray(
@@ -25246,8 +25239,8 @@ var $author$project$Main$viewPullRequestsPage = function (model) {
 							]),
 						_List_fromArray(
 							[
-								$capitalist$elm_octicons$Octicons$flame($author$project$Main$octiconOpts),
-								$elm$html$Html$text('Weekly Review Leaderboard')
+								$capitalist$elm_octicons$Octicons$person($author$project$Main$octiconOpts),
+								$elm$html$Html$text('Assignments')
 							])),
 						A2(
 						$elm$html$Html$div,

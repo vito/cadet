@@ -1684,11 +1684,14 @@ viewPullRequestsPage model =
                 _ ->
                     False
 
-        events =
-            eventsThisWeek model
-                |> List.filter (.event >> .event >> eventCounts)
+        assignedPRs =
+            model.openPRsByRepo
+                |> Dict.values
+                |> List.concat
+                |> List.filterMap (\prId -> Dict.get prId model.cards)
+                |> List.filter (not << List.isEmpty << .assignees)
 
-        bumpLeaderboard user entry =
+        bumpCount user entry =
             case entry of
                 Nothing ->
                     Just ( user, 1 )
@@ -1696,19 +1699,11 @@ viewPullRequestsPage model =
                 Just ( _, count ) ->
                     Just ( user, count + 1 )
 
-        countUserEvent event byUser =
-            case event.user of
-                Nothing ->
-                    byUser
-
-                Just user ->
-                    Dict.update user.id (bumpLeaderboard user) byUser
+        countAssignees pr counts =
+            List.foldl (\user -> Dict.update user.id (bumpCount user)) counts pr.assignees
 
         leaderboard =
-            List.foldl
-                (\{ event } -> countUserEvent event)
-                Dict.empty
-                events
+            List.foldl countAssignees Dict.empty assignedPRs
                 |> Dict.values
                 |> List.sortBy Tuple.second
                 |> List.reverse
@@ -1734,8 +1729,8 @@ viewPullRequestsPage model =
             |> Html.div [ HA.class "dashboard-pane" ]
         , Html.div [ HA.class "dashboard-pane side-pane" ]
             [ Html.div [ HA.class "page-header" ]
-                [ Octicons.flame octiconOpts
-                , Html.text "Weekly Review Leaderboard"
+                [ Octicons.person octiconOpts
+                , Html.text "Assignments"
                 ]
             , Html.div [ HA.class "leaderboard" ]
                 (List.map viewLeaderboardEntry leaderboard)
