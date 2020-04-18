@@ -94,7 +94,6 @@ routeParser =
         , UP.map ReleasesPage (UP.s "releases")
         , UP.map ReleasePage (UP.s "releases" </> UP.string <?> UQ.string "ref" <?> UQ.string "milestone" <?> UQ.int "tab")
         , UP.map PullRequestsPage (UP.s "pull-requests")
-        , UP.map PullRequestsRepoPage (UP.s "pull-requests" </> UP.string <?> UQ.int "tab")
         , UP.map ArchivePage (UP.s "archive")
         , UP.map PairsPage (UP.s "pairs")
         , UP.map BouncePage (UP.s "auth" </> UP.s "github")
@@ -133,9 +132,6 @@ pageUrl page query =
         PullRequestsPage ->
             UB.absolute [ "pull-requests" ] query
 
-        PullRequestsRepoPage r _ ->
-            UB.absolute [ "pull-requests", r ] query
-
         ArchivePage ->
             UB.absolute [ "archive" ] query
 
@@ -150,9 +146,6 @@ pageTab : Page -> Int
 pageTab page =
     case page of
         ReleasePage _ _ _ mi ->
-            Maybe.withDefault 0 mi
-
-        PullRequestsRepoPage _ mi ->
             Maybe.withDefault 0 mi
 
         _ ->
@@ -976,14 +969,6 @@ computeViewForPage model =
             }
                 |> computeRepoStatuses
 
-        PullRequestsRepoPage _ _ ->
-            { reset
-                | suggestedLabels =
-                    [ "needs-test"
-                    , "blocked"
-                    ]
-            }
-
         PairsPage ->
             computeProjectLanes reset
 
@@ -1266,9 +1251,6 @@ pageTitle model =
             PullRequestsPage ->
                 "Pull Requests"
 
-            PullRequestsRepoPage repoName _ ->
-                repoName ++ " Pull Requests"
-
             ArchivePage ->
                 "Archive"
 
@@ -1345,9 +1327,6 @@ viewPage model =
             PullRequestsPage ->
                 viewPullRequestsPage model
 
-            PullRequestsRepoPage repoName _ ->
-                viewRepoPullRequestsPage model repoName
-
             ArchivePage ->
                 viewArchivePage model
 
@@ -1420,9 +1399,6 @@ navButton model icon label route =
                     label == "Release"
 
                 PullRequestsPage ->
-                    label == "PRs"
-
-                PullRequestsRepoPage _ _ ->
                     label == "PRs"
 
                 PairsPage ->
@@ -1622,68 +1598,10 @@ viewLabelByName model name =
             Html.text ("missing label: " ++ name)
 
 
-viewTabbedCards : Model -> List ( Html Msg, String, List Card ) -> Html Msg
-viewTabbedCards model tabs =
-    Html.div [ HA.class "tabbed-cards" ]
-        [ let
-            tabAttrs tab =
-                [ HA.classList [ ( "tab", True ), ( "selected", pageTab model.page == tab ) ]
-                , HA.href (pageUrl model.page [ UB.int "tab" tab ])
-                ]
-
-            tabCount count =
-                Html.span [ HA.class "counter" ]
-                    [ Html.text (String.fromInt count) ]
-          in
-          Html.div [ HA.class "tab-row" ] <|
-            List.indexedMap
-                (\idx ( icon, label, cards ) ->
-                    Html.a (tabAttrs idx)
-                        [ icon
-                        , hideLabel label
-                        , tabCount (List.length cards)
-                        ]
-                )
-                tabs
-        , let
-            firstTabClass =
-                HA.classList [ ( "first-tab", pageTab model.page == 0 ) ]
-          in
-          case List.drop (pageTab model.page) tabs of
-            ( _, _, cards ) :: _ ->
-                if List.isEmpty cards then
-                    Html.div [ HA.class "no-tab-cards", firstTabClass ]
-                        [ Html.text "no cards" ]
-
-                else
-                    cards
-                        |> List.sortBy (.updatedAt >> Time.posixToMillis)
-                        |> List.reverse
-                        |> List.map (CardView.viewCard model [])
-                        |> Html.div [ HA.class "tab-cards", firstTabClass ]
-
-            _ ->
-                Html.text ""
-        ]
-
 
 viewPullRequestsPage : Model -> Html Msg
 viewPullRequestsPage model =
     let
-        eventCounts event =
-            case event of
-                "review-comment" ->
-                    True
-
-                "review-approved" ->
-                    True
-
-                "review-changes-requested" ->
-                    True
-
-                _ ->
-                    False
-
         assignedPRs =
             model.openPRsByRepo
                 |> Dict.values
@@ -1765,11 +1683,9 @@ viewRepoOpenPRs model repo cards =
     in
     Html.div [ HA.class "repo-prs" ]
         [ Html.div [ HA.class "page-header" ]
-            [ Html.a [ HA.href ("/pull-requests/" ++ repo.name) ]
                 [ Octicons.repo octiconOpts
                 , Html.text repo.name
                 ]
-            ]
         , Html.div [ HA.class "fixed-columns" ]
             [ Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
@@ -1800,137 +1716,6 @@ viewRepoOpenPRs model repo cards =
                     ]
                 , Html.div [ HA.class "dashboard-cards" ] <|
                     List.map (CardView.viewCard model []) (lastUpdatedFirst usWaiting)
-                ]
-            ]
-        ]
-
-
-failedChecks : Card -> Bool
-failedChecks card =
-    case card.content of
-        GitHub.PullRequestCardContent { lastCommit } ->
-            case lastCommit |> Maybe.andThen .status of
-                Just { contexts } ->
-                    List.any ((==) GitHub.StatusStateFailure << .state) contexts
-
-                Nothing ->
-                    False
-
-        _ ->
-            False
-
-
-changesRequested : Model -> Card -> Bool
-changesRequested model card =
-    case Dict.get card.id model.prReviewers of
-        Just reviews ->
-            List.any ((==) GitHub.PullRequestReviewStateChangesRequested << .state) reviews
-
-        _ ->
-            False
-
-
-hasMergeConflict : Card -> Bool
-hasMergeConflict card =
-    case card.content of
-        GitHub.PullRequestCardContent { mergeable } ->
-            case mergeable of
-                GitHub.MergeableStateMergeable ->
-                    False
-
-                GitHub.MergeableStateConflicting ->
-                    True
-
-                GitHub.MergeableStateUnknown ->
-                    False
-
-        _ ->
-            False
-
-
-viewRepoPullRequestsPage : Model -> String -> Html Msg
-viewRepoPullRequestsPage model repoName =
-    let
-        prCards =
-            Dict.get repoName model.reposByName
-                |> Maybe.andThen (\id -> Dict.get id model.openPRsByRepo)
-                |> Maybe.map (List.filterMap (\id -> Dict.get id model.cards))
-                |> Maybe.withDefault []
-
-        categorizeCard card cat =
-            let
-                lastWord =
-                    lastActiveUser model card.id
-
-                reviewersHaveLastWord =
-                    case lastWord of
-                        Just { login } ->
-                            let
-                                reviewers =
-                                    Dict.get card.id model.prReviewers
-                                        |> Maybe.withDefault []
-                                        |> List.map .author
-                            in
-                            List.any ((==) login << .login) (card.assignees ++ reviewers)
-
-                        Nothing ->
-                            False
-            in
-            if not reviewersHaveLastWord then
-                -- force PRs that were last active by someone else into the inbox
-                { cat | inbox = card :: cat.inbox }
-
-            else if Label.cardHasLabel model "needs-test" card then
-                { cat | needsTest = card :: cat.needsTest }
-
-            else if Label.cardHasLabel model "blocked" card then
-                { cat | blocked = card :: cat.blocked }
-
-            else if changesRequested model card then
-                { cat | changesRequested = card :: cat.changesRequested }
-
-            else if failedChecks card then
-                { cat | failedChecks = card :: cat.failedChecks }
-
-            else if hasMergeConflict card then
-                { cat | mergeConflict = card :: cat.mergeConflict }
-
-            else if reviewersHaveLastWord then
-                { cat | waiting = card :: cat.waiting }
-
-            else
-                { cat | inbox = card :: cat.inbox }
-
-        categorized =
-            List.foldl categorizeCard
-                { inbox = []
-                , waiting = []
-                , failedChecks = []
-                , mergeConflict = []
-                , needsTest = []
-                , blocked = []
-                , changesRequested = []
-                }
-                prCards
-    in
-    Html.div [ HA.class "page-content" ]
-        [ Html.div [ HA.class "page-header" ]
-            [ Html.a [ HA.href "/pull-requests" ]
-                [ Octicons.gitPullRequest octiconOpts
-                , Html.text "Pull Requests"
-                ]
-            , Octicons.repo octiconOpts
-            , Html.text repoName
-            ]
-        , Html.div [ HA.class "repo-cards" ]
-            [ viewTabbedCards model
-                [ ( Octicons.inbox octiconOpts, "Inbox", categorized.inbox )
-                , ( Octicons.comment octiconOpts, "Waiting", categorized.waiting )
-                , ( Octicons.x octiconOpts, "Failed Checks", categorized.failedChecks )
-                , ( Octicons.alert octiconOpts, "Merge Conflict", categorized.mergeConflict )
-                , ( Octicons.law octiconOpts, "Changes Requested", categorized.changesRequested )
-                , ( viewLabelByName model "needs-test", "Needs Tests", categorized.needsTest )
-                , ( viewLabelByName model "blocked", "Blocked", categorized.blocked )
                 ]
             ]
         ]

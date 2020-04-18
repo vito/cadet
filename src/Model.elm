@@ -225,7 +225,6 @@ type Page
     | ReleasesPage
     | ReleasePage String (Maybe String) (Maybe String) (Maybe Int)
     | PullRequestsPage
-    | PullRequestsRepoPage String (Maybe Int)
     | ArchivePage
     | PairsPage
     | BouncePage

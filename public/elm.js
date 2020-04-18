@@ -12582,13 +12582,6 @@ var $author$project$Main$computeViewForPage = function (model) {
 						suggestedLabels: _List_fromArray(
 							['release/documented', 'release/undocumented', 'release/no-impact'])
 					}));
-		case 'PullRequestsRepoPage':
-			return _Utils_update(
-				reset,
-				{
-					suggestedLabels: _List_fromArray(
-						['needs-test', 'blocked'])
-				});
 		case 'PairsPage':
 			return $author$project$Main$computeProjectLanes(reset);
 		default:
@@ -14150,10 +14143,6 @@ var $author$project$Model$ProjectPage = function (a) {
 	return {$: 'ProjectPage', a: a};
 };
 var $author$project$Model$PullRequestsPage = {$: 'PullRequestsPage'};
-var $author$project$Model$PullRequestsRepoPage = F2(
-	function (a, b) {
-		return {$: 'PullRequestsRepoPage', a: a, b: b};
-	});
 var $author$project$Model$ReleasePage = F4(
 	function (a, b, c, d) {
 		return {$: 'ReleasePage', a: a, b: b, c: c, d: d};
@@ -14395,16 +14384,6 @@ var $author$project$Main$routeParser = $elm$url$Url$Parser$oneOf(
 			$elm$url$Url$Parser$map,
 			$author$project$Model$PullRequestsPage,
 			$elm$url$Url$Parser$s('pull-requests')),
-			A2(
-			$elm$url$Url$Parser$map,
-			$author$project$Model$PullRequestsRepoPage,
-			A2(
-				$elm$url$Url$Parser$slash,
-				$elm$url$Url$Parser$s('pull-requests'),
-				A2(
-					$elm$url$Url$Parser$questionMark,
-					$elm$url$Url$Parser$string,
-					$elm$url$Url$Parser$Query$int('tab')))),
 			A2(
 			$elm$url$Url$Parser$map,
 			$author$project$Model$ArchivePage,
@@ -16501,9 +16480,6 @@ var $author$project$Main$pageTitle = function (model) {
 					return repoName + '  Release';
 				case 'PullRequestsPage':
 					return 'Pull Requests';
-				case 'PullRequestsRepoPage':
-					var repoName = _v0.a;
-					return repoName + ' Pull Requests';
 				case 'ArchivePage':
 					return 'Archive';
 				case 'PairsPage':
@@ -18142,8 +18118,6 @@ var $author$project$Main$navButton = F4(
 				case 'ReleasePage':
 					return label === 'Release';
 				case 'PullRequestsPage':
-					return label === 'PRs';
-				case 'PullRequestsRepoPage':
 					return label === 'PRs';
 				case 'PairsPage':
 					return label === 'Pairs';
@@ -24984,17 +24958,8 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 						]),
 					_List_fromArray(
 						[
-							A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href('/pull-requests/' + repo.name)
-								]),
-							_List_fromArray(
-								[
-									$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-									$elm$html$Html$text(repo.name)
-								]))
+							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
+							$elm$html$Html$text(repo.name)
 						])),
 					A2(
 					$elm$html$Html$div,
@@ -25125,18 +25090,6 @@ var $author$project$Main$viewRepoOpenPRs = F3(
 				]));
 	});
 var $author$project$Main$viewPullRequestsPage = function (model) {
-	var eventCounts = function (event) {
-		switch (event) {
-			case 'review-comment':
-				return true;
-			case 'review-approved':
-				return true;
-			case 'review-changes-requested':
-				return true;
-			default:
-				return false;
-		}
-	};
 	var bumpCount = F2(
 		function (user, entry) {
 			if (entry.$ === 'Nothing') {
@@ -26170,456 +26123,6 @@ var $author$project$Main$viewReleasesPage = function (model) {
 		$elm$core$Dict$values(
 			A2($elm$core$Dict$map, viewRepoReleases, model.repoReleaseStatuses)));
 };
-var $author$project$Main$changesRequested = F2(
-	function (model, card) {
-		var _v0 = A2($elm$core$Dict$get, card.id, model.prReviewers);
-		if (_v0.$ === 'Just') {
-			var reviews = _v0.a;
-			return A2(
-				$elm$core$List$any,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq($author$project$GitHub$PullRequestReviewStateChangesRequested),
-					function ($) {
-						return $.state;
-					}),
-				reviews);
-		} else {
-			return false;
-		}
-	});
-var $author$project$Main$failedChecks = function (card) {
-	var _v0 = card.content;
-	if (_v0.$ === 'PullRequestCardContent') {
-		var lastCommit = _v0.a.lastCommit;
-		var _v1 = A2(
-			$elm$core$Maybe$andThen,
-			function ($) {
-				return $.status;
-			},
-			lastCommit);
-		if (_v1.$ === 'Just') {
-			var contexts = _v1.a.contexts;
-			return A2(
-				$elm$core$List$any,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq($author$project$GitHub$StatusStateFailure),
-					function ($) {
-						return $.state;
-					}),
-				contexts);
-		} else {
-			return false;
-		}
-	} else {
-		return false;
-	}
-};
-var $author$project$Main$hasMergeConflict = function (card) {
-	var _v0 = card.content;
-	if (_v0.$ === 'PullRequestCardContent') {
-		var mergeable = _v0.a.mergeable;
-		switch (mergeable.$) {
-			case 'MergeableStateMergeable':
-				return false;
-			case 'MergeableStateConflicting':
-				return true;
-			default:
-				return false;
-		}
-	} else {
-		return false;
-	}
-};
-var $capitalist$elm_octicons$Octicons$lawPath = 'M7,4 C6.17,4 5.5,3.33 5.5,2.5 C5.5,1.67 6.17,1 7,1 C7.83,1 8.5,1.67 8.5,2.5 C8.5,3.33 7.83,4 7,4 L7,4 Z M14,10 C14,11.11 13.11,12 12,12 L11,12 C9.89,12 9,11.11 9,10 L11,6 L10,6 C9.45,6 9,5.55 9,5 L8,5 L8,13 C8.42,13 9,13.45 9,14 L10,14 C10.42,14 11,14.45 11,15 L3,15 C3,14.45 3.58,14 4,14 L5,14 C5,13.45 5.58,13 6,13 L6.03,13 L6,5 L5,5 C5,5.55 4.55,6 4,6 L3,6 L5,10 C5,11.11 4.11,12 3,12 L2,12 C0.89,12 0,11.11 0,10 L2,6 L1,6 L1,5 L4,5 C4,4.45 4.45,4 5,4 L9,4 C9.55,4 10,4.45 10,5 L13,5 L13,6 L12,6 L14,10 L14,10 Z M2.5,7 L1,10 L4,10 L2.5,7 L2.5,7 Z M13,10 L11.5,7 L10,10 L13,10 L13,10 Z';
-var $capitalist$elm_octicons$Octicons$law = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$lawPath, '0 0 14 16', 'law');
-var $elm$url$Url$Builder$int = F2(
-	function (key, value) {
-		return A2(
-			$elm$url$Url$Builder$QueryParameter,
-			$elm$url$Url$percentEncode(key),
-			$elm$core$String$fromInt(value));
-	});
-var $author$project$Main$pageTab = function (page) {
-	switch (page.$) {
-		case 'ReleasePage':
-			var mi = page.d;
-			return A2($elm$core$Maybe$withDefault, 0, mi);
-		case 'PullRequestsRepoPage':
-			var mi = page.b;
-			return A2($elm$core$Maybe$withDefault, 0, mi);
-		default:
-			return 0;
-	}
-};
-var $author$project$Main$pageUrl = F2(
-	function (page, query) {
-		switch (page.$) {
-			case 'AllProjectsPage':
-				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
-			case 'ProjectPage':
-				var id = page.a;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['projects', id]),
-					query);
-			case 'GlobalGraphPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['graph']),
-					query);
-			case 'ReleasePage':
-				var repo = page.a;
-				var mref = page.b;
-				var mmilestone = page.c;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['releases', repo]),
-					function () {
-						var _v1 = _Utils_Tuple2(mref, mmilestone);
-						if (_v1.a.$ === 'Just') {
-							var ref = _v1.a.a;
-							return A2(
-								$elm$core$List$cons,
-								A2($elm$url$Url$Builder$string, 'ref', ref),
-								query);
-						} else {
-							if (_v1.b.$ === 'Just') {
-								var _v2 = _v1.a;
-								var milestone = _v1.b.a;
-								return A2(
-									$elm$core$List$cons,
-									A2($elm$url$Url$Builder$string, 'milestone', milestone),
-									query);
-							} else {
-								var _v3 = _v1.a;
-								var _v4 = _v1.b;
-								return query;
-							}
-						}
-					}());
-			case 'ReleasesPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['releases']),
-					query);
-			case 'PullRequestsPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['pull-requests']),
-					query);
-			case 'PullRequestsRepoPage':
-				var r = page.a;
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['pull-requests', r]),
-					query);
-			case 'ArchivePage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['archive']),
-					query);
-			case 'PairsPage':
-				return A2(
-					$elm$url$Url$Builder$absolute,
-					_List_fromArray(
-						['pairs']),
-					query);
-			default:
-				return A2($elm$url$Url$Builder$absolute, _List_Nil, query);
-		}
-	});
-var $author$project$Main$viewTabbedCards = F2(
-	function (model, tabs) {
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('tabbed-cards')
-				]),
-			_List_fromArray(
-				[
-					function () {
-					var tabCount = function (count) {
-						return A2(
-							$elm$html$Html$span,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('counter')
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text(
-									$elm$core$String$fromInt(count))
-								]));
-					};
-					var tabAttrs = function (tab) {
-						return _List_fromArray(
-							[
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('tab', true),
-										_Utils_Tuple2(
-										'selected',
-										_Utils_eq(
-											$author$project$Main$pageTab(model.page),
-											tab))
-									])),
-								$elm$html$Html$Attributes$href(
-								A2(
-									$author$project$Main$pageUrl,
-									model.page,
-									_List_fromArray(
-										[
-											A2($elm$url$Url$Builder$int, 'tab', tab)
-										])))
-							]);
-					};
-					return A2(
-						$elm$html$Html$div,
-						_List_fromArray(
-							[
-								$elm$html$Html$Attributes$class('tab-row')
-							]),
-						A2(
-							$elm$core$List$indexedMap,
-							F2(
-								function (idx, _v0) {
-									var icon = _v0.a;
-									var label = _v0.b;
-									var cards = _v0.c;
-									return A2(
-										$elm$html$Html$a,
-										tabAttrs(idx),
-										_List_fromArray(
-											[
-												icon,
-												$author$project$Main$hideLabel(label),
-												tabCount(
-												$elm$core$List$length(cards))
-											]));
-								}),
-							tabs));
-				}(),
-					function () {
-					var firstTabClass = $elm$html$Html$Attributes$classList(
-						_List_fromArray(
-							[
-								_Utils_Tuple2(
-								'first-tab',
-								!$author$project$Main$pageTab(model.page))
-							]));
-					var _v1 = A2(
-						$elm$core$List$drop,
-						$author$project$Main$pageTab(model.page),
-						tabs);
-					if (_v1.b) {
-						var _v2 = _v1.a;
-						var cards = _v2.c;
-						return $elm$core$List$isEmpty(cards) ? A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('no-tab-cards'),
-									firstTabClass
-								]),
-							_List_fromArray(
-								[
-									$elm$html$Html$text('no cards')
-								])) : A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('tab-cards'),
-									firstTabClass
-								]),
-							A2(
-								$elm$core$List$map,
-								A2($author$project$CardView$viewCard, model, _List_Nil),
-								$elm$core$List$reverse(
-									A2(
-										$elm$core$List$sortBy,
-										A2(
-											$elm$core$Basics$composeR,
-											function ($) {
-												return $.updatedAt;
-											},
-											$elm$time$Time$posixToMillis),
-										cards))));
-					} else {
-						return $elm$html$Html$text('');
-					}
-				}()
-				]));
-	});
-var $author$project$Main$viewRepoPullRequestsPage = F2(
-	function (model, repoName) {
-		var prCards = A2(
-			$elm$core$Maybe$withDefault,
-			_List_Nil,
-			A2(
-				$elm$core$Maybe$map,
-				$elm$core$List$filterMap(
-					function (id) {
-						return A2($elm$core$Dict$get, id, model.cards);
-					}),
-				A2(
-					$elm$core$Maybe$andThen,
-					function (id) {
-						return A2($elm$core$Dict$get, id, model.openPRsByRepo);
-					},
-					A2($elm$core$Dict$get, repoName, model.reposByName))));
-		var categorizeCard = F2(
-			function (card, cat) {
-				var lastWord = A2($author$project$Main$lastActiveUser, model, card.id);
-				var reviewersHaveLastWord = function () {
-					if (lastWord.$ === 'Just') {
-						var login = lastWord.a.login;
-						var reviewers = A2(
-							$elm$core$List$map,
-							function ($) {
-								return $.author;
-							},
-							A2(
-								$elm$core$Maybe$withDefault,
-								_List_Nil,
-								A2($elm$core$Dict$get, card.id, model.prReviewers)));
-						return A2(
-							$elm$core$List$any,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$Basics$eq(login),
-								function ($) {
-									return $.login;
-								}),
-							_Utils_ap(card.assignees, reviewers));
-					} else {
-						return false;
-					}
-				}();
-				return (!reviewersHaveLastWord) ? _Utils_update(
-					cat,
-					{
-						inbox: A2($elm$core$List$cons, card, cat.inbox)
-					}) : (A3($author$project$Label$cardHasLabel, model, 'needs-test', card) ? _Utils_update(
-					cat,
-					{
-						needsTest: A2($elm$core$List$cons, card, cat.needsTest)
-					}) : (A3($author$project$Label$cardHasLabel, model, 'blocked', card) ? _Utils_update(
-					cat,
-					{
-						blocked: A2($elm$core$List$cons, card, cat.blocked)
-					}) : (A2($author$project$Main$changesRequested, model, card) ? _Utils_update(
-					cat,
-					{
-						changesRequested: A2($elm$core$List$cons, card, cat.changesRequested)
-					}) : ($author$project$Main$failedChecks(card) ? _Utils_update(
-					cat,
-					{
-						failedChecks: A2($elm$core$List$cons, card, cat.failedChecks)
-					}) : ($author$project$Main$hasMergeConflict(card) ? _Utils_update(
-					cat,
-					{
-						mergeConflict: A2($elm$core$List$cons, card, cat.mergeConflict)
-					}) : (reviewersHaveLastWord ? _Utils_update(
-					cat,
-					{
-						waiting: A2($elm$core$List$cons, card, cat.waiting)
-					}) : _Utils_update(
-					cat,
-					{
-						inbox: A2($elm$core$List$cons, card, cat.inbox)
-					})))))));
-			});
-		var categorized = A3(
-			$elm$core$List$foldl,
-			categorizeCard,
-			{blocked: _List_Nil, changesRequested: _List_Nil, failedChecks: _List_Nil, inbox: _List_Nil, mergeConflict: _List_Nil, needsTest: _List_Nil, waiting: _List_Nil},
-			prCards);
-		return A2(
-			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$class('page-content')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('page-header')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$a,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$href('/pull-requests')
-								]),
-							_List_fromArray(
-								[
-									$capitalist$elm_octicons$Octicons$gitPullRequest($author$project$Main$octiconOpts),
-									$elm$html$Html$text('Pull Requests')
-								])),
-							$capitalist$elm_octicons$Octicons$repo($author$project$Main$octiconOpts),
-							$elm$html$Html$text(repoName)
-						])),
-					A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$class('repo-cards')
-						]),
-					_List_fromArray(
-						[
-							A2(
-							$author$project$Main$viewTabbedCards,
-							model,
-							_List_fromArray(
-								[
-									_Utils_Tuple3(
-									$capitalist$elm_octicons$Octicons$inbox($author$project$Main$octiconOpts),
-									'Inbox',
-									categorized.inbox),
-									_Utils_Tuple3(
-									$capitalist$elm_octicons$Octicons$comment($author$project$Main$octiconOpts),
-									'Waiting',
-									categorized.waiting),
-									_Utils_Tuple3(
-									$capitalist$elm_octicons$Octicons$x($author$project$Main$octiconOpts),
-									'Failed Checks',
-									categorized.failedChecks),
-									_Utils_Tuple3(
-									$capitalist$elm_octicons$Octicons$alert($author$project$Main$octiconOpts),
-									'Merge Conflict',
-									categorized.mergeConflict),
-									_Utils_Tuple3(
-									$capitalist$elm_octicons$Octicons$law($author$project$Main$octiconOpts),
-									'Changes Requested',
-									categorized.changesRequested),
-									_Utils_Tuple3(
-									A2($author$project$Main$viewLabelByName, model, 'needs-test'),
-									'Needs Tests',
-									categorized.needsTest),
-									_Utils_Tuple3(
-									A2($author$project$Main$viewLabelByName, model, 'blocked'),
-									'Blocked',
-									categorized.blocked)
-								]))
-						]))
-				]));
-	});
 var $author$project$Main$viewPage = function (model) {
 	return A2(
 		$elm$html$Html$div,
@@ -26664,9 +26167,6 @@ var $author$project$Main$viewPage = function (model) {
 									A2($elm$core$Dict$get, repoName, model.repoReleaseStatuses))));
 					case 'PullRequestsPage':
 						return $author$project$Main$viewPullRequestsPage(model);
-					case 'PullRequestsRepoPage':
-						var repoName = _v0.a;
-						return A2($author$project$Main$viewRepoPullRequestsPage, model, repoName);
 					case 'ArchivePage':
 						return $author$project$Main$viewArchivePage(model);
 					case 'PairsPage':
