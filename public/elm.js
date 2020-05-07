@@ -5754,6 +5754,7 @@ var $author$project$Model$empty = function (key) {
 		cardClosers: $elm$core$Dict$empty,
 		cardEvents: $elm$core$Dict$empty,
 		cardLabelOperations: $elm$core$Dict$empty,
+		cardProjects: $elm$core$Dict$empty,
 		cardRotations: $elm$core$Dict$empty,
 		cardSearch: 'is:open ',
 		cards: $elm$core$Dict$empty,
@@ -5785,12 +5786,14 @@ var $author$project$Model$empty = function (key) {
 		prReviewers: $elm$core$Dict$empty,
 		progress: $elm$core$Dict$empty,
 		projectDrag: $author$project$Drag$init,
+		projectifyingCards: $elm$core$Set$empty,
 		projects: $elm$core$Dict$empty,
 		prs: $elm$core$Dict$empty,
 		reassignUserDrag: $author$project$Drag$init,
 		repoCommits: $elm$core$Dict$empty,
 		repoLabels: $elm$core$Dict$empty,
 		repoMilestones: $elm$core$Dict$empty,
+		repoProjectTemplates: $elm$core$Dict$empty,
 		repoProjects: $elm$core$Dict$empty,
 		repoReleaseStatuses: $elm$core$Dict$empty,
 		repoReleases: $elm$core$Dict$empty,
@@ -11175,6 +11178,23 @@ var $elm$core$Dict$union = F2(
 		return A3($elm$core$Dict$foldl, $elm$core$Dict$insert, t2, t1);
 	});
 var $author$project$Main$computeCardsView = function (model) {
+	var repoIssuesByNumber = A3(
+		$elm$core$Dict$foldl,
+		F2(
+			function (_v11, issue) {
+				return A2(
+					$elm$core$Dict$update,
+					issue.repo.id,
+					A2(
+						$elm$core$Basics$composeL,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Maybe$Just,
+							A2($elm$core$Dict$insert, issue.number, issue.id)),
+						$elm$core$Maybe$withDefault($elm$core$Dict$empty)));
+			}),
+		$elm$core$Dict$empty,
+		model.issues);
 	var recordRotation = F2(
 		function (start, cur) {
 			if (cur.$ === 'Nothing') {
@@ -11187,12 +11207,12 @@ var $author$project$Main$computeCardsView = function (model) {
 			}
 		});
 	var recordPairRotations = F3(
-		function (_v5, rotations, acc) {
+		function (_v9, rotations, acc) {
 			return A3(
 				$elm$core$List$foldl,
-				function (_v4) {
-					var users = _v4.users;
-					var start = _v4.start;
+				function (_v8) {
+					var users = _v8.users;
+					var start = _v8.start;
 					return A2(
 						$elm$core$Dict$update,
 						$elm$core$List$sort(
@@ -11210,7 +11230,7 @@ var $author$project$Main$computeCardsView = function (model) {
 	var openPRsByRepo = A3(
 		$elm$core$Dict$foldl,
 		F3(
-			function (_v3, pr, prs) {
+			function (_v7, pr, prs) {
 				return _Utils_eq(pr.state, $author$project$GitHub$PullRequestStateOpen) ? A3(
 					$elm$core$Dict$update,
 					pr.repo.id,
@@ -11233,9 +11253,9 @@ var $author$project$Main$computeCardsView = function (model) {
 		$elm$core$Dict$foldl,
 		F3(
 			function (id, card, cbm) {
-				var _v2 = card.milestone;
-				if (_v2.$ === 'Just') {
-					var milestone = _v2.a;
+				var _v6 = card.milestone;
+				if (_v6.$ === 'Just') {
+					var milestone = _v6.a;
 					return A3(
 						$elm$core$Dict$update,
 						milestone.id,
@@ -11250,17 +11270,55 @@ var $author$project$Main$computeCardsView = function (model) {
 	var idsByUrl = A3(
 		$elm$core$Dict$foldl,
 		F2(
-			function (_v0, _v1) {
-				var id = _v1.id;
-				var url = _v1.url;
+			function (_v4, _v5) {
+				var id = _v5.id;
+				var url = _v5.url;
 				return A2($elm$core$Dict$insert, url, id);
 			}),
 		model.idsByUrl,
 		cards);
+	var cardProjects = A3(
+		$elm$core$Dict$foldl,
+		F3(
+			function (repoId, ps, cpsOuter) {
+				return A3(
+					$elm$core$List$foldl,
+					F2(
+						function (project, cps) {
+							var _v0 = A2($elm$core$String$split, '#', project.name);
+							if ((_v0.b && _v0.b.b) && (!_v0.b.b.b)) {
+								var _v1 = _v0.b;
+								var numStr = _v1.a;
+								var _v2 = $elm$core$String$toInt(numStr);
+								if (_v2.$ === 'Just') {
+									var num = _v2.a;
+									var _v3 = A2(
+										$elm$core$Maybe$andThen,
+										$elm$core$Dict$get(num),
+										A2($elm$core$Dict$get, repoId, repoIssuesByNumber));
+									if (_v3.$ === 'Just') {
+										var issueId = _v3.a;
+										return A3($elm$core$Dict$insert, issueId, project.id, cps);
+									} else {
+										return cps;
+									}
+								} else {
+									return cps;
+								}
+							} else {
+								return cps;
+							}
+						}),
+					cpsOuter,
+					ps);
+			}),
+		$elm$core$Dict$empty,
+		model.repoProjects);
 	return _Utils_update(
 		model,
 		{
 			archive: A2($author$project$Main$computeArchive, model, cards),
+			cardProjects: cardProjects,
 			cards: cards,
 			cardsByMilestone: cardsByMilestone,
 			idsByUrl: idsByUrl,
@@ -11483,12 +11541,24 @@ var $author$project$Main$computeDataView = function (model) {
 	var reposByName = A3(
 		$elm$core$Dict$foldl,
 		F2(
-			function (id, _v2) {
-				var name = _v2.name;
+			function (id, _v3) {
+				var name = _v3.name;
 				return A2($elm$core$Dict$insert, name, id);
 			}),
 		$elm$core$Dict$empty,
 		model.repos);
+	var repoProjectTemplates = A2(
+		$elm$core$Dict$map,
+		function (_v2) {
+			return $elm$core$List$filter(
+				A2(
+					$elm$core$Basics$composeL,
+					$elm$core$String$startsWith('Template:'),
+					function ($) {
+						return $.name;
+					}));
+		},
+		model.repoProjects);
 	var groupRepoLabels = A3(
 		$elm$core$Dict$foldl,
 		F3(
@@ -11567,7 +11637,7 @@ var $author$project$Main$computeDataView = function (model) {
 	return $author$project$Label$cacheColorLightness(
 		_Utils_update(
 			model,
-			{allLabels: allLabels, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, reposByLabel: groupRepoLabels, reposByName: reposByName}));
+			{allLabels: allLabels, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, repoProjectTemplates: repoProjectTemplates, reposByLabel: groupRepoLabels, reposByName: reposByName}));
 };
 var $author$project$Main$byAssignees = function () {
 	var addCard = F2(
@@ -12695,6 +12765,223 @@ var $author$project$Effects$convertNoteToIssue = F5(
 						A5($author$project$GitHub$convertCardToIssue, token, cardId, repoId, title, body)));
 			});
 	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue = function (a) {
+	return {$: 'BooleanValue', a: a};
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Boolean');
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue);
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume = function (_v0) {
+	var ast = _v0.a;
+	var decoder = _v0.b;
+	var vars = _v0.c;
+	var fragments = _v0.d;
+	return A4(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$SelectionSpec,
+		ast,
+		A2(
+			$elm$core$Basics$composeR,
+			decoder,
+			$elm$json$Json$Decode$andThen(
+				function (maybeValue) {
+					if (maybeValue.$ === 'Just') {
+						var value = maybeValue.a;
+						return $elm$json$Json$Decode$succeed(value);
+					} else {
+						return $elm$json$Json$Decode$fail('Expected a selection to be present in the response with `assume`, but found `Nothing`');
+					}
+				})),
+		vars,
+		fragments);
+};
+var $author$project$GitHub$idObject = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
+var $author$project$GitHub$maybeOr3 = F3(
+	function (ma, mb, mc) {
+		return A2(
+			$elm_community$maybe_extra$Maybe$Extra$or,
+			ma,
+			A2($elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
+	});
+var $author$project$GitHub$projectOwnerObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+		$elm$core$Maybe$Just(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
+		A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerUser, $author$project$GitHub$idObject)),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			$elm$core$Maybe$Just(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Organization')),
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerOrg, $author$project$GitHub$idObject)),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+				$elm$core$Maybe$Just(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Repository')),
+				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerRepo, $author$project$GitHub$idObject)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr3))));
+var $author$project$GitHub$projectObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'columns',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'first',
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(50))
+			]),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$columnObject)))),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'body', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'owner', _List_Nil, $author$project$GitHub$projectOwnerObject)),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						A2(
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Project))))))));
+var $author$project$GitHub$cloneProjectMutation = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+		A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'cloneProject',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'input',
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+						_List_fromArray(
+							[
+								_Utils_Tuple2(
+								'sourceId',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'sourceId',
+										function ($) {
+											return $.sourceId;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id))),
+								_Utils_Tuple2(
+								'targetOwnerId',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'targetOwnerId',
+										function ($) {
+											return $.targetOwnerId;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id))),
+								_Utils_Tuple2(
+								'includeWorkflows',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'includeWorkflows',
+										function ($) {
+											return $.includeWorkflows;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool))),
+								_Utils_Tuple2(
+								'name',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'name',
+										function ($) {
+											return $.name;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string))),
+								_Utils_Tuple2(
+								'body',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'body',
+										function ($) {
+											return $.body;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string)))),
+								_Utils_Tuple2(
+								'public',
+								$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(
+									A3(
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+										'public',
+										function ($) {
+											return $._public;
+										},
+										$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool)))
+							])))
+				]),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'project', _List_Nil, $author$project$GitHub$projectObject)))));
+var $author$project$GitHub$cloneProject = F2(
+	function (token, cpi) {
+		return A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
+			$author$project$GitHub$authedOptions(token),
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, cpi, $author$project$GitHub$cloneProjectMutation));
+	});
+var $author$project$Backend$refreshRepoProjects = F2(
+	function (repo, f) {
+		return A2(
+			$elm$core$Task$attempt,
+			f,
+			$lukewestby$elm_http_builder$HttpBuilder$toTask(
+				$lukewestby$elm_http_builder$HttpBuilder$get('/refresh?repoProjects=' + (repo.owner + ('/' + repo.name)))));
+	});
+var $author$project$Effects$createProjectForIssue = F3(
+	function (model, card, templateProject) {
+		var repoSelector = {name: card.repo.name, owner: card.repo.owner};
+		var cardNumber = $elm$core$String$fromInt(card.number);
+		var projectBody = 'Project corresponding to [issue #' + (cardNumber + ('](' + (card.repo.url + ('/issues/' + (cardNumber + ').')))));
+		var projectName = A3($elm$core$String$replace, 'Template: ', '', templateProject.name) + (' #' + cardNumber);
+		return A2(
+			$author$project$Effects$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					$elm$core$Task$attempt,
+					$author$project$Model$DataChanged(
+						A2($author$project$Backend$refreshRepoProjects, repoSelector, $author$project$Model$RefreshQueued)),
+					A2(
+						$elm$core$Task$map,
+						$elm$core$Basics$always(_Utils_Tuple0),
+						A2(
+							$author$project$GitHub$cloneProject,
+							token,
+							{
+								body: $elm$core$Maybe$Just(projectBody),
+								includeWorkflows: true,
+								name: projectName,
+								_public: true,
+								sourceId: templateProject.id,
+								targetOwnerId: card.repo.id
+							})));
+			});
+	});
 var $author$project$GitHub$deleteProjectCardMutation = function () {
 	var cardIDVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -13813,11 +14100,13 @@ var $author$project$Main$handleEvent = F4(
 					withDecoded,
 					$author$project$Backend$decodeRepoProjectsEvent,
 					function (val) {
-						return _Utils_update(
-							model,
-							{
-								repoProjects: A3($elm$core$Dict$insert, val.repoId, val.projects, model.repoProjects)
-							});
+						return $author$project$Main$computeCardsView(
+							$author$project$Main$computeDataView(
+								_Utils_update(
+									model,
+									{
+										repoProjects: A3($elm$core$Dict$insert, val.repoId, val.projects, model.repoProjects)
+									})));
 					});
 			case 'repoRefs':
 				return A2(
@@ -14627,11 +14916,6 @@ var $author$project$Main$setLoading = F2(
 					ids)
 			});
 	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue = function (a) {
-	return {$: 'BooleanValue', a: a};
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('Boolean');
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$bool = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$boolean, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$BooleanValue);
 var $author$project$GitHub$updateProjectCardMutation = function () {
 	var noteVar = A3(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
@@ -16146,7 +16430,7 @@ var $author$project$Main$update = F2(
 								outUsers: A2($elm$core$Set$insert, user.id, model.outUsers)
 							}),
 						$elm$core$Platform$Cmd$none);
-				default:
+				case 'SetUserIn':
 					var user = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
@@ -16155,6 +16439,34 @@ var $author$project$Main$update = F2(
 								outUsers: A2($elm$core$Set$remove, user.id, model.outUsers)
 							}),
 						$elm$core$Platform$Cmd$none);
+				case 'StartProjectifying':
+					var cardId = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								projectifyingCards: A2($elm$core$Set$insert, cardId, model.projectifyingCards)
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'StopProjectifying':
+					var cardId = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								projectifyingCards: A2($elm$core$Set$remove, cardId, model.projectifyingCards)
+							}),
+						$elm$core$Platform$Cmd$none);
+				default:
+					var card = msg.a;
+					var project = msg.b;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								projectifyingCards: A2($elm$core$Set$remove, card.id, model.projectifyingCards)
+							}),
+						A3($author$project$Effects$createProjectForIssue, model, card, project));
 			}
 		}
 	});
@@ -16712,19 +17024,6 @@ var $elm$html$Html$Attributes$tabindex = function (n) {
 		'tabIndex',
 		$elm$core$String$fromInt(n));
 };
-var $author$project$Model$HighlightNode = function (a) {
-	return {$: 'HighlightNode', a: a};
-};
-var $author$project$Model$RefreshIssue = function (a) {
-	return {$: 'RefreshIssue', a: a};
-};
-var $author$project$Model$RefreshPullRequest = function (a) {
-	return {$: 'RefreshPullRequest', a: a};
-};
-var $author$project$Model$SelectCard = function (a) {
-	return {$: 'SelectCard', a: a};
-};
-var $author$project$Model$UnhighlightNode = {$: 'UnhighlightNode'};
 var $elm$html$Html$a = _VirtualDom_node('a');
 var $elm$html$Html$Attributes$href = function (url) {
 	return A2(
@@ -16732,7 +17031,7 @@ var $elm$html$Html$Attributes$href = function (url) {
 		'href',
 		_VirtualDom_noJavaScriptUri(url));
 };
-var $capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
+var $author$project$CardView$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
 var $elm$svg$Svg$Attributes$d = _VirtualDom_attribute('d');
 var $elm$svg$Svg$Attributes$fill = _VirtualDom_attribute('fill');
 var $elm$svg$Svg$Attributes$fillRule = _VirtualDom_attribute('fill-rule');
@@ -16824,6 +17123,149 @@ var $capitalist$elm_octicons$Octicons$pathIconWithOptions = F4(
 					_List_Nil)
 				]));
 	});
+var $capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
+var $capitalist$elm_octicons$Octicons$project = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
+var $author$project$Colors$gray200 = '#e1e4e8';
+var $author$project$Colors$green500 = '#28a745';
+var $author$project$Colors$green = $author$project$Colors$green500;
+var $author$project$Colors$purple500 = '#6f42c1';
+var $author$project$Colors$purple = $author$project$Colors$purple500;
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$ProgressBar$view = function (segments) {
+	var total = $elm$core$List$sum(
+		A2($elm$core$List$map, $elm$core$Tuple$second, segments));
+	var width = function (base) {
+		var pct = (base / total) * 100;
+		return A2(
+			$elm$html$Html$Attributes$style,
+			'width',
+			$elm$core$String$fromFloat(pct) + '%');
+	};
+	var segment = F2(
+		function (color, val) {
+			return (!val) ? $elm$html$Html$text('') : A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$class('segment'),
+						A2($elm$html$Html$Attributes$style, 'background-color', color),
+						width(val)
+					]),
+				_List_Nil);
+		});
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$class('progress-bar')
+			]),
+		A2(
+			$elm$core$List$map,
+			function (_v0) {
+				var c = _v0.a;
+				var v = _v0.b;
+				return A2(segment, c, v);
+			},
+			segments));
+};
+var $author$project$CardView$viewProjectBar = F2(
+	function (model, project) {
+		var _v0 = A2($author$project$CardView$projectProgress, model, project);
+		var toDos = _v0.a;
+		var inProgresses = _v0.b;
+		var dones = _v0.c;
+		return (((toDos + inProgresses) + dones) > 0) ? $author$project$ProgressBar$view(
+			_List_fromArray(
+				[
+					_Utils_Tuple2($author$project$Colors$green, dones),
+					_Utils_Tuple2($author$project$Colors$purple, inProgresses),
+					_Utils_Tuple2($author$project$Colors$gray200, toDos)
+				])) : $author$project$ProgressBar$view(
+			_List_fromArray(
+				[
+					_Utils_Tuple2($author$project$Colors$gray200, 1)
+				]));
+	});
+var $author$project$CardView$viewCardAssociatedProject = F2(
+	function (model, card) {
+		var _v0 = A2(
+			$elm$core$Maybe$andThen,
+			function (id) {
+				return A2($elm$core$Dict$get, id, model.projects);
+			},
+			A2($elm$core$Dict$get, card.id, model.cardProjects));
+		if (_v0.$ === 'Nothing') {
+			return _List_Nil;
+		} else {
+			var project = _v0.a;
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-projects')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$a,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$href('/projects/' + project.id),
+									$elm$html$Html$Attributes$class('card-content')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-squares left vertical')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$div,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('card-square')
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$project($author$project$CardView$octiconOpts)
+												]))
+										])),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('card-info')
+										]),
+									_List_fromArray(
+										[
+											A2($author$project$CardView$viewProjectBar, model, project)
+										]))
+								]))
+						]))
+				]);
+		}
+	});
+var $author$project$Model$HighlightNode = function (a) {
+	return {$: 'HighlightNode', a: a};
+};
+var $author$project$Model$RefreshIssue = function (a) {
+	return {$: 'RefreshIssue', a: a};
+};
+var $author$project$Model$RefreshPullRequest = function (a) {
+	return {$: 'RefreshPullRequest', a: a};
+};
+var $author$project$Model$SelectCard = function (a) {
+	return {$: 'SelectCard', a: a};
+};
+var $author$project$Model$UnhighlightNode = {$: 'UnhighlightNode'};
+var $capitalist$elm_octicons$Octicons$linkExternalPath = 'M11,10 L12,10 L12,13 C12,13.55 11.55,14 11,14 L1,14 C0.45,14 0,13.55 0,13 L0,3 C0,2.45 0.45,2 1,2 L4,2 L4,3 L1,3 L1,13 L11,13 L11,10 L11,10 Z M6,2 L8.25,4.25 L5,7.5 L6.5,9 L9.75,5.75 L12,8 L12,2 L6,2 L6,2 Z';
 var $capitalist$elm_octicons$Octicons$linkExternal = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$linkExternalPath, '0 0 12 16', 'linkExternal');
 var $elm$html$Html$Attributes$target = $elm$html$Html$Attributes$stringProperty('target');
 var $author$project$CardView$cardExternalIcons = function (card) {
@@ -16948,8 +17390,6 @@ var $author$project$Label$colorIsLight = F2(
 				$author$project$Label$computeColorIsLight(hex));
 		}
 	});
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
 var $author$project$Label$colorStyles = F2(
 	function (model, color) {
 		return _List_fromArray(
@@ -17010,9 +17450,6 @@ var $capitalist$elm_octicons$Octicons$syncPath = 'M10.24,7.4 C10.43,8.68 10.04,1
 var $capitalist$elm_octicons$Octicons$sync = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$syncPath, '0 0 12 16', 'sync');
 var $capitalist$elm_octicons$Octicons$gitMergePath = 'M10,7 C9.27,7 8.62,7.41 8.27,8.02 L8.27,8 C7.22,7.98 6,7.64 5.14,6.98 C4.39,6.4 3.64,5.37 3.25,4.54 C3.7,4.18 4,3.62 4,2.99 C4,1.88 3.11,0.99 2,0.99 C0.89,0.99 0,1.89 0,3 C0,3.73 0.41,4.38 1,4.72 L1,11.28 C0.41,11.63 0,12.27 0,13 C0,14.11 0.89,15 2,15 C3.11,15 4,14.11 4,13 C4,12.27 3.59,11.62 3,11.28 L3,7.67 C3.67,8.37 4.44,8.94 5.3,9.36 C6.16,9.78 7.33,9.99 8.27,10 L8.27,9.98 C8.63,10.59 9.27,11 10,11 C11.11,11 12,10.11 12,9 C12,7.89 11.11,7 10,7 L10,7 Z M3.2,13 C3.2,13.66 2.65,14.2 2,14.2 C1.35,14.2 0.8,13.65 0.8,13 C0.8,12.35 1.35,11.8 2,11.8 C2.65,11.8 3.2,12.35 3.2,13 L3.2,13 Z M2,4.2 C1.34,4.2 0.8,3.65 0.8,3 C0.8,2.35 1.35,1.8 2,1.8 C2.65,1.8 3.2,2.35 3.2,3 C3.2,3.65 2.65,4.2 2,4.2 L2,4.2 Z M10,10.2 C9.34,10.2 8.8,9.65 8.8,9 C8.8,8.35 9.35,7.8 10,7.8 C10.65,7.8 11.2,8.35 11.2,9 C11.2,9.65 10.65,10.2 10,10.2 L10,10.2 Z';
 var $capitalist$elm_octicons$Octicons$gitMerge = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$gitMergePath, '0 0 12 16', 'gitMerge');
-var $author$project$Colors$green500 = '#28a745';
-var $author$project$Colors$green = $author$project$Colors$green500;
-var $author$project$CardView$octiconOpts = $capitalist$elm_octicons$Octicons$defaultOptions;
 var $author$project$Colors$red500 = '#d73a49';
 var $author$project$Colors$red = $author$project$Colors$red500;
 var $capitalist$elm_octicons$Octicons$alertPath = 'M8.865,1.51999998 C8.685,1.20999998 8.355,1.01999998 7.995,1.01999998 C7.635,1.01999998 7.305,1.20999998 7.125,1.51999998 L0.275000001,13.5 C0.0950000006,13.81 0.0950000006,14.19 0.275000001,14.5 C0.465000001,14.81 0.795000001,15 1.145,15 L14.845,15 C15.205,15 15.535,14.81 15.705,14.5 C15.875,14.19 15.885,13.81 15.715,13.5 L8.865,1.51999998 Z M8.995,13 L6.995,13 L6.995,11 L8.995,11 L8.995,13 L8.995,13 Z M8.995,9.99999998 L6.995,9.99999998 L6.995,5.99999998 L8.995,5.99999998 L8.995,9.99999998 L8.995,9.99999998 Z';
@@ -17046,8 +17483,6 @@ var $author$project$Colors$orange500 = '#f66a0a';
 var $author$project$Colors$orange = $author$project$Colors$orange500;
 var $capitalist$elm_octicons$Octicons$primitiveDotPath = 'M0,8 C0,5.8 1.8,4 4,4 C6.2,4 8,5.8 8,8 C8,10.2 6.2,12 4,12 C1.8,12 0,10.2 0,8 L0,8 Z';
 var $capitalist$elm_octicons$Octicons$primitiveDot = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$primitiveDotPath, '0 0 8 16', 'primitiveDot');
-var $author$project$Colors$purple500 = '#6f42c1';
-var $author$project$Colors$purple = $author$project$Colors$purple500;
 var $capitalist$elm_octicons$Octicons$questionPath = 'M6,10 L8,10 L8,12 L6,12 L6,10 L6,10 Z M10,6.5 C10,8.64 8,9 8,9 L6,9 C6,8.45 6.45,8 7,8 L7.5,8 C7.78,8 8,7.78 8,7.5 L8,6.5 C8,6.22 7.78,6 7.5,6 L6.5,6 C6.22,6 6,6.22 6,6.5 L6,7 L4,7 C4,5.5 5.5,4 7,4 C8.5,4 10,5 10,6.5 L10,6.5 Z M7,2.3 C10.14,2.3 12.7,4.86 12.7,8 C12.7,11.14 10.14,13.7 7,13.7 C3.86,13.7 1.3,11.14 1.3,8 C1.3,4.86 3.86,2.3 7,2.3 L7,2.3 Z M7,1 C3.14,1 0,4.14 0,8 C0,11.86 3.14,15 7,15 C10.86,15 14,11.86 14,8 C14,4.14 10.86,1 7,1 L7,1 Z';
 var $capitalist$elm_octicons$Octicons$question = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$questionPath, '0 0 14 16', 'question');
 var $capitalist$elm_octicons$Octicons$xPolygon = '7.48 8 11.23 11.75 9.75 13.23 6 9.48 2.25 13.23 0.77 11.75 4.52 8 0.77 4.25 2.25 2.77 6 6.52 9.75 2.77 11.23 4.25';
@@ -17478,6 +17913,94 @@ var $author$project$CardView$viewCardMeta = function (card) {
 			}()
 			]));
 };
+var $author$project$Model$Projectify = F2(
+	function (a, b) {
+		return {$: 'Projectify', a: a, b: b};
+	});
+var $author$project$Model$StartProjectifying = function (a) {
+	return {$: 'StartProjectifying', a: a};
+};
+var $author$project$Model$StopProjectifying = function (a) {
+	return {$: 'StopProjectifying', a: a};
+};
+var $elm$html$Html$li = _VirtualDom_node('li');
+var $elm$html$Html$ul = _VirtualDom_node('ul');
+var $author$project$CardView$viewProjectifyControls = F2(
+	function (model, card) {
+		var _v0 = A2(
+			$elm$core$Maybe$withDefault,
+			_List_Nil,
+			A2($elm$core$Dict$get, card.repo.id, model.repoProjectTemplates));
+		if (!_v0.b) {
+			return _List_Nil;
+		} else {
+			var templates = _v0;
+			return _List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('projectify-interaction')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Events$onClick(
+									$author$project$Model$StartProjectifying(card.id))
+								]),
+							_List_fromArray(
+								[
+									$capitalist$elm_octicons$Octicons$project($capitalist$elm_octicons$Octicons$defaultOptions)
+								])),
+							A2($elm$core$Set$member, card.id, model.projectifyingCards) ? A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('projectify')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Events$onClick(
+											$author$project$Model$StopProjectifying(card.id)),
+											$elm$html$Html$Attributes$class('click-away-catcher')
+										]),
+									_List_Nil),
+									A2(
+									$elm$html$Html$ul,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('projectify-selector')
+										]),
+									A2(
+										$elm$core$List$map,
+										function (project) {
+											return A2(
+												$elm$html$Html$li,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('project-choice'),
+														$elm$html$Html$Events$onClick(
+														A2($author$project$Model$Projectify, card, project))
+													]),
+												_List_fromArray(
+													[
+														$elm$html$Html$text(project.name)
+													]));
+										},
+										templates))
+								])) : $elm$html$Html$text('')
+						]))
+				]);
+		}
+	});
 var $capitalist$elm_octicons$Octicons$plusPolygon = '12 9 7 9 7 14 5 14 5 9 0 9 0 7 5 7 5 2 7 2 7 7 12 7';
 var $capitalist$elm_octicons$Octicons$plus = A3($capitalist$elm_octicons$Octicons$polygonIconWithOptions, $capitalist$elm_octicons$Octicons$plusPolygon, '0 0 12 16', 'plus');
 var $author$project$Model$whenLoggedIn = F2(
@@ -17683,6 +18206,7 @@ var $author$project$CardView$viewCardContent = F3(
 							_List_fromArray(
 								[
 									controls,
+									((!_Utils_eq(model.me, $elm$core$Maybe$Nothing)) && ((!$author$project$Card$isPR(card)) && (!A2($elm$core$Dict$member, card.id, model.cardProjects)))) ? A2($author$project$CardView$viewProjectifyControls, model, card) : _List_Nil,
 									_List_fromArray(
 									[
 										A2(
@@ -17715,39 +18239,45 @@ var $author$project$CardView$viewCard = F3(
 					$elm$html$Html$Attributes$class('card'),
 					$elm$html$Html$Attributes$tabindex(0)
 				]),
-			A2(
-				$elm$core$List$cons,
-				A3($author$project$CardView$viewCardContent, model, controls, card),
-				function () {
-					var _v0 = A2($elm$core$Dict$get, card.id, model.cardClosers);
-					if (_v0.$ === 'Nothing') {
-						return _List_Nil;
-					} else {
-						if (!_v0.a.b) {
+			$elm$core$List$concat(
+				_List_fromArray(
+					[
+						_List_fromArray(
+						[
+							A3($author$project$CardView$viewCardContent, model, controls, card)
+						]),
+						function () {
+						var _v0 = A2($elm$core$Dict$get, card.id, model.cardClosers);
+						if (_v0.$ === 'Nothing') {
 							return _List_Nil;
 						} else {
-							var closers = _v0.a;
-							return _List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('card-closers')
-										]),
-									A2(
-										$elm$core$List$map,
-										A2($author$project$CardView$viewCardContent, model, _List_Nil),
+							if (!_v0.a.b) {
+								return _List_Nil;
+							} else {
+								var closers = _v0.a;
+								return _List_fromArray(
+									[
 										A2(
-											$elm$core$List$filterMap,
-											function (id) {
-												return A2($elm$core$Dict$get, id, model.cards);
-											},
-											closers)))
-								]);
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('card-closers')
+											]),
+										A2(
+											$elm$core$List$map,
+											A2($author$project$CardView$viewCardContent, model, _List_Nil),
+											A2(
+												$elm$core$List$filterMap,
+												function (id) {
+													return A2($elm$core$Dict$get, id, model.cards);
+												},
+												closers)))
+									]);
+							}
 						}
-					}
-				}()));
+					}(),
+						A2($author$project$CardView$viewCardAssociatedProject, model, card)
+					])));
 	});
 var $author$project$CardOperations$viewCardEntry = F2(
 	function (model, card) {
@@ -18145,8 +18675,6 @@ var $author$project$Main$navButton = F4(
 	});
 var $capitalist$elm_octicons$Octicons$organizationPath = 'M16,12.999 C16,13.438 15.55,13.999 15,13.999 L7.995,13.999 C7.456,13.999 7.001,13.552 7,13 L1,13 C0.46,13 0,12.439 0,12 C0,9.366 3,8 3,8 C3,8 3.229,7.591 3,7 C2.159,6.379 1.942,6.41 2,4 C2.058,1.581 3.367,1 4.5,1 C5.633,1 6.942,1.58 7,4 C7.058,6.41 6.841,6.379 6,7 C5.771,7.59 6,8 6,8 C6,8 7.549,8.711 8.42,10.088 C9.196,9.369 10,8.999 10,8.999 C10,8.999 10.229,8.59 10,7.999 C9.159,7.379 8.942,7.409 9,4.999 C9.058,2.58 10.367,1.999 11.5,1.999 C12.633,1.999 13.937,2.58 13.995,4.999 C14.054,7.409 13.837,7.379 12.995,7.999 C12.766,8.589 12.995,8.999 12.995,8.999 C12.995,8.999 16,10.365 16,12.999';
 var $capitalist$elm_octicons$Octicons$organization = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$organizationPath, '0 0 16 16', 'organization');
-var $capitalist$elm_octicons$Octicons$projectPath = 'M10,12 L13,12 L13,2 L10,2 L10,12 L10,12 Z M6,10 L9,10 L9,2 L6,2 L6,10 L6,10 Z M2,14 L5,14 L5,2 L2,2 L2,14 L2,14 Z M1,15 L14,15 L14,1 L1,1 L1,15 L1,15 Z M14,0 L1,0 C0.448,0 0,0.448 0,1 L0,15 C0,15.552 0.448,16 1,16 L14,16 C14.552,16 15,15.552 15,15 L15,1 C15,0.448 14.552,0 14,0 L14,0 L14,0 Z';
-var $capitalist$elm_octicons$Octicons$project = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$projectPath, '0 0 15 16', 'project');
 var $capitalist$elm_octicons$Octicons$signInPath = 'M7,6.75 L7,12 L11,12 L11,8 L12,8 L12,12 C12,12.55 11.55,13 11,13 L7,13 L7,16 L1.55,13.28 C1.22,13.11 1,12.76 1,12.37 L1,1 C1,0.45 1.45,0 2,0 L11,0 C11.55,0 12,0.45 12,1 L12,4 L11,4 L11,1 L3,1 L7,3 L7,5.25 L10,3 L10,5 L14,5 L14,7 L10,7 L10,9 L7,6.75 L7,6.75 Z';
 var $capitalist$elm_octicons$Octicons$signIn = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$signInPath, '0 0 14 16', 'signIn');
 var $author$project$Model$SelectAnticipatedCards = {$: 'SelectAnticipatedCards'};
@@ -18388,58 +18916,6 @@ var $author$project$CardView$viewCardActor = function (_v0) {
 			]),
 		_List_Nil);
 };
-var $author$project$Colors$gray200 = '#e1e4e8';
-var $author$project$ProgressBar$view = function (segments) {
-	var total = $elm$core$List$sum(
-		A2($elm$core$List$map, $elm$core$Tuple$second, segments));
-	var width = function (base) {
-		var pct = (base / total) * 100;
-		return A2(
-			$elm$html$Html$Attributes$style,
-			'width',
-			$elm$core$String$fromFloat(pct) + '%');
-	};
-	var segment = F2(
-		function (color, val) {
-			return (!val) ? $elm$html$Html$text('') : A2(
-				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$class('segment'),
-						A2($elm$html$Html$Attributes$style, 'background-color', color),
-						width(val)
-					]),
-				_List_Nil);
-		});
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('progress-bar')
-			]),
-		A2(
-			$elm$core$List$map,
-			function (_v0) {
-				var c = _v0.a;
-				var v = _v0.b;
-				return A2(segment, c, v);
-			},
-			segments));
-};
-var $author$project$CardView$viewProjectBar = F2(
-	function (model, project) {
-		var _v0 = A2($author$project$CardView$projectProgress, model, project);
-		var toDos = _v0.a;
-		var inProgresses = _v0.b;
-		var dones = _v0.c;
-		return (((toDos + inProgresses) + dones) > 0) ? $author$project$ProgressBar$view(
-			_List_fromArray(
-				[
-					_Utils_Tuple2($author$project$Colors$green, dones),
-					_Utils_Tuple2($author$project$Colors$purple, inProgresses),
-					_Utils_Tuple2($author$project$Colors$gray200, toDos)
-				])) : $elm$html$Html$text('');
-	});
 var $author$project$CardView$viewProjectCard = F3(
 	function (model, controls, project) {
 		var isOpenEpic = function (card) {

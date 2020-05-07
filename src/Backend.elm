@@ -32,6 +32,7 @@ module Backend exposing
     , refreshIssue
     , refreshPR
     , refreshRepo
+    , refreshRepoProjects
     , timelineRotations
     )
 
@@ -224,6 +225,13 @@ refreshCards col f =
 refreshRepo : GitHub.RepoSelector -> (Result Http.Error () -> msg) -> Cmd msg
 refreshRepo repo f =
     HttpBuilder.get ("/refresh?repo=" ++ repo.owner ++ "/" ++ repo.name)
+        |> HttpBuilder.toTask
+        |> Task.attempt f
+
+
+refreshRepoProjects : GitHub.RepoSelector -> (Result Http.Error () -> msg) -> Cmd msg
+refreshRepoProjects repo f =
+    HttpBuilder.get ("/refresh?repoProjects=" ++ repo.owner ++ "/" ++ repo.name)
         |> HttpBuilder.toTask
         |> Task.attempt f
 

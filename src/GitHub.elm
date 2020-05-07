@@ -46,6 +46,7 @@ module GitHub exposing
     , addNoteCardAfter
     , addPullRequestLabels
     , assign
+    , cloneProject
     , closeIssue
     , closeRepoMilestone
     , convertCardToIssue
@@ -550,6 +551,13 @@ fetchOrgProjects token org =
     fetchPaged orgProjectsQuery token { selector = org, after = Nothing }
 
 
+cloneProject : Token -> CloneProjectInput -> Task Error Project
+cloneProject token cpi =
+    cloneProjectMutation
+        |> GB.request cpi
+        |> GH.customSendMutation (authedOptions token)
+
+
 fetchOrgProject : Token -> ProjectSelector -> Task Error Project
 fetchOrgProject token project =
     projectQuery
@@ -922,6 +930,35 @@ unassignUsersMutation =
                         []
                         assignable
                 )
+
+
+type alias CloneProjectInput =
+    { sourceId : ID
+    , targetOwnerId : ID
+    , includeWorkflows : Bool
+    , name : String
+    , body : Maybe String
+    , public : Bool
+    }
+
+
+cloneProjectMutation : GB.Document GB.Mutation Project CloneProjectInput
+cloneProjectMutation =
+    GB.mutationDocument <|
+        GB.extract <|
+            GB.field "cloneProject"
+                [ ( "input"
+                  , GA.object
+                        [ ( "sourceId", GA.variable (GV.required "sourceId" .sourceId GV.id) )
+                        , ( "targetOwnerId", GA.variable (GV.required "targetOwnerId" .targetOwnerId GV.id) )
+                        , ( "includeWorkflows", GA.variable (GV.required "includeWorkflows" .includeWorkflows GV.bool) )
+                        , ( "name", GA.variable (GV.required "name" .name GV.string) )
+                        , ( "body", GA.variable (GV.required "body" .body (GV.nullable GV.string)) )
+                        , ( "public", GA.variable (GV.required "public" .public GV.bool) )
+                        ]
+                  )
+                ]
+                (GB.extract <| GB.field "project" [] projectObject)
 
 
 moveCardMutation : GB.Document GB.Mutation ProjectColumnCard { columnId : ID, cardId : ID, afterId : Maybe ID }

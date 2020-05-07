@@ -745,6 +745,17 @@ update msg model =
         SetUserIn user ->
             ( { model | outUsers = Set.remove user.id model.outUsers }, Cmd.none )
 
+        StartProjectifying cardId ->
+            ( { model | projectifyingCards = Set.insert cardId model.projectifyingCards }, Cmd.none )
+
+        StopProjectifying cardId ->
+            ( { model | projectifyingCards = Set.remove cardId model.projectifyingCards }, Cmd.none )
+
+        Projectify card project ->
+            ( { model | projectifyingCards = Set.remove card.id model.projectifyingCards }
+            , Effects.createProjectForIssue model card project
+            )
+
 
 addAssignments : List GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
 addAssignments users mp =
@@ -1004,6 +1015,10 @@ computeDataView model =
                 |> Dict.values
                 |> List.concat
 
+        repoProjectTemplates =
+            model.repoProjects
+                |> Dict.map (\_ -> List.filter (String.startsWith "Template:" << .name))
+
         projects =
             List.foldl (\project -> Dict.insert project.id project) Dict.empty allProjects
 
@@ -1059,6 +1074,7 @@ computeDataView model =
             , reposByLabel = groupRepoLabels
             , labelToRepoToId = groupLabelsToRepoToId
             , allLabels = allLabels
+            , repoProjectTemplates = repoProjectTemplates
         }
 
 
@@ -1112,6 +1128,42 @@ computeCardsView model =
 
         recordPairRotations _ rotations acc =
             List.foldl (\{ users, start } -> Dict.update (List.sort (List.map .id users)) (recordRotation start)) acc rotations
+
+        repoIssuesByNumber =
+            Dict.foldl
+                (\_ issue ->
+                    Dict.update issue.repo.id (Just << Dict.insert issue.number issue.id << Maybe.withDefault Dict.empty)
+                )
+                Dict.empty
+                model.issues
+
+        cardProjects =
+            Dict.foldl
+                (\repoId ps cpsOuter ->
+                    List.foldl
+                        (\project cps ->
+                            case String.split "#" project.name of
+                                [ _, numStr ] ->
+                                    case String.toInt numStr of
+                                        Just num ->
+                                            case Dict.get repoId repoIssuesByNumber |> Maybe.andThen (Dict.get num) of
+                                                Just issueId ->
+                                                    Dict.insert issueId project.id cps
+
+                                                Nothing ->
+                                                    cps
+
+                                        Nothing ->
+                                            cps
+
+                                _ ->
+                                    cps
+                        )
+                        cpsOuter
+                        ps
+                )
+                Dict.empty
+                model.repoProjects
     in
     { model
         | cards = cards
@@ -1120,6 +1172,7 @@ computeCardsView model =
         , cardsByMilestone = cardsByMilestone
         , archive = computeArchive model cards
         , lastPaired = Dict.foldl recordPairRotations Dict.empty model.cardRotations
+        , cardProjects = cardProjects
     }
 
 
@@ -1598,7 +1651,6 @@ viewLabelByName model name =
             Html.text ("missing label: " ++ name)
 
 
-
 viewPullRequestsPage : Model -> Html Msg
 viewPullRequestsPage model =
     let
@@ -1683,9 +1735,9 @@ viewRepoOpenPRs model repo cards =
     in
     Html.div [ HA.class "repo-prs" ]
         [ Html.div [ HA.class "page-header" ]
-                [ Octicons.repo octiconOpts
-                , Html.text repo.name
-                ]
+            [ Octicons.repo octiconOpts
+            , Html.text repo.name
+            ]
         , Html.div [ HA.class "fixed-columns" ]
             [ Html.div [ HA.class "fixed-column" ]
                 [ Html.div [ HA.class "column-title" ]
@@ -2420,6 +2472,9 @@ handleEvent event data index model =
             withDecoded Backend.decodeRepoProjectsEvent <|
                 \val ->
                     { model | repoProjects = Dict.insert val.repoId val.projects model.repoProjects }
+                        -- refresh project <-> card mapping
+                        |> computeDataView
+                        |> computeCardsView
 
         "repoRefs" ->
             withDecoded Backend.decodeRepoRefsEvent <|

@@ -30,8 +30,8 @@ import Dict exposing (Dict)
 import Drag
 import ForceGraph exposing (ForceGraph)
 import GitHub
-import Http
 import Html exposing (Html)
+import Http
 import OrderedSet exposing (OrderedSet)
 import Set exposing (Set)
 import Time
@@ -81,6 +81,8 @@ type alias Model =
     , repoReleaseStatuses : Dict GitHub.ID (List ReleaseStatus)
     , lastPaired : Dict (List GitHub.ID) Time.Posix
     , inFlight : List ProjectLanes
+    , repoProjectTemplates : Dict GitHub.ID (List GitHub.Project)
+    , cardProjects : Dict GitHub.ID GitHub.ID
 
     -- cache of computed lightness values for each color; used for determining
     -- whether label text should be white or dark
@@ -129,6 +131,9 @@ type alias Model =
     -- assigning state
     , outUsers : Set GitHub.ID
     , pendingAssignments : Dict GitHub.ID PendingAssignments
+
+    -- projectifying state
+    , projectifyingCards : Set GitHub.ID
     }
 
 
@@ -216,6 +221,9 @@ type Msg
     | SetLoading (List GitHub.ID) (Cmd Msg)
     | SetUserOut GitHub.User
     | SetUserIn GitHub.User
+    | StartProjectifying GitHub.ID
+    | StopProjectifying GitHub.ID
+    | Projectify Card GitHub.Project
 
 
 type Page
@@ -397,6 +405,9 @@ empty key =
     , pendingAssignments = Dict.empty
     , inFlight = []
     , lastPaired = Dict.empty
+    , repoProjectTemplates = Dict.empty
+    , cardProjects = Dict.empty
+    , projectifyingCards = Set.empty
     }
 
 

@@ -37,21 +37,45 @@ import Task
 viewCard : Model -> List (Html Msg) -> Card -> Html Msg
 viewCard model controls card =
     Html.div [ HA.class "card", HA.tabindex 0 ] <|
-        viewCardContent model controls card
-            :: (case Dict.get card.id model.cardClosers of
-                    Nothing ->
-                        []
+        List.concat
+            [ [ viewCardContent model controls card ]
+            , case Dict.get card.id model.cardClosers of
+                Nothing ->
+                    []
 
-                    Just [] ->
-                        []
+                Just [] ->
+                    []
 
-                    Just closers ->
-                        [ closers
-                            |> List.filterMap (\id -> Dict.get id model.cards)
-                            |> List.map (viewCardContent model [])
-                            |> Html.div [ HA.class "card-closers" ]
+                Just closers ->
+                    [ closers
+                        |> List.filterMap (\id -> Dict.get id model.cards)
+                        |> List.map (viewCardContent model [])
+                        |> Html.div [ HA.class "card-closers" ]
+                    ]
+            , viewCardAssociatedProject model card
+            ]
+
+
+viewCardAssociatedProject : Model -> Card -> List (Html Msg)
+viewCardAssociatedProject model card =
+    case Dict.get card.id model.cardProjects |> Maybe.andThen (\id -> Dict.get id model.projects) of
+        Nothing ->
+            []
+
+        Just project ->
+            [ Html.div [ HA.class "card-projects" ]
+                [ Html.a [ HA.href ("/projects/" ++ project.id), HA.class "card-content" ]
+                    [ Html.div [ HA.class "card-squares left vertical" ]
+                        [ Html.div [ HA.class "card-square" ]
+                            [ Octicons.project octiconOpts
+                            ]
                         ]
-               )
+                    , Html.div [ HA.class "card-info" ]
+                        [ viewProjectBar model project
+                        ]
+                    ]
+                ]
+            ]
 
 
 viewCardContent : Model -> List (Html Msg) -> Card -> Html Msg
@@ -96,6 +120,11 @@ viewCardContent model controls card =
             List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
                 List.concat
                     [ controls
+                    , if model.me /= Nothing && not (Card.isPR card) && not (Dict.member card.id model.cardProjects) then
+                        viewProjectifyControls model card
+
+                      else
+                        []
                     , [ Html.span
                             [ HE.onClick
                                 (if Card.isPR card then
@@ -110,11 +139,47 @@ viewCardContent model controls card =
                     , cardExternalIcons card
                     , if model.me == Nothing then
                         []
+
                       else
                         pauseIcon card
                     , List.map (viewSuggestedLabel model card) model.suggestedLabels
                     ]
         ]
+
+
+viewProjectifyControls : Model -> Card -> List (Html Msg)
+viewProjectifyControls model card =
+    case Maybe.withDefault [] (Dict.get card.repo.id model.repoProjectTemplates) of
+        [] ->
+            []
+
+        templates ->
+            [ Html.div [ HA.class "projectify-interaction" ]
+                [ Html.span [ HE.onClick (StartProjectifying card.id) ]
+                    [ Octicons.project Octicons.defaultOptions ]
+                , if Set.member card.id model.projectifyingCards then
+                    Html.div [ HA.class "projectify" ]
+                        [ Html.div
+                            [ HE.onClick (StopProjectifying card.id)
+                            , HA.class "click-away-catcher"
+                            ]
+                            []
+                        , Html.ul [ HA.class "projectify-selector" ] <|
+                            List.map
+                                (\project ->
+                                    Html.li
+                                        [ HA.class "project-choice"
+                                        , HE.onClick (Projectify card project)
+                                        ]
+                                        [ Html.text project.name ]
+                                )
+                                templates
+                        ]
+
+                  else
+                    Html.text ""
+                ]
+            ]
 
 
 viewNote : Model -> GitHub.Project -> GitHub.ProjectColumn -> Backend.ColumnCard -> String -> Html Msg
@@ -485,7 +550,9 @@ viewProjectBar model project =
             ]
 
     else
-        Html.text ""
+        ProgressBar.view
+            [ ( Colors.gray200, 1 )
+            ]
 
 
 viewCardMeta : Card -> Html Msg

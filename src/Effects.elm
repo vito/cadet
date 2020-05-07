@@ -6,6 +6,7 @@ module Effects exposing
     , assignUsers
     , contentCardId
     , convertNoteToIssue
+    , createProjectForIssue
     , deleteProjectCard
     , moveCard
     , refreshColumnCards
@@ -20,6 +21,7 @@ module Effects exposing
 
 import Backend
 import Browser.Navigation as Nav
+import Card exposing (Card)
 import Dict
 import GitHub
 import Model exposing (Model, Msg(..))
@@ -57,6 +59,37 @@ refreshPR : GitHub.ID -> Cmd Msg
 refreshPR id =
     Backend.refreshPR id RefreshQueued
         |> withSetLoading [ id ]
+
+
+createProjectForIssue : Model -> Card -> GitHub.Project -> Cmd Msg
+createProjectForIssue model card templateProject =
+    let
+        cardNumber =
+            String.fromInt card.number
+
+        projectName =
+            String.replace "Template: " "" templateProject.name ++ " #" ++ cardNumber
+
+        projectBody =
+            "Project corresponding to [issue #" ++ cardNumber ++ "](" ++ card.repo.url ++ "/issues/" ++ cardNumber ++ ")."
+
+        repoSelector =
+            { owner = card.repo.owner
+            , name = card.repo.name
+            }
+    in
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.cloneProject token
+                { sourceId = templateProject.id
+                , targetOwnerId = card.repo.id
+                , includeWorkflows = True
+                , name = projectName
+                , body = Just projectBody
+                , public = True
+                }
+                |> Task.map (always ())
+                |> Task.attempt (DataChanged (Backend.refreshRepoProjects repoSelector RefreshQueued))
 
 
 moveCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg
@@ -100,7 +133,6 @@ assignUsers model users id =
             GitHub.assign token (List.map .id users) id
                 |> Task.attempt AssigneesUpdated
                 |> withSetLoading [ id ]
-
 
 
 addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg
