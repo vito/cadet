@@ -255,7 +255,7 @@ view model sir =
 
                     Just issue ->
                         Html.div [ HA.class "release-issue" ]
-                            [ case issue.author of
+                            [ case ME.or (List.head issue.assignees) issue.author of
                                 Nothing ->
                                     Html.text "missing owner"
 

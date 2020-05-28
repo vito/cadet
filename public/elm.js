@@ -26050,7 +26050,10 @@ var $author$project$ReleaseStatus$view = F2(
 											_List_fromArray(
 												[
 													function () {
-													var _v3 = issue.author;
+													var _v3 = A2(
+														$elm_community$maybe_extra$Maybe$Extra$or,
+														$elm$core$List$head(issue.assignees),
+														issue.author);
 													if (_v3.$ === 'Nothing') {
 														return $elm$html$Html$text('missing owner');
 													} else {
