@@ -5772,7 +5772,7 @@ var $author$project$Model$empty = function (key) {
 		highlightedCard: $elm$core$Maybe$Nothing,
 		highlightedNode: $elm$core$Maybe$Nothing,
 		idsByUrl: $elm$core$Dict$empty,
-		inFlight: _List_Nil,
+		inFlight: $elm$core$Dict$empty,
 		issues: $elm$core$Dict$empty,
 		key: key,
 		labelSearch: '',
@@ -11646,58 +11646,6 @@ var $author$project$Main$computeDataView = function (model) {
 			model,
 			{allLabels: allLabels, idsByUrl: idsByUrl, labelToRepoToId: groupLabelsToRepoToId, projects: projects, repoProjectTemplates: repoProjectTemplates, reposByLabel: groupRepoLabels, reposByName: reposByName}));
 };
-var $author$project$Main$byAssignees = function () {
-	var addCard = F2(
-		function (card, val) {
-			if (val.$ === 'Nothing') {
-				return $elm$core$Maybe$Just(
-					{
-						assignees: card.assignees,
-						cards: _List_fromArray(
-							[card])
-					});
-			} else {
-				var lane = val.a;
-				return $elm$core$Maybe$Just(
-					_Utils_update(
-						lane,
-						{
-							cards: A2($elm$core$List$cons, card, lane.cards)
-						}));
-			}
-		});
-	var groupByAssignees = F2(
-		function (card, groups) {
-			return A3(
-				$elm$core$Dict$update,
-				$elm$core$List$sort(
-					A2(
-						$elm$core$List$map,
-						function ($) {
-							return $.id;
-						},
-						card.assignees)),
-				addCard(card),
-				groups);
-		});
-	return A2(
-		$elm$core$Basics$composeR,
-		A2($elm$core$List$foldl, groupByAssignees, $elm$core$Dict$empty),
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Dict$values,
-			A2(
-				$elm$core$Basics$composeR,
-				$elm$core$List$sortBy(
-					function (_v0) {
-						var assignees = _v0.assignees;
-						var cards = _v0.cards;
-						return _Utils_Tuple2(
-							$elm$core$List$length(assignees),
-							$elm$core$List$length(cards));
-					}),
-				$elm$core$List$reverse)));
-}();
 var $author$project$Card$isOpen = function (card) {
 	var _v0 = card.state;
 	_v0$2:
@@ -11720,100 +11668,19 @@ var $author$project$Card$isOpen = function (card) {
 	}
 	return false;
 };
-var $elm_community$list_extra$List$Extra$find = F2(
-	function (predicate, list) {
-		find:
-		while (true) {
-			if (!list.b) {
-				return $elm$core$Maybe$Nothing;
-			} else {
-				var first = list.a;
-				var rest = list.b;
-				if (predicate(first)) {
-					return $elm$core$Maybe$Just(first);
-				} else {
-					var $temp$predicate = predicate,
-						$temp$list = rest;
-					predicate = $temp$predicate;
-					list = $temp$list;
-					continue find;
-				}
-			}
-		}
-	});
-var $author$project$CardView$projectProgress = F2(
-	function (model, project) {
-		var cardCount = function (col) {
-			return A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2(
-					$elm$core$Maybe$map,
-					$elm$core$List$length,
-					A2($elm$core$Dict$get, col.id, model.columnCards)));
-		};
-		var countPurpose = function (purpose) {
-			return A2(
-				$elm$core$Maybe$withDefault,
-				0,
-				A2(
-					$elm$core$Maybe$map,
-					cardCount,
-					A2(
-						$elm_community$list_extra$List$Extra$find,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(
-								$elm$core$Maybe$Just(purpose)),
-							function ($) {
-								return $.purpose;
-							}),
-						project.columns)));
-		};
-		var dones = countPurpose($author$project$GitHub$ProjectColumnPurposeDone);
-		var inProgresses = countPurpose($author$project$GitHub$ProjectColumnPurposeInProgress);
-		var toDos = countPurpose($author$project$GitHub$ProjectColumnPurposeToDo);
-		return _Utils_Tuple3(toDos, inProgresses, dones);
-	});
-var $author$project$Main$projectProgress = F2(
-	function (model, project) {
-		var _v0 = A2($author$project$CardView$projectProgress, model, project);
-		var toDos = _v0.a;
-		var inProgresses = _v0.b;
-		var dones = _v0.c;
-		return dones / ((toDos + inProgresses) + dones);
-	});
-var $author$project$Main$reflectPendingAssignments = F2(
-	function (model, card) {
-		var newAssignees = function () {
-			var _v0 = A2($elm$core$Dict$get, card.id, model.pendingAssignments);
-			if (_v0.$ === 'Nothing') {
-				return card.assignees;
-			} else {
-				var assign = _v0.a.assign;
-				var unassign = _v0.a.unassign;
-				var unaffected = function (_v1) {
-					var id = _v1.id;
-					return !A2(
-						$elm$core$List$any,
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(id),
-							function ($) {
-								return $.id;
-							}),
-						_Utils_ap(assign, unassign));
-				};
-				return _Utils_ap(
-					assign,
-					A2($elm$core$List$filter, unaffected, card.assignees));
-			}
-		}();
-		return _Utils_update(
-			card,
-			{assignees: newAssignees});
-	});
 var $author$project$Main$computeProjectLanes = function (model) {
+	var trackInFlight = F2(
+		function (card, mcs) {
+			if (mcs.$ === 'Nothing') {
+				return $elm$core$Maybe$Just(
+					_List_fromArray(
+						[card.id]));
+			} else {
+				var cs = mcs.a;
+				return $elm$core$Maybe$Just(
+					A2($elm$core$List$cons, card.id, cs));
+			}
+		});
 	var isInProgress = function (_v3) {
 		var purpose = _v3.purpose;
 		_v0$2:
@@ -11855,36 +11722,36 @@ var $author$project$Main$computeProjectLanes = function (model) {
 						A2($elm$core$Dict$get, col.id, model.columnCards)))));
 	};
 	var inFlightCards = function (project) {
-		var projectCards = A2(
-			$elm$core$List$map,
-			$author$project$Main$reflectPendingAssignments(model),
-			A2(
-				$elm$core$List$concatMap,
-				columnCards,
-				A2($elm$core$List$filter, isInProgress, project.columns)));
-		return $elm$core$List$isEmpty(projectCards) ? $elm$core$Maybe$Nothing : $elm$core$Maybe$Just(
-			{
-				lanes: $author$project$Main$byAssignees(projectCards),
-				project: project
-			});
+		return A2(
+			$elm$core$List$concatMap,
+			columnCards,
+			A2($elm$core$List$filter, isInProgress, project.columns));
 	};
+	var allInFlightCards = A2(
+		$elm$core$List$concatMap,
+		inFlightCards,
+		$elm$core$List$concat(
+			$elm$core$Dict$values(model.repoProjects)));
 	return _Utils_update(
 		model,
 		{
-			inFlight: $elm$core$List$reverse(
-				A2(
-					$elm$core$List$sortBy,
-					A2(
-						$elm$core$Basics$composeL,
-						$author$project$Main$projectProgress(model),
-						function ($) {
-							return $.project;
-						}),
-					A2(
-						$elm$core$List$filterMap,
-						inFlightCards,
-						$elm$core$List$concat(
-							$elm$core$Dict$values(model.repoProjects)))))
+			inFlight: A3(
+				$elm$core$List$foldl,
+				F2(
+					function (card, byUser) {
+						return A3(
+							$elm$core$List$foldl,
+							function (user) {
+								return A2(
+									$elm$core$Dict$update,
+									user.id,
+									trackInFlight(card));
+							},
+							byUser,
+							card.assignees);
+					}),
+				$elm$core$Dict$empty,
+				allInFlightCards)
 		});
 };
 var $author$project$Model$InProjectFilter = function (a) {
@@ -11955,6 +11822,27 @@ var $author$project$ReleaseStatus$categorizeCard = F3(
 	function (model, card, sir) {
 		var byState = A2($author$project$ReleaseStatus$categorizeByCardState, card, sir);
 		return $author$project$Card$isOpen(card) ? byState : A3($author$project$ReleaseStatus$categorizeByDocumentedState, model, card, byState);
+	});
+var $elm_community$list_extra$List$Extra$find = F2(
+	function (predicate, list) {
+		find:
+		while (true) {
+			if (!list.b) {
+				return $elm$core$Maybe$Nothing;
+			} else {
+				var first = list.a;
+				var rest = list.b;
+				if (predicate(first)) {
+					return $elm$core$Maybe$Just(first);
+				} else {
+					var $temp$predicate = predicate,
+						$temp$list = rest;
+					predicate = $temp$predicate;
+					list = $temp$list;
+					continue find;
+				}
+			}
+		}
 	});
 var $elm$core$String$replace = F3(
 	function (before, after, string) {
@@ -12627,7 +12515,7 @@ var $author$project$StatefulGraph$update = function (model) {
 var $author$project$Main$computeViewForPage = function (model) {
 	var reset = _Utils_update(
 		model,
-		{baseGraphFilter: $elm$core$Maybe$Nothing, inFlight: _List_Nil, suggestedLabels: _List_Nil});
+		{baseGraphFilter: $elm$core$Maybe$Nothing, inFlight: $elm$core$Dict$empty, suggestedLabels: _List_Nil});
 	var _v0 = model.page;
 	switch (_v0.$) {
 		case 'GlobalGraphPage':
@@ -15315,23 +15203,7 @@ var $author$project$Main$pairUpUser = F2(
 					}
 				}
 			});
-		var _v29 = A2(
-			$elm$core$List$partition,
-			A2(
-				$elm$core$Basics$composeL,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$Basics$eq(1),
-					$elm$core$List$length),
-				function ($) {
-					return $.assignees;
-				}),
-			A2(
-				$elm$core$List$concatMap,
-				function ($) {
-					return $.lanes;
-				},
-				model.inFlight));
+		var _v29 = _Utils_Tuple2(_List_Nil, _List_Nil);
 		var soloLanes = _v29.a;
 		var pairingLanes = _v29.b;
 		var isPairing = function (user) {
@@ -15401,7 +15273,7 @@ var $author$project$Main$pairUpUser = F2(
 								function ($) {
 									return $.lanes;
 								},
-								model.inFlight)));
+								_List_Nil)));
 					return A2(
 						$author$project$Main$update,
 						A2($author$project$Model$AssignUser, target, activeCards),
@@ -15820,7 +15692,7 @@ var $author$project$Main$update = F2(
 							}
 						});
 					var assignable = function (user) {
-						return (!A2($elm$core$Set$member, user.id, model.outUsers)) && (!A2(assigned, model.inFlight, user));
+						return (!A2($elm$core$Set$member, user.id, model.outUsers)) && (!A2(assigned, _List_Nil, user));
 					};
 					var toAssign = A2($elm$core$List$filter, assignable, model.assignableUsers);
 					return A3(
@@ -17145,6 +17017,40 @@ var $capitalist$elm_octicons$Octicons$project = A3($capitalist$elm_octicons$Octi
 var $author$project$Colors$gray200 = '#e1e4e8';
 var $author$project$Colors$green500 = '#28a745';
 var $author$project$Colors$green = $author$project$Colors$green500;
+var $author$project$CardView$projectProgress = F2(
+	function (model, project) {
+		var cardCount = function (col) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2(
+					$elm$core$Maybe$map,
+					$elm$core$List$length,
+					A2($elm$core$Dict$get, col.id, model.columnCards)));
+		};
+		var countPurpose = function (purpose) {
+			return A2(
+				$elm$core$Maybe$withDefault,
+				0,
+				A2(
+					$elm$core$Maybe$map,
+					cardCount,
+					A2(
+						$elm_community$list_extra$List$Extra$find,
+						A2(
+							$elm$core$Basics$composeL,
+							$elm$core$Basics$eq(
+								$elm$core$Maybe$Just(purpose)),
+							function ($) {
+								return $.purpose;
+							}),
+						project.columns)));
+		};
+		var dones = countPurpose($author$project$GitHub$ProjectColumnPurposeDone);
+		var inProgresses = countPurpose($author$project$GitHub$ProjectColumnPurposeInProgress);
+		var toDos = countPurpose($author$project$GitHub$ProjectColumnPurposeToDo);
+		return _Utils_Tuple3(toDos, inProgresses, dones);
+	});
 var $author$project$Colors$purple500 = '#6f42c1';
 var $author$project$Colors$purple = $author$project$Colors$purple500;
 var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
@@ -17222,7 +17128,7 @@ var $author$project$CardView$viewCardAssociatedProject = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-projects')
+							$elm$html$Html$Attributes$class('related-cards')
 						]),
 					_List_fromArray(
 						[
@@ -18278,7 +18184,7 @@ var $author$project$CardView$viewCard = F3(
 										$elm$html$Html$div,
 										_List_fromArray(
 											[
-												$elm$html$Html$Attributes$class('card-closers')
+												$elm$html$Html$Attributes$class('related-cards')
 											]),
 										A2(
 											$elm$core$List$map,
@@ -20245,8 +20151,219 @@ var $author$project$CardView$viewNoteCard = F6(
 				}()
 				]));
 	});
+var $author$project$CardView$viewMinimalCardContent = F3(
+	function (model, controls, card) {
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card-content'),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'loading',
+							A2($elm$core$Dict$member, card.id, model.progress))
+						])),
+					$elm$html$Html$Attributes$classList(
+					_List_fromArray(
+						[
+							_Utils_Tuple2(
+							'paused',
+							$author$project$Card$isPaused(card)),
+							_Utils_Tuple2(
+							'highlighted',
+							_Utils_eq(
+								model.highlightedCard,
+								$elm$core$Maybe$Just(card.id))),
+							_Utils_Tuple2(
+							A2($author$project$Activity$class, model.currentTime, card.updatedAt),
+							$author$project$Card$isPR(card))
+						])),
+					$elm$html$Html$Events$onClick(
+					$author$project$Model$SelectCard(card.id)),
+					$elm$html$Html$Events$onMouseOver(
+					$author$project$Model$HighlightNode(card.id)),
+					$elm$html$Html$Events$onMouseOut($author$project$Model$UnhighlightNode)
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-squares left vertical')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-square')
+								]),
+							_List_fromArray(
+								[
+									$author$project$CardView$viewCardIcon(card)
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-info')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$span,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-title'),
+									$elm$html$Html$Attributes$draggable('false')
+								]),
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('title-link'),
+											$elm$html$Html$Attributes$href(card.url),
+											$elm$html$Html$Attributes$target('_blank')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(card.title)
+										]))
+								])),
+							$author$project$CardView$viewCardMeta(card),
+							A2($author$project$CardView$viewCardActivity, model, card)
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
+						]),
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						$elm$core$List$concat(
+							_List_fromArray(
+								[
+									controls,
+									_List_fromArray(
+									[
+										A2(
+										$elm$html$Html$span,
+										_List_fromArray(
+											[
+												$elm$html$Html$Events$onClick(
+												$author$project$Card$isPR(card) ? $author$project$Model$RefreshPullRequest(card.id) : $author$project$Model$RefreshIssue(card.id))
+											]),
+										_List_fromArray(
+											[
+												$capitalist$elm_octicons$Octicons$sync($capitalist$elm_octicons$Octicons$defaultOptions)
+											]))
+									]),
+									A2(
+									$elm$core$List$map,
+									A2($author$project$CardView$viewSuggestedLabel, model, card),
+									model.suggestedLabels)
+								]))))
+				]));
+	});
 var $author$project$CardView$viewPersonCard = F3(
 	function (model, controls, user) {
+		var personCardContent = A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('card-content')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-squares left vertical')
+						]),
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						_List_fromArray(
+							[
+								$author$project$CardView$viewCardActor(user)
+							]))),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-info')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-title')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text(
+									A2($elm$core$Maybe$withDefault, '@' + user.login, user.name))
+								]))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
+						]),
+					A2(
+						$elm$core$List$map,
+						function (x) {
+							return A2(
+								$elm$html$Html$div,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$class('card-square')
+									]),
+								_List_fromArray(
+									[x]));
+						},
+						controls))
+				]));
+		var inFlightCards = A2(
+			$elm$core$List$filterMap,
+			function (id) {
+				return A2($elm$core$Dict$get, id, model.cards);
+			},
+			A2(
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2($elm$core$Dict$get, user.id, model.inFlight)));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -20256,76 +20373,17 @@ var $author$project$CardView$viewPersonCard = F3(
 				]),
 			_List_fromArray(
 				[
+					personCardContent,
 					A2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-content')
+							$elm$html$Html$Attributes$class('related-cards')
 						]),
-					_List_fromArray(
-						[
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('card-squares left vertical')
-								]),
-							A2(
-								$elm$core$List$map,
-								function (x) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('card-square')
-											]),
-										_List_fromArray(
-											[x]));
-								},
-								_List_fromArray(
-									[
-										$author$project$CardView$viewCardActor(user)
-									]))),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('card-info')
-								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$div,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('card-title')
-										]),
-									_List_fromArray(
-										[
-											$elm$html$Html$text(
-											A2($elm$core$Maybe$withDefault, '@' + user.login, user.name))
-										]))
-								])),
-							A2(
-							$elm$html$Html$div,
-							_List_fromArray(
-								[
-									$elm$html$Html$Attributes$class('card-squares right vertical card-controls')
-								]),
-							A2(
-								$elm$core$List$map,
-								function (x) {
-									return A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('card-square')
-											]),
-										_List_fromArray(
-											[x]));
-								},
-								controls))
-						]))
+					A2(
+						$elm$core$List$map,
+						A2($author$project$CardView$viewMinimalCardContent, model, _List_Nil),
+						inFlightCards))
 				]));
 	});
 var $author$project$CardView$viewNote = F5(

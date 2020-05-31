@@ -81,7 +81,7 @@ type alias Model =
     , cardsByMilestone : Dict GitHub.ID (List GitHub.ID)
     , repoReleaseStatuses : Dict GitHub.ID (List ReleaseStatus)
     , lastPaired : Dict (List GitHub.ID) Time.Posix
-    , inFlight : List ProjectLanes
+    , inFlight : Dict GitHub.ID (List GitHub.ID)
     , repoProjectTemplates : Dict GitHub.ID (List GitHub.Project)
     , cardProjects : Dict GitHub.ID GitHub.ID
 
@@ -405,7 +405,7 @@ empty key =
     , showArchivedCards = Set.empty
     , outUsers = Set.empty
     , pendingAssignments = Dict.empty
-    , inFlight = []
+    , inFlight = Dict.empty
     , lastPaired = Dict.empty
     , repoProjectTemplates = Dict.empty
     , cardProjects = Dict.empty

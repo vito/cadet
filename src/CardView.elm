@@ -50,7 +50,7 @@ viewCard model controls card =
                     [ closers
                         |> List.filterMap (\id -> Dict.get id model.cards)
                         |> List.map (viewCardContent model [])
-                        |> Html.div [ HA.class "card-closers" ]
+                        |> Html.div [ HA.class "related-cards" ]
                     ]
             , viewCardAssociatedProject model card
             ]
@@ -63,7 +63,7 @@ viewCardAssociatedProject model card =
             []
 
         Just project ->
-            [ Html.div [ HA.class "card-projects" ]
+            [ Html.div [ HA.class "related-cards" ]
                 [ Html.a [ HA.href ("/projects/" ++ project.id), HA.class "card-content" ]
                     [ Html.div [ HA.class "card-squares left vertical" ]
                         [ Html.div [ HA.class "card-square" ]
@@ -142,6 +142,58 @@ viewCardContent model controls card =
 
                       else
                         pauseIcon card
+                    , List.map (viewSuggestedLabel model card) model.suggestedLabels
+                    ]
+        ]
+
+
+viewMinimalCardContent : Model -> List (Html Msg) -> Card -> Html Msg
+viewMinimalCardContent model controls card =
+    Html.div
+        [ HA.class "card-content"
+        , HA.classList [ ( "loading", Dict.member card.id model.progress ) ]
+        , HA.classList
+            [ ( "paused", Card.isPaused card )
+            , ( "highlighted", model.highlightedCard == Just card.id )
+            , ( Activity.class model.currentTime card.updatedAt, Card.isPR card )
+            ]
+        , HE.onClick (SelectCard card.id)
+        , HE.onMouseOver (HighlightNode card.id)
+        , HE.onMouseOut UnhighlightNode
+        ]
+        [ Html.div [ HA.class "card-squares left vertical" ]
+            [ Html.div [ HA.class "card-square" ]
+                [ viewCardIcon card
+                ]
+            ]
+        , Html.div [ HA.class "card-info" ]
+            [ Html.span [ HA.class "card-title", HA.draggable "false" ] <|
+                [ Html.a
+                    [ HA.class "title-link"
+                    , HA.href card.url
+                    , HA.target "_blank"
+                    ]
+                    [ Html.text card.title
+                    ]
+                ]
+            , viewCardMeta card
+            , viewCardActivity model card
+            ]
+        , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+            List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                List.concat
+                    [ controls
+                    , [ Html.span
+                            [ HE.onClick
+                                (if Card.isPR card then
+                                    RefreshPullRequest card.id
+
+                                 else
+                                    RefreshIssue card.id
+                                )
+                            ]
+                            [ Octicons.sync Octicons.defaultOptions ]
+                      ]
                     , List.map (viewSuggestedLabel model card) model.suggestedLabels
                     ]
         ]
@@ -260,21 +312,32 @@ viewProjectColumnCard model project col ghCard =
 
 viewPersonCard : Model -> List (Html Msg) -> GitHub.User -> Html Msg
 viewPersonCard model controls user =
-    Html.div [ HA.class "card note", HA.tabindex 0 ]
-        [ Html.div [ HA.class "card-content" ]
-            [ Html.div [ HA.class "card-squares left vertical" ] <|
-                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    [ viewCardActor user
+    let
+        personCardContent =
+            Html.div [ HA.class "card-content" ]
+                [ Html.div [ HA.class "card-squares left vertical" ] <|
+                    List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                        [ viewCardActor user
+                        ]
+                , Html.div [ HA.class "card-info" ]
+                    [ Html.div [ HA.class "card-title" ]
+                        [ Html.text (Maybe.withDefault ("@" ++ user.login) user.name)
+                        ]
                     ]
-            , Html.div [ HA.class "card-info" ]
-                [ Html.div [ HA.class "card-title" ]
-                    [ Html.text (Maybe.withDefault ("@" ++ user.login) user.name)
-                    ]
+                , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+                    List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                        controls
                 ]
-            , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
-                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
-                    controls
-            ]
+
+        inFlightCards =
+            Dict.get user.id model.inFlight
+                |> Maybe.withDefault []
+                |> List.filterMap (\id -> Dict.get id model.cards)
+    in
+    Html.div [ HA.class "card note", HA.tabindex 0 ] <|
+        [ personCardContent
+        , Html.div [ HA.class "related-cards" ] <|
+            List.map (viewMinimalCardContent model []) inFlightCards
         ]
 
 

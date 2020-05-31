@@ -357,8 +357,9 @@ update msg model =
                                 assigned rest user
 
                 assignable user =
+                    -- TODO
                     not (Set.member user.id model.outUsers)
-                        && not (assigned model.inFlight user)
+                        && not (assigned [] user)
 
                 toAssign =
                     List.filter assignable model.assignableUsers
@@ -786,11 +787,13 @@ addUnassignment user mp =
 pairUpUser : GitHub.User -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
 pairUpUser target ( model, msg ) =
     let
+        -- TODO
         ( soloLanes, pairingLanes ) =
-            model.inFlight
-                |> List.concatMap .lanes
-                |> List.partition ((==) 1 << List.length << .assignees)
+            ( [], [] )
 
+        -- model.inFlight
+        --     |> List.concatMap .lanes
+        --     |> List.partition ((==) 1 << List.length << .assignees)
         isPairing user =
             List.any (List.any ((==) user.login << .login) << .assignees) pairingLanes
 
@@ -830,8 +833,9 @@ pairUpUser target ( model, msg ) =
         Just pair ->
             Log.debug "chose" ( target.login, pair.login ) <|
                 let
+                    -- TODO
                     activeCards =
-                        model.inFlight
+                        []
                             |> List.concatMap .lanes
                             |> List.filter (List.any ((==) pair.id << .id) << .assignees)
                             |> List.concatMap .cards
@@ -938,7 +942,7 @@ computeViewForPage model =
             { model
                 | baseGraphFilter = Nothing
                 , suggestedLabels = []
-                , inFlight = []
+                , inFlight = Dict.empty
             }
     in
     case model.page of
@@ -1189,26 +1193,34 @@ computeProjectLanes model =
                 |> List.filter Card.isOpen
 
         inFlightCards project =
-            let
-                projectCards =
-                    List.filter isInProgress project.columns
-                        |> List.concatMap columnCards
-                        |> List.map (reflectPendingAssignments model)
-            in
-            if List.isEmpty projectCards then
-                Nothing
+            List.filter isInProgress project.columns
+                |> List.concatMap columnCards
 
-            else
-                Just { project = project, lanes = byAssignees projectCards }
+        allInFlightCards =
+            List.concat (Dict.values model.repoProjects)
+                |> List.concatMap inFlightCards
+
+        trackInFlight card mcs =
+            case mcs of
+                Nothing ->
+                    Just [ card.id ]
+
+                Just cs ->
+                    Just (card.id :: cs)
     in
     { model
         | inFlight =
-            model.repoProjects
-                |> Dict.values
-                |> List.concat
-                |> List.filterMap inFlightCards
-                |> List.sortBy (projectProgress model << .project)
-                |> List.reverse
+            List.foldl
+                (\card byUser ->
+                    List.foldl
+                        (\user ->
+                            Dict.update user.id (trackInFlight card)
+                        )
+                        byUser
+                        card.assignees
+                )
+                Dict.empty
+                allInFlightCards
     }
 
 
@@ -1219,24 +1231,6 @@ projectProgress model project =
             CardView.projectProgress model project
     in
     toFloat dones / toFloat (toDos + inProgresses + dones)
-
-
-reflectPendingAssignments : Model -> Card -> Card
-reflectPendingAssignments model card =
-    let
-        newAssignees =
-            case Dict.get card.id model.pendingAssignments of
-                Nothing ->
-                    card.assignees
-
-                Just { assign, unassign } ->
-                    let
-                        unaffected { id } =
-                            not (List.any ((==) id << .id) (assign ++ unassign))
-                    in
-                    assign ++ List.filter unaffected card.assignees
-    in
-    { card | assignees = newAssignees }
 
 
 byAssignees : List Card -> List Model.ProjectLane
