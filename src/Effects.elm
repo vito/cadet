@@ -25,6 +25,7 @@ import Card exposing (Card)
 import Dict
 import GitHub
 import Model exposing (Model, Msg(..))
+import Result exposing (Result)
 import Task
 
 
@@ -92,12 +93,12 @@ createProjectForIssue model card templateProject =
                 |> Task.attempt (DataChanged (Backend.refreshRepoProjects repoSelector RefreshQueued))
 
 
-moveCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg
-moveCard model { columnId, afterId } cardId =
+moveCard : Model -> Model.CardDestination -> GitHub.ID -> (Result GitHub.Error GitHub.ProjectColumnCard -> Msg) -> Cmd Msg
+moveCard model { columnId, afterId } cardId nextMsg =
     withTokenOrLogIn model <|
         \token ->
             GitHub.moveCardAfter token columnId cardId afterId
-                |> Task.attempt (CardMoved columnId)
+                |> Task.attempt nextMsg
                 |> withSetLoading [ columnId ]
 
 

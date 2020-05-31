@@ -26,6 +26,8 @@ import Model exposing (Model, Msg(..), Page(..), whenLoggedIn)
 import Octicons
 import Project
 import Query
+import Random
+import Random.List as RL
 import ReleaseStatus
 import Set exposing (Set)
 import StatefulGraph
@@ -214,7 +216,7 @@ update msg model =
         MoveCardAfter source dest ->
             case source of
                 Model.FromColumnCardSource { cardId } ->
-                    ( model, Effects.moveCard model dest cardId )
+                    ( model, Effects.moveCard model dest cardId (CardMoved dest.columnId) )
 
                 Model.NewContentCardSource { contentId } ->
                     ( model, Effects.addCard model dest contentId )
@@ -344,27 +346,76 @@ update msg model =
             -- for each lane that has only one user,
             -- select the lane whose assignee has been paired with least recently
             let
-                assigned projectLanes user =
-                    case projectLanes of
-                        [] ->
-                            False
-
-                        { lanes } :: rest ->
-                            if List.any (List.any ((==) user.id << .id) << .assignees) lanes then
-                                True
-
-                            else
-                                assigned rest user
-
-                assignable user =
-                    -- TODO
-                    not (Set.member user.id model.outUsers)
-                        && not (assigned [] user)
-
-                toAssign =
-                    List.filter assignable model.assignableUsers
+                pairsProject =
+                    List.filter (\p -> p.name == "Pairs") model.orgProjects
+                        |> List.head
             in
-            List.foldl pairUpUser ( model, Cmd.none ) toAssign
+            case pairsProject of
+                Nothing ->
+                    -- TODO: this sucks
+                    ( model, Cmd.none )
+
+                Just project ->
+                    let
+                        availableCards =
+                            List.concatMap
+                                (\col ->
+                                    if col.purpose == Just GitHub.ProjectColumnPurposeToDo || col.purpose == Just GitHub.ProjectColumnPurposeInProgress then
+                                        Maybe.withDefault [] (Dict.get col.id model.columnCards)
+
+                                    else
+                                        []
+                                )
+                                project.columns
+                    in
+                    ( model, Random.generate ShuffledPairs (RL.shuffle availableCards) )
+
+        ShuffledPairs pairs ->
+            Log.debug "shuffled" pairs <|
+                let
+                    pairsProject =
+                        List.filter (\p -> p.name == "Pairs") model.orgProjects
+                            |> List.head
+                in
+                case pairsProject of
+                    Nothing ->
+                        -- TODO: this sucks
+                        ( model, Cmd.none )
+
+                    Just project ->
+                        let
+                            groupUp card ( ms, nth, cols ) =
+                                case cols of
+                                    [] ->
+                                        Log.debug "ran out of lanes!" () <|
+                                            ( ms, nth, cols )
+
+                                    col :: rest ->
+                                        let
+                                            move =
+                                                Effects.moveCard model
+                                                    { projectId = project.id
+                                                    , columnId = col.id
+                                                    , afterId = Nothing
+                                                    }
+                                                    card.id
+                                                    (always (RefreshColumn col.id))
+                                        in
+                                        if nth == 2 then
+                                            ( move :: ms, 1, rest )
+
+                                        else
+                                            ( move :: ms, nth + 1, cols )
+
+                            lanes =
+                                List.filter ((==) (Just GitHub.ProjectColumnPurposeInProgress) << .purpose) project.columns
+
+                            ( moves, _, _ ) =
+                                List.foldl groupUp ( [], 1, lanes ) pairs
+                        in
+                        ( model
+                        , Cmd.batch moves
+                        )
 
         CommitAssignments ->
             let
@@ -1789,6 +1840,12 @@ viewPairsPage model =
                     [ Html.div [ HA.class "page-header" ]
                         [ Octicons.project octiconOpts
                         , Html.text project.name
+                        , Html.div [ HA.class "lane-controls buttons" ]
+                            [ Html.span [ HA.class "button shuffle", HE.onClick AssignPairs ]
+                                [ Octicons.organization octiconOpts
+                                , Html.text "shuffle"
+                                ]
+                            ]
                         ]
                     , Html.div [ HA.class "fixed-columns card-columns" ] <|
                         List.map (viewProjectColumn model project) project.columns

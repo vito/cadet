@@ -225,6 +225,7 @@ type Msg
     | StartProjectifying GitHub.ID
     | StopProjectifying GitHub.ID
     | Projectify Card GitHub.Project
+    | ShuffledPairs (List Backend.ColumnCard)
 
 
 type Page

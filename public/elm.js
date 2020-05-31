@@ -7779,17 +7779,23 @@ var $author$project$Backend$fetchMe = function (f) {
 				$lukewestby$elm_http_builder$HttpBuilder$get('/me'))));
 };
 var $elm$time$Time$here = _Time_here(_Utils_Tuple0);
-var $author$project$Model$AssignUser = F2(
-	function (a, b) {
-		return {$: 'AssignUser', a: a, b: b};
-	});
 var $author$project$Model$CardDataFetched = function (a) {
 	return {$: 'CardDataFetched', a: a};
 };
+var $author$project$Model$CardMoved = F2(
+	function (a, b) {
+		return {$: 'CardMoved', a: a, b: b};
+	});
 var $author$project$Model$GraphsFetched = function (a) {
 	return {$: 'GraphsFetched', a: a};
 };
 var $author$project$Model$Noop = {$: 'Noop'};
+var $author$project$Model$RefreshColumn = function (a) {
+	return {$: 'RefreshColumn', a: a};
+};
+var $author$project$Model$ShuffledPairs = function (a) {
+	return {$: 'ShuffledPairs', a: a};
+};
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -7864,10 +7870,6 @@ var $author$project$Main$addAssignments = F2(
 							p.unassign)
 					}));
 		}
-	});
-var $author$project$Model$CardMoved = F2(
-	function (a, b) {
-		return {$: 'CardMoved', a: a, b: b};
 	});
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$ObjectType = {$: 'ObjectType'};
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$SelectionSet = function (a) {
@@ -13752,18 +13754,93 @@ var $author$project$CardView$focusEditNote = function (id) {
 var $author$project$Main$focusId = function (colId) {
 	return 'add-note-' + colId;
 };
-var $elm_community$list_extra$List$Extra$foldl1 = F2(
-	function (func, list) {
-		if (!list.b) {
-			return $elm$core$Maybe$Nothing;
+var $elm$core$Basics$ge = _Utils_ge;
+var $elm$random$Random$Generate = function (a) {
+	return {$: 'Generate', a: a};
+};
+var $elm$random$Random$Seed = F2(
+	function (a, b) {
+		return {$: 'Seed', a: a, b: b};
+	});
+var $elm$random$Random$next = function (_v0) {
+	var state0 = _v0.a;
+	var incr = _v0.b;
+	return A2($elm$random$Random$Seed, ((state0 * 1664525) + incr) >>> 0, incr);
+};
+var $elm$random$Random$initialSeed = function (x) {
+	var _v0 = $elm$random$Random$next(
+		A2($elm$random$Random$Seed, 0, 1013904223));
+	var state1 = _v0.a;
+	var incr = _v0.b;
+	var state2 = (state1 + x) >>> 0;
+	return $elm$random$Random$next(
+		A2($elm$random$Random$Seed, state2, incr));
+};
+var $elm$random$Random$init = A2(
+	$elm$core$Task$andThen,
+	function (time) {
+		return $elm$core$Task$succeed(
+			$elm$random$Random$initialSeed(
+				$elm$time$Time$posixToMillis(time)));
+	},
+	$elm$time$Time$now);
+var $elm$random$Random$step = F2(
+	function (_v0, seed) {
+		var generator = _v0.a;
+		return generator(seed);
+	});
+var $elm$random$Random$onEffects = F3(
+	function (router, commands, seed) {
+		if (!commands.b) {
+			return $elm$core$Task$succeed(seed);
 		} else {
-			var x = list.a;
-			var xs = list.b;
-			return $elm$core$Maybe$Just(
-				A3($elm$core$List$foldl, func, x, xs));
+			var generator = commands.a.a;
+			var rest = commands.b;
+			var _v1 = A2($elm$random$Random$step, generator, seed);
+			var value = _v1.a;
+			var newSeed = _v1.b;
+			return A2(
+				$elm$core$Task$andThen,
+				function (_v2) {
+					return A3($elm$random$Random$onEffects, router, rest, newSeed);
+				},
+				A2($elm$core$Platform$sendToApp, router, value));
 		}
 	});
-var $elm$core$Basics$ge = _Utils_ge;
+var $elm$random$Random$onSelfMsg = F3(
+	function (_v0, _v1, seed) {
+		return $elm$core$Task$succeed(seed);
+	});
+var $elm$random$Random$Generator = function (a) {
+	return {$: 'Generator', a: a};
+};
+var $elm$random$Random$map = F2(
+	function (func, _v0) {
+		var genA = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v1 = genA(seed0);
+				var a = _v1.a;
+				var seed1 = _v1.b;
+				return _Utils_Tuple2(
+					func(a),
+					seed1);
+			});
+	});
+var $elm$random$Random$cmdMap = F2(
+	function (func, _v0) {
+		var generator = _v0.a;
+		return $elm$random$Random$Generate(
+			A2($elm$random$Random$map, func, generator));
+	});
+_Platform_effectManagers['Random'] = _Platform_createManager($elm$random$Random$init, $elm$random$Random$onEffects, $elm$random$Random$onSelfMsg, $elm$random$Random$cmdMap);
+var $elm$random$Random$command = _Platform_leaf('Random');
+var $elm$random$Random$generate = F2(
+	function (tagger, generator) {
+		return $elm$random$Random$command(
+			$elm$random$Random$Generate(
+				A2($elm$random$Random$map, tagger, generator)));
+	});
 var $author$project$Backend$CardClosersEvent = F2(
 	function (cardId, closers) {
 		return {cardId: cardId, closers: closers};
@@ -14180,12 +14257,9 @@ var $author$project$Main$handleEvent = F4(
 					model);
 		}
 	});
-var $author$project$Card$isPaused = function (card) {
-	return card.processState.hasPausedLabel;
-};
 var $elm$core$String$lines = _String_lines;
-var $author$project$Effects$moveCard = F3(
-	function (model, _v0, cardId) {
+var $author$project$Effects$moveCard = F4(
+	function (model, _v0, cardId, nextMsg) {
 		var columnId = _v0.columnId;
 		var afterId = _v0.afterId;
 		return A2(
@@ -14198,7 +14272,7 @@ var $author$project$Effects$moveCard = F3(
 						[columnId]),
 					A2(
 						$elm$core$Task$attempt,
-						$author$project$Model$CardMoved(columnId),
+						nextMsg,
 						A4($author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId)));
 			});
 	});
@@ -14913,6 +14987,262 @@ var $author$project$Effects$setProjectCardArchived = F3(
 						A3($author$project$GitHub$setCardArchived, token, cardId, archived)));
 			});
 	});
+var $elm$core$Array$fromListHelp = F3(
+	function (list, nodeList, nodeListSize) {
+		fromListHelp:
+		while (true) {
+			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
+			var jsArray = _v0.a;
+			var remainingItems = _v0.b;
+			if (_Utils_cmp(
+				$elm$core$Elm$JsArray$length(jsArray),
+				$elm$core$Array$branchFactor) < 0) {
+				return A2(
+					$elm$core$Array$builderToArray,
+					true,
+					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
+			} else {
+				var $temp$list = remainingItems,
+					$temp$nodeList = A2(
+					$elm$core$List$cons,
+					$elm$core$Array$Leaf(jsArray),
+					nodeList),
+					$temp$nodeListSize = nodeListSize + 1;
+				list = $temp$list;
+				nodeList = $temp$nodeList;
+				nodeListSize = $temp$nodeListSize;
+				continue fromListHelp;
+			}
+		}
+	});
+var $elm$core$Array$fromList = function (list) {
+	if (!list.b) {
+		return $elm$core$Array$empty;
+	} else {
+		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
+	}
+};
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
+	});
+var $elm$core$Array$length = function (_v0) {
+	var len = _v0.a;
+	return len;
+};
+var $elm$random$Random$listHelp = F4(
+	function (revList, n, gen, seed) {
+		listHelp:
+		while (true) {
+			if (n < 1) {
+				return _Utils_Tuple2(revList, seed);
+			} else {
+				var _v0 = gen(seed);
+				var value = _v0.a;
+				var newSeed = _v0.b;
+				var $temp$revList = A2($elm$core$List$cons, value, revList),
+					$temp$n = n - 1,
+					$temp$gen = gen,
+					$temp$seed = newSeed;
+				revList = $temp$revList;
+				n = $temp$n;
+				gen = $temp$gen;
+				seed = $temp$seed;
+				continue listHelp;
+			}
+		}
+	});
+var $elm$random$Random$list = F2(
+	function (n, _v0) {
+		var gen = _v0.a;
+		return $elm$random$Random$Generator(
+			function (seed) {
+				return A4($elm$random$Random$listHelp, _List_Nil, n, gen, seed);
+			});
+	});
+var $owanturist$elm_union_find$UnionFind$findFast = F2(
+	function (id, dict) {
+		findFast:
+		while (true) {
+			var _v0 = A2($elm$core$Dict$get, id, dict);
+			if (_v0.$ === 'Nothing') {
+				return id;
+			} else {
+				var cursor = _v0.a;
+				if (_Utils_eq(id, cursor)) {
+					return id;
+				} else {
+					var $temp$id = cursor,
+						$temp$dict = dict;
+					id = $temp$id;
+					dict = $temp$dict;
+					continue findFast;
+				}
+			}
+		}
+	});
+var $owanturist$elm_union_find$UnionFind$find = F2(
+	function (id, _v0) {
+		var dict = _v0.b;
+		return A2($owanturist$elm_union_find$UnionFind$findFast, id, dict);
+	});
+var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
+var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
+var $elm$core$Array$getHelp = F3(
+	function (shift, index, tree) {
+		getHelp:
+		while (true) {
+			var pos = $elm$core$Array$bitMask & (index >>> shift);
+			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
+			if (_v0.$ === 'SubTree') {
+				var subTree = _v0.a;
+				var $temp$shift = shift - $elm$core$Array$shiftStep,
+					$temp$index = index,
+					$temp$tree = subTree;
+				shift = $temp$shift;
+				index = $temp$index;
+				tree = $temp$tree;
+				continue getHelp;
+			} else {
+				var values = _v0.a;
+				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
+			}
+		}
+	});
+var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
+var $elm$core$Array$tailIndex = function (len) {
+	return (len >>> 5) << 5;
+};
+var $elm$core$Array$get = F2(
+	function (index, _v0) {
+		var len = _v0.a;
+		var startShift = _v0.b;
+		var tree = _v0.c;
+		var tail = _v0.d;
+		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
+			index,
+			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
+			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
+			A3($elm$core$Array$getHelp, startShift, index, tree)));
+	});
+var $elm$core$Array$isEmpty = function (_v0) {
+	var len = _v0.a;
+	return !len;
+};
+var $owanturist$elm_union_find$UnionFind$QuickUnionPathCompression = F2(
+	function (a, b) {
+		return {$: 'QuickUnionPathCompression', a: a, b: b};
+	});
+var $owanturist$elm_union_find$UnionFind$quickUnionPathCompression = A2($owanturist$elm_union_find$UnionFind$QuickUnionPathCompression, 0, $elm$core$Dict$empty);
+var $owanturist$elm_union_find$UnionFind$findCompressed = F2(
+	function (id, dict) {
+		var _v0 = A2($elm$core$Dict$get, id, dict);
+		if (_v0.$ === 'Nothing') {
+			return _Utils_Tuple2(
+				id,
+				A3($elm$core$Dict$insert, id, id, dict));
+		} else {
+			var cursor = _v0.a;
+			if (_Utils_eq(id, cursor)) {
+				return _Utils_Tuple2(id, dict);
+			} else {
+				var _v1 = A2($owanturist$elm_union_find$UnionFind$findCompressed, cursor, dict);
+				var parent = _v1.a;
+				var nextDict = _v1.b;
+				return _Utils_Tuple2(
+					parent,
+					A3($elm$core$Dict$insert, id, parent, nextDict));
+			}
+		}
+	});
+var $owanturist$elm_union_find$UnionFind$union = F3(
+	function (left, right, _v0) {
+		var count_ = _v0.a;
+		var dict = _v0.b;
+		var _v1 = A2($owanturist$elm_union_find$UnionFind$findCompressed, left, dict);
+		var leftRoot = _v1.a;
+		var leftDict = _v1.b;
+		var _v2 = A2($owanturist$elm_union_find$UnionFind$findCompressed, right, leftDict);
+		var rightRoot = _v2.a;
+		var rightDict = _v2.b;
+		return _Utils_eq(leftRoot, rightRoot) ? A2($owanturist$elm_union_find$UnionFind$QuickUnionPathCompression, count_, rightDict) : A2(
+			$owanturist$elm_union_find$UnionFind$QuickUnionPathCompression,
+			count_ + 1,
+			A3($elm$core$Dict$insert, leftRoot, rightRoot, rightDict));
+	});
+var $elm_community$random_extra$Utils$selectUniqByIndexes = F2(
+	function (values, randomIndexes) {
+		var modByLength = $elm$core$Basics$modBy(
+			$elm$core$Array$length(values));
+		var step = F2(
+			function (randomIndex, _v1) {
+				var uf = _v1.a;
+				var acc = _v1.b;
+				var leaderOfElement = A2($owanturist$elm_union_find$UnionFind$find, randomIndex, uf);
+				var leaderOfNextElement = A2(
+					$owanturist$elm_union_find$UnionFind$find,
+					modByLength(leaderOfElement + 1),
+					uf);
+				var _v0 = A2($elm$core$Array$get, leaderOfElement, values);
+				if (_v0.$ === 'Nothing') {
+					return _Utils_Tuple2(uf, acc);
+				} else {
+					var value = _v0.a;
+					return _Utils_Tuple2(
+						A3($owanturist$elm_union_find$UnionFind$union, leaderOfElement, leaderOfNextElement, uf),
+						A2($elm$core$List$cons, value, acc));
+				}
+			});
+		return $elm$core$Array$isEmpty(values) ? _List_Nil : A3(
+			$elm$core$List$foldr,
+			step,
+			_Utils_Tuple2($owanturist$elm_union_find$UnionFind$quickUnionPathCompression, _List_Nil),
+			randomIndexes).b;
+	});
+var $elm_community$random_extra$Random$List$shuffle = function (list) {
+	var values = $elm$core$Array$fromList(list);
+	var length = $elm$core$Array$length(values);
+	return A2(
+		$elm$random$Random$map,
+		$elm_community$random_extra$Utils$selectUniqByIndexes(values),
+		A2(
+			$elm$random$Random$list,
+			length,
+			A2($elm$random$Random$int, 0, length - 1)));
+};
 var $elm$core$Dict$sizeHelp = F2(
 	function (n, dict) {
 		sizeHelp:
@@ -15163,137 +15493,6 @@ var $author$project$Effects$updateCardNote = F3(
 						A3($author$project$GitHub$updateCardNote, token, cardId, note)));
 			});
 	});
-var $author$project$Main$pairUpUser = F2(
-	function (target, _v28) {
-		var model = _v28.a;
-		var msg = _v28.b;
-		var lastPaired = F2(
-			function (userA, userB) {
-				return A2(
-					$elm$core$Dict$get,
-					$elm$core$List$sort(
-						_List_fromArray(
-							[userA.id, userB.id])),
-					model.lastPaired);
-			});
-		var pickBestUser = F2(
-			function (user, cur) {
-				var _v31 = _Utils_Tuple2(
-					A2(lastPaired, target, user),
-					A2(lastPaired, target, cur));
-				if (_v31.a.$ === 'Just') {
-					if (_v31.b.$ === 'Just') {
-						var tsUser = _v31.a.a;
-						var tsCur = _v31.b.a;
-						return (_Utils_cmp(
-							$elm$time$Time$posixToMillis(tsCur),
-							$elm$time$Time$posixToMillis(tsUser)) < 0) ? cur : user;
-					} else {
-						var _v32 = _v31.b;
-						return cur;
-					}
-				} else {
-					if (_v31.b.$ === 'Just') {
-						var _v33 = _v31.a;
-						return user;
-					} else {
-						var _v34 = _v31.a;
-						var _v35 = _v31.b;
-						return (_Utils_cmp(user.id, cur.id) < 0) ? user : cur;
-					}
-				}
-			});
-		var _v29 = _Utils_Tuple2(_List_Nil, _List_Nil);
-		var soloLanes = _v29.a;
-		var pairingLanes = _v29.b;
-		var isPairing = function (user) {
-			return A2(
-				$elm$core$List$any,
-				A2(
-					$elm$core$Basics$composeL,
-					$elm$core$List$any(
-						A2(
-							$elm$core$Basics$composeL,
-							$elm$core$Basics$eq(user.login),
-							function ($) {
-								return $.login;
-							})),
-					function ($) {
-						return $.assignees;
-					}),
-				pairingLanes);
-		};
-		var pairingPool = A2(
-			$elm$core$List$filter,
-			A2($elm$core$Basics$composeL, $elm$core$Basics$not, isPairing),
-			A2(
-				$elm$core$List$concatMap,
-				function ($) {
-					return $.assignees;
-				},
-				A2(
-					$elm$core$List$filter,
-					A2(
-						$elm$core$Basics$composeL,
-						$elm$core$List$any(
-							A2($elm$core$Basics$composeL, $elm$core$Basics$not, $author$project$Card$isPaused)),
-						function ($) {
-							return $.cards;
-						}),
-					soloLanes)));
-		var _v30 = A2($elm_community$list_extra$List$Extra$foldl1, pickBestUser, pairingPool);
-		if (_v30.$ === 'Just') {
-			var pair = _v30.a;
-			return A3(
-				$author$project$Log$debug,
-				'chose',
-				_Utils_Tuple2(target.login, pair.login),
-				function () {
-					var activeCards = A2(
-						$elm$core$List$concatMap,
-						function ($) {
-							return $.cards;
-						},
-						A2(
-							$elm$core$List$filter,
-							A2(
-								$elm$core$Basics$composeL,
-								$elm$core$List$any(
-									A2(
-										$elm$core$Basics$composeL,
-										$elm$core$Basics$eq(pair.id),
-										function ($) {
-											return $.id;
-										})),
-								function ($) {
-									return $.assignees;
-								}),
-							A2(
-								$elm$core$List$concatMap,
-								function ($) {
-									return $.lanes;
-								},
-								_List_Nil)));
-					return A2(
-						$author$project$Main$update,
-						A2($author$project$Model$AssignUser, target, activeCards),
-						model);
-				}());
-		} else {
-			return A3(
-				$author$project$Log$debug,
-				'no pair available',
-				_Utils_Tuple2(
-					target.login,
-					A2(
-						$elm$core$List$map,
-						function ($) {
-							return $.login;
-						},
-						pairingPool)),
-				_Utils_Tuple2(model, msg));
-		}
-	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		update:
@@ -15391,7 +15590,12 @@ var $author$project$Main$update = F2(
 						var cardId = source.a.cardId;
 						return _Utils_Tuple2(
 							model,
-							A3($author$project$Effects$moveCard, model, dest, cardId));
+							A4(
+								$author$project$Effects$moveCard,
+								model,
+								dest,
+								cardId,
+								$author$project$Model$CardMoved(dest.columnId)));
 					} else {
 						var contentId = source.a.contentId;
 						return _Utils_Tuple2(
@@ -15656,58 +15860,114 @@ var $author$project$Main$update = F2(
 								$elm$core$Platform$Cmd$none);
 						}());
 				case 'AssignPairs':
-					var assigned = F2(
-						function (projectLanes, user) {
-							assigned:
-							while (true) {
-								if (!projectLanes.b) {
-									return false;
-								} else {
-									var lanes = projectLanes.a.lanes;
-									var rest = projectLanes.b;
-									if (A2(
-										$elm$core$List$any,
-										A2(
-											$elm$core$Basics$composeL,
-											$elm$core$List$any(
-												A2(
-													$elm$core$Basics$composeL,
-													$elm$core$Basics$eq(user.id),
-													function ($) {
-														return $.id;
-													})),
-											function ($) {
-												return $.assignees;
-											}),
-										lanes)) {
-										return true;
-									} else {
-										var $temp$projectLanes = rest,
-											$temp$user = user;
-										projectLanes = $temp$projectLanes;
-										user = $temp$user;
-										continue assigned;
-									}
-								}
-							}
-						});
-					var assignable = function (user) {
-						return (!A2($elm$core$Set$member, user.id, model.outUsers)) && (!A2(assigned, _List_Nil, user));
-					};
-					var toAssign = A2($elm$core$List$filter, assignable, model.assignableUsers);
+					var pairsProject = $elm$core$List$head(
+						A2(
+							$elm$core$List$filter,
+							function (p) {
+								return p.name === 'Pairs';
+							},
+							model.orgProjects));
+					if (pairsProject.$ === 'Nothing') {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					} else {
+						var project = pairsProject.a;
+						var availableCards = A2(
+							$elm$core$List$concatMap,
+							function (col) {
+								return (_Utils_eq(
+									col.purpose,
+									$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeToDo)) || _Utils_eq(
+									col.purpose,
+									$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress))) ? A2(
+									$elm$core$Maybe$withDefault,
+									_List_Nil,
+									A2($elm$core$Dict$get, col.id, model.columnCards)) : _List_Nil;
+							},
+							project.columns);
+						return _Utils_Tuple2(
+							model,
+							A2(
+								$elm$random$Random$generate,
+								$author$project$Model$ShuffledPairs,
+								$elm_community$random_extra$Random$List$shuffle(availableCards)));
+					}
+				case 'ShuffledPairs':
+					var pairs = msg.a;
 					return A3(
-						$elm$core$List$foldl,
-						$author$project$Main$pairUpUser,
-						_Utils_Tuple2(model, $elm$core$Platform$Cmd$none),
-						toAssign);
+						$author$project$Log$debug,
+						'shuffled',
+						pairs,
+						function () {
+							var pairsProject = $elm$core$List$head(
+								A2(
+									$elm$core$List$filter,
+									function (p) {
+										return p.name === 'Pairs';
+									},
+									model.orgProjects));
+							if (pairsProject.$ === 'Nothing') {
+								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+							} else {
+								var project = pairsProject.a;
+								var lanes = A2(
+									$elm$core$List$filter,
+									A2(
+										$elm$core$Basics$composeL,
+										$elm$core$Basics$eq(
+											$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress)),
+										function ($) {
+											return $.purpose;
+										}),
+									project.columns);
+								var groupUp = F2(
+									function (card, _v20) {
+										var ms = _v20.a;
+										var nth = _v20.b;
+										var cols = _v20.c;
+										if (!cols.b) {
+											return A3(
+												$author$project$Log$debug,
+												'ran out of lanes!',
+												_Utils_Tuple0,
+												_Utils_Tuple3(ms, nth, cols));
+										} else {
+											var col = cols.a;
+											var rest = cols.b;
+											var move = A4(
+												$author$project$Effects$moveCard,
+												model,
+												{afterId: $elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id},
+												card.id,
+												$elm$core$Basics$always(
+													$author$project$Model$RefreshColumn(col.id)));
+											return (nth === 2) ? _Utils_Tuple3(
+												A2($elm$core$List$cons, move, ms),
+												1,
+												rest) : _Utils_Tuple3(
+												A2($elm$core$List$cons, move, ms),
+												nth + 1,
+												cols);
+										}
+									});
+								var _v18 = A3(
+									$elm$core$List$foldl,
+									groupUp,
+									_Utils_Tuple3(_List_Nil, 1, lanes),
+									pairs);
+								var moves = _v18.a;
+								return _Utils_Tuple2(
+									model,
+									$elm$core$Platform$Cmd$batch(moves));
+							}
+						}());
 				case 'CommitAssignments':
 					var cardAssignments = F2(
-						function (cardId, _v18) {
-							var assign = _v18.assign;
-							var unassign = _v18.unassign;
-							var _v17 = _Utils_Tuple2(assign, unassign);
-							if (!_v17.a.b) {
-								if (!_v17.b.b) {
+						function (cardId, _v22) {
+							var assign = _v22.assign;
+							var unassign = _v22.unassign;
+							var _v21 = _Utils_Tuple2(assign, unassign);
+							if (!_v21.a.b) {
+								if (!_v21.b.b) {
 									return _List_Nil;
 								} else {
 									return _List_fromArray(
@@ -15716,7 +15976,7 @@ var $author$project$Main$update = F2(
 										]);
 								}
 							} else {
-								if (!_v17.b.b) {
+								if (!_v21.b.b) {
 									return _List_fromArray(
 										[
 											A3($author$project$Effects$assignUsers, model, assign, cardId)
@@ -15769,7 +16029,7 @@ var $author$project$Main$update = F2(
 									}
 								}());
 						} else {
-							var _v20 = msg.a.a;
+							var _v24 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15889,13 +16149,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v21 = msg.a;
-					var event = _v21.a;
-					var data = _v21.b;
-					var indexStr = _v21.c;
-					var _v22 = $elm$core$String$toInt(indexStr);
-					if (_v22.$ === 'Just') {
-						var index = _v22.a;
+					var _v25 = msg.a;
+					var event = _v25.a;
+					var data = _v25.b;
+					var indexStr = _v25.c;
+					var _v26 = $elm$core$String$toInt(indexStr);
+					if (_v26.$ === 'Just') {
+						var index = _v26.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -16020,9 +16280,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v23 = card.content;
-					if (_v23.$ === 'IssueCardContent') {
-						var issue = _v23.a;
+					var _v27 = card.content;
+					if (_v27.$ === 'IssueCardContent') {
+						var issue = _v27.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16032,7 +16292,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v23.a;
+						var pr = _v27.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16045,14 +16305,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v24 = card.content;
-					if (_v24.$ === 'IssueCardContent') {
-						var issue = _v24.a;
+					var _v28 = card.content;
+					if (_v28.$ === 'IssueCardContent') {
+						var issue = _v28.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v24.a;
+						var pr = _v28.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16192,14 +16452,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v25 = A2(
+							var _v29 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v25 === '') {
+							if (_v29 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v25;
+								var note = _v29;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -16265,14 +16525,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v26 = A2(
+							var _v30 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v26 === '') {
+							if (_v30 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v26;
+								var note = _v30;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -17218,6 +17478,9 @@ var $author$project$Activity$class = F2(
 		return (daysSinceLastUpdate <= 1) ? 'active-today' : ((daysSinceLastUpdate <= 2) ? 'active-yesterday' : ((daysSinceLastUpdate <= 7) ? 'active-this-week' : ((daysSinceLastUpdate <= 30) ? 'active-this-month' : 'active-long-ago')));
 	});
 var $elm$html$Html$img = _VirtualDom_node('img');
+var $author$project$Card$isPaused = function (card) {
+	return card.processState.hasPausedLabel;
+};
 var $elm$html$Html$Events$onClick = function (msg) {
 	return A2(
 		$elm$html$Html$Events$on,
@@ -19050,9 +19313,6 @@ var $author$project$Model$MoveCardAfter = F2(
 	function (a, b) {
 		return {$: 'MoveCardAfter', a: a, b: b};
 	});
-var $author$project$Model$RefreshColumn = function (a) {
-	return {$: 'RefreshColumn', a: a};
-};
 var $author$project$Model$SetCreatingColumnNote = F2(
 	function (a, b) {
 		return {$: 'SetCreatingColumnNote', a: a, b: b};
@@ -23850,80 +24110,6 @@ var $folkertdev$one_true_path_experiment$Path$element = F2(
 				attributes),
 			_List_Nil);
 	});
-var $elm$core$Array$fromListHelp = F3(
-	function (list, nodeList, nodeListSize) {
-		fromListHelp:
-		while (true) {
-			var _v0 = A2($elm$core$Elm$JsArray$initializeFromList, $elm$core$Array$branchFactor, list);
-			var jsArray = _v0.a;
-			var remainingItems = _v0.b;
-			if (_Utils_cmp(
-				$elm$core$Elm$JsArray$length(jsArray),
-				$elm$core$Array$branchFactor) < 0) {
-				return A2(
-					$elm$core$Array$builderToArray,
-					true,
-					{nodeList: nodeList, nodeListSize: nodeListSize, tail: jsArray});
-			} else {
-				var $temp$list = remainingItems,
-					$temp$nodeList = A2(
-					$elm$core$List$cons,
-					$elm$core$Array$Leaf(jsArray),
-					nodeList),
-					$temp$nodeListSize = nodeListSize + 1;
-				list = $temp$list;
-				nodeList = $temp$nodeList;
-				nodeListSize = $temp$nodeListSize;
-				continue fromListHelp;
-			}
-		}
-	});
-var $elm$core$Array$fromList = function (list) {
-	if (!list.b) {
-		return $elm$core$Array$empty;
-	} else {
-		return A3($elm$core$Array$fromListHelp, list, _List_Nil, 0);
-	}
-};
-var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
-var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
-var $elm$core$Array$getHelp = F3(
-	function (shift, index, tree) {
-		getHelp:
-		while (true) {
-			var pos = $elm$core$Array$bitMask & (index >>> shift);
-			var _v0 = A2($elm$core$Elm$JsArray$unsafeGet, pos, tree);
-			if (_v0.$ === 'SubTree') {
-				var subTree = _v0.a;
-				var $temp$shift = shift - $elm$core$Array$shiftStep,
-					$temp$index = index,
-					$temp$tree = subTree;
-				shift = $temp$shift;
-				index = $temp$index;
-				tree = $temp$tree;
-				continue getHelp;
-			} else {
-				var values = _v0.a;
-				return A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, values);
-			}
-		}
-	});
-var $elm$core$Bitwise$shiftLeftBy = _Bitwise_shiftLeftBy;
-var $elm$core$Array$tailIndex = function (len) {
-	return (len >>> 5) << 5;
-};
-var $elm$core$Array$get = F2(
-	function (index, _v0) {
-		var len = _v0.a;
-		var startShift = _v0.b;
-		var tree = _v0.c;
-		var tail = _v0.d;
-		return ((index < 0) || (_Utils_cmp(index, len) > -1)) ? $elm$core$Maybe$Nothing : ((_Utils_cmp(
-			index,
-			$elm$core$Array$tailIndex(len)) > -1) ? $elm$core$Maybe$Just(
-			A2($elm$core$Elm$JsArray$unsafeGet, $elm$core$Array$bitMask & index, tail)) : $elm$core$Maybe$Just(
-			A3($elm$core$Array$getHelp, startShift, index, tree)));
-	});
 var $gampleman$elm_visualization$Shape$Pie$pie = F2(
 	function (settings, data) {
 		var unsafeGet = F2(
@@ -24948,6 +25134,7 @@ var $author$project$StatefulGraph$view = function (model) {
 var $author$project$Main$viewGlobalGraphPage = function (model) {
 	return $author$project$StatefulGraph$view(model);
 };
+var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
 var $author$project$Main$viewPairsPage = function (model) {
 	var pairsProject = $elm$core$List$head(
 		A2(
@@ -24986,7 +25173,28 @@ var $author$project$Main$viewPairsPage = function (model) {
 								_List_fromArray(
 									[
 										$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
-										$elm$html$Html$text(project.name)
+										$elm$html$Html$text(project.name),
+										A2(
+										$elm$html$Html$div,
+										_List_fromArray(
+											[
+												$elm$html$Html$Attributes$class('lane-controls buttons')
+											]),
+										_List_fromArray(
+											[
+												A2(
+												$elm$html$Html$span,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('button shuffle'),
+														$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
+													]),
+												_List_fromArray(
+													[
+														$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
+														$elm$html$Html$text('shuffle')
+													]))
+											]))
 									])),
 								A2(
 								$elm$html$Html$div,
