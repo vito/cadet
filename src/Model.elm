@@ -130,8 +130,6 @@ type alias Model =
     , showArchivedCards : Set GitHub.ID
 
     -- assigning state
-    , outUsers : Set GitHub.ID
-    , pendingAssignments : Dict GitHub.ID PendingAssignments
     , pinnedLanes : Set GitHub.ID
 
     -- projectifying state
@@ -166,18 +164,8 @@ type Msg
     | SetCurrentZone Time.Zone
     | ProjectDrag (Drag.Msg CardSource CardDestination Msg)
     | MoveCardAfter CardSource CardDestination
-    | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
-    | AssignUserDrag (Drag.Msg GitHub.User (List Card) Msg)
-    | AssignUser GitHub.User (List Card)
-    | AssignOnlyUsersDrag (Drag.Msg Card (List GitHub.User) Msg)
-    | AssignOnlyUsers Card (List GitHub.User)
-    | ReassignUserDrag (Drag.Msg ( GitHub.User, List Card ) (List Card) Msg)
-    | ReassignUser ( GitHub.User, List Card ) (List Card)
-    | UnassignUser GitHub.User (List Card)
     | AssigneesUpdated (Result GitHub.Error (Maybe GitHub.Assignable))
-    | AssignPairs
-    | CommitAssignments
-    | ResetAssignments
+    | CardMoved GitHub.ID (Result GitHub.Error GitHub.ProjectColumnCard)
     | RefreshQueued (Result Http.Error ())
     | MeFetched (Result Http.Error (Maybe Backend.Me))
     | DataFetched (Result Http.Error (Backend.Indexed Backend.Data))
@@ -221,11 +209,10 @@ type Msg
     | SetCardArchived GitHub.ID Bool
     | ToggleShowArchivedCards GitHub.ID
     | SetLoading (List GitHub.ID) (Cmd Msg)
-    | SetUserOut GitHub.User
-    | SetUserIn GitHub.User
     | StartProjectifying GitHub.ID
     | StopProjectifying GitHub.ID
     | Projectify Card GitHub.Project
+    | AssignPairs
     | ShuffledPairs (List Backend.ColumnCard)
     | PinLane GitHub.ID
     | UnpinLane GitHub.ID
@@ -407,8 +394,6 @@ empty key =
     , deletingCards = Set.empty
     , editingCardNotes = Dict.empty
     , showArchivedCards = Set.empty
-    , outUsers = Set.empty
-    , pendingAssignments = Dict.empty
     , pinnedLanes = Set.empty
     , inFlight = Dict.empty
     , lastPaired = Dict.empty

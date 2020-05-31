@@ -234,113 +234,6 @@ update msg model =
             Log.debug "failed to move card" err <|
                 ( model, Cmd.none )
 
-        AssignUserDrag subMsg ->
-            let
-                dragModel =
-                    Drag.update subMsg model.assignUserDrag
-
-                newModel =
-                    { model | assignUserDrag = dragModel }
-            in
-            case dragModel of
-                Drag.Dropping state ->
-                    update state.msg { newModel | assignUserDrag = Drag.complete newModel.assignUserDrag }
-
-                _ ->
-                    ( newModel, Cmd.none )
-
-        AssignUser user cards ->
-            Log.debug "assigning" ( user.login, List.map .id cards ) <|
-                ( computeProjectLanes
-                    { model
-                        | pendingAssignments =
-                            List.foldl (\{ id } -> Dict.update id (addAssignments [ user ])) model.pendingAssignments cards
-                    }
-                , Cmd.none
-                )
-
-        ReassignUserDrag subMsg ->
-            let
-                dragModel =
-                    Drag.update subMsg model.reassignUserDrag
-
-                newModel =
-                    { model | reassignUserDrag = dragModel }
-            in
-            case dragModel of
-                Drag.Dropping state ->
-                    update state.msg { newModel | reassignUserDrag = Drag.complete newModel.reassignUserDrag }
-
-                _ ->
-                    ( newModel, Cmd.none )
-
-        ReassignUser ( user, unassignCards ) assignCards ->
-            Log.debug "reassigning" ( user.login, List.map .id unassignCards, List.map .id assignCards ) <|
-                let
-                    withAssignments pas =
-                        List.foldl (\{ id } -> Dict.update id (addAssignments [ user ])) pas assignCards
-
-                    withUnassignments pas =
-                        List.foldl (\{ id } -> Dict.update id (addUnassignment user)) pas unassignCards
-                in
-                ( computeProjectLanes
-                    { model
-                        | pendingAssignments =
-                            model.pendingAssignments
-                                |> withAssignments
-                                |> withUnassignments
-                    }
-                , Cmd.none
-                )
-
-        UnassignUser user cards ->
-            Log.debug "unassigning" ( user.login, List.map .id cards ) <|
-                ( computeProjectLanes
-                    { model
-                        | pendingAssignments =
-                            List.foldl (\{ id } -> Dict.update id (addUnassignment user))
-                                model.pendingAssignments
-                                cards
-                    }
-                , Cmd.none
-                )
-
-        AssignOnlyUsersDrag subMsg ->
-            let
-                dragModel =
-                    Drag.update subMsg model.assignOnlyUsersDrag
-
-                newModel =
-                    { model | assignOnlyUsersDrag = dragModel }
-            in
-            case dragModel of
-                Drag.Dropping state ->
-                    update state.msg { newModel | assignOnlyUsersDrag = Drag.complete newModel.assignOnlyUsersDrag }
-
-                _ ->
-                    ( newModel, Cmd.none )
-
-        AssignOnlyUsers card users ->
-            Log.debug "assigning" ( List.map .login users, card.id ) <|
-                let
-                    userIds =
-                        List.map .id users
-
-                    beingAssigned { id } =
-                        List.member id userIds
-
-                    otherAssignees =
-                        List.filter (not << beingAssigned) card.assignees
-                in
-                ( computeProjectLanes
-                    { model
-                        | pendingAssignments =
-                            Dict.update card.id (addAssignments users) <|
-                                List.foldl (\other -> Dict.update card.id (addUnassignment other)) model.pendingAssignments otherAssignees
-                    }
-                , Cmd.none
-                )
-
         AssignPairs ->
             -- loop over each available user,
             -- for each lane that has only one user,
@@ -432,37 +325,6 @@ update msg model =
 
         UnpinLane id ->
             ( { model | pinnedLanes = Set.remove id model.pinnedLanes }, Cmd.none )
-
-        CommitAssignments ->
-            let
-                cardAssignments cardId { assign, unassign } =
-                    case ( assign, unassign ) of
-                        ( [], [] ) ->
-                            []
-
-                        ( [], _ ) ->
-                            [ Effects.unassignUsers model unassign cardId ]
-
-                        ( _, [] ) ->
-                            [ Effects.assignUsers model assign cardId ]
-
-                        _ ->
-                            [ Effects.assignUsers model assign cardId
-                            , Effects.unassignUsers model unassign cardId
-                            ]
-            in
-            ( computeProjectLanes { model | pendingAssignments = Dict.empty }
-            , Cmd.batch <|
-                Dict.foldl
-                    (\cardId assignments effects ->
-                        cardAssignments cardId assignments ++ effects
-                    )
-                    []
-                    model.pendingAssignments
-            )
-
-        ResetAssignments ->
-            ( computeProjectLanes { model | pendingAssignments = Dict.empty }, Cmd.none )
 
         AssigneesUpdated (Ok (Just assignable)) ->
             ( model
@@ -798,12 +660,6 @@ update msg model =
             , Cmd.none
             )
 
-        SetUserOut user ->
-            ( { model | outUsers = Set.insert user.id model.outUsers }, Cmd.none )
-
-        SetUserIn user ->
-            ( { model | outUsers = Set.remove user.id model.outUsers }, Cmd.none )
-
         StartProjectifying cardId ->
             ( { model | projectifyingCards = Set.insert cardId model.projectifyingCards }, Cmd.none )
 
@@ -814,118 +670,6 @@ update msg model =
             ( { model | projectifyingCards = Set.remove card.id model.projectifyingCards }
             , Effects.createProjectForIssue model card project
             )
-
-
-addAssignments : List GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
-addAssignments users mp =
-    let
-        userIds =
-            List.map .id users
-
-        beingAssigned { id } =
-            List.member id userIds
-    in
-    case mp of
-        Nothing ->
-            Just { assign = users, unassign = [] }
-
-        Just p ->
-            Just
-                { p
-                    | unassign = List.filter (not << beingAssigned) p.unassign
-                    , assign = users ++ List.filter (not << beingAssigned) p.assign
-                }
-
-
-addUnassignment : GitHub.User -> Maybe Model.PendingAssignments -> Maybe Model.PendingAssignments
-addUnassignment user mp =
-    case mp of
-        Nothing ->
-            Just { assign = [], unassign = [ user ] }
-
-        Just p ->
-            Just
-                { p
-                    | unassign = user :: List.filter ((/=) user.id << .id) p.unassign
-                    , assign = List.filter ((/=) user.id << .id) p.assign
-                }
-
-
-pairUpUser : GitHub.User -> ( Model, Cmd Msg ) -> ( Model, Cmd Msg )
-pairUpUser target ( model, msg ) =
-    let
-        -- TODO
-        ( soloLanes, pairingLanes ) =
-            ( [], [] )
-
-        -- model.inFlight
-        --     |> List.concatMap .lanes
-        --     |> List.partition ((==) 1 << List.length << .assignees)
-        isPairing user =
-            List.any (List.any ((==) user.login << .login) << .assignees) pairingLanes
-
-        pairingPool =
-            soloLanes
-                |> List.filter (List.any (not << Card.isPaused) << .cards)
-                |> List.concatMap .assignees
-                |> List.filter (not << isPairing)
-
-        lastPaired userA userB =
-            Dict.get (List.sort [ userA.id, userB.id ]) model.lastPaired
-
-        pickBestUser user cur =
-            case ( lastPaired target user, lastPaired target cur ) of
-                ( Just tsUser, Just tsCur ) ->
-                    if Time.posixToMillis tsCur < Time.posixToMillis tsUser then
-                        cur
-
-                    else
-                        user
-
-                ( Just _, Nothing ) ->
-                    cur
-
-                ( Nothing, Just _ ) ->
-                    user
-
-                ( Nothing, Nothing ) ->
-                    -- arbitrary
-                    if user.id < cur.id then
-                        user
-
-                    else
-                        cur
-    in
-    case LE.foldl1 pickBestUser pairingPool of
-        Just pair ->
-            Log.debug "chose" ( target.login, pair.login ) <|
-                let
-                    -- TODO
-                    activeCards =
-                        []
-                            |> List.concatMap .lanes
-                            |> List.filter (List.any ((==) pair.id << .id) << .assignees)
-                            |> List.concatMap .cards
-                in
-                update (AssignUser target activeCards) model
-
-        Nothing ->
-            Log.debug "no pair available" ( target.login, List.map .login pairingPool ) <|
-                ( model, msg )
-
-
-replay : List Msg -> Model -> ( Model, Cmd Msg )
-replay msgs model =
-    List.foldl
-        (\msg ( m, cmd ) ->
-            let
-                ( nm, ncmd ) =
-                    update msg m
-            in
-            ( nm, Cmd.batch [ cmd, ncmd ] )
-        )
-        ( model, Cmd.none )
-        msgs
 
 
 searchCards : Model -> String -> Set GitHub.ID
@@ -1289,38 +1033,6 @@ computeProjectLanes model =
                 Dict.empty
                 allInFlightCards
     }
-
-
-projectProgress : Model -> GitHub.Project -> Float
-projectProgress model project =
-    let
-        ( toDos, inProgresses, dones ) =
-            CardView.projectProgress model project
-    in
-    toFloat dones / toFloat (toDos + inProgresses + dones)
-
-
-byAssignees : List Card -> List Model.ProjectLane
-byAssignees =
-    let
-        addCard card val =
-            case val of
-                Nothing ->
-                    Just { assignees = card.assignees, cards = [ card ] }
-
-                Just lane ->
-                    Just { lane | cards = card :: lane.cards }
-
-        groupByAssignees card groups =
-            Dict.update (List.sort <| List.map .id card.assignees) (addCard card) groups
-    in
-    List.foldl groupByAssignees Dict.empty
-        >> Dict.values
-        >> List.sortBy
-            (\{ assignees, cards } ->
-                ( List.length assignees, List.length cards )
-            )
-        >> List.reverse
 
 
 titleSuffix : String -> String
