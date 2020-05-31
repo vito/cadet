@@ -132,6 +132,7 @@ type alias Model =
     -- assigning state
     , outUsers : Set GitHub.ID
     , pendingAssignments : Dict GitHub.ID PendingAssignments
+    , pinnedLanes : Set GitHub.ID
 
     -- projectifying state
     , projectifyingCards : Set GitHub.ID
@@ -226,6 +227,8 @@ type Msg
     | StopProjectifying GitHub.ID
     | Projectify Card GitHub.Project
     | ShuffledPairs (List Backend.ColumnCard)
+    | PinLane GitHub.ID
+    | UnpinLane GitHub.ID
 
 
 type Page
@@ -406,6 +409,7 @@ empty key =
     , showArchivedCards = Set.empty
     , outUsers = Set.empty
     , pendingAssignments = Dict.empty
+    , pinnedLanes = Set.empty
     , inFlight = Dict.empty
     , lastPaired = Dict.empty
     , repoProjectTemplates = Dict.empty

@@ -360,7 +360,10 @@ update msg model =
                         availableCards =
                             List.concatMap
                                 (\col ->
-                                    if col.purpose == Just GitHub.ProjectColumnPurposeToDo || col.purpose == Just GitHub.ProjectColumnPurposeInProgress then
+                                    if Set.member col.id model.pinnedLanes then
+                                        []
+
+                                    else if col.purpose == Just GitHub.ProjectColumnPurposeToDo || col.purpose == Just GitHub.ProjectColumnPurposeInProgress then
                                         Maybe.withDefault [] (Dict.get col.id model.columnCards)
 
                                     else
@@ -407,8 +410,15 @@ update msg model =
                                         else
                                             ( move :: ms, nth + 1, cols )
 
+                            isTargetLane { id, purpose } =
+                                if Set.member id model.pinnedLanes then
+                                    False
+
+                                else
+                                    purpose == Just GitHub.ProjectColumnPurposeInProgress
+
                             lanes =
-                                List.filter ((==) (Just GitHub.ProjectColumnPurposeInProgress) << .purpose) project.columns
+                                List.filter isTargetLane project.columns
 
                             ( moves, _, _ ) =
                                 List.foldl groupUp ( [], 1, lanes ) pairs
@@ -416,6 +426,12 @@ update msg model =
                         ( model
                         , Cmd.batch moves
                         )
+
+        PinLane id ->
+            ( { model | pinnedLanes = Set.insert id model.pinnedLanes }, Cmd.none )
+
+        UnpinLane id ->
+            ( { model | pinnedLanes = Set.remove id model.pinnedLanes }, Cmd.none )
 
         CommitAssignments ->
             let
@@ -1553,7 +1569,7 @@ viewRepoRoadmap model repo project =
             , Html.text repo.name
             ]
         , Html.div [ HA.class "fixed-columns" ] <|
-            List.map (viewProjectColumn model project) project.columns
+            List.map (viewProjectColumn model project []) project.columns
         ]
 
 
@@ -1830,13 +1846,33 @@ viewPairsPage model =
             List.filter (\p -> p.name == "Pairs") model.orgProjects
                 |> List.head
     in
-    Html.div [ HA.class "page-content pair-assignments" ]
-        [ case pairsProject of
-            Nothing ->
-                Html.text "no Pairs project in organization"
+    case pairsProject of
+        Nothing ->
+            Html.text "no Pairs project in organization"
 
-            Just project ->
-                Html.div [ HA.class "project single" ]
+        Just project ->
+            let
+                viewColumn col =
+                    let
+                        isPinned =
+                            Set.member col.id model.pinnedLanes
+
+                        pinToggle =
+                            Html.span
+                                [ HA.classList [ ( "pinned", isPinned ) ]
+                                , HE.onClick <|
+                                    if isPinned then
+                                        UnpinLane col.id
+
+                                    else
+                                        PinLane col.id
+                                ]
+                                [ Octicons.pin octiconOpts ]
+                    in
+                    viewProjectColumn model project [ pinToggle ] col
+            in
+            Html.div [ HA.class "page-content pair-assignments" ]
+                [ Html.div [ HA.class "project single" ]
                     [ Html.div [ HA.class "page-header" ]
                         [ Octicons.project octiconOpts
                         , Html.text project.name
@@ -1848,9 +1884,9 @@ viewPairsPage model =
                             ]
                         ]
                     , Html.div [ HA.class "fixed-columns card-columns" ] <|
-                        List.map (viewProjectColumn model project) project.columns
+                        List.map viewColumn project.columns
                     ]
-        ]
+                ]
 
 
 viewLeaderboardEntry : ( GitHub.User, Int ) -> Html Msg
@@ -2067,8 +2103,8 @@ focusId colId =
     "add-note-" ++ colId
 
 
-viewProjectColumn : Model -> GitHub.Project -> GitHub.ProjectColumn -> Html Msg
-viewProjectColumn model project col =
+viewProjectColumn : Model -> GitHub.Project -> List (Html Msg) -> GitHub.ProjectColumn -> Html Msg
+viewProjectColumn model project controls col =
     let
         cards =
             Dict.get col.id model.columnCards
@@ -2116,13 +2152,16 @@ viewProjectColumn model project col =
             [ columnIcon col
             , Html.span [ HA.class "column-name" ]
                 [ Html.text col.name ]
-            , Html.div [ HA.class "column-controls" ]
-                [ Html.span [ HA.class "refresh-column spin-on-column-refresh", HE.onClick (RefreshColumn col.id) ]
-                    [ Octicons.sync octiconOpts ]
-                , whenLoggedIn model <|
-                    Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
-                        [ Octicons.plus octiconOpts ]
-                ]
+            , Html.div [ HA.class "column-controls" ] <|
+                List.concat
+                    [ controls
+                    , [ Html.span [ HA.class "refresh-column spin-on-column-refresh", HE.onClick (RefreshColumn col.id) ]
+                            [ Octicons.sync octiconOpts ]
+                      , whenLoggedIn model <|
+                            Html.span [ HA.class "add-card", HE.onClick (SetCreatingColumnNote col.id "") ]
+                                [ Octicons.plus octiconOpts ]
+                      ]
+                    ]
             ]
         , if addingNote == Nothing && List.isEmpty cards then
             Html.div [ HA.class "no-cards" ]
@@ -2232,7 +2271,7 @@ viewProjectPage model project =
                 , Html.text project.name
                 ]
             , Html.div [ HA.class "fixed-columns card-columns" ] <|
-                List.map (viewProjectColumn model project) project.columns
+                List.map (viewProjectColumn model project []) project.columns
             , Html.div [ HA.class "icebox-graph" ]
                 [ Html.div [ HA.class "page-header" ]
                     [ Octicons.circuitBoard octiconOpts

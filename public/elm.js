@@ -5784,6 +5784,7 @@ var $author$project$Model$empty = function (key) {
 		outUsers: $elm$core$Set$empty,
 		page: $author$project$Model$GlobalGraphPage,
 		pendingAssignments: $elm$core$Dict$empty,
+		pinnedLanes: $elm$core$Set$empty,
 		prReviewers: $elm$core$Dict$empty,
 		progress: $elm$core$Dict$empty,
 		projectDrag: $author$project$Drag$init,
@@ -15874,14 +15875,14 @@ var $author$project$Main$update = F2(
 						var availableCards = A2(
 							$elm$core$List$concatMap,
 							function (col) {
-								return (_Utils_eq(
+								return A2($elm$core$Set$member, col.id, model.pinnedLanes) ? _List_Nil : ((_Utils_eq(
 									col.purpose,
 									$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeToDo)) || _Utils_eq(
 									col.purpose,
 									$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress))) ? A2(
 									$elm$core$Maybe$withDefault,
 									_List_Nil,
-									A2($elm$core$Dict$get, col.id, model.columnCards)) : _List_Nil;
+									A2($elm$core$Dict$get, col.id, model.columnCards)) : _List_Nil);
 							},
 							project.columns);
 						return _Utils_Tuple2(
@@ -15909,16 +15910,14 @@ var $author$project$Main$update = F2(
 								return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 							} else {
 								var project = pairsProject.a;
-								var lanes = A2(
-									$elm$core$List$filter,
-									A2(
-										$elm$core$Basics$composeL,
-										$elm$core$Basics$eq(
-											$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress)),
-										function ($) {
-											return $.purpose;
-										}),
-									project.columns);
+								var isTargetLane = function (_v21) {
+									var id = _v21.id;
+									var purpose = _v21.purpose;
+									return A2($elm$core$Set$member, id, model.pinnedLanes) ? false : _Utils_eq(
+										purpose,
+										$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress));
+								};
+								var lanes = A2($elm$core$List$filter, isTargetLane, project.columns);
 								var groupUp = F2(
 									function (card, _v20) {
 										var ms = _v20.a;
@@ -15960,14 +15959,32 @@ var $author$project$Main$update = F2(
 									$elm$core$Platform$Cmd$batch(moves));
 							}
 						}());
+				case 'PinLane':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								pinnedLanes: A2($elm$core$Set$insert, id, model.pinnedLanes)
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'UnpinLane':
+					var id = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								pinnedLanes: A2($elm$core$Set$remove, id, model.pinnedLanes)
+							}),
+						$elm$core$Platform$Cmd$none);
 				case 'CommitAssignments':
 					var cardAssignments = F2(
-						function (cardId, _v22) {
-							var assign = _v22.assign;
-							var unassign = _v22.unassign;
-							var _v21 = _Utils_Tuple2(assign, unassign);
-							if (!_v21.a.b) {
-								if (!_v21.b.b) {
+						function (cardId, _v23) {
+							var assign = _v23.assign;
+							var unassign = _v23.unassign;
+							var _v22 = _Utils_Tuple2(assign, unassign);
+							if (!_v22.a.b) {
+								if (!_v22.b.b) {
 									return _List_Nil;
 								} else {
 									return _List_fromArray(
@@ -15976,7 +15993,7 @@ var $author$project$Main$update = F2(
 										]);
 								}
 							} else {
-								if (!_v21.b.b) {
+								if (!_v22.b.b) {
 									return _List_fromArray(
 										[
 											A3($author$project$Effects$assignUsers, model, assign, cardId)
@@ -16029,7 +16046,7 @@ var $author$project$Main$update = F2(
 									}
 								}());
 						} else {
-							var _v24 = msg.a.a;
+							var _v25 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -16149,13 +16166,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v25 = msg.a;
-					var event = _v25.a;
-					var data = _v25.b;
-					var indexStr = _v25.c;
-					var _v26 = $elm$core$String$toInt(indexStr);
-					if (_v26.$ === 'Just') {
-						var index = _v26.a;
+					var _v26 = msg.a;
+					var event = _v26.a;
+					var data = _v26.b;
+					var indexStr = _v26.c;
+					var _v27 = $elm$core$String$toInt(indexStr);
+					if (_v27.$ === 'Just') {
+						var index = _v27.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -16280,9 +16297,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v27 = card.content;
-					if (_v27.$ === 'IssueCardContent') {
-						var issue = _v27.a;
+					var _v28 = card.content;
+					if (_v28.$ === 'IssueCardContent') {
+						var issue = _v28.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16292,7 +16309,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v27.a;
+						var pr = _v28.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -16305,14 +16322,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v28 = card.content;
-					if (_v28.$ === 'IssueCardContent') {
-						var issue = _v28.a;
+					var _v29 = card.content;
+					if (_v29.$ === 'IssueCardContent') {
+						var issue = _v29.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v28.a;
+						var pr = _v29.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16452,14 +16469,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
 							}),
 						function () {
-							var _v29 = A2(
+							var _v30 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.addingColumnNotes));
-							if (_v29 === '') {
+							if (_v30 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v29;
+								var note = _v30;
 								return A3($author$project$Effects$addNoteCard, model, id, note);
 							}
 						}());
@@ -16525,14 +16542,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v30 = A2(
+							var _v31 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v30 === '') {
+							if (_v31 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v30;
+								var note = _v31;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -20746,8 +20763,8 @@ var $author$project$CardView$viewProjectColumnCard = F4(
 		}
 		return $elm$html$Html$text('impossible: card is neither note nor content');
 	});
-var $author$project$Main$viewProjectColumn = F3(
-	function (model, project, col) {
+var $author$project$Main$viewProjectColumn = F4(
+	function (model, project, controls, col) {
 		var firstDropCandidate = {
 			msgFunc: $author$project$Model$MoveCardAfter,
 			target: {afterId: $elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
@@ -20832,36 +20849,41 @@ var $author$project$Main$viewProjectColumn = F3(
 								[
 									$elm$html$Html$Attributes$class('column-controls')
 								]),
-							_List_fromArray(
-								[
-									A2(
-									$elm$html$Html$span,
-									_List_fromArray(
-										[
-											$elm$html$Html$Attributes$class('refresh-column spin-on-column-refresh'),
-											$elm$html$Html$Events$onClick(
-											$author$project$Model$RefreshColumn(col.id))
-										]),
-									_List_fromArray(
-										[
-											$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
-										])),
-									A2(
-									$author$project$Model$whenLoggedIn,
-									model,
-									A2(
-										$elm$html$Html$span,
+							$elm$core$List$concat(
+								_List_fromArray(
+									[
+										controls,
 										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('add-card'),
-												$elm$html$Html$Events$onClick(
-												A2($author$project$Model$SetCreatingColumnNote, col.id, ''))
-											]),
-										_List_fromArray(
-											[
-												$capitalist$elm_octicons$Octicons$plus($author$project$Main$octiconOpts)
-											])))
-								]))
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('refresh-column spin-on-column-refresh'),
+													$elm$html$Html$Events$onClick(
+													$author$project$Model$RefreshColumn(col.id))
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$sync($author$project$Main$octiconOpts)
+												])),
+											A2(
+											$author$project$Model$whenLoggedIn,
+											model,
+											A2(
+												$elm$html$Html$span,
+												_List_fromArray(
+													[
+														$elm$html$Html$Attributes$class('add-card'),
+														$elm$html$Html$Events$onClick(
+														A2($author$project$Model$SetCreatingColumnNote, col.id, ''))
+													]),
+												_List_fromArray(
+													[
+														$capitalist$elm_octicons$Octicons$plus($author$project$Main$octiconOpts)
+													])))
+										])
+									])))
 						])),
 					(_Utils_eq(addingNote, $elm$core$Maybe$Nothing) && $elm$core$List$isEmpty(cards)) ? A2(
 					$elm$html$Html$div,
@@ -20982,7 +21004,7 @@ var $author$project$Main$viewRepoRoadmap = F3(
 						]),
 					A2(
 						$elm$core$List$map,
-						A2($author$project$Main$viewProjectColumn, model, project),
+						A3($author$project$Main$viewProjectColumn, model, project, _List_Nil),
 						project.columns))
 				]));
 	});
@@ -25135,6 +25157,14 @@ var $author$project$Main$viewGlobalGraphPage = function (model) {
 	return $author$project$StatefulGraph$view(model);
 };
 var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
+var $author$project$Model$PinLane = function (a) {
+	return {$: 'PinLane', a: a};
+};
+var $author$project$Model$UnpinLane = function (a) {
+	return {$: 'UnpinLane', a: a};
+};
+var $capitalist$elm_octicons$Octicons$pinPath = 'M10,1.2 L10,2 L10.5,3 L6,6 L2.2,6 C1.76,6 1.53,6.53 1.86,6.86 L5,10 L1,15 L6,11 L9.14,14.14 C9.47,14.47 10,14.23 10,13.8 L10,10 L13,5.5 L14,6 L14.8,6 C15.24,6 15.47,5.47 15.14,5.14 L10.86,0.86 C10.53,0.53 10,0.77 10,1.2 L10,1.2 Z';
+var $capitalist$elm_octicons$Octicons$pin = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$pinPath, '0 0 16 16', 'pin');
 var $author$project$Main$viewPairsPage = function (model) {
 	var pairsProject = $elm$core$List$head(
 		A2(
@@ -25143,73 +25173,94 @@ var $author$project$Main$viewPairsPage = function (model) {
 				return p.name === 'Pairs';
 			},
 			model.orgProjects));
-	return A2(
-		$elm$html$Html$div,
-		_List_fromArray(
-			[
-				$elm$html$Html$Attributes$class('page-content pair-assignments')
-			]),
-		_List_fromArray(
-			[
-				function () {
-				if (pairsProject.$ === 'Nothing') {
-					return $elm$html$Html$text('no Pairs project in organization');
-				} else {
-					var project = pairsProject.a;
-					return A2(
-						$elm$html$Html$div,
+	if (pairsProject.$ === 'Nothing') {
+		return $elm$html$Html$text('no Pairs project in organization');
+	} else {
+		var project = pairsProject.a;
+		var viewColumn = function (col) {
+			var isPinned = A2($elm$core$Set$member, col.id, model.pinnedLanes);
+			var pinToggle = A2(
+				$elm$html$Html$span,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$classList(
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$class('project single')
-							]),
-						_List_fromArray(
-							[
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('page-header')
-									]),
-								_List_fromArray(
-									[
-										$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
-										$elm$html$Html$text(project.name),
-										A2(
-										$elm$html$Html$div,
-										_List_fromArray(
-											[
-												$elm$html$Html$Attributes$class('lane-controls buttons')
-											]),
-										_List_fromArray(
-											[
-												A2(
-												$elm$html$Html$span,
-												_List_fromArray(
-													[
-														$elm$html$Html$Attributes$class('button shuffle'),
-														$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
-													]),
-												_List_fromArray(
-													[
-														$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
-														$elm$html$Html$text('shuffle')
-													]))
-											]))
-									])),
-								A2(
-								$elm$html$Html$div,
-								_List_fromArray(
-									[
-										$elm$html$Html$Attributes$class('fixed-columns card-columns')
-									]),
-								A2(
-									$elm$core$List$map,
-									A2($author$project$Main$viewProjectColumn, model, project),
-									project.columns))
-							]));
-				}
-			}()
-			]));
+								_Utils_Tuple2('pinned', isPinned)
+							])),
+						$elm$html$Html$Events$onClick(
+						isPinned ? $author$project$Model$UnpinLane(col.id) : $author$project$Model$PinLane(col.id))
+					]),
+				_List_fromArray(
+					[
+						$capitalist$elm_octicons$Octicons$pin($author$project$Main$octiconOpts)
+					]));
+			return A4(
+				$author$project$Main$viewProjectColumn,
+				model,
+				project,
+				_List_fromArray(
+					[pinToggle]),
+				col);
+		};
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$class('page-content pair-assignments')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$class('project single')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('page-header')
+								]),
+							_List_fromArray(
+								[
+									$capitalist$elm_octicons$Octicons$project($author$project$Main$octiconOpts),
+									$elm$html$Html$text(project.name),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('lane-controls buttons')
+										]),
+									_List_fromArray(
+										[
+											A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('button shuffle'),
+													$elm$html$Html$Events$onClick($author$project$Model$AssignPairs)
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
+													$elm$html$Html$text('shuffle')
+												]))
+										]))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('fixed-columns card-columns')
+								]),
+							A2($elm$core$List$map, viewColumn, project.columns))
+						]))
+				]));
+	}
 };
 var $author$project$Main$viewProjectPage = F2(
 	function (model, project) {
@@ -25248,7 +25299,7 @@ var $author$project$Main$viewProjectPage = F2(
 								]),
 							A2(
 								$elm$core$List$map,
-								A2($author$project$Main$viewProjectColumn, model, project),
+								A3($author$project$Main$viewProjectColumn, model, project, _List_Nil),
 								project.columns)),
 							A2(
 							$elm$html$Html$div,
