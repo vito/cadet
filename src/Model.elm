@@ -52,6 +52,7 @@ type alias Model =
     -- data from backend
     , dataIndex : Int
     , assignableUsers : List GitHub.User
+    , orgProjects : List GitHub.Project
     , repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
     , repoCommits : Dict GitHub.ID (Dict String Backend.CommitsSinceLastRelease)
@@ -352,6 +353,7 @@ empty key =
     , graphs = []
     , dataIndex = 0
     , assignableUsers = []
+    , orgProjects = []
     , repos = Dict.empty
     , repoProjects = Dict.empty
     , repoCommits = Dict.empty

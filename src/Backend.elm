@@ -60,6 +60,7 @@ type alias Indexed a =
 
 type alias Data =
     { pairingUsers : List GitHub.User
+    , orgProjects : List GitHub.Project
     , repos : Dict GitHub.ID GitHub.Repo
     , repoProjects : Dict GitHub.ID (List GitHub.Project)
     , repoCommits : Dict GitHub.ID (Dict String CommitsSinceLastRelease)
@@ -262,6 +263,7 @@ decodeData : JD.Decoder Data
 decodeData =
     JD.succeed Data
         |> andMap (JD.field "pairingUsers" <| JD.list GitHub.decodeUser)
+        |> andMap (JD.field "orgProjects" <| JD.list GitHub.decodeProject)
         |> andMap (JD.field "repos" <| JD.dict GitHub.decodeRepo)
         |> andMap (JD.field "repoProjects" <| JD.dict (JD.list GitHub.decodeProject))
         |> andMap (JD.field "repoCommits" <| JD.dict (JD.dict decodeCommitsSinceLastRelease))

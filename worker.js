@@ -8720,6 +8720,301 @@ var $author$project$Worker$decodeAndFetchRepo = F3(
 				model);
 		}
 	});
+var $author$project$Worker$OrgProjectsFetched = function (a) {
+	return {$: 'OrgProjectsFetched', a: a};
+};
+var $author$project$GitHub$fetchPaged = F3(
+	function (doc, token, psel) {
+		var fetchNextPage = function (_v0) {
+			var content = _v0.content;
+			var pageInfo = _v0.pageInfo;
+			return pageInfo.hasNextPage ? A3(
+				$author$project$Log$debug,
+				'has next page',
+				psel,
+				A2(
+					$elm$core$Task$map,
+					$elm$core$Basics$append(content),
+					A3(
+						$author$project$GitHub$fetchPaged,
+						doc,
+						token,
+						_Utils_update(
+							psel,
+							{after: pageInfo.endCursor})))) : $elm$core$Task$succeed(content);
+		};
+		return A2(
+			$elm$core$Task$andThen,
+			fetchNextPage,
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery,
+				$author$project$GitHub$authedOptions(token),
+				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, psel, doc)));
+	});
+var $author$project$GitHub$PageInfo = F2(
+	function (endCursor, hasNextPage) {
+		return {endCursor: endCursor, hasNextPage: hasNextPage};
+	});
+var $author$project$GitHub$PagedResult = F2(
+	function (content, pageInfo) {
+		return {content: content, pageInfo: pageInfo};
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue = function (a) {
+	return {$: 'EnumValue', a: a};
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum = function (symbol) {
+	return A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue(symbol),
+		_List_Nil);
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
+	return {$: 'ListValue', a: a};
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep = A2($elm$core$Basics$composeR, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getVariables, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables);
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list = function (values) {
+	return A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue(
+			A2(
+				$elm$core$List$map,
+				function (_v0) {
+					var ast = _v0.a;
+					return ast;
+				},
+				values)),
+		A3($elm$core$List$foldr, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep, _List_Nil, values));
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue = {$: 'NullValue'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable = {$: 'Nullable'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_v0) {
+	var coreTypeRef = _v0.b;
+	return A2($jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable, coreTypeRef);
+};
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable = function (_v0) {
+	var _v1 = _v0.a;
+	var typeRef = _v0.b;
+	var convert = _v0.c;
+	return A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable,
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable(typeRef),
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Maybe$map(convert),
+			$elm$core$Maybe$withDefault($jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue)));
+};
+var $author$project$GitHub$Project = F7(
+	function (id, url, owner, name, number, body, columns) {
+		return {body: body, columns: columns, id: id, name: name, number: number, owner: owner, url: url};
+	});
+var $author$project$GitHub$ProjectOwnerOrg = function (a) {
+	return {$: 'ProjectOwnerOrg', a: a};
+};
+var $author$project$GitHub$ProjectOwnerRepo = function (a) {
+	return {$: 'ProjectOwnerRepo', a: a};
+};
+var $author$project$GitHub$ProjectOwnerUser = function (a) {
+	return {$: 'ProjectOwnerUser', a: a};
+};
+var $author$project$GitHub$idObject = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
+var $author$project$GitHub$maybeOr3 = F3(
+	function (ma, mb, mc) {
+		return A2(
+			$elm_community$maybe_extra$Maybe$Extra$or,
+			ma,
+			A2($elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
+	});
+var $author$project$GitHub$projectOwnerObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+		$elm$core$Maybe$Just(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
+		A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerUser, $author$project$GitHub$idObject)),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+			$elm$core$Maybe$Just(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Organization')),
+			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerOrg, $author$project$GitHub$idObject)),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
+				$elm$core$Maybe$Just(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Repository')),
+				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerRepo, $author$project$GitHub$idObject)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr3))));
+var $author$project$GitHub$projectObject = A2(
+	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+	A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+		'columns',
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'first',
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(50))
+			]),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$columnObject)))),
+	A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'body', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+				A2(
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'owner', _List_Nil, $author$project$GitHub$projectOwnerObject)),
+					A2(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+						A2(
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
+							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Project))))))));
+var $author$project$GitHub$orgProjectsQuery = function () {
+	var pageInfo = A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'hasNextPage', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$bool),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'endCursor',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PageInfo)));
+	var paged = A2(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'pageInfo', _List_Nil, pageInfo),
+		A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'nodes',
+				_List_Nil,
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$projectObject)),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$PagedResult)));
+	var orgNameVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'orgName',
+		A2(
+			$elm$core$Basics$composeL,
+			function ($) {
+				return $.name;
+			},
+			function ($) {
+				return $.selector;
+			}),
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var afterVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'after',
+		function ($) {
+			return $.after;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string));
+	var pageArgs = _List_fromArray(
+		[
+			_Utils_Tuple2(
+			'first',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(100)),
+			_Utils_Tuple2(
+			'after',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(afterVar)),
+			_Utils_Tuple2(
+			'states',
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list(
+				_List_fromArray(
+					[
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum('OPEN')
+					])))
+		]);
+	var queryRoot = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+		A3(
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+			'organization',
+			_List_fromArray(
+				[
+					_Utils_Tuple2(
+					'login',
+					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(orgNameVar))
+				]),
+			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'projects', pageArgs, paged))));
+	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
+}();
+var $author$project$GitHub$fetchOrgProjects = F2(
+	function (token, org) {
+		return A3(
+			$author$project$GitHub$fetchPaged,
+			$author$project$GitHub$orgProjectsQuery,
+			token,
+			{after: $elm$core$Maybe$Nothing, selector: org});
+	});
+var $author$project$Worker$fetchOrgProjects = function (model) {
+	return A2(
+		$elm$core$Task$attempt,
+		$author$project$Worker$OrgProjectsFetched,
+		A2(
+			$author$project$GitHub$fetchOrgProjects,
+			model.githubToken,
+			{name: model.githubOrg}));
+};
+var $author$project$Worker$decodeAndFetchRepoOrOrgProjects = F2(
+	function (payload, model) {
+		var _v0 = A2(
+			$elm$json$Json$Decode$decodeValue,
+			A2(
+				$elm$json$Json$Decode$field,
+				'repository',
+				$elm$json$Json$Decode$succeed(_Utils_Tuple0)),
+			payload);
+		if (_v0.$ === 'Ok') {
+			var _v1 = A2($elm$json$Json$Decode$decodeValue, $author$project$Worker$decodeRepoSelector, payload);
+			if (_v1.$ === 'Ok') {
+				var sel = _v1.a;
+				return _Utils_update(
+					model,
+					{
+						loadQueue: A2(
+							$elm$core$List$cons,
+							A3($author$project$Worker$fetchRepo, model, $author$project$Worker$FetchRepoProjects, sel),
+							model.loadQueue)
+					});
+			} else {
+				var err = _v1.a;
+				return A3(
+					$author$project$Log$debug,
+					'failed to decode repo',
+					_Utils_Tuple2(err, payload),
+					model);
+			}
+		} else {
+			return _Utils_update(
+				model,
+				{
+					loadQueue: A2(
+						$elm$core$List$cons,
+						$author$project$Worker$fetchOrgProjects(model),
+						model.loadQueue)
+				});
+		}
+	});
 var $elm_community$intdict$IntDict$values = function (dict) {
 	return A3(
 		$elm_community$intdict$IntDict$foldr,
@@ -9769,34 +10064,6 @@ var $author$project$Worker$CardsFetched = F2(
 	function (a, b) {
 		return {$: 'CardsFetched', a: a, b: b};
 	});
-var $author$project$GitHub$PageInfo = F2(
-	function (endCursor, hasNextPage) {
-		return {endCursor: endCursor, hasNextPage: hasNextPage};
-	});
-var $author$project$GitHub$PagedResult = F2(
-	function (content, pageInfo) {
-		return {content: content, pageInfo: pageInfo};
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue = {$: 'NullValue'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable = {$: 'Nullable'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable = {$: 'Nullable'};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable = function (_v0) {
-	var coreTypeRef = _v0.b;
-	return A2($jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$TypeRef, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$Nullable, coreTypeRef);
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$nullable = function (_v0) {
-	var _v1 = _v0.a;
-	var typeRef = _v0.b;
-	var convert = _v0.c;
-	return A3(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Nullable,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$nullable(typeRef),
-		A2(
-			$elm$core$Basics$composeR,
-			$elm$core$Maybe$map(convert),
-			$elm$core$Maybe$withDefault($jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$NullValue)));
-};
 var $author$project$GitHub$IssueCardContent = function (a) {
 	return {$: 'IssueCardContent', a: a};
 };
@@ -10067,34 +10334,6 @@ var $author$project$GitHub$cardsQuery = function () {
 						cards)))));
 	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$queryDocument(queryRoot);
 }();
-var $author$project$GitHub$fetchPaged = F3(
-	function (doc, token, psel) {
-		var fetchNextPage = function (_v0) {
-			var content = _v0.content;
-			var pageInfo = _v0.pageInfo;
-			return pageInfo.hasNextPage ? A3(
-				$author$project$Log$debug,
-				'has next page',
-				psel,
-				A2(
-					$elm$core$Task$map,
-					$elm$core$Basics$append(content),
-					A3(
-						$author$project$GitHub$fetchPaged,
-						doc,
-						token,
-						_Utils_update(
-							psel,
-							{after: pageInfo.endCursor})))) : $elm$core$Task$succeed(content);
-		};
-		return A2(
-			$elm$core$Task$andThen,
-			fetchNextPage,
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendQuery,
-				$author$project$GitHub$authedOptions(token),
-				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, psel, doc)));
-	});
 var $author$project$GitHub$fetchProjectColumnCards = F2(
 	function (token, col) {
 		return A3(
@@ -10112,6 +10351,29 @@ var $author$project$Worker$fetchCards = F2(
 				$author$project$GitHub$fetchProjectColumnCards,
 				model.githubToken,
 				{id: colId}));
+	});
+var $author$project$Worker$fetchAllCards = F2(
+	function (model, projects) {
+		var fetches = A2(
+			$elm$core$List$concatMap,
+			A2(
+				$elm$core$Basics$composeL,
+				$elm$core$List$map(
+					A2(
+						$elm$core$Basics$composeL,
+						$author$project$Worker$fetchCards(model),
+						function ($) {
+							return $.id;
+						})),
+				function ($) {
+					return $.columns;
+				}),
+			projects);
+		return _Utils_update(
+			model,
+			{
+				loadQueue: _Utils_ap(fetches, model.loadQueue)
+			});
 	});
 var $author$project$Worker$IssueFetched = function (a) {
 	return {$: 'IssueFetched', a: a};
@@ -10465,19 +10727,9 @@ var $author$project$GitHub$fetchPage = F4(
 				$author$project$GitHub$authedOptions(token),
 				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request, psel, doc)));
 	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue = function (a) {
-	return {$: 'EnumValue', a: a};
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$enum = function (symbol) {
-	return A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$EnumValue(symbol),
-		_List_Nil);
-};
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ObjectValue = function (a) {
 	return {$: 'ObjectValue', a: a};
 };
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep = A2($elm$core$Basics$composeR, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$getVariables, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$Util$mergeVariables);
 var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object = function (pairs) {
 	return A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
@@ -11342,103 +11594,6 @@ var $author$project$Worker$RepoProjectsFetched = F3(
 	function (a, b, c) {
 		return {$: 'RepoProjectsFetched', a: a, b: b, c: c};
 	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue = function (a) {
-	return {$: 'ListValue', a: a};
-};
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$list = function (values) {
-	return A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$Value,
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$ListValue(
-			A2(
-				$elm$core$List$map,
-				function (_v0) {
-					var ast = _v0.a;
-					return ast;
-				},
-				values)),
-		A3($elm$core$List$foldr, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$valueVariablesFoldStep, _List_Nil, values));
-};
-var $author$project$GitHub$Project = F7(
-	function (id, url, owner, name, number, body, columns) {
-		return {body: body, columns: columns, id: id, name: name, number: number, owner: owner, url: url};
-	});
-var $author$project$GitHub$ProjectOwnerOrg = function (a) {
-	return {$: 'ProjectOwnerOrg', a: a};
-};
-var $author$project$GitHub$ProjectOwnerRepo = function (a) {
-	return {$: 'ProjectOwnerRepo', a: a};
-};
-var $author$project$GitHub$ProjectOwnerUser = function (a) {
-	return {$: 'ProjectOwnerUser', a: a};
-};
-var $author$project$GitHub$idObject = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-	A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string));
-var $author$project$GitHub$maybeOr3 = F3(
-	function (ma, mb, mc) {
-		return A2(
-			$elm_community$maybe_extra$Maybe$Extra$or,
-			ma,
-			A2($elm_community$maybe_extra$Maybe$Extra$or, mb, mc));
-	});
-var $author$project$GitHub$projectOwnerObject = A2(
-	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-		$elm$core$Maybe$Just(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('User')),
-		A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerUser, $author$project$GitHub$idObject)),
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-			$elm$core$Maybe$Just(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Organization')),
-			A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerOrg, $author$project$GitHub$idObject)),
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$inlineFragment,
-				$elm$core$Maybe$Just(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$onType('Repository')),
-				A2($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$map, $author$project$GitHub$ProjectOwnerRepo, $author$project$GitHub$idObject)),
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$maybeOr3))));
-var $author$project$GitHub$projectObject = A2(
-	$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-	A3(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-		'columns',
-		_List_fromArray(
-			[
-				_Utils_Tuple2(
-				'first',
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$int(50))
-			]),
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-			A3(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-				'nodes',
-				_List_Nil,
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$list($author$project$GitHub$columnObject)))),
-	A2(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-		A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'body', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-		A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-			A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'number', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$int),
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-				A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'name', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-				A2(
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-					$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$assume(
-						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'owner', _List_Nil, $author$project$GitHub$projectOwnerObject)),
-					A2(
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-						A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'url', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-						A2(
-							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
-							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'id', _List_Nil, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$string),
-							$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$object($author$project$GitHub$Project))))))));
 var $author$project$GitHub$repoProjectsQuery = function () {
 	var pageInfo = A2(
 		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$with,
@@ -12034,6 +12189,9 @@ var $author$project$Worker$setGraphs = _Platform_outgoingPort('setGraphs', $elm$
 var $author$project$Worker$setIssue = _Platform_outgoingPort('setIssue', $elm$core$Basics$identity);
 var $author$project$Worker$setIssues = _Platform_outgoingPort(
 	'setIssues',
+	$elm$json$Json$Encode$list($elm$core$Basics$identity));
+var $author$project$Worker$setOrgProjects = _Platform_outgoingPort(
+	'setOrgProjects',
 	$elm$json$Json$Encode$list($elm$core$Basics$identity));
 var $author$project$Worker$setPairingUsers = _Platform_outgoingPort(
 	'setPairingUsers',
@@ -12840,8 +12998,11 @@ var $author$project$Worker$update = F2(
 								$author$project$Worker$fetchPairingTeam(model),
 								A2(
 									$elm$core$List$cons,
-									$author$project$Worker$fetchRepos(model),
-									model.loadQueue))
+									$author$project$Worker$fetchOrgProjects(model),
+									A2(
+										$elm$core$List$cons,
+										$author$project$Worker$fetchRepos(model),
+										model.loadQueue)))
 						}),
 					$elm$core$Platform$Cmd$none);
 			case 'PopQueue':
@@ -12891,6 +13052,10 @@ var $author$project$Worker$update = F2(
 						return _Utils_Tuple2(
 							model,
 							$author$project$Worker$fetchPairingTeam(model));
+					case 'orgProjects':
+						return _Utils_Tuple2(
+							model,
+							$author$project$Worker$fetchOrgProjects(model));
 					case 'columnCards':
 						var colId = msg.b;
 						return _Utils_Tuple2(
@@ -13081,7 +13246,7 @@ var $author$project$Worker$update = F2(
 							'project hook received; refreshing projects',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A3($author$project$Worker$decodeAndFetchRepo, $author$project$Worker$FetchRepoProjects, payload, model),
+								A2($author$project$Worker$decodeAndFetchRepoOrOrgProjects, payload, model),
 								$elm$core$Platform$Cmd$none));
 					case 'project_column':
 						var payload = msg.b;
@@ -13090,7 +13255,7 @@ var $author$project$Worker$update = F2(
 							'project_column hook received; refreshing projects',
 							_Utils_Tuple0,
 							_Utils_Tuple2(
-								A3($author$project$Worker$decodeAndFetchRepo, $author$project$Worker$FetchRepoProjects, payload, model),
+								A2($author$project$Worker$decodeAndFetchRepoOrOrgProjects, payload, model),
 								$elm$core$Platform$Cmd$none));
 					case 'project_card':
 						var payload = msg.b;
@@ -13196,6 +13361,34 @@ var $author$project$Worker$update = F2(
 							model,
 							err,
 							$author$project$Worker$fetchPairingTeam(model)));
+				}
+			case 'OrgProjectsFetched':
+				if (msg.a.$ === 'Ok') {
+					var projects = msg.a.a;
+					return A3(
+						$author$project$Log$debug,
+						'org projects fetched',
+						A2(
+							$elm$core$List$map,
+							function ($) {
+								return $.name;
+							},
+							projects),
+						_Utils_Tuple2(
+							A2($author$project$Worker$fetchAllCards, model, projects),
+							$author$project$Worker$setOrgProjects(
+								A2($elm$core$List$map, $author$project$GitHub$encodeProject, projects))));
+				} else {
+					var err = msg.a.a;
+					return A3(
+						$author$project$Log$debug,
+						'failed to fetch org projects',
+						err,
+						A3(
+							$author$project$Worker$backOff,
+							model,
+							err,
+							$author$project$Worker$fetchOrgProjects(model)));
 				}
 			case 'RepositoriesFetched':
 				if (msg.a.$ === 'Ok') {
@@ -13369,27 +13562,7 @@ var $author$project$Worker$update = F2(
 			case 'FetchCards':
 				var projects = msg.a;
 				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							loadQueue: _Utils_ap(
-								A2(
-									$elm$core$List$concatMap,
-									A2(
-										$elm$core$Basics$composeL,
-										$elm$core$List$map(
-											A2(
-												$elm$core$Basics$composeL,
-												$author$project$Worker$fetchCards(model),
-												function ($) {
-													return $.id;
-												})),
-										function ($) {
-											return $.columns;
-										}),
-									projects),
-								model.loadQueue)
-						}),
+					A2($author$project$Worker$fetchAllCards, model, projects),
 					$elm$core$Platform$Cmd$none);
 			case 'CardsFetched':
 				if (msg.b.$ === 'Ok') {

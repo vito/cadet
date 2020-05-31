@@ -37,6 +37,9 @@ const data = {
   // users in 'pairing' team
   pairingUsers: [],
 
+  // org-level projects
+  orgProjects: [],
+
   // repos by id
   repos: {},
 
@@ -114,6 +117,12 @@ worker.ports.setGraphs.subscribe(function(gs) {
 worker.ports.setPairingUsers.subscribe(function(users) {
   data.pairingUsers = users;
   bumpIndexAndEmitUpdate("pairingUsers", users);
+  popPoll();
+});
+
+worker.ports.setOrgProjects.subscribe(function(projects) {
+  data.orgProjects = projects;
+  bumpIndexAndEmitUpdate("orgProjects", projects);
   popPoll();
 });
 

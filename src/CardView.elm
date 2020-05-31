@@ -204,6 +204,21 @@ viewNote model project col card text =
             |> ME.orElseLazy (\_ -> Maybe.map (viewCard model controls) (cardByUrl model text))
             |> Maybe.withDefault (viewNoteCard model project col card controls text)
 
+    else if String.startsWith "@" text then
+        let
+            login =
+                String.dropLeft 1 text
+
+            muser =
+                LE.find ((==) login << .login) model.assignableUsers
+        in
+        case muser of
+            Just user ->
+                viewPersonCard model controls user
+
+            Nothing ->
+                viewNoteCard model project col card controls text
+
     else
         viewNoteCard model project col card controls text
 
@@ -241,6 +256,26 @@ viewProjectColumnCard model project col ghCard =
 
         _ ->
             Html.text "impossible: card is neither note nor content"
+
+
+viewPersonCard : Model -> List (Html Msg) -> GitHub.User -> Html Msg
+viewPersonCard model controls user =
+    Html.div [ HA.class "card note", HA.tabindex 0 ]
+        [ Html.div [ HA.class "card-content" ]
+            [ Html.div [ HA.class "card-squares left vertical" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                    [ viewCardActor user
+                    ]
+            , Html.div [ HA.class "card-info" ]
+                [ Html.div [ HA.class "card-title" ]
+                    [ Html.text (Maybe.withDefault ("@" ++ user.login) user.name)
+                    ]
+                ]
+            , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
+                List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
+                    controls
+            ]
+        ]
 
 
 viewLoadingCard : Html Msg

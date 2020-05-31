@@ -80,6 +80,9 @@ port setGraphs : JD.Value -> Cmd msg
 port setPairingUsers : List JD.Value -> Cmd msg
 
 
+port setOrgProjects : List JD.Value -> Cmd msg
+
+
 port refresh : (( String, GitHub.ID ) -> msg) -> Sub msg
 
 
@@ -132,6 +135,7 @@ type Msg
     | FetchRepoMilestones GitHub.Repo
     | FetchRepoReleases GitHub.Repo
     | PairingTeamFetched (Result GitHub.Error GitHub.Team)
+    | OrgProjectsFetched (Result GitHub.Error (List GitHub.Project))
     | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
     | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
     | CardsFetched GitHub.ID (Result GitHub.Error (List GitHub.ProjectColumnCard))
@@ -202,7 +206,7 @@ update msg model =
             ( model, Cmd.none )
 
         Refresh ->
-            ( { model | loadQueue = fetchPairingTeam model :: fetchRepos model :: model.loadQueue }, Cmd.none )
+            ( { model | loadQueue = fetchPairingTeam model :: fetchOrgProjects model :: fetchRepos model :: model.loadQueue }, Cmd.none )
 
         PopQueue ->
             case model.loadQueue of
@@ -237,6 +241,9 @@ update msg model =
 
         RefreshRequested "pairingUsers" _ ->
             ( model, fetchPairingTeam model )
+
+        RefreshRequested "orgProjects" _ ->
+            ( model, fetchOrgProjects model )
 
         RefreshRequested "columnCards" colId ->
             ( model, fetchCards model colId )
@@ -325,11 +332,11 @@ update msg model =
 
         HookReceived "project" payload ->
             Log.debug "project hook received; refreshing projects" () <|
-                ( decodeAndFetchRepo FetchRepoProjects payload model, Cmd.none )
+                ( decodeAndFetchRepoOrOrgProjects payload model, Cmd.none )
 
         HookReceived "project_column" payload ->
             Log.debug "project_column hook received; refreshing projects" () <|
-                ( decodeAndFetchRepo FetchRepoProjects payload model, Cmd.none )
+                ( decodeAndFetchRepoOrOrgProjects payload model, Cmd.none )
 
         HookReceived "project_card" payload ->
             Log.debug "project_card hook received; refreshing projects and cards" () <|
@@ -373,6 +380,14 @@ update msg model =
         PairingTeamFetched (Err err) ->
             Log.debug "failed to fetch pairing members" err <|
                 backOff model err (fetchPairingTeam model)
+
+        OrgProjectsFetched (Ok projects) ->
+            Log.debug "org projects fetched" (List.map .name projects) <|
+                ( fetchAllCards model projects, setOrgProjects (List.map GitHub.encodeProject projects) )
+
+        OrgProjectsFetched (Err err) ->
+            Log.debug "failed to fetch org projects" err <|
+                backOff model err (fetchOrgProjects model)
 
         RepositoriesFetched (Ok repos) ->
             Log.debug "repositories fetched" (List.map .name repos) <|
@@ -443,7 +458,7 @@ update msg model =
                 backOff model err (fetchRepoProjects model repo nextMsg)
 
         FetchCards projects ->
-            ( { model | loadQueue = List.concatMap (List.map (fetchCards model << .id) << .columns) projects ++ model.loadQueue }, Cmd.none )
+            ( fetchAllCards model projects, Cmd.none )
 
         CardsFetched colId (Ok cards) ->
             Log.debug "cards fetched for" colId <|
@@ -972,6 +987,23 @@ fetchPairingTeam model =
         |> Task.attempt PairingTeamFetched
 
 
+decodeAndFetchRepoOrOrgProjects : JD.Value -> Model -> Model
+decodeAndFetchRepoOrOrgProjects payload model =
+    case JD.decodeValue (JD.field "repository" (JD.succeed ())) payload of
+        Ok _ ->
+            case JD.decodeValue decodeRepoSelector payload of
+                Ok sel ->
+                    { model | loadQueue = fetchRepo model FetchRepoProjects sel :: model.loadQueue }
+
+                Err err ->
+                    Log.debug "failed to decode repo" ( err, payload ) <|
+                        model
+
+        Err _ ->
+            -- 'repository' field is missing; must be for an org
+            { model | loadQueue = fetchOrgProjects model :: model.loadQueue }
+
+
 decodeAndFetchPairingTeam : JD.Value -> Model -> Model
 decodeAndFetchPairingTeam payload model =
     case JD.decodeValue decodeTeamSelector payload of
@@ -985,6 +1017,12 @@ decodeAndFetchPairingTeam payload model =
         Err err ->
             Log.debug "failed to decode team" ( err, payload ) <|
                 model
+
+
+fetchOrgProjects : Model -> Cmd Msg
+fetchOrgProjects model =
+    GitHub.fetchOrgProjects model.githubToken { name = model.githubOrg }
+        |> Task.attempt OrgProjectsFetched
 
 
 decodeAndFetchPRForCommit : JD.Value -> Model -> Model
@@ -1276,3 +1314,12 @@ subEdges =
                             go ((edge :: List.concat connected) :: disconnected) rest
     in
     go []
+
+
+fetchAllCards : Model -> List GitHub.Project -> Model
+fetchAllCards model projects =
+    let
+        fetches =
+            List.concatMap (List.map (fetchCards model << .id) << .columns) projects
+    in
+    { model | loadQueue = fetches ++ model.loadQueue }
