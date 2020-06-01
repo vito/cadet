@@ -160,7 +160,13 @@ h4 {
 
   .related-cards {
     .card-content {
+      background: @gray-100;
       border-top: .1em solid @gray-200;
+
+      &:last-child {
+        border-bottom-left-radius: @card-border-radius;
+        border-bottom-right-radius: @card-border-radius;
+      }
     }
   }
 
