@@ -1,5 +1,6 @@
 module Effects exposing
     ( addCard
+    , addContentCard
     , addIssueLabels
     , addNoteCard
     , addPullRequestLabels
@@ -134,6 +135,16 @@ assignUsers model users id =
             GitHub.assign token (List.map .id users) id
                 |> Task.attempt AssigneesUpdated
                 |> withSetLoading [ id ]
+
+
+addContentCard : Model -> GitHub.ID -> GitHub.ID -> Cmd Msg
+addContentCard model colId contentId =
+    withTokenOrLogIn model <|
+        \token ->
+            GitHub.addContentCard token colId contentId
+                |> Task.map (always ())
+                |> Task.attempt (DataChanged (Backend.refreshCards colId RefreshQueued))
+                |> withSetLoading [ colId ]
 
 
 addNoteCard : Model -> GitHub.ID -> String -> Cmd Msg

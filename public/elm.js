@@ -10294,6 +10294,138 @@ var $author$project$Model$DataChanged = F2(
 var $author$project$Model$RefreshQueued = function (a) {
 	return {$: 'RefreshQueued', a: a};
 };
+var $author$project$Backend$refreshCards = F2(
+	function (col, f) {
+		return A2(
+			$elm$core$Task$attempt,
+			f,
+			$lukewestby$elm_http_builder$HttpBuilder$toTask(
+				$lukewestby$elm_http_builder$HttpBuilder$get('/refresh?columnCards=' + col)));
+	});
+var $author$project$Effects$addContentCard = F3(
+	function (model, colId, contentId) {
+		return A2(
+			$author$project$Effects$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					$author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[colId]),
+					A2(
+						$elm$core$Task$attempt,
+						$author$project$Model$DataChanged(
+							A2($author$project$Backend$refreshCards, colId, $author$project$Model$RefreshQueued)),
+						A2(
+							$elm$core$Task$map,
+							$elm$core$Basics$always(_Utils_Tuple0),
+							A3($author$project$GitHub$addContentCard, token, colId, contentId))));
+			});
+	});
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
+var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
+var $author$project$GitHub$addNoteCardMutation = function () {
+	var noteVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'note',
+		function ($) {
+			return $.note;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
+	var columnIDVar = A3(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
+		'columnId',
+		function ($) {
+			return $.columnId;
+		},
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
+	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
+		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+			A3(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+				'addProjectCard',
+				_List_fromArray(
+					[
+						_Utils_Tuple2(
+						'input',
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
+							_List_fromArray(
+								[
+									_Utils_Tuple2(
+									'projectColumnId',
+									$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(columnIDVar)),
+									_Utils_Tuple2(
+									'note',
+									$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(noteVar))
+								])))
+					]),
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+					A3(
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
+						'cardEdge',
+						_List_Nil,
+						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
+							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, $author$project$GitHub$projectColumnCardObject)))))));
+}();
+var $author$project$GitHub$addNoteCard = F3(
+	function (token, columnID, note) {
+		return A2(
+			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
+			$author$project$GitHub$authedOptions(token),
+			A2(
+				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
+				{columnId: columnID, note: note},
+				$author$project$GitHub$addNoteCardMutation));
+	});
+var $author$project$Effects$addNoteCard = F3(
+	function (model, colId, note) {
+		return A2(
+			$author$project$Effects$withTokenOrLogIn,
+			model,
+			function (token) {
+				return A2(
+					$author$project$Effects$withSetLoading,
+					_List_fromArray(
+						[colId]),
+					A2(
+						$elm$core$Task$attempt,
+						$author$project$Model$DataChanged(
+							A2($author$project$Backend$refreshCards, colId, $author$project$Model$RefreshQueued)),
+						A2(
+							$elm$core$Task$map,
+							$elm$core$Basics$always(_Utils_Tuple0),
+							A3($author$project$GitHub$addNoteCard, token, colId, note))));
+			});
+	});
+var $author$project$Main$addContentOrNote = F4(
+	function (model, project, colId, note) {
+		if (A2($elm$core$String$startsWith, 'http', note)) {
+			var _v0 = A2($elm$core$Dict$get, note, model.idsByUrl);
+			if (_v0.$ === 'Just') {
+				var contentId = _v0.a;
+				var _v1 = A2($elm$core$Dict$get, contentId, model.cards);
+				if (_v1.$ === 'Just') {
+					var card = _v1.a;
+					var _v2 = project.owner;
+					switch (_v2.$) {
+						case 'ProjectOwnerRepo':
+							var repoId = _v2.a;
+							return _Utils_eq(card.repo.id, repoId) ? A3($author$project$Effects$addContentCard, model, colId, contentId) : A3($author$project$Effects$addNoteCard, model, colId, note);
+						case 'ProjectOwnerOrg':
+							return A3($author$project$Effects$addContentCard, model, colId, contentId);
+						default:
+							return A3($author$project$Effects$addNoteCard, model, colId, note);
+					}
+				} else {
+					return A3($author$project$Effects$addNoteCard, model, colId, note);
+				}
+			} else {
+				return A3($author$project$Effects$addNoteCard, model, colId, note);
+			}
+		} else {
+			return A3($author$project$Effects$addNoteCard, model, colId, note);
+		}
+	});
 var $lukewestby$elm_http_builder$HttpBuilder$post = $lukewestby$elm_http_builder$HttpBuilder$requestWithMethodAndUrl('POST');
 var $lukewestby$elm_http_builder$HttpBuilder$withHeaders = F2(
 	function (headerPairs, builder) {
@@ -10360,89 +10492,6 @@ var $author$project$Effects$addIssueLabels = F3(
 						$author$project$Model$DataChanged(
 							A2($author$project$Backend$refreshIssue, issue.id, $author$project$Model$RefreshQueued)),
 						A3($author$project$GitHub$addIssueLabels, token, issue, labels)));
-			});
-	});
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string = $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$namedType('String');
-var $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string = A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$VariableSpec, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$NonNull, $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$TypeRef$string, $jamesmacaulay$elm_graphql$GraphQL$Request$Document$AST$StringValue);
-var $author$project$GitHub$addNoteCardMutation = function () {
-	var noteVar = A3(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
-		'note',
-		function ($) {
-			return $.note;
-		},
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$string);
-	var columnIDVar = A3(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$required,
-		'columnId',
-		function ($) {
-			return $.columnId;
-		},
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Variable$id);
-	return $jamesmacaulay$elm_graphql$GraphQL$Request$Builder$mutationDocument(
-		$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-			A3(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-				'addProjectCard',
-				_List_fromArray(
-					[
-						_Utils_Tuple2(
-						'input',
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$object(
-							_List_fromArray(
-								[
-									_Utils_Tuple2(
-									'projectColumnId',
-									$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(columnIDVar)),
-									_Utils_Tuple2(
-									'note',
-									$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$Arg$variable(noteVar))
-								])))
-					]),
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-					A3(
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field,
-						'cardEdge',
-						_List_Nil,
-						$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$extract(
-							A3($jamesmacaulay$elm_graphql$GraphQL$Request$Builder$field, 'node', _List_Nil, $author$project$GitHub$projectColumnCardObject)))))));
-}();
-var $author$project$GitHub$addNoteCard = F3(
-	function (token, columnID, note) {
-		return A2(
-			$jamesmacaulay$elm_graphql$GraphQL$Client$Http$customSendMutation,
-			$author$project$GitHub$authedOptions(token),
-			A2(
-				$jamesmacaulay$elm_graphql$GraphQL$Request$Builder$request,
-				{columnId: columnID, note: note},
-				$author$project$GitHub$addNoteCardMutation));
-	});
-var $author$project$Backend$refreshCards = F2(
-	function (col, f) {
-		return A2(
-			$elm$core$Task$attempt,
-			f,
-			$lukewestby$elm_http_builder$HttpBuilder$toTask(
-				$lukewestby$elm_http_builder$HttpBuilder$get('/refresh?columnCards=' + col)));
-	});
-var $author$project$Effects$addNoteCard = F3(
-	function (model, colId, note) {
-		return A2(
-			$author$project$Effects$withTokenOrLogIn,
-			model,
-			function (token) {
-				return A2(
-					$author$project$Effects$withSetLoading,
-					_List_fromArray(
-						[colId]),
-					A2(
-						$elm$core$Task$attempt,
-						$author$project$Model$DataChanged(
-							A2($author$project$Backend$refreshCards, colId, $author$project$Model$RefreshQueued)),
-						A2(
-							$elm$core$Task$map,
-							$elm$core$Basics$always(_Utils_Tuple0),
-							A3($author$project$GitHub$addNoteCard, token, colId, note))));
 			});
 	});
 var $author$project$GitHub$addPullRequestLabels = F3(
@@ -15865,46 +15914,47 @@ var $author$project$Main$update = F2(
 						model,
 						$author$project$CardOperations$applyLabelOperations(model));
 				case 'SetCreatingColumnNote':
-					var id = msg.a;
+					var colId = msg.a;
 					var note = msg.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								addingColumnNotes: A3($elm$core$Dict$insert, id, note, model.addingColumnNotes)
+								addingColumnNotes: A3($elm$core$Dict$insert, colId, note, model.addingColumnNotes)
 							}),
 						A2(
 							$elm$core$Task$attempt,
 							$elm$core$Basics$always($author$project$Model$Noop),
 							$elm$browser$Browser$Dom$focus(
-								$author$project$Main$focusId(id))));
+								$author$project$Main$focusId(colId))));
 				case 'CancelCreatingColumnNote':
-					var id = msg.a;
+					var colId = msg.a;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
+								addingColumnNotes: A2($elm$core$Dict$remove, colId, model.addingColumnNotes)
 							}),
 						$elm$core$Platform$Cmd$none);
 				case 'CreateColumnNote':
-					var id = msg.a;
+					var project = msg.a;
+					var colId = msg.b;
 					return _Utils_Tuple2(
 						_Utils_update(
 							model,
 							{
-								addingColumnNotes: A2($elm$core$Dict$remove, id, model.addingColumnNotes)
+								addingColumnNotes: A2($elm$core$Dict$remove, colId, model.addingColumnNotes)
 							}),
 						function () {
 							var _v19 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
-								A2($elm$core$Dict$get, id, model.addingColumnNotes));
+								A2($elm$core$Dict$get, colId, model.addingColumnNotes));
 							if (_v19 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
 								var note = _v19;
-								return A3($author$project$Effects$addNoteCard, model, id, note);
+								return A4($author$project$Main$addContentOrNote, model, project, colId, note);
 							}
 						}());
 				case 'ConfirmDeleteCard':
@@ -18773,9 +18823,10 @@ var $author$project$Main$columnIcon = function (col) {
 var $author$project$Model$CancelCreatingColumnNote = function (a) {
 	return {$: 'CancelCreatingColumnNote', a: a};
 };
-var $author$project$Model$CreateColumnNote = function (a) {
-	return {$: 'CreateColumnNote', a: a};
-};
+var $author$project$Model$CreateColumnNote = F2(
+	function (a, b) {
+		return {$: 'CreateColumnNote', a: a, b: b};
+	});
 var $elm$html$Html$button = _VirtualDom_node('button');
 var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $capitalist$elm_octicons$Octicons$notePath = 'M3,10 L7,10 L7,9 L3,9 L3,10 L3,10 Z M3,8 L9,8 L9,7 L3,7 L3,8 L3,8 Z M3,6 L11,6 L11,5 L3,5 L3,6 L3,6 Z M13,12 L1,12 L1,3 L13,3 L13,12 L13,12 Z M1,2 C0.45,2 0,2.45 0,3 L0,12 C0,12.55 0.45,13 1,13 L13,13 C13.55,13 14,12.55 14,12 L14,3 C14,2.45 13.55,2 13,2 L1,2 L1,2 Z';
@@ -19121,8 +19172,8 @@ var $author$project$Events$onCtrlEnter = function (msg) {
 		});
 };
 var $elm$html$Html$textarea = _VirtualDom_node('textarea');
-var $author$project$Main$viewAddingNote = F2(
-	function (col, val) {
+var $author$project$Main$viewAddingNote = F3(
+	function (project, col, val) {
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -19216,7 +19267,7 @@ var $author$project$Main$viewAddingNote = F2(
 								[
 									$elm$html$Html$Attributes$class('write-note-form'),
 									$elm$html$Html$Events$onSubmit(
-									$author$project$Model$CreateColumnNote(col.id))
+									A2($author$project$Model$CreateColumnNote, project, col.id))
 								]),
 							_List_fromArray(
 								[
@@ -19230,7 +19281,7 @@ var $author$project$Main$viewAddingNote = F2(
 											$elm$html$Html$Events$onInput(
 											$author$project$Model$SetCreatingColumnNote(col.id)),
 											$author$project$Events$onCtrlEnter(
-											$author$project$Model$CreateColumnNote(col.id))
+											A2($author$project$Model$CreateColumnNote, project, col.id))
 										]),
 									_List_fromArray(
 										[
@@ -20323,7 +20374,7 @@ var $author$project$Main$viewProjectColumn = F4(
 									var note = addingNote.a;
 									return _List_fromArray(
 										[
-											A2($author$project$Main$viewAddingNote, col, note)
+											A3($author$project$Main$viewAddingNote, project, col, note)
 										]);
 								}
 							}(),

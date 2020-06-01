@@ -198,7 +198,7 @@ type Msg
     | DataChanged (Cmd Msg) (Result GitHub.Error ())
     | SetCreatingColumnNote GitHub.ID String
     | CancelCreatingColumnNote GitHub.ID
-    | CreateColumnNote GitHub.ID
+    | CreateColumnNote GitHub.Project GitHub.ID
     | ConfirmDeleteCard GitHub.ID
     | CancelDeleteCard GitHub.ID
     | DeleteCard GitHub.ID GitHub.ID

@@ -575,23 +575,23 @@ update msg model =
         ApplyLabelOperations ->
             ( model, CardOperations.applyLabelOperations model )
 
-        SetCreatingColumnNote id note ->
-            ( { model | addingColumnNotes = Dict.insert id note model.addingColumnNotes }
-            , Task.attempt (always Noop) (Browser.Dom.focus (focusId id))
+        SetCreatingColumnNote colId note ->
+            ( { model | addingColumnNotes = Dict.insert colId note model.addingColumnNotes }
+            , Task.attempt (always Noop) (Browser.Dom.focus (focusId colId))
             )
 
-        CancelCreatingColumnNote id ->
-            ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }, Cmd.none )
+        CancelCreatingColumnNote colId ->
+            ( { model | addingColumnNotes = Dict.remove colId model.addingColumnNotes }, Cmd.none )
 
-        CreateColumnNote id ->
+        CreateColumnNote project colId ->
             -- TODO: progress
-            ( { model | addingColumnNotes = Dict.remove id model.addingColumnNotes }
-            , case Maybe.withDefault "" <| Dict.get id model.addingColumnNotes of
+            ( { model | addingColumnNotes = Dict.remove colId model.addingColumnNotes }
+            , case Maybe.withDefault "" <| Dict.get colId model.addingColumnNotes of
                 "" ->
                     Cmd.none
 
                 note ->
-                    Effects.addNoteCard model id note
+                    addContentOrNote model project colId note
             )
 
         ConfirmDeleteCard id ->
@@ -1889,7 +1889,7 @@ viewProjectColumn model project controls col =
                             []
 
                         Just note ->
-                            [ viewAddingNote col note ]
+                            [ viewAddingNote project col note ]
                     , List.concatMap draggableCard unarchived
                     ]
         , if List.isEmpty archived then
@@ -1917,8 +1917,8 @@ viewProjectColumn model project controls col =
         ]
 
 
-viewAddingNote : GitHub.ProjectColumn -> String -> Html Msg
-viewAddingNote col val =
+viewAddingNote : GitHub.Project -> GitHub.ProjectColumn -> String -> Html Msg
+viewAddingNote project col val =
     Html.div [ HA.class "editable-card" ]
         [ Html.div
             [ HA.class "card note"
@@ -1944,12 +1944,12 @@ viewAddingNote col val =
             , HA.draggable "true"
             , HE.custom "dragstart" (JD.succeed { message = Noop, stopPropagation = True, preventDefault = True })
             ]
-            [ Html.form [ HA.class "write-note-form", HE.onSubmit (CreateColumnNote col.id) ]
+            [ Html.form [ HA.class "write-note-form", HE.onSubmit (CreateColumnNote project col.id) ]
                 [ Html.textarea
                     [ HA.placeholder "Enter a note"
                     , HA.id (focusId col.id)
                     , HE.onInput (SetCreatingColumnNote col.id)
-                    , Events.onCtrlEnter (CreateColumnNote col.id)
+                    , Events.onCtrlEnter (CreateColumnNote project col.id)
                     ]
                     [ Html.text val ]
                 , Html.div [ HA.class "buttons" ]
@@ -2256,3 +2256,34 @@ finishLoadingCardData data =
 finishLoadingColumnCards : List Backend.ColumnCard -> Model.ProgressState -> Model.ProgressState
 finishLoadingColumnCards cards state =
     List.foldl (\{ id } -> finishProgress id) state cards
+
+
+addContentOrNote : Model -> GitHub.Project -> GitHub.ID -> String -> Cmd Msg
+addContentOrNote model project colId note =
+    if String.startsWith "http" note then
+        case Dict.get note model.idsByUrl of
+            Just contentId ->
+                case Dict.get contentId model.cards of
+                    Just card ->
+                        case project.owner of
+                            GitHub.ProjectOwnerRepo repoId ->
+                                if card.repo.id == repoId then
+                                    Effects.addContentCard model colId contentId
+
+                                else
+                                    Effects.addNoteCard model colId note
+
+                            GitHub.ProjectOwnerOrg _ ->
+                                Effects.addContentCard model colId contentId
+
+                            GitHub.ProjectOwnerUser _ ->
+                                Effects.addNoteCard model colId note
+
+                    Nothing ->
+                        Effects.addNoteCard model colId note
+
+            Nothing ->
+                Effects.addNoteCard model colId note
+
+    else
+        Effects.addNoteCard model colId note
