@@ -383,7 +383,13 @@ update msg model =
 
         OrgProjectsFetched (Ok projects) ->
             Log.debug "org projects fetched" (List.map .name projects) <|
-                ( fetchAllCards model projects, setOrgProjects (List.map GitHub.encodeProject projects) )
+                let
+                    fetch =
+                        fetchAllCards model projects
+                in
+                ( { fetch | columnIDs = List.foldl addColumnIDs fetch.columnIDs projects }
+                , setOrgProjects (List.map GitHub.encodeProject projects)
+                )
 
         OrgProjectsFetched (Err err) ->
             Log.debug "failed to fetch org projects" err <|
@@ -439,9 +445,6 @@ update msg model =
         RepoProjectsFetched repo nextMsg (Ok projects) ->
             Log.debug "projects fetched" (List.map .name projects) <|
                 let
-                    addColumnIDs project ids =
-                        List.foldl (\col -> Dict.insert col.databaseId col.id) ids project.columns
-
                     ( next, cmd ) =
                         update (nextMsg projects)
                             { model | columnIDs = List.foldl addColumnIDs model.columnIDs projects }
@@ -1323,3 +1326,8 @@ fetchAllCards model projects =
             List.concatMap (List.map (fetchCards model << .id) << .columns) projects
     in
     { model | loadQueue = fetches ++ model.loadQueue }
+
+
+addColumnIDs : GitHub.Project -> Dict Int GitHub.ID -> Dict Int GitHub.ID
+addColumnIDs project ids =
+    List.foldl (\col -> Dict.insert col.databaseId col.id) ids project.columns
