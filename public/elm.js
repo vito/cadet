@@ -20070,6 +20070,28 @@ var $author$project$CardView$viewPersonCard = F3(
 								[
 									$elm$html$Html$text(
 									A2($elm$core$Maybe$withDefault, '@' + user.login, user.name))
+								])),
+							A2(
+							$elm$html$Html$div,
+							_List_fromArray(
+								[
+									$elm$html$Html$Attributes$class('card-meta')
+								]),
+							_List_fromArray(
+								[
+									$elm$html$Html$text('aka '),
+									A2(
+									$elm$html$Html$a,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$href(user.url),
+											$elm$html$Html$Attributes$target('_blank'),
+											$elm$html$Html$Attributes$draggable('false')
+										]),
+									_List_fromArray(
+										[
+											$elm$html$Html$text(user.login)
+										]))
 								]))
 						])),
 					A2(

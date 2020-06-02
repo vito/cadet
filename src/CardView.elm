@@ -323,6 +323,15 @@ viewPersonCard model controls user =
                     [ Html.div [ HA.class "card-title" ]
                         [ Html.text (Maybe.withDefault ("@" ++ user.login) user.name)
                         ]
+                    , Html.div [ HA.class "card-meta" ]
+                        [ Html.text "aka "
+                        , Html.a
+                            [ HA.href user.url
+                            , HA.target "_blank"
+                            , HA.draggable "false"
+                            ]
+                            [ Html.text user.login ]
+                        ]
                     ]
                 , Html.div [ HA.class "card-squares right vertical card-controls" ] <|
                     List.map (\x -> Html.div [ HA.class "card-square" ] [ x ]) <|
