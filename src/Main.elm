@@ -1606,6 +1606,12 @@ viewPairsPage model =
                                 [ Octicons.pin octiconOpts ]
                     in
                     viewProjectColumn model project [ pinToggle ] col
+
+                isLane =
+                    .purpose >> (==) (Just GitHub.ProjectColumnPurposeInProgress)
+
+                ( lanes, nonLanes ) =
+                    List.partition isLane project.columns
             in
             Html.div [ HA.class "page-content pair-assignments" ]
                 [ Html.div [ HA.class "project single" ]
@@ -1619,8 +1625,12 @@ viewPairsPage model =
                                 ]
                             ]
                         ]
-                    , Html.div [ HA.class "fixed-columns card-columns" ] <|
-                        List.map viewColumn project.columns
+                    , Html.div [ HA.class "pairs-board" ]
+                        [ Html.div [ HA.class "fixed-columns card-columns lanes" ] <|
+                            List.map viewColumn lanes
+                        , Html.div [ HA.class "fixed-columns card-columns non-lanes" ] <|
+                            List.map viewColumn nonLanes
+                        ]
                     ]
                 ]
 

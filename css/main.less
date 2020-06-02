@@ -1373,8 +1373,19 @@ svg {
       }
     }
 
-    .pinned .octicon * {
-      fill: @purple;
+    .pinned {
+      .octicon {
+        background: @purple;
+        padding: 5px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .octicon * {
+        fill: @white;
+      }
     }
   }
 }
@@ -1398,8 +1409,23 @@ a.column-title:hover, .page-header a:hover {
 }
 
 .pair-assignments {
-  .card {
-    // font-size: 12px;
+  .pairs-board {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    .non-lanes {
+      flex-basis: 0;
+      align-content: flex-start;
+    }
+  }
+
+  .card-columns {
+    flex-wrap: wrap;
+
+    .fixed-column {
+      margin-bottom: 20px;
+    }
   }
 }
 

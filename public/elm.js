@@ -24861,6 +24861,16 @@ var $author$project$Main$viewPairsPage = function (model) {
 					[pinToggle]),
 				col);
 		};
+		var isLane = A2(
+			$elm$core$Basics$composeR,
+			function ($) {
+				return $.purpose;
+			},
+			$elm$core$Basics$eq(
+				$elm$core$Maybe$Just($author$project$GitHub$ProjectColumnPurposeInProgress)));
+		var _v1 = A2($elm$core$List$partition, isLane, project.columns);
+		var lanes = _v1.a;
+		var nonLanes = _v1.b;
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
@@ -24913,9 +24923,25 @@ var $author$project$Main$viewPairsPage = function (model) {
 							$elm$html$Html$div,
 							_List_fromArray(
 								[
-									$elm$html$Html$Attributes$class('fixed-columns card-columns')
+									$elm$html$Html$Attributes$class('pairs-board')
 								]),
-							A2($elm$core$List$map, viewColumn, project.columns))
+							_List_fromArray(
+								[
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('fixed-columns card-columns lanes')
+										]),
+									A2($elm$core$List$map, viewColumn, lanes)),
+									A2(
+									$elm$html$Html$div,
+									_List_fromArray(
+										[
+											$elm$html$Html$Attributes$class('fixed-columns card-columns non-lanes')
+										]),
+									A2($elm$core$List$map, viewColumn, nonLanes))
+								]))
 						]))
 				]));
 	}
