@@ -10,6 +10,7 @@ module Effects exposing
     , createProjectForIssue
     , deleteProjectCard
     , moveCard
+    , moveCards
     , refreshColumnCards
     , refreshIssue
     , refreshPR
@@ -101,6 +102,16 @@ moveCard model { columnId, afterId } cardId nextMsg =
             GitHub.moveCardAfter token columnId cardId afterId
                 |> Task.attempt nextMsg
                 |> withSetLoading [ columnId ]
+
+
+moveCards : Model -> List ( Model.CardDestination, GitHub.ID ) -> (Result GitHub.Error (List GitHub.ProjectColumnCard) -> Msg) -> Cmd Msg
+moveCards model moves nextMsg =
+    withTokenOrLogIn model <|
+        \token ->
+            moves
+                |> List.map (\( { columnId, afterId }, cardId ) -> GitHub.moveCardAfter token columnId cardId afterId)
+                |> Task.sequence
+                |> Task.attempt nextMsg
 
 
 addCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg

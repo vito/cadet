@@ -289,13 +289,12 @@ update msg model =
                                     col :: rest ->
                                         let
                                             move =
-                                                Effects.moveCard model
-                                                    { projectId = project.id
-                                                    , columnId = col.id
-                                                    , afterId = Nothing
-                                                    }
-                                                    card.id
-                                                    (always (RefreshColumn col.id))
+                                                ( { projectId = project.id
+                                                  , columnId = col.id
+                                                  , afterId = Nothing
+                                                  }
+                                                , card.id
+                                                )
                                         in
                                         if nth == 2 then
                                             ( move :: ms, 1, rest )
@@ -317,7 +316,7 @@ update msg model =
                                 List.foldl groupUp ( [], 1, lanes ) pairs
                         in
                         ( model
-                        , Cmd.batch moves
+                        , Effects.moveCards model moves (always <| RefreshColumns (List.map .id project.columns))
                         )
 
         PinLane id ->
@@ -530,6 +529,12 @@ update msg model =
 
         RefreshPullRequest id ->
             ( model, Effects.refreshPR id )
+
+        RefreshColumns ids ->
+            ( model
+            , Cmd.batch <|
+                List.map Effects.refreshColumnCards ids
+            )
 
         RefreshColumn id ->
             ( model, Effects.refreshColumnCards id )

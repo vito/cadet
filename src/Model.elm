@@ -186,6 +186,7 @@ type Msg
     | RefreshIssue GitHub.ID
     | RefreshPullRequest GitHub.ID
     | RefreshColumn GitHub.ID
+    | RefreshColumns (List GitHub.ID)
     | AddFilter GraphFilter
     | RemoveFilter GraphFilter
     | SetGraphSort GraphSort
