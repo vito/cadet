@@ -34,6 +34,7 @@ import Html exposing (Html)
 import Http
 import OrderedSet exposing (OrderedSet)
 import Set exposing (Set)
+import Task.Parallel as TP
 import Time
 import Url exposing (Url)
 
@@ -131,6 +132,7 @@ type alias Model =
 
     -- assigning state
     , pinnedLanes : Set GitHub.ID
+    , cardMovesState : Maybe (TP.ListState Msg GitHub.ProjectColumnCard)
 
     -- projectifying state
     , projectifyingCards : Set GitHub.ID
@@ -217,6 +219,8 @@ type Msg
     | ShuffledPairs (List Backend.ColumnCard)
     | PinLane GitHub.ID
     | UnpinLane GitHub.ID
+    | UpdateCardMoves (TP.ListMsg GitHub.ProjectColumnCard)
+    | CardMovesFailed GitHub.Error
 
 
 type Page
@@ -400,6 +404,7 @@ empty key =
     , lastPaired = Dict.empty
     , repoProjectTemplates = Dict.empty
     , cardProjects = Dict.empty
+    , cardMovesState = Nothing
     , projectifyingCards = Set.empty
     }
 

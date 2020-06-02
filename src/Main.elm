@@ -32,6 +32,7 @@ import ReleaseStatus
 import Set exposing (Set)
 import StatefulGraph
 import Task
+import Task.Parallel as TP
 import Time
 import Time.Extra as TE
 import Url exposing (Url)
@@ -315,9 +316,27 @@ update msg model =
                             ( moves, _, _ ) =
                                 List.foldl groupUp ( [], 1, lanes ) pairs
                         in
-                        ( model
-                        , Effects.moveCards model moves (always <| RefreshColumns (List.map .id project.columns))
-                        )
+                        Effects.moveCards model moves (always <| RefreshColumns (List.map .id project.columns))
+
+        UpdateCardMoves listMsg ->
+            case model.cardMovesState of
+                Nothing ->
+                    ( model, Cmd.none )
+
+                Just state ->
+                    let
+                        ( newState, cmd ) =
+                            TP.updateList state listMsg
+                    in
+                    ( { model | cardMovesState = Just newState }
+                    , cmd
+                    )
+
+        CardMovesFailed err ->
+            Log.debug "failed to move cards" err <|
+                ( { model | cardMovesState = Nothing }
+                , Cmd.none
+                )
 
         PinLane id ->
             ( { model | pinnedLanes = Set.insert id model.pinnedLanes }, Cmd.none )

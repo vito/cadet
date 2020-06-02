@@ -29,6 +29,7 @@ import GitHub
 import Model exposing (Model, Msg(..))
 import Result exposing (Result)
 import Task
+import Task.Parallel as TP
 
 
 withTokenOrLogIn : Model -> (String -> Cmd Msg) -> Cmd Msg
@@ -104,14 +105,29 @@ moveCard model { columnId, afterId } cardId nextMsg =
                 |> withSetLoading [ columnId ]
 
 
-moveCards : Model -> List ( Model.CardDestination, GitHub.ID ) -> (Result GitHub.Error (List GitHub.ProjectColumnCard) -> Msg) -> Cmd Msg
+moveCards : Model -> List ( Model.CardDestination, GitHub.ID ) -> (List GitHub.ProjectColumnCard -> Msg) -> ( Model, Cmd Msg )
 moveCards model moves nextMsg =
-    withTokenOrLogIn model <|
-        \token ->
-            moves
-                |> List.map (\( { columnId, afterId }, cardId ) -> GitHub.moveCardAfter token columnId cardId afterId)
-                |> Task.sequence
-                |> Task.attempt nextMsg
+    case model.me of
+        Just { token } ->
+            let
+                ( state, cmd ) =
+                    TP.attemptList
+                        { tasks =
+                            moves
+                                |> List.map (\( { columnId, afterId }, cardId ) -> GitHub.moveCardAfter token columnId cardId afterId)
+                        , onUpdates = UpdateCardMoves
+                        , onFailure = CardMovesFailed
+                        , onSuccess = nextMsg
+                        }
+            in
+            ( { model | cardMovesState = Just state }
+            , cmd
+            )
+
+        Nothing ->
+            ( model
+            , Nav.load "/auth/github"
+            )
 
 
 addCard : Model -> Model.CardDestination -> GitHub.ID -> Cmd Msg

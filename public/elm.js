@@ -5754,6 +5754,7 @@ var $author$project$Model$empty = function (key) {
 		cardClosers: $elm$core$Dict$empty,
 		cardEvents: $elm$core$Dict$empty,
 		cardLabelOperations: $elm$core$Dict$empty,
+		cardMovesState: $elm$core$Maybe$Nothing,
 		cardProjects: $elm$core$Dict$empty,
 		cardRotations: $elm$core$Dict$empty,
 		cardSearch: 'is:open ',
@@ -7789,8 +7790,8 @@ var $author$project$Model$GraphsFetched = function (a) {
 	return {$: 'GraphsFetched', a: a};
 };
 var $author$project$Model$Noop = {$: 'Noop'};
-var $author$project$Model$RefreshColumn = function (a) {
-	return {$: 'RefreshColumn', a: a};
+var $author$project$Model$RefreshColumns = function (a) {
+	return {$: 'RefreshColumns', a: a};
 };
 var $author$project$Model$ShuffledPairs = function (a) {
 	return {$: 'ShuffledPairs', a: a};
@@ -14132,6 +14133,105 @@ var $author$project$Effects$moveCard = F4(
 						A4($author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId)));
 			});
 	});
+var $author$project$Model$CardMovesFailed = function (a) {
+	return {$: 'CardMovesFailed', a: a};
+};
+var $author$project$Model$UpdateCardMoves = function (a) {
+	return {$: 'UpdateCardMoves', a: a};
+};
+var $0ui$elm_task_parallel$Task$Parallel$ItemLoaded = F2(
+	function (a, b) {
+		return {$: 'ItemLoaded', a: a, b: b};
+	});
+var $0ui$elm_task_parallel$Task$Parallel$ListState = F2(
+	function (a, b) {
+		return {$: 'ListState', a: a, b: b};
+	});
+var $0ui$elm_task_parallel$Task$Parallel$routeTo = F2(
+	function (successMsg, failureMsg) {
+		return A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Task$andThen(
+				A2($elm$core$Basics$composeL, $elm$core$Task$succeed, $elm$core$Result$Ok)),
+			A2(
+				$elm$core$Basics$composeR,
+				$elm$core$Task$onError(
+					A2($elm$core$Basics$composeL, $elm$core$Task$succeed, $elm$core$Result$Err)),
+				$elm$core$Task$perform(
+					function (result) {
+						if (result.$ === 'Ok') {
+							var a = result.a;
+							return successMsg(a);
+						} else {
+							var err = result.a;
+							return failureMsg(err);
+						}
+					})));
+	});
+var $0ui$elm_task_parallel$Task$Parallel$attemptList = function (_v0) {
+	var tasks = _v0.tasks;
+	var onUpdates = _v0.onUpdates;
+	var onSuccess = _v0.onSuccess;
+	var onFailure = _v0.onFailure;
+	return _Utils_Tuple2(
+		A2(
+			$0ui$elm_task_parallel$Task$Parallel$ListState,
+			onSuccess,
+			A2(
+				$elm$core$List$map,
+				$elm$core$Basics$always($elm$core$Maybe$Nothing),
+				tasks)),
+		$elm$core$Platform$Cmd$batch(
+			A2(
+				$elm$core$List$indexedMap,
+				F2(
+					function (index, task) {
+						return A3(
+							$0ui$elm_task_parallel$Task$Parallel$routeTo,
+							A2(
+								$elm$core$Basics$composeL,
+								onUpdates,
+								$0ui$elm_task_parallel$Task$Parallel$ItemLoaded(index)),
+							onFailure,
+							task);
+					}),
+				tasks)));
+};
+var $author$project$Effects$moveCards = F3(
+	function (model, moves, nextMsg) {
+		var _v0 = model.me;
+		if (_v0.$ === 'Just') {
+			var token = _v0.a.token;
+			var _v1 = $0ui$elm_task_parallel$Task$Parallel$attemptList(
+				{
+					onFailure: $author$project$Model$CardMovesFailed,
+					onSuccess: nextMsg,
+					onUpdates: $author$project$Model$UpdateCardMoves,
+					tasks: A2(
+						$elm$core$List$map,
+						function (_v2) {
+							var columnId = _v2.a.columnId;
+							var afterId = _v2.a.afterId;
+							var cardId = _v2.b;
+							return A4($author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId);
+						},
+						moves)
+				});
+			var state = _v1.a;
+			var cmd = _v1.b;
+			return _Utils_Tuple2(
+				_Utils_update(
+					model,
+					{
+						cardMovesState: $elm$core$Maybe$Just(state)
+					}),
+				cmd);
+		} else {
+			return _Utils_Tuple2(
+				model,
+				$elm$browser$Browser$Navigation$load('/auth/github'));
+		}
+	});
 var $elm$url$Url$Parser$State = F5(
 	function (visited, unvisited, params, frag, value) {
 		return {frag: frag, params: params, unvisited: unvisited, value: value, visited: visited};
@@ -15261,6 +15361,39 @@ var $author$project$Effects$updateCardNote = F3(
 						A3($author$project$GitHub$updateCardNote, token, cardId, note)));
 			});
 	});
+var $0ui$elm_task_parallel$Task$Parallel$toCmd = A2(
+	$elm$core$Basics$composeR,
+	$elm$core$Maybe$map(
+		A2(
+			$elm$core$Basics$composeR,
+			$elm$core$Task$succeed,
+			$elm$core$Task$perform($elm$core$Basics$identity))),
+	$elm$core$Maybe$withDefault($elm$core$Platform$Cmd$none));
+var $0ui$elm_task_parallel$Task$Parallel$updateList = F2(
+	function (_v0, _v1) {
+		var onSuccess = _v0.a;
+		var items = _v0.b;
+		var index = _v1.a;
+		var newItem = _v1.b;
+		var updatedItems = A2(
+			$elm$core$List$indexedMap,
+			F2(
+				function (i, maybeItem) {
+					return _Utils_eq(i, index) ? $elm$core$Maybe$Just(newItem) : maybeItem;
+				}),
+			items);
+		return A2(
+			$elm$core$List$any,
+			$elm$core$Basics$eq($elm$core$Maybe$Nothing),
+			updatedItems) ? _Utils_Tuple2(
+			A2($0ui$elm_task_parallel$Task$Parallel$ListState, onSuccess, updatedItems),
+			$elm$core$Platform$Cmd$none) : _Utils_Tuple2(
+			A2($0ui$elm_task_parallel$Task$Parallel$ListState, onSuccess, updatedItems),
+			$0ui$elm_task_parallel$Task$Parallel$toCmd(
+				$elm$core$Maybe$Just(
+					onSuccess(
+						A2($elm$core$List$filterMap, $elm$core$Basics$identity, updatedItems)))));
+	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		update:
@@ -15461,13 +15594,9 @@ var $author$project$Main$update = F2(
 										} else {
 											var col = cols.a;
 											var rest = cols.b;
-											var move = A4(
-												$author$project$Effects$moveCard,
-												model,
+											var move = _Utils_Tuple2(
 												{afterId: $elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id},
-												card.id,
-												$elm$core$Basics$always(
-													$author$project$Model$RefreshColumn(col.id)));
+												card.id);
 											return (nth === 2) ? _Utils_Tuple3(
 												A2($elm$core$List$cons, move, ms),
 												1,
@@ -15483,11 +15612,49 @@ var $author$project$Main$update = F2(
 									_Utils_Tuple3(_List_Nil, 1, lanes),
 									pairs);
 								var moves = _v9.a;
-								return _Utils_Tuple2(
+								return A3(
+									$author$project$Effects$moveCards,
 									model,
-									$elm$core$Platform$Cmd$batch(moves));
+									moves,
+									$elm$core$Basics$always(
+										$author$project$Model$RefreshColumns(
+											A2(
+												$elm$core$List$map,
+												function ($) {
+													return $.id;
+												},
+												project.columns))));
 							}
 						}());
+				case 'UpdateCardMoves':
+					var listMsg = msg.a;
+					var _v13 = model.cardMovesState;
+					if (_v13.$ === 'Nothing') {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					} else {
+						var state = _v13.a;
+						var _v14 = A2($0ui$elm_task_parallel$Task$Parallel$updateList, state, listMsg);
+						var newState = _v14.a;
+						var cmd = _v14.b;
+						return _Utils_Tuple2(
+							_Utils_update(
+								model,
+								{
+									cardMovesState: $elm$core$Maybe$Just(newState)
+								}),
+							cmd);
+					}
+				case 'CardMovesFailed':
+					var err = msg.a;
+					return A3(
+						$author$project$Log$debug,
+						'failed to move cards',
+						err,
+						_Utils_Tuple2(
+							_Utils_update(
+								model,
+								{cardMovesState: $elm$core$Maybe$Nothing}),
+							$elm$core$Platform$Cmd$none));
 				case 'PinLane':
 					var id = msg.a;
 					return _Utils_Tuple2(
@@ -15522,7 +15689,7 @@ var $author$project$Main$update = F2(
 									}
 								}());
 						} else {
-							var _v14 = msg.a.a;
+							var _v16 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15642,13 +15809,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v15 = msg.a;
-					var event = _v15.a;
-					var data = _v15.b;
-					var indexStr = _v15.c;
-					var _v16 = $elm$core$String$toInt(indexStr);
-					if (_v16.$ === 'Just') {
-						var index = _v16.a;
+					var _v17 = msg.a;
+					var event = _v17.a;
+					var data = _v17.b;
+					var indexStr = _v17.c;
+					var _v18 = $elm$core$String$toInt(indexStr);
+					if (_v18.$ === 'Just') {
+						var index = _v18.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -15773,9 +15940,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v17 = card.content;
-					if (_v17.$ === 'IssueCardContent') {
-						var issue = _v17.a;
+					var _v19 = card.content;
+					if (_v19.$ === 'IssueCardContent') {
+						var issue = _v19.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15785,7 +15952,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v17.a;
+						var pr = _v19.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15798,14 +15965,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v18 = card.content;
-					if (_v18.$ === 'IssueCardContent') {
-						var issue = _v18.a;
+					var _v20 = card.content;
+					if (_v20.$ === 'IssueCardContent') {
+						var issue = _v20.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v18.a;
+						var pr = _v20.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -15832,6 +15999,12 @@ var $author$project$Main$update = F2(
 					return _Utils_Tuple2(
 						model,
 						$author$project$Effects$refreshPR(id));
+				case 'RefreshColumns':
+					var ids = msg.a;
+					return _Utils_Tuple2(
+						model,
+						$elm$core$Platform$Cmd$batch(
+							A2($elm$core$List$map, $author$project$Effects$refreshColumnCards, ids)));
 				case 'RefreshColumn':
 					var id = msg.a;
 					return _Utils_Tuple2(
@@ -15946,14 +16119,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, colId, model.addingColumnNotes)
 							}),
 						function () {
-							var _v19 = A2(
+							var _v21 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, colId, model.addingColumnNotes));
-							if (_v19 === '') {
+							if (_v21 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v19;
+								var note = _v21;
 								return A4($author$project$Main$addContentOrNote, model, project, colId, note);
 							}
 						}());
@@ -16019,14 +16192,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v20 = A2(
+							var _v22 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v20 === '') {
+							if (_v22 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v20;
+								var note = _v22;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -18789,6 +18962,9 @@ var $author$project$Model$MoveCardAfter = F2(
 	function (a, b) {
 		return {$: 'MoveCardAfter', a: a, b: b};
 	});
+var $author$project$Model$RefreshColumn = function (a) {
+	return {$: 'RefreshColumn', a: a};
+};
 var $author$project$Model$SetCreatingColumnNote = F2(
 	function (a, b) {
 		return {$: 'SetCreatingColumnNote', a: a, b: b};
