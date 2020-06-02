@@ -105,7 +105,7 @@ moveCard model { columnId, afterId } cardId nextMsg =
                 |> withSetLoading [ columnId ]
 
 
-moveCards : Model -> List ( Model.CardDestination, GitHub.ID ) -> (List GitHub.ProjectColumnCard -> Msg) -> ( Model, Cmd Msg )
+moveCards : Model -> List ( Model.CardDestination, Backend.ColumnCard ) -> (List GitHub.ProjectColumnCard -> Msg) -> ( Model, Cmd Msg )
 moveCards model moves nextMsg =
     case model.me of
         Just { token } ->
@@ -114,13 +114,13 @@ moveCards model moves nextMsg =
                     TP.attemptList
                         { tasks =
                             moves
-                                |> List.map (\( { columnId, afterId }, cardId ) -> GitHub.moveCardAfter token columnId cardId afterId)
+                                |> List.map (\( { columnId, afterId }, card ) -> GitHub.moveCardAfter token columnId card.id afterId)
                         , onUpdates = UpdateCardMoves
                         , onFailure = CardMovesFailed
                         , onSuccess = nextMsg
                         }
             in
-            ( { model | cardMovesState = Just state }
+            ( { model | pairMovesState = Just state }
             , cmd
             )
 

@@ -294,7 +294,7 @@ update msg model =
                                                   , columnId = col.id
                                                   , afterId = Nothing
                                                   }
-                                                , card.id
+                                                , card
                                                 )
                                         in
                                         if nth == 2 then
@@ -316,10 +316,27 @@ update msg model =
                             ( moves, _, _ ) =
                                 List.foldl groupUp ( [], 1, lanes ) pairs
                         in
-                        Effects.moveCards model moves (always <| RefreshColumns (List.map .id project.columns))
+                        ( { model | pairMoves = Log.dump "moves" pairs moves }, Cmd.none )
+
+        ApplyAssignedPairs ->
+            let
+                pairsProject =
+                    List.filter (\p -> p.name == "Pairs") model.orgProjects
+                        |> List.head
+            in
+            case pairsProject of
+                Nothing ->
+                    -- TODO: this sucks
+                    ( model, Cmd.none )
+
+                Just project ->
+                    Effects.moveCards model model.pairMoves (always <| RefreshColumns (List.map .id project.columns))
+
+        CancelAssignPairs ->
+            ( { model | pairMoves = [] }, Cmd.none )
 
         UpdateCardMoves listMsg ->
-            case model.cardMovesState of
+            case model.pairMovesState of
                 Nothing ->
                     ( model, Cmd.none )
 
@@ -328,13 +345,13 @@ update msg model =
                         ( newState, cmd ) =
                             TP.updateList state listMsg
                     in
-                    ( { model | cardMovesState = Just newState }
+                    ( { model | pairMovesState = Just newState }
                     , cmd
                     )
 
         CardMovesFailed err ->
             Log.debug "failed to move cards" err <|
-                ( { model | cardMovesState = Nothing }
+                ( { model | pairMovesState = Nothing }
                 , Cmd.none
                 )
 
@@ -1575,6 +1592,22 @@ viewArchivePage model =
         ]
 
 
+pretendMoves : Model -> GitHub.ProjectColumn -> List Backend.ColumnCard -> List Backend.ColumnCard
+pretendMoves model col cards =
+    let
+        targetsMe ( { columnId }, card ) =
+            if columnId == col.id then
+                Just card
+
+            else
+                Nothing
+
+        cardMoved card =
+            List.any (Tuple.second >> .id >> (==) card.id) model.pairMoves
+    in
+    List.filterMap targetsMe model.pairMoves ++ List.filter (not << cardMoved) cards
+
+
 viewPairsPage : Model -> Html Msg
 viewPairsPage model =
     let
@@ -1604,8 +1637,13 @@ viewPairsPage model =
                                         PinLane col.id
                                 ]
                                 [ Octicons.pin octiconOpts ]
+
+                        cards =
+                            Dict.get col.id model.columnCards
+                                |> Maybe.withDefault []
+                                |> pretendMoves model col
                     in
-                    viewProjectColumn model project [ pinToggle ] col
+                    viewProjectColumnCards model project [ pinToggle ] col cards
 
                 isLane =
                     .purpose >> (==) (Just GitHub.ProjectColumnPurposeInProgress)
@@ -1623,6 +1661,22 @@ viewPairsPage model =
                                 [ Octicons.organization octiconOpts
                                 , Html.text "shuffle"
                                 ]
+                            , if List.isEmpty model.pairMoves then
+                                Html.text ""
+
+                              else
+                                Html.span [ HA.class "button apply", HE.onClick ApplyAssignedPairs ]
+                                    [ Octicons.check octiconOpts
+                                    , Html.text "apply"
+                                    ]
+                            , if List.isEmpty model.pairMoves then
+                                Html.text ""
+
+                              else
+                                Html.span [ HA.class "button cancel", HE.onClick CancelAssignPairs ]
+                                    [ Octicons.check octiconOpts
+                                    , Html.text "cancel"
+                                    ]
                             ]
                         ]
                     , Html.div [ HA.class "pairs-board" ]
@@ -1851,11 +1905,14 @@ focusId colId =
 
 viewProjectColumn : Model -> GitHub.Project -> List (Html Msg) -> GitHub.ProjectColumn -> Html Msg
 viewProjectColumn model project controls col =
-    let
-        cards =
-            Dict.get col.id model.columnCards
-                |> Maybe.withDefault []
+    Dict.get col.id model.columnCards
+        |> Maybe.withDefault []
+        |> viewProjectColumnCards model project controls col
 
+
+viewProjectColumnCards : Model -> GitHub.Project -> List (Html Msg) -> GitHub.ProjectColumn -> List Backend.ColumnCard -> Html Msg
+viewProjectColumnCards model project controls col cards =
+    let
         ( archived, unarchived ) =
             List.partition .isArchived cards
 

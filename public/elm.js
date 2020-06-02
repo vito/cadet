@@ -5754,7 +5754,6 @@ var $author$project$Model$empty = function (key) {
 		cardClosers: $elm$core$Dict$empty,
 		cardEvents: $elm$core$Dict$empty,
 		cardLabelOperations: $elm$core$Dict$empty,
-		cardMovesState: $elm$core$Maybe$Nothing,
 		cardProjects: $elm$core$Dict$empty,
 		cardRotations: $elm$core$Dict$empty,
 		cardSearch: 'is:open ',
@@ -5783,6 +5782,8 @@ var $author$project$Model$empty = function (key) {
 		openPRsByRepo: $elm$core$Dict$empty,
 		orgProjects: _List_Nil,
 		page: $author$project$Model$GlobalGraphPage,
+		pairMoves: _List_Nil,
+		pairMovesState: $elm$core$Maybe$Nothing,
 		pinnedLanes: $elm$core$Set$empty,
 		prReviewers: $elm$core$Dict$empty,
 		progress: $elm$core$Dict$empty,
@@ -12984,6 +12985,16 @@ var $author$project$CardOperations$dropCard = F4(
 					}()
 					])));
 	});
+var $author$project$Log$dump = F3(
+	function (ctx, thing, a) {
+		return A2(
+			$elm$core$Basics$always,
+			a,
+			A2(
+				$elm$core$Debug$log,
+				ctx,
+				_Utils_Tuple2(thing, a)));
+	});
 var $author$project$Backend$CardData = F6(
 	function (issues, prs, cardEvents, cardClosers, cardRotations, prReviewers) {
 		return {cardClosers: cardClosers, cardEvents: cardEvents, cardRotations: cardRotations, issues: issues, prReviewers: prReviewers, prs: prs};
@@ -14212,8 +14223,8 @@ var $author$project$Effects$moveCards = F3(
 						function (_v2) {
 							var columnId = _v2.a.columnId;
 							var afterId = _v2.a.afterId;
-							var cardId = _v2.b;
-							return A4($author$project$GitHub$moveCardAfter, token, columnId, cardId, afterId);
+							var card = _v2.b;
+							return A4($author$project$GitHub$moveCardAfter, token, columnId, card.id, afterId);
 						},
 						moves)
 				});
@@ -14223,7 +14234,7 @@ var $author$project$Effects$moveCards = F3(
 				_Utils_update(
 					model,
 					{
-						cardMovesState: $elm$core$Maybe$Just(state)
+						pairMovesState: $elm$core$Maybe$Just(state)
 					}),
 				cmd);
 		} else {
@@ -15596,7 +15607,7 @@ var $author$project$Main$update = F2(
 											var rest = cols.b;
 											var move = _Utils_Tuple2(
 												{afterId: $elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id},
-												card.id);
+												card);
 											return (nth === 2) ? _Utils_Tuple3(
 												A2($elm$core$List$cons, move, ms),
 												1,
@@ -15612,35 +15623,61 @@ var $author$project$Main$update = F2(
 									_Utils_Tuple3(_List_Nil, 1, lanes),
 									pairs);
 								var moves = _v9.a;
-								return A3(
-									$author$project$Effects$moveCards,
-									model,
-									moves,
-									$elm$core$Basics$always(
-										$author$project$Model$RefreshColumns(
-											A2(
-												$elm$core$List$map,
-												function ($) {
-													return $.id;
-												},
-												project.columns))));
+								return _Utils_Tuple2(
+									_Utils_update(
+										model,
+										{
+											pairMoves: A3($author$project$Log$dump, 'moves', pairs, moves)
+										}),
+									$elm$core$Platform$Cmd$none);
 							}
 						}());
-				case 'UpdateCardMoves':
-					var listMsg = msg.a;
-					var _v13 = model.cardMovesState;
-					if (_v13.$ === 'Nothing') {
+				case 'ApplyAssignedPairs':
+					var pairsProject = $elm$core$List$head(
+						A2(
+							$elm$core$List$filter,
+							function (p) {
+								return p.name === 'Pairs';
+							},
+							model.orgProjects));
+					if (pairsProject.$ === 'Nothing') {
 						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
 					} else {
-						var state = _v13.a;
-						var _v14 = A2($0ui$elm_task_parallel$Task$Parallel$updateList, state, listMsg);
-						var newState = _v14.a;
-						var cmd = _v14.b;
+						var project = pairsProject.a;
+						return A3(
+							$author$project$Effects$moveCards,
+							model,
+							model.pairMoves,
+							$elm$core$Basics$always(
+								$author$project$Model$RefreshColumns(
+									A2(
+										$elm$core$List$map,
+										function ($) {
+											return $.id;
+										},
+										project.columns))));
+					}
+				case 'CancelAssignPairs':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{pairMoves: _List_Nil}),
+						$elm$core$Platform$Cmd$none);
+				case 'UpdateCardMoves':
+					var listMsg = msg.a;
+					var _v14 = model.pairMovesState;
+					if (_v14.$ === 'Nothing') {
+						return _Utils_Tuple2(model, $elm$core$Platform$Cmd$none);
+					} else {
+						var state = _v14.a;
+						var _v15 = A2($0ui$elm_task_parallel$Task$Parallel$updateList, state, listMsg);
+						var newState = _v15.a;
+						var cmd = _v15.b;
 						return _Utils_Tuple2(
 							_Utils_update(
 								model,
 								{
-									cardMovesState: $elm$core$Maybe$Just(newState)
+									pairMovesState: $elm$core$Maybe$Just(newState)
 								}),
 							cmd);
 					}
@@ -15653,7 +15690,7 @@ var $author$project$Main$update = F2(
 						_Utils_Tuple2(
 							_Utils_update(
 								model,
-								{cardMovesState: $elm$core$Maybe$Nothing}),
+								{pairMovesState: $elm$core$Maybe$Nothing}),
 							$elm$core$Platform$Cmd$none));
 				case 'PinLane':
 					var id = msg.a;
@@ -15689,7 +15726,7 @@ var $author$project$Main$update = F2(
 									}
 								}());
 						} else {
-							var _v16 = msg.a.a;
+							var _v17 = msg.a.a;
 							return A3(
 								$author$project$Log$debug,
 								'assignment returned nothing',
@@ -15809,13 +15846,13 @@ var $author$project$Main$update = F2(
 							_Utils_Tuple2(model, $elm$core$Platform$Cmd$none));
 					}
 				case 'EventReceived':
-					var _v17 = msg.a;
-					var event = _v17.a;
-					var data = _v17.b;
-					var indexStr = _v17.c;
-					var _v18 = $elm$core$String$toInt(indexStr);
-					if (_v18.$ === 'Just') {
-						var index = _v18.a;
+					var _v18 = msg.a;
+					var event = _v18.a;
+					var data = _v18.b;
+					var indexStr = _v18.c;
+					var _v19 = $elm$core$String$toInt(indexStr);
+					if (_v19.$ === 'Just') {
+						var index = _v19.a;
 						return (_Utils_cmp(index, model.dataIndex) > -1) ? (_Utils_eq(index, model.dataIndex + 1) ? _Utils_Tuple2(
 							$author$project$Main$computeViewForPage(
 								A4(
@@ -15940,9 +15977,9 @@ var $author$project$Main$update = F2(
 				case 'LabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v19 = card.content;
-					if (_v19.$ === 'IssueCardContent') {
-						var issue = _v19.a;
+					var _v20 = card.content;
+					if (_v20.$ === 'IssueCardContent') {
+						var issue = _v20.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15952,7 +15989,7 @@ var $author$project$Main$update = F2(
 								_List_fromArray(
 									[label])));
 					} else {
-						var pr = _v19.a;
+						var pr = _v20.a;
 						return _Utils_Tuple2(
 							model,
 							A3(
@@ -15965,14 +16002,14 @@ var $author$project$Main$update = F2(
 				case 'UnlabelCard':
 					var card = msg.a;
 					var label = msg.b;
-					var _v20 = card.content;
-					if (_v20.$ === 'IssueCardContent') {
-						var issue = _v20.a;
+					var _v21 = card.content;
+					if (_v21.$ === 'IssueCardContent') {
+						var issue = _v21.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removeIssueLabel, model, issue, label));
 					} else {
-						var pr = _v20.a;
+						var pr = _v21.a;
 						return _Utils_Tuple2(
 							model,
 							A3($author$project$Effects$removePullRequestLabel, model, pr, label));
@@ -16119,14 +16156,14 @@ var $author$project$Main$update = F2(
 								addingColumnNotes: A2($elm$core$Dict$remove, colId, model.addingColumnNotes)
 							}),
 						function () {
-							var _v21 = A2(
+							var _v22 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, colId, model.addingColumnNotes));
-							if (_v21 === '') {
+							if (_v22 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v21;
+								var note = _v22;
 								return A4($author$project$Main$addContentOrNote, model, project, colId, note);
 							}
 						}());
@@ -16192,14 +16229,14 @@ var $author$project$Main$update = F2(
 								editingCardNotes: A2($elm$core$Dict$remove, id, model.editingCardNotes)
 							}),
 						function () {
-							var _v22 = A2(
+							var _v23 = A2(
 								$elm$core$Maybe$withDefault,
 								'',
 								A2($elm$core$Dict$get, id, model.editingCardNotes));
-							if (_v22 === '') {
+							if (_v23 === '') {
 								return $elm$core$Platform$Cmd$none;
 							} else {
-								var note = _v22;
+								var note = _v23;
 								return A3($author$project$Effects$updateCardNote, model, id, note);
 							}
 						}());
@@ -20421,8 +20458,8 @@ var $author$project$CardView$viewProjectColumnCard = F4(
 		}
 		return $elm$html$Html$text('impossible: card is neither note nor content');
 	});
-var $author$project$Main$viewProjectColumn = F4(
-	function (model, project, controls, col) {
+var $author$project$Main$viewProjectColumnCards = F5(
+	function (model, project, controls, col, cards) {
 		var firstDropCandidate = {
 			msgFunc: $author$project$Model$MoveCardAfter,
 			target: {afterId: $elm$core$Maybe$Nothing, columnId: col.id, projectId: project.id}
@@ -20454,10 +20491,6 @@ var $author$project$Main$viewProjectColumn = F4(
 					$elm$core$Maybe$Just(dragId))
 				]);
 		};
-		var cards = A2(
-			$elm$core$Maybe$withDefault,
-			_List_Nil,
-			A2($elm$core$Dict$get, col.id, model.columnCards));
 		var addingNote = A2($elm$core$Dict$get, col.id, model.addingColumnNotes);
 		var _v0 = A2(
 			$elm$core$List$partition,
@@ -20630,6 +20663,19 @@ var $author$project$Main$viewProjectColumn = F4(
 								A2($elm$core$List$concatMap, draggableCard, archived))) : $elm$html$Html$text('')
 						]))
 				]));
+	});
+var $author$project$Main$viewProjectColumn = F4(
+	function (model, project, controls, col) {
+		return A5(
+			$author$project$Main$viewProjectColumnCards,
+			model,
+			project,
+			controls,
+			col,
+			A2(
+				$elm$core$Maybe$withDefault,
+				_List_Nil,
+				A2($elm$core$Dict$get, col.id, model.columnCards)));
 	});
 var $author$project$Main$viewRepoRoadmap = F3(
 	function (model, repo, project) {
@@ -24814,7 +24860,9 @@ var $author$project$StatefulGraph$view = function (model) {
 var $author$project$Main$viewGlobalGraphPage = function (model) {
 	return $author$project$StatefulGraph$view(model);
 };
+var $author$project$Model$ApplyAssignedPairs = {$: 'ApplyAssignedPairs'};
 var $author$project$Model$AssignPairs = {$: 'AssignPairs'};
+var $author$project$Model$CancelAssignPairs = {$: 'CancelAssignPairs'};
 var $author$project$Model$PinLane = function (a) {
 	return {$: 'PinLane', a: a};
 };
@@ -24823,6 +24871,34 @@ var $author$project$Model$UnpinLane = function (a) {
 };
 var $capitalist$elm_octicons$Octicons$pinPath = 'M10,1.2 L10,2 L10.5,3 L6,6 L2.2,6 C1.76,6 1.53,6.53 1.86,6.86 L5,10 L1,15 L6,11 L9.14,14.14 C9.47,14.47 10,14.23 10,13.8 L10,10 L13,5.5 L14,6 L14.8,6 C15.24,6 15.47,5.47 15.14,5.14 L10.86,0.86 C10.53,0.53 10,0.77 10,1.2 L10,1.2 Z';
 var $capitalist$elm_octicons$Octicons$pin = A3($capitalist$elm_octicons$Octicons$pathIconWithOptions, $capitalist$elm_octicons$Octicons$pinPath, '0 0 16 16', 'pin');
+var $author$project$Main$pretendMoves = F3(
+	function (model, col, cards) {
+		var targetsMe = function (_v0) {
+			var columnId = _v0.a.columnId;
+			var card = _v0.b;
+			return _Utils_eq(columnId, col.id) ? $elm$core$Maybe$Just(card) : $elm$core$Maybe$Nothing;
+		};
+		var cardMoved = function (card) {
+			return A2(
+				$elm$core$List$any,
+				A2(
+					$elm$core$Basics$composeR,
+					$elm$core$Tuple$second,
+					A2(
+						$elm$core$Basics$composeR,
+						function ($) {
+							return $.id;
+						},
+						$elm$core$Basics$eq(card.id))),
+				model.pairMoves);
+		};
+		return _Utils_ap(
+			A2($elm$core$List$filterMap, targetsMe, model.pairMoves),
+			A2(
+				$elm$core$List$filter,
+				A2($elm$core$Basics$composeL, $elm$core$Basics$not, cardMoved),
+				cards));
+	});
 var $author$project$Main$viewPairsPage = function (model) {
 	var pairsProject = $elm$core$List$head(
 		A2(
@@ -24853,13 +24929,22 @@ var $author$project$Main$viewPairsPage = function (model) {
 					[
 						$capitalist$elm_octicons$Octicons$pin($author$project$Main$octiconOpts)
 					]));
-			return A4(
-				$author$project$Main$viewProjectColumn,
+			var cards = A3(
+				$author$project$Main$pretendMoves,
+				model,
+				col,
+				A2(
+					$elm$core$Maybe$withDefault,
+					_List_Nil,
+					A2($elm$core$Dict$get, col.id, model.columnCards)));
+			return A5(
+				$author$project$Main$viewProjectColumnCards,
 				model,
 				project,
 				_List_fromArray(
 					[pinToggle]),
-				col);
+				col,
+				cards);
 		};
 		var isLane = A2(
 			$elm$core$Basics$composeR,
@@ -24916,6 +25001,30 @@ var $author$project$Main$viewPairsPage = function (model) {
 												[
 													$capitalist$elm_octicons$Octicons$organization($author$project$Main$octiconOpts),
 													$elm$html$Html$text('shuffle')
+												])),
+											$elm$core$List$isEmpty(model.pairMoves) ? $elm$html$Html$text('') : A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('button apply'),
+													$elm$html$Html$Events$onClick($author$project$Model$ApplyAssignedPairs)
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
+													$elm$html$Html$text('apply')
+												])),
+											$elm$core$List$isEmpty(model.pairMoves) ? $elm$html$Html$text('') : A2(
+											$elm$html$Html$span,
+											_List_fromArray(
+												[
+													$elm$html$Html$Attributes$class('button cancel'),
+													$elm$html$Html$Events$onClick($author$project$Model$CancelAssignPairs)
+												]),
+											_List_fromArray(
+												[
+													$capitalist$elm_octicons$Octicons$check($author$project$Main$octiconOpts),
+													$elm$html$Html$text('cancel')
 												]))
 										]))
 								])),

@@ -132,7 +132,8 @@ type alias Model =
 
     -- assigning state
     , pinnedLanes : Set GitHub.ID
-    , cardMovesState : Maybe (TP.ListState Msg GitHub.ProjectColumnCard)
+    , pairMoves : List ( CardDestination, Backend.ColumnCard )
+    , pairMovesState : Maybe (TP.ListState Msg GitHub.ProjectColumnCard)
 
     -- projectifying state
     , projectifyingCards : Set GitHub.ID
@@ -219,6 +220,8 @@ type Msg
     | ShuffledPairs (List Backend.ColumnCard)
     | PinLane GitHub.ID
     | UnpinLane GitHub.ID
+    | ApplyAssignedPairs
+    | CancelAssignPairs
     | UpdateCardMoves (TP.ListMsg GitHub.ProjectColumnCard)
     | CardMovesFailed GitHub.Error
 
@@ -404,7 +407,8 @@ empty key =
     , lastPaired = Dict.empty
     , repoProjectTemplates = Dict.empty
     , cardProjects = Dict.empty
-    , cardMovesState = Nothing
+    , pairMoves = []
+    , pairMovesState = Nothing
     , projectifyingCards = Set.empty
     }
 
