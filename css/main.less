@@ -1982,10 +1982,16 @@ a.column-title:hover, .page-header a:hover {
   margin: 0 -10px;
 
   .fixed-column {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     flex-shrink: 0;
     flex-basis: 10em;
     margin: 0 1em;
+
+    .cards {
+      flex-grow: 1;
+    }
 
     .card {
       width: auto;
