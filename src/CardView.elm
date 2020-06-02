@@ -63,7 +63,7 @@ viewCardAssociatedProject model card =
             []
 
         Just project ->
-            [ Html.div [ HA.class "related-cards" ]
+            [ Html.div [ HA.class "card-annotation" ]
                 [ Html.a [ HA.href ("/projects/" ++ project.id), HA.class "card-content" ]
                     [ Html.div [ HA.class "card-squares left vertical" ]
                         [ Html.div [ HA.class "card-square" ]
@@ -558,7 +558,7 @@ viewProjectCard model controls project =
                     (controls ++ [ projectExternalIcon project ])
             ]
         , if not (List.isEmpty projectEpics) then
-            Html.div [ HA.class "card-epics" ]
+            Html.div [ HA.class "card-annotation card-epics" ]
                 [ Html.text (String.fromInt (List.length projectEpics))
                 , Html.text " "
                 , Html.text <|

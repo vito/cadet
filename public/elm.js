@@ -16864,7 +16864,7 @@ var $author$project$CardView$viewCardAssociatedProject = F2(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('related-cards')
+							$elm$html$Html$Attributes$class('card-annotation')
 						]),
 					_List_fromArray(
 						[
@@ -18720,7 +18720,7 @@ var $author$project$CardView$viewProjectCard = F3(
 					$elm$html$Html$div,
 					_List_fromArray(
 						[
-							$elm$html$Html$Attributes$class('card-epics')
+							$elm$html$Html$Attributes$class('card-annotation card-epics')
 						]),
 					_List_fromArray(
 						[

@@ -158,10 +158,13 @@ h4 {
     word-break: break-word;
   }
 
+  .card-annotation, .related-cards .card-content {
+    border-top: .1em solid @gray-200;
+  }
+
   .related-cards {
     .card-content {
       background: @gray-100;
-      border-top: .1em solid @gray-200;
 
       &:last-child {
         border-bottom-left-radius: @card-border-radius;
@@ -171,7 +174,6 @@ h4 {
   }
 
   .card-epics {
-    border-top: .1em solid @gray-200;
     padding: .8em 1em;
     font-size: 1.2em;
     color: @gray-light;
