@@ -39,7 +39,10 @@ type alias SponsorshipsOptionalArguments =
   - orderBy - Ordering options for sponsorships returned from this connection. If left blank, the sponsorships will be ordered based on relevancy to the viewer.
 
 -}
-sponsorships : (SponsorshipsOptionalArguments -> SponsorshipsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection -> SelectionSet decodesTo GitHub.Object.SponsorsTierAdminInfo
+sponsorships :
+    (SponsorshipsOptionalArguments -> SponsorshipsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection
+    -> SelectionSet decodesTo GitHub.Object.SponsorsTierAdminInfo
 sponsorships fillInOptionals object_ =
     let
         filledInOptionals =

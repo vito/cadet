@@ -35,7 +35,9 @@ isUnlicensed =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseOutsideCollaboratorEdge
+node :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseOutsideCollaboratorEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)
 
@@ -58,7 +60,10 @@ type alias RepositoriesOptionalArguments =
   - orderBy - Ordering options for repositories.
 
 -}
-repositories : (RepositoriesOptionalArguments -> RepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseRepositoryInfoConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOutsideCollaboratorEdge
+repositories :
+    (RepositoriesOptionalArguments -> RepositoriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseRepositoryInfoConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOutsideCollaboratorEdge
 repositories fillInOptionals object_ =
     let
         filledInOptionals =

@@ -28,7 +28,9 @@ clientMutationId =
 
 {-| The enterprise with the updated allow private repository forking setting.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseAllowPrivateRepositoryForkingSettingPayload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseAllowPrivateRepositoryForkingSettingPayload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 

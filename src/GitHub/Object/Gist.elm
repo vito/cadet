@@ -35,7 +35,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.GistCommentConnection -> SelectionSet decodesTo GitHub.Object.Gist
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.GistCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.Gist
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -74,7 +77,10 @@ type alias FilesOptionalArguments =
   - oid - The oid of the files to return
 
 -}
-files : (FilesOptionalArguments -> FilesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.GistFile -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.Gist
+files :
+    (FilesOptionalArguments -> FilesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.GistFile
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.Gist
 files fillInOptionals object_ =
     let
         filledInOptionals =
@@ -105,7 +111,10 @@ type alias ForksOptionalArguments =
   - orderBy - Ordering options for gists returned from the connection
 
 -}
-forks : (ForksOptionalArguments -> ForksOptionalArguments) -> SelectionSet decodesTo GitHub.Object.GistConnection -> SelectionSet decodesTo GitHub.Object.Gist
+forks :
+    (ForksOptionalArguments -> ForksOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.GistConnection
+    -> SelectionSet decodesTo GitHub.Object.Gist
 forks fillInOptionals object_ =
     let
         filledInOptionals =
@@ -146,7 +155,9 @@ name =
 
 {-| The gist owner.
 -}
-owner : SelectionSet decodesTo GitHub.Interface.RepositoryOwner -> SelectionSet (Maybe decodesTo) GitHub.Object.Gist
+owner :
+    SelectionSet decodesTo GitHub.Interface.RepositoryOwner
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Gist
 owner object_ =
     Object.selectionForCompositeField "owner" [] object_ (identity >> Decode.nullable)
 
@@ -183,7 +194,10 @@ type alias StargazersOptionalArguments =
   - orderBy - Order for connection
 
 -}
-stargazers : (StargazersOptionalArguments -> StargazersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.StargazerConnection -> SelectionSet decodesTo GitHub.Object.Gist
+stargazers :
+    (StargazersOptionalArguments -> StargazersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.StargazerConnection
+    -> SelectionSet decodesTo GitHub.Object.Gist
 stargazers fillInOptionals object_ =
     let
         filledInOptionals =

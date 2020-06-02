@@ -28,7 +28,9 @@ clientMutationId =
 
 {-| The enterprise with the updated members can delete issues setting.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseMembersCanDeleteIssuesSettingPayload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseMembersCanDeleteIssuesSettingPayload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 

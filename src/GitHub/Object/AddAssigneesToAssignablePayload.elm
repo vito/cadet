@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The item that was assigned.
 -}
-assignable : SelectionSet decodesTo GitHub.Interface.Assignable -> SelectionSet (Maybe decodesTo) GitHub.Object.AddAssigneesToAssignablePayload
+assignable :
+    SelectionSet decodesTo GitHub.Interface.Assignable
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AddAssigneesToAssignablePayload
 assignable object_ =
     Object.selectionForCompositeField "assignable" [] object_ (identity >> Decode.nullable)
 

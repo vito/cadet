@@ -12,6 +12,7 @@ import GitHub.Enum.EnterpriseEnabledSettingValue
 import GitHub.Enum.EnterpriseMembersCanCreateRepositoriesSettingValue
 import GitHub.Enum.EnterpriseMembersCanMakePurchasesSettingValue
 import GitHub.Enum.IdentityProviderConfigurationState
+import GitHub.Enum.IpAllowListEnabledSettingValue
 import GitHub.Enum.OrganizationMembersCanCreateRepositoriesSettingValue
 import GitHub.Enum.RepositoryVisibility
 import GitHub.InputObject
@@ -47,7 +48,10 @@ type alias ActionExecutionCapabilitySettingOrganizationsOptionalArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-actionExecutionCapabilitySettingOrganizations : (ActionExecutionCapabilitySettingOrganizationsOptionalArguments -> ActionExecutionCapabilitySettingOrganizationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+actionExecutionCapabilitySettingOrganizations :
+    (ActionExecutionCapabilitySettingOrganizationsOptionalArguments -> ActionExecutionCapabilitySettingOrganizationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 actionExecutionCapabilitySettingOrganizations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -82,7 +86,10 @@ type alias AdminsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-admins : (AdminsOptionalArguments -> AdminsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+admins :
+    (AdminsOptionalArguments -> AdminsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 admins fillInOptionals object_ =
     let
         filledInOptionals =
@@ -111,7 +118,10 @@ type alias AffiliatedUsersWithTwoFactorDisabledOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-affiliatedUsersWithTwoFactorDisabled : (AffiliatedUsersWithTwoFactorDisabledOptionalArguments -> AffiliatedUsersWithTwoFactorDisabledOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+affiliatedUsersWithTwoFactorDisabled :
+    (AffiliatedUsersWithTwoFactorDisabledOptionalArguments -> AffiliatedUsersWithTwoFactorDisabledOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 affiliatedUsersWithTwoFactorDisabled fillInOptionals object_ =
     let
         filledInOptionals =
@@ -161,7 +171,11 @@ type alias AllowPrivateRepositoryForkingSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-allowPrivateRepositoryForkingSettingOrganizations : (AllowPrivateRepositoryForkingSettingOrganizationsOptionalArguments -> AllowPrivateRepositoryForkingSettingOrganizationsOptionalArguments) -> AllowPrivateRepositoryForkingSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+allowPrivateRepositoryForkingSettingOrganizations :
+    (AllowPrivateRepositoryForkingSettingOrganizationsOptionalArguments -> AllowPrivateRepositoryForkingSettingOrganizationsOptionalArguments)
+    -> AllowPrivateRepositoryForkingSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 allowPrivateRepositoryForkingSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -204,7 +218,11 @@ type alias DefaultRepositoryPermissionSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-defaultRepositoryPermissionSettingOrganizations : (DefaultRepositoryPermissionSettingOrganizationsOptionalArguments -> DefaultRepositoryPermissionSettingOrganizationsOptionalArguments) -> DefaultRepositoryPermissionSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+defaultRepositoryPermissionSettingOrganizations :
+    (DefaultRepositoryPermissionSettingOrganizationsOptionalArguments -> DefaultRepositoryPermissionSettingOrganizationsOptionalArguments)
+    -> DefaultRepositoryPermissionSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 defaultRepositoryPermissionSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -237,7 +255,10 @@ type alias EnterpriseServerInstallationsOptionalArguments =
   - orderBy - Ordering options for Enterprise Server installations returned.
 
 -}
-enterpriseServerInstallations : (EnterpriseServerInstallationsOptionalArguments -> EnterpriseServerInstallationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+enterpriseServerInstallations :
+    (EnterpriseServerInstallationsOptionalArguments -> EnterpriseServerInstallationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 enterpriseServerInstallations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -248,6 +269,47 @@ enterpriseServerInstallations fillInOptionals object_ =
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "enterpriseServerInstallations" optionalArgs object_ identity
+
+
+{-| The setting value for whether the enterprise has an IP allow list enabled.
+-}
+ipAllowListEnabledSetting : SelectionSet GitHub.Enum.IpAllowListEnabledSettingValue.IpAllowListEnabledSettingValue GitHub.Object.EnterpriseOwnerInfo
+ipAllowListEnabledSetting =
+    Object.selectionForField "Enum.IpAllowListEnabledSettingValue.IpAllowListEnabledSettingValue" "ipAllowListEnabledSetting" [] GitHub.Enum.IpAllowListEnabledSettingValue.decoder
+
+
+type alias IpAllowListEntriesOptionalArguments =
+    { after : OptionalArgument String
+    , before : OptionalArgument String
+    , first : OptionalArgument Int
+    , last : OptionalArgument Int
+    , orderBy : OptionalArgument GitHub.InputObject.IpAllowListEntryOrder
+    }
+
+
+{-| The IP addresses that are allowed to access resources owned by the enterprise.
+
+  - after - Returns the elements in the list that come after the specified cursor.
+  - before - Returns the elements in the list that come before the specified cursor.
+  - first - Returns the first _n_ elements from the list.
+  - last - Returns the last _n_ elements from the list.
+  - orderBy - Ordering options for IP allow list entries returned.
+
+-}
+ipAllowListEntries :
+    (IpAllowListEntriesOptionalArguments -> IpAllowListEntriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IpAllowListEntryConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+ipAllowListEntries fillInOptionals object_ =
+    let
+        filledInOptionals =
+            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent, orderBy = Absent }
+
+        optionalArgs =
+            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int, Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeIpAllowListEntryOrder ]
+                |> List.filterMap identity
+    in
+    Object.selectionForCompositeField "ipAllowListEntries" optionalArgs object_ identity
 
 
 {-| Whether or not the default repository permission is currently being updated.
@@ -294,7 +356,11 @@ type alias MembersCanChangeRepositoryVisibilitySettingOrganizationsRequiredArgum
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanChangeRepositoryVisibilitySettingOrganizations : (MembersCanChangeRepositoryVisibilitySettingOrganizationsOptionalArguments -> MembersCanChangeRepositoryVisibilitySettingOrganizationsOptionalArguments) -> MembersCanChangeRepositoryVisibilitySettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanChangeRepositoryVisibilitySettingOrganizations :
+    (MembersCanChangeRepositoryVisibilitySettingOrganizationsOptionalArguments -> MembersCanChangeRepositoryVisibilitySettingOrganizationsOptionalArguments)
+    -> MembersCanChangeRepositoryVisibilitySettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanChangeRepositoryVisibilitySettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -358,7 +424,11 @@ type alias MembersCanCreateRepositoriesSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanCreateRepositoriesSettingOrganizations : (MembersCanCreateRepositoriesSettingOrganizationsOptionalArguments -> MembersCanCreateRepositoriesSettingOrganizationsOptionalArguments) -> MembersCanCreateRepositoriesSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanCreateRepositoriesSettingOrganizations :
+    (MembersCanCreateRepositoriesSettingOrganizationsOptionalArguments -> MembersCanCreateRepositoriesSettingOrganizationsOptionalArguments)
+    -> MembersCanCreateRepositoriesSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanCreateRepositoriesSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -401,7 +471,11 @@ type alias MembersCanDeleteIssuesSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanDeleteIssuesSettingOrganizations : (MembersCanDeleteIssuesSettingOrganizationsOptionalArguments -> MembersCanDeleteIssuesSettingOrganizationsOptionalArguments) -> MembersCanDeleteIssuesSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanDeleteIssuesSettingOrganizations :
+    (MembersCanDeleteIssuesSettingOrganizationsOptionalArguments -> MembersCanDeleteIssuesSettingOrganizationsOptionalArguments)
+    -> MembersCanDeleteIssuesSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanDeleteIssuesSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -444,7 +518,11 @@ type alias MembersCanDeleteRepositoriesSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanDeleteRepositoriesSettingOrganizations : (MembersCanDeleteRepositoriesSettingOrganizationsOptionalArguments -> MembersCanDeleteRepositoriesSettingOrganizationsOptionalArguments) -> MembersCanDeleteRepositoriesSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanDeleteRepositoriesSettingOrganizations :
+    (MembersCanDeleteRepositoriesSettingOrganizationsOptionalArguments -> MembersCanDeleteRepositoriesSettingOrganizationsOptionalArguments)
+    -> MembersCanDeleteRepositoriesSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanDeleteRepositoriesSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -487,7 +565,11 @@ type alias MembersCanInviteCollaboratorsSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanInviteCollaboratorsSettingOrganizations : (MembersCanInviteCollaboratorsSettingOrganizationsOptionalArguments -> MembersCanInviteCollaboratorsSettingOrganizationsOptionalArguments) -> MembersCanInviteCollaboratorsSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanInviteCollaboratorsSettingOrganizations :
+    (MembersCanInviteCollaboratorsSettingOrganizationsOptionalArguments -> MembersCanInviteCollaboratorsSettingOrganizationsOptionalArguments)
+    -> MembersCanInviteCollaboratorsSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanInviteCollaboratorsSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -537,7 +619,11 @@ type alias MembersCanUpdateProtectedBranchesSettingOrganizationsRequiredArgument
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanUpdateProtectedBranchesSettingOrganizations : (MembersCanUpdateProtectedBranchesSettingOrganizationsOptionalArguments -> MembersCanUpdateProtectedBranchesSettingOrganizationsOptionalArguments) -> MembersCanUpdateProtectedBranchesSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanUpdateProtectedBranchesSettingOrganizations :
+    (MembersCanUpdateProtectedBranchesSettingOrganizationsOptionalArguments -> MembersCanUpdateProtectedBranchesSettingOrganizationsOptionalArguments)
+    -> MembersCanUpdateProtectedBranchesSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanUpdateProtectedBranchesSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -580,7 +666,11 @@ type alias MembersCanViewDependencyInsightsSettingOrganizationsRequiredArguments
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-membersCanViewDependencyInsightsSettingOrganizations : (MembersCanViewDependencyInsightsSettingOrganizationsOptionalArguments -> MembersCanViewDependencyInsightsSettingOrganizationsOptionalArguments) -> MembersCanViewDependencyInsightsSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+membersCanViewDependencyInsightsSettingOrganizations :
+    (MembersCanViewDependencyInsightsSettingOrganizationsOptionalArguments -> MembersCanViewDependencyInsightsSettingOrganizationsOptionalArguments)
+    -> MembersCanViewDependencyInsightsSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 membersCanViewDependencyInsightsSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -623,7 +713,11 @@ type alias OrganizationProjectsSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-organizationProjectsSettingOrganizations : (OrganizationProjectsSettingOrganizationsOptionalArguments -> OrganizationProjectsSettingOrganizationsOptionalArguments) -> OrganizationProjectsSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+organizationProjectsSettingOrganizations :
+    (OrganizationProjectsSettingOrganizationsOptionalArguments -> OrganizationProjectsSettingOrganizationsOptionalArguments)
+    -> OrganizationProjectsSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 organizationProjectsSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -660,7 +754,10 @@ type alias OutsideCollaboratorsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-outsideCollaborators : (OutsideCollaboratorsOptionalArguments -> OutsideCollaboratorsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseOutsideCollaboratorConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+outsideCollaborators :
+    (OutsideCollaboratorsOptionalArguments -> OutsideCollaboratorsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOutsideCollaboratorConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 outsideCollaborators fillInOptionals object_ =
     let
         filledInOptionals =
@@ -695,7 +792,10 @@ type alias PendingAdminInvitationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pendingAdminInvitations : (PendingAdminInvitationsOptionalArguments -> PendingAdminInvitationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+pendingAdminInvitations :
+    (PendingAdminInvitationsOptionalArguments -> PendingAdminInvitationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 pendingAdminInvitations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -706,6 +806,42 @@ pendingAdminInvitations fillInOptionals object_ =
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "pendingAdminInvitations" optionalArgs object_ identity
+
+
+type alias PendingCollaboratorInvitationsOptionalArguments =
+    { query : OptionalArgument String
+    , orderBy : OptionalArgument GitHub.InputObject.RepositoryInvitationOrder
+    , after : OptionalArgument String
+    , before : OptionalArgument String
+    , first : OptionalArgument Int
+    , last : OptionalArgument Int
+    }
+
+
+{-| A list of pending collaborator invitations across the repositories in the enterprise.
+
+  - query - The search string to look for.
+  - orderBy - Ordering options for pending repository collaborator invitations returned from the connection.
+  - after - Returns the elements in the list that come after the specified cursor.
+  - before - Returns the elements in the list that come before the specified cursor.
+  - first - Returns the first _n_ elements from the list.
+  - last - Returns the last _n_ elements from the list.
+
+-}
+pendingCollaboratorInvitations :
+    (PendingCollaboratorInvitationsOptionalArguments -> PendingCollaboratorInvitationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RepositoryInvitationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+pendingCollaboratorInvitations fillInOptionals object_ =
+    let
+        filledInOptionals =
+            fillInOptionals { query = Absent, orderBy = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
+
+        optionalArgs =
+            [ Argument.optional "query" filledInOptionals.query Encode.string, Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeRepositoryInvitationOrder, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+                |> List.filterMap identity
+    in
+    Object.selectionForCompositeField "pendingCollaboratorInvitations" optionalArgs object_ identity
 
 
 type alias PendingCollaboratorsOptionalArguments =
@@ -728,7 +864,10 @@ type alias PendingCollaboratorsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pendingCollaborators : (PendingCollaboratorsOptionalArguments -> PendingCollaboratorsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterprisePendingCollaboratorConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+pendingCollaborators :
+    (PendingCollaboratorsOptionalArguments -> PendingCollaboratorsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterprisePendingCollaboratorConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 pendingCollaborators fillInOptionals object_ =
     let
         filledInOptionals =
@@ -759,7 +898,10 @@ type alias PendingMemberInvitationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pendingMemberInvitations : (PendingMemberInvitationsOptionalArguments -> PendingMemberInvitationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterprisePendingMemberInvitationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+pendingMemberInvitations :
+    (PendingMemberInvitationsOptionalArguments -> PendingMemberInvitationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterprisePendingMemberInvitationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 pendingMemberInvitations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -802,7 +944,11 @@ type alias RepositoryProjectsSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-repositoryProjectsSettingOrganizations : (RepositoryProjectsSettingOrganizationsOptionalArguments -> RepositoryProjectsSettingOrganizationsOptionalArguments) -> RepositoryProjectsSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+repositoryProjectsSettingOrganizations :
+    (RepositoryProjectsSettingOrganizationsOptionalArguments -> RepositoryProjectsSettingOrganizationsOptionalArguments)
+    -> RepositoryProjectsSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 repositoryProjectsSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -817,7 +963,9 @@ repositoryProjectsSettingOrganizations fillInOptionals requiredArgs object_ =
 
 {-| The SAML Identity Provider for the enterprise.
 -}
-samlIdentityProvider : SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseOwnerInfo
+samlIdentityProvider :
+    SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseOwnerInfo
 samlIdentityProvider object_ =
     Object.selectionForCompositeField "samlIdentityProvider" [] object_ (identity >> Decode.nullable)
 
@@ -845,7 +993,11 @@ type alias SamlIdentityProviderSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-samlIdentityProviderSettingOrganizations : (SamlIdentityProviderSettingOrganizationsOptionalArguments -> SamlIdentityProviderSettingOrganizationsOptionalArguments) -> SamlIdentityProviderSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+samlIdentityProviderSettingOrganizations :
+    (SamlIdentityProviderSettingOrganizationsOptionalArguments -> SamlIdentityProviderSettingOrganizationsOptionalArguments)
+    -> SamlIdentityProviderSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 samlIdentityProviderSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -888,7 +1040,11 @@ type alias TeamDiscussionsSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-teamDiscussionsSettingOrganizations : (TeamDiscussionsSettingOrganizationsOptionalArguments -> TeamDiscussionsSettingOrganizationsOptionalArguments) -> TeamDiscussionsSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+teamDiscussionsSettingOrganizations :
+    (TeamDiscussionsSettingOrganizationsOptionalArguments -> TeamDiscussionsSettingOrganizationsOptionalArguments)
+    -> TeamDiscussionsSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 teamDiscussionsSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -931,7 +1087,11 @@ type alias TwoFactorRequiredSettingOrganizationsRequiredArguments =
   - orderBy - Ordering options for organizations with this setting.
 
 -}
-twoFactorRequiredSettingOrganizations : (TwoFactorRequiredSettingOrganizationsOptionalArguments -> TwoFactorRequiredSettingOrganizationsOptionalArguments) -> TwoFactorRequiredSettingOrganizationsRequiredArguments -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+twoFactorRequiredSettingOrganizations :
+    (TwoFactorRequiredSettingOrganizationsOptionalArguments -> TwoFactorRequiredSettingOrganizationsOptionalArguments)
+    -> TwoFactorRequiredSettingOrganizationsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
 twoFactorRequiredSettingOrganizations fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =

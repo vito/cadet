@@ -54,7 +54,9 @@ name =
 
 {-| The package version this file belongs to.
 -}
-packageVersion : SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile
+packageVersion :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile
 packageVersion object_ =
     Object.selectionForCompositeField "packageVersion" [] object_ identity
 

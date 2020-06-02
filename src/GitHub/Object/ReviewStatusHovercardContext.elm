@@ -4,6 +4,7 @@
 
 module GitHub.Object.ReviewStatusHovercardContext exposing (..)
 
+import GitHub.Enum.PullRequestReviewDecision
 import GitHub.InputObject
 import GitHub.Interface
 import GitHub.Object
@@ -31,3 +32,10 @@ message =
 octicon : SelectionSet String GitHub.Object.ReviewStatusHovercardContext
 octicon =
     Object.selectionForField "String" "octicon" [] Decode.string
+
+
+{-| The current status of the pull request with respect to code review.
+-}
+reviewDecision : SelectionSet (Maybe GitHub.Enum.PullRequestReviewDecision.PullRequestReviewDecision) GitHub.Object.ReviewStatusHovercardContext
+reviewDecision =
+    Object.selectionForField "(Maybe Enum.PullRequestReviewDecision.PullRequestReviewDecision)" "reviewDecision" [] (GitHub.Enum.PullRequestReviewDecision.decoder |> Decode.nullable)

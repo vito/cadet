@@ -20,6 +20,13 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| The email address that received the invitation.
+-}
+email : SelectionSet (Maybe String) GitHub.Object.RepositoryInvitation
+email =
+    Object.selectionForField "(Maybe String)" "email" [] (Decode.string |> Decode.nullable)
+
+
 id : SelectionSet GitHub.ScalarCodecs.Id GitHub.Object.RepositoryInvitation
 id =
     Object.selectionForField "ScalarCodecs.Id" "id" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecId |> .decoder)
@@ -27,19 +34,28 @@ id =
 
 {-| The user who received the invitation.
 -}
-invitee : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.RepositoryInvitation
+invitee :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepositoryInvitation
 invitee object_ =
-    Object.selectionForCompositeField "invitee" [] object_ identity
+    Object.selectionForCompositeField "invitee" [] object_ (identity >> Decode.nullable)
 
 
 {-| The user who created the invitation.
 -}
-inviter : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.RepositoryInvitation
+inviter :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.RepositoryInvitation
 inviter object_ =
     Object.selectionForCompositeField "inviter" [] object_ identity
 
 
 {-| The permission granted on this repository by this invitation.
+
+**Upcoming Change on 2020-10-01 UTC**
+**Description:** Type for `permission` will change from `RepositoryPermission!` to `String`.
+**Reason:** This field may return additional values
+
 -}
 permission : SelectionSet GitHub.Enum.RepositoryPermission.RepositoryPermission GitHub.Object.RepositoryInvitation
 permission =
@@ -48,6 +64,8 @@ permission =
 
 {-| The Repository the user is invited to.
 -}
-repository : SelectionSet decodesTo GitHub.Interface.RepositoryInfo -> SelectionSet (Maybe decodesTo) GitHub.Object.RepositoryInvitation
+repository :
+    SelectionSet decodesTo GitHub.Interface.RepositoryInfo
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepositoryInvitation
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)

@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.DeployedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeployedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -42,7 +44,9 @@ databaseId =
 
 {-| The deployment associated with the 'deployed' event.
 -}
-deployment : SelectionSet decodesTo GitHub.Object.Deployment -> SelectionSet decodesTo GitHub.Object.DeployedEvent
+deployment :
+    SelectionSet decodesTo GitHub.Object.Deployment
+    -> SelectionSet decodesTo GitHub.Object.DeployedEvent
 deployment object_ =
     Object.selectionForCompositeField "deployment" [] object_ identity
 
@@ -54,13 +58,17 @@ id =
 
 {-| PullRequest referenced by event.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.DeployedEvent
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.DeployedEvent
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| The ref associated with the 'deployed' event.
 -}
-ref : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.DeployedEvent
+ref :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeployedEvent
 ref object_ =
     Object.selectionForCompositeField "ref" [] object_ (identity >> Decode.nullable)

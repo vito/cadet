@@ -28,7 +28,9 @@ clientMutationId =
 
 {-| The enterprise with the updated default repository permission setting.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseDefaultRepositoryPermissionSettingPayload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateEnterpriseDefaultRepositoryPermissionSettingPayload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 

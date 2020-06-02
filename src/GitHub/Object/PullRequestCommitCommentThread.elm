@@ -35,7 +35,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -50,7 +53,9 @@ comments fillInOptionals object_ =
 
 {-| The commit the comments were made on.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ identity
 
@@ -76,13 +81,17 @@ position =
 
 {-| The pull request this commit comment thread belongs to
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequestCommitCommentThread
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

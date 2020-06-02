@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Union.IssueTimelineItem -> SelectionSet (Maybe decodesTo) GitHub.Object.IssueTimelineItemEdge
+node :
+    SelectionSet decodesTo GitHub.Union.IssueTimelineItem
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.IssueTimelineItemEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

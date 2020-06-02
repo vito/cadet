@@ -9,6 +9,7 @@ import GitHub.Enum.CommentCannotUpdateReason
 import GitHub.Enum.LockReason
 import GitHub.Enum.MergeableState
 import GitHub.Enum.ProjectCardArchivedState
+import GitHub.Enum.PullRequestReviewDecision
 import GitHub.Enum.PullRequestReviewState
 import GitHub.Enum.PullRequestState
 import GitHub.Enum.PullRequestTimelineItemsItemType
@@ -59,7 +60,10 @@ type alias AssigneesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-assignees : (AssigneesOptionalArguments -> AssigneesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+assignees :
+    (AssigneesOptionalArguments -> AssigneesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 assignees fillInOptionals object_ =
     let
         filledInOptionals =
@@ -74,7 +78,9 @@ assignees fillInOptionals object_ =
 
 {-| The actor who authored the comment.
 -}
-author : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+author :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -88,7 +94,9 @@ authorAssociation =
 
 {-| Identifies the base Ref associated with the pull request.
 -}
-baseRef : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+baseRef :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 baseRef object_ =
     Object.selectionForCompositeField "baseRef" [] object_ (identity >> Decode.nullable)
 
@@ -109,7 +117,9 @@ baseRefOid =
 
 {-| The repository associated with this pull request's base Ref.
 -}
-baseRepository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+baseRepository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 baseRepository object_ =
     Object.selectionForCompositeField "baseRepository" [] object_ (identity >> Decode.nullable)
 
@@ -142,6 +152,20 @@ changedFiles =
     Object.selectionForField "Int" "changedFiles" [] Decode.int
 
 
+{-| The HTTP path for the checks of this pull request.
+-}
+checksResourcePath : SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.PullRequest
+checksResourcePath =
+    Object.selectionForField "ScalarCodecs.Uri" "checksResourcePath" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder)
+
+
+{-| The HTTP URL for the checks of this pull request.
+-}
+checksUrl : SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.PullRequest
+checksUrl =
+    Object.selectionForField "ScalarCodecs.Uri" "checksUrl" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder)
+
+
 {-| `true` if the pull request is closed
 -}
 closed : SelectionSet Bool GitHub.Object.PullRequest
@@ -172,7 +196,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -201,7 +228,10 @@ type alias CommitsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-commits : (CommitsOptionalArguments -> CommitsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestCommitConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+commits :
+    (CommitsOptionalArguments -> CommitsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestCommitConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 commits fillInOptionals object_ =
     let
         filledInOptionals =
@@ -244,7 +274,9 @@ deletions =
 
 {-| The actor who edited this pull request's body.
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 
@@ -265,7 +297,10 @@ type alias FilesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-files : (FilesOptionalArguments -> FilesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestChangedFileConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+files :
+    (FilesOptionalArguments -> FilesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestChangedFileConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 files fillInOptionals object_ =
     let
         filledInOptionals =
@@ -280,7 +315,9 @@ files fillInOptionals object_ =
 
 {-| Identifies the head Ref associated with the pull request.
 -}
-headRef : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+headRef :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 headRef object_ =
     Object.selectionForCompositeField "headRef" [] object_ (identity >> Decode.nullable)
 
@@ -301,14 +338,18 @@ headRefOid =
 
 {-| The repository associated with this pull request's head Ref.
 -}
-headRepository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+headRepository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 headRepository object_ =
     Object.selectionForCompositeField "headRepository" [] object_ (identity >> Decode.nullable)
 
 
 {-| The owner of the repository associated with this pull request's head Ref.
 -}
-headRepositoryOwner : SelectionSet decodesTo GitHub.Interface.RepositoryOwner -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+headRepositoryOwner :
+    SelectionSet decodesTo GitHub.Interface.RepositoryOwner
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 headRepositoryOwner object_ =
     Object.selectionForCompositeField "headRepositoryOwner" [] object_ (identity >> Decode.nullable)
 
@@ -322,7 +363,10 @@ type alias HovercardOptionalArguments =
   - includeNotificationContexts - Whether or not to include notification contexts
 
 -}
-hovercard : (HovercardOptionalArguments -> HovercardOptionalArguments) -> SelectionSet decodesTo GitHub.Object.Hovercard -> SelectionSet decodesTo GitHub.Object.PullRequest
+hovercard :
+    (HovercardOptionalArguments -> HovercardOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.Hovercard
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 hovercard fillInOptionals object_ =
     let
         filledInOptionals =
@@ -354,8 +398,16 @@ isCrossRepository =
     Object.selectionForField "Bool" "isCrossRepository" [] Decode.bool
 
 
+{-| Identifies if the pull request is a draft.
+-}
+isDraft : SelectionSet Bool GitHub.Object.PullRequest
+isDraft =
+    Object.selectionForField "Bool" "isDraft" [] Decode.bool
+
+
 type alias LabelsOptionalArguments =
-    { after : OptionalArgument String
+    { orderBy : OptionalArgument GitHub.InputObject.LabelOrder
+    , after : OptionalArgument String
     , before : OptionalArgument String
     , first : OptionalArgument Int
     , last : OptionalArgument Int
@@ -364,20 +416,24 @@ type alias LabelsOptionalArguments =
 
 {-| A list of labels associated with the object.
 
+  - orderBy - Ordering options for labels returned from the connection.
   - after - Returns the elements in the list that come after the specified cursor.
   - before - Returns the elements in the list that come before the specified cursor.
   - first - Returns the first _n_ elements from the list.
   - last - Returns the last _n_ elements from the list.
 
 -}
-labels : (LabelsOptionalArguments -> LabelsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.LabelConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+labels :
+    (LabelsOptionalArguments -> LabelsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.LabelConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 labels fillInOptionals object_ =
     let
         filledInOptionals =
-            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent }
+            fillInOptionals { orderBy = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
 
         optionalArgs =
-            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+            [ Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeLabelOrder, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "labels" optionalArgs object_ (identity >> Decode.nullable)
@@ -406,7 +462,9 @@ maintainerCanModify =
 
 {-| The commit that was created when this pull request was merged.
 -}
-mergeCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+mergeCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 mergeCommit object_ =
     Object.selectionForCompositeField "mergeCommit" [] object_ (identity >> Decode.nullable)
 
@@ -434,14 +492,18 @@ mergedAt =
 
 {-| The actor who merged the pull request.
 -}
-mergedBy : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+mergedBy :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 mergedBy object_ =
     Object.selectionForCompositeField "mergedBy" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the milestone associated with the pull request.
 -}
-milestone : SelectionSet decodesTo GitHub.Object.Milestone -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+milestone :
+    SelectionSet decodesTo GitHub.Object.Milestone
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 milestone object_ =
     Object.selectionForCompositeField "milestone" [] object_ (identity >> Decode.nullable)
 
@@ -469,7 +531,10 @@ type alias ParticipantsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-participants : (ParticipantsOptionalArguments -> ParticipantsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+participants :
+    (ParticipantsOptionalArguments -> ParticipantsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 participants fillInOptionals object_ =
     let
         filledInOptionals =
@@ -491,7 +556,9 @@ permalink =
 
 {-| The commit that GitHub automatically generated to test if this pull request could be merged. This field will not return a value if the pull request is merged, or if the test merge commit is still being generated. See the `mergeable` field for more details on the mergeability of the pull request.
 -}
-potentialMergeCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+potentialMergeCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 potentialMergeCommit object_ =
     Object.selectionForCompositeField "potentialMergeCommit" [] object_ (identity >> Decode.nullable)
 
@@ -514,7 +581,10 @@ type alias ProjectCardsOptionalArguments =
   - archivedStates - A list of archived states to filter the cards by
 
 -}
-projectCards : (ProjectCardsOptionalArguments -> ProjectCardsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+projectCards :
+    (ProjectCardsOptionalArguments -> ProjectCardsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 projectCards fillInOptionals object_ =
     let
         filledInOptionals =
@@ -536,7 +606,9 @@ publishedAt =
 
 {-| A list of reactions grouped by content left on the subject.
 -}
-reactionGroups : SelectionSet decodesTo GitHub.Object.ReactionGroup -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.PullRequest
+reactionGroups :
+    SelectionSet decodesTo GitHub.Object.ReactionGroup
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.PullRequest
 reactionGroups object_ =
     Object.selectionForCompositeField "reactionGroups" [] object_ (identity >> Decode.list >> Decode.nullable)
 
@@ -561,7 +633,10 @@ type alias ReactionsOptionalArguments =
   - orderBy - Allows specifying the order in which reactions are returned.
 
 -}
-reactions : (ReactionsOptionalArguments -> ReactionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactionConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+reactions :
+    (ReactionsOptionalArguments -> ReactionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactionConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 reactions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -576,7 +651,9 @@ reactions fillInOptionals object_ =
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequest
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -602,6 +679,13 @@ revertUrl =
     Object.selectionForField "ScalarCodecs.Uri" "revertUrl" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder)
 
 
+{-| The current status of this pull request with respect to code review.
+-}
+reviewDecision : SelectionSet (Maybe GitHub.Enum.PullRequestReviewDecision.PullRequestReviewDecision) GitHub.Object.PullRequest
+reviewDecision =
+    Object.selectionForField "(Maybe Enum.PullRequestReviewDecision.PullRequestReviewDecision)" "reviewDecision" [] (GitHub.Enum.PullRequestReviewDecision.decoder |> Decode.nullable)
+
+
 type alias ReviewRequestsOptionalArguments =
     { after : OptionalArgument String
     , before : OptionalArgument String
@@ -618,7 +702,10 @@ type alias ReviewRequestsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-reviewRequests : (ReviewRequestsOptionalArguments -> ReviewRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReviewRequestConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+reviewRequests :
+    (ReviewRequestsOptionalArguments -> ReviewRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReviewRequestConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 reviewRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -647,7 +734,10 @@ type alias ReviewThreadsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-reviewThreads : (ReviewThreadsOptionalArguments -> ReviewThreadsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThreadConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+reviewThreads :
+    (ReviewThreadsOptionalArguments -> ReviewThreadsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThreadConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 reviewThreads fillInOptionals object_ =
     let
         filledInOptionals =
@@ -680,7 +770,10 @@ type alias ReviewsOptionalArguments =
   - author - Filter by author of the review.
 
 -}
-reviews : (ReviewsOptionalArguments -> ReviewsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestReviewConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+reviews :
+    (ReviewsOptionalArguments -> ReviewsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 reviews fillInOptionals object_ =
     let
         filledInOptionals =
@@ -702,7 +795,9 @@ state =
 
 {-| A list of reviewer suggestions based on commit history and past review comments.
 -}
-suggestedReviewers : SelectionSet decodesTo GitHub.Object.SuggestedReviewer -> SelectionSet (List (Maybe decodesTo)) GitHub.Object.PullRequest
+suggestedReviewers :
+    SelectionSet decodesTo GitHub.Object.SuggestedReviewer
+    -> SelectionSet (List (Maybe decodesTo)) GitHub.Object.PullRequest
 suggestedReviewers object_ =
     Object.selectionForCompositeField "suggestedReviewers" [] object_ (identity >> Decode.nullable >> Decode.list)
 
@@ -725,7 +820,10 @@ type alias TimelineOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-timeline : (TimelineOptionalArguments -> TimelineOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+timeline :
+    (TimelineOptionalArguments -> TimelineOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 timeline fillInOptionals object_ =
     let
         filledInOptionals =
@@ -760,7 +858,10 @@ type alias TimelineItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-timelineItems : (TimelineItemsOptionalArguments -> TimelineItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsConnection -> SelectionSet decodesTo GitHub.Object.PullRequest
+timelineItems :
+    (TimelineItemsOptionalArguments -> TimelineItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequest
 timelineItems fillInOptionals object_ =
     let
         filledInOptionals =
@@ -810,7 +911,10 @@ type alias UserContentEditsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userContentEdits : (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
+userContentEdits :
+    (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequest
 userContentEdits fillInOptionals object_ =
     let
         filledInOptionals =

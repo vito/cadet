@@ -30,7 +30,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.Enterprise
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.Enterprise
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -45,7 +47,9 @@ avatarUrl fillInOptionals =
 
 {-| Enterprise billing information visible to enterprise billing managers.
 -}
-billingInfo : SelectionSet decodesTo GitHub.Object.EnterpriseBillingInfo -> SelectionSet (Maybe decodesTo) GitHub.Object.Enterprise
+billingInfo :
+    SelectionSet decodesTo GitHub.Object.EnterpriseBillingInfo
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Enterprise
 billingInfo object_ =
     Object.selectionForCompositeField "billingInfo" [] object_ (identity >> Decode.nullable)
 
@@ -116,7 +120,10 @@ type alias MembersOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-members : (MembersOptionalArguments -> MembersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseMemberConnection -> SelectionSet decodesTo GitHub.Object.Enterprise
+members :
+    (MembersOptionalArguments -> MembersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseMemberConnection
+    -> SelectionSet decodesTo GitHub.Object.Enterprise
 members fillInOptionals object_ =
     let
         filledInOptionals =
@@ -156,7 +163,10 @@ type alias OrganizationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-organizations : (OrganizationsOptionalArguments -> OrganizationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.Enterprise
+organizations :
+    (OrganizationsOptionalArguments -> OrganizationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.Enterprise
 organizations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -171,7 +181,9 @@ organizations fillInOptionals object_ =
 
 {-| Enterprise information only visible to enterprise owners.
 -}
-ownerInfo : SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo -> SelectionSet (Maybe decodesTo) GitHub.Object.Enterprise
+ownerInfo :
+    SelectionSet decodesTo GitHub.Object.EnterpriseOwnerInfo
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Enterprise
 ownerInfo object_ =
     Object.selectionForCompositeField "ownerInfo" [] object_ (identity >> Decode.nullable)
 
@@ -181,6 +193,13 @@ ownerInfo object_ =
 resourcePath : SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.Enterprise
 resourcePath =
     Object.selectionForField "ScalarCodecs.Uri" "resourcePath" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder)
+
+
+{-| The URL-friendly identifier for the enterprise.
+-}
+slug : SelectionSet String GitHub.Object.Enterprise
+slug =
+    Object.selectionForField "String" "slug" [] Decode.string
 
 
 {-| The HTTP URL for this enterprise.
@@ -206,7 +225,10 @@ type alias UserAccountsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userAccounts : (UserAccountsOptionalArguments -> UserAccountsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccountConnection -> SelectionSet decodesTo GitHub.Object.Enterprise
+userAccounts :
+    (UserAccountsOptionalArguments -> UserAccountsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccountConnection
+    -> SelectionSet decodesTo GitHub.Object.Enterprise
 userAccounts fillInOptionals object_ =
     let
         filledInOptionals =

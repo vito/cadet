@@ -22,7 +22,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.LockedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.LockedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -48,6 +50,8 @@ lockReason =
 
 {-| Object that was locked.
 -}
-lockable : SelectionSet decodesTo GitHub.Interface.Lockable -> SelectionSet decodesTo GitHub.Object.LockedEvent
+lockable :
+    SelectionSet decodesTo GitHub.Interface.Lockable
+    -> SelectionSet decodesTo GitHub.Object.LockedEvent
 lockable object_ =
     Object.selectionForCompositeField "lockable" [] object_ identity

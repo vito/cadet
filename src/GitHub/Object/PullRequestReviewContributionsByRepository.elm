@@ -37,7 +37,10 @@ type alias ContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-contributions : (ContributionsOptionalArguments -> ContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContributionConnection -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository
+contributions :
+    (ContributionsOptionalArguments -> ContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository
 contributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -52,6 +55,8 @@ contributions fillInOptionals object_ =
 
 {-| The repository in which the pull request reviews were made.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

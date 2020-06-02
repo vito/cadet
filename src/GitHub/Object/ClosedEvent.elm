@@ -21,21 +21,27 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Object that was closed.
 -}
-closable : SelectionSet decodesTo GitHub.Interface.Closable -> SelectionSet decodesTo GitHub.Object.ClosedEvent
+closable :
+    SelectionSet decodesTo GitHub.Interface.Closable
+    -> SelectionSet decodesTo GitHub.Object.ClosedEvent
 closable object_ =
     Object.selectionForCompositeField "closable" [] object_ identity
 
 
 {-| Object which triggered the creation of this event.
 -}
-closer : SelectionSet decodesTo GitHub.Union.Closer -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosedEvent
+closer :
+    SelectionSet decodesTo GitHub.Union.Closer
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosedEvent
 closer object_ =
     Object.selectionForCompositeField "closer" [] object_ (identity >> Decode.nullable)
 

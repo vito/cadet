@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmail -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseServerUserAccountEmailEdge
+node :
+    SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmail
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseServerUserAccountEmailEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

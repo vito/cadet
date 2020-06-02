@@ -45,7 +45,9 @@ createdAt =
 
 {-| Identifies the actor who created the milestone.
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.Milestone
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Milestone
 creator object_ =
     Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
 
@@ -100,7 +102,10 @@ type alias IssuesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-issues : (IssuesOptionalArguments -> IssuesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueConnection -> SelectionSet decodesTo GitHub.Object.Milestone
+issues :
+    (IssuesOptionalArguments -> IssuesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueConnection
+    -> SelectionSet decodesTo GitHub.Object.Milestone
 issues fillInOptionals object_ =
     let
         filledInOptionals =
@@ -146,7 +151,10 @@ type alias PullRequestsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pullRequests : (PullRequestsOptionalArguments -> PullRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestConnection -> SelectionSet decodesTo GitHub.Object.Milestone
+pullRequests :
+    (PullRequestsOptionalArguments -> PullRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestConnection
+    -> SelectionSet decodesTo GitHub.Object.Milestone
 pullRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -161,7 +169,9 @@ pullRequests fillInOptionals object_ =
 
 {-| The repository associated with this milestone.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Milestone
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Milestone
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 

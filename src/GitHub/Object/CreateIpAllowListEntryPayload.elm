@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Object.EnterpriseEdge exposing (..)
+module GitHub.Object.CreateIpAllowListEntryPayload exposing (..)
 
 import GitHub.InputObject
 import GitHub.Interface
@@ -19,15 +19,17 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| A cursor for use in pagination.
+{-| A unique identifier for the client performing the mutation.
 -}
-cursor : SelectionSet String GitHub.Object.EnterpriseEdge
-cursor =
-    Object.selectionForField "String" "cursor" [] Decode.string
+clientMutationId : SelectionSet (Maybe String) GitHub.Object.CreateIpAllowListEntryPayload
+clientMutationId =
+    Object.selectionForField "(Maybe String)" "clientMutationId" [] (Decode.string |> Decode.nullable)
 
 
-{-| The item at the end of the edge.
+{-| The IP allow list entry that was created.
 -}
-node : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseEdge
-node object_ =
-    Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)
+ipAllowListEntry :
+    SelectionSet decodesTo GitHub.Object.IpAllowListEntry
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateIpAllowListEntryPayload
+ipAllowListEntry object_ =
+    Object.selectionForCompositeField "ipAllowListEntry" [] object_ (identity >> Decode.nullable)

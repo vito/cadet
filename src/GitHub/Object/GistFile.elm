@@ -56,7 +56,9 @@ isTruncated =
 
 {-| The programming language this file is written in.
 -}
-language : SelectionSet decodesTo GitHub.Object.Language -> SelectionSet (Maybe decodesTo) GitHub.Object.GistFile
+language :
+    SelectionSet decodesTo GitHub.Object.Language
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.GistFile
 language object_ =
     Object.selectionForCompositeField "language" [] object_ (identity >> Decode.nullable)
 
@@ -84,7 +86,9 @@ type alias TextOptionalArguments =
   - truncate - Optionally truncate the returned file to this length.
 
 -}
-text : (TextOptionalArguments -> TextOptionalArguments) -> SelectionSet (Maybe String) GitHub.Object.GistFile
+text :
+    (TextOptionalArguments -> TextOptionalArguments)
+    -> SelectionSet (Maybe String) GitHub.Object.GistFile
 text fillInOptionals =
     let
         filledInOptionals =

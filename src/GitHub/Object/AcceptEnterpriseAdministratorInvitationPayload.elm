@@ -28,7 +28,9 @@ clientMutationId =
 
 {-| The invitation that was accepted.
 -}
-invitation : SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitation -> SelectionSet (Maybe decodesTo) GitHub.Object.AcceptEnterpriseAdministratorInvitationPayload
+invitation :
+    SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AcceptEnterpriseAdministratorInvitationPayload
 invitation object_ =
     Object.selectionForCompositeField "invitation" [] object_ (identity >> Decode.nullable)
 

@@ -7,8 +7,8 @@ module GitHub.InputObject exposing (..)
 import GitHub.Enum.ActionExecutionCapabilitySetting
 import GitHub.Enum.AuditLogOrderField
 import GitHub.Enum.CommitContributionOrderField
-import GitHub.Enum.ContributionOrderField
 import GitHub.Enum.DeploymentOrderField
+import GitHub.Enum.DiffSide
 import GitHub.Enum.EnterpriseAdministratorInvitationOrderField
 import GitHub.Enum.EnterpriseAdministratorRole
 import GitHub.Enum.EnterpriseDefaultRepositoryPermissionSettingValue
@@ -17,14 +17,16 @@ import GitHub.Enum.EnterpriseEnabledSettingValue
 import GitHub.Enum.EnterpriseMemberOrderField
 import GitHub.Enum.EnterpriseMembersCanCreateRepositoriesSettingValue
 import GitHub.Enum.EnterpriseMembersCanMakePurchasesSettingValue
-import GitHub.Enum.EnterpriseOrderField
 import GitHub.Enum.EnterpriseServerInstallationOrderField
 import GitHub.Enum.EnterpriseServerUserAccountEmailOrderField
 import GitHub.Enum.EnterpriseServerUserAccountOrderField
 import GitHub.Enum.EnterpriseServerUserAccountsUploadOrderField
 import GitHub.Enum.GistOrderField
+import GitHub.Enum.IpAllowListEnabledSettingValue
+import GitHub.Enum.IpAllowListEntryOrderField
 import GitHub.Enum.IssueOrderField
 import GitHub.Enum.IssueState
+import GitHub.Enum.LabelOrderField
 import GitHub.Enum.LanguageOrderField
 import GitHub.Enum.LockReason
 import GitHub.Enum.MilestoneOrderField
@@ -45,6 +47,8 @@ import GitHub.Enum.ReportedContentClassifiers
 import GitHub.Enum.RepositoryInvitationOrderField
 import GitHub.Enum.RepositoryOrderField
 import GitHub.Enum.RepositoryVisibility
+import GitHub.Enum.SamlDigestAlgorithm
+import GitHub.Enum.SamlSignatureAlgorithm
 import GitHub.Enum.SavedReplyOrderField
 import GitHub.Enum.SecurityAdvisoryIdentifierType
 import GitHub.Enum.SecurityAdvisoryOrderField
@@ -73,7 +77,10 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-buildAcceptEnterpriseAdministratorInvitationInput : AcceptEnterpriseAdministratorInvitationInputRequiredFields -> (AcceptEnterpriseAdministratorInvitationInputOptionalFields -> AcceptEnterpriseAdministratorInvitationInputOptionalFields) -> AcceptEnterpriseAdministratorInvitationInput
+buildAcceptEnterpriseAdministratorInvitationInput :
+    AcceptEnterpriseAdministratorInvitationInputRequiredFields
+    -> (AcceptEnterpriseAdministratorInvitationInputOptionalFields -> AcceptEnterpriseAdministratorInvitationInputOptionalFields)
+    -> AcceptEnterpriseAdministratorInvitationInput
 buildAcceptEnterpriseAdministratorInvitationInput required fillOptionals =
     let
         optionals =
@@ -107,7 +114,10 @@ encodeAcceptEnterpriseAdministratorInvitationInput input =
         [ ( "invitationId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.invitationId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAcceptTopicSuggestionInput : AcceptTopicSuggestionInputRequiredFields -> (AcceptTopicSuggestionInputOptionalFields -> AcceptTopicSuggestionInputOptionalFields) -> AcceptTopicSuggestionInput
+buildAcceptTopicSuggestionInput :
+    AcceptTopicSuggestionInputRequiredFields
+    -> (AcceptTopicSuggestionInputOptionalFields -> AcceptTopicSuggestionInputOptionalFields)
+    -> AcceptTopicSuggestionInput
 buildAcceptTopicSuggestionInput required fillOptionals =
     let
         optionals =
@@ -144,7 +154,10 @@ encodeAcceptTopicSuggestionInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string input.name |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddAssigneesToAssignableInput : AddAssigneesToAssignableInputRequiredFields -> (AddAssigneesToAssignableInputOptionalFields -> AddAssigneesToAssignableInputOptionalFields) -> AddAssigneesToAssignableInput
+buildAddAssigneesToAssignableInput :
+    AddAssigneesToAssignableInputRequiredFields
+    -> (AddAssigneesToAssignableInputOptionalFields -> AddAssigneesToAssignableInputOptionalFields)
+    -> AddAssigneesToAssignableInput
 buildAddAssigneesToAssignableInput required fillOptionals =
     let
         optionals =
@@ -181,7 +194,10 @@ encodeAddAssigneesToAssignableInput input =
         [ ( "assignableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.assignableId |> Just ), ( "assigneeIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) input.assigneeIds |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddCommentInput : AddCommentInputRequiredFields -> (AddCommentInputOptionalFields -> AddCommentInputOptionalFields) -> AddCommentInput
+buildAddCommentInput :
+    AddCommentInputRequiredFields
+    -> (AddCommentInputOptionalFields -> AddCommentInputOptionalFields)
+    -> AddCommentInput
 buildAddCommentInput required fillOptionals =
     let
         optionals =
@@ -218,7 +234,10 @@ encodeAddCommentInput input =
         [ ( "subjectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subjectId |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddLabelsToLabelableInput : AddLabelsToLabelableInputRequiredFields -> (AddLabelsToLabelableInputOptionalFields -> AddLabelsToLabelableInputOptionalFields) -> AddLabelsToLabelableInput
+buildAddLabelsToLabelableInput :
+    AddLabelsToLabelableInputRequiredFields
+    -> (AddLabelsToLabelableInputOptionalFields -> AddLabelsToLabelableInputOptionalFields)
+    -> AddLabelsToLabelableInput
 buildAddLabelsToLabelableInput required fillOptionals =
     let
         optionals =
@@ -255,7 +274,10 @@ encodeAddLabelsToLabelableInput input =
         [ ( "labelableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.labelableId |> Just ), ( "labelIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) input.labelIds |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddProjectCardInput : AddProjectCardInputRequiredFields -> (AddProjectCardInputOptionalFields -> AddProjectCardInputOptionalFields) -> AddProjectCardInput
+buildAddProjectCardInput :
+    AddProjectCardInputRequiredFields
+    -> (AddProjectCardInputOptionalFields -> AddProjectCardInputOptionalFields)
+    -> AddProjectCardInput
 buildAddProjectCardInput required fillOptionals =
     let
         optionals =
@@ -294,7 +316,10 @@ encodeAddProjectCardInput input =
         [ ( "projectColumnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectColumnId |> Just ), ( "contentId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.contentId ), ( "note", Encode.string |> Encode.optional input.note ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddProjectColumnInput : AddProjectColumnInputRequiredFields -> (AddProjectColumnInputOptionalFields -> AddProjectColumnInputOptionalFields) -> AddProjectColumnInput
+buildAddProjectColumnInput :
+    AddProjectColumnInputRequiredFields
+    -> (AddProjectColumnInputOptionalFields -> AddProjectColumnInputOptionalFields)
+    -> AddProjectColumnInput
 buildAddProjectColumnInput required fillOptionals =
     let
         optionals =
@@ -331,24 +356,27 @@ encodeAddProjectColumnInput input =
         [ ( "projectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectId |> Just ), ( "name", Encode.string input.name |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddPullRequestReviewCommentInput : AddPullRequestReviewCommentInputRequiredFields -> (AddPullRequestReviewCommentInputOptionalFields -> AddPullRequestReviewCommentInputOptionalFields) -> AddPullRequestReviewCommentInput
+buildAddPullRequestReviewCommentInput :
+    AddPullRequestReviewCommentInputRequiredFields
+    -> (AddPullRequestReviewCommentInputOptionalFields -> AddPullRequestReviewCommentInputOptionalFields)
+    -> AddPullRequestReviewCommentInput
 buildAddPullRequestReviewCommentInput required fillOptionals =
     let
         optionals =
             fillOptionals
-                { commitOID = Absent, path = Absent, position = Absent, inReplyTo = Absent, clientMutationId = Absent }
+                { pullRequestId = Absent, pullRequestReviewId = Absent, commitOID = Absent, path = Absent, position = Absent, inReplyTo = Absent, clientMutationId = Absent }
     in
-    { pullRequestReviewId = required.pullRequestReviewId, commitOID = optionals.commitOID, body = required.body, path = optionals.path, position = optionals.position, inReplyTo = optionals.inReplyTo, clientMutationId = optionals.clientMutationId }
+    { pullRequestId = optionals.pullRequestId, pullRequestReviewId = optionals.pullRequestReviewId, commitOID = optionals.commitOID, body = required.body, path = optionals.path, position = optionals.position, inReplyTo = optionals.inReplyTo, clientMutationId = optionals.clientMutationId }
 
 
 type alias AddPullRequestReviewCommentInputRequiredFields =
-    { pullRequestReviewId : GitHub.ScalarCodecs.Id
-    , body : String
-    }
+    { body : String }
 
 
 type alias AddPullRequestReviewCommentInputOptionalFields =
-    { commitOID : OptionalArgument GitHub.ScalarCodecs.GitObjectID
+    { pullRequestId : OptionalArgument GitHub.ScalarCodecs.Id
+    , pullRequestReviewId : OptionalArgument GitHub.ScalarCodecs.Id
+    , commitOID : OptionalArgument GitHub.ScalarCodecs.GitObjectID
     , path : OptionalArgument String
     , position : OptionalArgument Int
     , inReplyTo : OptionalArgument GitHub.ScalarCodecs.Id
@@ -359,7 +387,8 @@ type alias AddPullRequestReviewCommentInputOptionalFields =
 {-| Type for the AddPullRequestReviewCommentInput input object.
 -}
 type alias AddPullRequestReviewCommentInput =
-    { pullRequestReviewId : GitHub.ScalarCodecs.Id
+    { pullRequestId : OptionalArgument GitHub.ScalarCodecs.Id
+    , pullRequestReviewId : OptionalArgument GitHub.ScalarCodecs.Id
     , commitOID : OptionalArgument GitHub.ScalarCodecs.GitObjectID
     , body : String
     , path : OptionalArgument String
@@ -374,17 +403,20 @@ type alias AddPullRequestReviewCommentInput =
 encodeAddPullRequestReviewCommentInput : AddPullRequestReviewCommentInput -> Value
 encodeAddPullRequestReviewCommentInput input =
     Encode.maybeObject
-        [ ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "commitOID", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) |> Encode.optional input.commitOID ), ( "body", Encode.string input.body |> Just ), ( "path", Encode.string |> Encode.optional input.path ), ( "position", Encode.int |> Encode.optional input.position ), ( "inReplyTo", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.inReplyTo ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+        [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.pullRequestId ), ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.pullRequestReviewId ), ( "commitOID", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) |> Encode.optional input.commitOID ), ( "body", Encode.string input.body |> Just ), ( "path", Encode.string |> Encode.optional input.path ), ( "position", Encode.int |> Encode.optional input.position ), ( "inReplyTo", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.inReplyTo ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddPullRequestReviewInput : AddPullRequestReviewInputRequiredFields -> (AddPullRequestReviewInputOptionalFields -> AddPullRequestReviewInputOptionalFields) -> AddPullRequestReviewInput
+buildAddPullRequestReviewInput :
+    AddPullRequestReviewInputRequiredFields
+    -> (AddPullRequestReviewInputOptionalFields -> AddPullRequestReviewInputOptionalFields)
+    -> AddPullRequestReviewInput
 buildAddPullRequestReviewInput required fillOptionals =
     let
         optionals =
             fillOptionals
-                { commitOID = Absent, body = Absent, event = Absent, comments = Absent, clientMutationId = Absent }
+                { commitOID = Absent, body = Absent, event = Absent, comments = Absent, threads = Absent, clientMutationId = Absent }
     in
-    { pullRequestId = required.pullRequestId, commitOID = optionals.commitOID, body = optionals.body, event = optionals.event, comments = optionals.comments, clientMutationId = optionals.clientMutationId }
+    { pullRequestId = required.pullRequestId, commitOID = optionals.commitOID, body = optionals.body, event = optionals.event, comments = optionals.comments, threads = optionals.threads, clientMutationId = optionals.clientMutationId }
 
 
 type alias AddPullRequestReviewInputRequiredFields =
@@ -396,6 +428,7 @@ type alias AddPullRequestReviewInputOptionalFields =
     , body : OptionalArgument String
     , event : OptionalArgument GitHub.Enum.PullRequestReviewEvent.PullRequestReviewEvent
     , comments : OptionalArgument (List (Maybe DraftPullRequestReviewComment))
+    , threads : OptionalArgument (List (Maybe DraftPullRequestReviewThread))
     , clientMutationId : OptionalArgument String
     }
 
@@ -408,6 +441,7 @@ type alias AddPullRequestReviewInput =
     , body : OptionalArgument String
     , event : OptionalArgument GitHub.Enum.PullRequestReviewEvent.PullRequestReviewEvent
     , comments : OptionalArgument (List (Maybe DraftPullRequestReviewComment))
+    , threads : OptionalArgument (List (Maybe DraftPullRequestReviewThread))
     , clientMutationId : OptionalArgument String
     }
 
@@ -417,10 +451,64 @@ type alias AddPullRequestReviewInput =
 encodeAddPullRequestReviewInput : AddPullRequestReviewInput -> Value
 encodeAddPullRequestReviewInput input =
     Encode.maybeObject
-        [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "commitOID", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) |> Encode.optional input.commitOID ), ( "body", Encode.string |> Encode.optional input.body ), ( "event", Encode.enum GitHub.Enum.PullRequestReviewEvent.toString |> Encode.optional input.event ), ( "comments", (encodeDraftPullRequestReviewComment |> Encode.maybe |> Encode.list) |> Encode.optional input.comments ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+        [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "commitOID", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) |> Encode.optional input.commitOID ), ( "body", Encode.string |> Encode.optional input.body ), ( "event", Encode.enum GitHub.Enum.PullRequestReviewEvent.toString |> Encode.optional input.event ), ( "comments", (encodeDraftPullRequestReviewComment |> Encode.maybe |> Encode.list) |> Encode.optional input.comments ), ( "threads", (encodeDraftPullRequestReviewThread |> Encode.maybe |> Encode.list) |> Encode.optional input.threads ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddReactionInput : AddReactionInputRequiredFields -> (AddReactionInputOptionalFields -> AddReactionInputOptionalFields) -> AddReactionInput
+buildAddPullRequestReviewThreadInput :
+    AddPullRequestReviewThreadInputRequiredFields
+    -> (AddPullRequestReviewThreadInputOptionalFields -> AddPullRequestReviewThreadInputOptionalFields)
+    -> AddPullRequestReviewThreadInput
+buildAddPullRequestReviewThreadInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { side = Absent, startLine = Absent, startSide = Absent, clientMutationId = Absent }
+    in
+    { path = required.path, body = required.body, pullRequestReviewId = required.pullRequestReviewId, line = required.line, side = optionals.side, startLine = optionals.startLine, startSide = optionals.startSide, clientMutationId = optionals.clientMutationId }
+
+
+type alias AddPullRequestReviewThreadInputRequiredFields =
+    { path : String
+    , body : String
+    , pullRequestReviewId : GitHub.ScalarCodecs.Id
+    , line : Int
+    }
+
+
+type alias AddPullRequestReviewThreadInputOptionalFields =
+    { side : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , startLine : OptionalArgument Int
+    , startSide : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Type for the AddPullRequestReviewThreadInput input object.
+-}
+type alias AddPullRequestReviewThreadInput =
+    { path : String
+    , body : String
+    , pullRequestReviewId : GitHub.ScalarCodecs.Id
+    , line : Int
+    , side : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , startLine : OptionalArgument Int
+    , startSide : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a AddPullRequestReviewThreadInput into a value that can be used as an argument.
+-}
+encodeAddPullRequestReviewThreadInput : AddPullRequestReviewThreadInput -> Value
+encodeAddPullRequestReviewThreadInput input =
+    Encode.maybeObject
+        [ ( "path", Encode.string input.path |> Just ), ( "body", Encode.string input.body |> Just ), ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "line", Encode.int input.line |> Just ), ( "side", Encode.enum GitHub.Enum.DiffSide.toString |> Encode.optional input.side ), ( "startLine", Encode.int |> Encode.optional input.startLine ), ( "startSide", Encode.enum GitHub.Enum.DiffSide.toString |> Encode.optional input.startSide ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildAddReactionInput :
+    AddReactionInputRequiredFields
+    -> (AddReactionInputOptionalFields -> AddReactionInputOptionalFields)
+    -> AddReactionInput
 buildAddReactionInput required fillOptionals =
     let
         optionals =
@@ -457,7 +545,10 @@ encodeAddReactionInput input =
         [ ( "subjectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subjectId |> Just ), ( "content", Encode.enum GitHub.Enum.ReactionContent.toString input.content |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAddStarInput : AddStarInputRequiredFields -> (AddStarInputOptionalFields -> AddStarInputOptionalFields) -> AddStarInput
+buildAddStarInput :
+    AddStarInputRequiredFields
+    -> (AddStarInputOptionalFields -> AddStarInputOptionalFields)
+    -> AddStarInput
 buildAddStarInput required fillOptionals =
     let
         optionals =
@@ -491,7 +582,10 @@ encodeAddStarInput input =
         [ ( "starrableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.starrableId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildArchiveRepositoryInput : ArchiveRepositoryInputRequiredFields -> (ArchiveRepositoryInputOptionalFields -> ArchiveRepositoryInputOptionalFields) -> ArchiveRepositoryInput
+buildArchiveRepositoryInput :
+    ArchiveRepositoryInputRequiredFields
+    -> (ArchiveRepositoryInputOptionalFields -> ArchiveRepositoryInputOptionalFields)
+    -> ArchiveRepositoryInput
 buildArchiveRepositoryInput required fillOptionals =
     let
         optionals =
@@ -525,7 +619,9 @@ encodeArchiveRepositoryInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildAuditLogOrder : (AuditLogOrderOptionalFields -> AuditLogOrderOptionalFields) -> AuditLogOrder
+buildAuditLogOrder :
+    (AuditLogOrderOptionalFields -> AuditLogOrderOptionalFields)
+    -> AuditLogOrder
 buildAuditLogOrder fillOptionals =
     let
         optionals =
@@ -557,7 +653,10 @@ encodeAuditLogOrder input =
         [ ( "field", Encode.enum GitHub.Enum.AuditLogOrderField.toString |> Encode.optional input.field ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString |> Encode.optional input.direction ) ]
 
 
-buildCancelEnterpriseAdminInvitationInput : CancelEnterpriseAdminInvitationInputRequiredFields -> (CancelEnterpriseAdminInvitationInputOptionalFields -> CancelEnterpriseAdminInvitationInputOptionalFields) -> CancelEnterpriseAdminInvitationInput
+buildCancelEnterpriseAdminInvitationInput :
+    CancelEnterpriseAdminInvitationInputRequiredFields
+    -> (CancelEnterpriseAdminInvitationInputOptionalFields -> CancelEnterpriseAdminInvitationInputOptionalFields)
+    -> CancelEnterpriseAdminInvitationInput
 buildCancelEnterpriseAdminInvitationInput required fillOptionals =
     let
         optionals =
@@ -591,7 +690,9 @@ encodeCancelEnterpriseAdminInvitationInput input =
         [ ( "invitationId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.invitationId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildChangeUserStatusInput : (ChangeUserStatusInputOptionalFields -> ChangeUserStatusInputOptionalFields) -> ChangeUserStatusInput
+buildChangeUserStatusInput :
+    (ChangeUserStatusInputOptionalFields -> ChangeUserStatusInputOptionalFields)
+    -> ChangeUserStatusInput
 buildChangeUserStatusInput fillOptionals =
     let
         optionals =
@@ -631,7 +732,10 @@ encodeChangeUserStatusInput input =
         [ ( "emoji", Encode.string |> Encode.optional input.emoji ), ( "message", Encode.string |> Encode.optional input.message ), ( "organizationId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.organizationId ), ( "limitedAvailability", Encode.bool |> Encode.optional input.limitedAvailability ), ( "expiresAt", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecDateTime) |> Encode.optional input.expiresAt ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildClearLabelsFromLabelableInput : ClearLabelsFromLabelableInputRequiredFields -> (ClearLabelsFromLabelableInputOptionalFields -> ClearLabelsFromLabelableInputOptionalFields) -> ClearLabelsFromLabelableInput
+buildClearLabelsFromLabelableInput :
+    ClearLabelsFromLabelableInputRequiredFields
+    -> (ClearLabelsFromLabelableInputOptionalFields -> ClearLabelsFromLabelableInputOptionalFields)
+    -> ClearLabelsFromLabelableInput
 buildClearLabelsFromLabelableInput required fillOptionals =
     let
         optionals =
@@ -665,7 +769,10 @@ encodeClearLabelsFromLabelableInput input =
         [ ( "labelableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.labelableId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCloneProjectInput : CloneProjectInputRequiredFields -> (CloneProjectInputOptionalFields -> CloneProjectInputOptionalFields) -> CloneProjectInput
+buildCloneProjectInput :
+    CloneProjectInputRequiredFields
+    -> (CloneProjectInputOptionalFields -> CloneProjectInputOptionalFields)
+    -> CloneProjectInput
 buildCloneProjectInput required fillOptionals =
     let
         optionals =
@@ -711,14 +818,17 @@ encodeCloneProjectInput input =
         [ ( "targetOwnerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.targetOwnerId |> Just ), ( "sourceId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.sourceId |> Just ), ( "includeWorkflows", Encode.bool input.includeWorkflows |> Just ), ( "name", Encode.string input.name |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "public", Encode.bool |> Encode.optional input.public ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCloneTemplateRepositoryInput : CloneTemplateRepositoryInputRequiredFields -> (CloneTemplateRepositoryInputOptionalFields -> CloneTemplateRepositoryInputOptionalFields) -> CloneTemplateRepositoryInput
+buildCloneTemplateRepositoryInput :
+    CloneTemplateRepositoryInputRequiredFields
+    -> (CloneTemplateRepositoryInputOptionalFields -> CloneTemplateRepositoryInputOptionalFields)
+    -> CloneTemplateRepositoryInput
 buildCloneTemplateRepositoryInput required fillOptionals =
     let
         optionals =
             fillOptionals
-                { description = Absent, clientMutationId = Absent }
+                { description = Absent, includeAllBranches = Absent, clientMutationId = Absent }
     in
-    { repositoryId = required.repositoryId, name = required.name, ownerId = required.ownerId, description = optionals.description, visibility = required.visibility, clientMutationId = optionals.clientMutationId }
+    { repositoryId = required.repositoryId, name = required.name, ownerId = required.ownerId, description = optionals.description, visibility = required.visibility, includeAllBranches = optionals.includeAllBranches, clientMutationId = optionals.clientMutationId }
 
 
 type alias CloneTemplateRepositoryInputRequiredFields =
@@ -731,6 +841,7 @@ type alias CloneTemplateRepositoryInputRequiredFields =
 
 type alias CloneTemplateRepositoryInputOptionalFields =
     { description : OptionalArgument String
+    , includeAllBranches : OptionalArgument Bool
     , clientMutationId : OptionalArgument String
     }
 
@@ -743,6 +854,7 @@ type alias CloneTemplateRepositoryInput =
     , ownerId : GitHub.ScalarCodecs.Id
     , description : OptionalArgument String
     , visibility : GitHub.Enum.RepositoryVisibility.RepositoryVisibility
+    , includeAllBranches : OptionalArgument Bool
     , clientMutationId : OptionalArgument String
     }
 
@@ -752,10 +864,13 @@ type alias CloneTemplateRepositoryInput =
 encodeCloneTemplateRepositoryInput : CloneTemplateRepositoryInput -> Value
 encodeCloneTemplateRepositoryInput input =
     Encode.maybeObject
-        [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string input.name |> Just ), ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ownerId |> Just ), ( "description", Encode.string |> Encode.optional input.description ), ( "visibility", Encode.enum GitHub.Enum.RepositoryVisibility.toString input.visibility |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+        [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string input.name |> Just ), ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ownerId |> Just ), ( "description", Encode.string |> Encode.optional input.description ), ( "visibility", Encode.enum GitHub.Enum.RepositoryVisibility.toString input.visibility |> Just ), ( "includeAllBranches", Encode.bool |> Encode.optional input.includeAllBranches ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCloseIssueInput : CloseIssueInputRequiredFields -> (CloseIssueInputOptionalFields -> CloseIssueInputOptionalFields) -> CloseIssueInput
+buildCloseIssueInput :
+    CloseIssueInputRequiredFields
+    -> (CloseIssueInputOptionalFields -> CloseIssueInputOptionalFields)
+    -> CloseIssueInput
 buildCloseIssueInput required fillOptionals =
     let
         optionals =
@@ -789,7 +904,10 @@ encodeCloseIssueInput input =
         [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildClosePullRequestInput : ClosePullRequestInputRequiredFields -> (ClosePullRequestInputOptionalFields -> ClosePullRequestInputOptionalFields) -> ClosePullRequestInput
+buildClosePullRequestInput :
+    ClosePullRequestInputRequiredFields
+    -> (ClosePullRequestInputOptionalFields -> ClosePullRequestInputOptionalFields)
+    -> ClosePullRequestInput
 buildClosePullRequestInput required fillOptionals =
     let
         optionals =
@@ -823,7 +941,9 @@ encodeClosePullRequestInput input =
         [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCommitAuthor : (CommitAuthorOptionalFields -> CommitAuthorOptionalFields) -> CommitAuthor
+buildCommitAuthor :
+    (CommitAuthorOptionalFields -> CommitAuthorOptionalFields)
+    -> CommitAuthor
 buildCommitAuthor fillOptionals =
     let
         optionals =
@@ -855,7 +975,9 @@ encodeCommitAuthor input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.id ), ( "emails", (Encode.string |> Encode.list) |> Encode.optional input.emails ) ]
 
 
-buildCommitContributionOrder : CommitContributionOrderRequiredFields -> CommitContributionOrder
+buildCommitContributionOrder :
+    CommitContributionOrderRequiredFields
+    -> CommitContributionOrder
 buildCommitContributionOrder required =
     { field = required.field, direction = required.direction }
 
@@ -882,30 +1004,21 @@ encodeCommitContributionOrder input =
         [ ( "field", Encode.enum GitHub.Enum.CommitContributionOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildContributionOrder : ContributionOrderRequiredFields -> (ContributionOrderOptionalFields -> ContributionOrderOptionalFields) -> ContributionOrder
-buildContributionOrder required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { field = Absent }
-    in
-    { field = optionals.field, direction = required.direction }
+buildContributionOrder :
+    ContributionOrderRequiredFields
+    -> ContributionOrder
+buildContributionOrder required =
+    { direction = required.direction }
 
 
 type alias ContributionOrderRequiredFields =
     { direction : GitHub.Enum.OrderDirection.OrderDirection }
 
 
-type alias ContributionOrderOptionalFields =
-    { field : OptionalArgument GitHub.Enum.ContributionOrderField.ContributionOrderField }
-
-
 {-| Type for the ContributionOrder input object.
 -}
 type alias ContributionOrder =
-    { field : OptionalArgument GitHub.Enum.ContributionOrderField.ContributionOrderField
-    , direction : GitHub.Enum.OrderDirection.OrderDirection
-    }
+    { direction : GitHub.Enum.OrderDirection.OrderDirection }
 
 
 {-| Encode a ContributionOrder into a value that can be used as an argument.
@@ -913,10 +1026,13 @@ type alias ContributionOrder =
 encodeContributionOrder : ContributionOrder -> Value
 encodeContributionOrder input =
     Encode.maybeObject
-        [ ( "field", Encode.enum GitHub.Enum.ContributionOrderField.toString |> Encode.optional input.field ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
+        [ ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildConvertProjectCardNoteToIssueInput : ConvertProjectCardNoteToIssueInputRequiredFields -> (ConvertProjectCardNoteToIssueInputOptionalFields -> ConvertProjectCardNoteToIssueInputOptionalFields) -> ConvertProjectCardNoteToIssueInput
+buildConvertProjectCardNoteToIssueInput :
+    ConvertProjectCardNoteToIssueInputRequiredFields
+    -> (ConvertProjectCardNoteToIssueInputOptionalFields -> ConvertProjectCardNoteToIssueInputOptionalFields)
+    -> ConvertProjectCardNoteToIssueInput
 buildConvertProjectCardNoteToIssueInput required fillOptionals =
     let
         optionals =
@@ -958,7 +1074,10 @@ encodeConvertProjectCardNoteToIssueInput input =
         [ ( "projectCardId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectCardId |> Just ), ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "title", Encode.string |> Encode.optional input.title ), ( "body", Encode.string |> Encode.optional input.body ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateBranchProtectionRuleInput : CreateBranchProtectionRuleInputRequiredFields -> (CreateBranchProtectionRuleInputOptionalFields -> CreateBranchProtectionRuleInputOptionalFields) -> CreateBranchProtectionRuleInput
+buildCreateBranchProtectionRuleInput :
+    CreateBranchProtectionRuleInputRequiredFields
+    -> (CreateBranchProtectionRuleInputOptionalFields -> CreateBranchProtectionRuleInputOptionalFields)
+    -> CreateBranchProtectionRuleInput
 buildCreateBranchProtectionRuleInput required fillOptionals =
     let
         optionals =
@@ -1022,46 +1141,10 @@ encodeCreateBranchProtectionRuleInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "pattern", Encode.string input.pattern |> Just ), ( "requiresApprovingReviews", Encode.bool |> Encode.optional input.requiresApprovingReviews ), ( "requiredApprovingReviewCount", Encode.int |> Encode.optional input.requiredApprovingReviewCount ), ( "requiresCommitSignatures", Encode.bool |> Encode.optional input.requiresCommitSignatures ), ( "isAdminEnforced", Encode.bool |> Encode.optional input.isAdminEnforced ), ( "requiresStatusChecks", Encode.bool |> Encode.optional input.requiresStatusChecks ), ( "requiresStrictStatusChecks", Encode.bool |> Encode.optional input.requiresStrictStatusChecks ), ( "requiresCodeOwnerReviews", Encode.bool |> Encode.optional input.requiresCodeOwnerReviews ), ( "dismissesStaleReviews", Encode.bool |> Encode.optional input.dismissesStaleReviews ), ( "restrictsReviewDismissals", Encode.bool |> Encode.optional input.restrictsReviewDismissals ), ( "reviewDismissalActorIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.reviewDismissalActorIds ), ( "restrictsPushes", Encode.bool |> Encode.optional input.restrictsPushes ), ( "pushActorIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.pushActorIds ), ( "requiredStatusCheckContexts", (Encode.string |> Encode.list) |> Encode.optional input.requiredStatusCheckContexts ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateContentAttachmentInput : CreateContentAttachmentInputRequiredFields -> (CreateContentAttachmentInputOptionalFields -> CreateContentAttachmentInputOptionalFields) -> CreateContentAttachmentInput
-buildCreateContentAttachmentInput required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { clientMutationId = Absent }
-    in
-    { contentReferenceId = required.contentReferenceId, title = required.title, body = required.body, clientMutationId = optionals.clientMutationId }
-
-
-type alias CreateContentAttachmentInputRequiredFields =
-    { contentReferenceId : GitHub.ScalarCodecs.Id
-    , title : String
-    , body : String
-    }
-
-
-type alias CreateContentAttachmentInputOptionalFields =
-    { clientMutationId : OptionalArgument String }
-
-
-{-| Type for the CreateContentAttachmentInput input object.
--}
-type alias CreateContentAttachmentInput =
-    { contentReferenceId : GitHub.ScalarCodecs.Id
-    , title : String
-    , body : String
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Encode a CreateContentAttachmentInput into a value that can be used as an argument.
--}
-encodeCreateContentAttachmentInput : CreateContentAttachmentInput -> Value
-encodeCreateContentAttachmentInput input =
-    Encode.maybeObject
-        [ ( "contentReferenceId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.contentReferenceId |> Just ), ( "title", Encode.string input.title |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
-
-
-buildCreateEnterpriseOrganizationInput : CreateEnterpriseOrganizationInputRequiredFields -> (CreateEnterpriseOrganizationInputOptionalFields -> CreateEnterpriseOrganizationInputOptionalFields) -> CreateEnterpriseOrganizationInput
+buildCreateEnterpriseOrganizationInput :
+    CreateEnterpriseOrganizationInputRequiredFields
+    -> (CreateEnterpriseOrganizationInputOptionalFields -> CreateEnterpriseOrganizationInputOptionalFields)
+    -> CreateEnterpriseOrganizationInput
 buildCreateEnterpriseOrganizationInput required fillOptionals =
     let
         optionals =
@@ -1104,7 +1187,55 @@ encodeCreateEnterpriseOrganizationInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "login", Encode.string input.login |> Just ), ( "profileName", Encode.string input.profileName |> Just ), ( "billingEmail", Encode.string input.billingEmail |> Just ), ( "adminLogins", (Encode.string |> Encode.list) input.adminLogins |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateIssueInput : CreateIssueInputRequiredFields -> (CreateIssueInputOptionalFields -> CreateIssueInputOptionalFields) -> CreateIssueInput
+buildCreateIpAllowListEntryInput :
+    CreateIpAllowListEntryInputRequiredFields
+    -> (CreateIpAllowListEntryInputOptionalFields -> CreateIpAllowListEntryInputOptionalFields)
+    -> CreateIpAllowListEntryInput
+buildCreateIpAllowListEntryInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { name = Absent, clientMutationId = Absent }
+    in
+    { ownerId = required.ownerId, allowListValue = required.allowListValue, name = optionals.name, isActive = required.isActive, clientMutationId = optionals.clientMutationId }
+
+
+type alias CreateIpAllowListEntryInputRequiredFields =
+    { ownerId : GitHub.ScalarCodecs.Id
+    , allowListValue : String
+    , isActive : Bool
+    }
+
+
+type alias CreateIpAllowListEntryInputOptionalFields =
+    { name : OptionalArgument String
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Type for the CreateIpAllowListEntryInput input object.
+-}
+type alias CreateIpAllowListEntryInput =
+    { ownerId : GitHub.ScalarCodecs.Id
+    , allowListValue : String
+    , name : OptionalArgument String
+    , isActive : Bool
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a CreateIpAllowListEntryInput into a value that can be used as an argument.
+-}
+encodeCreateIpAllowListEntryInput : CreateIpAllowListEntryInput -> Value
+encodeCreateIpAllowListEntryInput input =
+    Encode.maybeObject
+        [ ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ownerId |> Just ), ( "allowListValue", Encode.string input.allowListValue |> Just ), ( "name", Encode.string |> Encode.optional input.name ), ( "isActive", Encode.bool input.isActive |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildCreateIssueInput :
+    CreateIssueInputRequiredFields
+    -> (CreateIssueInputOptionalFields -> CreateIssueInputOptionalFields)
+    -> CreateIssueInput
 buildCreateIssueInput required fillOptionals =
     let
         optionals =
@@ -1152,7 +1283,10 @@ encodeCreateIssueInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "title", Encode.string input.title |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "assigneeIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.assigneeIds ), ( "milestoneId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.milestoneId ), ( "labelIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.labelIds ), ( "projectIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.projectIds ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateProjectInput : CreateProjectInputRequiredFields -> (CreateProjectInputOptionalFields -> CreateProjectInputOptionalFields) -> CreateProjectInput
+buildCreateProjectInput :
+    CreateProjectInputRequiredFields
+    -> (CreateProjectInputOptionalFields -> CreateProjectInputOptionalFields)
+    -> CreateProjectInput
 buildCreateProjectInput required fillOptionals =
     let
         optionals =
@@ -1196,14 +1330,17 @@ encodeCreateProjectInput input =
         [ ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ownerId |> Just ), ( "name", Encode.string input.name |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "template", Encode.enum GitHub.Enum.ProjectTemplate.toString |> Encode.optional input.template ), ( "repositoryIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.repositoryIds ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreatePullRequestInput : CreatePullRequestInputRequiredFields -> (CreatePullRequestInputOptionalFields -> CreatePullRequestInputOptionalFields) -> CreatePullRequestInput
+buildCreatePullRequestInput :
+    CreatePullRequestInputRequiredFields
+    -> (CreatePullRequestInputOptionalFields -> CreatePullRequestInputOptionalFields)
+    -> CreatePullRequestInput
 buildCreatePullRequestInput required fillOptionals =
     let
         optionals =
             fillOptionals
-                { body = Absent, maintainerCanModify = Absent, clientMutationId = Absent }
+                { body = Absent, maintainerCanModify = Absent, draft = Absent, clientMutationId = Absent }
     in
-    { repositoryId = required.repositoryId, baseRefName = required.baseRefName, headRefName = required.headRefName, title = required.title, body = optionals.body, maintainerCanModify = optionals.maintainerCanModify, clientMutationId = optionals.clientMutationId }
+    { repositoryId = required.repositoryId, baseRefName = required.baseRefName, headRefName = required.headRefName, title = required.title, body = optionals.body, maintainerCanModify = optionals.maintainerCanModify, draft = optionals.draft, clientMutationId = optionals.clientMutationId }
 
 
 type alias CreatePullRequestInputRequiredFields =
@@ -1217,6 +1354,7 @@ type alias CreatePullRequestInputRequiredFields =
 type alias CreatePullRequestInputOptionalFields =
     { body : OptionalArgument String
     , maintainerCanModify : OptionalArgument Bool
+    , draft : OptionalArgument Bool
     , clientMutationId : OptionalArgument String
     }
 
@@ -1230,6 +1368,7 @@ type alias CreatePullRequestInput =
     , title : String
     , body : OptionalArgument String
     , maintainerCanModify : OptionalArgument Bool
+    , draft : OptionalArgument Bool
     , clientMutationId : OptionalArgument String
     }
 
@@ -1239,10 +1378,13 @@ type alias CreatePullRequestInput =
 encodeCreatePullRequestInput : CreatePullRequestInput -> Value
 encodeCreatePullRequestInput input =
     Encode.maybeObject
-        [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "baseRefName", Encode.string input.baseRefName |> Just ), ( "headRefName", Encode.string input.headRefName |> Just ), ( "title", Encode.string input.title |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "maintainerCanModify", Encode.bool |> Encode.optional input.maintainerCanModify ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+        [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "baseRefName", Encode.string input.baseRefName |> Just ), ( "headRefName", Encode.string input.headRefName |> Just ), ( "title", Encode.string input.title |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "maintainerCanModify", Encode.bool |> Encode.optional input.maintainerCanModify ), ( "draft", Encode.bool |> Encode.optional input.draft ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateRefInput : CreateRefInputRequiredFields -> (CreateRefInputOptionalFields -> CreateRefInputOptionalFields) -> CreateRefInput
+buildCreateRefInput :
+    CreateRefInputRequiredFields
+    -> (CreateRefInputOptionalFields -> CreateRefInputOptionalFields)
+    -> CreateRefInput
 buildCreateRefInput required fillOptionals =
     let
         optionals =
@@ -1281,7 +1423,10 @@ encodeCreateRefInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string input.name |> Just ), ( "oid", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) input.oid |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateRepositoryInput : CreateRepositoryInputRequiredFields -> (CreateRepositoryInputOptionalFields -> CreateRepositoryInputOptionalFields) -> CreateRepositoryInput
+buildCreateRepositoryInput :
+    CreateRepositoryInputRequiredFields
+    -> (CreateRepositoryInputOptionalFields -> CreateRepositoryInputOptionalFields)
+    -> CreateRepositoryInput
 buildCreateRepositoryInput required fillOptionals =
     let
         optionals =
@@ -1333,7 +1478,10 @@ encodeCreateRepositoryInput input =
         [ ( "name", Encode.string input.name |> Just ), ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.ownerId ), ( "description", Encode.string |> Encode.optional input.description ), ( "visibility", Encode.enum GitHub.Enum.RepositoryVisibility.toString input.visibility |> Just ), ( "template", Encode.bool |> Encode.optional input.template ), ( "homepageUrl", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecUri) |> Encode.optional input.homepageUrl ), ( "hasWikiEnabled", Encode.bool |> Encode.optional input.hasWikiEnabled ), ( "hasIssuesEnabled", Encode.bool |> Encode.optional input.hasIssuesEnabled ), ( "teamId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.teamId ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateTeamDiscussionCommentInput : CreateTeamDiscussionCommentInputRequiredFields -> (CreateTeamDiscussionCommentInputOptionalFields -> CreateTeamDiscussionCommentInputOptionalFields) -> CreateTeamDiscussionCommentInput
+buildCreateTeamDiscussionCommentInput :
+    CreateTeamDiscussionCommentInputRequiredFields
+    -> (CreateTeamDiscussionCommentInputOptionalFields -> CreateTeamDiscussionCommentInputOptionalFields)
+    -> CreateTeamDiscussionCommentInput
 buildCreateTeamDiscussionCommentInput required fillOptionals =
     let
         optionals =
@@ -1370,7 +1518,10 @@ encodeCreateTeamDiscussionCommentInput input =
         [ ( "discussionId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.discussionId |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildCreateTeamDiscussionInput : CreateTeamDiscussionInputRequiredFields -> (CreateTeamDiscussionInputOptionalFields -> CreateTeamDiscussionInputOptionalFields) -> CreateTeamDiscussionInput
+buildCreateTeamDiscussionInput :
+    CreateTeamDiscussionInputRequiredFields
+    -> (CreateTeamDiscussionInputOptionalFields -> CreateTeamDiscussionInputOptionalFields)
+    -> CreateTeamDiscussionInput
 buildCreateTeamDiscussionInput required fillOptionals =
     let
         optionals =
@@ -1412,7 +1563,10 @@ encodeCreateTeamDiscussionInput input =
         [ ( "teamId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.teamId |> Just ), ( "title", Encode.string input.title |> Just ), ( "body", Encode.string input.body |> Just ), ( "private", Encode.bool |> Encode.optional input.private ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeclineTopicSuggestionInput : DeclineTopicSuggestionInputRequiredFields -> (DeclineTopicSuggestionInputOptionalFields -> DeclineTopicSuggestionInputOptionalFields) -> DeclineTopicSuggestionInput
+buildDeclineTopicSuggestionInput :
+    DeclineTopicSuggestionInputRequiredFields
+    -> (DeclineTopicSuggestionInputOptionalFields -> DeclineTopicSuggestionInputOptionalFields)
+    -> DeclineTopicSuggestionInput
 buildDeclineTopicSuggestionInput required fillOptionals =
     let
         optionals =
@@ -1451,7 +1605,10 @@ encodeDeclineTopicSuggestionInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string input.name |> Just ), ( "reason", Encode.enum GitHub.Enum.TopicSuggestionDeclineReason.toString input.reason |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteBranchProtectionRuleInput : DeleteBranchProtectionRuleInputRequiredFields -> (DeleteBranchProtectionRuleInputOptionalFields -> DeleteBranchProtectionRuleInputOptionalFields) -> DeleteBranchProtectionRuleInput
+buildDeleteBranchProtectionRuleInput :
+    DeleteBranchProtectionRuleInputRequiredFields
+    -> (DeleteBranchProtectionRuleInputOptionalFields -> DeleteBranchProtectionRuleInputOptionalFields)
+    -> DeleteBranchProtectionRuleInput
 buildDeleteBranchProtectionRuleInput required fillOptionals =
     let
         optionals =
@@ -1485,7 +1642,84 @@ encodeDeleteBranchProtectionRuleInput input =
         [ ( "branchProtectionRuleId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.branchProtectionRuleId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteIssueCommentInput : DeleteIssueCommentInputRequiredFields -> (DeleteIssueCommentInputOptionalFields -> DeleteIssueCommentInputOptionalFields) -> DeleteIssueCommentInput
+buildDeleteDeploymentInput :
+    DeleteDeploymentInputRequiredFields
+    -> (DeleteDeploymentInputOptionalFields -> DeleteDeploymentInputOptionalFields)
+    -> DeleteDeploymentInput
+buildDeleteDeploymentInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { clientMutationId = Absent }
+    in
+    { id = required.id, clientMutationId = optionals.clientMutationId }
+
+
+type alias DeleteDeploymentInputRequiredFields =
+    { id : GitHub.ScalarCodecs.Id }
+
+
+type alias DeleteDeploymentInputOptionalFields =
+    { clientMutationId : OptionalArgument String }
+
+
+{-| Type for the DeleteDeploymentInput input object.
+-}
+type alias DeleteDeploymentInput =
+    { id : GitHub.ScalarCodecs.Id
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a DeleteDeploymentInput into a value that can be used as an argument.
+-}
+encodeDeleteDeploymentInput : DeleteDeploymentInput -> Value
+encodeDeleteDeploymentInput input =
+    Encode.maybeObject
+        [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildDeleteIpAllowListEntryInput :
+    DeleteIpAllowListEntryInputRequiredFields
+    -> (DeleteIpAllowListEntryInputOptionalFields -> DeleteIpAllowListEntryInputOptionalFields)
+    -> DeleteIpAllowListEntryInput
+buildDeleteIpAllowListEntryInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { clientMutationId = Absent }
+    in
+    { ipAllowListEntryId = required.ipAllowListEntryId, clientMutationId = optionals.clientMutationId }
+
+
+type alias DeleteIpAllowListEntryInputRequiredFields =
+    { ipAllowListEntryId : GitHub.ScalarCodecs.Id }
+
+
+type alias DeleteIpAllowListEntryInputOptionalFields =
+    { clientMutationId : OptionalArgument String }
+
+
+{-| Type for the DeleteIpAllowListEntryInput input object.
+-}
+type alias DeleteIpAllowListEntryInput =
+    { ipAllowListEntryId : GitHub.ScalarCodecs.Id
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a DeleteIpAllowListEntryInput into a value that can be used as an argument.
+-}
+encodeDeleteIpAllowListEntryInput : DeleteIpAllowListEntryInput -> Value
+encodeDeleteIpAllowListEntryInput input =
+    Encode.maybeObject
+        [ ( "ipAllowListEntryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ipAllowListEntryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildDeleteIssueCommentInput :
+    DeleteIssueCommentInputRequiredFields
+    -> (DeleteIssueCommentInputOptionalFields -> DeleteIssueCommentInputOptionalFields)
+    -> DeleteIssueCommentInput
 buildDeleteIssueCommentInput required fillOptionals =
     let
         optionals =
@@ -1519,7 +1753,10 @@ encodeDeleteIssueCommentInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteIssueInput : DeleteIssueInputRequiredFields -> (DeleteIssueInputOptionalFields -> DeleteIssueInputOptionalFields) -> DeleteIssueInput
+buildDeleteIssueInput :
+    DeleteIssueInputRequiredFields
+    -> (DeleteIssueInputOptionalFields -> DeleteIssueInputOptionalFields)
+    -> DeleteIssueInput
 buildDeleteIssueInput required fillOptionals =
     let
         optionals =
@@ -1553,41 +1790,10 @@ encodeDeleteIssueInput input =
         [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeletePackageVersionInput : DeletePackageVersionInputRequiredFields -> (DeletePackageVersionInputOptionalFields -> DeletePackageVersionInputOptionalFields) -> DeletePackageVersionInput
-buildDeletePackageVersionInput required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { clientMutationId = Absent }
-    in
-    { packageVersionId = required.packageVersionId, clientMutationId = optionals.clientMutationId }
-
-
-type alias DeletePackageVersionInputRequiredFields =
-    { packageVersionId : GitHub.ScalarCodecs.Id }
-
-
-type alias DeletePackageVersionInputOptionalFields =
-    { clientMutationId : OptionalArgument String }
-
-
-{-| Type for the DeletePackageVersionInput input object.
--}
-type alias DeletePackageVersionInput =
-    { packageVersionId : GitHub.ScalarCodecs.Id
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Encode a DeletePackageVersionInput into a value that can be used as an argument.
--}
-encodeDeletePackageVersionInput : DeletePackageVersionInput -> Value
-encodeDeletePackageVersionInput input =
-    Encode.maybeObject
-        [ ( "packageVersionId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.packageVersionId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
-
-
-buildDeleteProjectCardInput : DeleteProjectCardInputRequiredFields -> (DeleteProjectCardInputOptionalFields -> DeleteProjectCardInputOptionalFields) -> DeleteProjectCardInput
+buildDeleteProjectCardInput :
+    DeleteProjectCardInputRequiredFields
+    -> (DeleteProjectCardInputOptionalFields -> DeleteProjectCardInputOptionalFields)
+    -> DeleteProjectCardInput
 buildDeleteProjectCardInput required fillOptionals =
     let
         optionals =
@@ -1621,7 +1827,10 @@ encodeDeleteProjectCardInput input =
         [ ( "cardId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.cardId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteProjectColumnInput : DeleteProjectColumnInputRequiredFields -> (DeleteProjectColumnInputOptionalFields -> DeleteProjectColumnInputOptionalFields) -> DeleteProjectColumnInput
+buildDeleteProjectColumnInput :
+    DeleteProjectColumnInputRequiredFields
+    -> (DeleteProjectColumnInputOptionalFields -> DeleteProjectColumnInputOptionalFields)
+    -> DeleteProjectColumnInput
 buildDeleteProjectColumnInput required fillOptionals =
     let
         optionals =
@@ -1655,7 +1864,10 @@ encodeDeleteProjectColumnInput input =
         [ ( "columnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.columnId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteProjectInput : DeleteProjectInputRequiredFields -> (DeleteProjectInputOptionalFields -> DeleteProjectInputOptionalFields) -> DeleteProjectInput
+buildDeleteProjectInput :
+    DeleteProjectInputRequiredFields
+    -> (DeleteProjectInputOptionalFields -> DeleteProjectInputOptionalFields)
+    -> DeleteProjectInput
 buildDeleteProjectInput required fillOptionals =
     let
         optionals =
@@ -1689,7 +1901,10 @@ encodeDeleteProjectInput input =
         [ ( "projectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeletePullRequestReviewCommentInput : DeletePullRequestReviewCommentInputRequiredFields -> (DeletePullRequestReviewCommentInputOptionalFields -> DeletePullRequestReviewCommentInputOptionalFields) -> DeletePullRequestReviewCommentInput
+buildDeletePullRequestReviewCommentInput :
+    DeletePullRequestReviewCommentInputRequiredFields
+    -> (DeletePullRequestReviewCommentInputOptionalFields -> DeletePullRequestReviewCommentInputOptionalFields)
+    -> DeletePullRequestReviewCommentInput
 buildDeletePullRequestReviewCommentInput required fillOptionals =
     let
         optionals =
@@ -1723,7 +1938,10 @@ encodeDeletePullRequestReviewCommentInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeletePullRequestReviewInput : DeletePullRequestReviewInputRequiredFields -> (DeletePullRequestReviewInputOptionalFields -> DeletePullRequestReviewInputOptionalFields) -> DeletePullRequestReviewInput
+buildDeletePullRequestReviewInput :
+    DeletePullRequestReviewInputRequiredFields
+    -> (DeletePullRequestReviewInputOptionalFields -> DeletePullRequestReviewInputOptionalFields)
+    -> DeletePullRequestReviewInput
 buildDeletePullRequestReviewInput required fillOptionals =
     let
         optionals =
@@ -1757,7 +1975,10 @@ encodeDeletePullRequestReviewInput input =
         [ ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteRefInput : DeleteRefInputRequiredFields -> (DeleteRefInputOptionalFields -> DeleteRefInputOptionalFields) -> DeleteRefInput
+buildDeleteRefInput :
+    DeleteRefInputRequiredFields
+    -> (DeleteRefInputOptionalFields -> DeleteRefInputOptionalFields)
+    -> DeleteRefInput
 buildDeleteRefInput required fillOptionals =
     let
         optionals =
@@ -1791,7 +2012,10 @@ encodeDeleteRefInput input =
         [ ( "refId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.refId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteTeamDiscussionCommentInput : DeleteTeamDiscussionCommentInputRequiredFields -> (DeleteTeamDiscussionCommentInputOptionalFields -> DeleteTeamDiscussionCommentInputOptionalFields) -> DeleteTeamDiscussionCommentInput
+buildDeleteTeamDiscussionCommentInput :
+    DeleteTeamDiscussionCommentInputRequiredFields
+    -> (DeleteTeamDiscussionCommentInputOptionalFields -> DeleteTeamDiscussionCommentInputOptionalFields)
+    -> DeleteTeamDiscussionCommentInput
 buildDeleteTeamDiscussionCommentInput required fillOptionals =
     let
         optionals =
@@ -1825,7 +2049,10 @@ encodeDeleteTeamDiscussionCommentInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeleteTeamDiscussionInput : DeleteTeamDiscussionInputRequiredFields -> (DeleteTeamDiscussionInputOptionalFields -> DeleteTeamDiscussionInputOptionalFields) -> DeleteTeamDiscussionInput
+buildDeleteTeamDiscussionInput :
+    DeleteTeamDiscussionInputRequiredFields
+    -> (DeleteTeamDiscussionInputOptionalFields -> DeleteTeamDiscussionInputOptionalFields)
+    -> DeleteTeamDiscussionInput
 buildDeleteTeamDiscussionInput required fillOptionals =
     let
         optionals =
@@ -1859,7 +2086,9 @@ encodeDeleteTeamDiscussionInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDeploymentOrder : DeploymentOrderRequiredFields -> DeploymentOrder
+buildDeploymentOrder :
+    DeploymentOrderRequiredFields
+    -> DeploymentOrder
 buildDeploymentOrder required =
     { field = required.field, direction = required.direction }
 
@@ -1886,7 +2115,10 @@ encodeDeploymentOrder input =
         [ ( "field", Encode.enum GitHub.Enum.DeploymentOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildDismissPullRequestReviewInput : DismissPullRequestReviewInputRequiredFields -> (DismissPullRequestReviewInputOptionalFields -> DismissPullRequestReviewInputOptionalFields) -> DismissPullRequestReviewInput
+buildDismissPullRequestReviewInput :
+    DismissPullRequestReviewInputRequiredFields
+    -> (DismissPullRequestReviewInputOptionalFields -> DismissPullRequestReviewInputOptionalFields)
+    -> DismissPullRequestReviewInput
 buildDismissPullRequestReviewInput required fillOptionals =
     let
         optionals =
@@ -1923,7 +2155,9 @@ encodeDismissPullRequestReviewInput input =
         [ ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "message", Encode.string input.message |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildDraftPullRequestReviewComment : DraftPullRequestReviewCommentRequiredFields -> DraftPullRequestReviewComment
+buildDraftPullRequestReviewComment :
+    DraftPullRequestReviewCommentRequiredFields
+    -> DraftPullRequestReviewComment
 buildDraftPullRequestReviewComment required =
     { path = required.path, position = required.position, body = required.body }
 
@@ -1952,7 +2186,56 @@ encodeDraftPullRequestReviewComment input =
         [ ( "path", Encode.string input.path |> Just ), ( "position", Encode.int input.position |> Just ), ( "body", Encode.string input.body |> Just ) ]
 
 
-buildEnterpriseAdministratorInvitationOrder : EnterpriseAdministratorInvitationOrderRequiredFields -> EnterpriseAdministratorInvitationOrder
+buildDraftPullRequestReviewThread :
+    DraftPullRequestReviewThreadRequiredFields
+    -> (DraftPullRequestReviewThreadOptionalFields -> DraftPullRequestReviewThreadOptionalFields)
+    -> DraftPullRequestReviewThread
+buildDraftPullRequestReviewThread required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { side = Absent, startLine = Absent, startSide = Absent }
+    in
+    { path = required.path, line = required.line, side = optionals.side, startLine = optionals.startLine, startSide = optionals.startSide, body = required.body }
+
+
+type alias DraftPullRequestReviewThreadRequiredFields =
+    { path : String
+    , line : Int
+    , body : String
+    }
+
+
+type alias DraftPullRequestReviewThreadOptionalFields =
+    { side : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , startLine : OptionalArgument Int
+    , startSide : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    }
+
+
+{-| Type for the DraftPullRequestReviewThread input object.
+-}
+type alias DraftPullRequestReviewThread =
+    { path : String
+    , line : Int
+    , side : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , startLine : OptionalArgument Int
+    , startSide : OptionalArgument GitHub.Enum.DiffSide.DiffSide
+    , body : String
+    }
+
+
+{-| Encode a DraftPullRequestReviewThread into a value that can be used as an argument.
+-}
+encodeDraftPullRequestReviewThread : DraftPullRequestReviewThread -> Value
+encodeDraftPullRequestReviewThread input =
+    Encode.maybeObject
+        [ ( "path", Encode.string input.path |> Just ), ( "line", Encode.int input.line |> Just ), ( "side", Encode.enum GitHub.Enum.DiffSide.toString |> Encode.optional input.side ), ( "startLine", Encode.int |> Encode.optional input.startLine ), ( "startSide", Encode.enum GitHub.Enum.DiffSide.toString |> Encode.optional input.startSide ), ( "body", Encode.string input.body |> Just ) ]
+
+
+buildEnterpriseAdministratorInvitationOrder :
+    EnterpriseAdministratorInvitationOrderRequiredFields
+    -> EnterpriseAdministratorInvitationOrder
 buildEnterpriseAdministratorInvitationOrder required =
     { field = required.field, direction = required.direction }
 
@@ -1979,7 +2262,9 @@ encodeEnterpriseAdministratorInvitationOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseAdministratorInvitationOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildEnterpriseMemberOrder : EnterpriseMemberOrderRequiredFields -> EnterpriseMemberOrder
+buildEnterpriseMemberOrder :
+    EnterpriseMemberOrderRequiredFields
+    -> EnterpriseMemberOrder
 buildEnterpriseMemberOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2006,34 +2291,9 @@ encodeEnterpriseMemberOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseMemberOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildEnterpriseOrder : EnterpriseOrderRequiredFields -> EnterpriseOrder
-buildEnterpriseOrder required =
-    { field = required.field, direction = required.direction }
-
-
-type alias EnterpriseOrderRequiredFields =
-    { field : GitHub.Enum.EnterpriseOrderField.EnterpriseOrderField
-    , direction : GitHub.Enum.OrderDirection.OrderDirection
-    }
-
-
-{-| Type for the EnterpriseOrder input object.
--}
-type alias EnterpriseOrder =
-    { field : GitHub.Enum.EnterpriseOrderField.EnterpriseOrderField
-    , direction : GitHub.Enum.OrderDirection.OrderDirection
-    }
-
-
-{-| Encode a EnterpriseOrder into a value that can be used as an argument.
--}
-encodeEnterpriseOrder : EnterpriseOrder -> Value
-encodeEnterpriseOrder input =
-    Encode.maybeObject
-        [ ( "field", Encode.enum GitHub.Enum.EnterpriseOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
-
-
-buildEnterpriseServerInstallationOrder : EnterpriseServerInstallationOrderRequiredFields -> EnterpriseServerInstallationOrder
+buildEnterpriseServerInstallationOrder :
+    EnterpriseServerInstallationOrderRequiredFields
+    -> EnterpriseServerInstallationOrder
 buildEnterpriseServerInstallationOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2060,7 +2320,9 @@ encodeEnterpriseServerInstallationOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseServerInstallationOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildEnterpriseServerUserAccountEmailOrder : EnterpriseServerUserAccountEmailOrderRequiredFields -> EnterpriseServerUserAccountEmailOrder
+buildEnterpriseServerUserAccountEmailOrder :
+    EnterpriseServerUserAccountEmailOrderRequiredFields
+    -> EnterpriseServerUserAccountEmailOrder
 buildEnterpriseServerUserAccountEmailOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2087,7 +2349,9 @@ encodeEnterpriseServerUserAccountEmailOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseServerUserAccountEmailOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildEnterpriseServerUserAccountOrder : EnterpriseServerUserAccountOrderRequiredFields -> EnterpriseServerUserAccountOrder
+buildEnterpriseServerUserAccountOrder :
+    EnterpriseServerUserAccountOrderRequiredFields
+    -> EnterpriseServerUserAccountOrder
 buildEnterpriseServerUserAccountOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2114,7 +2378,9 @@ encodeEnterpriseServerUserAccountOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseServerUserAccountOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildEnterpriseServerUserAccountsUploadOrder : EnterpriseServerUserAccountsUploadOrderRequiredFields -> EnterpriseServerUserAccountsUploadOrder
+buildEnterpriseServerUserAccountsUploadOrder :
+    EnterpriseServerUserAccountsUploadOrderRequiredFields
+    -> EnterpriseServerUserAccountsUploadOrder
 buildEnterpriseServerUserAccountsUploadOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2141,7 +2407,10 @@ encodeEnterpriseServerUserAccountsUploadOrder input =
         [ ( "field", Encode.enum GitHub.Enum.EnterpriseServerUserAccountsUploadOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildFollowUserInput : FollowUserInputRequiredFields -> (FollowUserInputOptionalFields -> FollowUserInputOptionalFields) -> FollowUserInput
+buildFollowUserInput :
+    FollowUserInputRequiredFields
+    -> (FollowUserInputOptionalFields -> FollowUserInputOptionalFields)
+    -> FollowUserInput
 buildFollowUserInput required fillOptionals =
     let
         optionals =
@@ -2175,7 +2444,9 @@ encodeFollowUserInput input =
         [ ( "userId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.userId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildGistOrder : GistOrderRequiredFields -> GistOrder
+buildGistOrder :
+    GistOrderRequiredFields
+    -> GistOrder
 buildGistOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2202,51 +2473,10 @@ encodeGistOrder input =
         [ ( "field", Encode.enum GitHub.Enum.GistOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildImportProjectInput : ImportProjectInputRequiredFields -> (ImportProjectInputOptionalFields -> ImportProjectInputOptionalFields) -> ImportProjectInput
-buildImportProjectInput required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { body = Absent, public = Absent, clientMutationId = Absent }
-    in
-    { ownerName = required.ownerName, name = required.name, body = optionals.body, public = optionals.public, columnImports = required.columnImports, clientMutationId = optionals.clientMutationId }
-
-
-type alias ImportProjectInputRequiredFields =
-    { ownerName : String
-    , name : String
-    , columnImports : List ProjectColumnImport
-    }
-
-
-type alias ImportProjectInputOptionalFields =
-    { body : OptionalArgument String
-    , public : OptionalArgument Bool
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Type for the ImportProjectInput input object.
--}
-type alias ImportProjectInput =
-    { ownerName : String
-    , name : String
-    , body : OptionalArgument String
-    , public : OptionalArgument Bool
-    , columnImports : List ProjectColumnImport
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Encode a ImportProjectInput into a value that can be used as an argument.
--}
-encodeImportProjectInput : ImportProjectInput -> Value
-encodeImportProjectInput input =
-    Encode.maybeObject
-        [ ( "ownerName", Encode.string input.ownerName |> Just ), ( "name", Encode.string input.name |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "public", Encode.bool |> Encode.optional input.public ), ( "columnImports", (encodeProjectColumnImport |> Encode.list) input.columnImports |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
-
-
-buildInviteEnterpriseAdminInput : InviteEnterpriseAdminInputRequiredFields -> (InviteEnterpriseAdminInputOptionalFields -> InviteEnterpriseAdminInputOptionalFields) -> InviteEnterpriseAdminInput
+buildInviteEnterpriseAdminInput :
+    InviteEnterpriseAdminInputRequiredFields
+    -> (InviteEnterpriseAdminInputOptionalFields -> InviteEnterpriseAdminInputOptionalFields)
+    -> InviteEnterpriseAdminInput
 buildInviteEnterpriseAdminInput required fillOptionals =
     let
         optionals =
@@ -2287,7 +2517,38 @@ encodeInviteEnterpriseAdminInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "invitee", Encode.string |> Encode.optional input.invitee ), ( "email", Encode.string |> Encode.optional input.email ), ( "role", Encode.enum GitHub.Enum.EnterpriseAdministratorRole.toString |> Encode.optional input.role ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildIssueFilters : (IssueFiltersOptionalFields -> IssueFiltersOptionalFields) -> IssueFilters
+buildIpAllowListEntryOrder :
+    IpAllowListEntryOrderRequiredFields
+    -> IpAllowListEntryOrder
+buildIpAllowListEntryOrder required =
+    { field = required.field, direction = required.direction }
+
+
+type alias IpAllowListEntryOrderRequiredFields =
+    { field : GitHub.Enum.IpAllowListEntryOrderField.IpAllowListEntryOrderField
+    , direction : GitHub.Enum.OrderDirection.OrderDirection
+    }
+
+
+{-| Type for the IpAllowListEntryOrder input object.
+-}
+type alias IpAllowListEntryOrder =
+    { field : GitHub.Enum.IpAllowListEntryOrderField.IpAllowListEntryOrderField
+    , direction : GitHub.Enum.OrderDirection.OrderDirection
+    }
+
+
+{-| Encode a IpAllowListEntryOrder into a value that can be used as an argument.
+-}
+encodeIpAllowListEntryOrder : IpAllowListEntryOrder -> Value
+encodeIpAllowListEntryOrder input =
+    Encode.maybeObject
+        [ ( "field", Encode.enum GitHub.Enum.IpAllowListEntryOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
+
+
+buildIssueFilters :
+    (IssueFiltersOptionalFields -> IssueFiltersOptionalFields)
+    -> IssueFilters
 buildIssueFilters fillOptionals =
     let
         optionals =
@@ -2331,7 +2592,9 @@ encodeIssueFilters input =
         [ ( "assignee", Encode.string |> Encode.optional input.assignee ), ( "createdBy", Encode.string |> Encode.optional input.createdBy ), ( "labels", (Encode.string |> Encode.list) |> Encode.optional input.labels ), ( "mentioned", Encode.string |> Encode.optional input.mentioned ), ( "milestone", Encode.string |> Encode.optional input.milestone ), ( "since", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecDateTime) |> Encode.optional input.since ), ( "states", (Encode.enum GitHub.Enum.IssueState.toString |> Encode.list) |> Encode.optional input.states ), ( "viewerSubscribed", Encode.bool |> Encode.optional input.viewerSubscribed ) ]
 
 
-buildIssueOrder : IssueOrderRequiredFields -> IssueOrder
+buildIssueOrder :
+    IssueOrderRequiredFields
+    -> IssueOrder
 buildIssueOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2358,7 +2621,38 @@ encodeIssueOrder input =
         [ ( "field", Encode.enum GitHub.Enum.IssueOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildLanguageOrder : LanguageOrderRequiredFields -> LanguageOrder
+buildLabelOrder :
+    LabelOrderRequiredFields
+    -> LabelOrder
+buildLabelOrder required =
+    { field = required.field, direction = required.direction }
+
+
+type alias LabelOrderRequiredFields =
+    { field : GitHub.Enum.LabelOrderField.LabelOrderField
+    , direction : GitHub.Enum.OrderDirection.OrderDirection
+    }
+
+
+{-| Type for the LabelOrder input object.
+-}
+type alias LabelOrder =
+    { field : GitHub.Enum.LabelOrderField.LabelOrderField
+    , direction : GitHub.Enum.OrderDirection.OrderDirection
+    }
+
+
+{-| Encode a LabelOrder into a value that can be used as an argument.
+-}
+encodeLabelOrder : LabelOrder -> Value
+encodeLabelOrder input =
+    Encode.maybeObject
+        [ ( "field", Encode.enum GitHub.Enum.LabelOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
+
+
+buildLanguageOrder :
+    LanguageOrderRequiredFields
+    -> LanguageOrder
 buildLanguageOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2385,7 +2679,10 @@ encodeLanguageOrder input =
         [ ( "field", Encode.enum GitHub.Enum.LanguageOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildLinkRepositoryToProjectInput : LinkRepositoryToProjectInputRequiredFields -> (LinkRepositoryToProjectInputOptionalFields -> LinkRepositoryToProjectInputOptionalFields) -> LinkRepositoryToProjectInput
+buildLinkRepositoryToProjectInput :
+    LinkRepositoryToProjectInputRequiredFields
+    -> (LinkRepositoryToProjectInputOptionalFields -> LinkRepositoryToProjectInputOptionalFields)
+    -> LinkRepositoryToProjectInput
 buildLinkRepositoryToProjectInput required fillOptionals =
     let
         optionals =
@@ -2422,7 +2719,10 @@ encodeLinkRepositoryToProjectInput input =
         [ ( "projectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectId |> Just ), ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildLockLockableInput : LockLockableInputRequiredFields -> (LockLockableInputOptionalFields -> LockLockableInputOptionalFields) -> LockLockableInput
+buildLockLockableInput :
+    LockLockableInputRequiredFields
+    -> (LockLockableInputOptionalFields -> LockLockableInputOptionalFields)
+    -> LockLockableInput
 buildLockLockableInput required fillOptionals =
     let
         optionals =
@@ -2459,7 +2759,47 @@ encodeLockLockableInput input =
         [ ( "lockableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.lockableId |> Just ), ( "lockReason", Encode.enum GitHub.Enum.LockReason.toString |> Encode.optional input.lockReason ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildMergeBranchInput : MergeBranchInputRequiredFields -> (MergeBranchInputOptionalFields -> MergeBranchInputOptionalFields) -> MergeBranchInput
+buildMarkPullRequestReadyForReviewInput :
+    MarkPullRequestReadyForReviewInputRequiredFields
+    -> (MarkPullRequestReadyForReviewInputOptionalFields -> MarkPullRequestReadyForReviewInputOptionalFields)
+    -> MarkPullRequestReadyForReviewInput
+buildMarkPullRequestReadyForReviewInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { clientMutationId = Absent }
+    in
+    { pullRequestId = required.pullRequestId, clientMutationId = optionals.clientMutationId }
+
+
+type alias MarkPullRequestReadyForReviewInputRequiredFields =
+    { pullRequestId : GitHub.ScalarCodecs.Id }
+
+
+type alias MarkPullRequestReadyForReviewInputOptionalFields =
+    { clientMutationId : OptionalArgument String }
+
+
+{-| Type for the MarkPullRequestReadyForReviewInput input object.
+-}
+type alias MarkPullRequestReadyForReviewInput =
+    { pullRequestId : GitHub.ScalarCodecs.Id
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a MarkPullRequestReadyForReviewInput into a value that can be used as an argument.
+-}
+encodeMarkPullRequestReadyForReviewInput : MarkPullRequestReadyForReviewInput -> Value
+encodeMarkPullRequestReadyForReviewInput input =
+    Encode.maybeObject
+        [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildMergeBranchInput :
+    MergeBranchInputRequiredFields
+    -> (MergeBranchInputOptionalFields -> MergeBranchInputOptionalFields)
+    -> MergeBranchInput
 buildMergeBranchInput required fillOptionals =
     let
         optionals =
@@ -2501,7 +2841,10 @@ encodeMergeBranchInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "base", Encode.string input.base |> Just ), ( "head", Encode.string input.head |> Just ), ( "commitMessage", Encode.string |> Encode.optional input.commitMessage ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildMergePullRequestInput : MergePullRequestInputRequiredFields -> (MergePullRequestInputOptionalFields -> MergePullRequestInputOptionalFields) -> MergePullRequestInput
+buildMergePullRequestInput :
+    MergePullRequestInputRequiredFields
+    -> (MergePullRequestInputOptionalFields -> MergePullRequestInputOptionalFields)
+    -> MergePullRequestInput
 buildMergePullRequestInput required fillOptionals =
     let
         optionals =
@@ -2544,7 +2887,9 @@ encodeMergePullRequestInput input =
         [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "commitHeadline", Encode.string |> Encode.optional input.commitHeadline ), ( "commitBody", Encode.string |> Encode.optional input.commitBody ), ( "expectedHeadOid", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) |> Encode.optional input.expectedHeadOid ), ( "mergeMethod", Encode.enum GitHub.Enum.PullRequestMergeMethod.toString |> Encode.optional input.mergeMethod ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildMilestoneOrder : MilestoneOrderRequiredFields -> MilestoneOrder
+buildMilestoneOrder :
+    MilestoneOrderRequiredFields
+    -> MilestoneOrder
 buildMilestoneOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2571,7 +2916,10 @@ encodeMilestoneOrder input =
         [ ( "field", Encode.enum GitHub.Enum.MilestoneOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildMinimizeCommentInput : MinimizeCommentInputRequiredFields -> (MinimizeCommentInputOptionalFields -> MinimizeCommentInputOptionalFields) -> MinimizeCommentInput
+buildMinimizeCommentInput :
+    MinimizeCommentInputRequiredFields
+    -> (MinimizeCommentInputOptionalFields -> MinimizeCommentInputOptionalFields)
+    -> MinimizeCommentInput
 buildMinimizeCommentInput required fillOptionals =
     let
         optionals =
@@ -2608,7 +2956,10 @@ encodeMinimizeCommentInput input =
         [ ( "subjectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subjectId |> Just ), ( "classifier", Encode.enum GitHub.Enum.ReportedContentClassifiers.toString input.classifier |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildMoveProjectCardInput : MoveProjectCardInputRequiredFields -> (MoveProjectCardInputOptionalFields -> MoveProjectCardInputOptionalFields) -> MoveProjectCardInput
+buildMoveProjectCardInput :
+    MoveProjectCardInputRequiredFields
+    -> (MoveProjectCardInputOptionalFields -> MoveProjectCardInputOptionalFields)
+    -> MoveProjectCardInput
 buildMoveProjectCardInput required fillOptionals =
     let
         optionals =
@@ -2648,7 +2999,10 @@ encodeMoveProjectCardInput input =
         [ ( "cardId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.cardId |> Just ), ( "columnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.columnId |> Just ), ( "afterCardId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.afterCardId ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildMoveProjectColumnInput : MoveProjectColumnInputRequiredFields -> (MoveProjectColumnInputOptionalFields -> MoveProjectColumnInputOptionalFields) -> MoveProjectColumnInput
+buildMoveProjectColumnInput :
+    MoveProjectColumnInputRequiredFields
+    -> (MoveProjectColumnInputOptionalFields -> MoveProjectColumnInputOptionalFields)
+    -> MoveProjectColumnInput
 buildMoveProjectColumnInput required fillOptionals =
     let
         optionals =
@@ -2685,7 +3039,9 @@ encodeMoveProjectColumnInput input =
         [ ( "columnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.columnId |> Just ), ( "afterColumnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.afterColumnId ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildOrganizationOrder : OrganizationOrderRequiredFields -> OrganizationOrder
+buildOrganizationOrder :
+    OrganizationOrderRequiredFields
+    -> OrganizationOrder
 buildOrganizationOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2712,105 +3068,9 @@ encodeOrganizationOrder input =
         [ ( "field", Encode.enum GitHub.Enum.OrganizationOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildPinIssueInput : PinIssueInputRequiredFields -> (PinIssueInputOptionalFields -> PinIssueInputOptionalFields) -> PinIssueInput
-buildPinIssueInput required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { clientMutationId = Absent }
-    in
-    { issueId = required.issueId, clientMutationId = optionals.clientMutationId }
-
-
-type alias PinIssueInputRequiredFields =
-    { issueId : GitHub.ScalarCodecs.Id }
-
-
-type alias PinIssueInputOptionalFields =
-    { clientMutationId : OptionalArgument String }
-
-
-{-| Type for the PinIssueInput input object.
--}
-type alias PinIssueInput =
-    { issueId : GitHub.ScalarCodecs.Id
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Encode a PinIssueInput into a value that can be used as an argument.
--}
-encodePinIssueInput : PinIssueInput -> Value
-encodePinIssueInput input =
-    Encode.maybeObject
-        [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
-
-
-buildProjectCardImport : ProjectCardImportRequiredFields -> ProjectCardImport
-buildProjectCardImport required =
-    { repository = required.repository, number = required.number }
-
-
-type alias ProjectCardImportRequiredFields =
-    { repository : String
-    , number : Int
-    }
-
-
-{-| Type for the ProjectCardImport input object.
--}
-type alias ProjectCardImport =
-    { repository : String
-    , number : Int
-    }
-
-
-{-| Encode a ProjectCardImport into a value that can be used as an argument.
--}
-encodeProjectCardImport : ProjectCardImport -> Value
-encodeProjectCardImport input =
-    Encode.maybeObject
-        [ ( "repository", Encode.string input.repository |> Just ), ( "number", Encode.int input.number |> Just ) ]
-
-
-buildProjectColumnImport : ProjectColumnImportRequiredFields -> (ProjectColumnImportOptionalFields -> ProjectColumnImportOptionalFields) -> ProjectColumnImport
-buildProjectColumnImport required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { issues = Absent }
-    in
-    { columnName = required.columnName, position = required.position, issues = optionals.issues }
-
-
-type alias ProjectColumnImportRequiredFields =
-    { columnName : String
-    , position : Int
-    }
-
-
-type alias ProjectColumnImportOptionalFields =
-    { issues : OptionalArgument (List ProjectCardImport) }
-
-
-{-| Type for the ProjectColumnImport input object.
--}
-type alias ProjectColumnImport =
-    { columnName : String
-    , position : Int
-    , issues : OptionalArgument (List ProjectCardImport)
-    }
-
-
-{-| Encode a ProjectColumnImport into a value that can be used as an argument.
--}
-encodeProjectColumnImport : ProjectColumnImport -> Value
-encodeProjectColumnImport input =
-    Encode.maybeObject
-        [ ( "columnName", Encode.string input.columnName |> Just ), ( "position", Encode.int input.position |> Just ), ( "issues", (encodeProjectCardImport |> Encode.list) |> Encode.optional input.issues ) ]
-
-
-buildProjectOrder : ProjectOrderRequiredFields -> ProjectOrder
+buildProjectOrder :
+    ProjectOrderRequiredFields
+    -> ProjectOrder
 buildProjectOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2837,7 +3097,9 @@ encodeProjectOrder input =
         [ ( "field", Encode.enum GitHub.Enum.ProjectOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildPullRequestOrder : PullRequestOrderRequiredFields -> PullRequestOrder
+buildPullRequestOrder :
+    PullRequestOrderRequiredFields
+    -> PullRequestOrder
 buildPullRequestOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2864,7 +3126,9 @@ encodePullRequestOrder input =
         [ ( "field", Encode.enum GitHub.Enum.PullRequestOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildReactionOrder : ReactionOrderRequiredFields -> ReactionOrder
+buildReactionOrder :
+    ReactionOrderRequiredFields
+    -> ReactionOrder
 buildReactionOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2891,7 +3155,9 @@ encodeReactionOrder input =
         [ ( "field", Encode.enum GitHub.Enum.ReactionOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildRefOrder : RefOrderRequiredFields -> RefOrder
+buildRefOrder :
+    RefOrderRequiredFields
+    -> RefOrder
 buildRefOrder required =
     { field = required.field, direction = required.direction }
 
@@ -2918,7 +3184,10 @@ encodeRefOrder input =
         [ ( "field", Encode.enum GitHub.Enum.RefOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildRegenerateEnterpriseIdentityProviderRecoveryCodesInput : RegenerateEnterpriseIdentityProviderRecoveryCodesInputRequiredFields -> (RegenerateEnterpriseIdentityProviderRecoveryCodesInputOptionalFields -> RegenerateEnterpriseIdentityProviderRecoveryCodesInputOptionalFields) -> RegenerateEnterpriseIdentityProviderRecoveryCodesInput
+buildRegenerateEnterpriseIdentityProviderRecoveryCodesInput :
+    RegenerateEnterpriseIdentityProviderRecoveryCodesInputRequiredFields
+    -> (RegenerateEnterpriseIdentityProviderRecoveryCodesInputOptionalFields -> RegenerateEnterpriseIdentityProviderRecoveryCodesInputOptionalFields)
+    -> RegenerateEnterpriseIdentityProviderRecoveryCodesInput
 buildRegenerateEnterpriseIdentityProviderRecoveryCodesInput required fillOptionals =
     let
         optionals =
@@ -2952,7 +3221,10 @@ encodeRegenerateEnterpriseIdentityProviderRecoveryCodesInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRegistryPackageMetadatum : RegistryPackageMetadatumRequiredFields -> (RegistryPackageMetadatumOptionalFields -> RegistryPackageMetadatumOptionalFields) -> RegistryPackageMetadatum
+buildRegistryPackageMetadatum :
+    RegistryPackageMetadatumRequiredFields
+    -> (RegistryPackageMetadatumOptionalFields -> RegistryPackageMetadatumOptionalFields)
+    -> RegistryPackageMetadatum
 buildRegistryPackageMetadatum required fillOptionals =
     let
         optionals =
@@ -2989,7 +3261,9 @@ encodeRegistryPackageMetadatum input =
         [ ( "name", Encode.string input.name |> Just ), ( "value", Encode.string input.value |> Just ), ( "update", Encode.bool |> Encode.optional input.update ) ]
 
 
-buildReleaseOrder : ReleaseOrderRequiredFields -> ReleaseOrder
+buildReleaseOrder :
+    ReleaseOrderRequiredFields
+    -> ReleaseOrder
 buildReleaseOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3016,7 +3290,10 @@ encodeReleaseOrder input =
         [ ( "field", Encode.enum GitHub.Enum.ReleaseOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildRemoveAssigneesFromAssignableInput : RemoveAssigneesFromAssignableInputRequiredFields -> (RemoveAssigneesFromAssignableInputOptionalFields -> RemoveAssigneesFromAssignableInputOptionalFields) -> RemoveAssigneesFromAssignableInput
+buildRemoveAssigneesFromAssignableInput :
+    RemoveAssigneesFromAssignableInputRequiredFields
+    -> (RemoveAssigneesFromAssignableInputOptionalFields -> RemoveAssigneesFromAssignableInputOptionalFields)
+    -> RemoveAssigneesFromAssignableInput
 buildRemoveAssigneesFromAssignableInput required fillOptionals =
     let
         optionals =
@@ -3053,7 +3330,10 @@ encodeRemoveAssigneesFromAssignableInput input =
         [ ( "assignableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.assignableId |> Just ), ( "assigneeIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) input.assigneeIds |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveEnterpriseAdminInput : RemoveEnterpriseAdminInputRequiredFields -> (RemoveEnterpriseAdminInputOptionalFields -> RemoveEnterpriseAdminInputOptionalFields) -> RemoveEnterpriseAdminInput
+buildRemoveEnterpriseAdminInput :
+    RemoveEnterpriseAdminInputRequiredFields
+    -> (RemoveEnterpriseAdminInputOptionalFields -> RemoveEnterpriseAdminInputOptionalFields)
+    -> RemoveEnterpriseAdminInput
 buildRemoveEnterpriseAdminInput required fillOptionals =
     let
         optionals =
@@ -3090,7 +3370,47 @@ encodeRemoveEnterpriseAdminInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "login", Encode.string input.login |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveEnterpriseOrganizationInput : RemoveEnterpriseOrganizationInputRequiredFields -> (RemoveEnterpriseOrganizationInputOptionalFields -> RemoveEnterpriseOrganizationInputOptionalFields) -> RemoveEnterpriseOrganizationInput
+buildRemoveEnterpriseIdentityProviderInput :
+    RemoveEnterpriseIdentityProviderInputRequiredFields
+    -> (RemoveEnterpriseIdentityProviderInputOptionalFields -> RemoveEnterpriseIdentityProviderInputOptionalFields)
+    -> RemoveEnterpriseIdentityProviderInput
+buildRemoveEnterpriseIdentityProviderInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { clientMutationId = Absent }
+    in
+    { enterpriseId = required.enterpriseId, clientMutationId = optionals.clientMutationId }
+
+
+type alias RemoveEnterpriseIdentityProviderInputRequiredFields =
+    { enterpriseId : GitHub.ScalarCodecs.Id }
+
+
+type alias RemoveEnterpriseIdentityProviderInputOptionalFields =
+    { clientMutationId : OptionalArgument String }
+
+
+{-| Type for the RemoveEnterpriseIdentityProviderInput input object.
+-}
+type alias RemoveEnterpriseIdentityProviderInput =
+    { enterpriseId : GitHub.ScalarCodecs.Id
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a RemoveEnterpriseIdentityProviderInput into a value that can be used as an argument.
+-}
+encodeRemoveEnterpriseIdentityProviderInput : RemoveEnterpriseIdentityProviderInput -> Value
+encodeRemoveEnterpriseIdentityProviderInput input =
+    Encode.maybeObject
+        [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildRemoveEnterpriseOrganizationInput :
+    RemoveEnterpriseOrganizationInputRequiredFields
+    -> (RemoveEnterpriseOrganizationInputOptionalFields -> RemoveEnterpriseOrganizationInputOptionalFields)
+    -> RemoveEnterpriseOrganizationInput
 buildRemoveEnterpriseOrganizationInput required fillOptionals =
     let
         optionals =
@@ -3127,7 +3447,10 @@ encodeRemoveEnterpriseOrganizationInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "organizationId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.organizationId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveLabelsFromLabelableInput : RemoveLabelsFromLabelableInputRequiredFields -> (RemoveLabelsFromLabelableInputOptionalFields -> RemoveLabelsFromLabelableInputOptionalFields) -> RemoveLabelsFromLabelableInput
+buildRemoveLabelsFromLabelableInput :
+    RemoveLabelsFromLabelableInputRequiredFields
+    -> (RemoveLabelsFromLabelableInputOptionalFields -> RemoveLabelsFromLabelableInputOptionalFields)
+    -> RemoveLabelsFromLabelableInput
 buildRemoveLabelsFromLabelableInput required fillOptionals =
     let
         optionals =
@@ -3164,7 +3487,10 @@ encodeRemoveLabelsFromLabelableInput input =
         [ ( "labelableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.labelableId |> Just ), ( "labelIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) input.labelIds |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveOutsideCollaboratorInput : RemoveOutsideCollaboratorInputRequiredFields -> (RemoveOutsideCollaboratorInputOptionalFields -> RemoveOutsideCollaboratorInputOptionalFields) -> RemoveOutsideCollaboratorInput
+buildRemoveOutsideCollaboratorInput :
+    RemoveOutsideCollaboratorInputRequiredFields
+    -> (RemoveOutsideCollaboratorInputOptionalFields -> RemoveOutsideCollaboratorInputOptionalFields)
+    -> RemoveOutsideCollaboratorInput
 buildRemoveOutsideCollaboratorInput required fillOptionals =
     let
         optionals =
@@ -3201,7 +3527,10 @@ encodeRemoveOutsideCollaboratorInput input =
         [ ( "userId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.userId |> Just ), ( "organizationId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.organizationId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveReactionInput : RemoveReactionInputRequiredFields -> (RemoveReactionInputOptionalFields -> RemoveReactionInputOptionalFields) -> RemoveReactionInput
+buildRemoveReactionInput :
+    RemoveReactionInputRequiredFields
+    -> (RemoveReactionInputOptionalFields -> RemoveReactionInputOptionalFields)
+    -> RemoveReactionInput
 buildRemoveReactionInput required fillOptionals =
     let
         optionals =
@@ -3238,7 +3567,10 @@ encodeRemoveReactionInput input =
         [ ( "subjectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subjectId |> Just ), ( "content", Encode.enum GitHub.Enum.ReactionContent.toString input.content |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRemoveStarInput : RemoveStarInputRequiredFields -> (RemoveStarInputOptionalFields -> RemoveStarInputOptionalFields) -> RemoveStarInput
+buildRemoveStarInput :
+    RemoveStarInputRequiredFields
+    -> (RemoveStarInputOptionalFields -> RemoveStarInputOptionalFields)
+    -> RemoveStarInput
 buildRemoveStarInput required fillOptionals =
     let
         optionals =
@@ -3272,7 +3604,10 @@ encodeRemoveStarInput input =
         [ ( "starrableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.starrableId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildReopenIssueInput : ReopenIssueInputRequiredFields -> (ReopenIssueInputOptionalFields -> ReopenIssueInputOptionalFields) -> ReopenIssueInput
+buildReopenIssueInput :
+    ReopenIssueInputRequiredFields
+    -> (ReopenIssueInputOptionalFields -> ReopenIssueInputOptionalFields)
+    -> ReopenIssueInput
 buildReopenIssueInput required fillOptionals =
     let
         optionals =
@@ -3306,7 +3641,10 @@ encodeReopenIssueInput input =
         [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildReopenPullRequestInput : ReopenPullRequestInputRequiredFields -> (ReopenPullRequestInputOptionalFields -> ReopenPullRequestInputOptionalFields) -> ReopenPullRequestInput
+buildReopenPullRequestInput :
+    ReopenPullRequestInputRequiredFields
+    -> (ReopenPullRequestInputOptionalFields -> ReopenPullRequestInputOptionalFields)
+    -> ReopenPullRequestInput
 buildReopenPullRequestInput required fillOptionals =
     let
         optionals =
@@ -3340,7 +3678,9 @@ encodeReopenPullRequestInput input =
         [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildRepositoryInvitationOrder : RepositoryInvitationOrderRequiredFields -> RepositoryInvitationOrder
+buildRepositoryInvitationOrder :
+    RepositoryInvitationOrderRequiredFields
+    -> RepositoryInvitationOrder
 buildRepositoryInvitationOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3367,7 +3707,9 @@ encodeRepositoryInvitationOrder input =
         [ ( "field", Encode.enum GitHub.Enum.RepositoryInvitationOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildRepositoryOrder : RepositoryOrderRequiredFields -> RepositoryOrder
+buildRepositoryOrder :
+    RepositoryOrderRequiredFields
+    -> RepositoryOrder
 buildRepositoryOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3394,7 +3736,10 @@ encodeRepositoryOrder input =
         [ ( "field", Encode.enum GitHub.Enum.RepositoryOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildRequestReviewsInput : RequestReviewsInputRequiredFields -> (RequestReviewsInputOptionalFields -> RequestReviewsInputOptionalFields) -> RequestReviewsInput
+buildRequestReviewsInput :
+    RequestReviewsInputRequiredFields
+    -> (RequestReviewsInputOptionalFields -> RequestReviewsInputOptionalFields)
+    -> RequestReviewsInput
 buildRequestReviewsInput required fillOptionals =
     let
         optionals =
@@ -3435,7 +3780,10 @@ encodeRequestReviewsInput input =
         [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "userIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.userIds ), ( "teamIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.teamIds ), ( "union", Encode.bool |> Encode.optional input.union ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildResolveReviewThreadInput : ResolveReviewThreadInputRequiredFields -> (ResolveReviewThreadInputOptionalFields -> ResolveReviewThreadInputOptionalFields) -> ResolveReviewThreadInput
+buildResolveReviewThreadInput :
+    ResolveReviewThreadInputRequiredFields
+    -> (ResolveReviewThreadInputOptionalFields -> ResolveReviewThreadInputOptionalFields)
+    -> ResolveReviewThreadInput
 buildResolveReviewThreadInput required fillOptionals =
     let
         optionals =
@@ -3469,7 +3817,9 @@ encodeResolveReviewThreadInput input =
         [ ( "threadId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.threadId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildSavedReplyOrder : SavedReplyOrderRequiredFields -> SavedReplyOrder
+buildSavedReplyOrder :
+    SavedReplyOrderRequiredFields
+    -> SavedReplyOrder
 buildSavedReplyOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3496,7 +3846,9 @@ encodeSavedReplyOrder input =
         [ ( "field", Encode.enum GitHub.Enum.SavedReplyOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildSecurityAdvisoryIdentifierFilter : SecurityAdvisoryIdentifierFilterRequiredFields -> SecurityAdvisoryIdentifierFilter
+buildSecurityAdvisoryIdentifierFilter :
+    SecurityAdvisoryIdentifierFilterRequiredFields
+    -> SecurityAdvisoryIdentifierFilter
 buildSecurityAdvisoryIdentifierFilter required =
     { type_ = required.type_, value = required.value }
 
@@ -3523,7 +3875,9 @@ encodeSecurityAdvisoryIdentifierFilter input =
         [ ( "type", Encode.enum GitHub.Enum.SecurityAdvisoryIdentifierType.toString input.type_ |> Just ), ( "value", Encode.string input.value |> Just ) ]
 
 
-buildSecurityAdvisoryOrder : SecurityAdvisoryOrderRequiredFields -> SecurityAdvisoryOrder
+buildSecurityAdvisoryOrder :
+    SecurityAdvisoryOrderRequiredFields
+    -> SecurityAdvisoryOrder
 buildSecurityAdvisoryOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3550,7 +3904,9 @@ encodeSecurityAdvisoryOrder input =
         [ ( "field", Encode.enum GitHub.Enum.SecurityAdvisoryOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildSecurityVulnerabilityOrder : SecurityVulnerabilityOrderRequiredFields -> SecurityVulnerabilityOrder
+buildSecurityVulnerabilityOrder :
+    SecurityVulnerabilityOrderRequiredFields
+    -> SecurityVulnerabilityOrder
 buildSecurityVulnerabilityOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3577,7 +3933,58 @@ encodeSecurityVulnerabilityOrder input =
         [ ( "field", Encode.enum GitHub.Enum.SecurityVulnerabilityOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildSponsorsTierOrder : SponsorsTierOrderRequiredFields -> SponsorsTierOrder
+buildSetEnterpriseIdentityProviderInput :
+    SetEnterpriseIdentityProviderInputRequiredFields
+    -> (SetEnterpriseIdentityProviderInputOptionalFields -> SetEnterpriseIdentityProviderInputOptionalFields)
+    -> SetEnterpriseIdentityProviderInput
+buildSetEnterpriseIdentityProviderInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { issuer = Absent, clientMutationId = Absent }
+    in
+    { enterpriseId = required.enterpriseId, ssoUrl = required.ssoUrl, issuer = optionals.issuer, idpCertificate = required.idpCertificate, signatureMethod = required.signatureMethod, digestMethod = required.digestMethod, clientMutationId = optionals.clientMutationId }
+
+
+type alias SetEnterpriseIdentityProviderInputRequiredFields =
+    { enterpriseId : GitHub.ScalarCodecs.Id
+    , ssoUrl : GitHub.ScalarCodecs.Uri
+    , idpCertificate : String
+    , signatureMethod : GitHub.Enum.SamlSignatureAlgorithm.SamlSignatureAlgorithm
+    , digestMethod : GitHub.Enum.SamlDigestAlgorithm.SamlDigestAlgorithm
+    }
+
+
+type alias SetEnterpriseIdentityProviderInputOptionalFields =
+    { issuer : OptionalArgument String
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Type for the SetEnterpriseIdentityProviderInput input object.
+-}
+type alias SetEnterpriseIdentityProviderInput =
+    { enterpriseId : GitHub.ScalarCodecs.Id
+    , ssoUrl : GitHub.ScalarCodecs.Uri
+    , issuer : OptionalArgument String
+    , idpCertificate : String
+    , signatureMethod : GitHub.Enum.SamlSignatureAlgorithm.SamlSignatureAlgorithm
+    , digestMethod : GitHub.Enum.SamlDigestAlgorithm.SamlDigestAlgorithm
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a SetEnterpriseIdentityProviderInput into a value that can be used as an argument.
+-}
+encodeSetEnterpriseIdentityProviderInput : SetEnterpriseIdentityProviderInput -> Value
+encodeSetEnterpriseIdentityProviderInput input =
+    Encode.maybeObject
+        [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "ssoUrl", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecUri) input.ssoUrl |> Just ), ( "issuer", Encode.string |> Encode.optional input.issuer ), ( "idpCertificate", Encode.string input.idpCertificate |> Just ), ( "signatureMethod", Encode.enum GitHub.Enum.SamlSignatureAlgorithm.toString input.signatureMethod |> Just ), ( "digestMethod", Encode.enum GitHub.Enum.SamlDigestAlgorithm.toString input.digestMethod |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildSponsorsTierOrder :
+    SponsorsTierOrderRequiredFields
+    -> SponsorsTierOrder
 buildSponsorsTierOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3604,7 +4011,9 @@ encodeSponsorsTierOrder input =
         [ ( "field", Encode.enum GitHub.Enum.SponsorsTierOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildSponsorshipOrder : SponsorshipOrderRequiredFields -> SponsorshipOrder
+buildSponsorshipOrder :
+    SponsorshipOrderRequiredFields
+    -> SponsorshipOrder
 buildSponsorshipOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3631,7 +4040,9 @@ encodeSponsorshipOrder input =
         [ ( "field", Encode.enum GitHub.Enum.SponsorshipOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildStarOrder : StarOrderRequiredFields -> StarOrder
+buildStarOrder :
+    StarOrderRequiredFields
+    -> StarOrder
 buildStarOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3658,24 +4069,27 @@ encodeStarOrder input =
         [ ( "field", Encode.enum GitHub.Enum.StarOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildSubmitPullRequestReviewInput : SubmitPullRequestReviewInputRequiredFields -> (SubmitPullRequestReviewInputOptionalFields -> SubmitPullRequestReviewInputOptionalFields) -> SubmitPullRequestReviewInput
+buildSubmitPullRequestReviewInput :
+    SubmitPullRequestReviewInputRequiredFields
+    -> (SubmitPullRequestReviewInputOptionalFields -> SubmitPullRequestReviewInputOptionalFields)
+    -> SubmitPullRequestReviewInput
 buildSubmitPullRequestReviewInput required fillOptionals =
     let
         optionals =
             fillOptionals
-                { body = Absent, clientMutationId = Absent }
+                { pullRequestId = Absent, pullRequestReviewId = Absent, body = Absent, clientMutationId = Absent }
     in
-    { pullRequestReviewId = required.pullRequestReviewId, event = required.event, body = optionals.body, clientMutationId = optionals.clientMutationId }
+    { pullRequestId = optionals.pullRequestId, pullRequestReviewId = optionals.pullRequestReviewId, event = required.event, body = optionals.body, clientMutationId = optionals.clientMutationId }
 
 
 type alias SubmitPullRequestReviewInputRequiredFields =
-    { pullRequestReviewId : GitHub.ScalarCodecs.Id
-    , event : GitHub.Enum.PullRequestReviewEvent.PullRequestReviewEvent
-    }
+    { event : GitHub.Enum.PullRequestReviewEvent.PullRequestReviewEvent }
 
 
 type alias SubmitPullRequestReviewInputOptionalFields =
-    { body : OptionalArgument String
+    { pullRequestId : OptionalArgument GitHub.ScalarCodecs.Id
+    , pullRequestReviewId : OptionalArgument GitHub.ScalarCodecs.Id
+    , body : OptionalArgument String
     , clientMutationId : OptionalArgument String
     }
 
@@ -3683,7 +4097,8 @@ type alias SubmitPullRequestReviewInputOptionalFields =
 {-| Type for the SubmitPullRequestReviewInput input object.
 -}
 type alias SubmitPullRequestReviewInput =
-    { pullRequestReviewId : GitHub.ScalarCodecs.Id
+    { pullRequestId : OptionalArgument GitHub.ScalarCodecs.Id
+    , pullRequestReviewId : OptionalArgument GitHub.ScalarCodecs.Id
     , event : GitHub.Enum.PullRequestReviewEvent.PullRequestReviewEvent
     , body : OptionalArgument String
     , clientMutationId : OptionalArgument String
@@ -3695,10 +4110,12 @@ type alias SubmitPullRequestReviewInput =
 encodeSubmitPullRequestReviewInput : SubmitPullRequestReviewInput -> Value
 encodeSubmitPullRequestReviewInput input =
     Encode.maybeObject
-        [ ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "event", Encode.enum GitHub.Enum.PullRequestReviewEvent.toString input.event |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+        [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.pullRequestId ), ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.pullRequestReviewId ), ( "event", Encode.enum GitHub.Enum.PullRequestReviewEvent.toString input.event |> Just ), ( "body", Encode.string |> Encode.optional input.body ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildTeamDiscussionCommentOrder : TeamDiscussionCommentOrderRequiredFields -> TeamDiscussionCommentOrder
+buildTeamDiscussionCommentOrder :
+    TeamDiscussionCommentOrderRequiredFields
+    -> TeamDiscussionCommentOrder
 buildTeamDiscussionCommentOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3725,7 +4142,9 @@ encodeTeamDiscussionCommentOrder input =
         [ ( "field", Encode.enum GitHub.Enum.TeamDiscussionCommentOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildTeamDiscussionOrder : TeamDiscussionOrderRequiredFields -> TeamDiscussionOrder
+buildTeamDiscussionOrder :
+    TeamDiscussionOrderRequiredFields
+    -> TeamDiscussionOrder
 buildTeamDiscussionOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3752,7 +4171,9 @@ encodeTeamDiscussionOrder input =
         [ ( "field", Encode.enum GitHub.Enum.TeamDiscussionOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildTeamMemberOrder : TeamMemberOrderRequiredFields -> TeamMemberOrder
+buildTeamMemberOrder :
+    TeamMemberOrderRequiredFields
+    -> TeamMemberOrder
 buildTeamMemberOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3779,7 +4200,9 @@ encodeTeamMemberOrder input =
         [ ( "field", Encode.enum GitHub.Enum.TeamMemberOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildTeamOrder : TeamOrderRequiredFields -> TeamOrder
+buildTeamOrder :
+    TeamOrderRequiredFields
+    -> TeamOrder
 buildTeamOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3806,7 +4229,9 @@ encodeTeamOrder input =
         [ ( "field", Encode.enum GitHub.Enum.TeamOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildTeamRepositoryOrder : TeamRepositoryOrderRequiredFields -> TeamRepositoryOrder
+buildTeamRepositoryOrder :
+    TeamRepositoryOrderRequiredFields
+    -> TeamRepositoryOrder
 buildTeamRepositoryOrder required =
     { field = required.field, direction = required.direction }
 
@@ -3833,7 +4258,10 @@ encodeTeamRepositoryOrder input =
         [ ( "field", Encode.enum GitHub.Enum.TeamRepositoryOrderField.toString input.field |> Just ), ( "direction", Encode.enum GitHub.Enum.OrderDirection.toString input.direction |> Just ) ]
 
 
-buildTransferIssueInput : TransferIssueInputRequiredFields -> (TransferIssueInputOptionalFields -> TransferIssueInputOptionalFields) -> TransferIssueInput
+buildTransferIssueInput :
+    TransferIssueInputRequiredFields
+    -> (TransferIssueInputOptionalFields -> TransferIssueInputOptionalFields)
+    -> TransferIssueInput
 buildTransferIssueInput required fillOptionals =
     let
         optionals =
@@ -3870,7 +4298,10 @@ encodeTransferIssueInput input =
         [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnarchiveRepositoryInput : UnarchiveRepositoryInputRequiredFields -> (UnarchiveRepositoryInputOptionalFields -> UnarchiveRepositoryInputOptionalFields) -> UnarchiveRepositoryInput
+buildUnarchiveRepositoryInput :
+    UnarchiveRepositoryInputRequiredFields
+    -> (UnarchiveRepositoryInputOptionalFields -> UnarchiveRepositoryInputOptionalFields)
+    -> UnarchiveRepositoryInput
 buildUnarchiveRepositoryInput required fillOptionals =
     let
         optionals =
@@ -3904,7 +4335,10 @@ encodeUnarchiveRepositoryInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnfollowUserInput : UnfollowUserInputRequiredFields -> (UnfollowUserInputOptionalFields -> UnfollowUserInputOptionalFields) -> UnfollowUserInput
+buildUnfollowUserInput :
+    UnfollowUserInputRequiredFields
+    -> (UnfollowUserInputOptionalFields -> UnfollowUserInputOptionalFields)
+    -> UnfollowUserInput
 buildUnfollowUserInput required fillOptionals =
     let
         optionals =
@@ -3938,7 +4372,10 @@ encodeUnfollowUserInput input =
         [ ( "userId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.userId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnlinkRepositoryFromProjectInput : UnlinkRepositoryFromProjectInputRequiredFields -> (UnlinkRepositoryFromProjectInputOptionalFields -> UnlinkRepositoryFromProjectInputOptionalFields) -> UnlinkRepositoryFromProjectInput
+buildUnlinkRepositoryFromProjectInput :
+    UnlinkRepositoryFromProjectInputRequiredFields
+    -> (UnlinkRepositoryFromProjectInputOptionalFields -> UnlinkRepositoryFromProjectInputOptionalFields)
+    -> UnlinkRepositoryFromProjectInput
 buildUnlinkRepositoryFromProjectInput required fillOptionals =
     let
         optionals =
@@ -3975,7 +4412,10 @@ encodeUnlinkRepositoryFromProjectInput input =
         [ ( "projectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectId |> Just ), ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnlockLockableInput : UnlockLockableInputRequiredFields -> (UnlockLockableInputOptionalFields -> UnlockLockableInputOptionalFields) -> UnlockLockableInput
+buildUnlockLockableInput :
+    UnlockLockableInputRequiredFields
+    -> (UnlockLockableInputOptionalFields -> UnlockLockableInputOptionalFields)
+    -> UnlockLockableInput
 buildUnlockLockableInput required fillOptionals =
     let
         optionals =
@@ -4009,7 +4449,10 @@ encodeUnlockLockableInput input =
         [ ( "lockableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.lockableId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnmarkIssueAsDuplicateInput : UnmarkIssueAsDuplicateInputRequiredFields -> (UnmarkIssueAsDuplicateInputOptionalFields -> UnmarkIssueAsDuplicateInputOptionalFields) -> UnmarkIssueAsDuplicateInput
+buildUnmarkIssueAsDuplicateInput :
+    UnmarkIssueAsDuplicateInputRequiredFields
+    -> (UnmarkIssueAsDuplicateInputOptionalFields -> UnmarkIssueAsDuplicateInputOptionalFields)
+    -> UnmarkIssueAsDuplicateInput
 buildUnmarkIssueAsDuplicateInput required fillOptionals =
     let
         optionals =
@@ -4046,7 +4489,10 @@ encodeUnmarkIssueAsDuplicateInput input =
         [ ( "duplicateId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.duplicateId |> Just ), ( "canonicalId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.canonicalId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnminimizeCommentInput : UnminimizeCommentInputRequiredFields -> (UnminimizeCommentInputOptionalFields -> UnminimizeCommentInputOptionalFields) -> UnminimizeCommentInput
+buildUnminimizeCommentInput :
+    UnminimizeCommentInputRequiredFields
+    -> (UnminimizeCommentInputOptionalFields -> UnminimizeCommentInputOptionalFields)
+    -> UnminimizeCommentInput
 buildUnminimizeCommentInput required fillOptionals =
     let
         optionals =
@@ -4080,41 +4526,10 @@ encodeUnminimizeCommentInput input =
         [ ( "subjectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subjectId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUnpinIssueInput : UnpinIssueInputRequiredFields -> (UnpinIssueInputOptionalFields -> UnpinIssueInputOptionalFields) -> UnpinIssueInput
-buildUnpinIssueInput required fillOptionals =
-    let
-        optionals =
-            fillOptionals
-                { clientMutationId = Absent }
-    in
-    { issueId = required.issueId, clientMutationId = optionals.clientMutationId }
-
-
-type alias UnpinIssueInputRequiredFields =
-    { issueId : GitHub.ScalarCodecs.Id }
-
-
-type alias UnpinIssueInputOptionalFields =
-    { clientMutationId : OptionalArgument String }
-
-
-{-| Type for the UnpinIssueInput input object.
--}
-type alias UnpinIssueInput =
-    { issueId : GitHub.ScalarCodecs.Id
-    , clientMutationId : OptionalArgument String
-    }
-
-
-{-| Encode a UnpinIssueInput into a value that can be used as an argument.
--}
-encodeUnpinIssueInput : UnpinIssueInput -> Value
-encodeUnpinIssueInput input =
-    Encode.maybeObject
-        [ ( "issueId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.issueId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
-
-
-buildUnresolveReviewThreadInput : UnresolveReviewThreadInputRequiredFields -> (UnresolveReviewThreadInputOptionalFields -> UnresolveReviewThreadInputOptionalFields) -> UnresolveReviewThreadInput
+buildUnresolveReviewThreadInput :
+    UnresolveReviewThreadInputRequiredFields
+    -> (UnresolveReviewThreadInputOptionalFields -> UnresolveReviewThreadInputOptionalFields)
+    -> UnresolveReviewThreadInput
 buildUnresolveReviewThreadInput required fillOptionals =
     let
         optionals =
@@ -4148,7 +4563,10 @@ encodeUnresolveReviewThreadInput input =
         [ ( "threadId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.threadId |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateBranchProtectionRuleInput : UpdateBranchProtectionRuleInputRequiredFields -> (UpdateBranchProtectionRuleInputOptionalFields -> UpdateBranchProtectionRuleInputOptionalFields) -> UpdateBranchProtectionRuleInput
+buildUpdateBranchProtectionRuleInput :
+    UpdateBranchProtectionRuleInputRequiredFields
+    -> (UpdateBranchProtectionRuleInputOptionalFields -> UpdateBranchProtectionRuleInputOptionalFields)
+    -> UpdateBranchProtectionRuleInput
 buildUpdateBranchProtectionRuleInput required fillOptionals =
     let
         optionals =
@@ -4211,7 +4629,10 @@ encodeUpdateBranchProtectionRuleInput input =
         [ ( "branchProtectionRuleId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.branchProtectionRuleId |> Just ), ( "pattern", Encode.string |> Encode.optional input.pattern ), ( "requiresApprovingReviews", Encode.bool |> Encode.optional input.requiresApprovingReviews ), ( "requiredApprovingReviewCount", Encode.int |> Encode.optional input.requiredApprovingReviewCount ), ( "requiresCommitSignatures", Encode.bool |> Encode.optional input.requiresCommitSignatures ), ( "isAdminEnforced", Encode.bool |> Encode.optional input.isAdminEnforced ), ( "requiresStatusChecks", Encode.bool |> Encode.optional input.requiresStatusChecks ), ( "requiresStrictStatusChecks", Encode.bool |> Encode.optional input.requiresStrictStatusChecks ), ( "requiresCodeOwnerReviews", Encode.bool |> Encode.optional input.requiresCodeOwnerReviews ), ( "dismissesStaleReviews", Encode.bool |> Encode.optional input.dismissesStaleReviews ), ( "restrictsReviewDismissals", Encode.bool |> Encode.optional input.restrictsReviewDismissals ), ( "reviewDismissalActorIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.reviewDismissalActorIds ), ( "restrictsPushes", Encode.bool |> Encode.optional input.restrictsPushes ), ( "pushActorIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.pushActorIds ), ( "requiredStatusCheckContexts", (Encode.string |> Encode.list) |> Encode.optional input.requiredStatusCheckContexts ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseActionExecutionCapabilitySettingInput : UpdateEnterpriseActionExecutionCapabilitySettingInputRequiredFields -> (UpdateEnterpriseActionExecutionCapabilitySettingInputOptionalFields -> UpdateEnterpriseActionExecutionCapabilitySettingInputOptionalFields) -> UpdateEnterpriseActionExecutionCapabilitySettingInput
+buildUpdateEnterpriseActionExecutionCapabilitySettingInput :
+    UpdateEnterpriseActionExecutionCapabilitySettingInputRequiredFields
+    -> (UpdateEnterpriseActionExecutionCapabilitySettingInputOptionalFields -> UpdateEnterpriseActionExecutionCapabilitySettingInputOptionalFields)
+    -> UpdateEnterpriseActionExecutionCapabilitySettingInput
 buildUpdateEnterpriseActionExecutionCapabilitySettingInput required fillOptionals =
     let
         optionals =
@@ -4248,7 +4669,10 @@ encodeUpdateEnterpriseActionExecutionCapabilitySettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "capability", Encode.enum GitHub.Enum.ActionExecutionCapabilitySetting.toString input.capability |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseAdministratorRoleInput : UpdateEnterpriseAdministratorRoleInputRequiredFields -> (UpdateEnterpriseAdministratorRoleInputOptionalFields -> UpdateEnterpriseAdministratorRoleInputOptionalFields) -> UpdateEnterpriseAdministratorRoleInput
+buildUpdateEnterpriseAdministratorRoleInput :
+    UpdateEnterpriseAdministratorRoleInputRequiredFields
+    -> (UpdateEnterpriseAdministratorRoleInputOptionalFields -> UpdateEnterpriseAdministratorRoleInputOptionalFields)
+    -> UpdateEnterpriseAdministratorRoleInput
 buildUpdateEnterpriseAdministratorRoleInput required fillOptionals =
     let
         optionals =
@@ -4287,7 +4711,10 @@ encodeUpdateEnterpriseAdministratorRoleInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "login", Encode.string input.login |> Just ), ( "role", Encode.enum GitHub.Enum.EnterpriseAdministratorRole.toString input.role |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseAllowPrivateRepositoryForkingSettingInput : UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputRequiredFields -> (UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputOptionalFields -> UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputOptionalFields) -> UpdateEnterpriseAllowPrivateRepositoryForkingSettingInput
+buildUpdateEnterpriseAllowPrivateRepositoryForkingSettingInput :
+    UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputRequiredFields
+    -> (UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputOptionalFields -> UpdateEnterpriseAllowPrivateRepositoryForkingSettingInputOptionalFields)
+    -> UpdateEnterpriseAllowPrivateRepositoryForkingSettingInput
 buildUpdateEnterpriseAllowPrivateRepositoryForkingSettingInput required fillOptionals =
     let
         optionals =
@@ -4324,7 +4751,10 @@ encodeUpdateEnterpriseAllowPrivateRepositoryForkingSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseDefaultRepositoryPermissionSettingInput : UpdateEnterpriseDefaultRepositoryPermissionSettingInputRequiredFields -> (UpdateEnterpriseDefaultRepositoryPermissionSettingInputOptionalFields -> UpdateEnterpriseDefaultRepositoryPermissionSettingInputOptionalFields) -> UpdateEnterpriseDefaultRepositoryPermissionSettingInput
+buildUpdateEnterpriseDefaultRepositoryPermissionSettingInput :
+    UpdateEnterpriseDefaultRepositoryPermissionSettingInputRequiredFields
+    -> (UpdateEnterpriseDefaultRepositoryPermissionSettingInputOptionalFields -> UpdateEnterpriseDefaultRepositoryPermissionSettingInputOptionalFields)
+    -> UpdateEnterpriseDefaultRepositoryPermissionSettingInput
 buildUpdateEnterpriseDefaultRepositoryPermissionSettingInput required fillOptionals =
     let
         optionals =
@@ -4361,7 +4791,10 @@ encodeUpdateEnterpriseDefaultRepositoryPermissionSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseDefaultRepositoryPermissionSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput : UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputRequiredFields -> (UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputOptionalFields -> UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputOptionalFields) -> UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput
+buildUpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput :
+    UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputOptionalFields -> UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput
 buildUpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput required fillOptionals =
     let
         optionals =
@@ -4398,7 +4831,10 @@ encodeUpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanCreateRepositoriesSettingInput : UpdateEnterpriseMembersCanCreateRepositoriesSettingInputRequiredFields -> (UpdateEnterpriseMembersCanCreateRepositoriesSettingInputOptionalFields -> UpdateEnterpriseMembersCanCreateRepositoriesSettingInputOptionalFields) -> UpdateEnterpriseMembersCanCreateRepositoriesSettingInput
+buildUpdateEnterpriseMembersCanCreateRepositoriesSettingInput :
+    UpdateEnterpriseMembersCanCreateRepositoriesSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanCreateRepositoriesSettingInputOptionalFields -> UpdateEnterpriseMembersCanCreateRepositoriesSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanCreateRepositoriesSettingInput
 buildUpdateEnterpriseMembersCanCreateRepositoriesSettingInput required fillOptionals =
     let
         optionals =
@@ -4443,7 +4879,10 @@ encodeUpdateEnterpriseMembersCanCreateRepositoriesSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseMembersCanCreateRepositoriesSettingValue.toString |> Encode.optional input.settingValue ), ( "membersCanCreateRepositoriesPolicyEnabled", Encode.bool |> Encode.optional input.membersCanCreateRepositoriesPolicyEnabled ), ( "membersCanCreatePublicRepositories", Encode.bool |> Encode.optional input.membersCanCreatePublicRepositories ), ( "membersCanCreatePrivateRepositories", Encode.bool |> Encode.optional input.membersCanCreatePrivateRepositories ), ( "membersCanCreateInternalRepositories", Encode.bool |> Encode.optional input.membersCanCreateInternalRepositories ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanDeleteIssuesSettingInput : UpdateEnterpriseMembersCanDeleteIssuesSettingInputRequiredFields -> (UpdateEnterpriseMembersCanDeleteIssuesSettingInputOptionalFields -> UpdateEnterpriseMembersCanDeleteIssuesSettingInputOptionalFields) -> UpdateEnterpriseMembersCanDeleteIssuesSettingInput
+buildUpdateEnterpriseMembersCanDeleteIssuesSettingInput :
+    UpdateEnterpriseMembersCanDeleteIssuesSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanDeleteIssuesSettingInputOptionalFields -> UpdateEnterpriseMembersCanDeleteIssuesSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanDeleteIssuesSettingInput
 buildUpdateEnterpriseMembersCanDeleteIssuesSettingInput required fillOptionals =
     let
         optionals =
@@ -4480,7 +4919,10 @@ encodeUpdateEnterpriseMembersCanDeleteIssuesSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanDeleteRepositoriesSettingInput : UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputRequiredFields -> (UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputOptionalFields -> UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputOptionalFields) -> UpdateEnterpriseMembersCanDeleteRepositoriesSettingInput
+buildUpdateEnterpriseMembersCanDeleteRepositoriesSettingInput :
+    UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputOptionalFields -> UpdateEnterpriseMembersCanDeleteRepositoriesSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanDeleteRepositoriesSettingInput
 buildUpdateEnterpriseMembersCanDeleteRepositoriesSettingInput required fillOptionals =
     let
         optionals =
@@ -4517,7 +4959,10 @@ encodeUpdateEnterpriseMembersCanDeleteRepositoriesSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanInviteCollaboratorsSettingInput : UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputRequiredFields -> (UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputOptionalFields -> UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputOptionalFields) -> UpdateEnterpriseMembersCanInviteCollaboratorsSettingInput
+buildUpdateEnterpriseMembersCanInviteCollaboratorsSettingInput :
+    UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputOptionalFields -> UpdateEnterpriseMembersCanInviteCollaboratorsSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanInviteCollaboratorsSettingInput
 buildUpdateEnterpriseMembersCanInviteCollaboratorsSettingInput required fillOptionals =
     let
         optionals =
@@ -4554,7 +4999,10 @@ encodeUpdateEnterpriseMembersCanInviteCollaboratorsSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanMakePurchasesSettingInput : UpdateEnterpriseMembersCanMakePurchasesSettingInputRequiredFields -> (UpdateEnterpriseMembersCanMakePurchasesSettingInputOptionalFields -> UpdateEnterpriseMembersCanMakePurchasesSettingInputOptionalFields) -> UpdateEnterpriseMembersCanMakePurchasesSettingInput
+buildUpdateEnterpriseMembersCanMakePurchasesSettingInput :
+    UpdateEnterpriseMembersCanMakePurchasesSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanMakePurchasesSettingInputOptionalFields -> UpdateEnterpriseMembersCanMakePurchasesSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanMakePurchasesSettingInput
 buildUpdateEnterpriseMembersCanMakePurchasesSettingInput required fillOptionals =
     let
         optionals =
@@ -4591,7 +5039,10 @@ encodeUpdateEnterpriseMembersCanMakePurchasesSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseMembersCanMakePurchasesSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput : UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputRequiredFields -> (UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputOptionalFields -> UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputOptionalFields) -> UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput
+buildUpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput :
+    UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputOptionalFields -> UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput
 buildUpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput required fillOptionals =
     let
         optionals =
@@ -4628,7 +5079,10 @@ encodeUpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseMembersCanViewDependencyInsightsSettingInput : UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputRequiredFields -> (UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputOptionalFields -> UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputOptionalFields) -> UpdateEnterpriseMembersCanViewDependencyInsightsSettingInput
+buildUpdateEnterpriseMembersCanViewDependencyInsightsSettingInput :
+    UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputRequiredFields
+    -> (UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputOptionalFields -> UpdateEnterpriseMembersCanViewDependencyInsightsSettingInputOptionalFields)
+    -> UpdateEnterpriseMembersCanViewDependencyInsightsSettingInput
 buildUpdateEnterpriseMembersCanViewDependencyInsightsSettingInput required fillOptionals =
     let
         optionals =
@@ -4665,7 +5119,10 @@ encodeUpdateEnterpriseMembersCanViewDependencyInsightsSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseOrganizationProjectsSettingInput : UpdateEnterpriseOrganizationProjectsSettingInputRequiredFields -> (UpdateEnterpriseOrganizationProjectsSettingInputOptionalFields -> UpdateEnterpriseOrganizationProjectsSettingInputOptionalFields) -> UpdateEnterpriseOrganizationProjectsSettingInput
+buildUpdateEnterpriseOrganizationProjectsSettingInput :
+    UpdateEnterpriseOrganizationProjectsSettingInputRequiredFields
+    -> (UpdateEnterpriseOrganizationProjectsSettingInputOptionalFields -> UpdateEnterpriseOrganizationProjectsSettingInputOptionalFields)
+    -> UpdateEnterpriseOrganizationProjectsSettingInput
 buildUpdateEnterpriseOrganizationProjectsSettingInput required fillOptionals =
     let
         optionals =
@@ -4702,7 +5159,10 @@ encodeUpdateEnterpriseOrganizationProjectsSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseProfileInput : UpdateEnterpriseProfileInputRequiredFields -> (UpdateEnterpriseProfileInputOptionalFields -> UpdateEnterpriseProfileInputOptionalFields) -> UpdateEnterpriseProfileInput
+buildUpdateEnterpriseProfileInput :
+    UpdateEnterpriseProfileInputRequiredFields
+    -> (UpdateEnterpriseProfileInputOptionalFields -> UpdateEnterpriseProfileInputOptionalFields)
+    -> UpdateEnterpriseProfileInput
 buildUpdateEnterpriseProfileInput required fillOptionals =
     let
         optionals =
@@ -4745,7 +5205,10 @@ encodeUpdateEnterpriseProfileInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "name", Encode.string |> Encode.optional input.name ), ( "description", Encode.string |> Encode.optional input.description ), ( "websiteUrl", Encode.string |> Encode.optional input.websiteUrl ), ( "location", Encode.string |> Encode.optional input.location ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseRepositoryProjectsSettingInput : UpdateEnterpriseRepositoryProjectsSettingInputRequiredFields -> (UpdateEnterpriseRepositoryProjectsSettingInputOptionalFields -> UpdateEnterpriseRepositoryProjectsSettingInputOptionalFields) -> UpdateEnterpriseRepositoryProjectsSettingInput
+buildUpdateEnterpriseRepositoryProjectsSettingInput :
+    UpdateEnterpriseRepositoryProjectsSettingInputRequiredFields
+    -> (UpdateEnterpriseRepositoryProjectsSettingInputOptionalFields -> UpdateEnterpriseRepositoryProjectsSettingInputOptionalFields)
+    -> UpdateEnterpriseRepositoryProjectsSettingInput
 buildUpdateEnterpriseRepositoryProjectsSettingInput required fillOptionals =
     let
         optionals =
@@ -4782,7 +5245,10 @@ encodeUpdateEnterpriseRepositoryProjectsSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseTeamDiscussionsSettingInput : UpdateEnterpriseTeamDiscussionsSettingInputRequiredFields -> (UpdateEnterpriseTeamDiscussionsSettingInputOptionalFields -> UpdateEnterpriseTeamDiscussionsSettingInputOptionalFields) -> UpdateEnterpriseTeamDiscussionsSettingInput
+buildUpdateEnterpriseTeamDiscussionsSettingInput :
+    UpdateEnterpriseTeamDiscussionsSettingInputRequiredFields
+    -> (UpdateEnterpriseTeamDiscussionsSettingInputOptionalFields -> UpdateEnterpriseTeamDiscussionsSettingInputOptionalFields)
+    -> UpdateEnterpriseTeamDiscussionsSettingInput
 buildUpdateEnterpriseTeamDiscussionsSettingInput required fillOptionals =
     let
         optionals =
@@ -4819,7 +5285,10 @@ encodeUpdateEnterpriseTeamDiscussionsSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledDisabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput : UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputRequiredFields -> (UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputOptionalFields -> UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputOptionalFields) -> UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput
+buildUpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput :
+    UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputRequiredFields
+    -> (UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputOptionalFields -> UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInputOptionalFields)
+    -> UpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput
 buildUpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput required fillOptionals =
     let
         optionals =
@@ -4856,7 +5325,95 @@ encodeUpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput input =
         [ ( "enterpriseId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.enterpriseId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.EnterpriseEnabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateIssueCommentInput : UpdateIssueCommentInputRequiredFields -> (UpdateIssueCommentInputOptionalFields -> UpdateIssueCommentInputOptionalFields) -> UpdateIssueCommentInput
+buildUpdateIpAllowListEnabledSettingInput :
+    UpdateIpAllowListEnabledSettingInputRequiredFields
+    -> (UpdateIpAllowListEnabledSettingInputOptionalFields -> UpdateIpAllowListEnabledSettingInputOptionalFields)
+    -> UpdateIpAllowListEnabledSettingInput
+buildUpdateIpAllowListEnabledSettingInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { clientMutationId = Absent }
+    in
+    { ownerId = required.ownerId, settingValue = required.settingValue, clientMutationId = optionals.clientMutationId }
+
+
+type alias UpdateIpAllowListEnabledSettingInputRequiredFields =
+    { ownerId : GitHub.ScalarCodecs.Id
+    , settingValue : GitHub.Enum.IpAllowListEnabledSettingValue.IpAllowListEnabledSettingValue
+    }
+
+
+type alias UpdateIpAllowListEnabledSettingInputOptionalFields =
+    { clientMutationId : OptionalArgument String }
+
+
+{-| Type for the UpdateIpAllowListEnabledSettingInput input object.
+-}
+type alias UpdateIpAllowListEnabledSettingInput =
+    { ownerId : GitHub.ScalarCodecs.Id
+    , settingValue : GitHub.Enum.IpAllowListEnabledSettingValue.IpAllowListEnabledSettingValue
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a UpdateIpAllowListEnabledSettingInput into a value that can be used as an argument.
+-}
+encodeUpdateIpAllowListEnabledSettingInput : UpdateIpAllowListEnabledSettingInput -> Value
+encodeUpdateIpAllowListEnabledSettingInput input =
+    Encode.maybeObject
+        [ ( "ownerId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ownerId |> Just ), ( "settingValue", Encode.enum GitHub.Enum.IpAllowListEnabledSettingValue.toString input.settingValue |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildUpdateIpAllowListEntryInput :
+    UpdateIpAllowListEntryInputRequiredFields
+    -> (UpdateIpAllowListEntryInputOptionalFields -> UpdateIpAllowListEntryInputOptionalFields)
+    -> UpdateIpAllowListEntryInput
+buildUpdateIpAllowListEntryInput required fillOptionals =
+    let
+        optionals =
+            fillOptionals
+                { name = Absent, clientMutationId = Absent }
+    in
+    { ipAllowListEntryId = required.ipAllowListEntryId, allowListValue = required.allowListValue, name = optionals.name, isActive = required.isActive, clientMutationId = optionals.clientMutationId }
+
+
+type alias UpdateIpAllowListEntryInputRequiredFields =
+    { ipAllowListEntryId : GitHub.ScalarCodecs.Id
+    , allowListValue : String
+    , isActive : Bool
+    }
+
+
+type alias UpdateIpAllowListEntryInputOptionalFields =
+    { name : OptionalArgument String
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Type for the UpdateIpAllowListEntryInput input object.
+-}
+type alias UpdateIpAllowListEntryInput =
+    { ipAllowListEntryId : GitHub.ScalarCodecs.Id
+    , allowListValue : String
+    , name : OptionalArgument String
+    , isActive : Bool
+    , clientMutationId : OptionalArgument String
+    }
+
+
+{-| Encode a UpdateIpAllowListEntryInput into a value that can be used as an argument.
+-}
+encodeUpdateIpAllowListEntryInput : UpdateIpAllowListEntryInput -> Value
+encodeUpdateIpAllowListEntryInput input =
+    Encode.maybeObject
+        [ ( "ipAllowListEntryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.ipAllowListEntryId |> Just ), ( "allowListValue", Encode.string input.allowListValue |> Just ), ( "name", Encode.string |> Encode.optional input.name ), ( "isActive", Encode.bool input.isActive |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
+
+
+buildUpdateIssueCommentInput :
+    UpdateIssueCommentInputRequiredFields
+    -> (UpdateIssueCommentInputOptionalFields -> UpdateIssueCommentInputOptionalFields)
+    -> UpdateIssueCommentInput
 buildUpdateIssueCommentInput required fillOptionals =
     let
         optionals =
@@ -4893,7 +5450,10 @@ encodeUpdateIssueCommentInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateIssueInput : UpdateIssueInputRequiredFields -> (UpdateIssueInputOptionalFields -> UpdateIssueInputOptionalFields) -> UpdateIssueInput
+buildUpdateIssueInput :
+    UpdateIssueInputRequiredFields
+    -> (UpdateIssueInputOptionalFields -> UpdateIssueInputOptionalFields)
+    -> UpdateIssueInput
 buildUpdateIssueInput required fillOptionals =
     let
         optionals =
@@ -4942,7 +5502,10 @@ encodeUpdateIssueInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "title", Encode.string |> Encode.optional input.title ), ( "body", Encode.string |> Encode.optional input.body ), ( "assigneeIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.assigneeIds ), ( "milestoneId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.milestoneId ), ( "labelIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.labelIds ), ( "state", Encode.enum GitHub.Enum.IssueState.toString |> Encode.optional input.state ), ( "projectIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.projectIds ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateProjectCardInput : UpdateProjectCardInputRequiredFields -> (UpdateProjectCardInputOptionalFields -> UpdateProjectCardInputOptionalFields) -> UpdateProjectCardInput
+buildUpdateProjectCardInput :
+    UpdateProjectCardInputRequiredFields
+    -> (UpdateProjectCardInputOptionalFields -> UpdateProjectCardInputOptionalFields)
+    -> UpdateProjectCardInput
 buildUpdateProjectCardInput required fillOptionals =
     let
         optionals =
@@ -4981,7 +5544,10 @@ encodeUpdateProjectCardInput input =
         [ ( "projectCardId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectCardId |> Just ), ( "isArchived", Encode.bool |> Encode.optional input.isArchived ), ( "note", Encode.string |> Encode.optional input.note ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateProjectColumnInput : UpdateProjectColumnInputRequiredFields -> (UpdateProjectColumnInputOptionalFields -> UpdateProjectColumnInputOptionalFields) -> UpdateProjectColumnInput
+buildUpdateProjectColumnInput :
+    UpdateProjectColumnInputRequiredFields
+    -> (UpdateProjectColumnInputOptionalFields -> UpdateProjectColumnInputOptionalFields)
+    -> UpdateProjectColumnInput
 buildUpdateProjectColumnInput required fillOptionals =
     let
         optionals =
@@ -5018,7 +5584,10 @@ encodeUpdateProjectColumnInput input =
         [ ( "projectColumnId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectColumnId |> Just ), ( "name", Encode.string input.name |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateProjectInput : UpdateProjectInputRequiredFields -> (UpdateProjectInputOptionalFields -> UpdateProjectInputOptionalFields) -> UpdateProjectInput
+buildUpdateProjectInput :
+    UpdateProjectInputRequiredFields
+    -> (UpdateProjectInputOptionalFields -> UpdateProjectInputOptionalFields)
+    -> UpdateProjectInput
 buildUpdateProjectInput required fillOptionals =
     let
         optionals =
@@ -5061,7 +5630,10 @@ encodeUpdateProjectInput input =
         [ ( "projectId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.projectId |> Just ), ( "name", Encode.string |> Encode.optional input.name ), ( "body", Encode.string |> Encode.optional input.body ), ( "state", Encode.enum GitHub.Enum.ProjectState.toString |> Encode.optional input.state ), ( "public", Encode.bool |> Encode.optional input.public ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdatePullRequestInput : UpdatePullRequestInputRequiredFields -> (UpdatePullRequestInputOptionalFields -> UpdatePullRequestInputOptionalFields) -> UpdatePullRequestInput
+buildUpdatePullRequestInput :
+    UpdatePullRequestInputRequiredFields
+    -> (UpdatePullRequestInputOptionalFields -> UpdatePullRequestInputOptionalFields)
+    -> UpdatePullRequestInput
 buildUpdatePullRequestInput required fillOptionals =
     let
         optionals =
@@ -5114,7 +5686,10 @@ encodeUpdatePullRequestInput input =
         [ ( "pullRequestId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestId |> Just ), ( "baseRefName", Encode.string |> Encode.optional input.baseRefName ), ( "title", Encode.string |> Encode.optional input.title ), ( "body", Encode.string |> Encode.optional input.body ), ( "state", Encode.enum GitHub.Enum.PullRequestUpdateState.toString |> Encode.optional input.state ), ( "maintainerCanModify", Encode.bool |> Encode.optional input.maintainerCanModify ), ( "assigneeIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.assigneeIds ), ( "milestoneId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.optional input.milestoneId ), ( "labelIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.labelIds ), ( "projectIds", ((GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) |> Encode.list) |> Encode.optional input.projectIds ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdatePullRequestReviewCommentInput : UpdatePullRequestReviewCommentInputRequiredFields -> (UpdatePullRequestReviewCommentInputOptionalFields -> UpdatePullRequestReviewCommentInputOptionalFields) -> UpdatePullRequestReviewCommentInput
+buildUpdatePullRequestReviewCommentInput :
+    UpdatePullRequestReviewCommentInputRequiredFields
+    -> (UpdatePullRequestReviewCommentInputOptionalFields -> UpdatePullRequestReviewCommentInputOptionalFields)
+    -> UpdatePullRequestReviewCommentInput
 buildUpdatePullRequestReviewCommentInput required fillOptionals =
     let
         optionals =
@@ -5151,7 +5726,10 @@ encodeUpdatePullRequestReviewCommentInput input =
         [ ( "pullRequestReviewCommentId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewCommentId |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdatePullRequestReviewInput : UpdatePullRequestReviewInputRequiredFields -> (UpdatePullRequestReviewInputOptionalFields -> UpdatePullRequestReviewInputOptionalFields) -> UpdatePullRequestReviewInput
+buildUpdatePullRequestReviewInput :
+    UpdatePullRequestReviewInputRequiredFields
+    -> (UpdatePullRequestReviewInputOptionalFields -> UpdatePullRequestReviewInputOptionalFields)
+    -> UpdatePullRequestReviewInput
 buildUpdatePullRequestReviewInput required fillOptionals =
     let
         optionals =
@@ -5188,7 +5766,10 @@ encodeUpdatePullRequestReviewInput input =
         [ ( "pullRequestReviewId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.pullRequestReviewId |> Just ), ( "body", Encode.string input.body |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateRefInput : UpdateRefInputRequiredFields -> (UpdateRefInputOptionalFields -> UpdateRefInputOptionalFields) -> UpdateRefInput
+buildUpdateRefInput :
+    UpdateRefInputRequiredFields
+    -> (UpdateRefInputOptionalFields -> UpdateRefInputOptionalFields)
+    -> UpdateRefInput
 buildUpdateRefInput required fillOptionals =
     let
         optionals =
@@ -5228,7 +5809,10 @@ encodeUpdateRefInput input =
         [ ( "refId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.refId |> Just ), ( "oid", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecGitObjectID) input.oid |> Just ), ( "force", Encode.bool |> Encode.optional input.force ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateRepositoryInput : UpdateRepositoryInputRequiredFields -> (UpdateRepositoryInputOptionalFields -> UpdateRepositoryInputOptionalFields) -> UpdateRepositoryInput
+buildUpdateRepositoryInput :
+    UpdateRepositoryInputRequiredFields
+    -> (UpdateRepositoryInputOptionalFields -> UpdateRepositoryInputOptionalFields)
+    -> UpdateRepositoryInput
 buildUpdateRepositoryInput required fillOptionals =
     let
         optionals =
@@ -5277,7 +5861,10 @@ encodeUpdateRepositoryInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "name", Encode.string |> Encode.optional input.name ), ( "description", Encode.string |> Encode.optional input.description ), ( "template", Encode.bool |> Encode.optional input.template ), ( "homepageUrl", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecUri) |> Encode.optional input.homepageUrl ), ( "hasWikiEnabled", Encode.bool |> Encode.optional input.hasWikiEnabled ), ( "hasIssuesEnabled", Encode.bool |> Encode.optional input.hasIssuesEnabled ), ( "hasProjectsEnabled", Encode.bool |> Encode.optional input.hasProjectsEnabled ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateSubscriptionInput : UpdateSubscriptionInputRequiredFields -> (UpdateSubscriptionInputOptionalFields -> UpdateSubscriptionInputOptionalFields) -> UpdateSubscriptionInput
+buildUpdateSubscriptionInput :
+    UpdateSubscriptionInputRequiredFields
+    -> (UpdateSubscriptionInputOptionalFields -> UpdateSubscriptionInputOptionalFields)
+    -> UpdateSubscriptionInput
 buildUpdateSubscriptionInput required fillOptionals =
     let
         optionals =
@@ -5314,7 +5901,10 @@ encodeUpdateSubscriptionInput input =
         [ ( "subscribableId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.subscribableId |> Just ), ( "state", Encode.enum GitHub.Enum.SubscriptionState.toString input.state |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateTeamDiscussionCommentInput : UpdateTeamDiscussionCommentInputRequiredFields -> (UpdateTeamDiscussionCommentInputOptionalFields -> UpdateTeamDiscussionCommentInputOptionalFields) -> UpdateTeamDiscussionCommentInput
+buildUpdateTeamDiscussionCommentInput :
+    UpdateTeamDiscussionCommentInputRequiredFields
+    -> (UpdateTeamDiscussionCommentInputOptionalFields -> UpdateTeamDiscussionCommentInputOptionalFields)
+    -> UpdateTeamDiscussionCommentInput
 buildUpdateTeamDiscussionCommentInput required fillOptionals =
     let
         optionals =
@@ -5354,7 +5944,10 @@ encodeUpdateTeamDiscussionCommentInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "body", Encode.string input.body |> Just ), ( "bodyVersion", Encode.string |> Encode.optional input.bodyVersion ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateTeamDiscussionInput : UpdateTeamDiscussionInputRequiredFields -> (UpdateTeamDiscussionInputOptionalFields -> UpdateTeamDiscussionInputOptionalFields) -> UpdateTeamDiscussionInput
+buildUpdateTeamDiscussionInput :
+    UpdateTeamDiscussionInputRequiredFields
+    -> (UpdateTeamDiscussionInputOptionalFields -> UpdateTeamDiscussionInputOptionalFields)
+    -> UpdateTeamDiscussionInput
 buildUpdateTeamDiscussionInput required fillOptionals =
     let
         optionals =
@@ -5397,7 +5990,10 @@ encodeUpdateTeamDiscussionInput input =
         [ ( "id", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.id |> Just ), ( "title", Encode.string |> Encode.optional input.title ), ( "body", Encode.string |> Encode.optional input.body ), ( "bodyVersion", Encode.string |> Encode.optional input.bodyVersion ), ( "pinned", Encode.bool |> Encode.optional input.pinned ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUpdateTopicsInput : UpdateTopicsInputRequiredFields -> (UpdateTopicsInputOptionalFields -> UpdateTopicsInputOptionalFields) -> UpdateTopicsInput
+buildUpdateTopicsInput :
+    UpdateTopicsInputRequiredFields
+    -> (UpdateTopicsInputOptionalFields -> UpdateTopicsInputOptionalFields)
+    -> UpdateTopicsInput
 buildUpdateTopicsInput required fillOptionals =
     let
         optionals =
@@ -5434,7 +6030,9 @@ encodeUpdateTopicsInput input =
         [ ( "repositoryId", (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapEncoder .codecId) input.repositoryId |> Just ), ( "topicNames", (Encode.string |> Encode.list) input.topicNames |> Just ), ( "clientMutationId", Encode.string |> Encode.optional input.clientMutationId ) ]
 
 
-buildUserStatusOrder : UserStatusOrderRequiredFields -> UserStatusOrder
+buildUserStatusOrder :
+    UserStatusOrderRequiredFields
+    -> UserStatusOrder
 buildUserStatusOrder required =
     { field = required.field, direction = required.direction }
 

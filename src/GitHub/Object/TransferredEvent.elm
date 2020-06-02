@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferredEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferredEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -35,7 +37,9 @@ createdAt =
 
 {-| The repository this came from
 -}
-fromRepository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferredEvent
+fromRepository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferredEvent
 fromRepository object_ =
     Object.selectionForCompositeField "fromRepository" [] object_ (identity >> Decode.nullable)
 
@@ -47,6 +51,8 @@ id =
 
 {-| Identifies the issue associated with the event.
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet decodesTo GitHub.Object.TransferredEvent
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet decodesTo GitHub.Object.TransferredEvent
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ identity

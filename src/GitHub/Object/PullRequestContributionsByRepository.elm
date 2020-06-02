@@ -37,7 +37,10 @@ type alias ContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-contributions : (ContributionsOptionalArguments -> ContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContributionConnection -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository
+contributions :
+    (ContributionsOptionalArguments -> ContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository
 contributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -52,6 +55,8 @@ contributions fillInOptionals object_ =
 
 {-| The repository in which the pull requests were opened.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

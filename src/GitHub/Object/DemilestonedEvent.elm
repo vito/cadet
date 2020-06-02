@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.DemilestonedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DemilestonedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -47,6 +49,8 @@ milestoneTitle =
 
 {-| Object referenced by event.
 -}
-subject : SelectionSet decodesTo GitHub.Union.MilestoneItem -> SelectionSet decodesTo GitHub.Object.DemilestonedEvent
+subject :
+    SelectionSet decodesTo GitHub.Union.MilestoneItem
+    -> SelectionSet decodesTo GitHub.Object.DemilestonedEvent
 subject object_ =
     Object.selectionForCompositeField "subject" [] object_ identity

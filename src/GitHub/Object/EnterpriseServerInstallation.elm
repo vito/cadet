@@ -77,7 +77,10 @@ type alias UserAccountsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userAccounts : (UserAccountsOptionalArguments -> UserAccountsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
+userAccounts :
+    (UserAccountsOptionalArguments -> UserAccountsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
 userAccounts fillInOptionals object_ =
     let
         filledInOptionals =
@@ -108,7 +111,10 @@ type alias UserAccountsUploadsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userAccountsUploads : (UserAccountsUploadsOptionalArguments -> UserAccountsUploadsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUploadConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
+userAccountsUploads :
+    (UserAccountsUploadsOptionalArguments -> UserAccountsUploadsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUploadConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
 userAccountsUploads fillInOptionals object_ =
     let
         filledInOptionals =

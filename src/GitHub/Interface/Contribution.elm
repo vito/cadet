@@ -36,7 +36,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Contribution
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "CreatedCommitContribution" selections.onCreatedCommitContribution
         , Object.buildFragment "CreatedIssueContribution" selections.onCreatedIssueContribution
         , Object.buildFragment "CreatedPullRequestContribution" selections.onCreatedPullRequestContribution
@@ -47,7 +47,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -94,6 +94,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Interface.Contribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Interface.Contribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

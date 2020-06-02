@@ -33,7 +33,9 @@ resourcePath =
 
 {-| The topic.
 -}
-topic : SelectionSet decodesTo GitHub.Object.Topic -> SelectionSet decodesTo GitHub.Object.RepositoryTopic
+topic :
+    SelectionSet decodesTo GitHub.Object.Topic
+    -> SelectionSet decodesTo GitHub.Object.RepositoryTopic
 topic object_ =
     Object.selectionForCompositeField "topic" [] object_ identity
 

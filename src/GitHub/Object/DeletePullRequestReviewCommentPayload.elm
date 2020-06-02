@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The pull request review the deleted comment belonged to.
 -}
-pullRequestReview : SelectionSet decodesTo GitHub.Object.PullRequestReview -> SelectionSet (Maybe decodesTo) GitHub.Object.DeletePullRequestReviewCommentPayload
+pullRequestReview :
+    SelectionSet decodesTo GitHub.Object.PullRequestReview
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeletePullRequestReviewCommentPayload
 pullRequestReview object_ =
     Object.selectionForCompositeField "pullRequestReview" [] object_ (identity >> Decode.nullable)

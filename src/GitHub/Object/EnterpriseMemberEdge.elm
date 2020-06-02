@@ -35,6 +35,8 @@ isUnlicensed =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Union.EnterpriseMember -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseMemberEdge
+node :
+    SelectionSet decodesTo GitHub.Union.EnterpriseMember
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseMemberEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

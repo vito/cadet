@@ -33,14 +33,14 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.ProjectOwner
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "Repository" selections.onRepository
         , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -65,7 +65,10 @@ type alias ProjectRequiredArguments =
   - number - The project number to find.
 
 -}
-project : ProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.Project -> SelectionSet (Maybe decodesTo) GitHub.Interface.ProjectOwner
+project :
+    ProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.ProjectOwner
 project requiredArgs object_ =
     Object.selectionForCompositeField "project" [ Argument.required "number" requiredArgs.number Encode.int ] object_ (identity >> Decode.nullable)
 
@@ -92,7 +95,10 @@ type alias ProjectsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-projects : (ProjectsOptionalArguments -> ProjectsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectConnection -> SelectionSet decodesTo GitHub.Interface.ProjectOwner
+projects :
+    (ProjectsOptionalArguments -> ProjectsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectConnection
+    -> SelectionSet decodesTo GitHub.Interface.ProjectOwner
 projects fillInOptionals object_ =
     let
         filledInOptionals =

@@ -27,12 +27,19 @@ cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
-node : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.RepositoryCollaboratorEdge
+node :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.RepositoryCollaboratorEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ identity
 
 
 {-| The permission the user has on the repository.
+
+**Upcoming Change on 2020-10-01 UTC**
+**Description:** Type for `permission` will change from `RepositoryPermission!` to `String`.
+**Reason:** This field may return additional values
+
 -}
 permission : SelectionSet GitHub.Enum.RepositoryPermission.RepositoryPermission GitHub.Object.RepositoryCollaboratorEdge
 permission =
@@ -41,6 +48,8 @@ permission =
 
 {-| A list of sources for the user's access to the repository.
 -}
-permissionSources : SelectionSet decodesTo GitHub.Object.PermissionSource -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.RepositoryCollaboratorEdge
+permissionSources :
+    SelectionSet decodesTo GitHub.Object.PermissionSource
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.RepositoryCollaboratorEdge
 permissionSources object_ =
     Object.selectionForCompositeField "permissionSources" [] object_ (identity >> Decode.list >> Decode.nullable)

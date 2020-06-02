@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.DeploymentEnvironmentChangedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeploymentEnvironmentChangedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -35,7 +37,9 @@ createdAt =
 
 {-| The deployment status that updated the deployment environment.
 -}
-deploymentStatus : SelectionSet decodesTo GitHub.Object.DeploymentStatus -> SelectionSet decodesTo GitHub.Object.DeploymentEnvironmentChangedEvent
+deploymentStatus :
+    SelectionSet decodesTo GitHub.Object.DeploymentStatus
+    -> SelectionSet decodesTo GitHub.Object.DeploymentEnvironmentChangedEvent
 deploymentStatus object_ =
     Object.selectionForCompositeField "deploymentStatus" [] object_ identity
 
@@ -47,6 +51,8 @@ id =
 
 {-| PullRequest referenced by event.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.DeploymentEnvironmentChangedEvent
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.DeploymentEnvironmentChangedEvent
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity

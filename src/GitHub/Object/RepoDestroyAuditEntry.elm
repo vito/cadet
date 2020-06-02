@@ -30,7 +30,9 @@ action =
 
 {-| The user who initiated the action
 -}
-actor : SelectionSet decodesTo GitHub.Union.AuditEntryActor -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
+actor :
+    SelectionSet decodesTo GitHub.Union.AuditEntryActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -44,7 +46,9 @@ actorIp =
 
 {-| A readable representation of the actor's location
 -}
-actorLocation : SelectionSet decodesTo GitHub.Object.ActorLocation -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
+actorLocation :
+    SelectionSet decodesTo GitHub.Object.ActorLocation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
 actorLocation object_ =
     Object.selectionForCompositeField "actorLocation" [] object_ (identity >> Decode.nullable)
 
@@ -91,7 +95,9 @@ operationType =
 
 {-| The Organization associated with the Audit Entry.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
@@ -119,7 +125,9 @@ organizationUrl =
 
 {-| The repository associated with the action
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)
 
@@ -147,7 +155,9 @@ repositoryUrl =
 
 {-| The user affected by the action
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepoDestroyAuditEntry
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
 

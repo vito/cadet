@@ -36,7 +36,9 @@ hasTwoFactorEnabled =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.OrganizationMemberEdge
+node :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrganizationMemberEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)
 

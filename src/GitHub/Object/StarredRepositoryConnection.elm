@@ -21,21 +21,34 @@ import Json.Decode as Decode
 
 {-| A list of edges.
 -}
-edges : SelectionSet decodesTo GitHub.Object.StarredRepositoryEdge -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.StarredRepositoryConnection
+edges :
+    SelectionSet decodesTo GitHub.Object.StarredRepositoryEdge
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.StarredRepositoryConnection
 edges object_ =
     Object.selectionForCompositeField "edges" [] object_ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
 
 
+{-| Is the list of stars for this user truncated? This is true for users that have many stars.
+-}
+isOverLimit : SelectionSet Bool GitHub.Object.StarredRepositoryConnection
+isOverLimit =
+    Object.selectionForField "Bool" "isOverLimit" [] Decode.bool
+
+
 {-| A list of nodes.
 -}
-nodes : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.StarredRepositoryConnection
+nodes :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.StarredRepositoryConnection
 nodes object_ =
     Object.selectionForCompositeField "nodes" [] object_ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
 
 
 {-| Information to aid in pagination.
 -}
-pageInfo : SelectionSet decodesTo GitHub.Object.PageInfo -> SelectionSet decodesTo GitHub.Object.StarredRepositoryConnection
+pageInfo :
+    SelectionSet decodesTo GitHub.Object.PageInfo
+    -> SelectionSet decodesTo GitHub.Object.StarredRepositoryConnection
 pageInfo object_ =
     Object.selectionForCompositeField "pageInfo" [] object_ identity
 

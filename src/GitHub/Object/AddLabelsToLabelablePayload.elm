@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The item that was labeled.
 -}
-labelable : SelectionSet decodesTo GitHub.Interface.Labelable -> SelectionSet (Maybe decodesTo) GitHub.Object.AddLabelsToLabelablePayload
+labelable :
+    SelectionSet decodesTo GitHub.Interface.Labelable
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AddLabelsToLabelablePayload
 labelable object_ =
     Object.selectionForCompositeField "labelable" [] object_ (identity >> Decode.nullable)

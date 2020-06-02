@@ -21,14 +21,18 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Object that was reopened.
 -}
-closable : SelectionSet decodesTo GitHub.Interface.Closable -> SelectionSet decodesTo GitHub.Object.ReopenedEvent
+closable :
+    SelectionSet decodesTo GitHub.Interface.Closable
+    -> SelectionSet decodesTo GitHub.Object.ReopenedEvent
 closable object_ =
     Object.selectionForCompositeField "closable" [] object_ identity
 

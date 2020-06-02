@@ -35,7 +35,10 @@ type alias BranchProtectionRuleConflictsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-branchProtectionRuleConflicts : (BranchProtectionRuleConflictsOptionalArguments -> BranchProtectionRuleConflictsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.BranchProtectionRuleConflictConnection -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+branchProtectionRuleConflicts :
+    (BranchProtectionRuleConflictsOptionalArguments -> BranchProtectionRuleConflictsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.BranchProtectionRuleConflictConnection
+    -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
 branchProtectionRuleConflicts fillInOptionals object_ =
     let
         filledInOptionals =
@@ -50,7 +53,9 @@ branchProtectionRuleConflicts fillInOptionals object_ =
 
 {-| The actor who created this branch protection rule.
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRule
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRule
 creator object_ =
     Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
 
@@ -82,7 +87,8 @@ isAdminEnforced =
 
 
 type alias MatchingRefsOptionalArguments =
-    { after : OptionalArgument String
+    { query : OptionalArgument String
+    , after : OptionalArgument String
     , before : OptionalArgument String
     , first : OptionalArgument Int
     , last : OptionalArgument Int
@@ -91,20 +97,24 @@ type alias MatchingRefsOptionalArguments =
 
 {-| Repository refs that are protected by this rule
 
+  - query - Filters refs with query on name
   - after - Returns the elements in the list that come after the specified cursor.
   - before - Returns the elements in the list that come before the specified cursor.
   - first - Returns the first _n_ elements from the list.
   - last - Returns the last _n_ elements from the list.
 
 -}
-matchingRefs : (MatchingRefsOptionalArguments -> MatchingRefsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RefConnection -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+matchingRefs :
+    (MatchingRefsOptionalArguments -> MatchingRefsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RefConnection
+    -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
 matchingRefs fillInOptionals object_ =
     let
         filledInOptionals =
-            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent }
+            fillInOptionals { query = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
 
         optionalArgs =
-            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+            [ Argument.optional "query" filledInOptionals.query Encode.string, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "matchingRefs" optionalArgs object_ identity
@@ -133,7 +143,10 @@ type alias PushAllowancesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pushAllowances : (PushAllowancesOptionalArguments -> PushAllowancesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PushAllowanceConnection -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+pushAllowances :
+    (PushAllowancesOptionalArguments -> PushAllowancesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PushAllowanceConnection
+    -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
 pushAllowances fillInOptionals object_ =
     let
         filledInOptionals =
@@ -148,7 +161,9 @@ pushAllowances fillInOptionals object_ =
 
 {-| The repository associated with this branch protection rule.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRule
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRule
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)
 
@@ -232,7 +247,10 @@ type alias ReviewDismissalAllowancesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-reviewDismissalAllowances : (ReviewDismissalAllowancesOptionalArguments -> ReviewDismissalAllowancesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReviewDismissalAllowanceConnection -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+reviewDismissalAllowances :
+    (ReviewDismissalAllowancesOptionalArguments -> ReviewDismissalAllowancesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReviewDismissalAllowanceConnection
+    -> SelectionSet decodesTo GitHub.Object.BranchProtectionRule
 reviewDismissalAllowances fillInOptionals object_ =
     let
         filledInOptionals =

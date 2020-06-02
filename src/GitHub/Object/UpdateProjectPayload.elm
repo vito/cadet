@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The updated project.
 -}
-project : SelectionSet decodesTo GitHub.Object.Project -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateProjectPayload
+project :
+    SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateProjectPayload
 project object_ =
     Object.selectionForCompositeField "project" [] object_ (identity >> Decode.nullable)

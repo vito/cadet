@@ -88,7 +88,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.AuditEntry
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "MembersCanDeleteReposClearAuditEntry" selections.onMembersCanDeleteReposClearAuditEntry
         , Object.buildFragment "MembersCanDeleteReposDisableAuditEntry" selections.onMembersCanDeleteReposDisableAuditEntry
         , Object.buildFragment "MembersCanDeleteReposEnableAuditEntry" selections.onMembersCanDeleteReposEnableAuditEntry
@@ -150,7 +150,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -225,7 +225,9 @@ action =
 
 {-| The user who initiated the action
 -}
-actor : SelectionSet decodesTo GitHub.Union.AuditEntryActor -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
+actor :
+    SelectionSet decodesTo GitHub.Union.AuditEntryActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -239,7 +241,9 @@ actorIp =
 
 {-| A readable representation of the actor's location
 -}
-actorLocation : SelectionSet decodesTo GitHub.Object.ActorLocation -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
+actorLocation :
+    SelectionSet decodesTo GitHub.Object.ActorLocation
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
 actorLocation object_ =
     Object.selectionForCompositeField "actorLocation" [] object_ (identity >> Decode.nullable)
 
@@ -281,7 +285,9 @@ operationType =
 
 {-| The user affected by the action
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.AuditEntry
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
 

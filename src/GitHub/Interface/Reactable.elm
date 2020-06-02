@@ -38,7 +38,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Reactable
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "CommitComment" selections.onCommitComment
         , Object.buildFragment "Issue" selections.onIssue
         , Object.buildFragment "IssueComment" selections.onIssueComment
@@ -50,7 +50,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -80,7 +80,9 @@ id =
 
 {-| A list of reactions grouped by content left on the subject.
 -}
-reactionGroups : SelectionSet decodesTo GitHub.Object.ReactionGroup -> SelectionSet (Maybe (List decodesTo)) GitHub.Interface.Reactable
+reactionGroups :
+    SelectionSet decodesTo GitHub.Object.ReactionGroup
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Interface.Reactable
 reactionGroups object_ =
     Object.selectionForCompositeField "reactionGroups" [] object_ (identity >> Decode.list >> Decode.nullable)
 
@@ -105,7 +107,10 @@ type alias ReactionsOptionalArguments =
   - orderBy - Allows specifying the order in which reactions are returned.
 
 -}
-reactions : (ReactionsOptionalArguments -> ReactionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactionConnection -> SelectionSet decodesTo GitHub.Interface.Reactable
+reactions :
+    (ReactionsOptionalArguments -> ReactionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactionConnection
+    -> SelectionSet decodesTo GitHub.Interface.Reactable
 reactions fillInOptionals object_ =
     let
         filledInOptionals =

@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The issue that was transferred
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferIssuePayload
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TransferIssuePayload
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ (identity >> Decode.nullable)

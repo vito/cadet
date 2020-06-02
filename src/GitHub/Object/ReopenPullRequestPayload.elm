@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The pull request that was reopened.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenPullRequestPayload
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenPullRequestPayload
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ (identity >> Decode.nullable)

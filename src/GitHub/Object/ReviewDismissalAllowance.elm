@@ -21,14 +21,18 @@ import Json.Decode as Decode
 
 {-| The actor that can dismiss.
 -}
-actor : SelectionSet decodesTo GitHub.Union.ReviewDismissalAllowanceActor -> SelectionSet (Maybe decodesTo) GitHub.Object.ReviewDismissalAllowance
+actor :
+    SelectionSet decodesTo GitHub.Union.ReviewDismissalAllowanceActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReviewDismissalAllowance
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the branch protection rule associated with the allowed user or team.
 -}
-branchProtectionRule : SelectionSet decodesTo GitHub.Object.BranchProtectionRule -> SelectionSet (Maybe decodesTo) GitHub.Object.ReviewDismissalAllowance
+branchProtectionRule :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReviewDismissalAllowance
 branchProtectionRule object_ =
     Object.selectionForCompositeField "branchProtectionRule" [] object_ (identity >> Decode.nullable)
 

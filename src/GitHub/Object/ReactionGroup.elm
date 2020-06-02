@@ -36,7 +36,9 @@ createdAt =
 
 {-| The subject that was reacted to.
 -}
-subject : SelectionSet decodesTo GitHub.Interface.Reactable -> SelectionSet decodesTo GitHub.Object.ReactionGroup
+subject :
+    SelectionSet decodesTo GitHub.Interface.Reactable
+    -> SelectionSet decodesTo GitHub.Object.ReactionGroup
 subject object_ =
     Object.selectionForCompositeField "subject" [] object_ identity
 
@@ -57,7 +59,10 @@ type alias UsersOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-users : (UsersOptionalArguments -> UsersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactingUserConnection -> SelectionSet decodesTo GitHub.Object.ReactionGroup
+users :
+    (UsersOptionalArguments -> UsersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactingUserConnection
+    -> SelectionSet decodesTo GitHub.Object.ReactionGroup
 users fillInOptionals object_ =
     let
         filledInOptionals =

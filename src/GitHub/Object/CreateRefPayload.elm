@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The newly created ref.
 -}
-ref : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateRefPayload
+ref :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateRefPayload
 ref object_ =
     Object.selectionForCompositeField "ref" [] object_ (identity >> Decode.nullable)

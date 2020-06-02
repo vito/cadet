@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The author of the release
 -}
-author : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.Release
+author :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Release
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -98,7 +100,10 @@ type alias ReleaseAssetsOptionalArguments =
   - name - A list of names to filter the assets by.
 
 -}
-releaseAssets : (ReleaseAssetsOptionalArguments -> ReleaseAssetsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReleaseAssetConnection -> SelectionSet decodesTo GitHub.Object.Release
+releaseAssets :
+    (ReleaseAssetsOptionalArguments -> ReleaseAssetsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReleaseAssetConnection
+    -> SelectionSet decodesTo GitHub.Object.Release
 releaseAssets fillInOptionals object_ =
     let
         filledInOptionals =
@@ -127,7 +132,9 @@ type alias ShortDescriptionHTMLOptionalArguments =
   - limit - How many characters to return.
 
 -}
-shortDescriptionHTML : (ShortDescriptionHTMLOptionalArguments -> ShortDescriptionHTMLOptionalArguments) -> SelectionSet (Maybe GitHub.ScalarCodecs.Html) GitHub.Object.Release
+shortDescriptionHTML :
+    (ShortDescriptionHTMLOptionalArguments -> ShortDescriptionHTMLOptionalArguments)
+    -> SelectionSet (Maybe GitHub.ScalarCodecs.Html) GitHub.Object.Release
 shortDescriptionHTML fillInOptionals =
     let
         filledInOptionals =
@@ -142,7 +149,9 @@ shortDescriptionHTML fillInOptionals =
 
 {-| The Git tag the release points to
 -}
-tag : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.Release
+tag :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Release
 tag object_ =
     Object.selectionForCompositeField "tag" [] object_ (identity >> Decode.nullable)
 

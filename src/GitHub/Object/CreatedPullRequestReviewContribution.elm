@@ -37,21 +37,27 @@ occurredAt =
 
 {-| The pull request the user reviewed.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| The review the user left on the pull request.
 -}
-pullRequestReview : SelectionSet decodesTo GitHub.Object.PullRequestReview -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
+pullRequestReview :
+    SelectionSet decodesTo GitHub.Object.PullRequestReview
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
 pullRequestReview object_ =
     Object.selectionForCompositeField "pullRequestReview" [] object_ identity
 
 
 {-| The repository containing the pull request that the user reviewed.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -72,6 +78,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The team associated with the action
 -}
-team : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipTeamAuditEntryData
+team :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipTeamAuditEntryData
 team object_ =
     Object.selectionForCompositeField "team" [] object_ (identity >> Decode.nullable)
 

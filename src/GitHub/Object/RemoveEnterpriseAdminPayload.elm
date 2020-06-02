@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The user who was removed as an administrator.
 -}
-admin : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
+admin :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
 admin object_ =
     Object.selectionForCompositeField "admin" [] object_ (identity >> Decode.nullable)
 
@@ -35,7 +37,9 @@ clientMutationId =
 
 {-| The updated enterprise.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 
@@ -49,6 +53,8 @@ message =
 
 {-| The viewer performing the mutation.
 -}
-viewer : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
+viewer :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseAdminPayload
 viewer object_ =
     Object.selectionForCompositeField "viewer" [] object_ (identity >> Decode.nullable)

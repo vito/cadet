@@ -19,6 +19,15 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Identifies the actor who performed the event.
+-}
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.MergePullRequestPayload
+actor object_ =
+    Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
+
+
 {-| A unique identifier for the client performing the mutation.
 -}
 clientMutationId : SelectionSet (Maybe String) GitHub.Object.MergePullRequestPayload
@@ -28,6 +37,8 @@ clientMutationId =
 
 {-| The pull request that was merged.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.MergePullRequestPayload
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.MergePullRequestPayload
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ (identity >> Decode.nullable)

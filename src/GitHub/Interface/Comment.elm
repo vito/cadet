@@ -39,7 +39,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Comment
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "CommitComment" selections.onCommitComment
         , Object.buildFragment "GistComment" selections.onGistComment
         , Object.buildFragment "Issue" selections.onIssue
@@ -52,7 +52,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -71,7 +71,9 @@ maybeFragments =
 
 {-| The actor who authored the comment.
 -}
-author : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
+author :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -120,7 +122,9 @@ createdViaEmail =
 
 {-| The actor who edited the comment.
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 
@@ -174,7 +178,10 @@ type alias UserContentEditsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userContentEdits : (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
+userContentEdits :
+    (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.Comment
 userContentEdits fillInOptionals object_ =
     let
         filledInOptionals =

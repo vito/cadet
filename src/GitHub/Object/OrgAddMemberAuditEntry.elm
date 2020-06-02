@@ -30,7 +30,9 @@ action =
 
 {-| The user who initiated the action
 -}
-actor : SelectionSet decodesTo GitHub.Union.AuditEntryActor -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
+actor :
+    SelectionSet decodesTo GitHub.Union.AuditEntryActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -44,7 +46,9 @@ actorIp =
 
 {-| A readable representation of the actor's location
 -}
-actorLocation : SelectionSet decodesTo GitHub.Object.ActorLocation -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
+actorLocation :
+    SelectionSet decodesTo GitHub.Object.ActorLocation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
 actorLocation object_ =
     Object.selectionForCompositeField "actorLocation" [] object_ (identity >> Decode.nullable)
 
@@ -91,7 +95,9 @@ operationType =
 
 {-| The Organization associated with the Audit Entry.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
@@ -126,7 +132,9 @@ permission =
 
 {-| The user affected by the action
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgAddMemberAuditEntry
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
 

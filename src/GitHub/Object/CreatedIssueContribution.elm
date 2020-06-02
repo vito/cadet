@@ -30,7 +30,9 @@ isRestricted =
 
 {-| The issue that was opened.
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet decodesTo GitHub.Object.CreatedIssueContribution
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet decodesTo GitHub.Object.CreatedIssueContribution
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ identity
 
@@ -58,6 +60,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.CreatedIssueContribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.CreatedIssueContribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

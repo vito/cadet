@@ -37,7 +37,9 @@ occurredAt =
 
 {-| The pull request that was opened.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
@@ -58,6 +60,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

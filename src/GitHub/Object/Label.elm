@@ -78,7 +78,10 @@ type alias IssuesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-issues : (IssuesOptionalArguments -> IssuesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueConnection -> SelectionSet decodesTo GitHub.Object.Label
+issues :
+    (IssuesOptionalArguments -> IssuesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueConnection
+    -> SelectionSet decodesTo GitHub.Object.Label
 issues fillInOptionals object_ =
     let
         filledInOptionals =
@@ -124,7 +127,10 @@ type alias PullRequestsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pullRequests : (PullRequestsOptionalArguments -> PullRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestConnection -> SelectionSet decodesTo GitHub.Object.Label
+pullRequests :
+    (PullRequestsOptionalArguments -> PullRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestConnection
+    -> SelectionSet decodesTo GitHub.Object.Label
 pullRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -139,7 +145,9 @@ pullRequests fillInOptionals object_ =
 
 {-| The repository associated with this label.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Label
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Label
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 

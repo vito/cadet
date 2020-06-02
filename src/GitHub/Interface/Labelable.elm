@@ -31,13 +31,13 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Labelable
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Issue" selections.onIssue
         , Object.buildFragment "PullRequest" selections.onPullRequest
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -48,7 +48,8 @@ maybeFragments =
 
 
 type alias LabelsOptionalArguments =
-    { after : OptionalArgument String
+    { orderBy : OptionalArgument GitHub.InputObject.LabelOrder
+    , after : OptionalArgument String
     , before : OptionalArgument String
     , first : OptionalArgument Int
     , last : OptionalArgument Int
@@ -57,20 +58,24 @@ type alias LabelsOptionalArguments =
 
 {-| A list of labels associated with the object.
 
+  - orderBy - Ordering options for labels returned from the connection.
   - after - Returns the elements in the list that come after the specified cursor.
   - before - Returns the elements in the list that come before the specified cursor.
   - first - Returns the first _n_ elements from the list.
   - last - Returns the last _n_ elements from the list.
 
 -}
-labels : (LabelsOptionalArguments -> LabelsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.LabelConnection -> SelectionSet (Maybe decodesTo) GitHub.Interface.Labelable
+labels :
+    (LabelsOptionalArguments -> LabelsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.LabelConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.Labelable
 labels fillInOptionals object_ =
     let
         filledInOptionals =
-            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent }
+            fillInOptionals { orderBy = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
 
         optionalArgs =
-            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+            [ Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeLabelOrder, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "labels" optionalArgs object_ (identity >> Decode.nullable)

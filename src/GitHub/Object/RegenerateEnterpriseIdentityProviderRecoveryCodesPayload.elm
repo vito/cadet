@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The identity provider for the enterprise.
 -}
-identityProvider : SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider -> SelectionSet (Maybe decodesTo) GitHub.Object.RegenerateEnterpriseIdentityProviderRecoveryCodesPayload
+identityProvider :
+    SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegenerateEnterpriseIdentityProviderRecoveryCodesPayload
 identityProvider object_ =
     Object.selectionForCompositeField "identityProvider" [] object_ (identity >> Decode.nullable)

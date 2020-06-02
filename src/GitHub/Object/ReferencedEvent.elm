@@ -21,21 +21,27 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.ReferencedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReferencedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the commit associated with the 'referenced' event.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.ReferencedEvent
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReferencedEvent
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the repository associated with the 'referenced' event.
 -}
-commitRepository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.ReferencedEvent
+commitRepository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.ReferencedEvent
 commitRepository object_ =
     Object.selectionForCompositeField "commitRepository" [] object_ identity
 
@@ -68,6 +74,8 @@ isDirectReference =
 
 {-| Object referenced by event.
 -}
-subject : SelectionSet decodesTo GitHub.Union.ReferencedSubject -> SelectionSet decodesTo GitHub.Object.ReferencedEvent
+subject :
+    SelectionSet decodesTo GitHub.Union.ReferencedSubject
+    -> SelectionSet decodesTo GitHub.Object.ReferencedEvent
 subject object_ =
     Object.selectionForCompositeField "subject" [] object_ identity

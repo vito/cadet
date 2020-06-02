@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The GitHub App this listing represents.
 -}
-app : SelectionSet decodesTo GitHub.Object.App -> SelectionSet (Maybe decodesTo) GitHub.Object.MarketplaceListing
+app :
+    SelectionSet decodesTo GitHub.Object.App
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.MarketplaceListing
 app object_ =
     Object.selectionForCompositeField "app" [] object_ (identity >> Decode.nullable)
 
@@ -82,13 +84,6 @@ fullDescriptionHTML =
     Object.selectionForField "ScalarCodecs.Html" "fullDescriptionHTML" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecHtml |> .decoder)
 
 
-{-| Whether this listing has been submitted for review from GitHub for approval to be displayed in the Marketplace.
--}
-hasApprovalBeenRequested : SelectionSet Bool GitHub.Object.MarketplaceListing
-hasApprovalBeenRequested =
-    Object.selectionForField "Bool" "hasApprovalBeenRequested" [] Decode.bool
-
-
 {-| Does this listing have any plans with a free trial?
 -}
 hasPublishedFreeTrialPlans : SelectionSet Bool GitHub.Object.MarketplaceListing
@@ -136,25 +131,11 @@ installedForViewer =
     Object.selectionForField "Bool" "installedForViewer" [] Decode.bool
 
 
-{-| Whether this listing has been approved for display in the Marketplace.
--}
-isApproved : SelectionSet Bool GitHub.Object.MarketplaceListing
-isApproved =
-    Object.selectionForField "Bool" "isApproved" [] Decode.bool
-
-
 {-| Whether this listing has been removed from the Marketplace.
 -}
 isArchived : SelectionSet Bool GitHub.Object.MarketplaceListing
 isArchived =
     Object.selectionForField "Bool" "isArchived" [] Decode.bool
-
-
-{-| Whether this listing has been removed from the Marketplace.
--}
-isDelisted : SelectionSet Bool GitHub.Object.MarketplaceListing
-isDelisted =
-    Object.selectionForField "Bool" "isDelisted" [] Decode.bool
 
 
 {-| Whether this listing is still an editable draft that has not been submitted for review and is not publicly visible in the Marketplace.
@@ -236,7 +217,9 @@ type alias LogoUrlOptionalArguments =
   - size - The size in pixels of the resulting square image.
 
 -}
-logoUrl : (LogoUrlOptionalArguments -> LogoUrlOptionalArguments) -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.MarketplaceListing
+logoUrl :
+    (LogoUrlOptionalArguments -> LogoUrlOptionalArguments)
+    -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.MarketplaceListing
 logoUrl fillInOptionals =
     let
         filledInOptionals =
@@ -272,7 +255,9 @@ pricingUrl =
 
 {-| The category that best describes the listing.
 -}
-primaryCategory : SelectionSet decodesTo GitHub.Object.MarketplaceCategory -> SelectionSet decodesTo GitHub.Object.MarketplaceListing
+primaryCategory :
+    SelectionSet decodesTo GitHub.Object.MarketplaceCategory
+    -> SelectionSet decodesTo GitHub.Object.MarketplaceListing
 primaryCategory object_ =
     Object.selectionForCompositeField "primaryCategory" [] object_ identity
 
@@ -300,7 +285,9 @@ screenshotUrls =
 
 {-| An alternate category that describes the listing.
 -}
-secondaryCategory : SelectionSet decodesTo GitHub.Object.MarketplaceCategory -> SelectionSet (Maybe decodesTo) GitHub.Object.MarketplaceListing
+secondaryCategory :
+    SelectionSet decodesTo GitHub.Object.MarketplaceCategory
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.MarketplaceListing
 secondaryCategory object_ =
     Object.selectionForCompositeField "secondaryCategory" [] object_ (identity >> Decode.nullable)
 

@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Object.IssueOrPullRequestEdge exposing (..)
+module GitHub.Object.SubmoduleEdge exposing (..)
 
 import GitHub.InputObject
 import GitHub.Interface
@@ -21,13 +21,15 @@ import Json.Decode as Decode
 
 {-| A cursor for use in pagination.
 -}
-cursor : SelectionSet String GitHub.Object.IssueOrPullRequestEdge
+cursor : SelectionSet String GitHub.Object.SubmoduleEdge
 cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Union.IssueOrPullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.IssueOrPullRequestEdge
+node :
+    SelectionSet decodesTo GitHub.Object.Submodule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.SubmoduleEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

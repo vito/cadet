@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| A list of edges.
 -}
-edges : SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsEdge -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.PullRequestTimelineItemsConnection
+edges :
+    SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsEdge
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.PullRequestTimelineItemsConnection
 edges object_ =
     Object.selectionForCompositeField "edges" [] object_ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
 
@@ -35,7 +37,9 @@ filteredCount =
 
 {-| A list of nodes.
 -}
-nodes : SelectionSet decodesTo GitHub.Union.PullRequestTimelineItems -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.PullRequestTimelineItemsConnection
+nodes :
+    SelectionSet decodesTo GitHub.Union.PullRequestTimelineItems
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.PullRequestTimelineItemsConnection
 nodes object_ =
     Object.selectionForCompositeField "nodes" [] object_ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)
 
@@ -49,7 +53,9 @@ pageCount =
 
 {-| Information to aid in pagination.
 -}
-pageInfo : SelectionSet decodesTo GitHub.Object.PageInfo -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsConnection
+pageInfo :
+    SelectionSet decodesTo GitHub.Object.PageInfo
+    -> SelectionSet decodesTo GitHub.Object.PullRequestTimelineItemsConnection
 pageInfo object_ =
     Object.selectionForCompositeField "pageInfo" [] object_ identity
 

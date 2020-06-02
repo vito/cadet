@@ -37,7 +37,9 @@ occurredAt =
 
 {-| The repository that was created.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContribution
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContribution
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -58,6 +60,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

@@ -29,7 +29,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.StatusContext
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.StatusContext
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -44,7 +46,9 @@ avatarUrl fillInOptionals =
 
 {-| This commit this status context is attached to.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.StatusContext
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.StatusContext
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ (identity >> Decode.nullable)
 
@@ -65,7 +69,9 @@ createdAt =
 
 {-| The actor who created this status context.
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.StatusContext
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.StatusContext
 creator object_ =
     Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
 

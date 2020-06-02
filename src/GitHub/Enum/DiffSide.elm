@@ -2,46 +2,54 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Enum.EnterpriseOrderField exposing (..)
+module GitHub.Enum.DiffSide exposing (..)
 
 import Json.Decode as Decode exposing (Decoder)
 
 
-{-| Properties by which enterprise connections can be ordered.
+{-| The possible sides of a diff.
 
-  - Name - Order enterprises by name
+  - Left - The left side of the diff.
+  - Right - The right side of the diff.
 
 -}
-type EnterpriseOrderField
-    = Name
+type DiffSide
+    = Left
+    | Right
 
 
-list : List EnterpriseOrderField
+list : List DiffSide
 list =
-    [ Name ]
+    [ Left, Right ]
 
 
-decoder : Decoder EnterpriseOrderField
+decoder : Decoder DiffSide
 decoder =
     Decode.string
         |> Decode.andThen
             (\string ->
                 case string of
-                    "NAME" ->
-                        Decode.succeed Name
+                    "LEFT" ->
+                        Decode.succeed Left
+
+                    "RIGHT" ->
+                        Decode.succeed Right
 
                     _ ->
-                        Decode.fail ("Invalid EnterpriseOrderField type, " ++ string ++ " try re-running the @dillonkearns/elm-graphql CLI ")
+                        Decode.fail ("Invalid DiffSide type, " ++ string ++ " try re-running the @dillonkearns/elm-graphql CLI ")
             )
 
 
-{-| Convert from the union type representating the Enum to a string that the GraphQL server will recognize.
+{-| Convert from the union type representing the Enum to a string that the GraphQL server will recognize.
 -}
-toString : EnterpriseOrderField -> String
+toString : DiffSide -> String
 toString enum =
     case enum of
-        Name ->
-            "NAME"
+        Left ->
+            "LEFT"
+
+        Right ->
+            "RIGHT"
 
 
 {-| Convert from a String representation to an elm representation enum.
@@ -55,11 +63,14 @@ This is the inverse of the Enum `toString` function. So you can call `toString` 
 This can be useful for generating Strings to use for <select> menus to check which item was selected.
 
 -}
-fromString : String -> Maybe EnterpriseOrderField
+fromString : String -> Maybe DiffSide
 fromString enumString =
     case enumString of
-        "NAME" ->
-            Just Name
+        "LEFT" ->
+            Just Left
+
+        "RIGHT" ->
+            Just Right
 
         _ ->
             Nothing

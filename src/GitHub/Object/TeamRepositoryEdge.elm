@@ -27,12 +27,19 @@ cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
-node : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.TeamRepositoryEdge
+node :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.TeamRepositoryEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ identity
 
 
 {-| The permission level the team has on the repository
+
+**Upcoming Change on 2020-10-01 UTC**
+**Description:** Type for `permission` will change from `RepositoryPermission!` to `String`.
+**Reason:** This field may return additional values
+
 -}
 permission : SelectionSet GitHub.Enum.RepositoryPermission.RepositoryPermission GitHub.Object.TeamRepositoryEdge
 permission =

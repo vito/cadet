@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.RenamedTitleEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RenamedTitleEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -54,6 +56,8 @@ previousTitle =
 
 {-| Subject that was renamed.
 -}
-subject : SelectionSet decodesTo GitHub.Union.RenamedTitleSubject -> SelectionSet decodesTo GitHub.Object.RenamedTitleEvent
+subject :
+    SelectionSet decodesTo GitHub.Union.RenamedTitleSubject
+    -> SelectionSet decodesTo GitHub.Object.RenamedTitleEvent
 subject object_ =
     Object.selectionForCompositeField "subject" [] object_ identity

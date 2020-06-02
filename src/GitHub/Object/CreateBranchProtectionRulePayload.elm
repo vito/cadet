@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The newly created BranchProtectionRule.
 -}
-branchProtectionRule : SelectionSet decodesTo GitHub.Object.BranchProtectionRule -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateBranchProtectionRulePayload
+branchProtectionRule :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateBranchProtectionRulePayload
 branchProtectionRule object_ =
     Object.selectionForCompositeField "branchProtectionRule" [] object_ (identity >> Decode.nullable)
 

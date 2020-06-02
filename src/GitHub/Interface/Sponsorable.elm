@@ -31,13 +31,13 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Sponsorable
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -49,7 +49,9 @@ maybeFragments =
 
 {-| The GitHub Sponsors listing for this user.
 -}
-sponsorsListing : SelectionSet decodesTo GitHub.Object.SponsorsListing -> SelectionSet (Maybe decodesTo) GitHub.Interface.Sponsorable
+sponsorsListing :
+    SelectionSet decodesTo GitHub.Object.SponsorsListing
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.Sponsorable
 sponsorsListing object_ =
     Object.selectionForCompositeField "sponsorsListing" [] object_ (identity >> Decode.nullable)
 
@@ -74,7 +76,10 @@ type alias SponsorshipsAsMaintainerOptionalArguments =
   - orderBy - Ordering options for sponsorships returned from this connection. If left blank, the sponsorships will be ordered based on relevancy to the viewer.
 
 -}
-sponsorshipsAsMaintainer : (SponsorshipsAsMaintainerOptionalArguments -> SponsorshipsAsMaintainerOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection -> SelectionSet decodesTo GitHub.Interface.Sponsorable
+sponsorshipsAsMaintainer :
+    (SponsorshipsAsMaintainerOptionalArguments -> SponsorshipsAsMaintainerOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection
+    -> SelectionSet decodesTo GitHub.Interface.Sponsorable
 sponsorshipsAsMaintainer fillInOptionals object_ =
     let
         filledInOptionals =
@@ -105,7 +110,10 @@ type alias SponsorshipsAsSponsorOptionalArguments =
   - orderBy - Ordering options for sponsorships returned from this connection. If left blank, the sponsorships will be ordered based on relevancy to the viewer.
 
 -}
-sponsorshipsAsSponsor : (SponsorshipsAsSponsorOptionalArguments -> SponsorshipsAsSponsorOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection -> SelectionSet decodesTo GitHub.Interface.Sponsorable
+sponsorshipsAsSponsor :
+    (SponsorshipsAsSponsorOptionalArguments -> SponsorshipsAsSponsorOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection
+    -> SelectionSet decodesTo GitHub.Interface.Sponsorable
 sponsorshipsAsSponsor fillInOptionals object_ =
     let
         filledInOptionals =

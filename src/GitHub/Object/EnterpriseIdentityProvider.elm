@@ -30,7 +30,9 @@ digestMethod =
 
 {-| The enterprise this identity provider belongs to.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseIdentityProvider
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseIdentityProvider
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 
@@ -51,7 +53,10 @@ type alias ExternalIdentitiesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-externalIdentities : (ExternalIdentitiesOptionalArguments -> ExternalIdentitiesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ExternalIdentityConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider
+externalIdentities :
+    (ExternalIdentitiesOptionalArguments -> ExternalIdentitiesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ExternalIdentityConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider
 externalIdentities fillInOptionals object_ =
     let
         filledInOptionals =

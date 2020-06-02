@@ -32,13 +32,13 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -57,7 +57,9 @@ type alias AnyPinnableItemsOptionalArguments =
   - type\_ - Filter to only a particular kind of pinnable item.
 
 -}
-anyPinnableItems : (AnyPinnableItemsOptionalArguments -> AnyPinnableItemsOptionalArguments) -> SelectionSet Bool GitHub.Interface.ProfileOwner
+anyPinnableItems :
+    (AnyPinnableItemsOptionalArguments -> AnyPinnableItemsOptionalArguments)
+    -> SelectionSet Bool GitHub.Interface.ProfileOwner
 anyPinnableItems fillInOptionals =
     let
         filledInOptionals =
@@ -84,7 +86,9 @@ id =
 
 {-| Showcases a selection of repositories and gists that the profile owner has either curated or that have been selected automatically based on popularity.
 -}
-itemShowcase : SelectionSet decodesTo GitHub.Object.ProfileItemShowcase -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
+itemShowcase :
+    SelectionSet decodesTo GitHub.Object.ProfileItemShowcase
+    -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
 itemShowcase object_ =
     Object.selectionForCompositeField "itemShowcase" [] object_ identity
 
@@ -128,7 +132,10 @@ type alias PinnableItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pinnableItems : (PinnableItemsOptionalArguments -> PinnableItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
+pinnableItems :
+    (PinnableItemsOptionalArguments -> PinnableItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection
+    -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
 pinnableItems fillInOptionals object_ =
     let
         filledInOptionals =
@@ -159,7 +166,10 @@ type alias PinnedItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pinnedItems : (PinnedItemsOptionalArguments -> PinnedItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
+pinnedItems :
+    (PinnedItemsOptionalArguments -> PinnedItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection
+    -> SelectionSet decodesTo GitHub.Interface.ProfileOwner
 pinnedItems fillInOptionals object_ =
     let
         filledInOptionals =

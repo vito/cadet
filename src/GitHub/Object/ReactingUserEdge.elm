@@ -26,7 +26,9 @@ cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
-node : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.ReactingUserEdge
+node :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.ReactingUserEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ identity
 

@@ -38,7 +38,10 @@ type alias DependenciesOptionalArguments =
   - type\_ - Find dependencies by type.
 
 -}
-dependencies : (DependenciesOptionalArguments -> DependenciesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageDependencyConnection -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+dependencies :
+    (DependenciesOptionalArguments -> DependenciesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageDependencyConnection
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
 dependencies fillInOptionals object_ =
     let
         filledInOptionals =
@@ -60,7 +63,10 @@ type alias FileByNameRequiredArguments =
   - filename - A specific file to find.
 
 -}
-fileByName : FileByNameRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
+fileByName :
+    FileByNameRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
 fileByName requiredArgs object_ =
     Object.selectionForCompositeField "fileByName" [ Argument.required "filename" requiredArgs.filename Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -81,7 +87,10 @@ type alias FilesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-files : (FilesOptionalArguments -> FilesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageFileConnection -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+files :
+    (FilesOptionalArguments -> FilesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageFileConnection
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
 files fillInOptionals object_ =
     let
         filledInOptionals =
@@ -143,14 +152,18 @@ readmeHtml =
 
 {-| Registry package associated with this version.
 -}
-registryPackage : SelectionSet decodesTo GitHub.Object.RegistryPackage -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
+registryPackage :
+    SelectionSet decodesTo GitHub.Object.RegistryPackage
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
 registryPackage object_ =
     Object.selectionForCompositeField "registryPackage" [] object_ (identity >> Decode.nullable)
 
 
 {-| Release associated with this package.
 -}
-release : SelectionSet decodesTo GitHub.Object.Release -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
+release :
+    SelectionSet decodesTo GitHub.Object.Release
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
 release object_ =
     Object.selectionForCompositeField "release" [] object_ (identity >> Decode.nullable)
 
@@ -171,7 +184,9 @@ size =
 
 {-| Statistics about package activity.
 -}
-statistics : SelectionSet decodesTo GitHub.Object.RegistryPackageVersionStatistics -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
+statistics :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageVersionStatistics
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageVersion
 statistics object_ =
     Object.selectionForCompositeField "statistics" [] object_ (identity >> Decode.nullable)
 

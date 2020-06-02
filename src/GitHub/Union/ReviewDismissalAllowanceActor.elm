@@ -20,8 +20,8 @@ import Json.Decode as Decode
 
 
 type alias Fragments decodesTo =
-    { onUser : SelectionSet decodesTo GitHub.Object.User
-    , onTeam : SelectionSet decodesTo GitHub.Object.Team
+    { onTeam : SelectionSet decodesTo GitHub.Object.Team
+    , onUser : SelectionSet decodesTo GitHub.Object.User
     }
 
 
@@ -31,17 +31,17 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Union.ReviewDismissalAllowanceActor
 fragments selections =
-    Object.exhuastiveFragmentSelection
-        [ Object.buildFragment "User" selections.onUser
-        , Object.buildFragment "Team" selections.onTeam
+    Object.exhaustiveFragmentSelection
+        [ Object.buildFragment "Team" selections.onTeam
+        , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
-    { onUser = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onTeam = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    { onTeam = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUser = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

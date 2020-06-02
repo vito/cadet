@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The resulting merge Commit.
 -}
-mergeCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.MergeBranchPayload
+mergeCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.MergeBranchPayload
 mergeCommit object_ =
     Object.selectionForCompositeField "mergeCommit" [] object_ (identity >> Decode.nullable)

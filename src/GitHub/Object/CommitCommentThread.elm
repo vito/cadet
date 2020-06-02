@@ -35,7 +35,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection -> SelectionSet decodesTo GitHub.Object.CommitCommentThread
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentThread
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -50,7 +53,9 @@ comments fillInOptionals object_ =
 
 {-| The commit the comments were made on.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.CommitCommentThread
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CommitCommentThread
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ (identity >> Decode.nullable)
 
@@ -76,6 +81,8 @@ position =
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.CommitCommentThread
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentThread
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

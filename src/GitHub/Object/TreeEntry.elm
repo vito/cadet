@@ -35,7 +35,9 @@ name =
 
 {-| Entry file object.
 -}
-object : SelectionSet decodesTo GitHub.Interface.GitObject -> SelectionSet (Maybe decodesTo) GitHub.Object.TreeEntry
+object :
+    SelectionSet decodesTo GitHub.Interface.GitObject
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TreeEntry
 object object_ =
     Object.selectionForCompositeField "object" [] object_ (identity >> Decode.nullable)
 
@@ -49,9 +51,20 @@ oid =
 
 {-| The Repository the tree entry belongs to
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.TreeEntry
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.TreeEntry
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
+
+
+{-| If the TreeEntry is for a directory occupied by a submodule project, this returns the corresponding submodule
+-}
+submodule :
+    SelectionSet decodesTo GitHub.Object.Submodule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TreeEntry
+submodule object_ =
+    Object.selectionForCompositeField "submodule" [] object_ (identity >> Decode.nullable)
 
 
 {-| Entry file type.

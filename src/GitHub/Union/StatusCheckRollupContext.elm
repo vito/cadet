@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Union.CollectionItemContent exposing (..)
+module GitHub.Union.StatusCheckRollupContext exposing (..)
 
 import GitHub.InputObject
 import GitHub.Interface
@@ -20,9 +20,7 @@ import Json.Decode as Decode
 
 
 type alias Fragments decodesTo =
-    { onRepository : SelectionSet decodesTo GitHub.Object.Repository
-    , onOrganization : SelectionSet decodesTo GitHub.Object.Organization
-    , onUser : SelectionSet decodesTo GitHub.Object.User
+    { onStatusContext : SelectionSet decodesTo GitHub.Object.StatusContext
     }
 
 
@@ -30,21 +28,17 @@ type alias Fragments decodesTo =
 -}
 fragments :
     Fragments decodesTo
-    -> SelectionSet decodesTo GitHub.Union.CollectionItemContent
+    -> SelectionSet decodesTo GitHub.Union.StatusCheckRollupContext
 fragments selections =
-    Object.exhuastiveFragmentSelection
-        [ Object.buildFragment "Repository" selections.onRepository
-        , Object.buildFragment "Organization" selections.onOrganization
-        , Object.buildFragment "User" selections.onUser
+    Object.exhaustiveFragmentSelection
+        [ Object.buildFragment "StatusContext" selections.onStatusContext
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
-    { onRepository = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onOrganization = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUser = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    { onStatusContext = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

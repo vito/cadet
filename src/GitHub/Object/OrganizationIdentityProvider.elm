@@ -42,7 +42,10 @@ type alias ExternalIdentitiesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-externalIdentities : (ExternalIdentitiesOptionalArguments -> ExternalIdentitiesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ExternalIdentityConnection -> SelectionSet decodesTo GitHub.Object.OrganizationIdentityProvider
+externalIdentities :
+    (ExternalIdentitiesOptionalArguments -> ExternalIdentitiesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ExternalIdentityConnection
+    -> SelectionSet decodesTo GitHub.Object.OrganizationIdentityProvider
 externalIdentities fillInOptionals object_ =
     let
         filledInOptionals =
@@ -76,7 +79,9 @@ issuer =
 
 {-| Organization this Identity Provider belongs to
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.OrganizationIdentityProvider
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrganizationIdentityProvider
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 

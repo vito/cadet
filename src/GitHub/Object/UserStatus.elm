@@ -70,7 +70,9 @@ message =
 
 {-| The organization whose members can see this status. If null, this status is publicly visible.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.UserStatus
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UserStatus
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
@@ -84,6 +86,8 @@ updatedAt =
 
 {-| The user who has this status.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.UserStatus
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.UserStatus
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

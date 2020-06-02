@@ -20,25 +20,25 @@ import Json.Decode as Decode
 
 
 type alias Fragments decodesTo =
-    { onCommit : SelectionSet decodesTo GitHub.Object.Commit
-    , onIssueComment : SelectionSet decodesTo GitHub.Object.IssueComment
-    , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
+    { onAssignedEvent : SelectionSet decodesTo GitHub.Object.AssignedEvent
     , onClosedEvent : SelectionSet decodesTo GitHub.Object.ClosedEvent
+    , onCommit : SelectionSet decodesTo GitHub.Object.Commit
+    , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
+    , onDemilestonedEvent : SelectionSet decodesTo GitHub.Object.DemilestonedEvent
+    , onIssueComment : SelectionSet decodesTo GitHub.Object.IssueComment
+    , onLabeledEvent : SelectionSet decodesTo GitHub.Object.LabeledEvent
+    , onLockedEvent : SelectionSet decodesTo GitHub.Object.LockedEvent
+    , onMilestonedEvent : SelectionSet decodesTo GitHub.Object.MilestonedEvent
+    , onReferencedEvent : SelectionSet decodesTo GitHub.Object.ReferencedEvent
+    , onRenamedTitleEvent : SelectionSet decodesTo GitHub.Object.RenamedTitleEvent
     , onReopenedEvent : SelectionSet decodesTo GitHub.Object.ReopenedEvent
     , onSubscribedEvent : SelectionSet decodesTo GitHub.Object.SubscribedEvent
-    , onUnsubscribedEvent : SelectionSet decodesTo GitHub.Object.UnsubscribedEvent
-    , onReferencedEvent : SelectionSet decodesTo GitHub.Object.ReferencedEvent
-    , onAssignedEvent : SelectionSet decodesTo GitHub.Object.AssignedEvent
-    , onUnassignedEvent : SelectionSet decodesTo GitHub.Object.UnassignedEvent
-    , onLabeledEvent : SelectionSet decodesTo GitHub.Object.LabeledEvent
-    , onUnlabeledEvent : SelectionSet decodesTo GitHub.Object.UnlabeledEvent
-    , onUserBlockedEvent : SelectionSet decodesTo GitHub.Object.UserBlockedEvent
-    , onMilestonedEvent : SelectionSet decodesTo GitHub.Object.MilestonedEvent
-    , onDemilestonedEvent : SelectionSet decodesTo GitHub.Object.DemilestonedEvent
-    , onRenamedTitleEvent : SelectionSet decodesTo GitHub.Object.RenamedTitleEvent
-    , onLockedEvent : SelectionSet decodesTo GitHub.Object.LockedEvent
-    , onUnlockedEvent : SelectionSet decodesTo GitHub.Object.UnlockedEvent
     , onTransferredEvent : SelectionSet decodesTo GitHub.Object.TransferredEvent
+    , onUnassignedEvent : SelectionSet decodesTo GitHub.Object.UnassignedEvent
+    , onUnlabeledEvent : SelectionSet decodesTo GitHub.Object.UnlabeledEvent
+    , onUnlockedEvent : SelectionSet decodesTo GitHub.Object.UnlockedEvent
+    , onUnsubscribedEvent : SelectionSet decodesTo GitHub.Object.UnsubscribedEvent
+    , onUserBlockedEvent : SelectionSet decodesTo GitHub.Object.UserBlockedEvent
     }
 
 
@@ -48,51 +48,51 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Union.IssueTimelineItem
 fragments selections =
-    Object.exhuastiveFragmentSelection
-        [ Object.buildFragment "Commit" selections.onCommit
-        , Object.buildFragment "IssueComment" selections.onIssueComment
-        , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
+    Object.exhaustiveFragmentSelection
+        [ Object.buildFragment "AssignedEvent" selections.onAssignedEvent
         , Object.buildFragment "ClosedEvent" selections.onClosedEvent
+        , Object.buildFragment "Commit" selections.onCommit
+        , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
+        , Object.buildFragment "DemilestonedEvent" selections.onDemilestonedEvent
+        , Object.buildFragment "IssueComment" selections.onIssueComment
+        , Object.buildFragment "LabeledEvent" selections.onLabeledEvent
+        , Object.buildFragment "LockedEvent" selections.onLockedEvent
+        , Object.buildFragment "MilestonedEvent" selections.onMilestonedEvent
+        , Object.buildFragment "ReferencedEvent" selections.onReferencedEvent
+        , Object.buildFragment "RenamedTitleEvent" selections.onRenamedTitleEvent
         , Object.buildFragment "ReopenedEvent" selections.onReopenedEvent
         , Object.buildFragment "SubscribedEvent" selections.onSubscribedEvent
-        , Object.buildFragment "UnsubscribedEvent" selections.onUnsubscribedEvent
-        , Object.buildFragment "ReferencedEvent" selections.onReferencedEvent
-        , Object.buildFragment "AssignedEvent" selections.onAssignedEvent
-        , Object.buildFragment "UnassignedEvent" selections.onUnassignedEvent
-        , Object.buildFragment "LabeledEvent" selections.onLabeledEvent
-        , Object.buildFragment "UnlabeledEvent" selections.onUnlabeledEvent
-        , Object.buildFragment "UserBlockedEvent" selections.onUserBlockedEvent
-        , Object.buildFragment "MilestonedEvent" selections.onMilestonedEvent
-        , Object.buildFragment "DemilestonedEvent" selections.onDemilestonedEvent
-        , Object.buildFragment "RenamedTitleEvent" selections.onRenamedTitleEvent
-        , Object.buildFragment "LockedEvent" selections.onLockedEvent
-        , Object.buildFragment "UnlockedEvent" selections.onUnlockedEvent
         , Object.buildFragment "TransferredEvent" selections.onTransferredEvent
+        , Object.buildFragment "UnassignedEvent" selections.onUnassignedEvent
+        , Object.buildFragment "UnlabeledEvent" selections.onUnlabeledEvent
+        , Object.buildFragment "UnlockedEvent" selections.onUnlockedEvent
+        , Object.buildFragment "UnsubscribedEvent" selections.onUnsubscribedEvent
+        , Object.buildFragment "UserBlockedEvent" selections.onUserBlockedEvent
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
-    { onCommit = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onIssueComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    { onAssignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onClosedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onCommit = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onDemilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onIssueComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onLabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onLockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onMilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onRenamedTitleEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onReopenedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onSubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUnsubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onAssignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUnassignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onLabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUnlabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUserBlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onMilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onDemilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onRenamedTitleEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onLockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUnlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onTransferredEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnassignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnlabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnsubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUserBlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

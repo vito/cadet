@@ -57,7 +57,9 @@ signature =
 
 {-| GitHub user corresponding to the email signing this commit.
 -}
-signer : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.GpgSignature
+signer :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.GpgSignature
 signer object_ =
     Object.selectionForCompositeField "signer" [] object_ (identity >> Decode.nullable)
 

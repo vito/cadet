@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The new repository.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateRepositoryPayload
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CreateRepositoryPayload
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)

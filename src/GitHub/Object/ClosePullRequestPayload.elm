@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The pull request that was closed.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosePullRequestPayload
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ClosePullRequestPayload
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ (identity >> Decode.nullable)

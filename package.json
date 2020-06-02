@@ -7,9 +7,11 @@
   "license": "MIT",
   "scripts": {
     "start": "node index.js",
-    "build": "make"
+    "build": "make",
+    "update-graphql": "elm-graphql https://api.github.com/graphql --header \"Authorization: bearer $GITHUB_TOKEN\" --base GitHub --output src"
   },
   "dependencies": {
+    "@dillonkearns/elm-graphql": "^4.0.3",
     "body-parser": "^1.18.2",
     "compression": "^1.7.1",
     "elm": "^0.19.1",

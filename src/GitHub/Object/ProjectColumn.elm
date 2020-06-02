@@ -39,7 +39,10 @@ type alias CardsOptionalArguments =
   - archivedStates - A list of archived states to filter the cards by
 
 -}
-cards : (CardsOptionalArguments -> CardsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection -> SelectionSet decodesTo GitHub.Object.ProjectColumn
+cards :
+    (CardsOptionalArguments -> CardsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection
+    -> SelectionSet decodesTo GitHub.Object.ProjectColumn
 cards fillInOptionals object_ =
     let
         filledInOptionals =
@@ -80,7 +83,9 @@ name =
 
 {-| The project that contains this column.
 -}
-project : SelectionSet decodesTo GitHub.Object.Project -> SelectionSet decodesTo GitHub.Object.ProjectColumn
+project :
+    SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet decodesTo GitHub.Object.ProjectColumn
 project object_ =
     Object.selectionForCompositeField "project" [] object_ identity
 

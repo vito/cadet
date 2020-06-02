@@ -23,6 +23,7 @@ type alias Fragments decodesTo =
     { onBot : SelectionSet decodesTo GitHub.Object.Bot
     , onClosedEvent : SelectionSet decodesTo GitHub.Object.ClosedEvent
     , onCommit : SelectionSet decodesTo GitHub.Object.Commit
+    , onConvertToDraftEvent : SelectionSet decodesTo GitHub.Object.ConvertToDraftEvent
     , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
     , onGist : SelectionSet decodesTo GitHub.Object.Gist
     , onIssue : SelectionSet decodesTo GitHub.Object.Issue
@@ -49,10 +50,11 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.UniformResourceLocatable
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Bot" selections.onBot
         , Object.buildFragment "ClosedEvent" selections.onClosedEvent
         , Object.buildFragment "Commit" selections.onCommit
+        , Object.buildFragment "ConvertToDraftEvent" selections.onConvertToDraftEvent
         , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
         , Object.buildFragment "Gist" selections.onGist
         , Object.buildFragment "Issue" selections.onIssue
@@ -73,7 +75,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -81,6 +83,7 @@ maybeFragments =
     { onBot = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onClosedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCommit = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onConvertToDraftEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onGist = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onIssue = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)

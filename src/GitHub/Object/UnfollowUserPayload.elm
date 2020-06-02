@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The user that was unfollowed.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.UnfollowUserPayload
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UnfollowUserPayload
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

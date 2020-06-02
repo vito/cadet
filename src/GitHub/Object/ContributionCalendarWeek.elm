@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The days of contributions in this week.
 -}
-contributionDays : SelectionSet decodesTo GitHub.Object.ContributionCalendarDay -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendarWeek
+contributionDays :
+    SelectionSet decodesTo GitHub.Object.ContributionCalendarDay
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendarWeek
 contributionDays object_ =
     Object.selectionForCompositeField "contributionDays" [] object_ (identity >> Decode.list)
 

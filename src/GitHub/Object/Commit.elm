@@ -52,7 +52,10 @@ type alias AssociatedPullRequestsOptionalArguments =
   - orderBy - Ordering options for pull requests.
 
 -}
-associatedPullRequests : (AssociatedPullRequestsOptionalArguments -> AssociatedPullRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+associatedPullRequests :
+    (AssociatedPullRequestsOptionalArguments -> AssociatedPullRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 associatedPullRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -67,7 +70,9 @@ associatedPullRequests fillInOptionals object_ =
 
 {-| Authorship details of the commit.
 -}
-author : SelectionSet decodesTo GitHub.Object.GitActor -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+author :
+    SelectionSet decodesTo GitHub.Object.GitActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -95,7 +100,10 @@ type alias BlameRequiredArguments =
   - path - The file whose Git blame information you want.
 
 -}
-blame : BlameRequiredArguments -> SelectionSet decodesTo GitHub.Object.Blame -> SelectionSet decodesTo GitHub.Object.Commit
+blame :
+    BlameRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Blame
+    -> SelectionSet decodesTo GitHub.Object.Commit
 blame requiredArgs object_ =
     Object.selectionForCompositeField "blame" [ Argument.required "path" requiredArgs.path Encode.string ] object_ identity
 
@@ -123,7 +131,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection -> SelectionSet decodesTo GitHub.Object.Commit
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.Commit
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -166,7 +177,9 @@ committedViaWeb =
 
 {-| Committership details of the commit.
 -}
-committer : SelectionSet decodesTo GitHub.Object.GitActor -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+committer :
+    SelectionSet decodesTo GitHub.Object.GitActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 committer object_ =
     Object.selectionForCompositeField "committer" [] object_ (identity >> Decode.nullable)
 
@@ -198,7 +211,10 @@ type alias DeploymentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-deployments : (DeploymentsOptionalArguments -> DeploymentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.DeploymentConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+deployments :
+    (DeploymentsOptionalArguments -> DeploymentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.DeploymentConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 deployments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -235,7 +251,10 @@ type alias HistoryOptionalArguments =
   - until - Allows specifying an ending time or date for fetching commits.
 
 -}
-history : (HistoryOptionalArguments -> HistoryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitHistoryConnection -> SelectionSet decodesTo GitHub.Object.Commit
+history :
+    (HistoryOptionalArguments -> HistoryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitHistoryConnection
+    -> SelectionSet decodesTo GitHub.Object.Commit
 history fillInOptionals object_ =
     let
         filledInOptionals =
@@ -295,6 +314,15 @@ oid =
     Object.selectionForField "ScalarCodecs.GitObjectID" "oid" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecGitObjectID |> .decoder)
 
 
+{-| The organization this commit was made on behalf of.
+-}
+onBehalfOf :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+onBehalfOf object_ =
+    Object.selectionForCompositeField "onBehalfOf" [] object_ (identity >> Decode.nullable)
+
+
 type alias ParentsOptionalArguments =
     { after : OptionalArgument String
     , before : OptionalArgument String
@@ -311,7 +339,10 @@ type alias ParentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-parents : (ParentsOptionalArguments -> ParentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitConnection -> SelectionSet decodesTo GitHub.Object.Commit
+parents :
+    (ParentsOptionalArguments -> ParentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitConnection
+    -> SelectionSet decodesTo GitHub.Object.Commit
 parents fillInOptionals object_ =
     let
         filledInOptionals =
@@ -333,7 +364,9 @@ pushedDate =
 
 {-| The Repository this commit belongs to
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Commit
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Commit
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -347,16 +380,61 @@ resourcePath =
 
 {-| Commit signing information, if present.
 -}
-signature : SelectionSet decodesTo GitHub.Interface.GitSignature -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+signature :
+    SelectionSet decodesTo GitHub.Interface.GitSignature
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 signature object_ =
     Object.selectionForCompositeField "signature" [] object_ (identity >> Decode.nullable)
 
 
 {-| Status information for this commit
 -}
-status : SelectionSet decodesTo GitHub.Object.Status -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+status :
+    SelectionSet decodesTo GitHub.Object.Status
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
 status object_ =
     Object.selectionForCompositeField "status" [] object_ (identity >> Decode.nullable)
+
+
+{-| Check and Status rollup information for this commit.
+-}
+statusCheckRollup :
+    SelectionSet decodesTo GitHub.Object.StatusCheckRollup
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Commit
+statusCheckRollup object_ =
+    Object.selectionForCompositeField "statusCheckRollup" [] object_ (identity >> Decode.nullable)
+
+
+type alias SubmodulesOptionalArguments =
+    { after : OptionalArgument String
+    , before : OptionalArgument String
+    , first : OptionalArgument Int
+    , last : OptionalArgument Int
+    }
+
+
+{-| Returns a list of all submodules in this repository as of this Commit parsed from the .gitmodules file.
+
+  - after - Returns the elements in the list that come after the specified cursor.
+  - before - Returns the elements in the list that come before the specified cursor.
+  - first - Returns the first _n_ elements from the list.
+  - last - Returns the last _n_ elements from the list.
+
+-}
+submodules :
+    (SubmodulesOptionalArguments -> SubmodulesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SubmoduleConnection
+    -> SelectionSet decodesTo GitHub.Object.Commit
+submodules fillInOptionals object_ =
+    let
+        filledInOptionals =
+            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent }
+
+        optionalArgs =
+            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+                |> List.filterMap identity
+    in
+    Object.selectionForCompositeField "submodules" optionalArgs object_ identity
 
 
 {-| Returns a URL to download a tarball archive for a repository.
@@ -369,7 +447,9 @@ tarballUrl =
 
 {-| Commit's root Tree
 -}
-tree : SelectionSet decodesTo GitHub.Object.Tree -> SelectionSet decodesTo GitHub.Object.Commit
+tree :
+    SelectionSet decodesTo GitHub.Object.Tree
+    -> SelectionSet decodesTo GitHub.Object.Commit
 tree object_ =
     Object.selectionForCompositeField "tree" [] object_ identity
 

@@ -41,7 +41,9 @@ memberAccessUrl =
     Object.selectionForField "ScalarCodecs.Uri" "memberAccessUrl" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder)
 
 
-node : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.TeamMemberEdge
+node :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.TeamMemberEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ identity
 

@@ -21,14 +21,18 @@ import Json.Decode as Decode
 
 {-| The actor that can push.
 -}
-actor : SelectionSet decodesTo GitHub.Union.PushAllowanceActor -> SelectionSet (Maybe decodesTo) GitHub.Object.PushAllowance
+actor :
+    SelectionSet decodesTo GitHub.Union.PushAllowanceActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PushAllowance
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the branch protection rule associated with the allowed user or team.
 -}
-branchProtectionRule : SelectionSet decodesTo GitHub.Object.BranchProtectionRule -> SelectionSet (Maybe decodesTo) GitHub.Object.PushAllowance
+branchProtectionRule :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PushAllowance
 branchProtectionRule object_ =
     Object.selectionForCompositeField "branchProtectionRule" [] object_ (identity >> Decode.nullable)
 

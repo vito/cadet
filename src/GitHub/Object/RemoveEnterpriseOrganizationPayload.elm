@@ -28,20 +28,26 @@ clientMutationId =
 
 {-| The updated enterprise.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ (identity >> Decode.nullable)
 
 
 {-| The organization that was removed from the enterprise.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
 
 {-| The viewer performing the mutation.
 -}
-viewer : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
+viewer :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RemoveEnterpriseOrganizationPayload
 viewer object_ =
     Object.selectionForCompositeField "viewer" [] object_ (identity >> Decode.nullable)

@@ -29,14 +29,18 @@ createdAt =
 
 {-| The enterprise to which this upload belongs.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUpload
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUpload
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ identity
 
 
 {-| The Enterprise Server installation for which this upload was generated.
 -}
-enterpriseServerInstallation : SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUpload
+enterpriseServerInstallation :
+    SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountsUpload
 enterpriseServerInstallation object_ =
     Object.selectionForCompositeField "enterpriseServerInstallation" [] object_ identity
 

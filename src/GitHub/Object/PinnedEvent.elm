@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PinnedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PinnedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -40,6 +42,8 @@ id =
 
 {-| Identifies the issue associated with the event.
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet decodesTo GitHub.Object.PinnedEvent
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet decodesTo GitHub.Object.PinnedEvent
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ identity

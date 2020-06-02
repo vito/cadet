@@ -35,6 +35,8 @@ jobStatusId =
 
 {-| The new cloned project.
 -}
-project : SelectionSet decodesTo GitHub.Object.Project -> SelectionSet (Maybe decodesTo) GitHub.Object.CloneProjectPayload
+project :
+    SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.CloneProjectPayload
 project object_ =
     Object.selectionForCompositeField "project" [] object_ (identity >> Decode.nullable)

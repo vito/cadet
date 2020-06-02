@@ -61,6 +61,10 @@ type MemberStatusable
     = MemberStatusable
 
 
+type Minimizable
+    = Minimizable
+
+
 type Node
     = Node
 

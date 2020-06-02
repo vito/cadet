@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The issue that was opened.
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenIssuePayload
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ReopenIssuePayload
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ (identity >> Decode.nullable)

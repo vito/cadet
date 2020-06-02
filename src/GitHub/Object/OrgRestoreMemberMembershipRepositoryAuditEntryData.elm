@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The repository associated with the action
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipRepositoryAuditEntryData
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipRepositoryAuditEntryData
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)
 

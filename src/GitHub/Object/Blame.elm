@@ -21,6 +21,8 @@ import Json.Decode as Decode
 
 {-| The list of ranges from a Git blame.
 -}
-ranges : SelectionSet decodesTo GitHub.Object.BlameRange -> SelectionSet (List decodesTo) GitHub.Object.Blame
+ranges :
+    SelectionSet decodesTo GitHub.Object.BlameRange
+    -> SelectionSet (List decodesTo) GitHub.Object.Blame
 ranges object_ =
     Object.selectionForCompositeField "ranges" [] object_ (identity >> Decode.list)

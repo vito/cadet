@@ -12,17 +12,19 @@ import Json.Decode as Decode exposing (Decoder)
   - TwoFactorRequirementNonCompliance - The organization required 2FA of its billing managers and this user did not have 2FA enabled.
   - SamlExternalIdentityMissing - SAML external identity missing
   - SamlSsoEnforcementRequiresExternalIdentity - SAML SSO enforcement requires an external identity
+  - UserAccountDeleted - User account has been deleted
 
 -}
 type OrgRemoveMemberAuditEntryReason
     = TwoFactorRequirementNonCompliance
     | SamlExternalIdentityMissing
     | SamlSsoEnforcementRequiresExternalIdentity
+    | UserAccountDeleted
 
 
 list : List OrgRemoveMemberAuditEntryReason
 list =
-    [ TwoFactorRequirementNonCompliance, SamlExternalIdentityMissing, SamlSsoEnforcementRequiresExternalIdentity ]
+    [ TwoFactorRequirementNonCompliance, SamlExternalIdentityMissing, SamlSsoEnforcementRequiresExternalIdentity, UserAccountDeleted ]
 
 
 decoder : Decoder OrgRemoveMemberAuditEntryReason
@@ -40,12 +42,15 @@ decoder =
                     "SAML_SSO_ENFORCEMENT_REQUIRES_EXTERNAL_IDENTITY" ->
                         Decode.succeed SamlSsoEnforcementRequiresExternalIdentity
 
+                    "USER_ACCOUNT_DELETED" ->
+                        Decode.succeed UserAccountDeleted
+
                     _ ->
                         Decode.fail ("Invalid OrgRemoveMemberAuditEntryReason type, " ++ string ++ " try re-running the @dillonkearns/elm-graphql CLI ")
             )
 
 
-{-| Convert from the union type representating the Enum to a string that the GraphQL server will recognize.
+{-| Convert from the union type representing the Enum to a string that the GraphQL server will recognize.
 -}
 toString : OrgRemoveMemberAuditEntryReason -> String
 toString enum =
@@ -58,6 +63,9 @@ toString enum =
 
         SamlSsoEnforcementRequiresExternalIdentity ->
             "SAML_SSO_ENFORCEMENT_REQUIRES_EXTERNAL_IDENTITY"
+
+        UserAccountDeleted ->
+            "USER_ACCOUNT_DELETED"
 
 
 {-| Convert from a String representation to an elm representation enum.
@@ -82,6 +90,9 @@ fromString enumString =
 
         "SAML_SSO_ENFORCEMENT_REQUIRES_EXTERNAL_IDENTITY" ->
             Just SamlSsoEnforcementRequiresExternalIdentity
+
+        "USER_ACCOUNT_DELETED" ->
+            Just UserAccountDeleted
 
         _ ->
             Nothing

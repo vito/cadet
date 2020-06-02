@@ -35,7 +35,9 @@ deletedAt =
 
 {-| The actor who deleted this content
 -}
-deletedBy : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.UserContentEdit
+deletedBy :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UserContentEdit
 deletedBy object_ =
     Object.selectionForCompositeField "deletedBy" [] object_ (identity >> Decode.nullable)
 
@@ -56,7 +58,9 @@ editedAt =
 
 {-| The actor who edited this content
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.UserContentEdit
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UserContentEdit
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 

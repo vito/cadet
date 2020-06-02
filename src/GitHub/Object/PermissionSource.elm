@@ -22,7 +22,9 @@ import Json.Decode as Decode
 
 {-| The organization the repository belongs to.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet decodesTo GitHub.Object.PermissionSource
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet decodesTo GitHub.Object.PermissionSource
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ identity
 
@@ -36,6 +38,8 @@ permission =
 
 {-| The source of this permission.
 -}
-source : SelectionSet decodesTo GitHub.Union.PermissionGranter -> SelectionSet decodesTo GitHub.Object.PermissionSource
+source :
+    SelectionSet decodesTo GitHub.Union.PermissionGranter
+    -> SelectionSet decodesTo GitHub.Object.PermissionSource
 source object_ =
     Object.selectionForCompositeField "source" [] object_ identity

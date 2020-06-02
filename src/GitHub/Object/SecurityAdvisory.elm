@@ -49,7 +49,9 @@ id =
 
 {-| A list of identifiers for this advisory
 -}
-identifiers : SelectionSet decodesTo GitHub.Object.SecurityAdvisoryIdentifier -> SelectionSet (List decodesTo) GitHub.Object.SecurityAdvisory
+identifiers :
+    SelectionSet decodesTo GitHub.Object.SecurityAdvisoryIdentifier
+    -> SelectionSet (List decodesTo) GitHub.Object.SecurityAdvisory
 identifiers object_ =
     Object.selectionForCompositeField "identifiers" [] object_ (identity >> Decode.list)
 
@@ -61,6 +63,13 @@ origin =
     Object.selectionForField "String" "origin" [] Decode.string
 
 
+{-| The permalink for the advisory
+-}
+permalink : SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.SecurityAdvisory
+permalink =
+    Object.selectionForField "(Maybe ScalarCodecs.Uri)" "permalink" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecUri |> .decoder |> Decode.nullable)
+
+
 {-| When the advisory was published
 -}
 publishedAt : SelectionSet GitHub.ScalarCodecs.DateTime GitHub.Object.SecurityAdvisory
@@ -70,7 +79,9 @@ publishedAt =
 
 {-| A list of references for this advisory
 -}
-references : SelectionSet decodesTo GitHub.Object.SecurityAdvisoryReference -> SelectionSet (List decodesTo) GitHub.Object.SecurityAdvisory
+references :
+    SelectionSet decodesTo GitHub.Object.SecurityAdvisoryReference
+    -> SelectionSet (List decodesTo) GitHub.Object.SecurityAdvisory
 references object_ =
     Object.selectionForCompositeField "references" [] object_ (identity >> Decode.list)
 
@@ -120,7 +131,10 @@ type alias VulnerabilitiesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-vulnerabilities : (VulnerabilitiesOptionalArguments -> VulnerabilitiesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SecurityVulnerabilityConnection -> SelectionSet decodesTo GitHub.Object.SecurityAdvisory
+vulnerabilities :
+    (VulnerabilitiesOptionalArguments -> VulnerabilitiesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SecurityVulnerabilityConnection
+    -> SelectionSet decodesTo GitHub.Object.SecurityAdvisory
 vulnerabilities fillInOptionals object_ =
     let
         filledInOptionals =

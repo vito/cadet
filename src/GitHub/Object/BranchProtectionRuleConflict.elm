@@ -21,20 +21,26 @@ import Json.Decode as Decode
 
 {-| Identifies the branch protection rule.
 -}
-branchProtectionRule : SelectionSet decodesTo GitHub.Object.BranchProtectionRule -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
+branchProtectionRule :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
 branchProtectionRule object_ =
     Object.selectionForCompositeField "branchProtectionRule" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the conflicting branch protection rule.
 -}
-conflictingBranchProtectionRule : SelectionSet decodesTo GitHub.Object.BranchProtectionRule -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
+conflictingBranchProtectionRule :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRule
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
 conflictingBranchProtectionRule object_ =
     Object.selectionForCompositeField "conflictingBranchProtectionRule" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the branch ref that has conflicting rules
 -}
-ref : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
+ref :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflict
 ref object_ =
     Object.selectionForCompositeField "ref" [] object_ (identity >> Decode.nullable)

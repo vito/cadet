@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The user that was followed.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.FollowUserPayload
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.FollowUserPayload
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

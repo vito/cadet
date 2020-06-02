@@ -50,7 +50,10 @@ type alias AssigneesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-assignees : (AssigneesOptionalArguments -> AssigneesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserConnection -> SelectionSet decodesTo GitHub.Object.Issue
+assignees :
+    (AssigneesOptionalArguments -> AssigneesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 assignees fillInOptionals object_ =
     let
         filledInOptionals =
@@ -65,7 +68,9 @@ assignees fillInOptionals object_ =
 
 {-| The actor who authored the comment.
 -}
-author : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
+author :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -128,7 +133,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection -> SelectionSet decodesTo GitHub.Object.Issue
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -164,7 +172,9 @@ databaseId =
 
 {-| The actor who edited the comment.
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 
@@ -178,7 +188,10 @@ type alias HovercardOptionalArguments =
   - includeNotificationContexts - Whether or not to include notification contexts
 
 -}
-hovercard : (HovercardOptionalArguments -> HovercardOptionalArguments) -> SelectionSet decodesTo GitHub.Object.Hovercard -> SelectionSet decodesTo GitHub.Object.Issue
+hovercard :
+    (HovercardOptionalArguments -> HovercardOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.Hovercard
+    -> SelectionSet decodesTo GitHub.Object.Issue
 hovercard fillInOptionals object_ =
     let
         filledInOptionals =
@@ -204,7 +217,8 @@ includesCreatedEdit =
 
 
 type alias LabelsOptionalArguments =
-    { after : OptionalArgument String
+    { orderBy : OptionalArgument GitHub.InputObject.LabelOrder
+    , after : OptionalArgument String
     , before : OptionalArgument String
     , first : OptionalArgument Int
     , last : OptionalArgument Int
@@ -213,20 +227,24 @@ type alias LabelsOptionalArguments =
 
 {-| A list of labels associated with the object.
 
+  - orderBy - Ordering options for labels returned from the connection.
   - after - Returns the elements in the list that come after the specified cursor.
   - before - Returns the elements in the list that come before the specified cursor.
   - first - Returns the first _n_ elements from the list.
   - last - Returns the last _n_ elements from the list.
 
 -}
-labels : (LabelsOptionalArguments -> LabelsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.LabelConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
+labels :
+    (LabelsOptionalArguments -> LabelsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.LabelConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
 labels fillInOptionals object_ =
     let
         filledInOptionals =
-            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent }
+            fillInOptionals { orderBy = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
 
         optionalArgs =
-            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+            [ Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeLabelOrder, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "labels" optionalArgs object_ (identity >> Decode.nullable)
@@ -248,7 +266,9 @@ locked =
 
 {-| Identifies the milestone associated with the issue.
 -}
-milestone : SelectionSet decodesTo GitHub.Object.Milestone -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
+milestone :
+    SelectionSet decodesTo GitHub.Object.Milestone
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
 milestone object_ =
     Object.selectionForCompositeField "milestone" [] object_ (identity >> Decode.nullable)
 
@@ -276,7 +296,10 @@ type alias ParticipantsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-participants : (ParticipantsOptionalArguments -> ParticipantsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserConnection -> SelectionSet decodesTo GitHub.Object.Issue
+participants :
+    (ParticipantsOptionalArguments -> ParticipantsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 participants fillInOptionals object_ =
     let
         filledInOptionals =
@@ -307,7 +330,10 @@ type alias ProjectCardsOptionalArguments =
   - archivedStates - A list of archived states to filter the cards by
 
 -}
-projectCards : (ProjectCardsOptionalArguments -> ProjectCardsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection -> SelectionSet decodesTo GitHub.Object.Issue
+projectCards :
+    (ProjectCardsOptionalArguments -> ProjectCardsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 projectCards fillInOptionals object_ =
     let
         filledInOptionals =
@@ -329,7 +355,9 @@ publishedAt =
 
 {-| A list of reactions grouped by content left on the subject.
 -}
-reactionGroups : SelectionSet decodesTo GitHub.Object.ReactionGroup -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.Issue
+reactionGroups :
+    SelectionSet decodesTo GitHub.Object.ReactionGroup
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.Issue
 reactionGroups object_ =
     Object.selectionForCompositeField "reactionGroups" [] object_ (identity >> Decode.list >> Decode.nullable)
 
@@ -354,7 +382,10 @@ type alias ReactionsOptionalArguments =
   - orderBy - Allows specifying the order in which reactions are returned.
 
 -}
-reactions : (ReactionsOptionalArguments -> ReactionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactionConnection -> SelectionSet decodesTo GitHub.Object.Issue
+reactions :
+    (ReactionsOptionalArguments -> ReactionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactionConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 reactions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -369,7 +400,9 @@ reactions fillInOptionals object_ =
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Issue
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Issue
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -406,7 +439,10 @@ type alias TimelineOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-timeline : (TimelineOptionalArguments -> TimelineOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueTimelineConnection -> SelectionSet decodesTo GitHub.Object.Issue
+timeline :
+    (TimelineOptionalArguments -> TimelineOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueTimelineConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 timeline fillInOptionals object_ =
     let
         filledInOptionals =
@@ -441,7 +477,10 @@ type alias TimelineItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-timelineItems : (TimelineItemsOptionalArguments -> TimelineItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueTimelineItemsConnection -> SelectionSet decodesTo GitHub.Object.Issue
+timelineItems :
+    (TimelineItemsOptionalArguments -> TimelineItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueTimelineItemsConnection
+    -> SelectionSet decodesTo GitHub.Object.Issue
 timelineItems fillInOptionals object_ =
     let
         filledInOptionals =
@@ -491,7 +530,10 @@ type alias UserContentEditsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userContentEdits : (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
+userContentEdits :
+    (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Issue
 userContentEdits fillInOptionals object_ =
     let
         filledInOptionals =

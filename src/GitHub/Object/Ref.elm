@@ -46,7 +46,10 @@ type alias AssociatedPullRequestsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-associatedPullRequests : (AssociatedPullRequestsOptionalArguments -> AssociatedPullRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestConnection -> SelectionSet decodesTo GitHub.Object.Ref
+associatedPullRequests :
+    (AssociatedPullRequestsOptionalArguments -> AssociatedPullRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestConnection
+    -> SelectionSet decodesTo GitHub.Object.Ref
 associatedPullRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -80,13 +83,22 @@ prefix =
 
 {-| The repository the ref belongs to.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Ref
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Ref
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
 
 {-| The object the ref points to.
+
+**Upcoming Change on 2019-07-01 UTC**
+**Description:** Type for `target` will change from `GitObject!` to `GitObject`.
+**Reason:** The `target` field may return `null` values and is changing to nullable
+
 -}
-target : SelectionSet decodesTo GitHub.Interface.GitObject -> SelectionSet decodesTo GitHub.Object.Ref
+target :
+    SelectionSet decodesTo GitHub.Interface.GitObject
+    -> SelectionSet decodesTo GitHub.Object.Ref
 target object_ =
     Object.selectionForCompositeField "target" [] object_ identity

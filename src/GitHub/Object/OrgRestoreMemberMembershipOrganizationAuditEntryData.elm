@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| The Organization associated with the Audit Entry.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipOrganizationAuditEntryData
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.OrgRestoreMemberMembershipOrganizationAuditEntryData
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 

@@ -19,6 +19,13 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Identifies the date and time when the object was created.
+-}
+createdAt : SelectionSet GitHub.ScalarCodecs.DateTime GitHub.Object.SponsorsListing
+createdAt =
+    Object.selectionForField "ScalarCodecs.DateTime" "createdAt" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecDateTime |> .decoder)
+
+
 {-| The full description of the listing.
 -}
 fullDescription : SelectionSet String GitHub.Object.SponsorsListing
@@ -77,7 +84,10 @@ type alias TiersOptionalArguments =
   - orderBy - Ordering options for Sponsors tiers returned from the connection.
 
 -}
-tiers : (TiersOptionalArguments -> TiersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorsTierConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.SponsorsListing
+tiers :
+    (TiersOptionalArguments -> TiersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorsTierConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.SponsorsListing
 tiers fillInOptionals object_ =
     let
         filledInOptionals =

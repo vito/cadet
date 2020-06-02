@@ -19,6 +19,15 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Identifies the actor who performed the event.
+-}
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateIssuePayload
+actor object_ =
+    Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
+
+
 {-| A unique identifier for the client performing the mutation.
 -}
 clientMutationId : SelectionSet (Maybe String) GitHub.Object.UpdateIssuePayload
@@ -28,6 +37,8 @@ clientMutationId =
 
 {-| The issue.
 -}
-issue : SelectionSet decodesTo GitHub.Object.Issue -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateIssuePayload
+issue :
+    SelectionSet decodesTo GitHub.Object.Issue
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateIssuePayload
 issue object_ =
     Object.selectionForCompositeField "issue" [] object_ (identity >> Decode.nullable)

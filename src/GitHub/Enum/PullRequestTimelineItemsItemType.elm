@@ -14,6 +14,8 @@ import Json.Decode as Decode exposing (Decoder)
   - PullRequestReview - A review object for a given pull request.
   - PullRequestReviewThread - A threaded list of comments for a given pull request.
   - PullRequestRevisionMarker - Represents the latest point in the pull request timeline for which the viewer has seen the pull request's commits.
+  - AutomaticBaseChangeFailedEvent - Represents a 'automatic\_base\_change\_failed' event on a given pull request.
+  - AutomaticBaseChangeSucceededEvent - Represents a 'automatic\_base\_change\_succeeded' event on a given pull request.
   - BaseRefChangedEvent - Represents a 'base\_ref\_changed' event on a given issue or pull request.
   - BaseRefForcePushedEvent - Represents a 'base\_ref\_force\_pushed' event on a given pull request.
   - DeployedEvent - Represents a 'deployed' event on a given pull request.
@@ -26,14 +28,17 @@ import Json.Decode as Decode exposing (Decoder)
   - ReviewRequestedEvent - Represents an 'review\_requested' event on a given pull request.
   - ReviewRequestRemovedEvent - Represents an 'review\_request\_removed' event on a given pull request.
   - ReadyForReviewEvent - Represents a 'ready\_for\_review' event on a given pull request.
+  - ConvertToDraftEvent - Represents a 'convert\_to\_draft' event on a given pull request.
   - IssueComment - Represents a comment on an Issue.
   - CrossReferencedEvent - Represents a mention made by one issue or pull request to another.
   - AddedToProjectEvent - Represents a 'added\_to\_project' event on a given issue or pull request.
   - AssignedEvent - Represents an 'assigned' event on any assignable object.
   - ClosedEvent - Represents a 'closed' event on any `Closable`.
   - CommentDeletedEvent - Represents a 'comment\_deleted' event on a given issue or pull request.
+  - ConnectedEvent - Represents a 'connected' event on a given issue or pull request.
   - ConvertedNoteToIssueEvent - Represents a 'converted\_note\_to\_issue' event on a given issue or pull request.
   - DemilestonedEvent - Represents a 'demilestoned' event on a given issue or pull request.
+  - DisconnectedEvent - Represents a 'disconnected' event on a given issue or pull request.
   - LabeledEvent - Represents a 'labeled' event on a given issue or pull request.
   - LockedEvent - Represents a 'locked' event on a given issue or pull request.
   - MarkedAsDuplicateEvent - Represents a 'marked\_as\_duplicate' event on a given issue or pull request.
@@ -51,6 +56,7 @@ import Json.Decode as Decode exposing (Decoder)
   - UnlabeledEvent - Represents an 'unlabeled' event on a given issue or pull request.
   - UnlockedEvent - Represents an 'unlocked' event on a given issue or pull request.
   - UserBlockedEvent - Represents a 'user\_blocked' event on a given user.
+  - UnmarkedAsDuplicateEvent - Represents an 'unmarked\_as\_duplicate' event on a given issue or pull request.
   - UnpinnedEvent - Represents an 'unpinned' event on a given issue or pull request.
   - UnsubscribedEvent - Represents an 'unsubscribed' event on a given `Subscribable`.
 
@@ -61,6 +67,8 @@ type PullRequestTimelineItemsItemType
     | PullRequestReview
     | PullRequestReviewThread
     | PullRequestRevisionMarker
+    | AutomaticBaseChangeFailedEvent
+    | AutomaticBaseChangeSucceededEvent
     | BaseRefChangedEvent
     | BaseRefForcePushedEvent
     | DeployedEvent
@@ -73,14 +81,17 @@ type PullRequestTimelineItemsItemType
     | ReviewRequestedEvent
     | ReviewRequestRemovedEvent
     | ReadyForReviewEvent
+    | ConvertToDraftEvent
     | IssueComment
     | CrossReferencedEvent
     | AddedToProjectEvent
     | AssignedEvent
     | ClosedEvent
     | CommentDeletedEvent
+    | ConnectedEvent
     | ConvertedNoteToIssueEvent
     | DemilestonedEvent
+    | DisconnectedEvent
     | LabeledEvent
     | LockedEvent
     | MarkedAsDuplicateEvent
@@ -98,13 +109,14 @@ type PullRequestTimelineItemsItemType
     | UnlabeledEvent
     | UnlockedEvent
     | UserBlockedEvent
+    | UnmarkedAsDuplicateEvent
     | UnpinnedEvent
     | UnsubscribedEvent
 
 
 list : List PullRequestTimelineItemsItemType
 list =
-    [ PullRequestCommit, PullRequestCommitCommentThread, PullRequestReview, PullRequestReviewThread, PullRequestRevisionMarker, BaseRefChangedEvent, BaseRefForcePushedEvent, DeployedEvent, DeploymentEnvironmentChangedEvent, HeadRefDeletedEvent, HeadRefForcePushedEvent, HeadRefRestoredEvent, MergedEvent, ReviewDismissedEvent, ReviewRequestedEvent, ReviewRequestRemovedEvent, ReadyForReviewEvent, IssueComment, CrossReferencedEvent, AddedToProjectEvent, AssignedEvent, ClosedEvent, CommentDeletedEvent, ConvertedNoteToIssueEvent, DemilestonedEvent, LabeledEvent, LockedEvent, MarkedAsDuplicateEvent, MentionedEvent, MilestonedEvent, MovedColumnsInProjectEvent, PinnedEvent, ReferencedEvent, RemovedFromProjectEvent, RenamedTitleEvent, ReopenedEvent, SubscribedEvent, TransferredEvent, UnassignedEvent, UnlabeledEvent, UnlockedEvent, UserBlockedEvent, UnpinnedEvent, UnsubscribedEvent ]
+    [ PullRequestCommit, PullRequestCommitCommentThread, PullRequestReview, PullRequestReviewThread, PullRequestRevisionMarker, AutomaticBaseChangeFailedEvent, AutomaticBaseChangeSucceededEvent, BaseRefChangedEvent, BaseRefForcePushedEvent, DeployedEvent, DeploymentEnvironmentChangedEvent, HeadRefDeletedEvent, HeadRefForcePushedEvent, HeadRefRestoredEvent, MergedEvent, ReviewDismissedEvent, ReviewRequestedEvent, ReviewRequestRemovedEvent, ReadyForReviewEvent, ConvertToDraftEvent, IssueComment, CrossReferencedEvent, AddedToProjectEvent, AssignedEvent, ClosedEvent, CommentDeletedEvent, ConnectedEvent, ConvertedNoteToIssueEvent, DemilestonedEvent, DisconnectedEvent, LabeledEvent, LockedEvent, MarkedAsDuplicateEvent, MentionedEvent, MilestonedEvent, MovedColumnsInProjectEvent, PinnedEvent, ReferencedEvent, RemovedFromProjectEvent, RenamedTitleEvent, ReopenedEvent, SubscribedEvent, TransferredEvent, UnassignedEvent, UnlabeledEvent, UnlockedEvent, UserBlockedEvent, UnmarkedAsDuplicateEvent, UnpinnedEvent, UnsubscribedEvent ]
 
 
 decoder : Decoder PullRequestTimelineItemsItemType
@@ -127,6 +139,12 @@ decoder =
 
                     "PULL_REQUEST_REVISION_MARKER" ->
                         Decode.succeed PullRequestRevisionMarker
+
+                    "AUTOMATIC_BASE_CHANGE_FAILED_EVENT" ->
+                        Decode.succeed AutomaticBaseChangeFailedEvent
+
+                    "AUTOMATIC_BASE_CHANGE_SUCCEEDED_EVENT" ->
+                        Decode.succeed AutomaticBaseChangeSucceededEvent
 
                     "BASE_REF_CHANGED_EVENT" ->
                         Decode.succeed BaseRefChangedEvent
@@ -164,6 +182,9 @@ decoder =
                     "READY_FOR_REVIEW_EVENT" ->
                         Decode.succeed ReadyForReviewEvent
 
+                    "CONVERT_TO_DRAFT_EVENT" ->
+                        Decode.succeed ConvertToDraftEvent
+
                     "ISSUE_COMMENT" ->
                         Decode.succeed IssueComment
 
@@ -182,11 +203,17 @@ decoder =
                     "COMMENT_DELETED_EVENT" ->
                         Decode.succeed CommentDeletedEvent
 
+                    "CONNECTED_EVENT" ->
+                        Decode.succeed ConnectedEvent
+
                     "CONVERTED_NOTE_TO_ISSUE_EVENT" ->
                         Decode.succeed ConvertedNoteToIssueEvent
 
                     "DEMILESTONED_EVENT" ->
                         Decode.succeed DemilestonedEvent
+
+                    "DISCONNECTED_EVENT" ->
+                        Decode.succeed DisconnectedEvent
 
                     "LABELED_EVENT" ->
                         Decode.succeed LabeledEvent
@@ -239,6 +266,9 @@ decoder =
                     "USER_BLOCKED_EVENT" ->
                         Decode.succeed UserBlockedEvent
 
+                    "UNMARKED_AS_DUPLICATE_EVENT" ->
+                        Decode.succeed UnmarkedAsDuplicateEvent
+
                     "UNPINNED_EVENT" ->
                         Decode.succeed UnpinnedEvent
 
@@ -250,7 +280,7 @@ decoder =
             )
 
 
-{-| Convert from the union type representating the Enum to a string that the GraphQL server will recognize.
+{-| Convert from the union type representing the Enum to a string that the GraphQL server will recognize.
 -}
 toString : PullRequestTimelineItemsItemType -> String
 toString enum =
@@ -269,6 +299,12 @@ toString enum =
 
         PullRequestRevisionMarker ->
             "PULL_REQUEST_REVISION_MARKER"
+
+        AutomaticBaseChangeFailedEvent ->
+            "AUTOMATIC_BASE_CHANGE_FAILED_EVENT"
+
+        AutomaticBaseChangeSucceededEvent ->
+            "AUTOMATIC_BASE_CHANGE_SUCCEEDED_EVENT"
 
         BaseRefChangedEvent ->
             "BASE_REF_CHANGED_EVENT"
@@ -306,6 +342,9 @@ toString enum =
         ReadyForReviewEvent ->
             "READY_FOR_REVIEW_EVENT"
 
+        ConvertToDraftEvent ->
+            "CONVERT_TO_DRAFT_EVENT"
+
         IssueComment ->
             "ISSUE_COMMENT"
 
@@ -324,11 +363,17 @@ toString enum =
         CommentDeletedEvent ->
             "COMMENT_DELETED_EVENT"
 
+        ConnectedEvent ->
+            "CONNECTED_EVENT"
+
         ConvertedNoteToIssueEvent ->
             "CONVERTED_NOTE_TO_ISSUE_EVENT"
 
         DemilestonedEvent ->
             "DEMILESTONED_EVENT"
+
+        DisconnectedEvent ->
+            "DISCONNECTED_EVENT"
 
         LabeledEvent ->
             "LABELED_EVENT"
@@ -381,6 +426,9 @@ toString enum =
         UserBlockedEvent ->
             "USER_BLOCKED_EVENT"
 
+        UnmarkedAsDuplicateEvent ->
+            "UNMARKED_AS_DUPLICATE_EVENT"
+
         UnpinnedEvent ->
             "UNPINNED_EVENT"
 
@@ -416,6 +464,12 @@ fromString enumString =
 
         "PULL_REQUEST_REVISION_MARKER" ->
             Just PullRequestRevisionMarker
+
+        "AUTOMATIC_BASE_CHANGE_FAILED_EVENT" ->
+            Just AutomaticBaseChangeFailedEvent
+
+        "AUTOMATIC_BASE_CHANGE_SUCCEEDED_EVENT" ->
+            Just AutomaticBaseChangeSucceededEvent
 
         "BASE_REF_CHANGED_EVENT" ->
             Just BaseRefChangedEvent
@@ -453,6 +507,9 @@ fromString enumString =
         "READY_FOR_REVIEW_EVENT" ->
             Just ReadyForReviewEvent
 
+        "CONVERT_TO_DRAFT_EVENT" ->
+            Just ConvertToDraftEvent
+
         "ISSUE_COMMENT" ->
             Just IssueComment
 
@@ -471,11 +528,17 @@ fromString enumString =
         "COMMENT_DELETED_EVENT" ->
             Just CommentDeletedEvent
 
+        "CONNECTED_EVENT" ->
+            Just ConnectedEvent
+
         "CONVERTED_NOTE_TO_ISSUE_EVENT" ->
             Just ConvertedNoteToIssueEvent
 
         "DEMILESTONED_EVENT" ->
             Just DemilestonedEvent
+
+        "DISCONNECTED_EVENT" ->
+            Just DisconnectedEvent
 
         "LABELED_EVENT" ->
             Just LabeledEvent
@@ -527,6 +590,9 @@ fromString enumString =
 
         "USER_BLOCKED_EVENT" ->
             Just UserBlockedEvent
+
+        "UNMARKED_AS_DUPLICATE_EVENT" ->
+            Just UnmarkedAsDuplicateEvent
 
         "UNPINNED_EVENT" ->
             Just UnpinnedEvent

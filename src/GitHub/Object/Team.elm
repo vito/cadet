@@ -39,7 +39,10 @@ type alias AncestorsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-ancestors : (AncestorsOptionalArguments -> AncestorsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamConnection -> SelectionSet decodesTo GitHub.Object.Team
+ancestors :
+    (AncestorsOptionalArguments -> AncestorsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 ancestors fillInOptionals object_ =
     let
         filledInOptionals =
@@ -61,7 +64,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size in pixels of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.Team
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet (Maybe GitHub.ScalarCodecs.Uri) GitHub.Object.Team
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -96,7 +101,10 @@ type alias ChildTeamsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-childTeams : (ChildTeamsOptionalArguments -> ChildTeamsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamConnection -> SelectionSet decodesTo GitHub.Object.Team
+childTeams :
+    (ChildTeamsOptionalArguments -> ChildTeamsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 childTeams fillInOptionals object_ =
     let
         filledInOptionals =
@@ -139,7 +147,10 @@ type alias DiscussionRequiredArguments =
   - number - The sequence number of the discussion to find.
 
 -}
-discussion : DiscussionRequiredArguments -> SelectionSet decodesTo GitHub.Object.TeamDiscussion -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
+discussion :
+    DiscussionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
 discussion requiredArgs object_ =
     Object.selectionForCompositeField "discussion" [ Argument.required "number" requiredArgs.number Encode.int ] object_ (identity >> Decode.nullable)
 
@@ -164,7 +175,10 @@ type alias DiscussionsOptionalArguments =
   - orderBy - Order for connection
 
 -}
-discussions : (DiscussionsOptionalArguments -> DiscussionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamDiscussionConnection -> SelectionSet decodesTo GitHub.Object.Team
+discussions :
+    (DiscussionsOptionalArguments -> DiscussionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussionConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 discussions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -226,7 +240,10 @@ type alias InvitationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-invitations : (InvitationsOptionalArguments -> InvitationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.OrganizationInvitationConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
+invitations :
+    (InvitationsOptionalArguments -> InvitationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.OrganizationInvitationConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
 invitations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -257,7 +274,10 @@ type alias MemberStatusesOptionalArguments =
   - orderBy - Ordering options for user statuses returned from the connection.
 
 -}
-memberStatuses : (MemberStatusesOptionalArguments -> MemberStatusesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserStatusConnection -> SelectionSet decodesTo GitHub.Object.Team
+memberStatuses :
+    (MemberStatusesOptionalArguments -> MemberStatusesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserStatusConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 memberStatuses fillInOptionals object_ =
     let
         filledInOptionals =
@@ -294,7 +314,10 @@ type alias MembersOptionalArguments =
   - orderBy - Order for the connection.
 
 -}
-members : (MembersOptionalArguments -> MembersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamMemberConnection -> SelectionSet decodesTo GitHub.Object.Team
+members :
+    (MembersOptionalArguments -> MembersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamMemberConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 members fillInOptionals object_ =
     let
         filledInOptionals =
@@ -344,14 +367,18 @@ newTeamUrl =
 
 {-| The organization that owns this team.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet decodesTo GitHub.Object.Team
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet decodesTo GitHub.Object.Team
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ identity
 
 
 {-| The parent team of the team.
 -}
-parentTeam : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
+parentTeam :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Team
 parentTeam object_ =
     Object.selectionForCompositeField "parentTeam" [] object_ (identity >> Decode.nullable)
 
@@ -383,7 +410,10 @@ type alias RepositoriesOptionalArguments =
   - orderBy - Order for the connection.
 
 -}
-repositories : (RepositoriesOptionalArguments -> RepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamRepositoryConnection -> SelectionSet decodesTo GitHub.Object.Team
+repositories :
+    (RepositoriesOptionalArguments -> RepositoriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamRepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.Team
 repositories fillInOptionals object_ =
     let
         filledInOptionals =

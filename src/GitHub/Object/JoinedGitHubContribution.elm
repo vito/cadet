@@ -51,6 +51,8 @@ url =
 
 {-| The user who made this contribution.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.JoinedGitHubContribution
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.JoinedGitHubContribution
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

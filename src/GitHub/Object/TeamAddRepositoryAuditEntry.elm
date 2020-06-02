@@ -29,7 +29,9 @@ action =
 
 {-| The user who initiated the action
 -}
-actor : SelectionSet decodesTo GitHub.Union.AuditEntryActor -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+actor :
+    SelectionSet decodesTo GitHub.Union.AuditEntryActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -43,7 +45,9 @@ actorIp =
 
 {-| A readable representation of the actor's location
 -}
-actorLocation : SelectionSet decodesTo GitHub.Object.ActorLocation -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+actorLocation :
+    SelectionSet decodesTo GitHub.Object.ActorLocation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 actorLocation object_ =
     Object.selectionForCompositeField "actorLocation" [] object_ (identity >> Decode.nullable)
 
@@ -97,7 +101,9 @@ operationType =
 
 {-| The Organization associated with the Audit Entry.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
@@ -125,7 +131,9 @@ organizationUrl =
 
 {-| The repository associated with the action
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)
 
@@ -153,7 +161,9 @@ repositoryUrl =
 
 {-| The team associated with the action
 -}
-team : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+team :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 team object_ =
     Object.selectionForCompositeField "team" [] object_ (identity >> Decode.nullable)
 
@@ -181,7 +191,9 @@ teamUrl =
 
 {-| The user affected by the action
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamAddRepositoryAuditEntry
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
 

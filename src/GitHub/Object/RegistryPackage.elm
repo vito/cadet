@@ -34,7 +34,9 @@ id =
 
 {-| Find the latest version for the package.
 -}
-latestVersion : SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+latestVersion :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 latestVersion object_ =
     Object.selectionForCompositeField "latestVersion" [] object_ (identity >> Decode.nullable)
 
@@ -62,7 +64,10 @@ type alias PackageFileByGuidRequiredArguments =
   - guid - The unique identifier of the package\_file
 
 -}
-packageFileByGuid : PackageFileByGuidRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+packageFileByGuid :
+    PackageFileByGuidRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 packageFileByGuid requiredArgs object_ =
     Object.selectionForCompositeField "packageFileByGuid" [ Argument.required "guid" requiredArgs.guid Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -76,7 +81,10 @@ type alias PackageFileBySha256RequiredArguments =
   - sha256 - The SHA256 of the package\_file
 
 -}
-packageFileBySha256 : PackageFileBySha256RequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+packageFileBySha256 :
+    PackageFileBySha256RequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageFile
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 packageFileBySha256 requiredArgs object_ =
     Object.selectionForCompositeField "packageFileBySha256" [ Argument.required "sha256" requiredArgs.sha256 Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -104,7 +112,10 @@ type alias PreReleaseVersionsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-preReleaseVersions : (PreReleaseVersionsOptionalArguments -> PreReleaseVersionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+preReleaseVersions :
+    (PreReleaseVersionsOptionalArguments -> PreReleaseVersionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 preReleaseVersions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -126,14 +137,18 @@ registryPackageType =
 
 {-| repository that the release is associated with
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)
 
 
 {-| Statistics about package activity.
 -}
-statistics : SelectionSet decodesTo GitHub.Object.RegistryPackageStatistics -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+statistics :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageStatistics
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 statistics object_ =
     Object.selectionForCompositeField "statistics" [] object_ (identity >> Decode.nullable)
 
@@ -154,7 +169,10 @@ type alias TagsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-tags : (TagsOptionalArguments -> TagsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageTagConnection -> SelectionSet decodesTo GitHub.Object.RegistryPackage
+tags :
+    (TagsOptionalArguments -> TagsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageTagConnection
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackage
 tags fillInOptionals object_ =
     let
         filledInOptionals =
@@ -183,7 +201,10 @@ type alias TopicsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-topics : (TopicsOptionalArguments -> TopicsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TopicConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+topics :
+    (TopicsOptionalArguments -> TopicsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TopicConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 topics fillInOptionals object_ =
     let
         filledInOptionals =
@@ -205,7 +226,10 @@ type alias VersionRequiredArguments =
   - version - The package version.
 
 -}
-version : VersionRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+version :
+    VersionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 version requiredArgs object_ =
     Object.selectionForCompositeField "version" [ Argument.required "version" requiredArgs.version Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -222,7 +246,10 @@ type alias VersionByPlatformRequiredArguments =
   - platform - Find a registry package for a specific platform.
 
 -}
-versionByPlatform : VersionByPlatformRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+versionByPlatform :
+    VersionByPlatformRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 versionByPlatform requiredArgs object_ =
     Object.selectionForCompositeField "versionByPlatform" [ Argument.required "version" requiredArgs.version Encode.string, Argument.required "platform" requiredArgs.platform Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -236,7 +263,10 @@ type alias VersionBySha256RequiredArguments =
   - sha256 - The package SHA256 digest.
 
 -}
-versionBySha256 : VersionBySha256RequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+versionBySha256 :
+    VersionBySha256RequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 versionBySha256 requiredArgs object_ =
     Object.selectionForCompositeField "versionBySha256" [ Argument.required "sha256" requiredArgs.sha256 Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -257,7 +287,10 @@ type alias VersionsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-versions : (VersionsOptionalArguments -> VersionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection -> SelectionSet decodesTo GitHub.Object.RegistryPackage
+versions :
+    (VersionsOptionalArguments -> VersionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackage
 versions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -291,7 +324,11 @@ type alias VersionsByMetadatumRequiredArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-versionsByMetadatum : (VersionsByMetadatumOptionalArguments -> VersionsByMetadatumOptionalArguments) -> VersionsByMetadatumRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
+versionsByMetadatum :
+    (VersionsByMetadatumOptionalArguments -> VersionsByMetadatumOptionalArguments)
+    -> VersionsByMetadatumRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageVersionConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackage
 versionsByMetadatum fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =

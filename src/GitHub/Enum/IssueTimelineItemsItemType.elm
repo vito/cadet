@@ -15,8 +15,10 @@ import Json.Decode as Decode exposing (Decoder)
   - AssignedEvent - Represents an 'assigned' event on any assignable object.
   - ClosedEvent - Represents a 'closed' event on any `Closable`.
   - CommentDeletedEvent - Represents a 'comment\_deleted' event on a given issue or pull request.
+  - ConnectedEvent - Represents a 'connected' event on a given issue or pull request.
   - ConvertedNoteToIssueEvent - Represents a 'converted\_note\_to\_issue' event on a given issue or pull request.
   - DemilestonedEvent - Represents a 'demilestoned' event on a given issue or pull request.
+  - DisconnectedEvent - Represents a 'disconnected' event on a given issue or pull request.
   - LabeledEvent - Represents a 'labeled' event on a given issue or pull request.
   - LockedEvent - Represents a 'locked' event on a given issue or pull request.
   - MarkedAsDuplicateEvent - Represents a 'marked\_as\_duplicate' event on a given issue or pull request.
@@ -34,6 +36,7 @@ import Json.Decode as Decode exposing (Decoder)
   - UnlabeledEvent - Represents an 'unlabeled' event on a given issue or pull request.
   - UnlockedEvent - Represents an 'unlocked' event on a given issue or pull request.
   - UserBlockedEvent - Represents a 'user\_blocked' event on a given user.
+  - UnmarkedAsDuplicateEvent - Represents an 'unmarked\_as\_duplicate' event on a given issue or pull request.
   - UnpinnedEvent - Represents an 'unpinned' event on a given issue or pull request.
   - UnsubscribedEvent - Represents an 'unsubscribed' event on a given `Subscribable`.
 
@@ -45,8 +48,10 @@ type IssueTimelineItemsItemType
     | AssignedEvent
     | ClosedEvent
     | CommentDeletedEvent
+    | ConnectedEvent
     | ConvertedNoteToIssueEvent
     | DemilestonedEvent
+    | DisconnectedEvent
     | LabeledEvent
     | LockedEvent
     | MarkedAsDuplicateEvent
@@ -64,13 +69,14 @@ type IssueTimelineItemsItemType
     | UnlabeledEvent
     | UnlockedEvent
     | UserBlockedEvent
+    | UnmarkedAsDuplicateEvent
     | UnpinnedEvent
     | UnsubscribedEvent
 
 
 list : List IssueTimelineItemsItemType
 list =
-    [ IssueComment, CrossReferencedEvent, AddedToProjectEvent, AssignedEvent, ClosedEvent, CommentDeletedEvent, ConvertedNoteToIssueEvent, DemilestonedEvent, LabeledEvent, LockedEvent, MarkedAsDuplicateEvent, MentionedEvent, MilestonedEvent, MovedColumnsInProjectEvent, PinnedEvent, ReferencedEvent, RemovedFromProjectEvent, RenamedTitleEvent, ReopenedEvent, SubscribedEvent, TransferredEvent, UnassignedEvent, UnlabeledEvent, UnlockedEvent, UserBlockedEvent, UnpinnedEvent, UnsubscribedEvent ]
+    [ IssueComment, CrossReferencedEvent, AddedToProjectEvent, AssignedEvent, ClosedEvent, CommentDeletedEvent, ConnectedEvent, ConvertedNoteToIssueEvent, DemilestonedEvent, DisconnectedEvent, LabeledEvent, LockedEvent, MarkedAsDuplicateEvent, MentionedEvent, MilestonedEvent, MovedColumnsInProjectEvent, PinnedEvent, ReferencedEvent, RemovedFromProjectEvent, RenamedTitleEvent, ReopenedEvent, SubscribedEvent, TransferredEvent, UnassignedEvent, UnlabeledEvent, UnlockedEvent, UserBlockedEvent, UnmarkedAsDuplicateEvent, UnpinnedEvent, UnsubscribedEvent ]
 
 
 decoder : Decoder IssueTimelineItemsItemType
@@ -97,11 +103,17 @@ decoder =
                     "COMMENT_DELETED_EVENT" ->
                         Decode.succeed CommentDeletedEvent
 
+                    "CONNECTED_EVENT" ->
+                        Decode.succeed ConnectedEvent
+
                     "CONVERTED_NOTE_TO_ISSUE_EVENT" ->
                         Decode.succeed ConvertedNoteToIssueEvent
 
                     "DEMILESTONED_EVENT" ->
                         Decode.succeed DemilestonedEvent
+
+                    "DISCONNECTED_EVENT" ->
+                        Decode.succeed DisconnectedEvent
 
                     "LABELED_EVENT" ->
                         Decode.succeed LabeledEvent
@@ -154,6 +166,9 @@ decoder =
                     "USER_BLOCKED_EVENT" ->
                         Decode.succeed UserBlockedEvent
 
+                    "UNMARKED_AS_DUPLICATE_EVENT" ->
+                        Decode.succeed UnmarkedAsDuplicateEvent
+
                     "UNPINNED_EVENT" ->
                         Decode.succeed UnpinnedEvent
 
@@ -165,7 +180,7 @@ decoder =
             )
 
 
-{-| Convert from the union type representating the Enum to a string that the GraphQL server will recognize.
+{-| Convert from the union type representing the Enum to a string that the GraphQL server will recognize.
 -}
 toString : IssueTimelineItemsItemType -> String
 toString enum =
@@ -188,11 +203,17 @@ toString enum =
         CommentDeletedEvent ->
             "COMMENT_DELETED_EVENT"
 
+        ConnectedEvent ->
+            "CONNECTED_EVENT"
+
         ConvertedNoteToIssueEvent ->
             "CONVERTED_NOTE_TO_ISSUE_EVENT"
 
         DemilestonedEvent ->
             "DEMILESTONED_EVENT"
+
+        DisconnectedEvent ->
+            "DISCONNECTED_EVENT"
 
         LabeledEvent ->
             "LABELED_EVENT"
@@ -245,6 +266,9 @@ toString enum =
         UserBlockedEvent ->
             "USER_BLOCKED_EVENT"
 
+        UnmarkedAsDuplicateEvent ->
+            "UNMARKED_AS_DUPLICATE_EVENT"
+
         UnpinnedEvent ->
             "UNPINNED_EVENT"
 
@@ -284,11 +308,17 @@ fromString enumString =
         "COMMENT_DELETED_EVENT" ->
             Just CommentDeletedEvent
 
+        "CONNECTED_EVENT" ->
+            Just ConnectedEvent
+
         "CONVERTED_NOTE_TO_ISSUE_EVENT" ->
             Just ConvertedNoteToIssueEvent
 
         "DEMILESTONED_EVENT" ->
             Just DemilestonedEvent
+
+        "DISCONNECTED_EVENT" ->
+            Just DisconnectedEvent
 
         "LABELED_EVENT" ->
             Just LabeledEvent
@@ -340,6 +370,9 @@ fromString enumString =
 
         "USER_BLOCKED_EVENT" ->
             Just UserBlockedEvent
+
+        "UNMARKED_AS_DUPLICATE_EVENT" ->
+            Just UnmarkedAsDuplicateEvent
 
         "UNPINNED_EVENT" ->
             Just UnpinnedEvent

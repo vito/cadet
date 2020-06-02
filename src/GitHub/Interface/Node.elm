@@ -23,6 +23,8 @@ type alias Fragments decodesTo =
     { onAddedToProjectEvent : SelectionSet decodesTo GitHub.Object.AddedToProjectEvent
     , onApp : SelectionSet decodesTo GitHub.Object.App
     , onAssignedEvent : SelectionSet decodesTo GitHub.Object.AssignedEvent
+    , onAutomaticBaseChangeFailedEvent : SelectionSet decodesTo GitHub.Object.AutomaticBaseChangeFailedEvent
+    , onAutomaticBaseChangeSucceededEvent : SelectionSet decodesTo GitHub.Object.AutomaticBaseChangeSucceededEvent
     , onBaseRefChangedEvent : SelectionSet decodesTo GitHub.Object.BaseRefChangedEvent
     , onBaseRefForcePushedEvent : SelectionSet decodesTo GitHub.Object.BaseRefForcePushedEvent
     , onBlob : SelectionSet decodesTo GitHub.Object.Blob
@@ -34,6 +36,8 @@ type alias Fragments decodesTo =
     , onCommit : SelectionSet decodesTo GitHub.Object.Commit
     , onCommitComment : SelectionSet decodesTo GitHub.Object.CommitComment
     , onCommitCommentThread : SelectionSet decodesTo GitHub.Object.CommitCommentThread
+    , onConnectedEvent : SelectionSet decodesTo GitHub.Object.ConnectedEvent
+    , onConvertToDraftEvent : SelectionSet decodesTo GitHub.Object.ConvertToDraftEvent
     , onConvertedNoteToIssueEvent : SelectionSet decodesTo GitHub.Object.ConvertedNoteToIssueEvent
     , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
     , onDemilestonedEvent : SelectionSet decodesTo GitHub.Object.DemilestonedEvent
@@ -42,6 +46,7 @@ type alias Fragments decodesTo =
     , onDeployment : SelectionSet decodesTo GitHub.Object.Deployment
     , onDeploymentEnvironmentChangedEvent : SelectionSet decodesTo GitHub.Object.DeploymentEnvironmentChangedEvent
     , onDeploymentStatus : SelectionSet decodesTo GitHub.Object.DeploymentStatus
+    , onDisconnectedEvent : SelectionSet decodesTo GitHub.Object.DisconnectedEvent
     , onEnterprise : SelectionSet decodesTo GitHub.Object.Enterprise
     , onEnterpriseAdministratorInvitation : SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitation
     , onEnterpriseIdentityProvider : SelectionSet decodesTo GitHub.Object.EnterpriseIdentityProvider
@@ -57,6 +62,7 @@ type alias Fragments decodesTo =
     , onHeadRefDeletedEvent : SelectionSet decodesTo GitHub.Object.HeadRefDeletedEvent
     , onHeadRefForcePushedEvent : SelectionSet decodesTo GitHub.Object.HeadRefForcePushedEvent
     , onHeadRefRestoredEvent : SelectionSet decodesTo GitHub.Object.HeadRefRestoredEvent
+    , onIpAllowListEntry : SelectionSet decodesTo GitHub.Object.IpAllowListEntry
     , onIssue : SelectionSet decodesTo GitHub.Object.Issue
     , onIssueComment : SelectionSet decodesTo GitHub.Object.IssueComment
     , onLabel : SelectionSet decodesTo GitHub.Object.Label
@@ -170,6 +176,7 @@ type alias Fragments decodesTo =
     , onSponsorsTier : SelectionSet decodesTo GitHub.Object.SponsorsTier
     , onSponsorship : SelectionSet decodesTo GitHub.Object.Sponsorship
     , onStatus : SelectionSet decodesTo GitHub.Object.Status
+    , onStatusCheckRollup : SelectionSet decodesTo GitHub.Object.StatusCheckRollup
     , onStatusContext : SelectionSet decodesTo GitHub.Object.StatusContext
     , onSubscribedEvent : SelectionSet decodesTo GitHub.Object.SubscribedEvent
     , onTag : SelectionSet decodesTo GitHub.Object.Tag
@@ -187,6 +194,7 @@ type alias Fragments decodesTo =
     , onUnassignedEvent : SelectionSet decodesTo GitHub.Object.UnassignedEvent
     , onUnlabeledEvent : SelectionSet decodesTo GitHub.Object.UnlabeledEvent
     , onUnlockedEvent : SelectionSet decodesTo GitHub.Object.UnlockedEvent
+    , onUnmarkedAsDuplicateEvent : SelectionSet decodesTo GitHub.Object.UnmarkedAsDuplicateEvent
     , onUnpinnedEvent : SelectionSet decodesTo GitHub.Object.UnpinnedEvent
     , onUnsubscribedEvent : SelectionSet decodesTo GitHub.Object.UnsubscribedEvent
     , onUser : SelectionSet decodesTo GitHub.Object.User
@@ -202,10 +210,12 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.Node
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "AddedToProjectEvent" selections.onAddedToProjectEvent
         , Object.buildFragment "App" selections.onApp
         , Object.buildFragment "AssignedEvent" selections.onAssignedEvent
+        , Object.buildFragment "AutomaticBaseChangeFailedEvent" selections.onAutomaticBaseChangeFailedEvent
+        , Object.buildFragment "AutomaticBaseChangeSucceededEvent" selections.onAutomaticBaseChangeSucceededEvent
         , Object.buildFragment "BaseRefChangedEvent" selections.onBaseRefChangedEvent
         , Object.buildFragment "BaseRefForcePushedEvent" selections.onBaseRefForcePushedEvent
         , Object.buildFragment "Blob" selections.onBlob
@@ -217,6 +227,8 @@ fragments selections =
         , Object.buildFragment "Commit" selections.onCommit
         , Object.buildFragment "CommitComment" selections.onCommitComment
         , Object.buildFragment "CommitCommentThread" selections.onCommitCommentThread
+        , Object.buildFragment "ConnectedEvent" selections.onConnectedEvent
+        , Object.buildFragment "ConvertToDraftEvent" selections.onConvertToDraftEvent
         , Object.buildFragment "ConvertedNoteToIssueEvent" selections.onConvertedNoteToIssueEvent
         , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
         , Object.buildFragment "DemilestonedEvent" selections.onDemilestonedEvent
@@ -225,6 +237,7 @@ fragments selections =
         , Object.buildFragment "Deployment" selections.onDeployment
         , Object.buildFragment "DeploymentEnvironmentChangedEvent" selections.onDeploymentEnvironmentChangedEvent
         , Object.buildFragment "DeploymentStatus" selections.onDeploymentStatus
+        , Object.buildFragment "DisconnectedEvent" selections.onDisconnectedEvent
         , Object.buildFragment "Enterprise" selections.onEnterprise
         , Object.buildFragment "EnterpriseAdministratorInvitation" selections.onEnterpriseAdministratorInvitation
         , Object.buildFragment "EnterpriseIdentityProvider" selections.onEnterpriseIdentityProvider
@@ -240,6 +253,7 @@ fragments selections =
         , Object.buildFragment "HeadRefDeletedEvent" selections.onHeadRefDeletedEvent
         , Object.buildFragment "HeadRefForcePushedEvent" selections.onHeadRefForcePushedEvent
         , Object.buildFragment "HeadRefRestoredEvent" selections.onHeadRefRestoredEvent
+        , Object.buildFragment "IpAllowListEntry" selections.onIpAllowListEntry
         , Object.buildFragment "Issue" selections.onIssue
         , Object.buildFragment "IssueComment" selections.onIssueComment
         , Object.buildFragment "Label" selections.onLabel
@@ -353,6 +367,7 @@ fragments selections =
         , Object.buildFragment "SponsorsTier" selections.onSponsorsTier
         , Object.buildFragment "Sponsorship" selections.onSponsorship
         , Object.buildFragment "Status" selections.onStatus
+        , Object.buildFragment "StatusCheckRollup" selections.onStatusCheckRollup
         , Object.buildFragment "StatusContext" selections.onStatusContext
         , Object.buildFragment "SubscribedEvent" selections.onSubscribedEvent
         , Object.buildFragment "Tag" selections.onTag
@@ -370,6 +385,7 @@ fragments selections =
         , Object.buildFragment "UnassignedEvent" selections.onUnassignedEvent
         , Object.buildFragment "UnlabeledEvent" selections.onUnlabeledEvent
         , Object.buildFragment "UnlockedEvent" selections.onUnlockedEvent
+        , Object.buildFragment "UnmarkedAsDuplicateEvent" selections.onUnmarkedAsDuplicateEvent
         , Object.buildFragment "UnpinnedEvent" selections.onUnpinnedEvent
         , Object.buildFragment "UnsubscribedEvent" selections.onUnsubscribedEvent
         , Object.buildFragment "User" selections.onUser
@@ -379,7 +395,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -387,6 +403,8 @@ maybeFragments =
     { onAddedToProjectEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onApp = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onAssignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onAutomaticBaseChangeFailedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onAutomaticBaseChangeSucceededEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onBaseRefChangedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onBaseRefForcePushedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onBlob = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -398,6 +416,8 @@ maybeFragments =
     , onCommit = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCommitComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCommitCommentThread = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onConnectedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onConvertToDraftEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onConvertedNoteToIssueEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onDemilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -406,6 +426,7 @@ maybeFragments =
     , onDeployment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onDeploymentEnvironmentChangedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onDeploymentStatus = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onDisconnectedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onEnterprise = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onEnterpriseAdministratorInvitation = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onEnterpriseIdentityProvider = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -421,6 +442,7 @@ maybeFragments =
     , onHeadRefDeletedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onHeadRefForcePushedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onHeadRefRestoredEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onIpAllowListEntry = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onIssue = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onIssueComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onLabel = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -534,6 +556,7 @@ maybeFragments =
     , onSponsorsTier = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onSponsorship = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onStatus = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onStatusCheckRollup = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onStatusContext = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onSubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onTag = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -551,6 +574,7 @@ maybeFragments =
     , onUnassignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnlabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnmarkedAsDuplicateEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnpinnedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnsubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUser = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)

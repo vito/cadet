@@ -19,6 +19,15 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Identifies the actor who performed the event.
+-}
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RequestReviewsPayload
+actor object_ =
+    Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
+
+
 {-| A unique identifier for the client performing the mutation.
 -}
 clientMutationId : SelectionSet (Maybe String) GitHub.Object.RequestReviewsPayload
@@ -28,13 +37,17 @@ clientMutationId =
 
 {-| The pull request that is getting requests.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.RequestReviewsPayload
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RequestReviewsPayload
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ (identity >> Decode.nullable)
 
 
 {-| The edge from the pull request to the requested reviewers.
 -}
-requestedReviewersEdge : SelectionSet decodesTo GitHub.Object.UserEdge -> SelectionSet (Maybe decodesTo) GitHub.Object.RequestReviewsPayload
+requestedReviewersEdge :
+    SelectionSet decodesTo GitHub.Object.UserEdge
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RequestReviewsPayload
 requestedReviewersEdge object_ =
     Object.selectionForCompositeField "requestedReviewersEdge" [] object_ (identity >> Decode.nullable)

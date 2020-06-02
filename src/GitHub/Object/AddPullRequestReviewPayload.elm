@@ -28,13 +28,17 @@ clientMutationId =
 
 {-| The newly created pull request review.
 -}
-pullRequestReview : SelectionSet decodesTo GitHub.Object.PullRequestReview -> SelectionSet (Maybe decodesTo) GitHub.Object.AddPullRequestReviewPayload
+pullRequestReview :
+    SelectionSet decodesTo GitHub.Object.PullRequestReview
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AddPullRequestReviewPayload
 pullRequestReview object_ =
     Object.selectionForCompositeField "pullRequestReview" [] object_ (identity >> Decode.nullable)
 
 
 {-| The edge from the pull request's review connection.
 -}
-reviewEdge : SelectionSet decodesTo GitHub.Object.PullRequestReviewEdge -> SelectionSet (Maybe decodesTo) GitHub.Object.AddPullRequestReviewPayload
+reviewEdge :
+    SelectionSet decodesTo GitHub.Object.PullRequestReviewEdge
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AddPullRequestReviewPayload
 reviewEdge object_ =
     Object.selectionForCompositeField "reviewEdge" [] object_ (identity >> Decode.nullable)

@@ -53,6 +53,11 @@ id =
 
 
 {-| Indicates whether the Blob is binary or text
+
+**Upcoming Change on 2019-07-01 UTC**
+**Description:** Type for `isBinary` will change from `Boolean!` to `Boolean`.
+**Reason:** The `isBinary` field may return `null` when it cannot determine if a Blob is binary.
+
 -}
 isBinary : SelectionSet Bool GitHub.Object.Blob
 isBinary =
@@ -75,7 +80,9 @@ oid =
 
 {-| The Repository the Git object belongs to
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Blob
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Blob
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 

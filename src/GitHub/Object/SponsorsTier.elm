@@ -21,7 +21,9 @@ import Json.Decode as Decode
 
 {-| SponsorsTier information only visible to users that can administer the associated Sponsors listing.
 -}
-adminInfo : SelectionSet decodesTo GitHub.Object.SponsorsTierAdminInfo -> SelectionSet (Maybe decodesTo) GitHub.Object.SponsorsTier
+adminInfo :
+    SelectionSet decodesTo GitHub.Object.SponsorsTierAdminInfo
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.SponsorsTier
 adminInfo object_ =
     Object.selectionForCompositeField "adminInfo" [] object_ (identity >> Decode.nullable)
 
@@ -75,7 +77,9 @@ name =
 
 {-| The sponsors listing that this tier belongs to.
 -}
-sponsorsListing : SelectionSet decodesTo GitHub.Object.SponsorsListing -> SelectionSet decodesTo GitHub.Object.SponsorsTier
+sponsorsListing :
+    SelectionSet decodesTo GitHub.Object.SponsorsListing
+    -> SelectionSet decodesTo GitHub.Object.SponsorsTier
 sponsorsListing object_ =
     Object.selectionForCompositeField "sponsorsListing" [] object_ identity
 

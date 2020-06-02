@@ -33,13 +33,13 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.RepositoryOwner
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -58,7 +58,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Interface.RepositoryOwner
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Interface.RepositoryOwner
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -81,45 +83,6 @@ id =
 login : SelectionSet String GitHub.Interface.RepositoryOwner
 login =
     Object.selectionForField "String" "login" [] Decode.string
-
-
-type alias PinnedRepositoriesOptionalArguments =
-    { privacy : OptionalArgument GitHub.Enum.RepositoryPrivacy.RepositoryPrivacy
-    , orderBy : OptionalArgument GitHub.InputObject.RepositoryOrder
-    , affiliations : OptionalArgument (List (Maybe GitHub.Enum.RepositoryAffiliation.RepositoryAffiliation))
-    , ownerAffiliations : OptionalArgument (List (Maybe GitHub.Enum.RepositoryAffiliation.RepositoryAffiliation))
-    , isLocked : OptionalArgument Bool
-    , after : OptionalArgument String
-    , before : OptionalArgument String
-    , first : OptionalArgument Int
-    , last : OptionalArgument Int
-    }
-
-
-{-| A list of repositories this user has pinned to their profile
-
-  - privacy - If non-null, filters repositories according to privacy
-  - orderBy - Ordering options for repositories returned from the connection
-  - affiliations - Array of viewer's affiliation options for repositories returned from the connection. For example, OWNER will include only repositories that the current viewer owns.
-  - ownerAffiliations - Array of owner's affiliation options for repositories returned from the connection. For example, OWNER will include only repositories that the organization or user being viewed owns.
-  - isLocked - If non-null, filters repositories according to whether they have been locked
-  - after - Returns the elements in the list that come after the specified cursor.
-  - before - Returns the elements in the list that come before the specified cursor.
-  - first - Returns the first _n_ elements from the list.
-  - last - Returns the last _n_ elements from the list.
-
--}
-pinnedRepositories : (PinnedRepositoriesOptionalArguments -> PinnedRepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Interface.RepositoryOwner
-pinnedRepositories fillInOptionals object_ =
-    let
-        filledInOptionals =
-            fillInOptionals { privacy = Absent, orderBy = Absent, affiliations = Absent, ownerAffiliations = Absent, isLocked = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
-
-        optionalArgs =
-            [ Argument.optional "privacy" filledInOptionals.privacy (Encode.enum GitHub.Enum.RepositoryPrivacy.toString), Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeRepositoryOrder, Argument.optional "affiliations" filledInOptionals.affiliations (Encode.enum GitHub.Enum.RepositoryAffiliation.toString |> Encode.maybe |> Encode.list), Argument.optional "ownerAffiliations" filledInOptionals.ownerAffiliations (Encode.enum GitHub.Enum.RepositoryAffiliation.toString |> Encode.maybe |> Encode.list), Argument.optional "isLocked" filledInOptionals.isLocked Encode.bool, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
-                |> List.filterMap identity
-    in
-    Object.selectionForCompositeField "pinnedRepositories" optionalArgs object_ identity
 
 
 type alias RepositoriesOptionalArguments =
@@ -150,7 +113,10 @@ type alias RepositoriesOptionalArguments =
   - isFork - If non-null, filters repositories according to whether they are forks of another repository
 
 -}
-repositories : (RepositoriesOptionalArguments -> RepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Interface.RepositoryOwner
+repositories :
+    (RepositoriesOptionalArguments -> RepositoriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RepositoryConnection
+    -> SelectionSet decodesTo GitHub.Interface.RepositoryOwner
 repositories fillInOptionals object_ =
     let
         filledInOptionals =
@@ -172,7 +138,10 @@ type alias RepositoryRequiredArguments =
   - name - Name of Repository to find.
 
 -}
-repository : RepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Interface.RepositoryOwner
+repository :
+    RepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.RepositoryOwner
 repository requiredArgs object_ =
     Object.selectionForCompositeField "repository" [ Argument.required "name" requiredArgs.name Encode.string ] object_ (identity >> Decode.nullable)
 

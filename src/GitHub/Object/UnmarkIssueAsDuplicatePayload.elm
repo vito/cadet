@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The issue or pull request that was marked as a duplicate.
 -}
-duplicate : SelectionSet decodesTo GitHub.Union.IssueOrPullRequest -> SelectionSet (Maybe decodesTo) GitHub.Object.UnmarkIssueAsDuplicatePayload
+duplicate :
+    SelectionSet decodesTo GitHub.Union.IssueOrPullRequest
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UnmarkIssueAsDuplicatePayload
 duplicate object_ =
     Object.selectionForCompositeField "duplicate" [] object_ (identity >> Decode.nullable)

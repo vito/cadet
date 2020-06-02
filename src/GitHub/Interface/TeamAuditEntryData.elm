@@ -35,7 +35,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.TeamAuditEntryData
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "OrgRestoreMemberMembershipTeamAuditEntryData" selections.onOrgRestoreMemberMembershipTeamAuditEntryData
         , Object.buildFragment "TeamAddMemberAuditEntry" selections.onTeamAddMemberAuditEntry
         , Object.buildFragment "TeamAddRepositoryAuditEntry" selections.onTeamAddRepositoryAuditEntry
@@ -45,7 +45,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -61,7 +61,9 @@ maybeFragments =
 
 {-| The team associated with the action
 -}
-team : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Interface.TeamAuditEntryData
+team :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.TeamAuditEntryData
 team object_ =
     Object.selectionForCompositeField "team" [] object_ (identity >> Decode.nullable)
 

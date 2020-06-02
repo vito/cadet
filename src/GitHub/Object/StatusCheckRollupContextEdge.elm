@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Object.AppEdge exposing (..)
+module GitHub.Object.StatusCheckRollupContextEdge exposing (..)
 
 import GitHub.InputObject
 import GitHub.Interface
@@ -21,13 +21,15 @@ import Json.Decode as Decode
 
 {-| A cursor for use in pagination.
 -}
-cursor : SelectionSet String GitHub.Object.AppEdge
+cursor : SelectionSet String GitHub.Object.StatusCheckRollupContextEdge
 cursor =
     Object.selectionForField "String" "cursor" [] Decode.string
 
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.App -> SelectionSet (Maybe decodesTo) GitHub.Object.AppEdge
+node :
+    SelectionSet decodesTo GitHub.Union.StatusCheckRollupContext
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.StatusCheckRollupContextEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

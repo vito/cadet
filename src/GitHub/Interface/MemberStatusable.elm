@@ -31,13 +31,13 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.MemberStatusable
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "Team" selections.onTeam
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -65,7 +65,10 @@ type alias MemberStatusesOptionalArguments =
   - orderBy - Ordering options for user statuses returned from the connection.
 
 -}
-memberStatuses : (MemberStatusesOptionalArguments -> MemberStatusesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserStatusConnection -> SelectionSet decodesTo GitHub.Interface.MemberStatusable
+memberStatuses :
+    (MemberStatusesOptionalArguments -> MemberStatusesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserStatusConnection
+    -> SelectionSet decodesTo GitHub.Interface.MemberStatusable
 memberStatuses fillInOptionals object_ =
     let
         filledInOptionals =

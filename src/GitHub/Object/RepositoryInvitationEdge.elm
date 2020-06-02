@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.RepositoryInvitation -> SelectionSet (Maybe decodesTo) GitHub.Object.RepositoryInvitationEdge
+node :
+    SelectionSet decodesTo GitHub.Object.RepositoryInvitation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RepositoryInvitationEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

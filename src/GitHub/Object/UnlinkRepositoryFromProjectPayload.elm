@@ -28,13 +28,17 @@ clientMutationId =
 
 {-| The linked Project.
 -}
-project : SelectionSet decodesTo GitHub.Object.Project -> SelectionSet (Maybe decodesTo) GitHub.Object.UnlinkRepositoryFromProjectPayload
+project :
+    SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UnlinkRepositoryFromProjectPayload
 project object_ =
     Object.selectionForCompositeField "project" [] object_ (identity >> Decode.nullable)
 
 
 {-| The linked Repository.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.UnlinkRepositoryFromProjectPayload
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UnlinkRepositoryFromProjectPayload
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ (identity >> Decode.nullable)

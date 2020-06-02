@@ -28,7 +28,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.GitActor
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.GitActor
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -64,6 +66,8 @@ name =
 
 {-| The GitHub user corresponding to the email field. Null if no such user exists.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.GitActor
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.GitActor
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

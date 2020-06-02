@@ -45,6 +45,10 @@ type AddPullRequestReviewPayload
     = AddPullRequestReviewPayload
 
 
+type AddPullRequestReviewThreadPayload
+    = AddPullRequestReviewThreadPayload
+
+
 type AddReactionPayload
     = AddReactionPayload
 
@@ -61,16 +65,20 @@ type App
     = App
 
 
-type AppEdge
-    = AppEdge
-
-
 type ArchiveRepositoryPayload
     = ArchiveRepositoryPayload
 
 
 type AssignedEvent
     = AssignedEvent
+
+
+type AutomaticBaseChangeFailedEvent
+    = AutomaticBaseChangeFailedEvent
+
+
+type AutomaticBaseChangeSucceededEvent
+    = AutomaticBaseChangeSucceededEvent
 
 
 type BaseRefChangedEvent
@@ -197,12 +205,8 @@ type CommitHistoryConnection
     = CommitHistoryConnection
 
 
-type ContentAttachment
-    = ContentAttachment
-
-
-type ContentReference
-    = ContentReference
+type ConnectedEvent
+    = ConnectedEvent
 
 
 type ContributionCalendar
@@ -229,6 +233,10 @@ type ConvertProjectCardNoteToIssuePayload
     = ConvertProjectCardNoteToIssuePayload
 
 
+type ConvertToDraftEvent
+    = ConvertToDraftEvent
+
+
 type ConvertedNoteToIssueEvent
     = ConvertedNoteToIssueEvent
 
@@ -239,6 +247,10 @@ type CreateBranchProtectionRulePayload
 
 type CreateEnterpriseOrganizationPayload
     = CreateEnterpriseOrganizationPayload
+
+
+type CreateIpAllowListEntryPayload
+    = CreateIpAllowListEntryPayload
 
 
 type CreateIssuePayload
@@ -341,6 +353,14 @@ type DeleteBranchProtectionRulePayload
     = DeleteBranchProtectionRulePayload
 
 
+type DeleteDeploymentPayload
+    = DeleteDeploymentPayload
+
+
+type DeleteIpAllowListEntryPayload
+    = DeleteIpAllowListEntryPayload
+
+
 type DeleteIssueCommentPayload
     = DeleteIssueCommentPayload
 
@@ -429,6 +449,10 @@ type DeploymentStatusEdge
     = DeploymentStatusEdge
 
 
+type DisconnectedEvent
+    = DisconnectedEvent
+
+
 type DismissPullRequestReviewPayload
     = DismissPullRequestReviewPayload
 
@@ -459,10 +483,6 @@ type EnterpriseAdministratorInvitationEdge
 
 type EnterpriseBillingInfo
     = EnterpriseBillingInfo
-
-
-type EnterpriseEdge
-    = EnterpriseEdge
 
 
 type EnterpriseIdentityProvider
@@ -685,6 +705,18 @@ type InviteEnterpriseAdminPayload
     = InviteEnterpriseAdminPayload
 
 
+type IpAllowListEntry
+    = IpAllowListEntry
+
+
+type IpAllowListEntryConnection
+    = IpAllowListEntryConnection
+
+
+type IpAllowListEntryEdge
+    = IpAllowListEntryEdge
+
+
 type Issue
     = Issue
 
@@ -711,10 +743,6 @@ type IssueContributionsByRepository
 
 type IssueEdge
     = IssueEdge
-
-
-type IssueOrPullRequestEdge
-    = IssueOrPullRequestEdge
 
 
 type IssueTimelineConnection
@@ -789,6 +817,10 @@ type Mannequin
     = Mannequin
 
 
+type MarkPullRequestReadyForReviewPayload
+    = MarkPullRequestReadyForReviewPayload
+
+
 type MarkedAsDuplicateEvent
     = MarkedAsDuplicateEvent
 
@@ -851,6 +883,10 @@ type MilestoneEdge
 
 type MilestonedEvent
     = MilestonedEvent
+
+
+type MinimizeCommentPayload
+    = MinimizeCommentPayload
 
 
 type MoveProjectCardPayload
@@ -1385,6 +1421,10 @@ type RemoveEnterpriseAdminPayload
     = RemoveEnterpriseAdminPayload
 
 
+type RemoveEnterpriseIdentityProviderPayload
+    = RemoveEnterpriseIdentityProviderPayload
+
+
 type RemoveEnterpriseOrganizationPayload
     = RemoveEnterpriseOrganizationPayload
 
@@ -1523,6 +1563,10 @@ type RepositoryEdge
 
 type RepositoryInvitation
     = RepositoryInvitation
+
+
+type RepositoryInvitationConnection
+    = RepositoryInvitationConnection
 
 
 type RepositoryInvitationEdge
@@ -1673,6 +1717,10 @@ type SecurityVulnerabilityEdge
     = SecurityVulnerabilityEdge
 
 
+type SetEnterpriseIdentityProviderPayload
+    = SetEnterpriseIdentityProviderPayload
+
+
 type SmimeSignature
     = SmimeSignature
 
@@ -1729,12 +1777,36 @@ type Status
     = Status
 
 
+type StatusCheckRollup
+    = StatusCheckRollup
+
+
+type StatusCheckRollupContextConnection
+    = StatusCheckRollupContextConnection
+
+
+type StatusCheckRollupContextEdge
+    = StatusCheckRollupContextEdge
+
+
 type StatusContext
     = StatusContext
 
 
 type SubmitPullRequestReviewPayload
     = SubmitPullRequestReviewPayload
+
+
+type Submodule
+    = Submodule
+
+
+type SubmoduleConnection
+    = SubmoduleConnection
+
+
+type SubmoduleEdge
+    = SubmoduleEdge
 
 
 type SubscribedEvent
@@ -1893,6 +1965,14 @@ type UnmarkIssueAsDuplicatePayload
     = UnmarkIssueAsDuplicatePayload
 
 
+type UnmarkedAsDuplicateEvent
+    = UnmarkedAsDuplicateEvent
+
+
+type UnminimizeCommentPayload
+    = UnminimizeCommentPayload
+
+
 type UnpinnedEvent
     = UnpinnedEvent
 
@@ -1975,6 +2055,14 @@ type UpdateEnterpriseTeamDiscussionsSettingPayload
 
 type UpdateEnterpriseTwoFactorAuthenticationRequiredSettingPayload
     = UpdateEnterpriseTwoFactorAuthenticationRequiredSettingPayload
+
+
+type UpdateIpAllowListEnabledSettingPayload
+    = UpdateIpAllowListEnabledSettingPayload
+
+
+type UpdateIpAllowListEntryPayload
+    = UpdateIpAllowListEntryPayload
 
 
 type UpdateIssueCommentPayload

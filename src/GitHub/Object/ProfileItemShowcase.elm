@@ -42,7 +42,10 @@ type alias ItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-items : (ItemsOptionalArguments -> ItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection -> SelectionSet decodesTo GitHub.Object.ProfileItemShowcase
+items :
+    (ItemsOptionalArguments -> ItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection
+    -> SelectionSet decodesTo GitHub.Object.ProfileItemShowcase
 items fillInOptionals object_ =
     let
         filledInOptionals =

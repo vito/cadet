@@ -35,6 +35,8 @@ octicon =
 
 {-| Identifies the user who is related to this context.
 -}
-viewer : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.ViewerHovercardContext
+viewer :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.ViewerHovercardContext
 viewer object_ =
     Object.selectionForCompositeField "viewer" [] object_ identity

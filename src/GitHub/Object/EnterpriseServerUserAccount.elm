@@ -44,7 +44,10 @@ type alias EmailsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-emails : (EmailsOptionalArguments -> EmailsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmailConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount
+emails :
+    (EmailsOptionalArguments -> EmailsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmailConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount
 emails fillInOptionals object_ =
     let
         filledInOptionals =
@@ -59,7 +62,9 @@ emails fillInOptionals object_ =
 
 {-| The Enterprise Server installation on which this user account exists.
 -}
-enterpriseServerInstallation : SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount
+enterpriseServerInstallation :
+    SelectionSet decodesTo GitHub.Object.EnterpriseServerInstallation
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount
 enterpriseServerInstallation object_ =
     Object.selectionForCompositeField "enterpriseServerInstallation" [] object_ identity
 

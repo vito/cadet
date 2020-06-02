@@ -25,7 +25,9 @@ import Json.Decode as Decode
 
 {-| The actor who authored the comment.
 -}
-author : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
+author :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -85,7 +87,10 @@ type alias CommentsOptionalArguments =
   - fromComment - When provided, filters the connection such that results begin with the comment with this number.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamDiscussionCommentConnection -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussionCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -135,7 +140,9 @@ databaseId =
 
 {-| The actor who edited the comment.
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 
@@ -189,7 +196,9 @@ publishedAt =
 
 {-| A list of reactions grouped by content left on the subject.
 -}
-reactionGroups : SelectionSet decodesTo GitHub.Object.ReactionGroup -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.TeamDiscussion
+reactionGroups :
+    SelectionSet decodesTo GitHub.Object.ReactionGroup
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.TeamDiscussion
 reactionGroups object_ =
     Object.selectionForCompositeField "reactionGroups" [] object_ (identity >> Decode.list >> Decode.nullable)
 
@@ -214,7 +223,10 @@ type alias ReactionsOptionalArguments =
   - orderBy - Allows specifying the order in which reactions are returned.
 
 -}
-reactions : (ReactionsOptionalArguments -> ReactionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactionConnection -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
+reactions :
+    (ReactionsOptionalArguments -> ReactionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactionConnection
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
 reactions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -236,7 +248,9 @@ resourcePath =
 
 {-| The team that defines the context of this discussion.
 -}
-team : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
+team :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet decodesTo GitHub.Object.TeamDiscussion
 team object_ =
     Object.selectionForCompositeField "team" [] object_ identity
 
@@ -278,7 +292,10 @@ type alias UserContentEditsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userContentEdits : (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
+userContentEdits :
+    (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamDiscussion
 userContentEdits fillInOptionals object_ =
     let
         filledInOptionals =

@@ -33,14 +33,14 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.RegistryPackageOwner
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Organization" selections.onOrganization
         , Object.buildFragment "Repository" selections.onRepository
         , Object.buildFragment "User" selections.onUser
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -84,7 +84,10 @@ type alias RegistryPackagesOptionalArguments =
   - publicOnly - Filter registry package by whether it is publicly visible
 
 -}
-registryPackages : (RegistryPackagesOptionalArguments -> RegistryPackagesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection -> SelectionSet decodesTo GitHub.Interface.RegistryPackageOwner
+registryPackages :
+    (RegistryPackagesOptionalArguments -> RegistryPackagesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection
+    -> SelectionSet decodesTo GitHub.Interface.RegistryPackageOwner
 registryPackages fillInOptionals object_ =
     let
         filledInOptionals =

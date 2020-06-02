@@ -35,7 +35,9 @@ isHalloween =
 
 {-| A list of the months of contributions in this calendar.
 -}
-months : SelectionSet decodesTo GitHub.Object.ContributionCalendarMonth -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendar
+months :
+    SelectionSet decodesTo GitHub.Object.ContributionCalendarMonth
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendar
 months object_ =
     Object.selectionForCompositeField "months" [] object_ (identity >> Decode.list)
 
@@ -49,6 +51,8 @@ totalContributions =
 
 {-| A list of the weeks of contributions in this calendar.
 -}
-weeks : SelectionSet decodesTo GitHub.Object.ContributionCalendarWeek -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendar
+weeks :
+    SelectionSet decodesTo GitHub.Object.ContributionCalendarWeek
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionCalendar
 weeks object_ =
     Object.selectionForCompositeField "weeks" [] object_ (identity >> Decode.list)

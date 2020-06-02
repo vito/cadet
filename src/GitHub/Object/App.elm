@@ -61,7 +61,9 @@ type alias LogoUrlOptionalArguments =
   - size - The size of the resulting image.
 
 -}
-logoUrl : (LogoUrlOptionalArguments -> LogoUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.App
+logoUrl :
+    (LogoUrlOptionalArguments -> LogoUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.App
 logoUrl fillInOptionals =
     let
         filledInOptionals =

@@ -37,7 +37,9 @@ type alias AnyPinnableItemsOptionalArguments =
   - type\_ - Filter to only a particular kind of pinnable item.
 
 -}
-anyPinnableItems : (AnyPinnableItemsOptionalArguments -> AnyPinnableItemsOptionalArguments) -> SelectionSet Bool GitHub.Object.User
+anyPinnableItems :
+    (AnyPinnableItemsOptionalArguments -> AnyPinnableItemsOptionalArguments)
+    -> SelectionSet Bool GitHub.Object.User
 anyPinnableItems fillInOptionals =
     let
         filledInOptionals =
@@ -59,7 +61,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.User
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.User
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -102,7 +106,10 @@ type alias CommitCommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-commitComments : (CommitCommentsOptionalArguments -> CommitCommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection -> SelectionSet decodesTo GitHub.Object.User
+commitComments :
+    (CommitCommentsOptionalArguments -> CommitCommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 commitComments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -143,7 +150,10 @@ type alias ContributionsCollectionOptionalArguments =
   - to - Only contributions made before and up to and including this time will be counted. If omitted, defaults to the current time.
 
 -}
-contributionsCollection : (ContributionsCollectionOptionalArguments -> ContributionsCollectionOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ContributionsCollection -> SelectionSet decodesTo GitHub.Object.User
+contributionsCollection :
+    (ContributionsCollectionOptionalArguments -> ContributionsCollectionOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+    -> SelectionSet decodesTo GitHub.Object.User
 contributionsCollection fillInOptionals object_ =
     let
         filledInOptionals =
@@ -193,7 +203,10 @@ type alias FollowersOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-followers : (FollowersOptionalArguments -> FollowersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.FollowerConnection -> SelectionSet decodesTo GitHub.Object.User
+followers :
+    (FollowersOptionalArguments -> FollowersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.FollowerConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 followers fillInOptionals object_ =
     let
         filledInOptionals =
@@ -222,7 +235,10 @@ type alias FollowingOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-following : (FollowingOptionalArguments -> FollowingOptionalArguments) -> SelectionSet decodesTo GitHub.Object.FollowingConnection -> SelectionSet decodesTo GitHub.Object.User
+following :
+    (FollowingOptionalArguments -> FollowingOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.FollowingConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 following fillInOptionals object_ =
     let
         filledInOptionals =
@@ -244,7 +260,10 @@ type alias GistRequiredArguments =
   - name - The gist name to find.
 
 -}
-gist : GistRequiredArguments -> SelectionSet decodesTo GitHub.Object.Gist -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+gist :
+    GistRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Gist
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 gist requiredArgs object_ =
     Object.selectionForCompositeField "gist" [ Argument.required "name" requiredArgs.name Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -265,7 +284,10 @@ type alias GistCommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-gistComments : (GistCommentsOptionalArguments -> GistCommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.GistCommentConnection -> SelectionSet decodesTo GitHub.Object.User
+gistComments :
+    (GistCommentsOptionalArguments -> GistCommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.GistCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 gistComments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -298,7 +320,10 @@ type alias GistsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-gists : (GistsOptionalArguments -> GistsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.GistConnection -> SelectionSet decodesTo GitHub.Object.User
+gists :
+    (GistsOptionalArguments -> GistsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.GistConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 gists fillInOptionals object_ =
     let
         filledInOptionals =
@@ -320,7 +345,10 @@ type alias HovercardOptionalArguments =
   - primarySubjectId - The ID of the subject to get the hovercard in the context of
 
 -}
-hovercard : (HovercardOptionalArguments -> HovercardOptionalArguments) -> SelectionSet decodesTo GitHub.Object.Hovercard -> SelectionSet decodesTo GitHub.Object.User
+hovercard :
+    (HovercardOptionalArguments -> HovercardOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.Hovercard
+    -> SelectionSet decodesTo GitHub.Object.User
 hovercard fillInOptionals object_ =
     let
         filledInOptionals =
@@ -403,7 +431,10 @@ type alias IssueCommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-issueComments : (IssueCommentsOptionalArguments -> IssueCommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection -> SelectionSet decodesTo GitHub.Object.User
+issueComments :
+    (IssueCommentsOptionalArguments -> IssueCommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 issueComments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -440,7 +471,10 @@ type alias IssuesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-issues : (IssuesOptionalArguments -> IssuesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueConnection -> SelectionSet decodesTo GitHub.Object.User
+issues :
+    (IssuesOptionalArguments -> IssuesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 issues fillInOptionals object_ =
     let
         filledInOptionals =
@@ -455,7 +489,9 @@ issues fillInOptionals object_ =
 
 {-| Showcases a selection of repositories and gists that the profile owner has either curated or that have been selected automatically based on popularity.
 -}
-itemShowcase : SelectionSet decodesTo GitHub.Object.ProfileItemShowcase -> SelectionSet decodesTo GitHub.Object.User
+itemShowcase :
+    SelectionSet decodesTo GitHub.Object.ProfileItemShowcase
+    -> SelectionSet decodesTo GitHub.Object.User
 itemShowcase object_ =
     Object.selectionForCompositeField "itemShowcase" [] object_ identity
 
@@ -490,9 +526,28 @@ type alias OrganizationRequiredArguments =
   - login - The login of the organization to find.
 
 -}
-organization : OrganizationRequiredArguments -> SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+organization :
+    OrganizationRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 organization requiredArgs object_ =
     Object.selectionForCompositeField "organization" [ Argument.required "login" requiredArgs.login Encode.string ] object_ (identity >> Decode.nullable)
+
+
+type alias OrganizationVerifiedDomainEmailsRequiredArguments =
+    { login : String }
+
+
+{-| Verified email addresses that match verified domains for a specified organization the user is a member of.
+
+  - login - The login of the organization to match verified domains from.
+
+-}
+organizationVerifiedDomainEmails :
+    OrganizationVerifiedDomainEmailsRequiredArguments
+    -> SelectionSet (List String) GitHub.Object.User
+organizationVerifiedDomainEmails requiredArgs =
+    Object.selectionForField "(List String)" "organizationVerifiedDomainEmails" [ Argument.required "login" requiredArgs.login Encode.string ] (Decode.string |> Decode.list)
 
 
 type alias OrganizationsOptionalArguments =
@@ -511,7 +566,10 @@ type alias OrganizationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-organizations : (OrganizationsOptionalArguments -> OrganizationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.OrganizationConnection -> SelectionSet decodesTo GitHub.Object.User
+organizations :
+    (OrganizationsOptionalArguments -> OrganizationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.OrganizationConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 organizations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -542,7 +600,10 @@ type alias PinnableItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pinnableItems : (PinnableItemsOptionalArguments -> PinnableItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection -> SelectionSet decodesTo GitHub.Object.User
+pinnableItems :
+    (PinnableItemsOptionalArguments -> PinnableItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 pinnableItems fillInOptionals object_ =
     let
         filledInOptionals =
@@ -573,7 +634,10 @@ type alias PinnedItemsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pinnedItems : (PinnedItemsOptionalArguments -> PinnedItemsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection -> SelectionSet decodesTo GitHub.Object.User
+pinnedItems :
+    (PinnedItemsOptionalArguments -> PinnedItemsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PinnableItemConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 pinnedItems fillInOptionals object_ =
     let
         filledInOptionals =
@@ -593,45 +657,6 @@ pinnedItemsRemaining =
     Object.selectionForField "Int" "pinnedItemsRemaining" [] Decode.int
 
 
-type alias PinnedRepositoriesOptionalArguments =
-    { privacy : OptionalArgument GitHub.Enum.RepositoryPrivacy.RepositoryPrivacy
-    , orderBy : OptionalArgument GitHub.InputObject.RepositoryOrder
-    , affiliations : OptionalArgument (List (Maybe GitHub.Enum.RepositoryAffiliation.RepositoryAffiliation))
-    , ownerAffiliations : OptionalArgument (List (Maybe GitHub.Enum.RepositoryAffiliation.RepositoryAffiliation))
-    , isLocked : OptionalArgument Bool
-    , after : OptionalArgument String
-    , before : OptionalArgument String
-    , first : OptionalArgument Int
-    , last : OptionalArgument Int
-    }
-
-
-{-| A list of repositories this user has pinned to their profile
-
-  - privacy - If non-null, filters repositories according to privacy
-  - orderBy - Ordering options for repositories returned from the connection
-  - affiliations - Array of viewer's affiliation options for repositories returned from the connection. For example, OWNER will include only repositories that the current viewer owns.
-  - ownerAffiliations - Array of owner's affiliation options for repositories returned from the connection. For example, OWNER will include only repositories that the organization or user being viewed owns.
-  - isLocked - If non-null, filters repositories according to whether they have been locked
-  - after - Returns the elements in the list that come after the specified cursor.
-  - before - Returns the elements in the list that come before the specified cursor.
-  - first - Returns the first _n_ elements from the list.
-  - last - Returns the last _n_ elements from the list.
-
--}
-pinnedRepositories : (PinnedRepositoriesOptionalArguments -> PinnedRepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
-pinnedRepositories fillInOptionals object_ =
-    let
-        filledInOptionals =
-            fillInOptionals { privacy = Absent, orderBy = Absent, affiliations = Absent, ownerAffiliations = Absent, isLocked = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
-
-        optionalArgs =
-            [ Argument.optional "privacy" filledInOptionals.privacy (Encode.enum GitHub.Enum.RepositoryPrivacy.toString), Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeRepositoryOrder, Argument.optional "affiliations" filledInOptionals.affiliations (Encode.enum GitHub.Enum.RepositoryAffiliation.toString |> Encode.maybe |> Encode.list), Argument.optional "ownerAffiliations" filledInOptionals.ownerAffiliations (Encode.enum GitHub.Enum.RepositoryAffiliation.toString |> Encode.maybe |> Encode.list), Argument.optional "isLocked" filledInOptionals.isLocked Encode.bool, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
-                |> List.filterMap identity
-    in
-    Object.selectionForCompositeField "pinnedRepositories" optionalArgs object_ identity
-
-
 type alias ProjectRequiredArguments =
     { number : Int }
 
@@ -641,7 +666,10 @@ type alias ProjectRequiredArguments =
   - number - The project number to find.
 
 -}
-project : ProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.Project -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+project :
+    ProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 project requiredArgs object_ =
     Object.selectionForCompositeField "project" [ Argument.required "number" requiredArgs.number Encode.int ] object_ (identity >> Decode.nullable)
 
@@ -668,7 +696,10 @@ type alias ProjectsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-projects : (ProjectsOptionalArguments -> ProjectsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectConnection -> SelectionSet decodesTo GitHub.Object.User
+projects :
+    (ProjectsOptionalArguments -> ProjectsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 projects fillInOptionals object_ =
     let
         filledInOptionals =
@@ -711,7 +742,10 @@ type alias PublicKeysOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-publicKeys : (PublicKeysOptionalArguments -> PublicKeysOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PublicKeyConnection -> SelectionSet decodesTo GitHub.Object.User
+publicKeys :
+    (PublicKeysOptionalArguments -> PublicKeysOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PublicKeyConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 publicKeys fillInOptionals object_ =
     let
         filledInOptionals =
@@ -750,7 +784,10 @@ type alias PullRequestsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-pullRequests : (PullRequestsOptionalArguments -> PullRequestsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestConnection -> SelectionSet decodesTo GitHub.Object.User
+pullRequests :
+    (PullRequestsOptionalArguments -> PullRequestsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 pullRequests fillInOptionals object_ =
     let
         filledInOptionals =
@@ -791,7 +828,10 @@ type alias RegistryPackagesOptionalArguments =
   - publicOnly - Filter registry package by whether it is publicly visible
 
 -}
-registryPackages : (RegistryPackagesOptionalArguments -> RegistryPackagesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection -> SelectionSet decodesTo GitHub.Object.User
+registryPackages :
+    (RegistryPackagesOptionalArguments -> RegistryPackagesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 registryPackages fillInOptionals object_ =
     let
         filledInOptionals =
@@ -824,7 +864,10 @@ type alias RegistryPackagesForQueryOptionalArguments =
   - packageType - Filter registry package by type.
 
 -}
-registryPackagesForQuery : (RegistryPackagesForQueryOptionalArguments -> RegistryPackagesForQueryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection -> SelectionSet decodesTo GitHub.Object.User
+registryPackagesForQuery :
+    (RegistryPackagesForQueryOptionalArguments -> RegistryPackagesForQueryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RegistryPackageConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 registryPackagesForQuery fillInOptionals object_ =
     let
         filledInOptionals =
@@ -865,7 +908,10 @@ type alias RepositoriesOptionalArguments =
   - isFork - If non-null, filters repositories according to whether they are forks of another repository
 
 -}
-repositories : (RepositoriesOptionalArguments -> RepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
+repositories :
+    (RepositoriesOptionalArguments -> RepositoriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 repositories fillInOptionals object_ =
     let
         filledInOptionals =
@@ -904,7 +950,10 @@ type alias RepositoriesContributedToOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-repositoriesContributedTo : (RepositoriesContributedToOptionalArguments -> RepositoriesContributedToOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
+repositoriesContributedTo :
+    (RepositoriesContributedToOptionalArguments -> RepositoriesContributedToOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 repositoriesContributedTo fillInOptionals object_ =
     let
         filledInOptionals =
@@ -926,7 +975,10 @@ type alias RepositoryRequiredArguments =
   - name - Name of Repository to find.
 
 -}
-repository : RepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+repository :
+    RepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 repository requiredArgs object_ =
     Object.selectionForCompositeField "repository" [ Argument.required "name" requiredArgs.name Encode.string ] object_ (identity >> Decode.nullable)
 
@@ -956,7 +1008,10 @@ type alias SavedRepliesOptionalArguments =
   - orderBy - The field to order saved replies by.
 
 -}
-savedReplies : (SavedRepliesOptionalArguments -> SavedRepliesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SavedReplyConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+savedReplies :
+    (SavedRepliesOptionalArguments -> SavedRepliesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SavedReplyConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 savedReplies fillInOptionals object_ =
     let
         filledInOptionals =
@@ -971,7 +1026,9 @@ savedReplies fillInOptionals object_ =
 
 {-| The GitHub Sponsors listing for this user.
 -}
-sponsorsListing : SelectionSet decodesTo GitHub.Object.SponsorsListing -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+sponsorsListing :
+    SelectionSet decodesTo GitHub.Object.SponsorsListing
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 sponsorsListing object_ =
     Object.selectionForCompositeField "sponsorsListing" [] object_ (identity >> Decode.nullable)
 
@@ -996,7 +1053,10 @@ type alias SponsorshipsAsMaintainerOptionalArguments =
   - orderBy - Ordering options for sponsorships returned from this connection. If left blank, the sponsorships will be ordered based on relevancy to the viewer.
 
 -}
-sponsorshipsAsMaintainer : (SponsorshipsAsMaintainerOptionalArguments -> SponsorshipsAsMaintainerOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection -> SelectionSet decodesTo GitHub.Object.User
+sponsorshipsAsMaintainer :
+    (SponsorshipsAsMaintainerOptionalArguments -> SponsorshipsAsMaintainerOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 sponsorshipsAsMaintainer fillInOptionals object_ =
     let
         filledInOptionals =
@@ -1027,7 +1087,10 @@ type alias SponsorshipsAsSponsorOptionalArguments =
   - orderBy - Ordering options for sponsorships returned from this connection. If left blank, the sponsorships will be ordered based on relevancy to the viewer.
 
 -}
-sponsorshipsAsSponsor : (SponsorshipsAsSponsorOptionalArguments -> SponsorshipsAsSponsorOptionalArguments) -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection -> SelectionSet decodesTo GitHub.Object.User
+sponsorshipsAsSponsor :
+    (SponsorshipsAsSponsorOptionalArguments -> SponsorshipsAsSponsorOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.SponsorshipConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 sponsorshipsAsSponsor fillInOptionals object_ =
     let
         filledInOptionals =
@@ -1041,33 +1104,36 @@ sponsorshipsAsSponsor fillInOptionals object_ =
 
 
 type alias StarredRepositoriesOptionalArguments =
-    { ownedByViewer : OptionalArgument Bool
-    , orderBy : OptionalArgument GitHub.InputObject.StarOrder
-    , after : OptionalArgument String
+    { after : OptionalArgument String
     , before : OptionalArgument String
     , first : OptionalArgument Int
     , last : OptionalArgument Int
+    , ownedByViewer : OptionalArgument Bool
+    , orderBy : OptionalArgument GitHub.InputObject.StarOrder
     }
 
 
 {-| Repositories the user has starred.
 
-  - ownedByViewer - Filters starred repositories to only return repositories owned by the viewer.
-  - orderBy - Order for connection
   - after - Returns the elements in the list that come after the specified cursor.
   - before - Returns the elements in the list that come before the specified cursor.
   - first - Returns the first _n_ elements from the list.
   - last - Returns the last _n_ elements from the list.
+  - ownedByViewer - Filters starred repositories to only return repositories owned by the viewer.
+  - orderBy - Order for connection
 
 -}
-starredRepositories : (StarredRepositoriesOptionalArguments -> StarredRepositoriesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.StarredRepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
+starredRepositories :
+    (StarredRepositoriesOptionalArguments -> StarredRepositoriesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.StarredRepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 starredRepositories fillInOptionals object_ =
     let
         filledInOptionals =
-            fillInOptionals { ownedByViewer = Absent, orderBy = Absent, after = Absent, before = Absent, first = Absent, last = Absent }
+            fillInOptionals { after = Absent, before = Absent, first = Absent, last = Absent, ownedByViewer = Absent, orderBy = Absent }
 
         optionalArgs =
-            [ Argument.optional "ownedByViewer" filledInOptionals.ownedByViewer Encode.bool, Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeStarOrder, Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int ]
+            [ Argument.optional "after" filledInOptionals.after Encode.string, Argument.optional "before" filledInOptionals.before Encode.string, Argument.optional "first" filledInOptionals.first Encode.int, Argument.optional "last" filledInOptionals.last Encode.int, Argument.optional "ownedByViewer" filledInOptionals.ownedByViewer Encode.bool, Argument.optional "orderBy" filledInOptionals.orderBy GitHub.InputObject.encodeStarOrder ]
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "starredRepositories" optionalArgs object_ identity
@@ -1075,7 +1141,9 @@ starredRepositories fillInOptionals object_ =
 
 {-| The user's description of what they're currently doing.
 -}
-status : SelectionSet decodesTo GitHub.Object.UserStatus -> SelectionSet (Maybe decodesTo) GitHub.Object.User
+status :
+    SelectionSet decodesTo GitHub.Object.UserStatus
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.User
 status object_ =
     Object.selectionForCompositeField "status" [] object_ (identity >> Decode.nullable)
 
@@ -1103,7 +1171,11 @@ type alias TopRepositoriesRequiredArguments =
   - since - How far back in time to fetch contributed repositories
 
 -}
-topRepositories : (TopRepositoriesOptionalArguments -> TopRepositoriesOptionalArguments) -> TopRepositoriesRequiredArguments -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
+topRepositories :
+    (TopRepositoriesOptionalArguments -> TopRepositoriesOptionalArguments)
+    -> TopRepositoriesRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 topRepositories fillInOptionals requiredArgs object_ =
     let
         filledInOptionals =
@@ -1114,6 +1186,13 @@ topRepositories fillInOptionals requiredArgs object_ =
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "topRepositories" (optionalArgs ++ [ Argument.required "orderBy" requiredArgs.orderBy GitHub.InputObject.encodeRepositoryOrder ]) object_ identity
+
+
+{-| The user's Twitter username.
+-}
+twitterUsername : SelectionSet (Maybe String) GitHub.Object.User
+twitterUsername =
+    Object.selectionForField "(Maybe String)" "twitterUsername" [] (Decode.string |> Decode.nullable)
 
 
 {-| Identifies the date and time when the object was last updated.
@@ -1175,7 +1254,7 @@ type alias WatchingOptionalArguments =
 
   - privacy - If non-null, filters repositories according to privacy
   - orderBy - Ordering options for repositories returned from the connection
-  - affiliations - Affiliation options for repositories returned from the connection
+  - affiliations - Affiliation options for repositories returned from the connection. If none specified, the results will include repositories for which the current viewer is an owner or collaborator, or member.
   - ownerAffiliations - Array of owner's affiliation options for repositories returned from the connection. For example, OWNER will include only repositories that the organization or user being viewed owns.
   - isLocked - If non-null, filters repositories according to whether they have been locked
   - after - Returns the elements in the list that come after the specified cursor.
@@ -1184,7 +1263,10 @@ type alias WatchingOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-watching : (WatchingOptionalArguments -> WatchingOptionalArguments) -> SelectionSet decodesTo GitHub.Object.RepositoryConnection -> SelectionSet decodesTo GitHub.Object.User
+watching :
+    (WatchingOptionalArguments -> WatchingOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.RepositoryConnection
+    -> SelectionSet decodesTo GitHub.Object.User
 watching fillInOptionals object_ =
     let
         filledInOptionals =

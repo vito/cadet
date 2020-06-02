@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The repository or organization the project was removed from.
 -}
-owner : SelectionSet decodesTo GitHub.Interface.ProjectOwner -> SelectionSet (Maybe decodesTo) GitHub.Object.DeleteProjectPayload
+owner :
+    SelectionSet decodesTo GitHub.Interface.ProjectOwner
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeleteProjectPayload
 owner object_ =
     Object.selectionForCompositeField "owner" [] object_ (identity >> Decode.nullable)

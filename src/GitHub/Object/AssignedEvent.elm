@@ -21,21 +21,27 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the assignable associated with the event.
 -}
-assignable : SelectionSet decodesTo GitHub.Interface.Assignable -> SelectionSet decodesTo GitHub.Object.AssignedEvent
+assignable :
+    SelectionSet decodesTo GitHub.Interface.Assignable
+    -> SelectionSet decodesTo GitHub.Object.AssignedEvent
 assignable object_ =
     Object.selectionForCompositeField "assignable" [] object_ identity
 
 
 {-| Identifies the user or mannequin that was assigned.
 -}
-assignee : SelectionSet decodesTo GitHub.Union.Assignee -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
+assignee :
+    SelectionSet decodesTo GitHub.Union.Assignee
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
 assignee object_ =
     Object.selectionForCompositeField "assignee" [] object_ (identity >> Decode.nullable)
 
@@ -54,6 +60,8 @@ id =
 
 {-| Identifies the user who was assigned.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.AssignedEvent
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

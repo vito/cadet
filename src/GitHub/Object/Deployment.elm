@@ -22,7 +22,9 @@ import Json.Decode as Decode
 
 {-| Identifies the commit sha of the deployment.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ (identity >> Decode.nullable)
 
@@ -43,9 +45,11 @@ createdAt =
 
 {-| Identifies the actor who triggered the deployment.
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet decodesTo GitHub.Object.Deployment
 creator object_ =
-    Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
+    Object.selectionForCompositeField "creator" [] object_ identity
 
 
 {-| Identifies the primary key from the database.
@@ -62,7 +66,7 @@ description =
     Object.selectionForField "(Maybe String)" "description" [] (Decode.string |> Decode.nullable)
 
 
-{-| The environment to which this deployment was made.
+{-| The latest environment to which this deployment was made.
 -}
 environment : SelectionSet (Maybe String) GitHub.Object.Deployment
 environment =
@@ -74,11 +78,27 @@ id =
     Object.selectionForField "ScalarCodecs.Id" "id" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecId |> .decoder)
 
 
+{-| The latest environment to which this deployment was made.
+-}
+latestEnvironment : SelectionSet (Maybe String) GitHub.Object.Deployment
+latestEnvironment =
+    Object.selectionForField "(Maybe String)" "latestEnvironment" [] (Decode.string |> Decode.nullable)
+
+
 {-| The latest status of this deployment.
 -}
-latestStatus : SelectionSet decodesTo GitHub.Object.DeploymentStatus -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
+latestStatus :
+    SelectionSet decodesTo GitHub.Object.DeploymentStatus
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
 latestStatus object_ =
     Object.selectionForCompositeField "latestStatus" [] object_ (identity >> Decode.nullable)
+
+
+{-| The original environment to which this deployment was made.
+-}
+originalEnvironment : SelectionSet (Maybe String) GitHub.Object.Deployment
+originalEnvironment =
+    Object.selectionForField "(Maybe String)" "originalEnvironment" [] (Decode.string |> Decode.nullable)
 
 
 {-| Extra information that a deployment system might need.
@@ -90,14 +110,18 @@ payload =
 
 {-| Identifies the Ref of the deployment, if the deployment was created by ref.
 -}
-ref : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
+ref :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
 ref object_ =
     Object.selectionForCompositeField "ref" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the repository associated with the deployment.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.Deployment
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.Deployment
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -125,7 +149,10 @@ type alias StatusesOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-statuses : (StatusesOptionalArguments -> StatusesOptionalArguments) -> SelectionSet decodesTo GitHub.Object.DeploymentStatusConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
+statuses :
+    (StatusesOptionalArguments -> StatusesOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.DeploymentStatusConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Deployment
 statuses fillInOptionals object_ =
     let
         filledInOptionals =

@@ -31,12 +31,12 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.RepositoryInfo
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "Repository" selections.onRepository
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -145,7 +145,9 @@ isTemplate =
 
 {-| The license associated with the repository
 -}
-licenseInfo : SelectionSet decodesTo GitHub.Object.License -> SelectionSet (Maybe decodesTo) GitHub.Interface.RepositoryInfo
+licenseInfo :
+    SelectionSet decodesTo GitHub.Object.License
+    -> SelectionSet (Maybe decodesTo) GitHub.Interface.RepositoryInfo
 licenseInfo object_ =
     Object.selectionForCompositeField "licenseInfo" [] object_ (identity >> Decode.nullable)
 
@@ -187,7 +189,9 @@ openGraphImageUrl =
 
 {-| The User owner of the repository.
 -}
-owner : SelectionSet decodesTo GitHub.Interface.RepositoryOwner -> SelectionSet decodesTo GitHub.Interface.RepositoryInfo
+owner :
+    SelectionSet decodesTo GitHub.Interface.RepositoryOwner
+    -> SelectionSet decodesTo GitHub.Interface.RepositoryInfo
 owner object_ =
     Object.selectionForCompositeField "owner" [] object_ identity
 
@@ -215,7 +219,9 @@ type alias ShortDescriptionHTMLOptionalArguments =
   - limit - How many characters to return.
 
 -}
-shortDescriptionHTML : (ShortDescriptionHTMLOptionalArguments -> ShortDescriptionHTMLOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Html GitHub.Interface.RepositoryInfo
+shortDescriptionHTML :
+    (ShortDescriptionHTMLOptionalArguments -> ShortDescriptionHTMLOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Html GitHub.Interface.RepositoryInfo
 shortDescriptionHTML fillInOptionals =
     let
         filledInOptionals =

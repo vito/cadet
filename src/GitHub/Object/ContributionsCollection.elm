@@ -28,7 +28,10 @@ type alias CommitContributionsByRepositoryOptionalArguments =
   - maxRepositories - How many repositories should be included.
 
 -}
-commitContributionsByRepository : (CommitContributionsByRepositoryOptionalArguments -> CommitContributionsByRepositoryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CommitContributionsByRepository -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
+commitContributionsByRepository :
+    (CommitContributionsByRepositoryOptionalArguments -> CommitContributionsByRepositoryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CommitContributionsByRepository
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
 commitContributionsByRepository fillInOptionals object_ =
     let
         filledInOptionals =
@@ -43,7 +46,9 @@ commitContributionsByRepository fillInOptionals object_ =
 
 {-| A calendar of this user's contributions on GitHub.
 -}
-contributionCalendar : SelectionSet decodesTo GitHub.Object.ContributionCalendar -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+contributionCalendar :
+    SelectionSet decodesTo GitHub.Object.ContributionCalendar
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 contributionCalendar object_ =
     Object.selectionForCompositeField "contributionCalendar" [] object_ identity
 
@@ -78,21 +83,27 @@ endedAt =
 
 {-| The first issue the user opened on GitHub. This will be null if that issue was opened outside the collection's time range and ignoreTimeRange is false. If the issue is not visible but the user has opted to show private contributions, a RestrictedContribution will be returned.
 -}
-firstIssueContribution : SelectionSet decodesTo GitHub.Union.CreatedIssueOrRestrictedContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+firstIssueContribution :
+    SelectionSet decodesTo GitHub.Union.CreatedIssueOrRestrictedContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 firstIssueContribution object_ =
     Object.selectionForCompositeField "firstIssueContribution" [] object_ (identity >> Decode.nullable)
 
 
 {-| The first pull request the user opened on GitHub. This will be null if that pull request was opened outside the collection's time range and ignoreTimeRange is not true. If the pull request is not visible but the user has opted to show private contributions, a RestrictedContribution will be returned.
 -}
-firstPullRequestContribution : SelectionSet decodesTo GitHub.Union.CreatedPullRequestOrRestrictedContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+firstPullRequestContribution :
+    SelectionSet decodesTo GitHub.Union.CreatedPullRequestOrRestrictedContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 firstPullRequestContribution object_ =
     Object.selectionForCompositeField "firstPullRequestContribution" [] object_ (identity >> Decode.nullable)
 
 
 {-| The first repository the user created on GitHub. This will be null if that first repository was created outside the collection's time range and ignoreTimeRange is false. If the repository is not visible, then a RestrictedContribution is returned.
 -}
-firstRepositoryContribution : SelectionSet decodesTo GitHub.Union.CreatedRepositoryOrRestrictedContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+firstRepositoryContribution :
+    SelectionSet decodesTo GitHub.Union.CreatedRepositoryOrRestrictedContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 firstRepositoryContribution object_ =
     Object.selectionForCompositeField "firstRepositoryContribution" [] object_ (identity >> Decode.nullable)
 
@@ -147,7 +158,10 @@ type alias IssueContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-issueContributions : (IssueContributionsOptionalArguments -> IssueContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedIssueContributionConnection -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+issueContributions :
+    (IssueContributionsOptionalArguments -> IssueContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedIssueContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 issueContributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -174,7 +188,10 @@ type alias IssueContributionsByRepositoryOptionalArguments =
   - excludePopular - Should the user's most commented issue be excluded from the result.
 
 -}
-issueContributionsByRepository : (IssueContributionsByRepositoryOptionalArguments -> IssueContributionsByRepositoryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
+issueContributionsByRepository :
+    (IssueContributionsByRepositoryOptionalArguments -> IssueContributionsByRepositoryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
 issueContributionsByRepository fillInOptionals object_ =
     let
         filledInOptionals =
@@ -189,7 +206,9 @@ issueContributionsByRepository fillInOptionals object_ =
 
 {-| When the user signed up for GitHub. This will be null if that sign up date falls outside the collection's time range and ignoreTimeRange is false.
 -}
-joinedGitHubContribution : SelectionSet decodesTo GitHub.Object.JoinedGitHubContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+joinedGitHubContribution :
+    SelectionSet decodesTo GitHub.Object.JoinedGitHubContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 joinedGitHubContribution object_ =
     Object.selectionForCompositeField "joinedGitHubContribution" [] object_ (identity >> Decode.nullable)
 
@@ -204,7 +223,9 @@ latestRestrictedContributionDate =
 {-| When this collection's time range does not include any activity from the user, use this
 to get a different collection from an earlier time range that does have activity.
 -}
-mostRecentCollectionWithActivity : SelectionSet decodesTo GitHub.Object.ContributionsCollection -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+mostRecentCollectionWithActivity :
+    SelectionSet decodesTo GitHub.Object.ContributionsCollection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 mostRecentCollectionWithActivity object_ =
     Object.selectionForCompositeField "mostRecentCollectionWithActivity" [] object_ (identity >> Decode.nullable)
 
@@ -212,7 +233,9 @@ mostRecentCollectionWithActivity object_ =
 {-| Returns a different contributions collection from an earlier time range than this one
 that does not have any contributions.
 -}
-mostRecentCollectionWithoutActivity : SelectionSet decodesTo GitHub.Object.ContributionsCollection -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+mostRecentCollectionWithoutActivity :
+    SelectionSet decodesTo GitHub.Object.ContributionsCollection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 mostRecentCollectionWithoutActivity object_ =
     Object.selectionForCompositeField "mostRecentCollectionWithoutActivity" [] object_ (identity >> Decode.nullable)
 
@@ -220,7 +243,9 @@ mostRecentCollectionWithoutActivity object_ =
 {-| The issue the user opened on GitHub that received the most comments in the specified
 time frame.
 -}
-popularIssueContribution : SelectionSet decodesTo GitHub.Object.CreatedIssueContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+popularIssueContribution :
+    SelectionSet decodesTo GitHub.Object.CreatedIssueContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 popularIssueContribution object_ =
     Object.selectionForCompositeField "popularIssueContribution" [] object_ (identity >> Decode.nullable)
 
@@ -228,7 +253,9 @@ popularIssueContribution object_ =
 {-| The pull request the user opened on GitHub that received the most comments in the
 specified time frame.
 -}
-popularPullRequestContribution : SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
+popularPullRequestContribution :
+    SelectionSet decodesTo GitHub.Object.CreatedPullRequestContribution
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ContributionsCollection
 popularPullRequestContribution object_ =
     Object.selectionForCompositeField "popularPullRequestContribution" [] object_ (identity >> Decode.nullable)
 
@@ -255,7 +282,10 @@ type alias PullRequestContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-pullRequestContributions : (PullRequestContributionsOptionalArguments -> PullRequestContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContributionConnection -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+pullRequestContributions :
+    (PullRequestContributionsOptionalArguments -> PullRequestContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 pullRequestContributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -282,7 +312,10 @@ type alias PullRequestContributionsByRepositoryOptionalArguments =
   - excludePopular - Should the user's most commented pull request be excluded from the result.
 
 -}
-pullRequestContributionsByRepository : (PullRequestContributionsByRepositoryOptionalArguments -> PullRequestContributionsByRepositoryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
+pullRequestContributionsByRepository :
+    (PullRequestContributionsByRepositoryOptionalArguments -> PullRequestContributionsByRepositoryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestContributionsByRepository
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
 pullRequestContributionsByRepository fillInOptionals object_ =
     let
         filledInOptionals =
@@ -313,7 +346,10 @@ type alias PullRequestReviewContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-pullRequestReviewContributions : (PullRequestReviewContributionsOptionalArguments -> PullRequestReviewContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContributionConnection -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+pullRequestReviewContributions :
+    (PullRequestReviewContributionsOptionalArguments -> PullRequestReviewContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedPullRequestReviewContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 pullRequestReviewContributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -335,7 +371,10 @@ type alias PullRequestReviewContributionsByRepositoryOptionalArguments =
   - maxRepositories - How many repositories should be included.
 
 -}
-pullRequestReviewContributionsByRepository : (PullRequestReviewContributionsByRepositoryOptionalArguments -> PullRequestReviewContributionsByRepositoryOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
+pullRequestReviewContributionsByRepository :
+    (PullRequestReviewContributionsByRepositoryOptionalArguments -> PullRequestReviewContributionsByRepositoryOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewContributionsByRepository
+    -> SelectionSet (List decodesTo) GitHub.Object.ContributionsCollection
 pullRequestReviewContributionsByRepository fillInOptionals object_ =
     let
         filledInOptionals =
@@ -368,7 +407,10 @@ type alias RepositoryContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-repositoryContributions : (RepositoryContributionsOptionalArguments -> RepositoryContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContributionConnection -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+repositoryContributions :
+    (RepositoryContributionsOptionalArguments -> RepositoryContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedRepositoryContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 repositoryContributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -414,7 +456,9 @@ type alias TotalIssueContributionsOptionalArguments =
   - excludePopular - Should the user's most commented issue be excluded from this count.
 
 -}
-totalIssueContributions : (TotalIssueContributionsOptionalArguments -> TotalIssueContributionsOptionalArguments) -> SelectionSet Int GitHub.Object.ContributionsCollection
+totalIssueContributions :
+    (TotalIssueContributionsOptionalArguments -> TotalIssueContributionsOptionalArguments)
+    -> SelectionSet Int GitHub.Object.ContributionsCollection
 totalIssueContributions fillInOptionals =
     let
         filledInOptionals =
@@ -439,7 +483,9 @@ type alias TotalPullRequestContributionsOptionalArguments =
   - excludePopular - Should the user's most commented pull request be excluded from this count.
 
 -}
-totalPullRequestContributions : (TotalPullRequestContributionsOptionalArguments -> TotalPullRequestContributionsOptionalArguments) -> SelectionSet Int GitHub.Object.ContributionsCollection
+totalPullRequestContributions :
+    (TotalPullRequestContributionsOptionalArguments -> TotalPullRequestContributionsOptionalArguments)
+    -> SelectionSet Int GitHub.Object.ContributionsCollection
 totalPullRequestContributions fillInOptionals =
     let
         filledInOptionals =
@@ -478,7 +524,9 @@ type alias TotalRepositoriesWithContributedIssuesOptionalArguments =
   - excludePopular - Should the user's most commented issue be excluded from this count.
 
 -}
-totalRepositoriesWithContributedIssues : (TotalRepositoriesWithContributedIssuesOptionalArguments -> TotalRepositoriesWithContributedIssuesOptionalArguments) -> SelectionSet Int GitHub.Object.ContributionsCollection
+totalRepositoriesWithContributedIssues :
+    (TotalRepositoriesWithContributedIssuesOptionalArguments -> TotalRepositoriesWithContributedIssuesOptionalArguments)
+    -> SelectionSet Int GitHub.Object.ContributionsCollection
 totalRepositoriesWithContributedIssues fillInOptionals =
     let
         filledInOptionals =
@@ -510,7 +558,9 @@ type alias TotalRepositoriesWithContributedPullRequestsOptionalArguments =
   - excludePopular - Should the user's most commented pull request be excluded from this count.
 
 -}
-totalRepositoriesWithContributedPullRequests : (TotalRepositoriesWithContributedPullRequestsOptionalArguments -> TotalRepositoriesWithContributedPullRequestsOptionalArguments) -> SelectionSet Int GitHub.Object.ContributionsCollection
+totalRepositoriesWithContributedPullRequests :
+    (TotalRepositoriesWithContributedPullRequestsOptionalArguments -> TotalRepositoriesWithContributedPullRequestsOptionalArguments)
+    -> SelectionSet Int GitHub.Object.ContributionsCollection
 totalRepositoriesWithContributedPullRequests fillInOptionals =
     let
         filledInOptionals =
@@ -532,7 +582,9 @@ type alias TotalRepositoryContributionsOptionalArguments =
   - excludeFirst - Should the user's first repository ever be excluded from this count.
 
 -}
-totalRepositoryContributions : (TotalRepositoryContributionsOptionalArguments -> TotalRepositoryContributionsOptionalArguments) -> SelectionSet Int GitHub.Object.ContributionsCollection
+totalRepositoryContributions :
+    (TotalRepositoryContributionsOptionalArguments -> TotalRepositoryContributionsOptionalArguments)
+    -> SelectionSet Int GitHub.Object.ContributionsCollection
 totalRepositoryContributions fillInOptionals =
     let
         filledInOptionals =
@@ -547,6 +599,8 @@ totalRepositoryContributions fillInOptionals =
 
 {-| The user who made the contributions in this collection.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.ContributionsCollection
 user object_ =
     Object.selectionForCompositeField "user" [] object_ identity

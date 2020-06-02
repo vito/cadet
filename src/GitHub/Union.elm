@@ -17,10 +17,6 @@ type Closer
     = Closer
 
 
-type CollectionItemContent
-    = CollectionItemContent
-
-
 type CreatedIssueOrRestrictedContribution
     = CreatedIssueOrRestrictedContribution
 
@@ -35,6 +31,10 @@ type CreatedRepositoryOrRestrictedContribution
 
 type EnterpriseMember
     = EnterpriseMember
+
+
+type IpAllowListOwner
+    = IpAllowListOwner
 
 
 type IssueOrPullRequest
@@ -103,3 +103,11 @@ type ReviewDismissalAllowanceActor
 
 type SearchResultItem
     = SearchResultItem
+
+
+type Sponsor
+    = Sponsor
+
+
+type StatusCheckRollupContext
+    = StatusCheckRollupContext

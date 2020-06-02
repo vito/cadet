@@ -21,21 +21,27 @@ import Json.Decode as Decode
 
 {-| Identifies the actor who performed the event.
 -}
-actor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the after commit SHA for the 'base\_ref\_force\_pushed' event.
 -}
-afterCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
+afterCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
 afterCommit object_ =
     Object.selectionForCompositeField "afterCommit" [] object_ (identity >> Decode.nullable)
 
 
 {-| Identifies the before commit SHA for the 'base\_ref\_force\_pushed' event.
 -}
-beforeCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
+beforeCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
 beforeCommit object_ =
     Object.selectionForCompositeField "beforeCommit" [] object_ (identity >> Decode.nullable)
 
@@ -54,13 +60,17 @@ id =
 
 {-| PullRequest referenced by event.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.BaseRefForcePushedEvent
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.BaseRefForcePushedEvent
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| Identifies the fully qualified ref name for the 'base\_ref\_force\_pushed' event.
 -}
-ref : SelectionSet decodesTo GitHub.Object.Ref -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
+ref :
+    SelectionSet decodesTo GitHub.Object.Ref
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BaseRefForcePushedEvent
 ref object_ =
     Object.selectionForCompositeField "ref" [] object_ (identity >> Decode.nullable)

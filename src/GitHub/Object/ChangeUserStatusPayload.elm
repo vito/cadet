@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| Your updated status.
 -}
-status : SelectionSet decodesTo GitHub.Object.UserStatus -> SelectionSet (Maybe decodesTo) GitHub.Object.ChangeUserStatusPayload
+status :
+    SelectionSet decodesTo GitHub.Object.UserStatus
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ChangeUserStatusPayload
 status object_ =
     Object.selectionForCompositeField "status" [] object_ (identity >> Decode.nullable)

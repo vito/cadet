@@ -65,7 +65,10 @@ type alias ColumnsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-columns : (ColumnsOptionalArguments -> ColumnsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectColumnConnection -> SelectionSet decodesTo GitHub.Object.Project
+columns :
+    (ColumnsOptionalArguments -> ColumnsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectColumnConnection
+    -> SelectionSet decodesTo GitHub.Object.Project
 columns fillInOptionals object_ =
     let
         filledInOptionals =
@@ -87,7 +90,9 @@ createdAt =
 
 {-| The actor who originally created the project.
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.Project
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Project
 creator object_ =
     Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
 
@@ -120,7 +125,9 @@ number =
 
 {-| The project's owner. Currently limited to repositories, organizations, and users.
 -}
-owner : SelectionSet decodesTo GitHub.Interface.ProjectOwner -> SelectionSet decodesTo GitHub.Object.Project
+owner :
+    SelectionSet decodesTo GitHub.Interface.ProjectOwner
+    -> SelectionSet decodesTo GitHub.Object.Project
 owner object_ =
     Object.selectionForCompositeField "owner" [] object_ identity
 
@@ -143,7 +150,10 @@ type alias PendingCardsOptionalArguments =
   - archivedStates - A list of archived states to filter the cards by
 
 -}
-pendingCards : (PendingCardsOptionalArguments -> PendingCardsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection -> SelectionSet decodesTo GitHub.Object.Project
+pendingCards :
+    (PendingCardsOptionalArguments -> PendingCardsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ProjectCardConnection
+    -> SelectionSet decodesTo GitHub.Object.Project
 pendingCards fillInOptionals object_ =
     let
         filledInOptionals =

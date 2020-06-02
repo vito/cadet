@@ -37,7 +37,10 @@ type alias ContributionsOptionalArguments =
   - orderBy - Ordering options for contributions returned from the connection.
 
 -}
-contributions : (ContributionsOptionalArguments -> ContributionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.CreatedIssueContributionConnection -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository
+contributions :
+    (ContributionsOptionalArguments -> ContributionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.CreatedIssueContributionConnection
+    -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository
 contributions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -52,6 +55,8 @@ contributions fillInOptionals object_ =
 
 {-| The repository in which the issues were opened.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.IssueContributionsByRepository
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

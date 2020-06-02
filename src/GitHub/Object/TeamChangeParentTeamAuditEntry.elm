@@ -29,7 +29,9 @@ action =
 
 {-| The user who initiated the action
 -}
-actor : SelectionSet decodesTo GitHub.Union.AuditEntryActor -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+actor :
+    SelectionSet decodesTo GitHub.Union.AuditEntryActor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 actor object_ =
     Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
 
@@ -43,7 +45,9 @@ actorIp =
 
 {-| A readable representation of the actor's location
 -}
-actorLocation : SelectionSet decodesTo GitHub.Object.ActorLocation -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+actorLocation :
+    SelectionSet decodesTo GitHub.Object.ActorLocation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 actorLocation object_ =
     Object.selectionForCompositeField "actorLocation" [] object_ (identity >> Decode.nullable)
 
@@ -97,7 +101,9 @@ operationType =
 
 {-| The Organization associated with the Audit Entry.
 -}
-organization : SelectionSet decodesTo GitHub.Object.Organization -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+organization :
+    SelectionSet decodesTo GitHub.Object.Organization
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 organization object_ =
     Object.selectionForCompositeField "organization" [] object_ (identity >> Decode.nullable)
 
@@ -125,7 +131,9 @@ organizationUrl =
 
 {-| The new parent team.
 -}
-parentTeam : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+parentTeam :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 parentTeam object_ =
     Object.selectionForCompositeField "parentTeam" [] object_ (identity >> Decode.nullable)
 
@@ -160,7 +168,9 @@ parentTeamUrl =
 
 {-| The former parent team.
 -}
-parentTeamWas : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+parentTeamWas :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 parentTeamWas object_ =
     Object.selectionForCompositeField "parentTeamWas" [] object_ (identity >> Decode.nullable)
 
@@ -181,7 +191,9 @@ parentTeamWasUrl =
 
 {-| The team associated with the action
 -}
-team : SelectionSet decodesTo GitHub.Object.Team -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+team :
+    SelectionSet decodesTo GitHub.Object.Team
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 team object_ =
     Object.selectionForCompositeField "team" [] object_ (identity >> Decode.nullable)
 
@@ -209,7 +221,9 @@ teamUrl =
 
 {-| The user affected by the action
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.TeamChangeParentTeamAuditEntry
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
 

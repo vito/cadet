@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.BranchProtectionRuleConflict -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflictEdge
+node :
+    SelectionSet decodesTo GitHub.Object.BranchProtectionRuleConflict
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.BranchProtectionRuleConflictEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

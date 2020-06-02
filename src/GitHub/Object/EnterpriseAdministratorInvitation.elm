@@ -36,7 +36,9 @@ email =
 
 {-| The enterprise the invitation is for.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitation
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseAdministratorInvitation
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ identity
 
@@ -48,14 +50,18 @@ id =
 
 {-| The user who was invited to the enterprise.
 -}
-invitee : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseAdministratorInvitation
+invitee :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseAdministratorInvitation
 invitee object_ =
     Object.selectionForCompositeField "invitee" [] object_ (identity >> Decode.nullable)
 
 
 {-| The user who created the invitation.
 -}
-inviter : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseAdministratorInvitation
+inviter :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseAdministratorInvitation
 inviter object_ =
     Object.selectionForCompositeField "inviter" [] object_ (identity >> Decode.nullable)
 

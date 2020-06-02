@@ -33,27 +33,35 @@ id =
 
 {-| Organization invitation for this SCIM-provisioned external identity
 -}
-organizationInvitation : SelectionSet decodesTo GitHub.Object.OrganizationInvitation -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
+organizationInvitation :
+    SelectionSet decodesTo GitHub.Object.OrganizationInvitation
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
 organizationInvitation object_ =
     Object.selectionForCompositeField "organizationInvitation" [] object_ (identity >> Decode.nullable)
 
 
 {-| SAML Identity attributes
 -}
-samlIdentity : SelectionSet decodesTo GitHub.Object.ExternalIdentitySamlAttributes -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
+samlIdentity :
+    SelectionSet decodesTo GitHub.Object.ExternalIdentitySamlAttributes
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
 samlIdentity object_ =
     Object.selectionForCompositeField "samlIdentity" [] object_ (identity >> Decode.nullable)
 
 
 {-| SCIM Identity attributes
 -}
-scimIdentity : SelectionSet decodesTo GitHub.Object.ExternalIdentityScimAttributes -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
+scimIdentity :
+    SelectionSet decodesTo GitHub.Object.ExternalIdentityScimAttributes
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
 scimIdentity object_ =
     Object.selectionForCompositeField "scimIdentity" [] object_ (identity >> Decode.nullable)
 
 
 {-| User linked to this external identity. Will be NULL if this identity has not been claimed by an organization member.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ExternalIdentity
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

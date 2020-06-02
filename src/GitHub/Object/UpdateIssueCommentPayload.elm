@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The updated comment.
 -}
-issueComment : SelectionSet decodesTo GitHub.Object.IssueComment -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateIssueCommentPayload
+issueComment :
+    SelectionSet decodesTo GitHub.Object.IssueComment
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UpdateIssueCommentPayload
 issueComment object_ =
     Object.selectionForCompositeField "issueComment" [] object_ (identity >> Decode.nullable)

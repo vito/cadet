@@ -49,7 +49,10 @@ type alias RelevantTeamsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-relevantTeams : (RelevantTeamsOptionalArguments -> RelevantTeamsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamConnection -> SelectionSet decodesTo GitHub.Object.OrganizationTeamsHovercardContext
+relevantTeams :
+    (RelevantTeamsOptionalArguments -> RelevantTeamsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamConnection
+    -> SelectionSet decodesTo GitHub.Object.OrganizationTeamsHovercardContext
 relevantTeams fillInOptionals object_ =
     let
         filledInOptionals =

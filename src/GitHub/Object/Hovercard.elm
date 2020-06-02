@@ -21,6 +21,8 @@ import Json.Decode as Decode
 
 {-| Each of the contexts for this hovercard
 -}
-contexts : SelectionSet decodesTo GitHub.Interface.HovercardContext -> SelectionSet (List decodesTo) GitHub.Object.Hovercard
+contexts :
+    SelectionSet decodesTo GitHub.Interface.HovercardContext
+    -> SelectionSet (List decodesTo) GitHub.Object.Hovercard
 contexts object_ =
     Object.selectionForCompositeField "contexts" [] object_ (identity >> Decode.list)

@@ -33,6 +33,8 @@ name =
 
 {-| version that the tag is associated with
 -}
-version : SelectionSet decodesTo GitHub.Object.RegistryPackageVersion -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageTag
+version :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageVersion
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageTag
 version object_ =
     Object.selectionForCompositeField "version" [] object_ (identity >> Decode.nullable)

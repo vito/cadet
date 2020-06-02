@@ -28,6 +28,8 @@ clientMutationId =
 
 {-| The thread to resolve.
 -}
-thread : SelectionSet decodesTo GitHub.Object.PullRequestReviewThread -> SelectionSet (Maybe decodesTo) GitHub.Object.UnresolveReviewThreadPayload
+thread :
+    SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.UnresolveReviewThreadPayload
 thread object_ =
     Object.selectionForCompositeField "thread" [] object_ (identity >> Decode.nullable)

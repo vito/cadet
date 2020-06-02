@@ -28,13 +28,17 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Union.SearchResultItem -> SelectionSet (Maybe decodesTo) GitHub.Object.SearchResultItemEdge
+node :
+    SelectionSet decodesTo GitHub.Union.SearchResultItem
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.SearchResultItemEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)
 
 
 {-| Text matches on the result found.
 -}
-textMatches : SelectionSet decodesTo GitHub.Object.TextMatch -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.SearchResultItemEdge
+textMatches :
+    SelectionSet decodesTo GitHub.Object.TextMatch
+    -> SelectionSet (Maybe (List (Maybe decodesTo))) GitHub.Object.SearchResultItemEdge
 textMatches object_ =
     Object.selectionForCompositeField "textMatches" [] object_ (identity >> Decode.nullable >> Decode.list >> Decode.nullable)

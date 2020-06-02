@@ -25,7 +25,10 @@ type alias AcceptEnterpriseAdministratorInvitationRequiredArguments =
 
 {-| Accepts a pending invitation for a user to become an administrator of an enterprise.
 -}
-acceptEnterpriseAdministratorInvitation : AcceptEnterpriseAdministratorInvitationRequiredArguments -> SelectionSet decodesTo GitHub.Object.AcceptEnterpriseAdministratorInvitationPayload -> SelectionSet (Maybe decodesTo) RootMutation
+acceptEnterpriseAdministratorInvitation :
+    AcceptEnterpriseAdministratorInvitationRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AcceptEnterpriseAdministratorInvitationPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 acceptEnterpriseAdministratorInvitation requiredArgs object_ =
     Object.selectionForCompositeField "acceptEnterpriseAdministratorInvitation" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAcceptEnterpriseAdministratorInvitationInput ] object_ (identity >> Decode.nullable)
 
@@ -36,7 +39,10 @@ type alias AcceptTopicSuggestionRequiredArguments =
 
 {-| Applies a suggested topic to the repository.
 -}
-acceptTopicSuggestion : AcceptTopicSuggestionRequiredArguments -> SelectionSet decodesTo GitHub.Object.AcceptTopicSuggestionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+acceptTopicSuggestion :
+    AcceptTopicSuggestionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AcceptTopicSuggestionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 acceptTopicSuggestion requiredArgs object_ =
     Object.selectionForCompositeField "acceptTopicSuggestion" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAcceptTopicSuggestionInput ] object_ (identity >> Decode.nullable)
 
@@ -47,7 +53,10 @@ type alias AddAssigneesToAssignableRequiredArguments =
 
 {-| Adds assignees to an assignable object.
 -}
-addAssigneesToAssignable : AddAssigneesToAssignableRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddAssigneesToAssignablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+addAssigneesToAssignable :
+    AddAssigneesToAssignableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddAssigneesToAssignablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addAssigneesToAssignable requiredArgs object_ =
     Object.selectionForCompositeField "addAssigneesToAssignable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddAssigneesToAssignableInput ] object_ (identity >> Decode.nullable)
 
@@ -58,7 +67,10 @@ type alias AddCommentRequiredArguments =
 
 {-| Adds a comment to an Issue or Pull Request.
 -}
-addComment : AddCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addComment :
+    AddCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addComment requiredArgs object_ =
     Object.selectionForCompositeField "addComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -69,7 +81,10 @@ type alias AddLabelsToLabelableRequiredArguments =
 
 {-| Adds labels to a labelable object.
 -}
-addLabelsToLabelable : AddLabelsToLabelableRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddLabelsToLabelablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+addLabelsToLabelable :
+    AddLabelsToLabelableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddLabelsToLabelablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addLabelsToLabelable requiredArgs object_ =
     Object.selectionForCompositeField "addLabelsToLabelable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddLabelsToLabelableInput ] object_ (identity >> Decode.nullable)
 
@@ -80,7 +95,10 @@ type alias AddProjectCardRequiredArguments =
 
 {-| Adds a card to a ProjectColumn. Either `contentId` or `note` must be provided but **not** both.
 -}
-addProjectCard : AddProjectCardRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddProjectCardPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addProjectCard :
+    AddProjectCardRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddProjectCardPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addProjectCard requiredArgs object_ =
     Object.selectionForCompositeField "addProjectCard" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddProjectCardInput ] object_ (identity >> Decode.nullable)
 
@@ -91,7 +109,10 @@ type alias AddProjectColumnRequiredArguments =
 
 {-| Adds a column to a Project.
 -}
-addProjectColumn : AddProjectColumnRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddProjectColumnPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addProjectColumn :
+    AddProjectColumnRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddProjectColumnPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addProjectColumn requiredArgs object_ =
     Object.selectionForCompositeField "addProjectColumn" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddProjectColumnInput ] object_ (identity >> Decode.nullable)
 
@@ -102,7 +123,10 @@ type alias AddPullRequestReviewRequiredArguments =
 
 {-| Adds a review to a Pull Request.
 -}
-addPullRequestReview : AddPullRequestReviewRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddPullRequestReviewPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addPullRequestReview :
+    AddPullRequestReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddPullRequestReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addPullRequestReview requiredArgs object_ =
     Object.selectionForCompositeField "addPullRequestReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddPullRequestReviewInput ] object_ (identity >> Decode.nullable)
 
@@ -113,9 +137,26 @@ type alias AddPullRequestReviewCommentRequiredArguments =
 
 {-| Adds a comment to a review.
 -}
-addPullRequestReviewComment : AddPullRequestReviewCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddPullRequestReviewCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addPullRequestReviewComment :
+    AddPullRequestReviewCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddPullRequestReviewCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addPullRequestReviewComment requiredArgs object_ =
     Object.selectionForCompositeField "addPullRequestReviewComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddPullRequestReviewCommentInput ] object_ (identity >> Decode.nullable)
+
+
+type alias AddPullRequestReviewThreadRequiredArguments =
+    { input : GitHub.InputObject.AddPullRequestReviewThreadInput }
+
+
+{-| Adds a new thread to a pending Pull Request Review.
+-}
+addPullRequestReviewThread :
+    AddPullRequestReviewThreadRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddPullRequestReviewThreadPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+addPullRequestReviewThread requiredArgs object_ =
+    Object.selectionForCompositeField "addPullRequestReviewThread" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddPullRequestReviewThreadInput ] object_ (identity >> Decode.nullable)
 
 
 type alias AddReactionRequiredArguments =
@@ -124,7 +165,10 @@ type alias AddReactionRequiredArguments =
 
 {-| Adds a reaction to a subject.
 -}
-addReaction : AddReactionRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddReactionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addReaction :
+    AddReactionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddReactionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addReaction requiredArgs object_ =
     Object.selectionForCompositeField "addReaction" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddReactionInput ] object_ (identity >> Decode.nullable)
 
@@ -135,7 +179,10 @@ type alias AddStarRequiredArguments =
 
 {-| Adds a star to a Starrable.
 -}
-addStar : AddStarRequiredArguments -> SelectionSet decodesTo GitHub.Object.AddStarPayload -> SelectionSet (Maybe decodesTo) RootMutation
+addStar :
+    AddStarRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.AddStarPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 addStar requiredArgs object_ =
     Object.selectionForCompositeField "addStar" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeAddStarInput ] object_ (identity >> Decode.nullable)
 
@@ -146,7 +193,10 @@ type alias ArchiveRepositoryRequiredArguments =
 
 {-| Marks a repository as archived.
 -}
-archiveRepository : ArchiveRepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.ArchiveRepositoryPayload -> SelectionSet (Maybe decodesTo) RootMutation
+archiveRepository :
+    ArchiveRepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ArchiveRepositoryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 archiveRepository requiredArgs object_ =
     Object.selectionForCompositeField "archiveRepository" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeArchiveRepositoryInput ] object_ (identity >> Decode.nullable)
 
@@ -157,7 +207,10 @@ type alias CancelEnterpriseAdminInvitationRequiredArguments =
 
 {-| Cancels a pending invitation for an administrator to join an enterprise.
 -}
-cancelEnterpriseAdminInvitation : CancelEnterpriseAdminInvitationRequiredArguments -> SelectionSet decodesTo GitHub.Object.CancelEnterpriseAdminInvitationPayload -> SelectionSet (Maybe decodesTo) RootMutation
+cancelEnterpriseAdminInvitation :
+    CancelEnterpriseAdminInvitationRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CancelEnterpriseAdminInvitationPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 cancelEnterpriseAdminInvitation requiredArgs object_ =
     Object.selectionForCompositeField "cancelEnterpriseAdminInvitation" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCancelEnterpriseAdminInvitationInput ] object_ (identity >> Decode.nullable)
 
@@ -168,7 +221,10 @@ type alias ChangeUserStatusRequiredArguments =
 
 {-| Update your status on GitHub.
 -}
-changeUserStatus : ChangeUserStatusRequiredArguments -> SelectionSet decodesTo GitHub.Object.ChangeUserStatusPayload -> SelectionSet (Maybe decodesTo) RootMutation
+changeUserStatus :
+    ChangeUserStatusRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ChangeUserStatusPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 changeUserStatus requiredArgs object_ =
     Object.selectionForCompositeField "changeUserStatus" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeChangeUserStatusInput ] object_ (identity >> Decode.nullable)
 
@@ -179,7 +235,10 @@ type alias ClearLabelsFromLabelableRequiredArguments =
 
 {-| Clears all labels from a labelable object.
 -}
-clearLabelsFromLabelable : ClearLabelsFromLabelableRequiredArguments -> SelectionSet decodesTo GitHub.Object.ClearLabelsFromLabelablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+clearLabelsFromLabelable :
+    ClearLabelsFromLabelableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ClearLabelsFromLabelablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 clearLabelsFromLabelable requiredArgs object_ =
     Object.selectionForCompositeField "clearLabelsFromLabelable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeClearLabelsFromLabelableInput ] object_ (identity >> Decode.nullable)
 
@@ -190,7 +249,10 @@ type alias CloneProjectRequiredArguments =
 
 {-| Creates a new project by cloning configuration from an existing project.
 -}
-cloneProject : CloneProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.CloneProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+cloneProject :
+    CloneProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CloneProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 cloneProject requiredArgs object_ =
     Object.selectionForCompositeField "cloneProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCloneProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -201,7 +263,10 @@ type alias CloneTemplateRepositoryRequiredArguments =
 
 {-| Create a new repository with the same files and directory structure as a template repository.
 -}
-cloneTemplateRepository : CloneTemplateRepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.CloneTemplateRepositoryPayload -> SelectionSet (Maybe decodesTo) RootMutation
+cloneTemplateRepository :
+    CloneTemplateRepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CloneTemplateRepositoryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 cloneTemplateRepository requiredArgs object_ =
     Object.selectionForCompositeField "cloneTemplateRepository" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCloneTemplateRepositoryInput ] object_ (identity >> Decode.nullable)
 
@@ -212,7 +277,10 @@ type alias CloseIssueRequiredArguments =
 
 {-| Close an issue.
 -}
-closeIssue : CloseIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.CloseIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+closeIssue :
+    CloseIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CloseIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 closeIssue requiredArgs object_ =
     Object.selectionForCompositeField "closeIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCloseIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -223,7 +291,10 @@ type alias ClosePullRequestRequiredArguments =
 
 {-| Close a pull request.
 -}
-closePullRequest : ClosePullRequestRequiredArguments -> SelectionSet decodesTo GitHub.Object.ClosePullRequestPayload -> SelectionSet (Maybe decodesTo) RootMutation
+closePullRequest :
+    ClosePullRequestRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ClosePullRequestPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 closePullRequest requiredArgs object_ =
     Object.selectionForCompositeField "closePullRequest" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeClosePullRequestInput ] object_ (identity >> Decode.nullable)
 
@@ -234,7 +305,10 @@ type alias ConvertProjectCardNoteToIssueRequiredArguments =
 
 {-| Convert a project note card to one associated with a newly created issue.
 -}
-convertProjectCardNoteToIssue : ConvertProjectCardNoteToIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.ConvertProjectCardNoteToIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+convertProjectCardNoteToIssue :
+    ConvertProjectCardNoteToIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ConvertProjectCardNoteToIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 convertProjectCardNoteToIssue requiredArgs object_ =
     Object.selectionForCompositeField "convertProjectCardNoteToIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeConvertProjectCardNoteToIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -245,7 +319,10 @@ type alias CreateBranchProtectionRuleRequiredArguments =
 
 {-| Create a new branch protection rule
 -}
-createBranchProtectionRule : CreateBranchProtectionRuleRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateBranchProtectionRulePayload -> SelectionSet (Maybe decodesTo) RootMutation
+createBranchProtectionRule :
+    CreateBranchProtectionRuleRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateBranchProtectionRulePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createBranchProtectionRule requiredArgs object_ =
     Object.selectionForCompositeField "createBranchProtectionRule" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateBranchProtectionRuleInput ] object_ (identity >> Decode.nullable)
 
@@ -256,9 +333,26 @@ type alias CreateEnterpriseOrganizationRequiredArguments =
 
 {-| Creates an organization as part of an enterprise account.
 -}
-createEnterpriseOrganization : CreateEnterpriseOrganizationRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateEnterpriseOrganizationPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createEnterpriseOrganization :
+    CreateEnterpriseOrganizationRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateEnterpriseOrganizationPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createEnterpriseOrganization requiredArgs object_ =
     Object.selectionForCompositeField "createEnterpriseOrganization" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateEnterpriseOrganizationInput ] object_ (identity >> Decode.nullable)
+
+
+type alias CreateIpAllowListEntryRequiredArguments =
+    { input : GitHub.InputObject.CreateIpAllowListEntryInput }
+
+
+{-| Creates a new IP allow list entry.
+-}
+createIpAllowListEntry :
+    CreateIpAllowListEntryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateIpAllowListEntryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+createIpAllowListEntry requiredArgs object_ =
+    Object.selectionForCompositeField "createIpAllowListEntry" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateIpAllowListEntryInput ] object_ (identity >> Decode.nullable)
 
 
 type alias CreateIssueRequiredArguments =
@@ -267,7 +361,10 @@ type alias CreateIssueRequiredArguments =
 
 {-| Creates a new issue.
 -}
-createIssue : CreateIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+createIssue :
+    CreateIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createIssue requiredArgs object_ =
     Object.selectionForCompositeField "createIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -278,7 +375,10 @@ type alias CreateProjectRequiredArguments =
 
 {-| Creates a new project.
 -}
-createProject : CreateProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createProject :
+    CreateProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createProject requiredArgs object_ =
     Object.selectionForCompositeField "createProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -289,7 +389,10 @@ type alias CreatePullRequestRequiredArguments =
 
 {-| Create a new pull request
 -}
-createPullRequest : CreatePullRequestRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreatePullRequestPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createPullRequest :
+    CreatePullRequestRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreatePullRequestPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createPullRequest requiredArgs object_ =
     Object.selectionForCompositeField "createPullRequest" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreatePullRequestInput ] object_ (identity >> Decode.nullable)
 
@@ -300,7 +403,10 @@ type alias CreateRefRequiredArguments =
 
 {-| Create a new Git Ref.
 -}
-createRef : CreateRefRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateRefPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createRef :
+    CreateRefRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateRefPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createRef requiredArgs object_ =
     Object.selectionForCompositeField "createRef" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateRefInput ] object_ (identity >> Decode.nullable)
 
@@ -311,7 +417,10 @@ type alias CreateRepositoryRequiredArguments =
 
 {-| Create a new repository.
 -}
-createRepository : CreateRepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateRepositoryPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createRepository :
+    CreateRepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateRepositoryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createRepository requiredArgs object_ =
     Object.selectionForCompositeField "createRepository" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateRepositoryInput ] object_ (identity >> Decode.nullable)
 
@@ -322,7 +431,10 @@ type alias CreateTeamDiscussionRequiredArguments =
 
 {-| Creates a new team discussion.
 -}
-createTeamDiscussion : CreateTeamDiscussionRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateTeamDiscussionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createTeamDiscussion :
+    CreateTeamDiscussionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateTeamDiscussionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createTeamDiscussion requiredArgs object_ =
     Object.selectionForCompositeField "createTeamDiscussion" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateTeamDiscussionInput ] object_ (identity >> Decode.nullable)
 
@@ -333,7 +445,10 @@ type alias CreateTeamDiscussionCommentRequiredArguments =
 
 {-| Creates a new team discussion comment.
 -}
-createTeamDiscussionComment : CreateTeamDiscussionCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.CreateTeamDiscussionCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+createTeamDiscussionComment :
+    CreateTeamDiscussionCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.CreateTeamDiscussionCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 createTeamDiscussionComment requiredArgs object_ =
     Object.selectionForCompositeField "createTeamDiscussionComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeCreateTeamDiscussionCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -344,7 +459,10 @@ type alias DeclineTopicSuggestionRequiredArguments =
 
 {-| Rejects a suggested topic for the repository.
 -}
-declineTopicSuggestion : DeclineTopicSuggestionRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeclineTopicSuggestionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+declineTopicSuggestion :
+    DeclineTopicSuggestionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeclineTopicSuggestionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 declineTopicSuggestion requiredArgs object_ =
     Object.selectionForCompositeField "declineTopicSuggestion" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeclineTopicSuggestionInput ] object_ (identity >> Decode.nullable)
 
@@ -355,9 +473,40 @@ type alias DeleteBranchProtectionRuleRequiredArguments =
 
 {-| Delete a branch protection rule
 -}
-deleteBranchProtectionRule : DeleteBranchProtectionRuleRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteBranchProtectionRulePayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteBranchProtectionRule :
+    DeleteBranchProtectionRuleRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteBranchProtectionRulePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteBranchProtectionRule requiredArgs object_ =
     Object.selectionForCompositeField "deleteBranchProtectionRule" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteBranchProtectionRuleInput ] object_ (identity >> Decode.nullable)
+
+
+type alias DeleteDeploymentRequiredArguments =
+    { input : GitHub.InputObject.DeleteDeploymentInput }
+
+
+{-| Deletes a deployment.
+-}
+deleteDeployment :
+    DeleteDeploymentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteDeploymentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+deleteDeployment requiredArgs object_ =
+    Object.selectionForCompositeField "deleteDeployment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteDeploymentInput ] object_ (identity >> Decode.nullable)
+
+
+type alias DeleteIpAllowListEntryRequiredArguments =
+    { input : GitHub.InputObject.DeleteIpAllowListEntryInput }
+
+
+{-| Deletes an IP allow list entry.
+-}
+deleteIpAllowListEntry :
+    DeleteIpAllowListEntryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteIpAllowListEntryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+deleteIpAllowListEntry requiredArgs object_ =
+    Object.selectionForCompositeField "deleteIpAllowListEntry" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteIpAllowListEntryInput ] object_ (identity >> Decode.nullable)
 
 
 type alias DeleteIssueRequiredArguments =
@@ -366,7 +515,10 @@ type alias DeleteIssueRequiredArguments =
 
 {-| Deletes an Issue object.
 -}
-deleteIssue : DeleteIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteIssue :
+    DeleteIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteIssue requiredArgs object_ =
     Object.selectionForCompositeField "deleteIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -377,7 +529,10 @@ type alias DeleteIssueCommentRequiredArguments =
 
 {-| Deletes an IssueComment object.
 -}
-deleteIssueComment : DeleteIssueCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteIssueCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteIssueComment :
+    DeleteIssueCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteIssueCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteIssueComment requiredArgs object_ =
     Object.selectionForCompositeField "deleteIssueComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteIssueCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -388,7 +543,10 @@ type alias DeleteProjectRequiredArguments =
 
 {-| Deletes a project.
 -}
-deleteProject : DeleteProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteProject :
+    DeleteProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteProject requiredArgs object_ =
     Object.selectionForCompositeField "deleteProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -399,7 +557,10 @@ type alias DeleteProjectCardRequiredArguments =
 
 {-| Deletes a project card.
 -}
-deleteProjectCard : DeleteProjectCardRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteProjectCardPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteProjectCard :
+    DeleteProjectCardRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteProjectCardPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteProjectCard requiredArgs object_ =
     Object.selectionForCompositeField "deleteProjectCard" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteProjectCardInput ] object_ (identity >> Decode.nullable)
 
@@ -410,7 +571,10 @@ type alias DeleteProjectColumnRequiredArguments =
 
 {-| Deletes a project column.
 -}
-deleteProjectColumn : DeleteProjectColumnRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteProjectColumnPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteProjectColumn :
+    DeleteProjectColumnRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteProjectColumnPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteProjectColumn requiredArgs object_ =
     Object.selectionForCompositeField "deleteProjectColumn" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteProjectColumnInput ] object_ (identity >> Decode.nullable)
 
@@ -421,7 +585,10 @@ type alias DeletePullRequestReviewRequiredArguments =
 
 {-| Deletes a pull request review.
 -}
-deletePullRequestReview : DeletePullRequestReviewRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeletePullRequestReviewPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deletePullRequestReview :
+    DeletePullRequestReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeletePullRequestReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deletePullRequestReview requiredArgs object_ =
     Object.selectionForCompositeField "deletePullRequestReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeletePullRequestReviewInput ] object_ (identity >> Decode.nullable)
 
@@ -432,7 +599,10 @@ type alias DeletePullRequestReviewCommentRequiredArguments =
 
 {-| Deletes a pull request review comment.
 -}
-deletePullRequestReviewComment : DeletePullRequestReviewCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeletePullRequestReviewCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deletePullRequestReviewComment :
+    DeletePullRequestReviewCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeletePullRequestReviewCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deletePullRequestReviewComment requiredArgs object_ =
     Object.selectionForCompositeField "deletePullRequestReviewComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeletePullRequestReviewCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -443,7 +613,10 @@ type alias DeleteRefRequiredArguments =
 
 {-| Delete a Git Ref.
 -}
-deleteRef : DeleteRefRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteRefPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteRef :
+    DeleteRefRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteRefPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteRef requiredArgs object_ =
     Object.selectionForCompositeField "deleteRef" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteRefInput ] object_ (identity >> Decode.nullable)
 
@@ -454,7 +627,10 @@ type alias DeleteTeamDiscussionRequiredArguments =
 
 {-| Deletes a team discussion.
 -}
-deleteTeamDiscussion : DeleteTeamDiscussionRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteTeamDiscussionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteTeamDiscussion :
+    DeleteTeamDiscussionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteTeamDiscussionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteTeamDiscussion requiredArgs object_ =
     Object.selectionForCompositeField "deleteTeamDiscussion" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteTeamDiscussionInput ] object_ (identity >> Decode.nullable)
 
@@ -465,7 +641,10 @@ type alias DeleteTeamDiscussionCommentRequiredArguments =
 
 {-| Deletes a team discussion comment.
 -}
-deleteTeamDiscussionComment : DeleteTeamDiscussionCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.DeleteTeamDiscussionCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+deleteTeamDiscussionComment :
+    DeleteTeamDiscussionCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DeleteTeamDiscussionCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 deleteTeamDiscussionComment requiredArgs object_ =
     Object.selectionForCompositeField "deleteTeamDiscussionComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDeleteTeamDiscussionCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -476,7 +655,10 @@ type alias DismissPullRequestReviewRequiredArguments =
 
 {-| Dismisses an approved or rejected pull request review.
 -}
-dismissPullRequestReview : DismissPullRequestReviewRequiredArguments -> SelectionSet decodesTo GitHub.Object.DismissPullRequestReviewPayload -> SelectionSet (Maybe decodesTo) RootMutation
+dismissPullRequestReview :
+    DismissPullRequestReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.DismissPullRequestReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 dismissPullRequestReview requiredArgs object_ =
     Object.selectionForCompositeField "dismissPullRequestReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeDismissPullRequestReviewInput ] object_ (identity >> Decode.nullable)
 
@@ -487,7 +669,10 @@ type alias FollowUserRequiredArguments =
 
 {-| Follow a user.
 -}
-followUser : FollowUserRequiredArguments -> SelectionSet decodesTo GitHub.Object.FollowUserPayload -> SelectionSet (Maybe decodesTo) RootMutation
+followUser :
+    FollowUserRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.FollowUserPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 followUser requiredArgs object_ =
     Object.selectionForCompositeField "followUser" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeFollowUserInput ] object_ (identity >> Decode.nullable)
 
@@ -498,7 +683,10 @@ type alias InviteEnterpriseAdminRequiredArguments =
 
 {-| Invite someone to become an administrator of the enterprise.
 -}
-inviteEnterpriseAdmin : InviteEnterpriseAdminRequiredArguments -> SelectionSet decodesTo GitHub.Object.InviteEnterpriseAdminPayload -> SelectionSet (Maybe decodesTo) RootMutation
+inviteEnterpriseAdmin :
+    InviteEnterpriseAdminRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.InviteEnterpriseAdminPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 inviteEnterpriseAdmin requiredArgs object_ =
     Object.selectionForCompositeField "inviteEnterpriseAdmin" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeInviteEnterpriseAdminInput ] object_ (identity >> Decode.nullable)
 
@@ -509,7 +697,10 @@ type alias LinkRepositoryToProjectRequiredArguments =
 
 {-| Creates a repository link for a project.
 -}
-linkRepositoryToProject : LinkRepositoryToProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.LinkRepositoryToProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+linkRepositoryToProject :
+    LinkRepositoryToProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.LinkRepositoryToProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 linkRepositoryToProject requiredArgs object_ =
     Object.selectionForCompositeField "linkRepositoryToProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeLinkRepositoryToProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -520,9 +711,26 @@ type alias LockLockableRequiredArguments =
 
 {-| Lock a lockable object
 -}
-lockLockable : LockLockableRequiredArguments -> SelectionSet decodesTo GitHub.Object.LockLockablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+lockLockable :
+    LockLockableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.LockLockablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 lockLockable requiredArgs object_ =
     Object.selectionForCompositeField "lockLockable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeLockLockableInput ] object_ (identity >> Decode.nullable)
+
+
+type alias MarkPullRequestReadyForReviewRequiredArguments =
+    { input : GitHub.InputObject.MarkPullRequestReadyForReviewInput }
+
+
+{-| Marks a pull request ready for review.
+-}
+markPullRequestReadyForReview :
+    MarkPullRequestReadyForReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MarkPullRequestReadyForReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+markPullRequestReadyForReview requiredArgs object_ =
+    Object.selectionForCompositeField "markPullRequestReadyForReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMarkPullRequestReadyForReviewInput ] object_ (identity >> Decode.nullable)
 
 
 type alias MergeBranchRequiredArguments =
@@ -531,7 +739,10 @@ type alias MergeBranchRequiredArguments =
 
 {-| Merge a head into a branch.
 -}
-mergeBranch : MergeBranchRequiredArguments -> SelectionSet decodesTo GitHub.Object.MergeBranchPayload -> SelectionSet (Maybe decodesTo) RootMutation
+mergeBranch :
+    MergeBranchRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MergeBranchPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 mergeBranch requiredArgs object_ =
     Object.selectionForCompositeField "mergeBranch" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMergeBranchInput ] object_ (identity >> Decode.nullable)
 
@@ -542,9 +753,26 @@ type alias MergePullRequestRequiredArguments =
 
 {-| Merge a pull request.
 -}
-mergePullRequest : MergePullRequestRequiredArguments -> SelectionSet decodesTo GitHub.Object.MergePullRequestPayload -> SelectionSet (Maybe decodesTo) RootMutation
+mergePullRequest :
+    MergePullRequestRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MergePullRequestPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 mergePullRequest requiredArgs object_ =
     Object.selectionForCompositeField "mergePullRequest" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMergePullRequestInput ] object_ (identity >> Decode.nullable)
+
+
+type alias MinimizeCommentRequiredArguments =
+    { input : GitHub.InputObject.MinimizeCommentInput }
+
+
+{-| Minimizes a comment on an Issue, Commit, Pull Request, or Gist
+-}
+minimizeComment :
+    MinimizeCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MinimizeCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+minimizeComment requiredArgs object_ =
+    Object.selectionForCompositeField "minimizeComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMinimizeCommentInput ] object_ (identity >> Decode.nullable)
 
 
 type alias MoveProjectCardRequiredArguments =
@@ -553,7 +781,10 @@ type alias MoveProjectCardRequiredArguments =
 
 {-| Moves a project card to another place.
 -}
-moveProjectCard : MoveProjectCardRequiredArguments -> SelectionSet decodesTo GitHub.Object.MoveProjectCardPayload -> SelectionSet (Maybe decodesTo) RootMutation
+moveProjectCard :
+    MoveProjectCardRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MoveProjectCardPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 moveProjectCard requiredArgs object_ =
     Object.selectionForCompositeField "moveProjectCard" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMoveProjectCardInput ] object_ (identity >> Decode.nullable)
 
@@ -564,7 +795,10 @@ type alias MoveProjectColumnRequiredArguments =
 
 {-| Moves a project column to another place.
 -}
-moveProjectColumn : MoveProjectColumnRequiredArguments -> SelectionSet decodesTo GitHub.Object.MoveProjectColumnPayload -> SelectionSet (Maybe decodesTo) RootMutation
+moveProjectColumn :
+    MoveProjectColumnRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.MoveProjectColumnPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 moveProjectColumn requiredArgs object_ =
     Object.selectionForCompositeField "moveProjectColumn" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeMoveProjectColumnInput ] object_ (identity >> Decode.nullable)
 
@@ -575,7 +809,10 @@ type alias RegenerateEnterpriseIdentityProviderRecoveryCodesRequiredArguments =
 
 {-| Regenerates the identity provider recovery codes for an enterprise
 -}
-regenerateEnterpriseIdentityProviderRecoveryCodes : RegenerateEnterpriseIdentityProviderRecoveryCodesRequiredArguments -> SelectionSet decodesTo GitHub.Object.RegenerateEnterpriseIdentityProviderRecoveryCodesPayload -> SelectionSet (Maybe decodesTo) RootMutation
+regenerateEnterpriseIdentityProviderRecoveryCodes :
+    RegenerateEnterpriseIdentityProviderRecoveryCodesRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RegenerateEnterpriseIdentityProviderRecoveryCodesPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 regenerateEnterpriseIdentityProviderRecoveryCodes requiredArgs object_ =
     Object.selectionForCompositeField "regenerateEnterpriseIdentityProviderRecoveryCodes" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRegenerateEnterpriseIdentityProviderRecoveryCodesInput ] object_ (identity >> Decode.nullable)
 
@@ -586,7 +823,10 @@ type alias RemoveAssigneesFromAssignableRequiredArguments =
 
 {-| Removes assignees from an assignable object.
 -}
-removeAssigneesFromAssignable : RemoveAssigneesFromAssignableRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveAssigneesFromAssignablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeAssigneesFromAssignable :
+    RemoveAssigneesFromAssignableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveAssigneesFromAssignablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeAssigneesFromAssignable requiredArgs object_ =
     Object.selectionForCompositeField "removeAssigneesFromAssignable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveAssigneesFromAssignableInput ] object_ (identity >> Decode.nullable)
 
@@ -597,9 +837,26 @@ type alias RemoveEnterpriseAdminRequiredArguments =
 
 {-| Removes an administrator from the enterprise.
 -}
-removeEnterpriseAdmin : RemoveEnterpriseAdminRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveEnterpriseAdminPayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeEnterpriseAdmin :
+    RemoveEnterpriseAdminRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveEnterpriseAdminPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeEnterpriseAdmin requiredArgs object_ =
     Object.selectionForCompositeField "removeEnterpriseAdmin" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveEnterpriseAdminInput ] object_ (identity >> Decode.nullable)
+
+
+type alias RemoveEnterpriseIdentityProviderRequiredArguments =
+    { input : GitHub.InputObject.RemoveEnterpriseIdentityProviderInput }
+
+
+{-| Removes the identity provider from an enterprise
+-}
+removeEnterpriseIdentityProvider :
+    RemoveEnterpriseIdentityProviderRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveEnterpriseIdentityProviderPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+removeEnterpriseIdentityProvider requiredArgs object_ =
+    Object.selectionForCompositeField "removeEnterpriseIdentityProvider" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveEnterpriseIdentityProviderInput ] object_ (identity >> Decode.nullable)
 
 
 type alias RemoveEnterpriseOrganizationRequiredArguments =
@@ -608,7 +865,10 @@ type alias RemoveEnterpriseOrganizationRequiredArguments =
 
 {-| Removes an organization from the enterprise
 -}
-removeEnterpriseOrganization : RemoveEnterpriseOrganizationRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveEnterpriseOrganizationPayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeEnterpriseOrganization :
+    RemoveEnterpriseOrganizationRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveEnterpriseOrganizationPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeEnterpriseOrganization requiredArgs object_ =
     Object.selectionForCompositeField "removeEnterpriseOrganization" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveEnterpriseOrganizationInput ] object_ (identity >> Decode.nullable)
 
@@ -619,7 +879,10 @@ type alias RemoveLabelsFromLabelableRequiredArguments =
 
 {-| Removes labels from a Labelable object.
 -}
-removeLabelsFromLabelable : RemoveLabelsFromLabelableRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveLabelsFromLabelablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeLabelsFromLabelable :
+    RemoveLabelsFromLabelableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveLabelsFromLabelablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeLabelsFromLabelable requiredArgs object_ =
     Object.selectionForCompositeField "removeLabelsFromLabelable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveLabelsFromLabelableInput ] object_ (identity >> Decode.nullable)
 
@@ -630,7 +893,10 @@ type alias RemoveOutsideCollaboratorRequiredArguments =
 
 {-| Removes outside collaborator from all repositories in an organization.
 -}
-removeOutsideCollaborator : RemoveOutsideCollaboratorRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveOutsideCollaboratorPayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeOutsideCollaborator :
+    RemoveOutsideCollaboratorRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveOutsideCollaboratorPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeOutsideCollaborator requiredArgs object_ =
     Object.selectionForCompositeField "removeOutsideCollaborator" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveOutsideCollaboratorInput ] object_ (identity >> Decode.nullable)
 
@@ -641,7 +907,10 @@ type alias RemoveReactionRequiredArguments =
 
 {-| Removes a reaction from a subject.
 -}
-removeReaction : RemoveReactionRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveReactionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeReaction :
+    RemoveReactionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveReactionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeReaction requiredArgs object_ =
     Object.selectionForCompositeField "removeReaction" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveReactionInput ] object_ (identity >> Decode.nullable)
 
@@ -652,7 +921,10 @@ type alias RemoveStarRequiredArguments =
 
 {-| Removes a star from a Starrable.
 -}
-removeStar : RemoveStarRequiredArguments -> SelectionSet decodesTo GitHub.Object.RemoveStarPayload -> SelectionSet (Maybe decodesTo) RootMutation
+removeStar :
+    RemoveStarRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RemoveStarPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 removeStar requiredArgs object_ =
     Object.selectionForCompositeField "removeStar" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRemoveStarInput ] object_ (identity >> Decode.nullable)
 
@@ -663,7 +935,10 @@ type alias ReopenIssueRequiredArguments =
 
 {-| Reopen a issue.
 -}
-reopenIssue : ReopenIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.ReopenIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+reopenIssue :
+    ReopenIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ReopenIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 reopenIssue requiredArgs object_ =
     Object.selectionForCompositeField "reopenIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeReopenIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -674,7 +949,10 @@ type alias ReopenPullRequestRequiredArguments =
 
 {-| Reopen a pull request.
 -}
-reopenPullRequest : ReopenPullRequestRequiredArguments -> SelectionSet decodesTo GitHub.Object.ReopenPullRequestPayload -> SelectionSet (Maybe decodesTo) RootMutation
+reopenPullRequest :
+    ReopenPullRequestRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ReopenPullRequestPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 reopenPullRequest requiredArgs object_ =
     Object.selectionForCompositeField "reopenPullRequest" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeReopenPullRequestInput ] object_ (identity >> Decode.nullable)
 
@@ -685,7 +963,10 @@ type alias RequestReviewsRequiredArguments =
 
 {-| Set review requests on a pull request.
 -}
-requestReviews : RequestReviewsRequiredArguments -> SelectionSet decodesTo GitHub.Object.RequestReviewsPayload -> SelectionSet (Maybe decodesTo) RootMutation
+requestReviews :
+    RequestReviewsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.RequestReviewsPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 requestReviews requiredArgs object_ =
     Object.selectionForCompositeField "requestReviews" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeRequestReviewsInput ] object_ (identity >> Decode.nullable)
 
@@ -696,9 +977,26 @@ type alias ResolveReviewThreadRequiredArguments =
 
 {-| Marks a review thread as resolved.
 -}
-resolveReviewThread : ResolveReviewThreadRequiredArguments -> SelectionSet decodesTo GitHub.Object.ResolveReviewThreadPayload -> SelectionSet (Maybe decodesTo) RootMutation
+resolveReviewThread :
+    ResolveReviewThreadRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.ResolveReviewThreadPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 resolveReviewThread requiredArgs object_ =
     Object.selectionForCompositeField "resolveReviewThread" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeResolveReviewThreadInput ] object_ (identity >> Decode.nullable)
+
+
+type alias SetEnterpriseIdentityProviderRequiredArguments =
+    { input : GitHub.InputObject.SetEnterpriseIdentityProviderInput }
+
+
+{-| Creates or updates the identity provider for an enterprise.
+-}
+setEnterpriseIdentityProvider :
+    SetEnterpriseIdentityProviderRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.SetEnterpriseIdentityProviderPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+setEnterpriseIdentityProvider requiredArgs object_ =
+    Object.selectionForCompositeField "setEnterpriseIdentityProvider" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeSetEnterpriseIdentityProviderInput ] object_ (identity >> Decode.nullable)
 
 
 type alias SubmitPullRequestReviewRequiredArguments =
@@ -707,7 +1005,10 @@ type alias SubmitPullRequestReviewRequiredArguments =
 
 {-| Submits a pending pull request review.
 -}
-submitPullRequestReview : SubmitPullRequestReviewRequiredArguments -> SelectionSet decodesTo GitHub.Object.SubmitPullRequestReviewPayload -> SelectionSet (Maybe decodesTo) RootMutation
+submitPullRequestReview :
+    SubmitPullRequestReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.SubmitPullRequestReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 submitPullRequestReview requiredArgs object_ =
     Object.selectionForCompositeField "submitPullRequestReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeSubmitPullRequestReviewInput ] object_ (identity >> Decode.nullable)
 
@@ -718,7 +1019,10 @@ type alias TransferIssueRequiredArguments =
 
 {-| Transfer an issue to a different repository
 -}
-transferIssue : TransferIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.TransferIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+transferIssue :
+    TransferIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.TransferIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 transferIssue requiredArgs object_ =
     Object.selectionForCompositeField "transferIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeTransferIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -729,7 +1033,10 @@ type alias UnarchiveRepositoryRequiredArguments =
 
 {-| Unarchives a repository.
 -}
-unarchiveRepository : UnarchiveRepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnarchiveRepositoryPayload -> SelectionSet (Maybe decodesTo) RootMutation
+unarchiveRepository :
+    UnarchiveRepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnarchiveRepositoryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unarchiveRepository requiredArgs object_ =
     Object.selectionForCompositeField "unarchiveRepository" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnarchiveRepositoryInput ] object_ (identity >> Decode.nullable)
 
@@ -740,7 +1047,10 @@ type alias UnfollowUserRequiredArguments =
 
 {-| Unfollow a user.
 -}
-unfollowUser : UnfollowUserRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnfollowUserPayload -> SelectionSet (Maybe decodesTo) RootMutation
+unfollowUser :
+    UnfollowUserRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnfollowUserPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unfollowUser requiredArgs object_ =
     Object.selectionForCompositeField "unfollowUser" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnfollowUserInput ] object_ (identity >> Decode.nullable)
 
@@ -751,7 +1061,10 @@ type alias UnlinkRepositoryFromProjectRequiredArguments =
 
 {-| Deletes a repository link from a project.
 -}
-unlinkRepositoryFromProject : UnlinkRepositoryFromProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnlinkRepositoryFromProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+unlinkRepositoryFromProject :
+    UnlinkRepositoryFromProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnlinkRepositoryFromProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unlinkRepositoryFromProject requiredArgs object_ =
     Object.selectionForCompositeField "unlinkRepositoryFromProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnlinkRepositoryFromProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -762,7 +1075,10 @@ type alias UnlockLockableRequiredArguments =
 
 {-| Unlock a lockable object
 -}
-unlockLockable : UnlockLockableRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnlockLockablePayload -> SelectionSet (Maybe decodesTo) RootMutation
+unlockLockable :
+    UnlockLockableRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnlockLockablePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unlockLockable requiredArgs object_ =
     Object.selectionForCompositeField "unlockLockable" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnlockLockableInput ] object_ (identity >> Decode.nullable)
 
@@ -773,9 +1089,26 @@ type alias UnmarkIssueAsDuplicateRequiredArguments =
 
 {-| Unmark an issue as a duplicate of another issue.
 -}
-unmarkIssueAsDuplicate : UnmarkIssueAsDuplicateRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnmarkIssueAsDuplicatePayload -> SelectionSet (Maybe decodesTo) RootMutation
+unmarkIssueAsDuplicate :
+    UnmarkIssueAsDuplicateRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnmarkIssueAsDuplicatePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unmarkIssueAsDuplicate requiredArgs object_ =
     Object.selectionForCompositeField "unmarkIssueAsDuplicate" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnmarkIssueAsDuplicateInput ] object_ (identity >> Decode.nullable)
+
+
+type alias UnminimizeCommentRequiredArguments =
+    { input : GitHub.InputObject.UnminimizeCommentInput }
+
+
+{-| Unminimizes a comment on an Issue, Commit, Pull Request, or Gist
+-}
+unminimizeComment :
+    UnminimizeCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnminimizeCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+unminimizeComment requiredArgs object_ =
+    Object.selectionForCompositeField "unminimizeComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnminimizeCommentInput ] object_ (identity >> Decode.nullable)
 
 
 type alias UnresolveReviewThreadRequiredArguments =
@@ -784,7 +1117,10 @@ type alias UnresolveReviewThreadRequiredArguments =
 
 {-| Marks a review thread as unresolved.
 -}
-unresolveReviewThread : UnresolveReviewThreadRequiredArguments -> SelectionSet decodesTo GitHub.Object.UnresolveReviewThreadPayload -> SelectionSet (Maybe decodesTo) RootMutation
+unresolveReviewThread :
+    UnresolveReviewThreadRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UnresolveReviewThreadPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 unresolveReviewThread requiredArgs object_ =
     Object.selectionForCompositeField "unresolveReviewThread" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUnresolveReviewThreadInput ] object_ (identity >> Decode.nullable)
 
@@ -795,7 +1131,10 @@ type alias UpdateBranchProtectionRuleRequiredArguments =
 
 {-| Create a new branch protection rule
 -}
-updateBranchProtectionRule : UpdateBranchProtectionRuleRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateBranchProtectionRulePayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateBranchProtectionRule :
+    UpdateBranchProtectionRuleRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateBranchProtectionRulePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateBranchProtectionRule requiredArgs object_ =
     Object.selectionForCompositeField "updateBranchProtectionRule" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateBranchProtectionRuleInput ] object_ (identity >> Decode.nullable)
 
@@ -806,7 +1145,10 @@ type alias UpdateEnterpriseActionExecutionCapabilitySettingRequiredArguments =
 
 {-| Sets the action execution capability setting for an enterprise.
 -}
-updateEnterpriseActionExecutionCapabilitySetting : UpdateEnterpriseActionExecutionCapabilitySettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseActionExecutionCapabilitySettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseActionExecutionCapabilitySetting :
+    UpdateEnterpriseActionExecutionCapabilitySettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseActionExecutionCapabilitySettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseActionExecutionCapabilitySetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseActionExecutionCapabilitySetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseActionExecutionCapabilitySettingInput ] object_ (identity >> Decode.nullable)
 
@@ -817,7 +1159,10 @@ type alias UpdateEnterpriseAdministratorRoleRequiredArguments =
 
 {-| Updates the role of an enterprise administrator.
 -}
-updateEnterpriseAdministratorRole : UpdateEnterpriseAdministratorRoleRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseAdministratorRolePayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseAdministratorRole :
+    UpdateEnterpriseAdministratorRoleRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseAdministratorRolePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseAdministratorRole requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseAdministratorRole" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseAdministratorRoleInput ] object_ (identity >> Decode.nullable)
 
@@ -828,7 +1173,10 @@ type alias UpdateEnterpriseAllowPrivateRepositoryForkingSettingRequiredArguments
 
 {-| Sets whether private repository forks are enabled for an enterprise.
 -}
-updateEnterpriseAllowPrivateRepositoryForkingSetting : UpdateEnterpriseAllowPrivateRepositoryForkingSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseAllowPrivateRepositoryForkingSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseAllowPrivateRepositoryForkingSetting :
+    UpdateEnterpriseAllowPrivateRepositoryForkingSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseAllowPrivateRepositoryForkingSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseAllowPrivateRepositoryForkingSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseAllowPrivateRepositoryForkingSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseAllowPrivateRepositoryForkingSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -839,7 +1187,10 @@ type alias UpdateEnterpriseDefaultRepositoryPermissionSettingRequiredArguments =
 
 {-| Sets the default repository permission for organizations in an enterprise.
 -}
-updateEnterpriseDefaultRepositoryPermissionSetting : UpdateEnterpriseDefaultRepositoryPermissionSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseDefaultRepositoryPermissionSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseDefaultRepositoryPermissionSetting :
+    UpdateEnterpriseDefaultRepositoryPermissionSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseDefaultRepositoryPermissionSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseDefaultRepositoryPermissionSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseDefaultRepositoryPermissionSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseDefaultRepositoryPermissionSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -850,7 +1201,10 @@ type alias UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingRequiredAr
 
 {-| Sets whether organization members with admin permissions on a repository can change repository visibility.
 -}
-updateEnterpriseMembersCanChangeRepositoryVisibilitySetting : UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanChangeRepositoryVisibilitySetting :
+    UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanChangeRepositoryVisibilitySetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanChangeRepositoryVisibilitySetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanChangeRepositoryVisibilitySettingInput ] object_ (identity >> Decode.nullable)
 
@@ -861,7 +1215,10 @@ type alias UpdateEnterpriseMembersCanCreateRepositoriesSettingRequiredArguments 
 
 {-| Sets the members can create repositories setting for an enterprise.
 -}
-updateEnterpriseMembersCanCreateRepositoriesSetting : UpdateEnterpriseMembersCanCreateRepositoriesSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanCreateRepositoriesSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanCreateRepositoriesSetting :
+    UpdateEnterpriseMembersCanCreateRepositoriesSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanCreateRepositoriesSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanCreateRepositoriesSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanCreateRepositoriesSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanCreateRepositoriesSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -872,7 +1229,10 @@ type alias UpdateEnterpriseMembersCanDeleteIssuesSettingRequiredArguments =
 
 {-| Sets the members can delete issues setting for an enterprise.
 -}
-updateEnterpriseMembersCanDeleteIssuesSetting : UpdateEnterpriseMembersCanDeleteIssuesSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanDeleteIssuesSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanDeleteIssuesSetting :
+    UpdateEnterpriseMembersCanDeleteIssuesSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanDeleteIssuesSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanDeleteIssuesSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanDeleteIssuesSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanDeleteIssuesSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -883,7 +1243,10 @@ type alias UpdateEnterpriseMembersCanDeleteRepositoriesSettingRequiredArguments 
 
 {-| Sets the members can delete repositories setting for an enterprise.
 -}
-updateEnterpriseMembersCanDeleteRepositoriesSetting : UpdateEnterpriseMembersCanDeleteRepositoriesSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanDeleteRepositoriesSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanDeleteRepositoriesSetting :
+    UpdateEnterpriseMembersCanDeleteRepositoriesSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanDeleteRepositoriesSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanDeleteRepositoriesSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanDeleteRepositoriesSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanDeleteRepositoriesSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -894,7 +1257,10 @@ type alias UpdateEnterpriseMembersCanInviteCollaboratorsSettingRequiredArguments
 
 {-| Sets whether members can invite collaborators are enabled for an enterprise.
 -}
-updateEnterpriseMembersCanInviteCollaboratorsSetting : UpdateEnterpriseMembersCanInviteCollaboratorsSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanInviteCollaboratorsSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanInviteCollaboratorsSetting :
+    UpdateEnterpriseMembersCanInviteCollaboratorsSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanInviteCollaboratorsSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanInviteCollaboratorsSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanInviteCollaboratorsSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanInviteCollaboratorsSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -905,7 +1271,10 @@ type alias UpdateEnterpriseMembersCanMakePurchasesSettingRequiredArguments =
 
 {-| Sets whether or not an organization admin can make purchases.
 -}
-updateEnterpriseMembersCanMakePurchasesSetting : UpdateEnterpriseMembersCanMakePurchasesSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanMakePurchasesSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanMakePurchasesSetting :
+    UpdateEnterpriseMembersCanMakePurchasesSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanMakePurchasesSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanMakePurchasesSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanMakePurchasesSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanMakePurchasesSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -916,7 +1285,10 @@ type alias UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingRequiredArgum
 
 {-| Sets the members can update protected branches setting for an enterprise.
 -}
-updateEnterpriseMembersCanUpdateProtectedBranchesSetting : UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanUpdateProtectedBranchesSetting :
+    UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanUpdateProtectedBranchesSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanUpdateProtectedBranchesSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanUpdateProtectedBranchesSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanUpdateProtectedBranchesSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -927,7 +1299,10 @@ type alias UpdateEnterpriseMembersCanViewDependencyInsightsSettingRequiredArgume
 
 {-| Sets the members can view dependency insights for an enterprise.
 -}
-updateEnterpriseMembersCanViewDependencyInsightsSetting : UpdateEnterpriseMembersCanViewDependencyInsightsSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanViewDependencyInsightsSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseMembersCanViewDependencyInsightsSetting :
+    UpdateEnterpriseMembersCanViewDependencyInsightsSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseMembersCanViewDependencyInsightsSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseMembersCanViewDependencyInsightsSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseMembersCanViewDependencyInsightsSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseMembersCanViewDependencyInsightsSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -938,7 +1313,10 @@ type alias UpdateEnterpriseOrganizationProjectsSettingRequiredArguments =
 
 {-| Sets whether organization projects are enabled for an enterprise.
 -}
-updateEnterpriseOrganizationProjectsSetting : UpdateEnterpriseOrganizationProjectsSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseOrganizationProjectsSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseOrganizationProjectsSetting :
+    UpdateEnterpriseOrganizationProjectsSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseOrganizationProjectsSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseOrganizationProjectsSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseOrganizationProjectsSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseOrganizationProjectsSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -949,7 +1327,10 @@ type alias UpdateEnterpriseProfileRequiredArguments =
 
 {-| Updates an enterprise's profile.
 -}
-updateEnterpriseProfile : UpdateEnterpriseProfileRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseProfilePayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseProfile :
+    UpdateEnterpriseProfileRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseProfilePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseProfile requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseProfile" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseProfileInput ] object_ (identity >> Decode.nullable)
 
@@ -960,7 +1341,10 @@ type alias UpdateEnterpriseRepositoryProjectsSettingRequiredArguments =
 
 {-| Sets whether repository projects are enabled for a enterprise.
 -}
-updateEnterpriseRepositoryProjectsSetting : UpdateEnterpriseRepositoryProjectsSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseRepositoryProjectsSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseRepositoryProjectsSetting :
+    UpdateEnterpriseRepositoryProjectsSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseRepositoryProjectsSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseRepositoryProjectsSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseRepositoryProjectsSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseRepositoryProjectsSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -971,7 +1355,10 @@ type alias UpdateEnterpriseTeamDiscussionsSettingRequiredArguments =
 
 {-| Sets whether team discussions are enabled for an enterprise.
 -}
-updateEnterpriseTeamDiscussionsSetting : UpdateEnterpriseTeamDiscussionsSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseTeamDiscussionsSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseTeamDiscussionsSetting :
+    UpdateEnterpriseTeamDiscussionsSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseTeamDiscussionsSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseTeamDiscussionsSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseTeamDiscussionsSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseTeamDiscussionsSettingInput ] object_ (identity >> Decode.nullable)
 
@@ -982,9 +1369,40 @@ type alias UpdateEnterpriseTwoFactorAuthenticationRequiredSettingRequiredArgumen
 
 {-| Sets whether two factor authentication is required for all users in an enterprise.
 -}
-updateEnterpriseTwoFactorAuthenticationRequiredSetting : UpdateEnterpriseTwoFactorAuthenticationRequiredSettingRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseTwoFactorAuthenticationRequiredSettingPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateEnterpriseTwoFactorAuthenticationRequiredSetting :
+    UpdateEnterpriseTwoFactorAuthenticationRequiredSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateEnterpriseTwoFactorAuthenticationRequiredSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateEnterpriseTwoFactorAuthenticationRequiredSetting requiredArgs object_ =
     Object.selectionForCompositeField "updateEnterpriseTwoFactorAuthenticationRequiredSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateEnterpriseTwoFactorAuthenticationRequiredSettingInput ] object_ (identity >> Decode.nullable)
+
+
+type alias UpdateIpAllowListEnabledSettingRequiredArguments =
+    { input : GitHub.InputObject.UpdateIpAllowListEnabledSettingInput }
+
+
+{-| Sets whether an IP allow list is enabled on an owner.
+-}
+updateIpAllowListEnabledSetting :
+    UpdateIpAllowListEnabledSettingRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateIpAllowListEnabledSettingPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+updateIpAllowListEnabledSetting requiredArgs object_ =
+    Object.selectionForCompositeField "updateIpAllowListEnabledSetting" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateIpAllowListEnabledSettingInput ] object_ (identity >> Decode.nullable)
+
+
+type alias UpdateIpAllowListEntryRequiredArguments =
+    { input : GitHub.InputObject.UpdateIpAllowListEntryInput }
+
+
+{-| Updates an IP allow list entry.
+-}
+updateIpAllowListEntry :
+    UpdateIpAllowListEntryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateIpAllowListEntryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
+updateIpAllowListEntry requiredArgs object_ =
+    Object.selectionForCompositeField "updateIpAllowListEntry" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateIpAllowListEntryInput ] object_ (identity >> Decode.nullable)
 
 
 type alias UpdateIssueRequiredArguments =
@@ -993,7 +1411,10 @@ type alias UpdateIssueRequiredArguments =
 
 {-| Updates an Issue.
 -}
-updateIssue : UpdateIssueRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateIssuePayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateIssue :
+    UpdateIssueRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateIssuePayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateIssue requiredArgs object_ =
     Object.selectionForCompositeField "updateIssue" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateIssueInput ] object_ (identity >> Decode.nullable)
 
@@ -1004,7 +1425,10 @@ type alias UpdateIssueCommentRequiredArguments =
 
 {-| Updates an IssueComment object.
 -}
-updateIssueComment : UpdateIssueCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateIssueCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateIssueComment :
+    UpdateIssueCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateIssueCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateIssueComment requiredArgs object_ =
     Object.selectionForCompositeField "updateIssueComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateIssueCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -1015,7 +1439,10 @@ type alias UpdateProjectRequiredArguments =
 
 {-| Updates an existing project.
 -}
-updateProject : UpdateProjectRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateProjectPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateProject :
+    UpdateProjectRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateProjectPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateProject requiredArgs object_ =
     Object.selectionForCompositeField "updateProject" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateProjectInput ] object_ (identity >> Decode.nullable)
 
@@ -1026,7 +1453,10 @@ type alias UpdateProjectCardRequiredArguments =
 
 {-| Updates an existing project card.
 -}
-updateProjectCard : UpdateProjectCardRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateProjectCardPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateProjectCard :
+    UpdateProjectCardRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateProjectCardPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateProjectCard requiredArgs object_ =
     Object.selectionForCompositeField "updateProjectCard" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateProjectCardInput ] object_ (identity >> Decode.nullable)
 
@@ -1037,7 +1467,10 @@ type alias UpdateProjectColumnRequiredArguments =
 
 {-| Updates an existing project column.
 -}
-updateProjectColumn : UpdateProjectColumnRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateProjectColumnPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateProjectColumn :
+    UpdateProjectColumnRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateProjectColumnPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateProjectColumn requiredArgs object_ =
     Object.selectionForCompositeField "updateProjectColumn" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateProjectColumnInput ] object_ (identity >> Decode.nullable)
 
@@ -1048,7 +1481,10 @@ type alias UpdatePullRequestRequiredArguments =
 
 {-| Update a pull request
 -}
-updatePullRequest : UpdatePullRequestRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updatePullRequest :
+    UpdatePullRequestRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updatePullRequest requiredArgs object_ =
     Object.selectionForCompositeField "updatePullRequest" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdatePullRequestInput ] object_ (identity >> Decode.nullable)
 
@@ -1059,7 +1495,10 @@ type alias UpdatePullRequestReviewRequiredArguments =
 
 {-| Updates the body of a pull request review.
 -}
-updatePullRequestReview : UpdatePullRequestReviewRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestReviewPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updatePullRequestReview :
+    UpdatePullRequestReviewRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestReviewPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updatePullRequestReview requiredArgs object_ =
     Object.selectionForCompositeField "updatePullRequestReview" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdatePullRequestReviewInput ] object_ (identity >> Decode.nullable)
 
@@ -1070,7 +1509,10 @@ type alias UpdatePullRequestReviewCommentRequiredArguments =
 
 {-| Updates a pull request review comment.
 -}
-updatePullRequestReviewComment : UpdatePullRequestReviewCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestReviewCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updatePullRequestReviewComment :
+    UpdatePullRequestReviewCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdatePullRequestReviewCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updatePullRequestReviewComment requiredArgs object_ =
     Object.selectionForCompositeField "updatePullRequestReviewComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdatePullRequestReviewCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -1081,7 +1523,10 @@ type alias UpdateRefRequiredArguments =
 
 {-| Update a Git Ref.
 -}
-updateRef : UpdateRefRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateRefPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateRef :
+    UpdateRefRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateRefPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateRef requiredArgs object_ =
     Object.selectionForCompositeField "updateRef" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateRefInput ] object_ (identity >> Decode.nullable)
 
@@ -1092,7 +1537,10 @@ type alias UpdateRepositoryRequiredArguments =
 
 {-| Update information about a repository.
 -}
-updateRepository : UpdateRepositoryRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateRepositoryPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateRepository :
+    UpdateRepositoryRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateRepositoryPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateRepository requiredArgs object_ =
     Object.selectionForCompositeField "updateRepository" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateRepositoryInput ] object_ (identity >> Decode.nullable)
 
@@ -1103,7 +1551,10 @@ type alias UpdateSubscriptionRequiredArguments =
 
 {-| Updates the state for subscribable subjects.
 -}
-updateSubscription : UpdateSubscriptionRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateSubscriptionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateSubscription :
+    UpdateSubscriptionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateSubscriptionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateSubscription requiredArgs object_ =
     Object.selectionForCompositeField "updateSubscription" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateSubscriptionInput ] object_ (identity >> Decode.nullable)
 
@@ -1114,7 +1565,10 @@ type alias UpdateTeamDiscussionRequiredArguments =
 
 {-| Updates a team discussion.
 -}
-updateTeamDiscussion : UpdateTeamDiscussionRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateTeamDiscussionPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateTeamDiscussion :
+    UpdateTeamDiscussionRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateTeamDiscussionPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateTeamDiscussion requiredArgs object_ =
     Object.selectionForCompositeField "updateTeamDiscussion" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateTeamDiscussionInput ] object_ (identity >> Decode.nullable)
 
@@ -1125,7 +1579,10 @@ type alias UpdateTeamDiscussionCommentRequiredArguments =
 
 {-| Updates a discussion comment.
 -}
-updateTeamDiscussionComment : UpdateTeamDiscussionCommentRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateTeamDiscussionCommentPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateTeamDiscussionComment :
+    UpdateTeamDiscussionCommentRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateTeamDiscussionCommentPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateTeamDiscussionComment requiredArgs object_ =
     Object.selectionForCompositeField "updateTeamDiscussionComment" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateTeamDiscussionCommentInput ] object_ (identity >> Decode.nullable)
 
@@ -1136,6 +1593,9 @@ type alias UpdateTopicsRequiredArguments =
 
 {-| Replaces the repository's topics with the given topics.
 -}
-updateTopics : UpdateTopicsRequiredArguments -> SelectionSet decodesTo GitHub.Object.UpdateTopicsPayload -> SelectionSet (Maybe decodesTo) RootMutation
+updateTopics :
+    UpdateTopicsRequiredArguments
+    -> SelectionSet decodesTo GitHub.Object.UpdateTopicsPayload
+    -> SelectionSet (Maybe decodesTo) RootMutation
 updateTopics requiredArgs object_ =
     Object.selectionForCompositeField "updateTopics" [ Argument.required "input" requiredArgs.input GitHub.InputObject.encodeUpdateTopicsInput ] object_ (identity >> Decode.nullable)

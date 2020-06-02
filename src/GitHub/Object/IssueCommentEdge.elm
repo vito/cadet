@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.IssueComment -> SelectionSet (Maybe decodesTo) GitHub.Object.IssueCommentEdge
+node :
+    SelectionSet decodesTo GitHub.Object.IssueComment
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.IssueCommentEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

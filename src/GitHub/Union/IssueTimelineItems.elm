@@ -20,14 +20,16 @@ import Json.Decode as Decode
 
 
 type alias Fragments decodesTo =
-    { onIssueComment : SelectionSet decodesTo GitHub.Object.IssueComment
-    , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
-    , onAddedToProjectEvent : SelectionSet decodesTo GitHub.Object.AddedToProjectEvent
+    { onAddedToProjectEvent : SelectionSet decodesTo GitHub.Object.AddedToProjectEvent
     , onAssignedEvent : SelectionSet decodesTo GitHub.Object.AssignedEvent
     , onClosedEvent : SelectionSet decodesTo GitHub.Object.ClosedEvent
     , onCommentDeletedEvent : SelectionSet decodesTo GitHub.Object.CommentDeletedEvent
+    , onConnectedEvent : SelectionSet decodesTo GitHub.Object.ConnectedEvent
     , onConvertedNoteToIssueEvent : SelectionSet decodesTo GitHub.Object.ConvertedNoteToIssueEvent
+    , onCrossReferencedEvent : SelectionSet decodesTo GitHub.Object.CrossReferencedEvent
     , onDemilestonedEvent : SelectionSet decodesTo GitHub.Object.DemilestonedEvent
+    , onDisconnectedEvent : SelectionSet decodesTo GitHub.Object.DisconnectedEvent
+    , onIssueComment : SelectionSet decodesTo GitHub.Object.IssueComment
     , onLabeledEvent : SelectionSet decodesTo GitHub.Object.LabeledEvent
     , onLockedEvent : SelectionSet decodesTo GitHub.Object.LockedEvent
     , onMarkedAsDuplicateEvent : SelectionSet decodesTo GitHub.Object.MarkedAsDuplicateEvent
@@ -44,9 +46,10 @@ type alias Fragments decodesTo =
     , onUnassignedEvent : SelectionSet decodesTo GitHub.Object.UnassignedEvent
     , onUnlabeledEvent : SelectionSet decodesTo GitHub.Object.UnlabeledEvent
     , onUnlockedEvent : SelectionSet decodesTo GitHub.Object.UnlockedEvent
-    , onUserBlockedEvent : SelectionSet decodesTo GitHub.Object.UserBlockedEvent
+    , onUnmarkedAsDuplicateEvent : SelectionSet decodesTo GitHub.Object.UnmarkedAsDuplicateEvent
     , onUnpinnedEvent : SelectionSet decodesTo GitHub.Object.UnpinnedEvent
     , onUnsubscribedEvent : SelectionSet decodesTo GitHub.Object.UnsubscribedEvent
+    , onUserBlockedEvent : SelectionSet decodesTo GitHub.Object.UserBlockedEvent
     }
 
 
@@ -56,15 +59,17 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Union.IssueTimelineItems
 fragments selections =
-    Object.exhuastiveFragmentSelection
-        [ Object.buildFragment "IssueComment" selections.onIssueComment
-        , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
-        , Object.buildFragment "AddedToProjectEvent" selections.onAddedToProjectEvent
+    Object.exhaustiveFragmentSelection
+        [ Object.buildFragment "AddedToProjectEvent" selections.onAddedToProjectEvent
         , Object.buildFragment "AssignedEvent" selections.onAssignedEvent
         , Object.buildFragment "ClosedEvent" selections.onClosedEvent
         , Object.buildFragment "CommentDeletedEvent" selections.onCommentDeletedEvent
+        , Object.buildFragment "ConnectedEvent" selections.onConnectedEvent
         , Object.buildFragment "ConvertedNoteToIssueEvent" selections.onConvertedNoteToIssueEvent
+        , Object.buildFragment "CrossReferencedEvent" selections.onCrossReferencedEvent
         , Object.buildFragment "DemilestonedEvent" selections.onDemilestonedEvent
+        , Object.buildFragment "DisconnectedEvent" selections.onDisconnectedEvent
+        , Object.buildFragment "IssueComment" selections.onIssueComment
         , Object.buildFragment "LabeledEvent" selections.onLabeledEvent
         , Object.buildFragment "LockedEvent" selections.onLockedEvent
         , Object.buildFragment "MarkedAsDuplicateEvent" selections.onMarkedAsDuplicateEvent
@@ -81,25 +86,28 @@ fragments selections =
         , Object.buildFragment "UnassignedEvent" selections.onUnassignedEvent
         , Object.buildFragment "UnlabeledEvent" selections.onUnlabeledEvent
         , Object.buildFragment "UnlockedEvent" selections.onUnlockedEvent
-        , Object.buildFragment "UserBlockedEvent" selections.onUserBlockedEvent
+        , Object.buildFragment "UnmarkedAsDuplicateEvent" selections.onUnmarkedAsDuplicateEvent
         , Object.buildFragment "UnpinnedEvent" selections.onUnpinnedEvent
         , Object.buildFragment "UnsubscribedEvent" selections.onUnsubscribedEvent
+        , Object.buildFragment "UserBlockedEvent" selections.onUserBlockedEvent
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
 maybeFragments =
-    { onIssueComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onAddedToProjectEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    { onAddedToProjectEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onAssignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onClosedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onCommentDeletedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onConnectedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onConvertedNoteToIssueEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onCrossReferencedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onDemilestonedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onDisconnectedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onIssueComment = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onLabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onLockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onMarkedAsDuplicateEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
@@ -116,7 +124,8 @@ maybeFragments =
     , onUnassignedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnlabeledEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
-    , onUserBlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUnmarkedAsDuplicateEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnpinnedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     , onUnsubscribedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
+    , onUserBlockedEvent = Graphql.SelectionSet.empty |> Graphql.SelectionSet.map (\_ -> Nothing)
     }

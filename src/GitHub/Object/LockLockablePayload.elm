@@ -19,6 +19,15 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
+{-| Identifies the actor who performed the event.
+-}
+actor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.LockLockablePayload
+actor object_ =
+    Object.selectionForCompositeField "actor" [] object_ (identity >> Decode.nullable)
+
+
 {-| A unique identifier for the client performing the mutation.
 -}
 clientMutationId : SelectionSet (Maybe String) GitHub.Object.LockLockablePayload
@@ -28,6 +37,8 @@ clientMutationId =
 
 {-| The item that was locked.
 -}
-lockedRecord : SelectionSet decodesTo GitHub.Interface.Lockable -> SelectionSet (Maybe decodesTo) GitHub.Object.LockLockablePayload
+lockedRecord :
+    SelectionSet decodesTo GitHub.Interface.Lockable
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.LockLockablePayload
 lockedRecord object_ =
     Object.selectionForCompositeField "lockedRecord" [] object_ (identity >> Decode.nullable)

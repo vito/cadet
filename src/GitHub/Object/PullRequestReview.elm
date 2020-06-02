@@ -25,7 +25,9 @@ import Json.Decode as Decode
 
 {-| The actor who authored the comment.
 -}
-author : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
+author :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
 author object_ =
     Object.selectionForCompositeField "author" [] object_ (identity >> Decode.nullable)
 
@@ -74,7 +76,10 @@ type alias CommentsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestReviewCommentConnection -> SelectionSet decodesTo GitHub.Object.PullRequestReview
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReview
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -89,7 +94,9 @@ comments fillInOptionals object_ =
 
 {-| Identifies the commit associated with this pull request review.
 -}
-commit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
+commit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
 commit object_ =
     Object.selectionForCompositeField "commit" [] object_ (identity >> Decode.nullable)
 
@@ -117,7 +124,9 @@ databaseId =
 
 {-| The actor who edited the comment.
 -}
-editor : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
+editor :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
 editor object_ =
     Object.selectionForCompositeField "editor" [] object_ (identity >> Decode.nullable)
 
@@ -157,7 +166,10 @@ type alias OnBehalfOfOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-onBehalfOf : (OnBehalfOfOptionalArguments -> OnBehalfOfOptionalArguments) -> SelectionSet decodesTo GitHub.Object.TeamConnection -> SelectionSet decodesTo GitHub.Object.PullRequestReview
+onBehalfOf :
+    (OnBehalfOfOptionalArguments -> OnBehalfOfOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.TeamConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReview
 onBehalfOf fillInOptionals object_ =
     let
         filledInOptionals =
@@ -179,14 +191,18 @@ publishedAt =
 
 {-| Identifies the pull request associated with this pull request review.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.PullRequestReview
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReview
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| A list of reactions grouped by content left on the subject.
 -}
-reactionGroups : SelectionSet decodesTo GitHub.Object.ReactionGroup -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.PullRequestReview
+reactionGroups :
+    SelectionSet decodesTo GitHub.Object.ReactionGroup
+    -> SelectionSet (Maybe (List decodesTo)) GitHub.Object.PullRequestReview
 reactionGroups object_ =
     Object.selectionForCompositeField "reactionGroups" [] object_ (identity >> Decode.list >> Decode.nullable)
 
@@ -211,7 +227,10 @@ type alias ReactionsOptionalArguments =
   - orderBy - Allows specifying the order in which reactions are returned.
 
 -}
-reactions : (ReactionsOptionalArguments -> ReactionsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.ReactionConnection -> SelectionSet decodesTo GitHub.Object.PullRequestReview
+reactions :
+    (ReactionsOptionalArguments -> ReactionsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.ReactionConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReview
 reactions fillInOptionals object_ =
     let
         filledInOptionals =
@@ -226,7 +245,9 @@ reactions fillInOptionals object_ =
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequestReview
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReview
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
@@ -282,7 +303,10 @@ type alias UserContentEditsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-userContentEdits : (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
+userContentEdits :
+    (UserContentEditsOptionalArguments -> UserContentEditsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.UserContentEditConnection
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReview
 userContentEdits fillInOptionals object_ =
     let
         filledInOptionals =

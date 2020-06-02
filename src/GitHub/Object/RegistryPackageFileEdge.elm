@@ -28,6 +28,8 @@ cursor =
 
 {-| The item at the end of the edge.
 -}
-node : SelectionSet decodesTo GitHub.Object.RegistryPackageFile -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageFileEdge
+node :
+    SelectionSet decodesTo GitHub.Object.RegistryPackageFile
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.RegistryPackageFileEdge
 node object_ =
     Object.selectionForCompositeField "node" [] object_ (identity >> Decode.nullable)

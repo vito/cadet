@@ -54,6 +54,8 @@ updatedAt =
 
 {-| The user account to which the email belongs.
 -}
-userAccount : SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmail
+userAccount :
+    SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccount
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseServerUserAccountEmail
 userAccount object_ =
     Object.selectionForCompositeField "userAccount" [] object_ identity

@@ -38,7 +38,7 @@ fragments :
     Fragments decodesTo
     -> SelectionSet decodesTo GitHub.Interface.RepositoryNode
 fragments selections =
-    Object.exhuastiveFragmentSelection
+    Object.exhaustiveFragmentSelection
         [ Object.buildFragment "CommitComment" selections.onCommitComment
         , Object.buildFragment "CommitCommentThread" selections.onCommitCommentThread
         , Object.buildFragment "Issue" selections.onIssue
@@ -51,7 +51,7 @@ fragments selections =
         ]
 
 
-{-| Can be used to create a non-exhuastive set of fragments by using the record
+{-| Can be used to create a non-exhaustive set of fragments by using the record
 update syntax to add `SelectionSet`s for the types you want to handle.
 -}
 maybeFragments : Fragments (Maybe decodesTo)
@@ -70,6 +70,8 @@ maybeFragments =
 
 {-| The repository associated with this node.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Interface.RepositoryNode
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Interface.RepositoryNode
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity

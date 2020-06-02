@@ -41,7 +41,10 @@ first. Returns up to 10 Topics.
   - first - How many topics to return.
 
 -}
-relatedTopics : (RelatedTopicsOptionalArguments -> RelatedTopicsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.Topic -> SelectionSet (List decodesTo) GitHub.Object.Topic
+relatedTopics :
+    (RelatedTopicsOptionalArguments -> RelatedTopicsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.Topic
+    -> SelectionSet (List decodesTo) GitHub.Object.Topic
 relatedTopics fillInOptionals object_ =
     let
         filledInOptionals =
@@ -72,7 +75,10 @@ type alias StargazersOptionalArguments =
   - orderBy - Order for connection
 
 -}
-stargazers : (StargazersOptionalArguments -> StargazersOptionalArguments) -> SelectionSet decodesTo GitHub.Object.StargazerConnection -> SelectionSet decodesTo GitHub.Object.Topic
+stargazers :
+    (StargazersOptionalArguments -> StargazersOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.StargazerConnection
+    -> SelectionSet decodesTo GitHub.Object.Topic
 stargazers fillInOptionals object_ =
     let
         filledInOptionals =

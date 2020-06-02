@@ -25,14 +25,18 @@ project column at a time. The column field will be null if the card is created
 in a pending state and has yet to be associated with a column. Once cards are
 associated with a column, they will not become pending in the future.
 -}
-column : SelectionSet decodesTo GitHub.Object.ProjectColumn -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
+column :
+    SelectionSet decodesTo GitHub.Object.ProjectColumn
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
 column object_ =
     Object.selectionForCompositeField "column" [] object_ (identity >> Decode.nullable)
 
 
 {-| The card content item
 -}
-content : SelectionSet decodesTo GitHub.Union.ProjectCardItem -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
+content :
+    SelectionSet decodesTo GitHub.Union.ProjectCardItem
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
 content object_ =
     Object.selectionForCompositeField "content" [] object_ (identity >> Decode.nullable)
 
@@ -46,7 +50,9 @@ createdAt =
 
 {-| The actor who created this card
 -}
-creator : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
+creator :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.ProjectCard
 creator object_ =
     Object.selectionForCompositeField "creator" [] object_ (identity >> Decode.nullable)
 
@@ -79,7 +85,9 @@ note =
 
 {-| The project that contains this card.
 -}
-project : SelectionSet decodesTo GitHub.Object.Project -> SelectionSet decodesTo GitHub.Object.ProjectCard
+project :
+    SelectionSet decodesTo GitHub.Object.Project
+    -> SelectionSet decodesTo GitHub.Object.ProjectCard
 project object_ =
     Object.selectionForCompositeField "project" [] object_ identity
 

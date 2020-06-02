@@ -28,13 +28,17 @@ createdAt =
 
 {-| The last commit the viewer has seen.
 -}
-lastSeenCommit : SelectionSet decodesTo GitHub.Object.Commit -> SelectionSet decodesTo GitHub.Object.PullRequestRevisionMarker
+lastSeenCommit :
+    SelectionSet decodesTo GitHub.Object.Commit
+    -> SelectionSet decodesTo GitHub.Object.PullRequestRevisionMarker
 lastSeenCommit object_ =
     Object.selectionForCompositeField "lastSeenCommit" [] object_ identity
 
 
 {-| The pull request to which the marker belongs.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.PullRequestRevisionMarker
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.PullRequestRevisionMarker
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity

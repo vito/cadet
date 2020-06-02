@@ -4,6 +4,7 @@
 
 module GitHub.Object.PullRequestReviewThread exposing (..)
 
+import GitHub.Enum.DiffSide
 import GitHub.InputObject
 import GitHub.Interface
 import GitHub.Object
@@ -37,7 +38,10 @@ type alias CommentsOptionalArguments =
   - skip - Skips the first _n_ elements in the list.
 
 -}
-comments : (CommentsOptionalArguments -> CommentsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.PullRequestReviewCommentConnection -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
+comments :
+    (CommentsOptionalArguments -> CommentsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewCommentConnection
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
 comments fillInOptionals object_ =
     let
         filledInOptionals =
@@ -48,6 +52,13 @@ comments fillInOptionals object_ =
                 |> List.filterMap identity
     in
     Object.selectionForCompositeField "comments" optionalArgs object_ identity
+
+
+{-| The side of the diff on which this thread was placed.
+-}
+diffSide : SelectionSet GitHub.Enum.DiffSide.DiffSide GitHub.Object.PullRequestReviewThread
+diffSide =
+    Object.selectionForField "Enum.DiffSide.DiffSide" "diffSide" [] GitHub.Enum.DiffSide.decoder
 
 
 id : SelectionSet GitHub.ScalarCodecs.Id GitHub.Object.PullRequestReviewThread
@@ -62,25 +73,66 @@ isResolved =
     Object.selectionForField "Bool" "isResolved" [] Decode.bool
 
 
+{-| The line in the file to which this thread refers
+-}
+line : SelectionSet (Maybe Int) GitHub.Object.PullRequestReviewThread
+line =
+    Object.selectionForField "(Maybe Int)" "line" [] (Decode.int |> Decode.nullable)
+
+
+{-| The original line in the file to which this thread refers.
+-}
+originalLine : SelectionSet (Maybe Int) GitHub.Object.PullRequestReviewThread
+originalLine =
+    Object.selectionForField "(Maybe Int)" "originalLine" [] (Decode.int |> Decode.nullable)
+
+
+{-| The original start line in the file to which this thread refers (multi-line only).
+-}
+originalStartLine : SelectionSet (Maybe Int) GitHub.Object.PullRequestReviewThread
+originalStartLine =
+    Object.selectionForField "(Maybe Int)" "originalStartLine" [] (Decode.int |> Decode.nullable)
+
+
 {-| Identifies the pull request associated with this thread.
 -}
-pullRequest : SelectionSet decodesTo GitHub.Object.PullRequest -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
+pullRequest :
+    SelectionSet decodesTo GitHub.Object.PullRequest
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
 pullRequest object_ =
     Object.selectionForCompositeField "pullRequest" [] object_ identity
 
 
 {-| Identifies the repository associated with this thread.
 -}
-repository : SelectionSet decodesTo GitHub.Object.Repository -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
+repository :
+    SelectionSet decodesTo GitHub.Object.Repository
+    -> SelectionSet decodesTo GitHub.Object.PullRequestReviewThread
 repository object_ =
     Object.selectionForCompositeField "repository" [] object_ identity
 
 
 {-| The user who resolved this thread
 -}
-resolvedBy : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReviewThread
+resolvedBy :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.PullRequestReviewThread
 resolvedBy object_ =
     Object.selectionForCompositeField "resolvedBy" [] object_ (identity >> Decode.nullable)
+
+
+{-| The side of the diff that the first line of the thread starts on (multi-line only)
+-}
+startDiffSide : SelectionSet (Maybe GitHub.Enum.DiffSide.DiffSide) GitHub.Object.PullRequestReviewThread
+startDiffSide =
+    Object.selectionForField "(Maybe Enum.DiffSide.DiffSide)" "startDiffSide" [] (GitHub.Enum.DiffSide.decoder |> Decode.nullable)
+
+
+{-| The start line in the file to which this thread refers (multi-line only)
+-}
+startLine : SelectionSet (Maybe Int) GitHub.Object.PullRequestReviewThread
+startLine =
+    Object.selectionForField "(Maybe Int)" "startLine" [] (Decode.int |> Decode.nullable)
 
 
 {-| Whether or not the viewer can resolve this thread

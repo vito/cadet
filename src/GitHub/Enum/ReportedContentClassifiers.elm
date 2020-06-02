@@ -13,6 +13,7 @@ import Json.Decode as Decode exposing (Decoder)
   - Abuse - An abusive or harassing piece of content
   - OffTopic - An irrelevant piece of content
   - Outdated - An outdated piece of content
+  - Duplicate - A duplicated piece of content
   - Resolved - The content has been resolved
 
 -}
@@ -21,12 +22,13 @@ type ReportedContentClassifiers
     | Abuse
     | OffTopic
     | Outdated
+    | Duplicate
     | Resolved
 
 
 list : List ReportedContentClassifiers
 list =
-    [ Spam, Abuse, OffTopic, Outdated, Resolved ]
+    [ Spam, Abuse, OffTopic, Outdated, Duplicate, Resolved ]
 
 
 decoder : Decoder ReportedContentClassifiers
@@ -47,6 +49,9 @@ decoder =
                     "OUTDATED" ->
                         Decode.succeed Outdated
 
+                    "DUPLICATE" ->
+                        Decode.succeed Duplicate
+
                     "RESOLVED" ->
                         Decode.succeed Resolved
 
@@ -55,7 +60,7 @@ decoder =
             )
 
 
-{-| Convert from the union type representating the Enum to a string that the GraphQL server will recognize.
+{-| Convert from the union type representing the Enum to a string that the GraphQL server will recognize.
 -}
 toString : ReportedContentClassifiers -> String
 toString enum =
@@ -71,6 +76,9 @@ toString enum =
 
         Outdated ->
             "OUTDATED"
+
+        Duplicate ->
+            "DUPLICATE"
 
         Resolved ->
             "RESOLVED"
@@ -101,6 +109,9 @@ fromString enumString =
 
         "OUTDATED" ->
             Just Outdated
+
+        "DUPLICATE" ->
+            Just Duplicate
 
         "RESOLVED" ->
             Just Resolved

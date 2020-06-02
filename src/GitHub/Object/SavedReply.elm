@@ -54,6 +54,8 @@ title =
 
 {-| The user that saved this reply.
 -}
-user : SelectionSet decodesTo GitHub.Interface.Actor -> SelectionSet (Maybe decodesTo) GitHub.Object.SavedReply
+user :
+    SelectionSet decodesTo GitHub.Interface.Actor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.SavedReply
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)

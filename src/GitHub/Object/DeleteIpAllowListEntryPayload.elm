@@ -2,7 +2,7 @@
 -- https://github.com/dillonkearns/elm-graphql
 
 
-module GitHub.Object.ContentReference exposing (..)
+module GitHub.Object.DeleteIpAllowListEntryPayload exposing (..)
 
 import GitHub.InputObject
 import GitHub.Interface
@@ -19,20 +19,17 @@ import Graphql.SelectionSet exposing (SelectionSet)
 import Json.Decode as Decode
 
 
-{-| Identifies the primary key from the database.
+{-| A unique identifier for the client performing the mutation.
 -}
-databaseId : SelectionSet Int GitHub.Object.ContentReference
-databaseId =
-    Object.selectionForField "Int" "databaseId" [] Decode.int
+clientMutationId : SelectionSet (Maybe String) GitHub.Object.DeleteIpAllowListEntryPayload
+clientMutationId =
+    Object.selectionForField "(Maybe String)" "clientMutationId" [] (Decode.string |> Decode.nullable)
 
 
-id : SelectionSet GitHub.ScalarCodecs.Id GitHub.Object.ContentReference
-id =
-    Object.selectionForField "ScalarCodecs.Id" "id" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecId |> .decoder)
-
-
-{-| The reference of the content reference.
+{-| The IP allow list entry that was deleted.
 -}
-reference : SelectionSet String GitHub.Object.ContentReference
-reference =
-    Object.selectionForField "String" "reference" [] Decode.string
+ipAllowListEntry :
+    SelectionSet decodesTo GitHub.Object.IpAllowListEntry
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.DeleteIpAllowListEntryPayload
+ipAllowListEntry object_ =
+    Object.selectionForCompositeField "ipAllowListEntry" [] object_ (identity >> Decode.nullable)

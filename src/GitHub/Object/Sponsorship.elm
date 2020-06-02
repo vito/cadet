@@ -34,7 +34,9 @@ id =
 
 {-| The entity that is being sponsored
 -}
-maintainer : SelectionSet decodesTo GitHub.Object.User -> SelectionSet decodesTo GitHub.Object.Sponsorship
+maintainer :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet decodesTo GitHub.Object.Sponsorship
 maintainer object_ =
     Object.selectionForCompositeField "maintainer" [] object_ identity
 
@@ -46,15 +48,37 @@ privacyLevel =
     Object.selectionForField "Enum.SponsorshipPrivacy.SponsorshipPrivacy" "privacyLevel" [] GitHub.Enum.SponsorshipPrivacy.decoder
 
 
-{-| The entity that is sponsoring. Returns null if the sponsorship is private
+{-| The user that is sponsoring. Returns null if the sponsorship is private or if sponsor is not a user.
 -}
-sponsor : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.Sponsorship
+sponsor :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Sponsorship
 sponsor object_ =
     Object.selectionForCompositeField "sponsor" [] object_ (identity >> Decode.nullable)
 
 
+{-| The user or organization that is sponsoring. Returns null if the sponsorship is private.
+-}
+sponsorEntity :
+    SelectionSet decodesTo GitHub.Union.Sponsor
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Sponsorship
+sponsorEntity object_ =
+    Object.selectionForCompositeField "sponsorEntity" [] object_ (identity >> Decode.nullable)
+
+
+{-| The entity that is being sponsored
+-}
+sponsorable :
+    SelectionSet decodesTo GitHub.Interface.Sponsorable
+    -> SelectionSet decodesTo GitHub.Object.Sponsorship
+sponsorable object_ =
+    Object.selectionForCompositeField "sponsorable" [] object_ identity
+
+
 {-| The associated sponsorship tier
 -}
-tier : SelectionSet decodesTo GitHub.Object.SponsorsTier -> SelectionSet (Maybe decodesTo) GitHub.Object.Sponsorship
+tier :
+    SelectionSet decodesTo GitHub.Object.SponsorsTier
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.Sponsorship
 tier object_ =
     Object.selectionForCompositeField "tier" [] object_ (identity >> Decode.nullable)

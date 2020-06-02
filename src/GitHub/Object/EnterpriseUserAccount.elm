@@ -29,7 +29,9 @@ type alias AvatarUrlOptionalArguments =
   - size - The size of the resulting square image.
 
 -}
-avatarUrl : (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments) -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.EnterpriseUserAccount
+avatarUrl :
+    (AvatarUrlOptionalArguments -> AvatarUrlOptionalArguments)
+    -> SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.EnterpriseUserAccount
 avatarUrl fillInOptionals =
     let
         filledInOptionals =
@@ -51,7 +53,9 @@ createdAt =
 
 {-| The enterprise in which this user account exists.
 -}
-enterprise : SelectionSet decodesTo GitHub.Object.Enterprise -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccount
+enterprise :
+    SelectionSet decodesTo GitHub.Object.Enterprise
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccount
 enterprise object_ =
     Object.selectionForCompositeField "enterprise" [] object_ identity
 
@@ -97,7 +101,10 @@ type alias OrganizationsOptionalArguments =
   - last - Returns the last _n_ elements from the list.
 
 -}
-organizations : (OrganizationsOptionalArguments -> OrganizationsOptionalArguments) -> SelectionSet decodesTo GitHub.Object.EnterpriseOrganizationMembershipConnection -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccount
+organizations :
+    (OrganizationsOptionalArguments -> OrganizationsOptionalArguments)
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseOrganizationMembershipConnection
+    -> SelectionSet decodesTo GitHub.Object.EnterpriseUserAccount
 organizations fillInOptionals object_ =
     let
         filledInOptionals =
@@ -110,7 +117,7 @@ organizations fillInOptionals object_ =
     Object.selectionForCompositeField "organizations" optionalArgs object_ identity
 
 
-{-| The HTTP path for this actor.
+{-| The HTTP path for this user.
 -}
 resourcePath : SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.EnterpriseUserAccount
 resourcePath =
@@ -124,7 +131,7 @@ updatedAt =
     Object.selectionForField "ScalarCodecs.DateTime" "updatedAt" [] (GitHub.ScalarCodecs.codecs |> GitHub.Scalar.unwrapCodecs |> .codecDateTime |> .decoder)
 
 
-{-| The HTTP URL for this actor.
+{-| The HTTP URL for this user.
 -}
 url : SelectionSet GitHub.ScalarCodecs.Uri GitHub.Object.EnterpriseUserAccount
 url =
@@ -133,6 +140,8 @@ url =
 
 {-| The user within the enterprise.
 -}
-user : SelectionSet decodesTo GitHub.Object.User -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseUserAccount
+user :
+    SelectionSet decodesTo GitHub.Object.User
+    -> SelectionSet (Maybe decodesTo) GitHub.Object.EnterpriseUserAccount
 user object_ =
     Object.selectionForCompositeField "user" [] object_ (identity >> Decode.nullable)
