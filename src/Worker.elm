@@ -134,7 +134,7 @@ type Msg
     | FetchRepoLabels GitHub.Repo
     | FetchRepoMilestones GitHub.Repo
     | FetchRepoReleases GitHub.Repo
-    | PairingTeamFetched (Result GitHub.Error GitHub.Team)
+    | OrgMembersFetched (Result GitHub.Error (List GitHub.User))
     | OrgProjectsFetched (Result GitHub.Error (List GitHub.Project))
     | RepositoriesFetched (Result GitHub.Error (List GitHub.Repo))
     | RepositoryFetched (GitHub.Repo -> Msg) (Result GitHub.Error GitHub.Repo)
@@ -206,7 +206,7 @@ update msg model =
             ( model, Cmd.none )
 
         Refresh ->
-            ( { model | loadQueue = fetchPairingTeam model :: fetchOrgProjects model :: fetchRepos model :: model.loadQueue }, Cmd.none )
+            ( { model | loadQueue = fetchOrgMembers model :: fetchOrgProjects model :: fetchRepos model :: model.loadQueue }, Cmd.none )
 
         PopQueue ->
             case model.loadQueue of
@@ -240,7 +240,7 @@ update msg model =
                 )
 
         RefreshRequested "pairingUsers" _ ->
-            ( model, fetchPairingTeam model )
+            ( model, fetchOrgMembers model )
 
         RefreshRequested "orgProjects" _ ->
             ( model, fetchOrgProjects model )
@@ -298,9 +298,9 @@ update msg model =
             Log.debug "cannot refresh" ( field, id ) <|
                 ( model, Cmd.none )
 
-        HookReceived "membership" payload ->
-            Log.debug "membership hook received; refreshing Pairing team" () <|
-                ( decodeAndFetchPairingTeam payload model, Cmd.none )
+        HookReceived "organization" payload ->
+            Log.debug "organization hook received; refreshing members" () <|
+                ( { model | loadQueue = fetchOrgMembers model :: model.loadQueue }, Cmd.none )
 
         HookReceived "label" payload ->
             Log.debug "label hook received; refreshing repo" () <|
@@ -374,12 +374,13 @@ update msg model =
             Log.debug "hook received" ( event, payload ) <|
                 ( model, Cmd.none )
 
-        PairingTeamFetched (Ok team) ->
-            ( model, setPairingUsers (List.map GitHub.encodeUser team.members) )
+        OrgMembersFetched (Ok users) ->
+            Log.debug "org members fetched" (List.length users) <|
+                ( model, setPairingUsers (List.map GitHub.encodeUser users) )
 
-        PairingTeamFetched (Err err) ->
+        OrgMembersFetched (Err err) ->
             Log.debug "failed to fetch pairing members" err <|
-                backOff model err (fetchPairingTeam model)
+                backOff model err (fetchOrgMembers model)
 
         OrgProjectsFetched (Ok projects) ->
             Log.debug "org projects fetched" (List.map .name projects) <|
@@ -984,10 +985,10 @@ decodeAndFetchRepo nextMsg payload model =
                 model
 
 
-fetchPairingTeam : Model -> Cmd Msg
-fetchPairingTeam model =
-    GitHub.fetchTeam model.githubToken { org = model.githubOrg, slug = "pairing" }
-        |> Task.attempt PairingTeamFetched
+fetchOrgMembers : Model -> Cmd Msg
+fetchOrgMembers model =
+    GitHub.fetchOrgMembers model.githubToken { name = model.githubOrg }
+        |> Task.attempt OrgMembersFetched
 
 
 decodeAndFetchRepoOrOrgProjects : JD.Value -> Model -> Model
@@ -1005,21 +1006,6 @@ decodeAndFetchRepoOrOrgProjects payload model =
         Err _ ->
             -- 'repository' field is missing; must be for an org
             { model | loadQueue = fetchOrgProjects model :: model.loadQueue }
-
-
-decodeAndFetchPairingTeam : JD.Value -> Model -> Model
-decodeAndFetchPairingTeam payload model =
-    case JD.decodeValue decodeTeamSelector payload of
-        Ok sel ->
-            if sel.slug == "pairing" then
-                { model | loadQueue = fetchPairingTeam model :: model.loadQueue }
-
-            else
-                model
-
-        Err err ->
-            Log.debug "failed to decode team" ( err, payload ) <|
-                model
 
 
 fetchOrgProjects : Model -> Cmd Msg

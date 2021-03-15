@@ -82,6 +82,7 @@ module GitHub exposing
     , encodeRepo
     , encodeUser
     , fetchIssue
+    , fetchOrgMembers
     , fetchOrgProject
     , fetchOrgProjects
     , fetchOrgRepos
@@ -549,6 +550,11 @@ fetchOrgRepos token org =
 fetchOrgProjects : Token -> OrgSelector -> Task Error (List Project)
 fetchOrgProjects token org =
     fetchPaged orgProjectsQuery token { selector = org, after = Nothing }
+
+
+fetchOrgMembers : Token -> OrgSelector -> Task Error (List User)
+fetchOrgMembers token org =
+    fetchPaged orgMembersQuery token { selector = org, after = Nothing }
 
 
 cloneProject : Token -> CloneProjectInput -> Task Error Project
@@ -1451,6 +1457,41 @@ projectQuery =
                     ]
                 <|
                     GB.extract (GB.field "project" [ ( "number", GA.variable projectNumberVar ) ] projectObject)
+    in
+    GB.queryDocument queryRoot
+
+
+orgMembersQuery : GB.Document GB.Query (PagedResult User) (PagedSelector OrgSelector)
+orgMembersQuery =
+    let
+        orgNameVar =
+            GV.required "orgName" (.name << .selector) GV.string
+
+        afterVar =
+            GV.required "after" .after (GV.nullable GV.string)
+
+        pageArgs =
+            [ ( "first", GA.int 100 )
+            , ( "after", GA.variable afterVar )
+            ]
+
+        pageInfo =
+            GB.object PageInfo
+                |> GB.with (GB.field "endCursor" [] (GB.nullable GB.string))
+                |> GB.with (GB.field "hasNextPage" [] GB.bool)
+
+        paged =
+            GB.object PagedResult
+                |> GB.with (GB.field "nodes" [] (GB.list userObject))
+                |> GB.with (GB.field "pageInfo" [] pageInfo)
+
+        queryRoot =
+            GB.extract <|
+                GB.field "organization"
+                    [ ( "login", GA.variable orgNameVar )
+                    ]
+                <|
+                    GB.extract (GB.field "membersWithRole" pageArgs paged)
     in
     GB.queryDocument queryRoot
 
